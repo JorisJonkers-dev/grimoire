@@ -26,12 +26,30 @@ type Handler interface {
 	//
 	// GET /readyz
 	GetReadiness(ctx context.Context) (GetReadinessRes, error)
+	// GetSpell implements getSpell operation.
+	//
+	// One spell with its rules text and the conditions it mentions.
+	//
+	// GET /api/v1/compendium/spells/{slug}
+	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
 	// GetStatus implements getStatus operation.
 	//
 	// Reports the running version and whether the database answers.
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// ListSources implements listSources operation.
+	//
+	// The documents the compendium draws from, with the attribution each license requires.
+	//
+	// GET /api/v1/compendium/sources
+	ListSources(ctx context.Context) (ListSourcesRes, error)
+	// ListSpells implements listSpells operation.
+	//
+	// Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+	//
+	// GET /api/v1/compendium/spells
+	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

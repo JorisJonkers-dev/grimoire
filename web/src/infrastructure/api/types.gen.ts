@@ -5,6 +5,97 @@ export type ClientOptions = {
 };
 
 /**
+ * Lower-case, hyphenated identifier.
+ */
+export type Slug = string;
+
+/**
+ * Rules document key.
+ */
+export type Ruleset = 'srd-2024' | 'srd-2014';
+
+/**
+ * A spell as it appears in a list.
+ */
+export type SpellSummary = {
+    slug: Slug;
+    name: string;
+    level: number;
+    school: Slug;
+    ruleset: Ruleset;
+    ritual: boolean;
+    concentration: boolean;
+};
+
+/**
+ * One page of spells.
+ */
+export type SpellPage = {
+    items: Array<SpellSummary>;
+    nextCursor?: string;
+};
+
+/**
+ * Damage at a higher slot or character level.
+ */
+export type SpellScaling = {
+    kind: 'slot' | 'character';
+    level: number;
+    damageRoll: string;
+};
+
+/**
+ * A condition named in rules text, with its own text for tooltips.
+ */
+export type ConditionRef = {
+    slug: Slug;
+    name: string;
+    description: string;
+};
+
+/**
+ * A spell with its full rules text.
+ */
+export type Spell = {
+    slug: Slug;
+    name: string;
+    level: number;
+    school: Slug;
+    ruleset: Ruleset;
+    ritual: boolean;
+    concentration: boolean;
+    castingTime: string;
+    rangeText: string;
+    rangeFeet?: number;
+    verbal: boolean;
+    somatic: boolean;
+    material: boolean;
+    materialText?: string;
+    duration: string;
+    description: string;
+    higherLevel?: string;
+    classes: Array<Slug>;
+    damageTypes: Array<Slug>;
+    saveAbility?: Slug;
+    attackRoll: boolean;
+    damageRoll?: string;
+    scaling: Array<SpellScaling>;
+    mentions: Array<ConditionRef>;
+};
+
+/**
+ * A source document and its required attribution.
+ */
+export type Source = {
+    key: string;
+    title: string;
+    rulesetYear: number;
+    license: string;
+    attribution: string;
+    url: string;
+};
+
+/**
  * The authenticated account.
  */
 export type Me = {
@@ -41,6 +132,154 @@ export type Problem = {
     detail?: string;
     instance?: string;
 };
+
+/**
+ * ETag from an earlier response; the server answers 304 when nothing changed.
+ */
+export type IfNoneMatch = string;
+
+/**
+ * Restrict to one ruleset; omitted, the 2024 rules lead.
+ */
+export type Ruleset2 = Ruleset;
+
+export type ListSpellsData = {
+    body?: never;
+    headers?: {
+        /**
+         * ETag from an earlier response; the server answers 304 when nothing changed.
+         */
+        'If-None-Match'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Part of the spell name.
+         */
+        q?: string;
+        /**
+         * Spell level; 0 is a cantrip.
+         */
+        level?: number;
+        /**
+         * Magic school slug.
+         */
+        school?: Slug;
+        /**
+         * Class slug whose spell list to show.
+         */
+        class?: Slug;
+        /**
+         * Restrict to one ruleset; omitted, the 2024 rules lead.
+         */
+        ruleset?: Ruleset;
+        /**
+         * Opaque cursor from the previous page.
+         */
+        cursor?: string;
+        /**
+         * Page size.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/compendium/spells';
+};
+
+export type ListSpellsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSpellsError = ListSpellsErrors[keyof ListSpellsErrors];
+
+export type ListSpellsResponses = {
+    /**
+     * One page of spells.
+     */
+    200: SpellPage;
+};
+
+export type ListSpellsResponse = ListSpellsResponses[keyof ListSpellsResponses];
+
+export type GetSpellData = {
+    body?: never;
+    headers?: {
+        /**
+         * ETag from an earlier response; the server answers 304 when nothing changed.
+         */
+        'If-None-Match'?: string;
+    };
+    path: {
+        /**
+         * Spell slug.
+         */
+        slug: Slug;
+    };
+    query?: {
+        /**
+         * Restrict to one ruleset; omitted, the 2024 rules lead.
+         */
+        ruleset?: Ruleset;
+    };
+    url: '/api/v1/compendium/spells/{slug}';
+};
+
+export type GetSpellErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpellError = GetSpellErrors[keyof GetSpellErrors];
+
+export type GetSpellResponses = {
+    /**
+     * The spell.
+     */
+    200: Spell;
+};
+
+export type GetSpellResponse = GetSpellResponses[keyof GetSpellResponses];
+
+export type ListSourcesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/compendium/sources';
+};
+
+export type ListSourcesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSourcesError = ListSourcesErrors[keyof ListSourcesErrors];
+
+export type ListSourcesResponses = {
+    /**
+     * Every source document.
+     */
+    200: Array<Source>;
+};
+
+export type ListSourcesResponse = ListSourcesResponses[keyof ListSourcesResponses];
 
 export type GetMeData = {
     body?: never;

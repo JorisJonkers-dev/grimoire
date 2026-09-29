@@ -13,6 +13,18 @@ type GetReadinessRes interface {
 	getReadinessRes()
 }
 
+type GetSpellRes interface {
+	getSpellRes()
+}
+
 type GetStatusRes interface {
 	getStatusRes()
+}
+
+type ListSourcesRes interface {
+	listSourcesRes()
+}
+
+type ListSpellsRes interface {
+	listSpellsRes()
 }

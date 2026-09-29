@@ -6,7 +6,93 @@ package queries
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type CompendiumAbilityScore struct {
+	ID   int64
+	Slug string
+	Name string
+}
+
+type CompendiumCondition struct {
+	ID          int64
+	DocumentID  int64
+	Slug        string
+	Name        string
+	Description string
+}
+
+type CompendiumDamageType struct {
+	ID   int64
+	Slug string
+	Name string
+}
+
+type CompendiumDocument struct {
+	ID          int64
+	Key         string
+	Title       string
+	RulesetYear int32
+	Precedence  int32
+	License     string
+	Attribution string
+	Url         string
+}
+
+type CompendiumMagicSchool struct {
+	ID   int64
+	Slug string
+	Name string
+}
+
+type CompendiumSpell struct {
+	ID               int64
+	DocumentID       int64
+	Slug             string
+	Name             string
+	Level            int32
+	SchoolID         int64
+	CastingTime      string
+	RangeText        string
+	RangeFeet        pgtype.Int4
+	RequiresVerbal   bool
+	RequiresSomatic  bool
+	RequiresMaterial bool
+	MaterialText     pgtype.Text
+	Ritual           bool
+	Concentration    bool
+	Duration         string
+	Description      string
+	HigherLevel      pgtype.Text
+	SaveAbilityID    pgtype.Int8
+	AttackRoll       bool
+	DamageRoll       pgtype.Text
+}
+
+type CompendiumSpellClass struct {
+	SpellID   int64
+	ClassSlug string
+}
+
+type CompendiumSpellDamageType struct {
+	SpellID      int64
+	DamageTypeID int64
+}
+
+type CompendiumSpellScaling struct {
+	SpellID    int64
+	Kind       string
+	AtLevel    int32
+	DamageRoll string
+}
+
+type OpsCompendiumImport struct {
+	ID           int64
+	SnapshotHash string
+	ImportedAt   time.Time
+}
 
 type OpsInstance struct {
 	ID        int64

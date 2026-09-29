@@ -8,6 +8,44 @@ import (
 	"github.com/go-faster/errors"
 )
 
+// A condition named in rules text, with its own text for tooltips.
+// Ref: #/components/schemas/ConditionRef
+type ConditionRef struct {
+	Slug        Slug   `json:"slug"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *ConditionRef) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ConditionRef) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *ConditionRef) GetDescription() string {
+	return s.Description
+}
+
+// SetSlug sets the value of Slug.
+func (s *ConditionRef) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ConditionRef) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *ConditionRef) SetDescription(val string) {
+	s.Description = val
+}
+
 type ForwardAuth struct {
 	APIKey string
 	Roles  []string
@@ -33,6 +71,23 @@ func (s *ForwardAuth) SetRoles(val []string) {
 	s.Roles = val
 }
 
+// GetSpellNotModified is response for GetSpell operation.
+type GetSpellNotModified struct {
+	ETag OptString
+}
+
+// GetETag returns the value of ETag.
+func (s *GetSpellNotModified) GetETag() OptString {
+	return s.ETag
+}
+
+// SetETag sets the value of ETag.
+func (s *GetSpellNotModified) SetETag(val OptString) {
+	s.ETag = val
+}
+
+func (*GetSpellNotModified) getSpellRes() {}
+
 // Probe result.
 // Ref: #/components/schemas/HealthStatus
 type HealthStatus struct {
@@ -51,6 +106,73 @@ func (s *HealthStatus) SetStatus(val string) {
 
 func (*HealthStatus) getHealthRes()    {}
 func (*HealthStatus) getReadinessRes() {}
+
+// ListSourcesOKHeaders wraps []Source with response headers.
+type ListSourcesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Source
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSourcesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSourcesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSourcesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSourcesOKHeaders) GetResponse() []Source {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSourcesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSourcesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSourcesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSourcesOKHeaders) SetResponse(val []Source) {
+	s.Response = val
+}
+
+func (*ListSourcesOKHeaders) listSourcesRes() {}
+
+// ListSpellsNotModified is response for ListSpells operation.
+type ListSpellsNotModified struct {
+	ETag OptString
+}
+
+// GetETag returns the value of ETag.
+func (s *ListSpellsNotModified) GetETag() OptString {
+	return s.ETag
+}
+
+// SetETag sets the value of ETag.
+func (s *ListSpellsNotModified) SetETag(val OptString) {
+	s.ETag = val
+}
+
+func (*ListSpellsNotModified) listSpellsRes() {}
 
 // The authenticated account.
 // Ref: #/components/schemas/Me
@@ -159,6 +281,98 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptRuleset returns new OptRuleset with value set to v.
+func NewOptRuleset(v Ruleset) OptRuleset {
+	return OptRuleset{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptRuleset is optional Ruleset.
+type OptRuleset struct {
+	Value Ruleset
+	Set   bool
+}
+
+// IsSet returns true if OptRuleset was set.
+func (o OptRuleset) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptRuleset) Reset() {
+	var v Ruleset
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptRuleset) SetTo(v Ruleset) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptRuleset) Get() (v Ruleset, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptRuleset) Or(d Ruleset) Ruleset {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptSlug returns new OptSlug with value set to v.
+func NewOptSlug(v Slug) OptSlug {
+	return OptSlug{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptSlug is optional Slug.
+type OptSlug struct {
+	Value Slug
+	Set   bool
+}
+
+// IsSet returns true if OptSlug was set.
+func (o OptSlug) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptSlug) Reset() {
+	var v Slug
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptSlug) SetTo(v Slug) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptSlug) Get() (v Slug, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptSlug) Or(d Slug) Slug {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -333,7 +547,705 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 func (*ProblemStatusCodeWithHeaders) getHealthRes()    {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()        {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes() {}
+func (*ProblemStatusCodeWithHeaders) getSpellRes()     {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()    {}
+func (*ProblemStatusCodeWithHeaders) listSourcesRes()  {}
+func (*ProblemStatusCodeWithHeaders) listSpellsRes()   {}
+
+// Rules document key.
+// Ref: #/components/schemas/Ruleset
+type Ruleset string
+
+const (
+	RulesetSrd2024 Ruleset = "srd-2024"
+	RulesetSrd2014 Ruleset = "srd-2014"
+)
+
+// AllValues returns all Ruleset values.
+func (Ruleset) AllValues() []Ruleset {
+	return []Ruleset{
+		RulesetSrd2024,
+		RulesetSrd2014,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Ruleset) MarshalText() ([]byte, error) {
+	switch s {
+	case RulesetSrd2024:
+		return []byte(s), nil
+	case RulesetSrd2014:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Ruleset) UnmarshalText(data []byte) error {
+	switch Ruleset(data) {
+	case RulesetSrd2024:
+		*s = RulesetSrd2024
+		return nil
+	case RulesetSrd2014:
+		*s = RulesetSrd2014
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type Slug string
+
+// A source document and its required attribution.
+// Ref: #/components/schemas/Source
+type Source struct {
+	Key         string `json:"key"`
+	Title       string `json:"title"`
+	RulesetYear int32  `json:"rulesetYear"`
+	License     string `json:"license"`
+	Attribution string `json:"attribution"`
+	URL         string `json:"url"`
+}
+
+// GetKey returns the value of Key.
+func (s *Source) GetKey() string {
+	return s.Key
+}
+
+// GetTitle returns the value of Title.
+func (s *Source) GetTitle() string {
+	return s.Title
+}
+
+// GetRulesetYear returns the value of RulesetYear.
+func (s *Source) GetRulesetYear() int32 {
+	return s.RulesetYear
+}
+
+// GetLicense returns the value of License.
+func (s *Source) GetLicense() string {
+	return s.License
+}
+
+// GetAttribution returns the value of Attribution.
+func (s *Source) GetAttribution() string {
+	return s.Attribution
+}
+
+// GetURL returns the value of URL.
+func (s *Source) GetURL() string {
+	return s.URL
+}
+
+// SetKey sets the value of Key.
+func (s *Source) SetKey(val string) {
+	s.Key = val
+}
+
+// SetTitle sets the value of Title.
+func (s *Source) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetRulesetYear sets the value of RulesetYear.
+func (s *Source) SetRulesetYear(val int32) {
+	s.RulesetYear = val
+}
+
+// SetLicense sets the value of License.
+func (s *Source) SetLicense(val string) {
+	s.License = val
+}
+
+// SetAttribution sets the value of Attribution.
+func (s *Source) SetAttribution(val string) {
+	s.Attribution = val
+}
+
+// SetURL sets the value of URL.
+func (s *Source) SetURL(val string) {
+	s.URL = val
+}
+
+// A spell with its full rules text.
+// Ref: #/components/schemas/Spell
+type Spell struct {
+	Slug          Slug           `json:"slug"`
+	Name          string         `json:"name"`
+	Level         int32          `json:"level"`
+	School        Slug           `json:"school"`
+	Ruleset       Ruleset        `json:"ruleset"`
+	Ritual        bool           `json:"ritual"`
+	Concentration bool           `json:"concentration"`
+	CastingTime   string         `json:"castingTime"`
+	RangeText     string         `json:"rangeText"`
+	RangeFeet     OptInt32       `json:"rangeFeet"`
+	Verbal        bool           `json:"verbal"`
+	Somatic       bool           `json:"somatic"`
+	Material      bool           `json:"material"`
+	MaterialText  OptString      `json:"materialText"`
+	Duration      string         `json:"duration"`
+	Description   string         `json:"description"`
+	HigherLevel   OptString      `json:"higherLevel"`
+	Classes       []Slug         `json:"classes"`
+	DamageTypes   []Slug         `json:"damageTypes"`
+	SaveAbility   OptSlug        `json:"saveAbility"`
+	AttackRoll    bool           `json:"attackRoll"`
+	DamageRoll    OptString      `json:"damageRoll"`
+	Scaling       []SpellScaling `json:"scaling"`
+	Mentions      []ConditionRef `json:"mentions"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *Spell) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *Spell) GetName() string {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *Spell) GetLevel() int32 {
+	return s.Level
+}
+
+// GetSchool returns the value of School.
+func (s *Spell) GetSchool() Slug {
+	return s.School
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *Spell) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetRitual returns the value of Ritual.
+func (s *Spell) GetRitual() bool {
+	return s.Ritual
+}
+
+// GetConcentration returns the value of Concentration.
+func (s *Spell) GetConcentration() bool {
+	return s.Concentration
+}
+
+// GetCastingTime returns the value of CastingTime.
+func (s *Spell) GetCastingTime() string {
+	return s.CastingTime
+}
+
+// GetRangeText returns the value of RangeText.
+func (s *Spell) GetRangeText() string {
+	return s.RangeText
+}
+
+// GetRangeFeet returns the value of RangeFeet.
+func (s *Spell) GetRangeFeet() OptInt32 {
+	return s.RangeFeet
+}
+
+// GetVerbal returns the value of Verbal.
+func (s *Spell) GetVerbal() bool {
+	return s.Verbal
+}
+
+// GetSomatic returns the value of Somatic.
+func (s *Spell) GetSomatic() bool {
+	return s.Somatic
+}
+
+// GetMaterial returns the value of Material.
+func (s *Spell) GetMaterial() bool {
+	return s.Material
+}
+
+// GetMaterialText returns the value of MaterialText.
+func (s *Spell) GetMaterialText() OptString {
+	return s.MaterialText
+}
+
+// GetDuration returns the value of Duration.
+func (s *Spell) GetDuration() string {
+	return s.Duration
+}
+
+// GetDescription returns the value of Description.
+func (s *Spell) GetDescription() string {
+	return s.Description
+}
+
+// GetHigherLevel returns the value of HigherLevel.
+func (s *Spell) GetHigherLevel() OptString {
+	return s.HigherLevel
+}
+
+// GetClasses returns the value of Classes.
+func (s *Spell) GetClasses() []Slug {
+	return s.Classes
+}
+
+// GetDamageTypes returns the value of DamageTypes.
+func (s *Spell) GetDamageTypes() []Slug {
+	return s.DamageTypes
+}
+
+// GetSaveAbility returns the value of SaveAbility.
+func (s *Spell) GetSaveAbility() OptSlug {
+	return s.SaveAbility
+}
+
+// GetAttackRoll returns the value of AttackRoll.
+func (s *Spell) GetAttackRoll() bool {
+	return s.AttackRoll
+}
+
+// GetDamageRoll returns the value of DamageRoll.
+func (s *Spell) GetDamageRoll() OptString {
+	return s.DamageRoll
+}
+
+// GetScaling returns the value of Scaling.
+func (s *Spell) GetScaling() []SpellScaling {
+	return s.Scaling
+}
+
+// GetMentions returns the value of Mentions.
+func (s *Spell) GetMentions() []ConditionRef {
+	return s.Mentions
+}
+
+// SetSlug sets the value of Slug.
+func (s *Spell) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *Spell) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *Spell) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetSchool sets the value of School.
+func (s *Spell) SetSchool(val Slug) {
+	s.School = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *Spell) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetRitual sets the value of Ritual.
+func (s *Spell) SetRitual(val bool) {
+	s.Ritual = val
+}
+
+// SetConcentration sets the value of Concentration.
+func (s *Spell) SetConcentration(val bool) {
+	s.Concentration = val
+}
+
+// SetCastingTime sets the value of CastingTime.
+func (s *Spell) SetCastingTime(val string) {
+	s.CastingTime = val
+}
+
+// SetRangeText sets the value of RangeText.
+func (s *Spell) SetRangeText(val string) {
+	s.RangeText = val
+}
+
+// SetRangeFeet sets the value of RangeFeet.
+func (s *Spell) SetRangeFeet(val OptInt32) {
+	s.RangeFeet = val
+}
+
+// SetVerbal sets the value of Verbal.
+func (s *Spell) SetVerbal(val bool) {
+	s.Verbal = val
+}
+
+// SetSomatic sets the value of Somatic.
+func (s *Spell) SetSomatic(val bool) {
+	s.Somatic = val
+}
+
+// SetMaterial sets the value of Material.
+func (s *Spell) SetMaterial(val bool) {
+	s.Material = val
+}
+
+// SetMaterialText sets the value of MaterialText.
+func (s *Spell) SetMaterialText(val OptString) {
+	s.MaterialText = val
+}
+
+// SetDuration sets the value of Duration.
+func (s *Spell) SetDuration(val string) {
+	s.Duration = val
+}
+
+// SetDescription sets the value of Description.
+func (s *Spell) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetHigherLevel sets the value of HigherLevel.
+func (s *Spell) SetHigherLevel(val OptString) {
+	s.HigherLevel = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *Spell) SetClasses(val []Slug) {
+	s.Classes = val
+}
+
+// SetDamageTypes sets the value of DamageTypes.
+func (s *Spell) SetDamageTypes(val []Slug) {
+	s.DamageTypes = val
+}
+
+// SetSaveAbility sets the value of SaveAbility.
+func (s *Spell) SetSaveAbility(val OptSlug) {
+	s.SaveAbility = val
+}
+
+// SetAttackRoll sets the value of AttackRoll.
+func (s *Spell) SetAttackRoll(val bool) {
+	s.AttackRoll = val
+}
+
+// SetDamageRoll sets the value of DamageRoll.
+func (s *Spell) SetDamageRoll(val OptString) {
+	s.DamageRoll = val
+}
+
+// SetScaling sets the value of Scaling.
+func (s *Spell) SetScaling(val []SpellScaling) {
+	s.Scaling = val
+}
+
+// SetMentions sets the value of Mentions.
+func (s *Spell) SetMentions(val []ConditionRef) {
+	s.Mentions = val
+}
+
+// SpellHeaders wraps Spell with response headers.
+type SpellHeaders struct {
+	ETag               OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Spell
+}
+
+// GetETag returns the value of ETag.
+func (s *SpellHeaders) GetETag() OptString {
+	return s.ETag
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpellHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpellHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpellHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpellHeaders) GetResponse() Spell {
+	return s.Response
+}
+
+// SetETag sets the value of ETag.
+func (s *SpellHeaders) SetETag(val OptString) {
+	s.ETag = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpellHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpellHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpellHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpellHeaders) SetResponse(val Spell) {
+	s.Response = val
+}
+
+func (*SpellHeaders) getSpellRes() {}
+
+// One page of spells.
+// Ref: #/components/schemas/SpellPage
+type SpellPage struct {
+	Items      []SpellSummary `json:"items"`
+	NextCursor OptString      `json:"nextCursor"`
+}
+
+// GetItems returns the value of Items.
+func (s *SpellPage) GetItems() []SpellSummary {
+	return s.Items
+}
+
+// GetNextCursor returns the value of NextCursor.
+func (s *SpellPage) GetNextCursor() OptString {
+	return s.NextCursor
+}
+
+// SetItems sets the value of Items.
+func (s *SpellPage) SetItems(val []SpellSummary) {
+	s.Items = val
+}
+
+// SetNextCursor sets the value of NextCursor.
+func (s *SpellPage) SetNextCursor(val OptString) {
+	s.NextCursor = val
+}
+
+// SpellPageHeaders wraps SpellPage with response headers.
+type SpellPageHeaders struct {
+	ETag               OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SpellPage
+}
+
+// GetETag returns the value of ETag.
+func (s *SpellPageHeaders) GetETag() OptString {
+	return s.ETag
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpellPageHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpellPageHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpellPageHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpellPageHeaders) GetResponse() SpellPage {
+	return s.Response
+}
+
+// SetETag sets the value of ETag.
+func (s *SpellPageHeaders) SetETag(val OptString) {
+	s.ETag = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpellPageHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpellPageHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpellPageHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpellPageHeaders) SetResponse(val SpellPage) {
+	s.Response = val
+}
+
+func (*SpellPageHeaders) listSpellsRes() {}
+
+// Damage at a higher slot or character level.
+// Ref: #/components/schemas/SpellScaling
+type SpellScaling struct {
+	Kind       SpellScalingKind `json:"kind"`
+	Level      int32            `json:"level"`
+	DamageRoll string           `json:"damageRoll"`
+}
+
+// GetKind returns the value of Kind.
+func (s *SpellScaling) GetKind() SpellScalingKind {
+	return s.Kind
+}
+
+// GetLevel returns the value of Level.
+func (s *SpellScaling) GetLevel() int32 {
+	return s.Level
+}
+
+// GetDamageRoll returns the value of DamageRoll.
+func (s *SpellScaling) GetDamageRoll() string {
+	return s.DamageRoll
+}
+
+// SetKind sets the value of Kind.
+func (s *SpellScaling) SetKind(val SpellScalingKind) {
+	s.Kind = val
+}
+
+// SetLevel sets the value of Level.
+func (s *SpellScaling) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetDamageRoll sets the value of DamageRoll.
+func (s *SpellScaling) SetDamageRoll(val string) {
+	s.DamageRoll = val
+}
+
+type SpellScalingKind string
+
+const (
+	SpellScalingKindSlot      SpellScalingKind = "slot"
+	SpellScalingKindCharacter SpellScalingKind = "character"
+)
+
+// AllValues returns all SpellScalingKind values.
+func (SpellScalingKind) AllValues() []SpellScalingKind {
+	return []SpellScalingKind{
+		SpellScalingKindSlot,
+		SpellScalingKindCharacter,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SpellScalingKind) MarshalText() ([]byte, error) {
+	switch s {
+	case SpellScalingKindSlot:
+		return []byte(s), nil
+	case SpellScalingKindCharacter:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SpellScalingKind) UnmarshalText(data []byte) error {
+	switch SpellScalingKind(data) {
+	case SpellScalingKindSlot:
+		*s = SpellScalingKindSlot
+		return nil
+	case SpellScalingKindCharacter:
+		*s = SpellScalingKindCharacter
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A spell as it appears in a list.
+// Ref: #/components/schemas/SpellSummary
+type SpellSummary struct {
+	Slug          Slug    `json:"slug"`
+	Name          string  `json:"name"`
+	Level         int32   `json:"level"`
+	School        Slug    `json:"school"`
+	Ruleset       Ruleset `json:"ruleset"`
+	Ritual        bool    `json:"ritual"`
+	Concentration bool    `json:"concentration"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *SpellSummary) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *SpellSummary) GetName() string {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *SpellSummary) GetLevel() int32 {
+	return s.Level
+}
+
+// GetSchool returns the value of School.
+func (s *SpellSummary) GetSchool() Slug {
+	return s.School
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *SpellSummary) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetRitual returns the value of Ritual.
+func (s *SpellSummary) GetRitual() bool {
+	return s.Ritual
+}
+
+// GetConcentration returns the value of Concentration.
+func (s *SpellSummary) GetConcentration() bool {
+	return s.Concentration
+}
+
+// SetSlug sets the value of Slug.
+func (s *SpellSummary) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *SpellSummary) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *SpellSummary) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetSchool sets the value of School.
+func (s *SpellSummary) SetSchool(val Slug) {
+	s.School = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *SpellSummary) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetRitual sets the value of Ritual.
+func (s *SpellSummary) SetRitual(val bool) {
+	s.Ritual = val
+}
+
+// SetConcentration sets the value of Concentration.
+func (s *SpellSummary) SetConcentration(val bool) {
+	s.Concentration = val
+}
 
 // Service status.
 // Ref: #/components/schemas/Status

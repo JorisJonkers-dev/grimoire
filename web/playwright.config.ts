@@ -25,6 +25,7 @@ export default defineConfig({
       env: {
         GRIMOIRE_DATABASE_URL: process.env.GRIMOIRE_DATABASE_URL ?? 'postgres://grimoire:grimoire@localhost:5432/grimoire?sslmode=disable',
         GRIMOIRE_AUTO_MIGRATE: 'true',
+        GRIMOIRE_AUTO_IMPORT: 'true',
         GRIMOIRE_DEV_SUBJECT: devSubject,
         GRIMOIRE_ADDR: ':18765',
       },

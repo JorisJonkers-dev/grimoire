@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetStatusData, GetStatusErrors, GetStatusResponses } from './types.gen';
-import { zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetStatusResponse } from './zod.gen';
+import type { GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses } from './types.gen';
+import { zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -20,6 +20,59 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * List spells
+ *
+ * Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+ */
+export const listSpells = <ThrowOnError extends boolean = false>(options?: Options<ListSpellsData, ThrowOnError>): RequestResult<ListSpellsResponses, ListSpellsErrors, ThrowOnError> => (options?.client ?? client).get<ListSpellsResponses, ListSpellsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        headers: zListSpellsHeaders.optional(),
+        path: z.never().optional(),
+        query: zListSpellsQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListSpellsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/spells',
+    ...options
+});
+
+/**
+ * Get a spell
+ *
+ * One spell with its rules text and the conditions it mentions.
+ */
+export const getSpell = <ThrowOnError extends boolean = false>(options: Options<GetSpellData, ThrowOnError>): RequestResult<GetSpellResponses, GetSpellErrors, ThrowOnError> => (options.client ?? client).get<GetSpellResponses, GetSpellErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        headers: zGetSpellHeaders.optional(),
+        path: zGetSpellPath,
+        query: zGetSpellQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetSpellResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/spells/{slug}',
+    ...options
+});
+
+/**
+ * List compendium sources
+ *
+ * The documents the compendium draws from, with the attribution each license requires.
+ */
+export const listSources = <ThrowOnError extends boolean = false>(options?: Options<ListSourcesData, ThrowOnError>): RequestResult<ListSourcesResponses, ListSourcesErrors, ThrowOnError> => (options?.client ?? client).get<ListSourcesResponses, ListSourcesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListSourcesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/sources',
+    ...options
+});
 
 /**
  * Who am I

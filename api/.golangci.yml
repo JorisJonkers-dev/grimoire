@@ -27,14 +27,6 @@ linters:
   settings:
     exhaustive:
       default-signifies-exhaustive: false
-    exhaustruct_v5:
-      enforce-patterns:
-        - .*/grimoire/api/internal/.*
-      # Standard-library structs (e.g. net/http.Server) are configured partially by design.
-      ignore-patterns:
-        - ^[^.]+\.[^.]+$
-        - .*/internal/platform/oas\..*
-        - .*/internal/platform/pg/queries\..*
     gocognit:
       min-complexity: 15
     depguard:
@@ -65,6 +57,10 @@ linters:
               desc: domain code never imports platform adapters
   exclusions:
     rules:
+      # Complete construction is enforced where it guards invariants: the pure rules engine.
+      - path-except: internal/rules/
+        linters:
+          - exhaustruct_v5
       # Sparse comments by convention: no doc comment required on every exported name.
       - linters:
           - revive

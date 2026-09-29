@@ -40,11 +40,38 @@ func (UnimplementedHandler) GetReadiness(ctx context.Context) (r GetReadinessRes
 	return r, ht.ErrNotImplemented
 }
 
+// GetSpell implements getSpell operation.
+//
+// One spell with its rules text and the conditions it mentions.
+//
+// GET /api/v1/compendium/spells/{slug}
+func (UnimplementedHandler) GetSpell(ctx context.Context, params GetSpellParams) (r GetSpellRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetStatus implements getStatus operation.
 //
 // Reports the running version and whether the database answers.
 //
 // GET /api/v1/status
 func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSources implements listSources operation.
+//
+// The documents the compendium draws from, with the attribution each license requires.
+//
+// GET /api/v1/compendium/sources
+func (UnimplementedHandler) ListSources(ctx context.Context) (r ListSourcesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSpells implements listSpells operation.
+//
+// Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+//
+// GET /api/v1/compendium/spells
+func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsParams) (r ListSpellsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
