@@ -1,15 +1,13 @@
+@import '@fontsource/cinzel/600.css';
+@import '@fontsource/cinzel/700.css';
+@import '@fontsource/alegreya/400.css';
+@import '@fontsource/alegreya/400-italic.css';
+@import '@fontsource/alegreya-sans/400.css';
+@import '@fontsource/alegreya-sans/700.css';
+@import '@fontsource/alegreya-sans/800.css';
+@import './tokens.css';
+
 :root {
-  --color-ground: #0e0b09;
-  --color-surface: #17120e;
-  --color-raised: #211a14;
-  --color-line: #3a2e22;
-  --color-gold: #d4af5a;
-  --color-gold-high: #ebcb7a;
-  --color-text: #efe6d2;
-  --color-text-2: #bfb199;
-  --font-display: Cinzel, serif;
-  --font-flavour: Alegreya, serif;
-  --font-ui: 'Alegreya Sans', sans-serif;
   color-scheme: dark;
 }
 body {
@@ -17,4 +15,12 @@ body {
   background: var(--color-ground);
   color: var(--color-text);
   font-family: var(--font-ui);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
 }
