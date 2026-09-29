@@ -124,5 +124,5 @@ tasks:
     desc: Run Postgres, the API with the dev identity, and Vite
     cmds:
       - docker compose up -d --wait postgres
-      - cmd: GRIMOIRE_DATABASE_URL='{{.DATABASE_URL}}' GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_DEV_SUBJECT=dev-dm go run ./cmd/grimoire serve & pnpm --filter @grimoire/web dev
+      - cmd: GRIMOIRE_DATABASE_URL='{{.DATABASE_URL}}' GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_AUTO_IMPORT=true GRIMOIRE_DEV_SUBJECT=dev-dm go run ./cmd/grimoire serve & pnpm --filter @grimoire/web dev
         dir: api

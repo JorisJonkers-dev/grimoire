@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL string
 	DevSubject  string
 	AutoMigrate bool
+	AutoImport  bool
 	RateLimit   int
 }
 
@@ -26,6 +27,7 @@ func Load(getenv func(string) string) (Config, error) {
 		DatabaseURL: getenv("GRIMOIRE_DATABASE_URL"),
 		DevSubject:  getenv("GRIMOIRE_DEV_SUBJECT"),
 		AutoMigrate: getenv("GRIMOIRE_AUTO_MIGRATE") == "true",
+		AutoImport:  getenv("GRIMOIRE_AUTO_IMPORT") == "true",
 		RateLimit:   600,
 	}
 	if c.Addr == "" {

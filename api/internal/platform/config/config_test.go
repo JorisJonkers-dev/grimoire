@@ -29,12 +29,13 @@ func TestLoadOverrides(t *testing.T) {
 		"GRIMOIRE_ADDR":                  ":9000",
 		"GRIMOIRE_DEV_SUBJECT":           "dev",
 		"GRIMOIRE_AUTO_MIGRATE":          "true",
+		"GRIMOIRE_AUTO_IMPORT":           "true",
 		"GRIMOIRE_RATE_LIMIT_PER_MINUTE": "42",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || c.DevSubject != "dev" {
+	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" {
 		t.Fatalf("overrides not applied: %+v", c)
 	}
 }

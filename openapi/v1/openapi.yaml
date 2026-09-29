@@ -19,11 +19,137 @@ servers:
 security:
   - forwardAuth: []
 tags:
+  - name: Compendium
+    description: SRD reference data.
   - name: Identity
     description: The signed-in account.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
+  /api/v1/compendium/spells:
+    get:
+      operationId: listSpells
+      summary: List spells
+      description: Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+      tags: [Compendium]
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+        - name: q
+          in: query
+          description: Part of the spell name.
+          schema: { type: string, minLength: 1, maxLength: 60 }
+        - name: level
+          in: query
+          description: Spell level; 0 is a cantrip.
+          schema: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        - name: school
+          in: query
+          description: Magic school slug.
+          schema: { $ref: "#/components/schemas/Slug" }
+        - name: class
+          in: query
+          description: Class slug whose spell list to show.
+          schema: { $ref: "#/components/schemas/Slug" }
+        - $ref: "#/components/parameters/Ruleset"
+        - name: cursor
+          in: query
+          description: Opaque cursor from the previous page.
+          schema: { type: string, minLength: 1, maxLength: 200, pattern: "^[A-Za-z0-9_-]+$" }
+        - name: limit
+          in: query
+          description: Page size.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: One page of spells.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpellPage"
+        "304":
+          description: Not modified since the given ETag.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/compendium/spells/{slug}:
+    get:
+      operationId: getSpell
+      summary: Get a spell
+      description: One spell with its rules text and the conditions it mentions.
+      tags: [Compendium]
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+        - name: slug
+          in: path
+          required: true
+          description: Spell slug.
+          schema: { $ref: "#/components/schemas/Slug" }
+        - $ref: "#/components/parameters/Ruleset"
+      responses:
+        "200":
+          description: The spell.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spell"
+        "304":
+          description: Not modified since the given ETag.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/compendium/sources:
+    get:
+      operationId: listSources
+      summary: List compendium sources
+      description: The documents the compendium draws from, with the attribution each license requires.
+      tags: [Compendium]
+      responses:
+        "200":
+          description: Every source document.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/Source"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -113,7 +239,21 @@ components:
       in: header
       name: X-User-Id
       description: Identity injected by the platform's forward-auth; never sent by clients directly.
+  parameters:
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      description: ETag from an earlier response; the server answers 304 when nothing changed.
+      schema: { type: string, maxLength: 100 }
+    Ruleset:
+      name: ruleset
+      in: query
+      description: Restrict to one ruleset; omitted, the 2024 rules lead.
+      schema: { $ref: "#/components/schemas/Ruleset" }
   headers:
+    ETag:
+      description: Version of the compendium this response came from.
+      schema: { type: string, maxLength: 100 }
     RateLimit-Limit:
       description: Requests allowed in the current window.
       schema:
@@ -150,6 +290,115 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
   schemas:
+    Slug:
+      type: string
+      description: Lower-case, hyphenated identifier.
+      minLength: 1
+      maxLength: 80
+      pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    Ruleset:
+      type: string
+      description: Rules document key.
+      enum: [srd-2024, srd-2014]
+    SpellSummary:
+      type: object
+      description: A spell as it appears in a list.
+      additionalProperties: false
+      required: [slug, name, level, school, ruleset, ritual, concentration]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        school: { $ref: "#/components/schemas/Slug" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        ritual: { type: boolean }
+        concentration: { type: boolean }
+    SpellPage:
+      type: object
+      description: One page of spells.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SpellSummary" }
+        nextCursor:
+          type: string
+          maxLength: 200
+          pattern: "^[A-Za-z0-9_-]+$"
+    SpellScaling:
+      type: object
+      description: Damage at a higher slot or character level.
+      additionalProperties: false
+      required: [kind, level, damageRoll]
+      properties:
+        kind: { type: string, enum: [slot, character] }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        damageRoll: { type: string, maxLength: 40 }
+    ConditionRef:
+      type: object
+      description: A condition named in rules text, with its own text for tooltips.
+      additionalProperties: false
+      required: [slug, name, description]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 60 }
+        description: { type: string, maxLength: 4000 }
+    Spell:
+      type: object
+      description: A spell with its full rules text.
+      additionalProperties: false
+      required: [slug, name, level, school, ruleset, ritual, concentration, castingTime, rangeText, verbal, somatic, material, duration, description, classes, damageTypes, attackRoll, scaling, mentions]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        school: { $ref: "#/components/schemas/Slug" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        ritual: { type: boolean }
+        concentration: { type: boolean }
+        castingTime: { type: string, maxLength: 120 }
+        rangeText: { type: string, maxLength: 120 }
+        rangeFeet: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        verbal: { type: boolean }
+        somatic: { type: boolean }
+        material: { type: boolean }
+        materialText: { type: string, maxLength: 500 }
+        duration: { type: string, maxLength: 120 }
+        description: { type: string, maxLength: 20000 }
+        higherLevel: { type: string, maxLength: 4000 }
+        classes:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/Slug" }
+        damageTypes:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/Slug" }
+        saveAbility: { $ref: "#/components/schemas/Slug" }
+        attackRoll: { type: boolean }
+        damageRoll: { type: string, maxLength: 40 }
+        scaling:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/SpellScaling" }
+        mentions:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/ConditionRef" }
+    Source:
+      type: object
+      description: A source document and its required attribution.
+      additionalProperties: false
+      required: [key, title, rulesetYear, license, attribution, url]
+      properties:
+        key: { type: string, maxLength: 40 }
+        title: { type: string, maxLength: 200 }
+        rulesetYear: { type: integer, format: int32, minimum: 2000, maximum: 2100 }
+        license: { type: string, maxLength: 40 }
+        attribution: { type: string, maxLength: 2000 }
+        url: { type: string, pattern: "^https://", maxLength: 500 }
     Me:
       type: object
       description: The authenticated account.

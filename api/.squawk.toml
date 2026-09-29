@@ -1,0 +1,2 @@
+# Game values (levels, ranges, years) are small and bounded; 32-bit integers are deliberate.
+excluded_rules = ["prefer-bigint-over-int"]

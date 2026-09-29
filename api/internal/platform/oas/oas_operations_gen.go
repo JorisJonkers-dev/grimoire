@@ -9,5 +9,8 @@ const (
 	GetHealthOperation    OperationName = "GetHealth"
 	GetMeOperation        OperationName = "GetMe"
 	GetReadinessOperation OperationName = "GetReadiness"
+	GetSpellOperation     OperationName = "GetSpell"
 	GetStatusOperation    OperationName = "GetStatus"
+	ListSourcesOperation  OperationName = "ListSources"
+	ListSpellsOperation   OperationName = "ListSpells"
 )

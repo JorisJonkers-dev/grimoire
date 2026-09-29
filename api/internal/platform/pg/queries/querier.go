@@ -10,7 +10,27 @@ import (
 )
 
 type Querier interface {
+	AbilityIDBySlug(ctx context.Context, slug string) (int64, error)
+	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
+	AddSpellDamageType(ctx context.Context, arg AddSpellDamageTypeParams) error
+	AddSpellScaling(ctx context.Context, arg AddSpellScalingParams) error
+	ClearSpellChildren(ctx context.Context, spellID int64) error
+	CompendiumVersion(ctx context.Context) (int64, error)
+	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
 	GetInstanceCreatedAt(ctx context.Context) (time.Time, error)
+	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
+	LatestSnapshotHash(ctx context.Context) (string, error)
+	ListSources(ctx context.Context) ([]ListSourcesRow, error)
+	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
+	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
+	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
+	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
+	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
+	UpsertCondition(ctx context.Context, arg UpsertConditionParams) error
+	UpsertDamageType(ctx context.Context, arg UpsertDamageTypeParams) (int64, error)
+	UpsertDocument(ctx context.Context, arg UpsertDocumentParams) (int64, error)
+	UpsertMagicSchool(ctx context.Context, arg UpsertMagicSchoolParams) (int64, error)
+	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

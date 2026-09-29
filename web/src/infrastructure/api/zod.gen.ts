@@ -3,6 +3,97 @@
 import * as z from 'zod';
 
 /**
+ * Lower-case, hyphenated identifier.
+ */
+export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+
+/**
+ * Rules document key.
+ */
+export const zRuleset = z.enum(['srd-2024', 'srd-2014']);
+
+/**
+ * A spell as it appears in a list.
+ */
+export const zSpellSummary = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    level: z.int().gte(0).lte(9),
+    school: zSlug,
+    ruleset: zRuleset,
+    ritual: z.boolean(),
+    concentration: z.boolean()
+});
+
+/**
+ * One page of spells.
+ */
+export const zSpellPage = z.object({
+    items: z.array(zSpellSummary).max(100),
+    nextCursor: z.string().max(200).regex(/^[A-Za-z0-9_-]+$/).optional()
+});
+
+/**
+ * Damage at a higher slot or character level.
+ */
+export const zSpellScaling = z.object({
+    kind: z.enum(['slot', 'character']),
+    level: z.int().gte(1).lte(20),
+    damageRoll: z.string().max(40)
+});
+
+/**
+ * A condition named in rules text, with its own text for tooltips.
+ */
+export const zConditionRef = z.object({
+    slug: zSlug,
+    name: z.string().max(60),
+    description: z.string().max(4000)
+});
+
+/**
+ * A spell with its full rules text.
+ */
+export const zSpell = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    level: z.int().gte(0).lte(9),
+    school: zSlug,
+    ruleset: zRuleset,
+    ritual: z.boolean(),
+    concentration: z.boolean(),
+    castingTime: z.string().max(120),
+    rangeText: z.string().max(120),
+    rangeFeet: z.int().gte(0).lte(1000000).optional(),
+    verbal: z.boolean(),
+    somatic: z.boolean(),
+    material: z.boolean(),
+    materialText: z.string().max(500).optional(),
+    duration: z.string().max(120),
+    description: z.string().max(20000),
+    higherLevel: z.string().max(4000).optional(),
+    classes: z.array(zSlug).max(20),
+    damageTypes: z.array(zSlug).max(20),
+    saveAbility: zSlug.optional(),
+    attackRoll: z.boolean(),
+    damageRoll: z.string().max(40).optional(),
+    scaling: z.array(zSpellScaling).max(40),
+    mentions: z.array(zConditionRef).max(40)
+});
+
+/**
+ * A source document and its required attribution.
+ */
+export const zSource = z.object({
+    key: z.string().max(40),
+    title: z.string().max(200),
+    rulesetYear: z.int().gte(2000).lte(2100),
+    license: z.string().max(40),
+    attribution: z.string().max(2000),
+    url: z.string().max(500).regex(/^https:\/\//)
+});
+
+/**
  * The authenticated account.
  */
 export const zMe = z.object({
@@ -36,6 +127,57 @@ export const zProblem = z.object({
     detail: z.string().max(2000).optional(),
     instance: z.string().max(500).optional()
 });
+
+/**
+ * ETag from an earlier response; the server answers 304 when nothing changed.
+ */
+export const zIfNoneMatch = z.string().max(100);
+
+/**
+ * Restrict to one ruleset; omitted, the 2024 rules lead.
+ */
+export const zRuleset2 = zRuleset;
+
+export const zListSpellsHeaders = z.object({
+    'If-None-Match': z.string().max(100).optional()
+});
+
+export const zListSpellsQuery = z.object({
+    q: z.string().min(1).max(60).optional(),
+    level: z.int().gte(0).lte(9).optional(),
+    school: zSlug.optional(),
+    class: zSlug.optional(),
+    ruleset: zRuleset.optional(),
+    cursor: z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/).optional(),
+    limit: z.int().gte(1).lte(100).optional().default(50)
+});
+
+/**
+ * One page of spells.
+ */
+export const zListSpellsResponse = zSpellPage;
+
+export const zGetSpellHeaders = z.object({
+    'If-None-Match': z.string().max(100).optional()
+});
+
+export const zGetSpellPath = z.object({
+    slug: zSlug
+});
+
+export const zGetSpellQuery = z.object({
+    ruleset: zRuleset.optional()
+});
+
+/**
+ * The spell.
+ */
+export const zGetSpellResponse = zSpell;
+
+/**
+ * Every source document.
+ */
+export const zListSourcesResponse = z.array(zSource).max(100);
 
 /**
  * The signed-in account.

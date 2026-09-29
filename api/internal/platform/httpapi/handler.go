@@ -19,9 +19,10 @@ type StatusSource interface {
 
 // Handler implements oas.Handler.
 type Handler struct {
-	Version string
-	Store   StatusSource
-	Log     *slog.Logger
+	Version    string
+	Store      StatusSource
+	Compendium CompendiumReader
+	Log        *slog.Logger
 }
 
 var _ oas.Handler = (*Handler)(nil)
