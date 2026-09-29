@@ -16,10 +16,11 @@ an entry here.
 
 | Snapshot | Source | Taken | Contents |
 |---|---|---|---|
-| `api/db/seeds/compendium.json` | [Open5e](https://open5e.com) v2 API (`srd-2024`, `srd-2014`) | 2026-09-29 | 658 spells, 30 condition texts |
+| `api/db/seeds/compendium.json.gz` | [Open5e](https://open5e.com) v2 API (`srd-2024`, `srd-2014`) | 2026-09-29 | 658 spells, 30 condition texts, 48 classes and subclasses, 22 species, 5 backgrounds, 18 feats, 75 weapons, 25 armor, 1,699 items and magic items, 656 monsters |
 
 The snapshot holds only SRD material; Open5e's own code is not included. Refresh it with
-`go run ./cmd/grimoire snapshot` from `api/`.
+`go run ./cmd/grimoire snapshot` from `api/`, then compare it with [5e-bits](https://www.dnd5eapi.co)
+using `go run ./cmd/grimoire crosscheck`, which rewrites [docs/compendium-crosscheck.md](docs/compendium-crosscheck.md).
 
 ## Third-party software
 

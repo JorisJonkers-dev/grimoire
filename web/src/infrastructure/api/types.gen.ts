@@ -84,6 +84,71 @@ export type Spell = {
 };
 
 /**
+ * A kind of compendium entry other than a spell.
+ */
+export type EntryKind = 'class' | 'species' | 'background' | 'feat' | 'weapon' | 'armor' | 'item' | 'magic-item' | 'monster' | 'condition';
+
+/**
+ * An entry as it appears in a list.
+ */
+export type EntrySummary = {
+    kind: EntryKind;
+    slug: Slug;
+    name: string;
+    subtitle: string;
+    ruleset: Ruleset;
+};
+
+/**
+ * One page of entries.
+ */
+export type EntryPage = {
+    items: Array<EntrySummary>;
+    nextCursor?: string;
+};
+
+/**
+ * A labelled value in an entry's header.
+ */
+export type EntryFact = {
+    label: string;
+    value: string;
+};
+
+/**
+ * A titled block of rules text.
+ */
+export type EntrySection = {
+    title: string;
+    text: string;
+};
+
+/**
+ * An entry rendered for reading.
+ */
+export type Entry = {
+    kind: EntryKind;
+    slug: Slug;
+    name: string;
+    subtitle: string;
+    ruleset: Ruleset;
+    facts: Array<EntryFact>;
+    sections: Array<EntrySection>;
+    mentions: Array<ConditionRef>;
+};
+
+/**
+ * Entries of one kind by Automation Level.
+ */
+export type AutomationCount = {
+    kind: 'spell' | 'class' | 'species' | 'background' | 'feat' | 'weapon' | 'armor' | 'item' | 'magic-item' | 'monster' | 'condition';
+    total: number;
+    full: number;
+    partial: number;
+    manual: number;
+};
+
+/**
  * A source document and its required attribution.
  */
 export type Source = {
@@ -251,6 +316,146 @@ export type GetSpellResponses = {
 };
 
 export type GetSpellResponse = GetSpellResponses[keyof GetSpellResponses];
+
+export type ListEntriesData = {
+    body?: never;
+    headers?: {
+        /**
+         * ETag from an earlier response; the server answers 304 when nothing changed.
+         */
+        'If-None-Match'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * Which kind of entry to list.
+         */
+        kind: EntryKind;
+        /**
+         * Part of the entry name.
+         */
+        q?: string;
+        /**
+         * Restrict to one ruleset; omitted, the 2024 rules lead.
+         */
+        ruleset?: Ruleset;
+        /**
+         * Opaque cursor from the previous page.
+         */
+        cursor?: string;
+        /**
+         * Page size.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/compendium/entries';
+};
+
+export type ListEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListEntriesError = ListEntriesErrors[keyof ListEntriesErrors];
+
+export type ListEntriesResponses = {
+    /**
+     * One page of entries.
+     */
+    200: EntryPage;
+};
+
+export type ListEntriesResponse = ListEntriesResponses[keyof ListEntriesResponses];
+
+export type GetEntryData = {
+    body?: never;
+    headers?: {
+        /**
+         * ETag from an earlier response; the server answers 304 when nothing changed.
+         */
+        'If-None-Match'?: string;
+    };
+    path: {
+        /**
+         * Entry kind.
+         */
+        kind: EntryKind;
+        /**
+         * Entry slug.
+         */
+        slug: Slug;
+    };
+    query?: {
+        /**
+         * Restrict to one ruleset; omitted, the 2024 rules lead.
+         */
+        ruleset?: Ruleset;
+    };
+    url: '/api/v1/compendium/entries/{kind}/{slug}';
+};
+
+export type GetEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetEntryError = GetEntryErrors[keyof GetEntryErrors];
+
+export type GetEntryResponses = {
+    /**
+     * The entry.
+     */
+    200: Entry;
+};
+
+export type GetEntryResponse = GetEntryResponses[keyof GetEntryResponses];
+
+export type GetAutomationCoverageData = {
+    body?: never;
+    headers?: {
+        /**
+         * ETag from an earlier response; the server answers 304 when nothing changed.
+         */
+        'If-None-Match'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/compendium/automation';
+};
+
+export type GetAutomationCoverageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAutomationCoverageError = GetAutomationCoverageErrors[keyof GetAutomationCoverageErrors];
+
+export type GetAutomationCoverageResponses = {
+    /**
+     * Counts per kind.
+     */
+    200: Array<AutomationCount>;
+};
+
+export type GetAutomationCoverageResponse = GetAutomationCoverageResponses[keyof GetAutomationCoverageResponses];
 
 export type ListSourcesData = {
     body?: never;

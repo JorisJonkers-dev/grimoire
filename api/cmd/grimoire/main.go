@@ -2,6 +2,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,6 +17,7 @@ import (
 	"time"
 
 	"github.com/JorisJonkers-dev/grimoire/api/db"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/crosscheck"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/open5e"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
@@ -45,8 +48,11 @@ func run(args []string, logger *slog.Logger) error {
 	if len(args) > 0 {
 		cmd = args[0]
 	}
-	if cmd == "snapshot" {
+	switch cmd {
+	case "snapshot":
 		return writeSnapshot(ctx, args[1:])
+	case "crosscheck":
+		return crossCheck(ctx, args[1:])
 	}
 	cfg, err := config.Load(os.Getenv)
 	if err != nil {
@@ -60,7 +66,7 @@ func run(args []string, logger *slog.Logger) error {
 	case "serve":
 		return serve(ctx, cfg, logger)
 	default:
-		return fmt.Errorf("unknown command %q (want serve, migrate, import or snapshot)", cmd)
+		return fmt.Errorf("unknown command %q (want serve, migrate, import, snapshot or crosscheck)", cmd)
 	}
 }
 
@@ -70,16 +76,41 @@ func writeSnapshot(ctx context.Context, args []string) error {
 	if len(args) > 0 {
 		out = args[0]
 	}
-	client := open5e.Client{BaseURL: "https://api.open5e.com", HTTP: &http.Client{Timeout: 60 * time.Second}}
+	client := open5e.Client{BaseURL: "https://api.open5e.com", HTTP: &http.Client{Timeout: 90 * time.Second}, Backoff: 5 * time.Second}
 	snap, err := client.Fetch(ctx)
 	if err != nil {
 		return err
 	}
-	raw, err := json.MarshalIndent(snap, "", " ")
+	raw, err := json.Marshal(snap)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(out, append(raw, '\n'), 0o600) //nolint:gosec // developer command writing where the developer points it
+	var buf bytes.Buffer
+	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if _, err := zw.Write(raw); err != nil {
+		return err
+	}
+	if err := zw.Close(); err != nil {
+		return err
+	}
+	return os.WriteFile(out, buf.Bytes(), 0o600) //nolint:gosec // developer command writing where the developer points it
+}
+
+func crossCheck(ctx context.Context, args []string) error {
+	snap, _, err := snapshot.Load(seeds())
+	if err != nil {
+		return err
+	}
+	client := crosscheck.Client{BaseURL: "https://www.dnd5eapi.co", HTTP: &http.Client{Timeout: 60 * time.Second}, Workers: 8}
+	report, err := client.Run(ctx, snap)
+	if err != nil {
+		return err
+	}
+	out := "../docs/compendium-crosscheck.md"
+	if len(args) > 0 {
+		out = args[0]
+	}
+	return os.WriteFile(out, []byte(report.Markdown()), 0o600) //nolint:gosec // developer command writing where the developer points it
 }
 
 func importCompendium(ctx context.Context, cfg config.Config, logger *slog.Logger) error {

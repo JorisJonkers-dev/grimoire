@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
 )
@@ -39,6 +40,7 @@ func srdDocuments() []snapshot.Document {
 type Client struct {
 	BaseURL string
 	HTTP    *http.Client
+	Backoff time.Duration
 }
 
 type page[T any] struct {
@@ -107,6 +109,11 @@ func (c Client) Fetch(ctx context.Context) (snapshot.Snapshot, error) {
 		return snapshot.Snapshot{}, err
 	}
 	snap := snapshot.Snapshot{Source: "Open5e v2 (" + c.BaseURL + ")", Documents: documents}
+	for _, k := range keys {
+		if err := c.fetchEntries(ctx, &snap, k); err != nil {
+			return snapshot.Snapshot{}, err
+		}
+	}
 	for _, s := range spells {
 		snap.Spells = append(snap.Spells, mapSpell(s))
 	}
@@ -142,7 +149,7 @@ func fetchAll[T any](ctx context.Context, c Client, path string) ([]T, error) {
 		if err != nil {
 			return nil, fmt.Errorf("open5e: request: %w", err)
 		}
-		res, err := c.HTTP.Do(req)
+		res, err := c.do(req)
 		if err != nil {
 			return nil, fmt.Errorf("open5e: get %s: %w", next, err)
 		}
@@ -162,6 +169,23 @@ func fetchAll[T any](ctx context.Context, c Client, path string) ([]T, error) {
 		}
 	}
 	return out, nil
+}
+
+// do retries server errors a few times; Open5e sits behind a proxy that fails intermittently.
+func (c Client) do(req *http.Request) (*http.Response, error) {
+	var res *http.Response
+	var err error
+	for attempt := range 4 {
+		if attempt > 0 {
+			time.Sleep(c.Backoff * time.Duration(attempt))
+		}
+		res, err = c.HTTP.Do(req) //nolint:gosec // G704: developer command; URLs are the configured base or its own next links
+		if err != nil || res.StatusCode < http.StatusInternalServerError {
+			return res, err
+		}
+		_ = res.Body.Close()
+	}
+	return res, err
 }
 
 func mapSpell(s apiSpell) snapshot.Spell {

@@ -11,26 +11,74 @@ import (
 
 type Querier interface {
 	AbilityIDBySlug(ctx context.Context, slug string) (int64, error)
+	AddBackgroundBenefit(ctx context.Context, arg AddBackgroundBenefitParams) error
+	AddClassFeature(ctx context.Context, arg AddClassFeatureParams) (int64, error)
+	AddClassFeatureLevel(ctx context.Context, arg AddClassFeatureLevelParams) error
+	AddClassSave(ctx context.Context, arg AddClassSaveParams) error
+	AddFeatBenefit(ctx context.Context, arg AddFeatBenefitParams) error
+	AddMonsterAction(ctx context.Context, arg AddMonsterActionParams) (int64, error)
+	AddMonsterAttack(ctx context.Context, arg AddMonsterAttackParams) error
+	AddMonsterRelation(ctx context.Context, arg AddMonsterRelationParams) error
+	AddMonsterStat(ctx context.Context, arg AddMonsterStatParams) error
+	AddMonsterTrait(ctx context.Context, arg AddMonsterTraitParams) error
+	AddSpeciesTrait(ctx context.Context, arg AddSpeciesTraitParams) error
 	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
 	AddSpellDamageType(ctx context.Context, arg AddSpellDamageTypeParams) error
 	AddSpellScaling(ctx context.Context, arg AddSpellScalingParams) error
+	AddWeaponProperty(ctx context.Context, arg AddWeaponPropertyParams) error
+	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
+	ClassFeatures(ctx context.Context, classID int64) ([]ClassFeaturesRow, error)
+	ClassSaves(ctx context.Context, classID int64) ([]string, error)
+	ClearBackgroundBenefits(ctx context.Context, backgroundID int64) error
+	ClearClassChildren(ctx context.Context, classID int64) error
+	ClearFeatBenefits(ctx context.Context, featID int64) error
+	ClearMonsterChildren(ctx context.Context, monsterID int64) error
+	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
+	ClearWeaponProperties(ctx context.Context, weaponID int64) error
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
+	CountEntriesByKind(ctx context.Context) ([]CountEntriesByKindRow, error)
+	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
+	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)
+	GetArmorDetail(ctx context.Context, id int64) (GetArmorDetailRow, error)
+	GetBackgroundDetail(ctx context.Context, id int64) (string, error)
+	GetClassDetail(ctx context.Context, id int64) (GetClassDetailRow, error)
+	GetConditionDetail(ctx context.Context, id int64) (string, error)
+	GetFeatDetail(ctx context.Context, id int64) (GetFeatDetailRow, error)
 	GetInstanceCreatedAt(ctx context.Context) (time.Time, error)
+	GetItemDetail(ctx context.Context, id int64) (GetItemDetailRow, error)
+	GetMonsterDetail(ctx context.Context, id int64) (GetMonsterDetailRow, error)
+	GetSpeciesDetail(ctx context.Context, id int64) (GetSpeciesDetailRow, error)
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
+	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
+	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
+	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
+	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
+	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
+	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
+	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
+	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error
+	UpsertBackground(ctx context.Context, arg UpsertBackgroundParams) (int64, error)
+	UpsertClass(ctx context.Context, arg UpsertClassParams) (int64, error)
 	UpsertCondition(ctx context.Context, arg UpsertConditionParams) error
 	UpsertDamageType(ctx context.Context, arg UpsertDamageTypeParams) (int64, error)
 	UpsertDocument(ctx context.Context, arg UpsertDocumentParams) (int64, error)
+	UpsertFeat(ctx context.Context, arg UpsertFeatParams) (int64, error)
+	UpsertItem(ctx context.Context, arg UpsertItemParams) error
 	UpsertMagicSchool(ctx context.Context, arg UpsertMagicSchoolParams) (int64, error)
+	UpsertMonster(ctx context.Context, arg UpsertMonsterParams) (int64, error)
+	UpsertSpecies(ctx context.Context, arg UpsertSpeciesParams) (int64, error)
 	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)
+	UpsertWeapon(ctx context.Context, arg UpsertWeaponParams) (int64, error)
+	WeaponProperties(ctx context.Context, weaponID int64) ([]WeaponPropertiesRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

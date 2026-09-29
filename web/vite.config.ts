@@ -17,7 +17,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.{ts,vue}'],
       exclude: ['src/infrastructure/api/**', 'src/test/**', 'src/main.ts', 'src/**/*.spec.ts', 'src/env.d.ts'],
-      thresholds: { lines: 95, branches: 95, functions: 95, statements: 95 },
+      thresholds: { lines: 98, branches: 95, functions: 98, statements: 98 },
     },
   },
 })

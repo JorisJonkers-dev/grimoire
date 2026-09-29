@@ -119,3 +119,50 @@ func FindMentions(conditions []Condition, texts ...string) []Condition {
 	sort.Slice(found, func(i, j int) bool { return found[i].Name < found[j].Name })
 	return found
 }
+
+// EntryFilter narrows a listing of one kind.
+type EntryFilter struct {
+	Kind     string
+	Query    string
+	Ruleset  string
+	After    *Cursor
+	PageSize int
+}
+
+// EntrySummary is one row of an entry listing.
+type EntrySummary struct {
+	Kind     string
+	Slug     string
+	Name     string
+	Subtitle string
+	Ruleset  string
+}
+
+// Fact is a labelled value in an entry's header, e.g. "Armor Class: 17".
+type Fact struct {
+	Label string
+	Value string
+}
+
+// Section is a titled block of rules text.
+type Section struct {
+	Title string
+	Text  string
+}
+
+// EntryDetail is an entry rendered for reading.
+type EntryDetail struct {
+	EntrySummary
+	Facts    []Fact
+	Sections []Section
+	Mentions []Condition
+}
+
+// AutomationCount says how much of one kind the rules engine can compute.
+type AutomationCount struct {
+	Kind    string
+	Total   int
+	Full    int
+	Partial int
+	Manual  int
+}

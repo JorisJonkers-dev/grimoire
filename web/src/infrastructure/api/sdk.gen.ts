@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses } from './types.gen';
-import { zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse } from './zod.gen';
+import type { GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses } from './types.gen';
+import { zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -54,6 +54,60 @@ export const getSpell = <ThrowOnError extends boolean = false>(options: Options<
     responseValidator: async (data) => await zGetSpellResponse.parseAsync(data),
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/compendium/spells/{slug}',
+    ...options
+});
+
+/**
+ * List compendium entries
+ *
+ * Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+ */
+export const listEntries = <ThrowOnError extends boolean = false>(options: Options<ListEntriesData, ThrowOnError>): RequestResult<ListEntriesResponses, ListEntriesErrors, ThrowOnError> => (options.client ?? client).get<ListEntriesResponses, ListEntriesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        headers: zListEntriesHeaders.optional(),
+        path: z.never().optional(),
+        query: zListEntriesQuery
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListEntriesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/entries',
+    ...options
+});
+
+/**
+ * Get a compendium entry
+ *
+ * One entry rendered for reading, with the conditions its text mentions.
+ */
+export const getEntry = <ThrowOnError extends boolean = false>(options: Options<GetEntryData, ThrowOnError>): RequestResult<GetEntryResponses, GetEntryErrors, ThrowOnError> => (options.client ?? client).get<GetEntryResponses, GetEntryErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        headers: zGetEntryHeaders.optional(),
+        path: zGetEntryPath,
+        query: zGetEntryQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetEntryResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/entries/{kind}/{slug}',
+    ...options
+});
+
+/**
+ * Get automation coverage
+ *
+ * How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
+ */
+export const getAutomationCoverage = <ThrowOnError extends boolean = false>(options?: Options<GetAutomationCoverageData, ThrowOnError>): RequestResult<GetAutomationCoverageResponses, GetAutomationCoverageErrors, ThrowOnError> => (options?.client ?? client).get<GetAutomationCoverageResponses, GetAutomationCoverageErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        headers: zGetAutomationCoverageHeaders.optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetAutomationCoverageResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/automation',
     ...options
 });
 
