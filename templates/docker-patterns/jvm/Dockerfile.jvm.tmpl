@@ -1,0 +1,48 @@
+# syntax=docker/dockerfile:1.7
+
+ARG JVM_BUILD_IMAGE="{{jvm_build_image}}"
+ARG JVM_RUNTIME_IMAGE="{{jvm_runtime_image}}"
+
+FROM ${JVM_BUILD_IMAGE} AS build
+WORKDIR /workspace
+
+COPY {{jvm_dependency_manifest_paths}} ./
+RUN --mount=type=cache,target={{jvm_build_cache_target}} \
+    {{jvm_dependency_resolution_command}}
+
+COPY {{jvm_source_paths}} ./
+RUN --mount=type=cache,target={{jvm_build_cache_target}} \
+    {{jvm_build_command}}
+
+FROM ${JVM_RUNTIME_IMAGE} AS runtime
+ARG APP_UID="{{app_uid}}"
+ARG APP_GID="{{app_gid}}"
+ARG APP_USER="{{app_user}}"
+ARG APP_GROUP="{{app_group}}"
+ARG BUILD_REVISION="{{build_revision}}"
+
+WORKDIR {{app_home}}
+
+RUN {{runtime_user_create_command}}
+
+COPY --from=build --chown=${APP_UID}:${APP_GID} {{jvm_artifact_from_build_stage}} {{app_jar_path}}
+COPY --chown=${APP_UID}:${APP_GID} {{otel_entrypoint_source}} {{entrypoint_path}}
+COPY --chown=${APP_UID}:${APP_GID} {{otel_java_agent_source}} {{otel_java_agent_path}}
+RUN chmod 0555 {{entrypoint_path}}
+
+ENV SERVICE_VERSION="${BUILD_REVISION}" \
+    JAVA_OPTS="{{java_opts}}" \
+    OTEL_JAVA_AGENT_ENABLED="{{otel_java_agent_enabled}}" \
+    OTEL_JAVA_AGENT_PATH="{{otel_java_agent_path}}" \
+    OTEL_SERVICE_NAME="{{otel_service_name}}" \
+    OTEL_EXPORTER_OTLP_ENDPOINT="{{otel_exporter_otlp_endpoint}}" \
+    OTEL_RESOURCE_ATTRIBUTES="{{otel_resource_attributes}}"
+
+USER ${APP_UID}:${APP_GID}
+EXPOSE {{server_port}}
+
+HEALTHCHECK --interval={{healthcheck_interval}} --timeout={{healthcheck_timeout}} --start-period={{healthcheck_start_period}} --retries={{healthcheck_retries}} \
+    CMD {{healthcheck_command}}
+
+ENTRYPOINT ["{{entrypoint_path}}"]
+CMD ["java", "-jar", "{{app_jar_path}}"]

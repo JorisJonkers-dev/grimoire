@@ -1,0 +1,26 @@
+name: Dependency review
+
+on:
+  pull_request:
+    branches: ["{{default_branch}}"]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Review dependency changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Review dependencies
+        uses: actions/dependency-review-action@v5.0.0
+        with:
+          fail-on-severity: "{{fail_on_severity}}"
+          deny-licenses: "{{deny_licenses_csv}}"
+          comment-summary-in-pr: on-failure

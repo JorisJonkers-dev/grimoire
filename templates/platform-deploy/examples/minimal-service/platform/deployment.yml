@@ -1,0 +1,23 @@
+# minimal-service example — stateless, no routes, no raw manifests.
+# The smallest deployment.yml that passes the SC-11 readiness scorecard:
+# route/stateful/raw-manifests checks all evaluate to not_applicable.
+apiVersion: deployment.jorisjonkers.dev/v2
+kind: Deployment
+metadata:
+  name: minimal-service
+spec:
+  schemaVersion: "0.16.0"
+  namespace: minimal-service
+  platform:
+    layer: apps-core
+  workloads:
+    - name: minimal-service
+      image: minimal-service
+      health:
+        path: /health
+        port: 8080
+        timeoutClass: stateless
+        mandatory: true
+      rollbackTargetRetention:
+        minimumDays: 90
+        acknowledged: true

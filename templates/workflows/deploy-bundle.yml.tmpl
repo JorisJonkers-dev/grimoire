@@ -1,0 +1,23 @@
+name: Deploy Bundle
+
+on:
+  pull_request:
+    paths:
+      - deploy/**
+      - .github/workflows/deploy-bundle.yml
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy-bundle:
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/deploy-bundle.yml@{{github_workflows_ref}}
+    with:
+      deploy-dir: deploy
+      images-lock-path: '{{images_lock_path}}'
+    secrets: inherit

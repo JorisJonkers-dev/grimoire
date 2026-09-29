@@ -1,0 +1,54 @@
+# Platform-strict release flow for deploy-platform service repos.
+#
+# Differs from the org-default release.yml in ONE deliberate way: the App
+# token is MANDATORY. release-please must author the release tag with the
+# App token so the resulting v*.*.* tag push triggers publish.yml — tags
+# created with the default GITHUB_TOKEN do not trigger downstream workflows.
+# There is intentionally NO GITHUB_TOKEN fallback.
+#
+# RULE: no job may `needs: release-please` here — the tag push triggers
+# publish.yml as an independent event. Publishing lives in publish.yml.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}   # top-level deny; per-job grant
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: mint-app-token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.{{release_app_id_var}} }}
+          private-key: ${{ secrets.{{release_app_key_var}} }}
+
+      - name: assert-token-minted
+        # Fail loudly if the App token is missing — never fall back to GITHUB_TOKEN.
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if [ -z "$APP_TOKEN" ]; then
+            echo "E_APP_TOKEN_MISSING: Release App token was not minted." >&2
+            echo "Secrets {{release_app_id_var}} and {{release_app_key_var}} must be configured." >&2
+            echo "GITHUB_TOKEN fallback is intentionally forbidden." >&2
+            exit 1
+          fi
+          echo "App token minted successfully (token prefix: ${APP_TOKEN:0:4}...)"
+
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

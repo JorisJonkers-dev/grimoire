@@ -1,0 +1,42 @@
+# Deployment contract for {{service_name}} (deployment v2).
+# Validated by deploy-preview.yml on every PR touching platform/ and rendered
+# into the deploy artifact by publish.yml. Run ./platform/render-local.sh for
+# a local CI-parity check.
+apiVersion: deployment.jorisjonkers.dev/v2
+kind: Deployment
+metadata:
+  name: '{{service_name}}'
+spec:
+  schemaVersion: '{{schema_version}}'
+  namespace: '{{service_namespace}}'
+  # platform.layer is REQUIRED for the first homelab-deploy registration
+  # (register-service derives the registry layer from it).
+  platform:
+    layer: apps-core
+  workloads:
+    - name: '{{service_name}}'
+      image: '{{image_alias}}'
+      health:
+        path: /health
+        port: 8080
+        timeoutClass: stateless
+        mandatory: true
+      rollbackTargetRetention:
+        minimumDays: 90
+        acknowledged: true
+      # Uncomment to expose HTTP routes. When any route is declared, BOTH
+      # owner and authMode are required (scorecard: route_owner_authmode_declared).
+      # routes:
+      #   - host: '{{service_name}}.example.internal'
+      #     owner: '{{service_name}}'
+      #     authMode: sso
+      # Stateful workloads must declare a migrationPolicy
+      # (scorecard: stateful_policy_declared).
+      # stateful: true
+      # migrationPolicy:
+      #   strategy: expand-contract
+      # Extra raw Kubernetes manifests must opt in and are guarded against
+      # forbidden kinds (scorecard: raw_manifests_guarded).
+      # rawManifests:
+      #   enabled: true
+      #   root: raw-manifests

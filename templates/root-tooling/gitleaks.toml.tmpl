@@ -1,0 +1,12 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Repo-local false positives; keep entries specific and documented."
+regexTarget = "match"
+regexes = [
+  '''{{fixture_token_regex}}'''
+]
+paths = [
+  '''{{fixture_path_regex}}'''
+]

@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+# shellcheck disable=SC2086
+set -eu
+
+service_version="${SERVICE_VERSION:-}"
+deployment_environment="${DEPLOYMENT_ENVIRONMENT:-}"
+otel_resource_attributes="${OTEL_RESOURCE_ATTRIBUTES:-}"
+otel_java_agent_enabled="${OTEL_JAVA_AGENT_ENABLED:-}"
+otel_java_agent_path="${OTEL_JAVA_AGENT_PATH:-}"
+java_opts="${JAVA_OPTS:-}"
+
+if [ -z "${service_version}" ]; then service_version="{{service_version}}"; fi
+if [ -z "${deployment_environment}" ]; then deployment_environment="{{deployment_environment}}"; fi
+if [ -z "${otel_resource_attributes}" ]; then otel_resource_attributes="{{otel_resource_attributes}}"; fi
+if [ -z "${otel_java_agent_enabled}" ]; then otel_java_agent_enabled="{{otel_java_agent_enabled}}"; fi
+if [ -z "${otel_java_agent_path}" ]; then otel_java_agent_path="{{otel_java_agent_path}}"; fi
+if [ -z "${java_opts}" ]; then java_opts="{{java_opts}}"; fi
+
+attrs="service.version=${service_version}"
+if [ -n "${deployment_environment}" ]; then
+  attrs="${attrs},deployment.environment=${deployment_environment}"
+fi
+
+if [ -n "${otel_resource_attributes}" ]; then
+  export OTEL_RESOURCE_ATTRIBUTES="${otel_resource_attributes},${attrs}"
+else
+  export OTEL_RESOURCE_ATTRIBUTES="${attrs}"
+fi
+
+if [ -z "${OTEL_SERVICE_NAME:-}" ]; then export OTEL_SERVICE_NAME="{{otel_service_name}}"; fi
+if [ -z "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" ]; then export OTEL_EXPORTER_OTLP_ENDPOINT="{{otel_exporter_otlp_endpoint}}"; fi
+
+otel_agent_arg=""
+if [ "${otel_java_agent_enabled}" = "true" ] && [ -n "${otel_java_agent_path}" ]; then
+  otel_agent_arg="-javaagent:${otel_java_agent_path}"
+fi
+
+if [ "$#" -eq 0 ]; then
+  set -- java -jar "{{app_jar_path}}"
+fi
+
+if [ "${1#-}" != "$1" ]; then
+  set -- java ${java_opts} ${otel_agent_arg} "$@"
+elif [ "$1" = "java" ]; then
+  shift
+  set -- java ${java_opts} ${otel_agent_arg} "$@"
+fi
+
+exec "$@"

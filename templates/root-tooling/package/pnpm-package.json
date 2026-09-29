@@ -1,0 +1,25 @@
+{
+  "name": "{{repo_name}}",
+  "private": true,
+  "license": "LicenseRef-JorisJonkers-Proprietary-1.0",
+  "type": "module",
+  "packageManager": "pnpm@{{pnpm_version}}",
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "{{antfu_eslint_config_version}}",
+    "eslint": "{{eslint_version}}",
+    "husky": "{{husky_version}}",
+    "lint-staged": "{{lint_staged_version}}",
+    "prettier": "{{prettier_version}}",
+    "typescript": "{{typescript_version}}"
+  }
+}

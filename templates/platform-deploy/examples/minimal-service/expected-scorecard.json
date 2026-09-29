@@ -1,0 +1,12 @@
+{
+  "schema_pinned": "pass",
+  "context_pinned": "pass",
+  "no_latest_images": "pass",
+  "health_declared": "pass",
+  "route_owner_authmode_declared": "not_applicable",
+  "rollback_retention_acknowledged": "pass",
+  "no_raw_secrets": "pass",
+  "stateful_policy_declared": "not_applicable",
+  "raw_manifests_guarded": "not_applicable",
+  "npm_signatures_verified": "pass"
+}

@@ -1,0 +1,12 @@
+name: "{{codeql_config_name}}"
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - "{{generated_api_path}}"
+  - "{{generated_assets_path}}"
+  - "**/dist"
+  - "**/node_modules"
+  - "**/*.min.js"
+  - "**/*.gen.ts"

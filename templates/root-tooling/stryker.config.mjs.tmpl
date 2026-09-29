@@ -1,0 +1,21 @@
+export default {
+  packageManager: '{{package_manager}}',
+  testRunner: '{{test_runner}}',
+  coverageAnalysis: 'perTest',
+  mutate: [
+    '{{source_glob}}',
+    '!**/*.d.ts',
+    '!**/*.test.ts',
+    '!**/*.spec.ts',
+    '!**/__tests__/**',
+    '!**/generated/**',
+    '!**/dist/**',
+  ],
+  ignoreStatic: true,
+  reporters: ['html', 'clear-text', 'progress'],
+  thresholds: {
+    high: 80,
+    low: 70,
+    break: 70,
+  },
+}

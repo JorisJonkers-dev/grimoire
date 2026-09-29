@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/tofu-ci.yml@{{github_workflows_ref}}
+    with:
+      working-directory: '.'
+      # Format and validate need no credentials. init runs with -backend=false
+      # and providers resolve from the registry, so a module that configures a
+      # remote system is still fully checked without reaching that system.
+      backend-init-args: '-backend=false'
+      # Enable only where the runner can reach the providers and the backend. A
+      # plan reporting pending changes fails the job, so drift between what the
+      # module declares and what exists shows up as a red check rather than a
+      # surprise at apply time.
+      plan: false
+    secrets: inherit
+
+  pipeline-complete:
+    name: Pipeline Complete
+    if: always()
+    needs: [verify]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

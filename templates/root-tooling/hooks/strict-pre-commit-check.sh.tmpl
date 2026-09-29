@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Optional strict local pre-commit gate. Enable only after the target repo has
+# the referenced tasks and tools.
+set -euo pipefail
+
+PACKAGE_MANAGER="${PACKAGE_MANAGER:-{{package_manager}}}"
+GRADLE_CMD="${GRADLE_CMD:-./gradlew}"
+DETEKT_CONFIG="${DETEKT_CONFIG:-config/detekt/detekt.yml}"
+FRONTEND_LINT="${FRONTEND_LINT:-${PACKAGE_MANAGER} lint}"
+FRONTEND_FORMAT_CHECK="${FRONTEND_FORMAT_CHECK:-${PACKAGE_MANAGER} format:check}"
+
+if [[ -x "$GRADLE_CMD" ]]; then
+  gradle_tasks=(detekt ktlintCheck)
+  if [[ -f "$DETEKT_CONFIG" ]]; then
+    "$GRADLE_CMD" --no-daemon "${gradle_tasks[@]}"
+  else
+    "$GRADLE_CMD" --no-daemon ktlintCheck
+  fi
+fi
+
+if command -v "$PACKAGE_MANAGER" >/dev/null 2>&1; then
+  $FRONTEND_LINT
+  $FRONTEND_FORMAT_CHECK
+fi
+
+if command -v gitleaks >/dev/null 2>&1 && [[ -f .gitleaks.toml ]]; then
+  gitleaks detect --source . --config .gitleaks.toml --no-banner
+fi

@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1.7
+
+ARG NGINX_RUNTIME_IMAGE="{{unprivileged_nginx_runtime_image}}"
+
+FROM ${NGINX_RUNTIME_IMAGE} AS runtime
+ARG NGINX_UID="{{nginx_uid}}"
+ARG NGINX_GID="{{nginx_gid}}"
+
+USER 0
+WORKDIR {{nginx_html_dir}}
+
+COPY --chown=${NGINX_UID}:${NGINX_GID} {{nginx_config_path}} /etc/nginx/conf.d/default.conf
+COPY --chown=${NGINX_UID}:${NGINX_GID} {{static_assets_dir}} {{nginx_html_dir}}
+
+USER ${NGINX_UID}:${NGINX_GID}
+EXPOSE {{unprivileged_listen_port}}
+HEALTHCHECK --interval={{healthcheck_interval}} --timeout={{healthcheck_timeout}} --start-period={{healthcheck_start_period}} --retries={{healthcheck_retries}} \
+    CMD {{nginx_healthcheck_command}}
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,67 @@
+import antfu from '@antfu/eslint-config'
+
+export default antfu(
+  {
+    vue: true,
+    typescript: true,
+    formatters: false,
+    ignores: {{generated_ignores_json}},
+  },
+  {
+    rules: {
+      'style/brace-style': ['error', '1tbs'],
+      'style/arrow-parens': ['error', 'always'],
+      'style/quotes': ['error', 'single', { avoidEscape: true }],
+      'antfu/if-newline': 'off',
+      'no-console': 'warn',
+      'ts/no-explicit-any': 'error',
+      'ts/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
+      ],
+      'ts/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
+    },
+  },
+  {
+    files: ['**/*.vue'],
+    rules: {
+      'vue/define-emits-declaration': 'error',
+      'vue/define-props-declaration': 'error',
+      'vue/no-required-prop-with-default': 'error',
+      'vue/require-prop-types': 'error',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/html-indent': 'off',
+      'vue/html-self-closing': [
+        'error',
+        {
+          html: { void: 'any', normal: 'always', component: 'always' },
+          svg: 'always',
+          math: 'always',
+        },
+      ],
+      'vue/max-len': [
+        'error',
+        {
+          code: 120,
+          template: 120,
+          ignoreUrls: true,
+          ignoreStrings: true,
+          ignoreTemplateLiterals: true,
+          ignoreHTMLAttributeValues: true,
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts', '**/e2e/**'],
+    rules: {
+      'ts/no-explicit-any': 'off',
+      'ts/explicit-function-return-type': 'off',
+    },
+  },
+)

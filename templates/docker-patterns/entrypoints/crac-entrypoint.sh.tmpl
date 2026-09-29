@@ -1,0 +1,65 @@
+#!/usr/bin/env sh
+# shellcheck disable=SC2086
+set -eu
+
+app_jar="${1:-}"
+mode="${CRAC_MODE:-}"
+checkpoint_dir="${CRAC_CHECKPOINT_DIR:-}"
+otel_java_agent_enabled="${OTEL_JAVA_AGENT_ENABLED:-}"
+otel_java_agent_path="${OTEL_JAVA_AGENT_PATH:-}"
+service_version="${SERVICE_VERSION:-}"
+deployment_environment="${DEPLOYMENT_ENVIRONMENT:-}"
+otel_resource_attributes="${OTEL_RESOURCE_ATTRIBUTES:-}"
+java_opts="${JAVA_OPTS:-}"
+crac_train_java_args="${CRAC_TRAIN_JAVA_ARGS:-}"
+crac_restore_java_args="${CRAC_RESTORE_JAVA_ARGS:-}"
+
+if [ -z "${app_jar}" ]; then app_jar="{{app_jar_path}}"; fi
+if [ -z "${mode}" ]; then mode="{{crac_mode}}"; fi
+if [ -z "${checkpoint_dir}" ]; then checkpoint_dir="{{checkpoint_dir}}"; fi
+if [ -z "${otel_java_agent_enabled}" ]; then otel_java_agent_enabled="{{otel_java_agent_enabled}}"; fi
+if [ -z "${otel_java_agent_path}" ]; then otel_java_agent_path="{{otel_java_agent_path}}"; fi
+if [ -z "${service_version}" ]; then service_version="{{service_version}}"; fi
+if [ -z "${deployment_environment}" ]; then deployment_environment="{{deployment_environment}}"; fi
+if [ -z "${otel_resource_attributes}" ]; then otel_resource_attributes="{{otel_resource_attributes}}"; fi
+if [ -z "${java_opts}" ]; then java_opts="{{java_opts}}"; fi
+if [ -z "${crac_train_java_args}" ]; then crac_train_java_args="{{crac_train_java_args}}"; fi
+if [ -z "${crac_restore_java_args}" ]; then crac_restore_java_args="{{crac_restore_java_args}}"; fi
+
+attrs="service.version=${service_version}"
+if [ -n "${deployment_environment}" ]; then
+  attrs="${attrs},deployment.environment=${deployment_environment}"
+fi
+
+if [ -n "${otel_resource_attributes}" ]; then
+  export OTEL_RESOURCE_ATTRIBUTES="${otel_resource_attributes},${attrs}"
+else
+  export OTEL_RESOURCE_ATTRIBUTES="${attrs}"
+fi
+
+if [ -z "${OTEL_SERVICE_NAME:-}" ]; then export OTEL_SERVICE_NAME="{{otel_service_name}}"; fi
+if [ -z "${OTEL_EXPORTER_OTLP_ENDPOINT:-}" ]; then export OTEL_EXPORTER_OTLP_ENDPOINT="{{otel_exporter_otlp_endpoint}}"; fi
+
+otel_agent_arg=""
+if [ "${otel_java_agent_enabled}" = "true" ] && [ -n "${otel_java_agent_path}" ]; then
+  otel_agent_arg="-javaagent:${otel_java_agent_path}"
+fi
+
+case "${mode}" in
+  train)
+    mkdir -p "${checkpoint_dir}"
+    exec java ${java_opts} ${crac_train_java_args} \
+      -XX:CRaCCheckpointTo="${checkpoint_dir}" ${otel_agent_arg} -jar "${app_jar}"
+    ;;
+  restore)
+    exec java ${java_opts} ${crac_restore_java_args} \
+      -XX:CRaCRestoreFrom="${checkpoint_dir}"
+    ;;
+  run)
+    exec java ${java_opts} ${otel_agent_arg} -jar "${app_jar}"
+    ;;
+  *)
+    echo "Unsupported CRAC_MODE: ${mode}" >&2
+    exit 2
+    ;;
+esac

@@ -1,0 +1,43 @@
+{
+  "name": "{{package_name}}",
+  "version": "{{initial_version}}",
+  "private": true,
+  "license": "LicenseRef-JorisJonkers-Proprietary-1.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "vue-tsc --noEmit -p {{typecheck_tsconfig}}",
+    "dev": "vite --host",
+    "test:unit": "vitest run --coverage",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test": "yarn test:unit && yarn test:e2e",
+    "lint": "eslint --fix --max-warnings 0 {{lint_paths}}",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "{{eslint_js_version}}",
+    "@playwright/test": "{{playwright_version}}",
+    "@typescript-eslint/eslint-plugin": "{{typescript_eslint_version}}",
+    "@typescript-eslint/parser": "{{typescript_eslint_version}}",
+    "@vitejs/plugin-vue": "{{vite_vue_plugin_version}}",
+    "@vitest/coverage-v8": "{{vitest_version}}",
+    "@vue/test-utils": "{{vue_test_utils_version}}",
+    "@vue/tsconfig": "{{vue_tsconfig_version}}",
+    "eslint": "{{eslint_version}}",
+    "eslint-plugin-vue": "{{eslint_plugin_vue_version}}",
+    "globals": "{{globals_version}}",
+    "husky": "{{husky_version}}",
+    "lint-staged": "{{lint_staged_version}}",
+    "prettier": "{{prettier_version}}",
+    "typescript": "{{typescript_version}}",
+    "vite": "{{vite_version}}",
+    "vitest": "{{vitest_version}}",
+    "vue-eslint-parser": "{{vue_eslint_parser_version}}",
+    "vue-tsc": "{{vue_tsc_version}}"
+  },
+  "packageManager": "yarn@{{yarn_version}}"
+}
