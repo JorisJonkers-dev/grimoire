@@ -26,3 +26,13 @@ describe('router', () => {
     expect(createAppRouter().options.history.base).toBe('')
   })
 })
+
+describe('gallery route', () => {
+  it('lazy-loads the component gallery', async () => {
+    const router = createAppRouter(createMemoryHistory())
+    await router.push('/gallery')
+    const wrapper = mount(App, { global: { plugins: [router, [VueQueryPlugin, { queryClient: new QueryClient() }]] } })
+    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('Component gallery')
+  })
+})

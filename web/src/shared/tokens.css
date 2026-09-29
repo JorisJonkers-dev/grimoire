@@ -1,0 +1,35 @@
+/* Mirrors design/tokens.json; tokens.spec.ts keeps the two in sync. */
+:root {
+  --color-ground: #0E0B09;
+  --color-surface: #17120E;
+  --color-raised: #211A14;
+  --color-line: #3A2E22;
+  --color-gold: #D4AF5A;
+  --color-gold-high: #EBCB7A;
+  --color-bronze: #8C7340;
+  --color-parchment: #E8DBBE;
+  --color-parchment-light: #F4ECDA;
+  --color-ink: #2B2118;
+  --color-ink-soft: #5A4A38;
+  --color-text: #EFE6D2;
+  --color-text-2: #BFB199;
+  --color-text-3: #8F826C;
+  --color-party: #8EC0EA;
+  --color-party-fill: #1A2430;
+  --color-enemy: #D0692A;
+  --color-enemy-fill: #2B1A12;
+  --color-enemy-soft: #F2B58C;
+  --color-success: #7FB069;
+  --color-felt: #1D2B23;
+  --font-display: Cinzel, serif;
+  --font-flavour: Alegreya, serif;
+  --font-ui: 'Alegreya Sans', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-sheet: 22px;
+  --radius-pill: 999px;
+  --size-touch-target: 44px;
+  --motion-max: 200ms;
+  --motion-dice-tumble: 950ms;
+}
