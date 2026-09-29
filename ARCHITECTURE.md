@@ -34,7 +34,8 @@ marked *(later)*; everything else is in scope for the milestone named next to it
 | Frontend | Vue 3.5 + TS strict, hey-api client + Zod, TanStack Query, Pinia; hybrid **PixiJS canvas + SVG** map | §15 |
 | Devices | Responsive **PWA**, wrapped in **Capacitor 7** (Android/iOS) like agents-ui; Table surface in a kiosk browser | §15.7 |
 | Connectivity | Online for live play; compendium and sheets cached for offline reading | §15.7 |
-| Design | **Claude Design mocks first** (M0), own BG3-inspired theme, vue-web-commons for plumbing only | §16 |
+| Design | **Claude Design mocks first** (M0), own BG3-inspired theme, vue-web-commons for plumbing only | §16, §23 |
+| Play | Exploration without initiative, combat with initiative on the TV, one hotbar for players and DM, suggested enemy actions, Encounter Zones with surprise | §23 |
 | Runtime | **Single replica** + Postgres advisory lock; ports ready for multi-replica | §11.7 |
 | AI | MCP server **inside the Go API** at `/mcp`, auth via auth-api OAuth; writes apply **immediately**, undone via Revisions/Action Log | §14 |
 | Generation | Deterministic seeded generators in Go; Go-native OSS embeds; Watabou/Azgaar exports imported; FMG and ComfyUI sidecars *(later)* | §13 |
@@ -72,7 +73,7 @@ hotbar, hit-chance previews, reaction prompts, roll cards with a modifier breakd
 |---|---|---|---|
 | **Player** | phone first, laptop | one Character | sheet, hotbar, movement, Roll Cards, Reaction Prompts, journal, chat, inventory |
 | **DM** | laptop / tablet | full control | truth view, all Combatants, prep, encounter checks, fog, overrides, undo, generators |
-| **Table** | TV / big screen, kiosk browser | shared, no controls | discovered map, tokens, initiative rail, roll results, level-up moments, handouts |
+| **Table Display** | TV / big screen, kiosk browser | shared, no controls; steered remotely from any DM session | party view only: discovered map, tokens, initiative rail (whenever enemies are present), roll results, level-up moments, handouts |
 
 ### 1.4 Principles
 
@@ -612,8 +613,10 @@ Action Log records it like any other action. Nothing silently skips.
 ### 9.7 Vision & lighting
 
 Grimoire §10.10/§27 carries over: per-Combatant senses, ambient + dynamic light, obscurement,
-sight-blocking terrain → visible hex set. The Table view uses the campaign's `union` or
-`intersection` mode. Results feed Fog projection (§11.5), not client rendering decisions.
+sight-blocking terrain → visible hex set. **Vision is shared by the whole party**: every Player and
+the Table Display see the union of what any party member perceives right now. Sight is strict: an
+unlit hex outside every sense is black, not hinted. Results feed Fog projection (§11.5), not client
+rendering decisions.
 
 ### 9.8 Surfaces
 
@@ -655,14 +658,17 @@ The table rolls **real dice by default**, and the app does the arithmetic.
 2. The **Roll Card** shows: the purpose ("Longsword attack vs Goblin"), **dice graphics for exactly
    what to throw** ("2 × d20, keep highest — advantage: Help from Lae'zel", "+ 1 × d4 — Bless"),
    and the modifier breakdown (BG3-style, each source named).
-3. The player either **types the faces** into the die graphics or **taps a die** to auto-roll it
-   (server-seeded, logged). Mixing is allowed per die.
+3. Each die offers two explicit buttons: **Roll for me** (server-seeded, logged; the die tumbles
+   briefly and lands on the server's result) and **I rolled it** (a number pad from 1 to the die
+   size). Mixing is allowed per die; "roll the rest for me" fills whatever is still empty. With
+   advantage the kept d20 is highlighted and the dropped one dimmed.
 4. The server resolves and broadcasts the outcome. Attack → hit/miss/crit → only then a damage Roll
    Card (crit shows doubled dice).
 5. The DM can auto-roll for NPCs by default (per-NPC or per-campaign setting) and can force-resolve a
    stalled card.
 
-Animation is limited to a short die "settle" on auto-roll and a colour state for success/failure.
+Dice are drawn as shaded polyhedra on a felt tray; animation is a sub-second tumble that honours
+reduced motion.
 The Roll Card is the same component on every surface; the Table shows it read-only.
 
 ---
@@ -725,9 +731,11 @@ and the expected effect (e.g. Shield: "AC 15 → 20, the attack (18) would miss"
 After each commit the runtime builds **per-audience projections**:
 
 - **DM**: truth.
-- **Player (per member)**: discovered hexes, own Character in full, allies' public state, only
-  revealed enemies, only open Encounter Checks, own whispers/handouts.
-- **Table**: the union/intersection vision set, no controls, no secrets.
+- **Player (per member)**: the party's shared vision and fog layers (never seen, remembered,
+  visible now), own Character in full, allies' public state, only noticed enemies, only open
+  Encounter Checks, own whispers/handouts.
+- **Table Display**: the same party view, no controls, no secrets, framed by the DM's camera and
+  scene.
 
 Updates are computed from the projection, so a hidden token or undiscovered hex is **absent from
 the payload**. Changes in visibility (a reveal) are sent as `Revealed{...}` updates that include
@@ -1175,6 +1183,74 @@ Each milestone ends with all gates green, and with a demo on phone + TV where UI
 | SRD 5.2 magic item price table availability | verify in M6; DM-set defaults otherwise |
 | No Go reusable workflow in the estate yet | add `go-ci` to github-workflows in M0 |
 | PixiJS canvas harder to test | SVG overlay carries all interaction; scene test hook; screenshot diffs |
+
+---
+
+## 23. Play modes & interaction model
+
+Settled in the design review of the Claude Design mockups (§16). These rules bind every surface.
+
+### 23.1 Exploration and combat
+
+- **Exploration** is the default whenever no hostile creature is noticed. There is **no
+  initiative**: everyone taps a visible, reachable hex and their token **walks** the path at a fixed
+  walking pace on every surface, so the Table Display sees them arrive a moment later.
+- **Combat** starts the instant a hostile creature is noticed, an Encounter Zone springs, or the DM
+  starts it. The **initiative rail appears on the Table Display**, the DM console and every phone,
+  showing whose turn it is; tied ranks act together in any order.
+
+### 23.2 Maps: world and local
+
+- A campaign has **world maps** (locations, routes, Regions) and **local maps** (hex tactical
+  maps). Everyone can switch **World ↔ Local**; the DM also switches what the Table Display shows.
+- Local fog has three layers for players: **never seen** (black), **remembered** (dimmed, what the
+  party saw before, persisted across Sessions) and **visible now** (lit). The DM sees everything,
+  with never-seen areas hatched.
+- **Strict sight**: light sources, darkvision and line of sight decide what is visible. What the
+  party cannot perceive is not drawn and is absent from the payload (§11.5).
+
+### 23.3 Encounter Zones, perception and surprise
+
+- The DM places **hidden creatures** (with Stealth) and draws an **Encounter Zone** on a local map.
+- A zone springs **automatically** when any party member comes within its radius, or when the DM
+  chooses (**Spring it now / Hold off**, or DM-trigger only zones).
+- On triggering: passive Perception is compared with Stealth first; anyone who missed gets a
+  Perception Roll Card; the DC stays hidden. A noticed creature is revealed to the whole party.
+- Anyone still unaware when combat starts is **surprised** (2024 rules: initiative at
+  disadvantage), shown on the initiative rail.
+
+### 23.4 One way to act
+
+- The DM acts for creatures with **the same hotbar, target preview and Roll Card** players use.
+  There are no separate DM action pages; tapping any token acts as it. HP and effect edits live
+  under the same hotbar.
+- **Suggested actions** for creatures (`rules/tactics`, pure and tested):
+  - **Simple** (Int 11 or less): attack the nearest visible enemy.
+  - **Cunning** (Int 12 or more): if it has a ranged attack, target the enemy it has *seen* deal
+    the most damage from range; otherwise nearest.
+  - **Never too clever**: only observed information (no hidden HP or AC), no coordinated focus
+    fire across creatures.
+  - Per-creature override: From Int / Simple / Cunning / Off. The suggestion shows its reason and
+    one tap (**Use suggestion**) performs it.
+
+### 23.5 Table Display remote
+
+The Table Display is steered from any DM session, phone or desktop: camera (**follow turn**,
+**show party**, free pan/zoom), **scene** (local map, world map, handout, title card), **ping** and
+**blackout**. It only ever renders the party view.
+
+### 23.6 Portraits and token icons
+
+Players upload a **portrait** and choose a **token icon** (crop from the portrait, a separate
+upload, or initials). Images are campaign-private objects (§8.3). The party ring (round) or enemy
+frame (hexagonal) is always drawn over the icon so allegiance stays readable without colour.
+
+### 23.7 Visual language
+
+Dark parchment and gold: tokens in `design/tokens.json`; Cinzel for titles, Alegreya for flavour
+text, Alegreya Sans for UI and numbers. Party tokens are round, enemies hexagonal, hidden
+creatures dashed (DM only). Touch targets are at least 44 px; motion stays under 200 ms except the
+dice tumble.
 
 ---
 
