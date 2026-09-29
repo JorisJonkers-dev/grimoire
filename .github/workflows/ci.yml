@@ -1,36 +1,6 @@
-# Canonical single CI workflow for every JorisJonkers-dev repository.
-#
-# Org convention: ONE pipeline per repo, terminating in a job named
-# "Pipeline Complete". That name is the ONLY required status check in the
-# org/repo ruleset, so it must always be reported — but note that the
-# convention is about the *name*, not about that job being an aggregator.
-#
-# DEFAULT SHAPE: one job. Put every check in it as a step.
-#
-# GitHub bills each job rounded up to a full minute. A pipeline split into
-# five jobs that each finish in ten seconds bills five minutes for under one
-# minute of work, and in this estate that rounding — not compute — was the
-# large majority of private-repo Actions spend. Splitting steps-based checks
-# across jobs buys parallel wall-clock at roughly a minute of billing each;
-# at these durations that is a bad trade, so do not do it by default.
-#
-# Steps carry `if: ${{ !cancelled() }}` so one failing check does not mask the
-# rest: a pull request still surfaces every problem in a single run, which is
-# the one thing parallel jobs were actually good for.
-#
-# WHEN TO ADD A SECOND JOB: only when you must. A reusable workflow (`uses:`)
-# cannot be a step, so calling one requires its own job — see the typed
-# callers in templates/workflows/. In that case something has to gate it, and
-# you have two options:
-#
-#   1. Keep this job as the gate: add `needs: [<that-job>]` and, as the LAST
-#      step, fail unless its result is 'success'. Compare against 'success'
-#      rather than 'failure', so a skipped or cancelled job fails too.
-#   2. Add a separate `pipeline-complete` job using re-actors/alls-green.
-#      Costs an extra billable minute; prefer option 1.
-#
-# Either way the required check keeps its name, so branch protection never
-# needs touching when jobs are added or renamed.
+# One pipeline ending in "Pipeline Complete", the only required check (estate convention).
+# Every step runs `task` targets so CI and `task check` cannot drift. Steps carry
+# `if: ${{ !cancelled() }}` so one failure still surfaces the rest.
 name: CI
 
 on:
@@ -52,35 +22,35 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      # Add `fetch-depth: 0` if any check below needs history (a full-history
-      # secret scan, or a diff against the base ref).
       - uses: actions/checkout@v7
 
-      - name: Lint
-        if: ${{ !cancelled() }}
-        run: echo "replace with real lint"
+      - uses: jdx/mise-action@v5
+        with:
+          cache: true
 
-      - name: Test
-        if: ${{ !cancelled() }}
-        run: scripts/validate-templates.sh
+      - name: Install JS tooling
+        run: task install
 
-      - name: Coverage
+      - name: Lint Go
         if: ${{ !cancelled() }}
-        run: echo "replace with the repo's real coverage gate — jacocoTestCoverageVerification >=80% for Gradle, or vitest/c8 --lines 80 for Node"
+        run: task lint:go
+
+      - name: Lint OpenAPI contract
+        if: ${{ !cancelled() }}
+        run: task lint:spec
+
+      - name: Lint workflows
+        if: ${{ !cancelled() }}
+        run: task lint:actions
+
+      - name: Test and coverage
+        if: ${{ !cancelled() }}
+        run: task coverage
 
       - name: Build
         if: ${{ !cancelled() }}
-        run: echo "replace with real build"
+        run: task build
 
-      - name: Download actionlint
-        id: actionlint
+      - name: Secret scan
         if: ${{ !cancelled() }}
-        shell: bash
-        run: |
-          bash <(curl --fail --silent --show-error --location https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-
-      - name: Lint GitHub Actions workflows
-        if: ${{ !cancelled() }}
-        shell: bash
-        run: |
-          "${{ steps.actionlint.outputs.executable }}" -color .github/workflows/*.yml
+        run: task secrets

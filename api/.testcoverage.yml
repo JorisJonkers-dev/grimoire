@@ -1,0 +1,12 @@
+# Coverage gate (ARCHITECTURE.md §17.2): 85% overall, 100% for the pure rules engine.
+profile: coverage.out
+local-prefix: github.com/JorisJonkers-dev/grimoire/api
+threshold:
+  total: 85
+override:
+  - path: ^internal/rules/
+    threshold: 100
+exclude:
+  paths:
+    - ^cmd/          # composition root, exercised by E2E
+    - /generated/

@@ -1,0 +1,14 @@
+extends:
+  - spectral:oas
+  - "@stoplight/spectral-owasp-ruleset"
+rules:
+  # The SPA and API share one origin; no cross-origin clients exist.
+  owasp:api8:2023-define-cors-origin: off
+overrides:
+  # Platform probes are anonymous and exempt from rate limiting (ARCHITECTURE.md §19.1).
+  - files:
+      - "v1/openapi.yaml#/paths/~1healthz"
+      - "v1/openapi.yaml#/paths/~1readyz"
+    rules:
+      owasp:api4:2023-rate-limit: off
+      owasp:api2:2023-read-restricted: off

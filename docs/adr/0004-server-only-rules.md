@@ -1,0 +1,3 @@
+# Rules run only on the server; the client keeps hex geometry alone
+
+Grimoire computes every modifier, range, hit chance and effect, and the old spec mirrored movement rules in the browser for instant previews. We keep all rules in Go and answer previews (reachable hexes, path cost, hit %, AoE targets) with cheap non-mutating `Preview*` commands; the only client-side logic is hex↔pixel geometry, pinned to the Go `HexLayout` by shared golden fixtures. A browser copy of the rules (Go→wasm, or a TS port) was rejected because it either bloats the bundle or creates a second rules implementation to keep in sync, and live play is online-only anyway.

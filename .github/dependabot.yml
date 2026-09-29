@@ -31,4 +31,4 @@ updates:
         applies-to: security-updates
         patterns:
           - "*"
-    labels: ["dependencies", "github_actions"]
+    labels: ["component: dependencies"]

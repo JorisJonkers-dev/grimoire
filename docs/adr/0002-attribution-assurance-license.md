@@ -1,0 +1,3 @@
+# Public repo under the Attribution Assurance License
+
+Grimoire is public and permissively licensed, unlike the estate's source-available repo-template license, because the owner wants it open while requiring forks to credit him visibly in their UI and in text. The Attribution Assurance License is the OSI-approved, BSD-style license whose extra condition is exactly that; Apache-2.0's NOTICE cannot enforce UI display, CPAL is copyleft, and a custom MIT clause would not be OSI-approved. Consequence: no GPL/AGPL code may be embedded (TownGeneratorOS, settlemaker, ComfyUI stay inspiration or separate services), and private adventures/homebrew never enter the repository.

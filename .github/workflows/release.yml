@@ -49,5 +49,5 @@ jobs:
     permissions:
       contents: read
     steps:
-      # This repo is consumed by release tag/ref; the GitHub Release is the artifact.
-      - run: echo 'Released repo-template at ${{ needs.release-please.outputs.tag_name }}'
+      # Image publishing (grimoire-api, grimoire-web) and the deploy artifact land with M0's first deploy.
+      - run: echo 'Released grimoire at ${{ needs.release-please.outputs.tag_name }}'

@@ -28,8 +28,9 @@ Only the current default branch and actively released packages or images are in
 scope. Archived repositories, old branches, and historical tags are not
 supported unless Joris Jonkers explicitly says otherwise.
 
-## Source Availability
+## Security-critical areas
 
-Public visibility does not grant permission to use, copy, modify, deploy,
-redistribute, or derive from this code. Repository licensing is governed by the
-root `LICENSE` file.
+Fog of war and role-scoped projections are a security boundary: hidden tokens,
+undiscovered map areas, secret checks and DM notes must never reach a player's
+or the table's payload. Reports that show such data leaking are treated as
+vulnerabilities.
