@@ -15,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/webui"
 )
 
 // version is set at build time with -ldflags "-X main.version=…".
@@ -69,6 +70,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		DevSubject: cfg.DevSubject,
 		RateLimit:  cfg.RateLimit,
 		Now:        time.Now,
+		Web:        webui.Handler(webui.Embedded()),
 	})
 	if err != nil {
 		return err

@@ -20,6 +20,8 @@ type Options struct {
 	DevSubject string
 	RateLimit  int
 	Now        func() time.Time
+	// Web serves the single-page app for every path the API does not own; nil leaves it out.
+	Web http.Handler
 }
 
 // New builds the full HTTP handler: generated router, security, rate limiting and dev identity.
@@ -34,11 +36,18 @@ func New(o Options) (http.Handler, error) {
 		Now:    o.Now,
 		Exempt: map[string]bool{"/healthz": true, "/readyz": true},
 	}
-	h := http.Handler(limiter.Wrap(srv))
+	api := http.Handler(limiter.Wrap(srv))
 	if o.DevSubject != "" {
-		h = httpx.DevIdentity(o.DevSubject, h)
+		api = httpx.DevIdentity(o.DevSubject, api)
 	}
-	return h, nil
+	mux := http.NewServeMux()
+	mux.Handle("/api/", api)
+	mux.Handle("/healthz", api)
+	mux.Handle("/readyz", api)
+	if o.Web != nil {
+		mux.Handle("/", o.Web)
+	}
+	return httpx.SecurityHeaders(mux), nil
 }
 
 func errorHandler(log *slog.Logger) ogenerrors.ErrorHandler {

@@ -86,6 +86,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: task secrets
 
+      - name: Container image builds
+        if: ${{ !cancelled() }}
+        run: docker build --build-arg VERSION=ci -t grimoire:ci .
+
       - name: Start API and web preview
         id: servers
         if: ${{ !cancelled() }}

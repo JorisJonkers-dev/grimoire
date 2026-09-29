@@ -5,6 +5,16 @@ export type ClientOptions = {
 };
 
 /**
+ * The authenticated account.
+ */
+export type Me = {
+    /**
+     * Stable account id from the platform's identity provider.
+     */
+    subject: string;
+};
+
+/**
  * Service status.
  */
 export type Status = {
@@ -31,6 +41,35 @@ export type Problem = {
     detail?: string;
     instance?: string;
 };
+
+export type GetMeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me';
+};
+
+export type GetMeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMeError = GetMeErrors[keyof GetMeErrors];
+
+export type GetMeResponses = {
+    /**
+     * The signed-in account.
+     */
+    200: Me;
+};
+
+export type GetMeResponse = GetMeResponses[keyof GetMeResponses];
 
 export type GetStatusData = {
     body?: never;

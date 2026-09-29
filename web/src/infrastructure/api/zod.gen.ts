@@ -3,6 +3,13 @@
 import * as z from 'zod';
 
 /**
+ * The authenticated account.
+ */
+export const zMe = z.object({
+    subject: z.string().min(1).max(128).regex(/^[^\s]+$/)
+});
+
+/**
  * Service status.
  */
 export const zStatus = z.object({
@@ -29,6 +36,11 @@ export const zProblem = z.object({
     detail: z.string().max(2000).optional(),
     instance: z.string().max(500).optional()
 });
+
+/**
+ * The signed-in account.
+ */
+export const zGetMeResponse = zMe;
 
 /**
  * The service status.

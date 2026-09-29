@@ -14,6 +14,12 @@ type Handler interface {
 	//
 	// GET /healthz
 	GetHealth(ctx context.Context) (GetHealthRes, error)
+	// GetMe implements getMe operation.
+	//
+	// Returns the identity the platform authenticated for this request.
+	//
+	// GET /api/v1/me
+	GetMe(ctx context.Context) (GetMeRes, error)
 	// GetReadiness implements getReadiness operation.
 	//
 	// Returns ok once the API can serve traffic.

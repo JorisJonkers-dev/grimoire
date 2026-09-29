@@ -5,6 +5,10 @@ type GetHealthRes interface {
 	getHealthRes()
 }
 
+type GetMeRes interface {
+	getMeRes()
+}
+
 type GetReadinessRes interface {
 	getReadinessRes()
 }

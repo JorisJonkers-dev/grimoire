@@ -1,0 +1,25 @@
+apiVersion: deployment.jorisjonkers.dev/v2
+kind: Deployment
+metadata:
+  name: grimoire
+spec:
+  schemaVersion: 0.16.0
+  namespace: grimoire
+  platform:
+    layer: apps-core
+  workloads:
+    - name: grimoire
+      image: grimoire
+      health:
+        path: /readyz
+        livenessPath: /healthz
+        port: 8080
+        timeoutClass: stateless
+        mandatory: true
+      rollbackTargetRetention:
+        minimumDays: 90
+        acknowledged: true
+      routes:
+        - host: grimoire.jorisjonkers.dev
+          owner: grimoire
+          authMode: forward-auth
