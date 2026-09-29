@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { getHealth, getMe, getReadiness, getSpell, getStatus, listSources, listSpells, type Options } from '../sdk.gen';
-import type { GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse } from '../types.gen';
+import { getAutomationCoverage, getEntry, getHealth, getMe, getReadiness, getSpell, getStatus, listEntries, listSources, listSpells, type Options } from '../sdk.gen';
+import type { GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -138,6 +138,98 @@ export const getSpellOptions = (options: Options<GetSpellData>) => queryOptions<
         return data;
     },
     queryKey: getSpellQueryKey(options)
+});
+
+export const listEntriesQueryKey = (options: Options<ListEntriesData>) => createQueryKey('listEntries', options);
+
+/**
+ * List compendium entries
+ *
+ * Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+ */
+export const listEntriesOptions = (options: Options<ListEntriesData>) => queryOptions<ListEntriesResponse, ListEntriesError, ListEntriesResponse, ReturnType<typeof listEntriesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listEntries({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listEntriesQueryKey(options)
+});
+
+export const listEntriesInfiniteQueryKey = (options: Options<ListEntriesData>): QueryKey<Options<ListEntriesData>> => createQueryKey('listEntries', options, true);
+
+/**
+ * List compendium entries
+ *
+ * Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+ */
+export const listEntriesInfiniteOptions = (options: Options<ListEntriesData>) => {
+    const opts = infiniteQueryOptions<ListEntriesResponse, ListEntriesError, InfiniteData<ListEntriesResponse>, QueryKey<Options<ListEntriesData>>, string | Pick<QueryKey<Options<ListEntriesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListEntriesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    cursor: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listEntries({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listEntriesInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const getEntryQueryKey = (options: Options<GetEntryData>) => createQueryKey('getEntry', options);
+
+/**
+ * Get a compendium entry
+ *
+ * One entry rendered for reading, with the conditions its text mentions.
+ */
+export const getEntryOptions = (options: Options<GetEntryData>) => queryOptions<GetEntryResponse, GetEntryError, GetEntryResponse, ReturnType<typeof getEntryQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getEntry({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getEntryQueryKey(options)
+});
+
+export const getAutomationCoverageQueryKey = (options?: Options<GetAutomationCoverageData>) => createQueryKey('getAutomationCoverage', options);
+
+/**
+ * Get automation coverage
+ *
+ * How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
+ */
+export const getAutomationCoverageOptions = (options?: Options<GetAutomationCoverageData>) => queryOptions<GetAutomationCoverageResponse, GetAutomationCoverageError, GetAutomationCoverageResponse, ReturnType<typeof getAutomationCoverageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAutomationCoverage({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAutomationCoverageQueryKey(options)
 });
 
 export const listSourcesQueryKey = (options?: Options<ListSourcesData>) => createQueryKey('listSources', options);

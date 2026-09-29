@@ -8,5 +8,5 @@ var Migrations embed.FS
 
 // Seeds holds the pinned compendium snapshot (SRD content under CC-BY-4.0).
 //
-//go:embed seeds/*.json
+//go:embed seeds/*.json.gz
 var Seeds embed.FS

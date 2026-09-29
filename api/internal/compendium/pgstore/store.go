@@ -70,6 +70,9 @@ func importInto(ctx context.Context, q *queries.Queries, snap snapshot.Snapshot,
 			return fmt.Errorf("compendium: condition %s: %w", c.Slug, err)
 		}
 	}
+	if err := importEntries(ctx, q, lookups, docIDs, snap); err != nil {
+		return err
+	}
 	_, err := q.RecordCompendiumImport(ctx, hash)
 	return err
 }

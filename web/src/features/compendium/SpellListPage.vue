@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { listSpellsInfiniteOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { ListSpellsData, Ruleset, SpellPage } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import CompendiumTabs from './CompendiumTabs.vue'
 import { classes, levelLabel, schools, titleCase } from './highlight'
 
 const search = ref('')
@@ -38,6 +39,7 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
 
 <template>
   <main class="spells">
+    <CompendiumTabs current="spell" />
     <h1>Spells</h1>
     <form class="filters" role="search" @submit.prevent>
       <label class="field grow">
@@ -104,6 +106,8 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
   max-width: 960px;
   margin: 0 auto;
   padding: 16px;

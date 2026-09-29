@@ -6,11 +6,14 @@ package oas
 type OperationName = string
 
 const (
-	GetHealthOperation    OperationName = "GetHealth"
-	GetMeOperation        OperationName = "GetMe"
-	GetReadinessOperation OperationName = "GetReadiness"
-	GetSpellOperation     OperationName = "GetSpell"
-	GetStatusOperation    OperationName = "GetStatus"
-	ListSourcesOperation  OperationName = "ListSources"
-	ListSpellsOperation   OperationName = "ListSpells"
+	GetAutomationCoverageOperation OperationName = "GetAutomationCoverage"
+	GetEntryOperation              OperationName = "GetEntry"
+	GetHealthOperation             OperationName = "GetHealth"
+	GetMeOperation                 OperationName = "GetMe"
+	GetReadinessOperation          OperationName = "GetReadiness"
+	GetSpellOperation              OperationName = "GetSpell"
+	GetStatusOperation             OperationName = "GetStatus"
+	ListEntriesOperation           OperationName = "ListEntries"
+	ListSourcesOperation           OperationName = "ListSources"
+	ListSpellsOperation            OperationName = "ListSpells"
 )

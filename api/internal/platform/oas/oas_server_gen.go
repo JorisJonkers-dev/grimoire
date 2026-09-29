@@ -8,6 +8,18 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// GetAutomationCoverage implements getAutomationCoverage operation.
+	//
+	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
+	//
+	// GET /api/v1/compendium/automation
+	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
+	// GetEntry implements getEntry operation.
+	//
+	// One entry rendered for reading, with the conditions its text mentions.
+	//
+	// GET /api/v1/compendium/entries/{kind}/{slug}
+	GetEntry(ctx context.Context, params GetEntryParams) (GetEntryRes, error)
 	// GetHealth implements getHealth operation.
 	//
 	// Returns ok while the process is serving requests.
@@ -38,6 +50,13 @@ type Handler interface {
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// ListEntries implements listEntries operation.
+	//
+	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
+	// blend.
+	//
+	// GET /api/v1/compendium/entries
+	ListEntries(ctx context.Context, params ListEntriesParams) (ListEntriesRes, error)
 	// ListSources implements listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.

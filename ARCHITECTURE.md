@@ -1010,7 +1010,7 @@ motion. Grimoire has its **own theme**; vue-web-commons provides plumbing only.
 
 - the contract chain from §7.2 (spec lint, generate, drift, oasdiff, compile)
 - `golangci-lint` (incl. nilaway, exhaustive, gochecksumtype, exhaustruct, depguard, gosec)
-- `go test -race ./...`, with coverage 100% on `rules` and a global floor of 85%
+- `go test -race ./...`, with coverage 100% on `rules` and a global floor of 98% (web: 98% lines, 95% branches)
 - gremlins on **changed** `rules` packages
 - `atlas migrate lint` and `migration-guard`
 - `govulncheck`

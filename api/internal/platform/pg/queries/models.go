@@ -16,6 +16,64 @@ type CompendiumAbilityScore struct {
 	Name string
 }
 
+type CompendiumArmor struct {
+	ID                  int64
+	DocumentID          int64
+	Slug                string
+	Name                string
+	Category            string
+	AcBase              int32
+	AddDex              bool
+	DexCap              pgtype.Int4
+	StealthDisadvantage bool
+	StrengthRequired    pgtype.Int4
+}
+
+type CompendiumBackground struct {
+	ID          int64
+	DocumentID  int64
+	Slug        string
+	Name        string
+	Description string
+}
+
+type CompendiumBackgroundBenefit struct {
+	BackgroundID int64
+	Ordering     int32
+	Name         string
+	Description  string
+}
+
+type CompendiumClass struct {
+	ID          int64
+	DocumentID  int64
+	Slug        string
+	Name        string
+	Description string
+	ParentSlug  pgtype.Text
+	HitDie      pgtype.Int4
+	CasterType  string
+}
+
+type CompendiumClassFeature struct {
+	ID          int64
+	ClassID     int64
+	Slug        string
+	Name        string
+	Description string
+	Ordering    int32
+}
+
+type CompendiumClassFeatureLevel struct {
+	FeatureID int64
+	Level     int32
+}
+
+type CompendiumClassSavingThrow struct {
+	ClassID   int64
+	AbilityID int64
+}
+
 type CompendiumCondition struct {
 	ID          int64
 	DocumentID  int64
@@ -41,10 +99,135 @@ type CompendiumDocument struct {
 	Url         string
 }
 
+type CompendiumEntry struct {
+	Kind       string
+	ID         int64
+	Slug       string
+	Name       string
+	DocumentID int64
+	Subtitle   interface{}
+}
+
+type CompendiumFeat struct {
+	ID           int64
+	DocumentID   int64
+	Slug         string
+	Name         string
+	Description  string
+	FeatType     string
+	Prerequisite string
+}
+
+type CompendiumFeatBenefit struct {
+	FeatID      int64
+	Ordering    int32
+	Description string
+}
+
+type CompendiumItem struct {
+	ID                 int64
+	DocumentID         int64
+	Slug               string
+	Name               string
+	Description        string
+	Category           string
+	CostGp             pgtype.Numeric
+	WeightLb           pgtype.Numeric
+	Magic              bool
+	Rarity             pgtype.Text
+	RequiresAttunement bool
+	AttunementDetail   pgtype.Text
+}
+
 type CompendiumMagicSchool struct {
 	ID   int64
 	Slug string
 	Name string
+}
+
+type CompendiumMonster struct {
+	ID                int64
+	DocumentID        int64
+	Slug              string
+	Name              string
+	Size              string
+	CreatureType      string
+	Alignment         string
+	ArmorClass        int32
+	ArmorDetail       pgtype.Text
+	HitPoints         int32
+	HitDice           string
+	ChallengeRating   pgtype.Numeric
+	Xp                int32
+	Strength          int32
+	Dexterity         int32
+	Constitution      int32
+	Intelligence      int32
+	Wisdom            int32
+	Charisma          int32
+	PassivePerception int32
+	Languages         pgtype.Text
+}
+
+type CompendiumMonsterAction struct {
+	ID          int64
+	MonsterID   int64
+	Ordering    int32
+	Name        string
+	Description string
+	ActionType  string
+}
+
+type CompendiumMonsterAttack struct {
+	ActionID      int64
+	Ordering      int32
+	Name          string
+	Kind          string
+	ToHit         int32
+	ReachFeet     int32
+	RangeFeet     int32
+	LongRangeFeet int32
+	DamageDice    pgtype.Text
+	DamageBonus   int32
+	DamageType    pgtype.Text
+	ExtraDice     pgtype.Text
+	ExtraType     pgtype.Text
+}
+
+type CompendiumMonsterRelation struct {
+	MonsterID  int64
+	Relation   string
+	TargetSlug string
+}
+
+type CompendiumMonsterStat struct {
+	MonsterID int64
+	Kind      string
+	Name      string
+	Value     int32
+}
+
+type CompendiumMonsterTrait struct {
+	MonsterID   int64
+	Ordering    int32
+	Name        string
+	Description string
+}
+
+type CompendiumSpeciesTrait struct {
+	SpeciesID   int64
+	Ordering    int32
+	Name        string
+	Description string
+}
+
+type CompendiumSpecy struct {
+	ID          int64
+	DocumentID  int64
+	Slug        string
+	Name        string
+	Description string
+	Subspecies  bool
 }
 
 type CompendiumSpell struct {
@@ -86,6 +269,25 @@ type CompendiumSpellScaling struct {
 	Kind       string
 	AtLevel    int32
 	DamageRoll string
+}
+
+type CompendiumWeapon struct {
+	ID            int64
+	DocumentID    int64
+	Slug          string
+	Name          string
+	DamageDice    string
+	DamageTypeID  pgtype.Int8
+	RangeFeet     int32
+	LongRangeFeet int32
+	Simple        bool
+}
+
+type CompendiumWeaponProperty struct {
+	WeaponID int64
+	Name     string
+	Mastery  bool
+	Detail   pgtype.Text
 }
 
 type OpsCompendiumImport struct {

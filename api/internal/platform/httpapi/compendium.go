@@ -16,6 +16,9 @@ type CompendiumReader interface {
 	ListSpells(ctx context.Context, f compendium.SpellFilter) ([]compendium.SpellSummary, error)
 	GetSpell(ctx context.Context, slug, ruleset string) (compendium.Spell, error)
 	ListSources(ctx context.Context) ([]compendium.Source, error)
+	ListEntries(ctx context.Context, f compendium.EntryFilter) ([]compendium.EntrySummary, error)
+	GetEntry(ctx context.Context, kind, slug, ruleset string) (compendium.EntryDetail, error)
+	AutomationCoverage(ctx context.Context) ([]compendium.AutomationCount, error)
 }
 
 const defaultPageSize = 50

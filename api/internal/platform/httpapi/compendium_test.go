@@ -17,8 +17,33 @@ type fakeCompendium struct {
 	listErr    error
 	getErr     error
 	sourcesErr error
+	entryErr   error
+	autoErr    error
 	spells     []compendium.SpellSummary
+	entries    []compendium.EntrySummary
 	lastFilter *compendium.SpellFilter
+	lastEntry  *compendium.EntryFilter
+}
+
+func (f *fakeCompendium) ListEntries(_ context.Context, filter compendium.EntryFilter) ([]compendium.EntrySummary, error) {
+	f.lastEntry = &filter
+	if len(f.entries) > filter.PageSize {
+		return f.entries[:filter.PageSize], f.listErr
+	}
+	return f.entries, f.listErr
+}
+
+func (f *fakeCompendium) GetEntry(_ context.Context, kind, slug, _ string) (compendium.EntryDetail, error) {
+	return compendium.EntryDetail{
+		EntrySummary: compendium.EntrySummary{Kind: kind, Slug: slug, Name: "Goblin", Subtitle: "CR 1/4", Ruleset: "srd-2024"},
+		Facts:        []compendium.Fact{{Label: "Armor Class", Value: "15"}},
+		Sections:     []compendium.Section{{Title: "Scimitar", Text: "Slash, prone."}},
+		Mentions:     []compendium.Condition{{Slug: "prone", Name: "Prone", Description: "Down."}},
+	}, f.entryErr
+}
+
+func (f *fakeCompendium) AutomationCoverage(context.Context) ([]compendium.AutomationCount, error) {
+	return []compendium.AutomationCount{{Kind: "monster", Total: 3, Manual: 3}}, f.autoErr
 }
 
 func (f *fakeCompendium) Version(context.Context) (int64, error) { return 7, f.versionErr }
@@ -141,6 +166,16 @@ func TestCompendiumErrorsBecomeProblems(t *testing.T) {
 		{&fakeCompendium{versionErr: boom}, "/api/v1/compendium/spells", 503},
 		{&fakeCompendium{listErr: boom}, "/api/v1/compendium/spells", 503},
 		{&fakeCompendium{sourcesErr: boom}, "/api/v1/compendium/sources", 503},
+		{&fakeCompendium{versionErr: boom}, "/api/v1/compendium/entries?kind=feat", 503},
+		{&fakeCompendium{listErr: boom}, "/api/v1/compendium/entries?kind=feat", 503},
+		{&fakeCompendium{}, "/api/v1/compendium/entries?kind=spell", 400},
+		{&fakeCompendium{}, "/api/v1/compendium/entries?kind=feat&cursor=AAAA", 400},
+		{&fakeCompendium{versionErr: boom}, "/api/v1/compendium/entries/feat/alert", 503},
+		{&fakeCompendium{entryErr: boom}, "/api/v1/compendium/entries/feat/alert", 503},
+		{&fakeCompendium{entryErr: compendium.ErrNotFound}, "/api/v1/compendium/entries/feat/alert", 404},
+		{&fakeCompendium{}, "/api/v1/compendium/entries/spell/alert", 400},
+		{&fakeCompendium{versionErr: boom}, "/api/v1/compendium/automation", 503},
+		{&fakeCompendium{autoErr: boom}, "/api/v1/compendium/automation", 503},
 	}
 	for _, tc := range cases {
 		if rec := getWith(compendiumServer(t, tc.c), tc.path, nil); rec.Code != tc.code {
@@ -154,5 +189,55 @@ func TestListSourcesCarriesAttribution(t *testing.T) {
 	rec := getWith(compendiumServer(t, &fakeCompendium{}), "/api/v1/compendium/sources", nil)
 	if rec.Code != 200 || rec.Body.String() == "" {
 		t.Fatalf("sources: %d", rec.Code)
+	}
+}
+
+func TestListEntriesPagesWithCursorAndETag(t *testing.T) {
+	t.Parallel()
+	c := &fakeCompendium{entries: []compendium.EntrySummary{
+		{Kind: "monster", Slug: "bandit", Name: "Bandit", Subtitle: "CR 1/8", Ruleset: "srd-2024"},
+		{Kind: "monster", Slug: "goblin", Name: "Goblin", Subtitle: "CR 1/4", Ruleset: "srd-2024"},
+	}}
+	h := compendiumServer(t, c)
+	rec := getWith(h, "/api/v1/compendium/entries?kind=monster&limit=1&q=b&ruleset=srd-2024", nil)
+	if rec.Code != 200 || rec.Header().Get("ETag") != `"c7"` {
+		t.Fatalf("list: %d %s", rec.Code, rec.Body.String())
+	}
+	body := decode(t, rec)
+	next, _ := body["nextCursor"].(string)
+	if items, _ := body["items"].([]any); len(items) != 1 || next == "" {
+		t.Fatalf("page = %v", body)
+	}
+	if f := c.lastEntry; f.Kind != "monster" || f.Query != "b" || f.Ruleset != "srd-2024" || f.PageSize != 2 {
+		t.Fatalf("filter = %+v", f)
+	}
+	if rec := getWith(h, "/api/v1/compendium/entries?kind=monster&cursor="+next, nil); rec.Code != 200 || c.lastEntry.After.Slug != "bandit" {
+		t.Fatalf("second page: %d %+v", rec.Code, c.lastEntry)
+	}
+	if rec := getWith(h, "/api/v1/compendium/entries?kind=monster", map[string]string{"If-None-Match": `"c7"`}); rec.Code != http.StatusNotModified {
+		t.Fatalf("conditional: %d", rec.Code)
+	}
+}
+
+func TestGetEntryAndAutomation(t *testing.T) {
+	t.Parallel()
+	h := compendiumServer(t, &fakeCompendium{})
+	rec := getWith(h, "/api/v1/compendium/entries/monster/goblin", nil)
+	b := decode(t, rec)
+	facts, _ := b["facts"].([]any)
+	sections, _ := b["sections"].([]any)
+	mentions, _ := b["mentions"].([]any)
+	if rec.Code != 200 || b["kind"] != "monster" || len(facts) != 1 || len(sections) != 1 || len(mentions) != 1 {
+		t.Fatalf("entry: %d %v", rec.Code, b)
+	}
+	if rec := getWith(h, "/api/v1/compendium/entries/monster/goblin", map[string]string{"If-None-Match": `"c7"`}); rec.Code != http.StatusNotModified {
+		t.Fatalf("conditional: %d", rec.Code)
+	}
+	rec = getWith(h, "/api/v1/compendium/automation", nil)
+	if rec.Code != 200 || rec.Body.String() == "" {
+		t.Fatalf("automation: %d", rec.Code)
+	}
+	if rec := getWith(h, "/api/v1/compendium/automation", map[string]string{"If-None-Match": `"c7"`}); rec.Code != http.StatusNotModified {
+		t.Fatalf("conditional: %d", rec.Code)
 	}
 }

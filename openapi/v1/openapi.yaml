@@ -123,6 +123,137 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/compendium/entries:
+    get:
+      operationId: listEntries
+      summary: List compendium entries
+      description: Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+      tags: [Compendium]
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+        - name: kind
+          in: query
+          required: true
+          description: Which kind of entry to list.
+          schema: { $ref: "#/components/schemas/EntryKind" }
+        - name: q
+          in: query
+          description: Part of the entry name.
+          schema: { type: string, minLength: 1, maxLength: 60 }
+        - $ref: "#/components/parameters/Ruleset"
+        - name: cursor
+          in: query
+          description: Opaque cursor from the previous page.
+          schema: { type: string, minLength: 1, maxLength: 200, pattern: "^[A-Za-z0-9_-]+$" }
+        - name: limit
+          in: query
+          description: Page size.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: One page of entries.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryPage"
+        "304":
+          description: Not modified since the given ETag.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/compendium/entries/{kind}/{slug}:
+    get:
+      operationId: getEntry
+      summary: Get a compendium entry
+      description: One entry rendered for reading, with the conditions its text mentions.
+      tags: [Compendium]
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+        - name: kind
+          in: path
+          required: true
+          description: Entry kind.
+          schema: { $ref: "#/components/schemas/EntryKind" }
+        - name: slug
+          in: path
+          required: true
+          description: Entry slug.
+          schema: { $ref: "#/components/schemas/Slug" }
+        - $ref: "#/components/parameters/Ruleset"
+      responses:
+        "200":
+          description: The entry.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "304":
+          description: Not modified since the given ETag.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/compendium/automation:
+    get:
+      operationId: getAutomationCoverage
+      summary: Get automation coverage
+      description: How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
+      tags: [Compendium]
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+      responses:
+        "200":
+          description: Counts per kind.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 40
+                items:
+                  $ref: "#/components/schemas/AutomationCount"
+        "304":
+          description: Not modified since the given ETag.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/compendium/sources:
     get:
       operationId: listSources
@@ -387,6 +518,85 @@ components:
           type: array
           maxItems: 40
           items: { $ref: "#/components/schemas/ConditionRef" }
+    EntryKind:
+      type: string
+      description: A kind of compendium entry other than a spell.
+      enum: [class, species, background, feat, weapon, armor, item, magic-item, monster, condition]
+    EntrySummary:
+      type: object
+      description: An entry as it appears in a list.
+      additionalProperties: false
+      required: [kind, slug, name, subtitle, ruleset]
+      properties:
+        kind: { $ref: "#/components/schemas/EntryKind" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        subtitle: { type: string, maxLength: 120 }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+    EntryPage:
+      type: object
+      description: One page of entries.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/EntrySummary" }
+        nextCursor:
+          type: string
+          maxLength: 200
+          pattern: "^[A-Za-z0-9_-]+$"
+    EntryFact:
+      type: object
+      description: A labelled value in an entry's header.
+      additionalProperties: false
+      required: [label, value]
+      properties:
+        label: { type: string, maxLength: 60 }
+        value: { type: string, maxLength: 500 }
+    EntrySection:
+      type: object
+      description: A titled block of rules text.
+      additionalProperties: false
+      required: [title, text]
+      properties:
+        title: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 20000 }
+    Entry:
+      type: object
+      description: An entry rendered for reading.
+      additionalProperties: false
+      required: [kind, slug, name, subtitle, ruleset, facts, sections, mentions]
+      properties:
+        kind: { $ref: "#/components/schemas/EntryKind" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        subtitle: { type: string, maxLength: 120 }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        facts:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/EntryFact" }
+        sections:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/EntrySection" }
+        mentions:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/ConditionRef" }
+    AutomationCount:
+      type: object
+      description: Entries of one kind by Automation Level.
+      additionalProperties: false
+      required: [kind, total, full, partial, manual]
+      properties:
+        kind: { type: string, enum: [spell, class, species, background, feat, weapon, armor, item, magic-item, monster, condition] }
+        total: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        full: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        partial: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        manual: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
     Source:
       type: object
       description: A source document and its required attribution.

@@ -82,6 +82,94 @@ export const zSpell = z.object({
 });
 
 /**
+ * A kind of compendium entry other than a spell.
+ */
+export const zEntryKind = z.enum([
+    'class',
+    'species',
+    'background',
+    'feat',
+    'weapon',
+    'armor',
+    'item',
+    'magic-item',
+    'monster',
+    'condition'
+]);
+
+/**
+ * An entry as it appears in a list.
+ */
+export const zEntrySummary = z.object({
+    kind: zEntryKind,
+    slug: zSlug,
+    name: z.string().max(120),
+    subtitle: z.string().max(120),
+    ruleset: zRuleset
+});
+
+/**
+ * One page of entries.
+ */
+export const zEntryPage = z.object({
+    items: z.array(zEntrySummary).max(100),
+    nextCursor: z.string().max(200).regex(/^[A-Za-z0-9_-]+$/).optional()
+});
+
+/**
+ * A labelled value in an entry's header.
+ */
+export const zEntryFact = z.object({
+    label: z.string().max(60),
+    value: z.string().max(500)
+});
+
+/**
+ * A titled block of rules text.
+ */
+export const zEntrySection = z.object({
+    title: z.string().max(200),
+    text: z.string().max(20000)
+});
+
+/**
+ * An entry rendered for reading.
+ */
+export const zEntry = z.object({
+    kind: zEntryKind,
+    slug: zSlug,
+    name: z.string().max(120),
+    subtitle: z.string().max(120),
+    ruleset: zRuleset,
+    facts: z.array(zEntryFact).max(40),
+    sections: z.array(zEntrySection).max(200),
+    mentions: z.array(zConditionRef).max(40)
+});
+
+/**
+ * Entries of one kind by Automation Level.
+ */
+export const zAutomationCount = z.object({
+    kind: z.enum([
+        'spell',
+        'class',
+        'species',
+        'background',
+        'feat',
+        'weapon',
+        'armor',
+        'item',
+        'magic-item',
+        'monster',
+        'condition'
+    ]),
+    total: z.int().gte(0).lte(1000000),
+    full: z.int().gte(0).lte(1000000),
+    partial: z.int().gte(0).lte(1000000),
+    manual: z.int().gte(0).lte(1000000)
+});
+
+/**
  * A source document and its required attribution.
  */
 export const zSource = z.object({
@@ -173,6 +261,50 @@ export const zGetSpellQuery = z.object({
  * The spell.
  */
 export const zGetSpellResponse = zSpell;
+
+export const zListEntriesHeaders = z.object({
+    'If-None-Match': z.string().max(100).optional()
+});
+
+export const zListEntriesQuery = z.object({
+    kind: zEntryKind,
+    q: z.string().min(1).max(60).optional(),
+    ruleset: zRuleset.optional(),
+    cursor: z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/).optional(),
+    limit: z.int().gte(1).lte(100).optional().default(50)
+});
+
+/**
+ * One page of entries.
+ */
+export const zListEntriesResponse = zEntryPage;
+
+export const zGetEntryHeaders = z.object({
+    'If-None-Match': z.string().max(100).optional()
+});
+
+export const zGetEntryPath = z.object({
+    kind: zEntryKind,
+    slug: zSlug
+});
+
+export const zGetEntryQuery = z.object({
+    ruleset: zRuleset.optional()
+});
+
+/**
+ * The entry.
+ */
+export const zGetEntryResponse = zEntry;
+
+export const zGetAutomationCoverageHeaders = z.object({
+    'If-None-Match': z.string().max(100).optional()
+});
+
+/**
+ * Counts per kind.
+ */
+export const zGetAutomationCoverageResponse = z.array(zAutomationCount).max(40);
 
 /**
  * Every source document.

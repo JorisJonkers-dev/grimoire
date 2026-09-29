@@ -8,6 +8,170 @@ import (
 	"github.com/go-faster/errors"
 )
 
+// Entries of one kind by Automation Level.
+// Ref: #/components/schemas/AutomationCount
+type AutomationCount struct {
+	Kind    AutomationCountKind `json:"kind"`
+	Total   int32               `json:"total"`
+	Full    int32               `json:"full"`
+	Partial int32               `json:"partial"`
+	Manual  int32               `json:"manual"`
+}
+
+// GetKind returns the value of Kind.
+func (s *AutomationCount) GetKind() AutomationCountKind {
+	return s.Kind
+}
+
+// GetTotal returns the value of Total.
+func (s *AutomationCount) GetTotal() int32 {
+	return s.Total
+}
+
+// GetFull returns the value of Full.
+func (s *AutomationCount) GetFull() int32 {
+	return s.Full
+}
+
+// GetPartial returns the value of Partial.
+func (s *AutomationCount) GetPartial() int32 {
+	return s.Partial
+}
+
+// GetManual returns the value of Manual.
+func (s *AutomationCount) GetManual() int32 {
+	return s.Manual
+}
+
+// SetKind sets the value of Kind.
+func (s *AutomationCount) SetKind(val AutomationCountKind) {
+	s.Kind = val
+}
+
+// SetTotal sets the value of Total.
+func (s *AutomationCount) SetTotal(val int32) {
+	s.Total = val
+}
+
+// SetFull sets the value of Full.
+func (s *AutomationCount) SetFull(val int32) {
+	s.Full = val
+}
+
+// SetPartial sets the value of Partial.
+func (s *AutomationCount) SetPartial(val int32) {
+	s.Partial = val
+}
+
+// SetManual sets the value of Manual.
+func (s *AutomationCount) SetManual(val int32) {
+	s.Manual = val
+}
+
+type AutomationCountKind string
+
+const (
+	AutomationCountKindSpell      AutomationCountKind = "spell"
+	AutomationCountKindClass      AutomationCountKind = "class"
+	AutomationCountKindSpecies    AutomationCountKind = "species"
+	AutomationCountKindBackground AutomationCountKind = "background"
+	AutomationCountKindFeat       AutomationCountKind = "feat"
+	AutomationCountKindWeapon     AutomationCountKind = "weapon"
+	AutomationCountKindArmor      AutomationCountKind = "armor"
+	AutomationCountKindItem       AutomationCountKind = "item"
+	AutomationCountKindMagicItem  AutomationCountKind = "magic-item"
+	AutomationCountKindMonster    AutomationCountKind = "monster"
+	AutomationCountKindCondition  AutomationCountKind = "condition"
+)
+
+// AllValues returns all AutomationCountKind values.
+func (AutomationCountKind) AllValues() []AutomationCountKind {
+	return []AutomationCountKind{
+		AutomationCountKindSpell,
+		AutomationCountKindClass,
+		AutomationCountKindSpecies,
+		AutomationCountKindBackground,
+		AutomationCountKindFeat,
+		AutomationCountKindWeapon,
+		AutomationCountKindArmor,
+		AutomationCountKindItem,
+		AutomationCountKindMagicItem,
+		AutomationCountKindMonster,
+		AutomationCountKindCondition,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AutomationCountKind) MarshalText() ([]byte, error) {
+	switch s {
+	case AutomationCountKindSpell:
+		return []byte(s), nil
+	case AutomationCountKindClass:
+		return []byte(s), nil
+	case AutomationCountKindSpecies:
+		return []byte(s), nil
+	case AutomationCountKindBackground:
+		return []byte(s), nil
+	case AutomationCountKindFeat:
+		return []byte(s), nil
+	case AutomationCountKindWeapon:
+		return []byte(s), nil
+	case AutomationCountKindArmor:
+		return []byte(s), nil
+	case AutomationCountKindItem:
+		return []byte(s), nil
+	case AutomationCountKindMagicItem:
+		return []byte(s), nil
+	case AutomationCountKindMonster:
+		return []byte(s), nil
+	case AutomationCountKindCondition:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AutomationCountKind) UnmarshalText(data []byte) error {
+	switch AutomationCountKind(data) {
+	case AutomationCountKindSpell:
+		*s = AutomationCountKindSpell
+		return nil
+	case AutomationCountKindClass:
+		*s = AutomationCountKindClass
+		return nil
+	case AutomationCountKindSpecies:
+		*s = AutomationCountKindSpecies
+		return nil
+	case AutomationCountKindBackground:
+		*s = AutomationCountKindBackground
+		return nil
+	case AutomationCountKindFeat:
+		*s = AutomationCountKindFeat
+		return nil
+	case AutomationCountKindWeapon:
+		*s = AutomationCountKindWeapon
+		return nil
+	case AutomationCountKindArmor:
+		*s = AutomationCountKindArmor
+		return nil
+	case AutomationCountKindItem:
+		*s = AutomationCountKindItem
+		return nil
+	case AutomationCountKindMagicItem:
+		*s = AutomationCountKindMagicItem
+		return nil
+	case AutomationCountKindMonster:
+		*s = AutomationCountKindMonster
+		return nil
+	case AutomationCountKindCondition:
+		*s = AutomationCountKindCondition
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A condition named in rules text, with its own text for tooltips.
 // Ref: #/components/schemas/ConditionRef
 type ConditionRef struct {
@@ -46,6 +210,461 @@ func (s *ConditionRef) SetDescription(val string) {
 	s.Description = val
 }
 
+// An entry rendered for reading.
+// Ref: #/components/schemas/Entry
+type Entry struct {
+	Kind     EntryKind      `json:"kind"`
+	Slug     Slug           `json:"slug"`
+	Name     string         `json:"name"`
+	Subtitle string         `json:"subtitle"`
+	Ruleset  Ruleset        `json:"ruleset"`
+	Facts    []EntryFact    `json:"facts"`
+	Sections []EntrySection `json:"sections"`
+	Mentions []ConditionRef `json:"mentions"`
+}
+
+// GetKind returns the value of Kind.
+func (s *Entry) GetKind() EntryKind {
+	return s.Kind
+}
+
+// GetSlug returns the value of Slug.
+func (s *Entry) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *Entry) GetName() string {
+	return s.Name
+}
+
+// GetSubtitle returns the value of Subtitle.
+func (s *Entry) GetSubtitle() string {
+	return s.Subtitle
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *Entry) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetFacts returns the value of Facts.
+func (s *Entry) GetFacts() []EntryFact {
+	return s.Facts
+}
+
+// GetSections returns the value of Sections.
+func (s *Entry) GetSections() []EntrySection {
+	return s.Sections
+}
+
+// GetMentions returns the value of Mentions.
+func (s *Entry) GetMentions() []ConditionRef {
+	return s.Mentions
+}
+
+// SetKind sets the value of Kind.
+func (s *Entry) SetKind(val EntryKind) {
+	s.Kind = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *Entry) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *Entry) SetName(val string) {
+	s.Name = val
+}
+
+// SetSubtitle sets the value of Subtitle.
+func (s *Entry) SetSubtitle(val string) {
+	s.Subtitle = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *Entry) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetFacts sets the value of Facts.
+func (s *Entry) SetFacts(val []EntryFact) {
+	s.Facts = val
+}
+
+// SetSections sets the value of Sections.
+func (s *Entry) SetSections(val []EntrySection) {
+	s.Sections = val
+}
+
+// SetMentions sets the value of Mentions.
+func (s *Entry) SetMentions(val []ConditionRef) {
+	s.Mentions = val
+}
+
+// A labelled value in an entry's header.
+// Ref: #/components/schemas/EntryFact
+type EntryFact struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+// GetLabel returns the value of Label.
+func (s *EntryFact) GetLabel() string {
+	return s.Label
+}
+
+// GetValue returns the value of Value.
+func (s *EntryFact) GetValue() string {
+	return s.Value
+}
+
+// SetLabel sets the value of Label.
+func (s *EntryFact) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetValue sets the value of Value.
+func (s *EntryFact) SetValue(val string) {
+	s.Value = val
+}
+
+// EntryHeaders wraps Entry with response headers.
+type EntryHeaders struct {
+	ETag               OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Entry
+}
+
+// GetETag returns the value of ETag.
+func (s *EntryHeaders) GetETag() OptString {
+	return s.ETag
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *EntryHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *EntryHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *EntryHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *EntryHeaders) GetResponse() Entry {
+	return s.Response
+}
+
+// SetETag sets the value of ETag.
+func (s *EntryHeaders) SetETag(val OptString) {
+	s.ETag = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *EntryHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *EntryHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *EntryHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *EntryHeaders) SetResponse(val Entry) {
+	s.Response = val
+}
+
+func (*EntryHeaders) getEntryRes() {}
+
+// A kind of compendium entry other than a spell.
+// Ref: #/components/schemas/EntryKind
+type EntryKind string
+
+const (
+	EntryKindClass      EntryKind = "class"
+	EntryKindSpecies    EntryKind = "species"
+	EntryKindBackground EntryKind = "background"
+	EntryKindFeat       EntryKind = "feat"
+	EntryKindWeapon     EntryKind = "weapon"
+	EntryKindArmor      EntryKind = "armor"
+	EntryKindItem       EntryKind = "item"
+	EntryKindMagicItem  EntryKind = "magic-item"
+	EntryKindMonster    EntryKind = "monster"
+	EntryKindCondition  EntryKind = "condition"
+)
+
+// AllValues returns all EntryKind values.
+func (EntryKind) AllValues() []EntryKind {
+	return []EntryKind{
+		EntryKindClass,
+		EntryKindSpecies,
+		EntryKindBackground,
+		EntryKindFeat,
+		EntryKindWeapon,
+		EntryKindArmor,
+		EntryKindItem,
+		EntryKindMagicItem,
+		EntryKindMonster,
+		EntryKindCondition,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EntryKind) MarshalText() ([]byte, error) {
+	switch s {
+	case EntryKindClass:
+		return []byte(s), nil
+	case EntryKindSpecies:
+		return []byte(s), nil
+	case EntryKindBackground:
+		return []byte(s), nil
+	case EntryKindFeat:
+		return []byte(s), nil
+	case EntryKindWeapon:
+		return []byte(s), nil
+	case EntryKindArmor:
+		return []byte(s), nil
+	case EntryKindItem:
+		return []byte(s), nil
+	case EntryKindMagicItem:
+		return []byte(s), nil
+	case EntryKindMonster:
+		return []byte(s), nil
+	case EntryKindCondition:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EntryKind) UnmarshalText(data []byte) error {
+	switch EntryKind(data) {
+	case EntryKindClass:
+		*s = EntryKindClass
+		return nil
+	case EntryKindSpecies:
+		*s = EntryKindSpecies
+		return nil
+	case EntryKindBackground:
+		*s = EntryKindBackground
+		return nil
+	case EntryKindFeat:
+		*s = EntryKindFeat
+		return nil
+	case EntryKindWeapon:
+		*s = EntryKindWeapon
+		return nil
+	case EntryKindArmor:
+		*s = EntryKindArmor
+		return nil
+	case EntryKindItem:
+		*s = EntryKindItem
+		return nil
+	case EntryKindMagicItem:
+		*s = EntryKindMagicItem
+		return nil
+	case EntryKindMonster:
+		*s = EntryKindMonster
+		return nil
+	case EntryKindCondition:
+		*s = EntryKindCondition
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One page of entries.
+// Ref: #/components/schemas/EntryPage
+type EntryPage struct {
+	Items      []EntrySummary `json:"items"`
+	NextCursor OptString      `json:"nextCursor"`
+}
+
+// GetItems returns the value of Items.
+func (s *EntryPage) GetItems() []EntrySummary {
+	return s.Items
+}
+
+// GetNextCursor returns the value of NextCursor.
+func (s *EntryPage) GetNextCursor() OptString {
+	return s.NextCursor
+}
+
+// SetItems sets the value of Items.
+func (s *EntryPage) SetItems(val []EntrySummary) {
+	s.Items = val
+}
+
+// SetNextCursor sets the value of NextCursor.
+func (s *EntryPage) SetNextCursor(val OptString) {
+	s.NextCursor = val
+}
+
+// EntryPageHeaders wraps EntryPage with response headers.
+type EntryPageHeaders struct {
+	ETag               OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           EntryPage
+}
+
+// GetETag returns the value of ETag.
+func (s *EntryPageHeaders) GetETag() OptString {
+	return s.ETag
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *EntryPageHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *EntryPageHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *EntryPageHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *EntryPageHeaders) GetResponse() EntryPage {
+	return s.Response
+}
+
+// SetETag sets the value of ETag.
+func (s *EntryPageHeaders) SetETag(val OptString) {
+	s.ETag = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *EntryPageHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *EntryPageHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *EntryPageHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *EntryPageHeaders) SetResponse(val EntryPage) {
+	s.Response = val
+}
+
+func (*EntryPageHeaders) listEntriesRes() {}
+
+// A titled block of rules text.
+// Ref: #/components/schemas/EntrySection
+type EntrySection struct {
+	Title string `json:"title"`
+	Text  string `json:"text"`
+}
+
+// GetTitle returns the value of Title.
+func (s *EntrySection) GetTitle() string {
+	return s.Title
+}
+
+// GetText returns the value of Text.
+func (s *EntrySection) GetText() string {
+	return s.Text
+}
+
+// SetTitle sets the value of Title.
+func (s *EntrySection) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetText sets the value of Text.
+func (s *EntrySection) SetText(val string) {
+	s.Text = val
+}
+
+// An entry as it appears in a list.
+// Ref: #/components/schemas/EntrySummary
+type EntrySummary struct {
+	Kind     EntryKind `json:"kind"`
+	Slug     Slug      `json:"slug"`
+	Name     string    `json:"name"`
+	Subtitle string    `json:"subtitle"`
+	Ruleset  Ruleset   `json:"ruleset"`
+}
+
+// GetKind returns the value of Kind.
+func (s *EntrySummary) GetKind() EntryKind {
+	return s.Kind
+}
+
+// GetSlug returns the value of Slug.
+func (s *EntrySummary) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *EntrySummary) GetName() string {
+	return s.Name
+}
+
+// GetSubtitle returns the value of Subtitle.
+func (s *EntrySummary) GetSubtitle() string {
+	return s.Subtitle
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *EntrySummary) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// SetKind sets the value of Kind.
+func (s *EntrySummary) SetKind(val EntryKind) {
+	s.Kind = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *EntrySummary) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *EntrySummary) SetName(val string) {
+	s.Name = val
+}
+
+// SetSubtitle sets the value of Subtitle.
+func (s *EntrySummary) SetSubtitle(val string) {
+	s.Subtitle = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *EntrySummary) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
 type ForwardAuth struct {
 	APIKey string
 	Roles  []string
@@ -70,6 +689,101 @@ func (s *ForwardAuth) SetAPIKey(val string) {
 func (s *ForwardAuth) SetRoles(val []string) {
 	s.Roles = val
 }
+
+// GetAutomationCoverageNotModified is response for GetAutomationCoverage operation.
+type GetAutomationCoverageNotModified struct {
+	ETag OptString
+}
+
+// GetETag returns the value of ETag.
+func (s *GetAutomationCoverageNotModified) GetETag() OptString {
+	return s.ETag
+}
+
+// SetETag sets the value of ETag.
+func (s *GetAutomationCoverageNotModified) SetETag(val OptString) {
+	s.ETag = val
+}
+
+func (*GetAutomationCoverageNotModified) getAutomationCoverageRes() {}
+
+// GetAutomationCoverageOKHeaders wraps []AutomationCount with response headers.
+type GetAutomationCoverageOKHeaders struct {
+	ETag               OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []AutomationCount
+}
+
+// GetETag returns the value of ETag.
+func (s *GetAutomationCoverageOKHeaders) GetETag() OptString {
+	return s.ETag
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetAutomationCoverageOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetAutomationCoverageOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetAutomationCoverageOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetAutomationCoverageOKHeaders) GetResponse() []AutomationCount {
+	return s.Response
+}
+
+// SetETag sets the value of ETag.
+func (s *GetAutomationCoverageOKHeaders) SetETag(val OptString) {
+	s.ETag = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetAutomationCoverageOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetAutomationCoverageOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetAutomationCoverageOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetAutomationCoverageOKHeaders) SetResponse(val []AutomationCount) {
+	s.Response = val
+}
+
+func (*GetAutomationCoverageOKHeaders) getAutomationCoverageRes() {}
+
+// GetEntryNotModified is response for GetEntry operation.
+type GetEntryNotModified struct {
+	ETag OptString
+}
+
+// GetETag returns the value of ETag.
+func (s *GetEntryNotModified) GetETag() OptString {
+	return s.ETag
+}
+
+// SetETag sets the value of ETag.
+func (s *GetEntryNotModified) SetETag(val OptString) {
+	s.ETag = val
+}
+
+func (*GetEntryNotModified) getEntryRes() {}
 
 // GetSpellNotModified is response for GetSpell operation.
 type GetSpellNotModified struct {
@@ -106,6 +820,23 @@ func (s *HealthStatus) SetStatus(val string) {
 
 func (*HealthStatus) getHealthRes()    {}
 func (*HealthStatus) getReadinessRes() {}
+
+// ListEntriesNotModified is response for ListEntries operation.
+type ListEntriesNotModified struct {
+	ETag OptString
+}
+
+// GetETag returns the value of ETag.
+func (s *ListEntriesNotModified) GetETag() OptString {
+	return s.ETag
+}
+
+// SetETag sets the value of ETag.
+func (s *ListEntriesNotModified) SetETag(val OptString) {
+	s.ETag = val
+}
+
+func (*ListEntriesNotModified) listEntriesRes() {}
 
 // ListSourcesOKHeaders wraps []Source with response headers.
 type ListSourcesOKHeaders struct {
@@ -544,13 +1275,16 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 	s.Response = val
 }
 
-func (*ProblemStatusCodeWithHeaders) getHealthRes()    {}
-func (*ProblemStatusCodeWithHeaders) getMeRes()        {}
-func (*ProblemStatusCodeWithHeaders) getReadinessRes() {}
-func (*ProblemStatusCodeWithHeaders) getSpellRes()     {}
-func (*ProblemStatusCodeWithHeaders) getStatusRes()    {}
-func (*ProblemStatusCodeWithHeaders) listSourcesRes()  {}
-func (*ProblemStatusCodeWithHeaders) listSpellsRes()   {}
+func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
+func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
+func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
+func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
+func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
+func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
+func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
+func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
+func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
+func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
 
 // Rules document key.
 // Ref: #/components/schemas/Ruleset

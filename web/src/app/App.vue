@@ -3,13 +3,14 @@
     <header class="bar">
       <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
       <nav aria-label="Main">
-        <RouterLink :to="{ name: 'spells' }">Spells</RouterLink>
+        <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
       </nav>
     </header>
     <RouterView />
     <footer class="credit">
       Grimoire by <a href="https://jorisjonkers.dev">Joris Jonkers</a> ·
-      <RouterLink :to="{ name: 'attribution' }">SRD content under CC-BY-4.0</RouterLink>
+      <RouterLink :to="{ name: 'attribution' }">SRD content under CC-BY-4.0</RouterLink> ·
+      <RouterLink :to="{ name: 'automation' }">Automation coverage</RouterLink>
     </footer>
   </div>
 </template>
