@@ -1,0 +1,127 @@
+# Tag-triggered publish flow for deploy-platform service repos.
+#
+# push of a v*.*.* tag (authored by release.yml via the App token) drives:
+#   publish-image -> resolve-image-lock -> publish-deploy-artifact -> register-service
+#
+# Boundary rule (R1-2): the image lock crosses the reusable-workflow boundary
+# as an UPLOADED ARTIFACT (image-lock-artifact), never as a runner-local path.
+# deploy-artifact.yml downloads the artifact itself; there is no intermediate
+# download job and no image-lock-path input on the deploy-artifact call.
+name: Publish
+
+# Manual until platform onboarding (database, secrets, namespace, auth allow-list) is complete;
+# then switch this trigger back to `push: tags: ['v*.*.*']`.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish (vX.Y.Z)
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  # -- 1. Build and push the container image --------------------------------
+  # Reusable workflow: consume its results via needs.<job>.outputs downstream;
+  # a `uses:` job must not redeclare an outputs: block.
+  publish-image:
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@1efce81af819868fb2f5fd99ee7b04a1275845d8 # v0.18.0
+    with:
+      image-name: grimoire
+      version: ${{ inputs.tag }}
+    permissions:
+      contents: read
+      packages: write
+
+  # -- 2. Resolve the image lock (upload artifact, never path) --------------
+  resolve-image-lock:
+    needs: [publish-image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      images-lock-artifact: images-lock-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: resolve-image-digest
+        id: digest
+        # container-publish.yml does not expose a digest output; resolve the
+        # digest of the tag it just pushed from the registry.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ghcr.io/jorisjonkers-dev/grimoire
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          digest="$(docker buildx imagetools inspect "${IMAGE}:${TAG}" --format '{{json .Manifest}}' | jq -r '.digest')"
+          if [ -z "$digest" ] || [ "$digest" = "null" ]; then
+            echo "E_FLOATING_IMAGE: could not resolve a digest for ${IMAGE}:${TAG}" >&2
+            exit 1
+          fi
+          echo "image-digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: lock-image
+        # deploy-config-schema@0.16.0 has no top-level 'images' subcommand.
+        # Write the object-form images.lock.json directly; the schema CLI and
+        # deploy-artifact action consume it as a plain JSON file.
+        env:
+          IMAGE_DIGEST: ${{ steps.digest.outputs.image-digest }}
+        run: |
+          set -euo pipefail
+          if [ -z "$IMAGE_DIGEST" ] || [ "$IMAGE_DIGEST" = "null" ]; then
+            echo "E_FLOATING_IMAGE: IMAGE_DIGEST is empty" >&2
+            exit 1
+          fi
+          case "$IMAGE_DIGEST" in
+            sha256:*) ;;
+            *) echo "E_FLOATING_IMAGE: IMAGE_DIGEST is not a digest ref (got: $IMAGE_DIGEST)" >&2; exit 1 ;;
+          esac
+          printf '{"grimoire":"ghcr.io/jorisjonkers-dev/grimoire@%s"}\n' "$IMAGE_DIGEST" \
+            > platform/images.lock.json
+          echo "Locked image: ghcr.io/jorisjonkers-dev/grimoire@${IMAGE_DIGEST}"
+
+      - name: verify-lock
+        # Guard: confirm images.lock.json is well-formed and digest-pinned.
+        run: |
+          set -euo pipefail
+          lock_ref=$(jq -r '.["grimoire"]' platform/images.lock.json)
+          case "$lock_ref" in
+            *@sha256:*) echo "Digest pin verified: $lock_ref" ;;
+            *) echo "E_FLOATING_IMAGE: lock ref is not digest-pinned: $lock_ref" >&2; exit 1 ;;
+          esac
+
+      - name: upload-image-lock
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: images-lock-${{ github.run_id }}
+          path: platform/images.lock.json
+          retention-days: 1
+
+  # -- 3. Render and publish the deploy artifact ----------------------------
+  # The reusable workflow downloads the image-lock artifact itself;
+  # image-lock-artifact is the ONLY lock input passed across the boundary.
+  publish-deploy-artifact:
+    needs: [resolve-image-lock]
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/deploy-artifact.yml@1efce81af819868fb2f5fd99ee7b04a1275845d8 # v0.18.0
+    with:
+      ref: ${{ inputs.tag }}
+      artifact-name: grimoire
+      artifact-version: ${{ inputs.tag }}
+      schema-version: 0.22.0
+      apply-bundle: true
+      context-ref: ghcr.io/jorisjonkers-dev/cluster-deploy-context-public@sha256:95dc39fc695694c8fb4b0c538d7fe13038d407c7302c3725c98f0496c6a83499
+      deploy-dir: platform
+      image-lock-artifact: ${{ needs.resolve-image-lock.outputs.images-lock-artifact }}
+      environments: production
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write

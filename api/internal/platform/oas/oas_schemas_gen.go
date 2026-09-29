@@ -52,6 +52,73 @@ func (s *HealthStatus) SetStatus(val string) {
 func (*HealthStatus) getHealthRes()    {}
 func (*HealthStatus) getReadinessRes() {}
 
+// The authenticated account.
+// Ref: #/components/schemas/Me
+type Me struct {
+	// Stable account id from the platform's identity provider.
+	Subject string `json:"subject"`
+}
+
+// GetSubject returns the value of Subject.
+func (s *Me) GetSubject() string {
+	return s.Subject
+}
+
+// SetSubject sets the value of Subject.
+func (s *Me) SetSubject(val string) {
+	s.Subject = val
+}
+
+// MeHeaders wraps Me with response headers.
+type MeHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Me
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MeHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MeHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MeHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MeHeaders) GetResponse() Me {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MeHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MeHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MeHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MeHeaders) SetResponse(val Me) {
+	s.Response = val
+}
+
+func (*MeHeaders) getMeRes() {}
+
 // NewOptInt32 returns new OptInt32 with value set to v.
 func NewOptInt32(v int32) OptInt32 {
 	return OptInt32{
@@ -264,6 +331,7 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 }
 
 func (*ProblemStatusCodeWithHeaders) getHealthRes()    {}
+func (*ProblemStatusCodeWithHeaders) getMeRes()        {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes() {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()    {}
 

@@ -19,9 +19,35 @@ servers:
 security:
   - forwardAuth: []
 tags:
+  - name: Identity
+    description: The signed-in account.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
+  /api/v1/me:
+    get:
+      operationId: getMe
+      summary: Who am I
+      description: Returns the identity the platform authenticated for this request.
+      tags: [Identity]
+      responses:
+        "200":
+          description: The signed-in account.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/status:
     get:
       operationId: getStatus
@@ -124,6 +150,20 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
   schemas:
+    Me:
+      type: object
+      description: The authenticated account.
+      additionalProperties: false
+      required: [subject]
+      properties:
+        subject:
+          type: string
+          description: Stable account id from the platform's identity provider.
+          minLength: 1
+          maxLength: 128
+          pattern: "^[^\\s]+$"
+      examples:
+        - subject: 5b1c6f2e-9c1d-4f0e-a2a7-2d8e4a9f1b3c
     Status:
       type: object
       description: Service status.

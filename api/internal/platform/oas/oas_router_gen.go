@@ -11,7 +11,10 @@ import (
 )
 
 var (
-	rn4AllowedHeaders = map[string]string{
+	rn3AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn6AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
 )
@@ -66,29 +69,68 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			switch elem[0] {
-			case 'a': // Prefix: "api/v1/status"
+			case 'a': // Prefix: "api/v1/"
 
-				if l := len("api/v1/status"); len(elem) >= l && elem[0:l] == "api/v1/status" {
+				if l := len("api/v1/"); len(elem) >= l && elem[0:l] == "api/v1/" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
 				if len(elem) == 0 {
-					// Leaf node.
-					switch r.Method {
-					case "GET":
-						s.handleGetStatusRequest([0]string{}, elemIsEscaped, w, r)
-					default:
-						s.notAllowed(w, r, notAllowedParams{
-							allowedMethods: "GET",
-							allowedHeaders: rn4AllowedHeaders,
-							acceptPost:     "",
-							acceptPatch:    "",
-						})
+					break
+				}
+				switch elem[0] {
+				case 'm': // Prefix: "me"
+
+					if l := len("me"); len(elem) >= l && elem[0:l] == "me" {
+						elem = elem[l:]
+					} else {
+						break
 					}
 
-					return
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetMeRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, notAllowedParams{
+								allowedMethods: "GET",
+								allowedHeaders: rn3AllowedHeaders,
+								acceptPost:     "",
+								acceptPatch:    "",
+							})
+						}
+
+						return
+					}
+
+				case 's': // Prefix: "status"
+
+					if l := len("status"); len(elem) >= l && elem[0:l] == "status" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch r.Method {
+						case "GET":
+							s.handleGetStatusRequest([0]string{}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, notAllowedParams{
+								allowedMethods: "GET",
+								allowedHeaders: rn6AllowedHeaders,
+								acceptPost:     "",
+								acceptPatch:    "",
+							})
+						}
+
+						return
+					}
+
 				}
 
 			case 'h': // Prefix: "healthz"
@@ -241,29 +283,68 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				break
 			}
 			switch elem[0] {
-			case 'a': // Prefix: "api/v1/status"
+			case 'a': // Prefix: "api/v1/"
 
-				if l := len("api/v1/status"); len(elem) >= l && elem[0:l] == "api/v1/status" {
+				if l := len("api/v1/"); len(elem) >= l && elem[0:l] == "api/v1/" {
 					elem = elem[l:]
 				} else {
 					break
 				}
 
 				if len(elem) == 0 {
-					// Leaf node.
-					switch method {
-					case "GET":
-						r.name = GetStatusOperation
-						r.summary = "Service status"
-						r.operationID = "getStatus"
-						r.operationGroup = ""
-						r.pathPattern = "/api/v1/status"
-						r.args = args
-						r.count = 0
-						return r, true
-					default:
-						return
+					break
+				}
+				switch elem[0] {
+				case 'm': // Prefix: "me"
+
+					if l := len("me"); len(elem) >= l && elem[0:l] == "me" {
+						elem = elem[l:]
+					} else {
+						break
 					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = GetMeOperation
+							r.summary = "Who am I"
+							r.operationID = "getMe"
+							r.operationGroup = ""
+							r.pathPattern = "/api/v1/me"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
+				case 's': // Prefix: "status"
+
+					if l := len("status"); len(elem) >= l && elem[0:l] == "status" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						// Leaf node.
+						switch method {
+						case "GET":
+							r.name = GetStatusOperation
+							r.summary = "Service status"
+							r.operationID = "getStatus"
+							r.operationGroup = ""
+							r.pathPattern = "/api/v1/status"
+							r.args = args
+							r.count = 0
+							return r, true
+						default:
+							return
+						}
+					}
+
 				}
 
 			case 'h': // Prefix: "healthz"

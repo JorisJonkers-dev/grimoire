@@ -35,6 +35,7 @@ func findAuthorization(h http.Header, prefix string) (string, bool) {
 
 // operationRolesForwardAuth is a private map storing roles per operation.
 var operationRolesForwardAuth = map[string][]string{
+	GetMeOperation:     []string{},
 	GetStatusOperation: []string{},
 }
 

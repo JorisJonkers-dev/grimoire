@@ -219,8 +219,8 @@ DM's AI agent ────▶│ Traefik + auth  │ forward-auth → auth-api (
         └─────────────────┘        └─────────────────┘
 ```
 
-- The SPA is a static artifact served by an unprivileged nginx image (vue-web-commons `/nginx`
-  preset) on the same host as the API, so cookies and WebSockets are same-origin.
+- The SPA is embedded in the API binary and served by it, so cookies and WebSockets are
+  same-origin and there is one image to deploy.
 - REST, WebSocket and MCP are three **inbound adapters over the same use cases**. There is no
   business logic in any of them.
 
@@ -1076,8 +1076,9 @@ Imperative use-case names (`MoveToken`, `RunEncounterCheck`); ports named `…Re
 
 ### 19.1 Deployment
 
-- Images: `grimoire-api` (distroless static Go binary) and `grimoire-web` (unprivileged nginx with
-  the SPA). Built and pushed by the repo-template `publish.yml`; deployed via `platform/deployment.yml`
+- One image, `grimoire`: a distroless static Go binary that also serves the built SPA (embedded at
+  build time, SPA fallback, immutable hashed assets, strict CSP). Built and pushed by `publish.yml`
+  (manual until platform onboarding is complete); deployed via `platform/deployment.yml`
   (v2) with pinned digests in `images.lock.json`, through the estate's publish → `deploy/production`
   → Flux flow.
 - Route: `grimoire.jorisjonkers.dev`, `authMode: forward-auth` for the app and API; `/mcp` uses

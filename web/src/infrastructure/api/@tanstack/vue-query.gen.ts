@@ -3,8 +3,8 @@
 import { queryOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { getHealth, getReadiness, getStatus, type Options } from '../sdk.gen';
-import type { GetHealthData, GetHealthError, GetHealthResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetStatusData, GetStatusError, GetStatusResponse } from '../types.gen';
+import { getHealth, getMe, getReadiness, getStatus, type Options } from '../sdk.gen';
+import type { GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetStatusData, GetStatusError, GetStatusResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -38,6 +38,26 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     }
     return [params];
 };
+
+export const getMeQueryKey = (options?: Options<GetMeData>) => createQueryKey('getMe', options);
+
+/**
+ * Who am I
+ *
+ * Returns the identity the platform authenticated for this request.
+ */
+export const getMeOptions = (options?: Options<GetMeData>) => queryOptions<GetMeResponse, GetMeError, GetMeResponse, ReturnType<typeof getMeQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMe({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMeQueryKey(options)
+});
 
 export const getStatusQueryKey = (options?: Options<GetStatusData>) => createQueryKey('getStatus', options);
 

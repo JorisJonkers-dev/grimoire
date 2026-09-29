@@ -118,3 +118,43 @@ func TestStatusWhenDatabaseFails(t *testing.T) {
 		t.Fatalf("status db down: %d %s", rec.Code, rec.Body.String())
 	}
 }
+
+func TestMeReturnsTheForwardedSubject(t *testing.T) {
+	t.Parallel()
+	rec := get(newServer(t, fakeStore{}, ""), "/api/v1/me", "5b1c6f2e")
+	if rec.Code != 200 || decode(t, rec)["subject"] != "5b1c6f2e" {
+		t.Fatalf("me: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := get(newServer(t, fakeStore{}, ""), "/api/v1/me", ""); rec.Code != 401 {
+		t.Fatalf("me without identity: %d", rec.Code)
+	}
+}
+
+func TestMeWithoutIdentityInContext(t *testing.T) {
+	t.Parallel()
+	res, err := (&httpapi.Handler{Log: quiet}).GetMe(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p, ok := res.(interface{ GetStatusCode() int }); !ok || p.GetStatusCode() != 401 {
+		t.Fatalf("res = %#v", res)
+	}
+}
+
+func TestSecurityHeadersAndWebFallback(t *testing.T) {
+	t.Parallel()
+	web := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte("app")) })
+	h, err := httpapi.New(httpapi.Options{
+		Handler: &httpapi.Handler{Version: "1", Store: fakeStore{}, Log: quiet}, RateLimit: 10, Now: time.Now, Web: web,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := get(h, "/campaigns", "")
+	if rec.Body.String() != "app" || rec.Header().Get("Content-Security-Policy") == "" || rec.Header().Get("X-Content-Type-Options") != "nosniff" {
+		t.Fatalf("web: %d %v %q", rec.Code, rec.Header(), rec.Body.String())
+	}
+	if rec := get(h, "/healthz", ""); rec.Header().Get("X-Frame-Options") != "DENY" {
+		t.Fatalf("api responses need headers too: %v", rec.Header())
+	}
+}

@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+!api/internal/platform/webui/dist/.gitkeep
+web/coverage
+web/playwright-report
+web/test-results
+api/bin
+api/coverage.out
+.git

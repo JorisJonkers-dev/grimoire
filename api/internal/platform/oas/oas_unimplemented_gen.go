@@ -22,6 +22,15 @@ func (UnimplementedHandler) GetHealth(ctx context.Context) (r GetHealthRes, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// GetMe implements getMe operation.
+//
+// Returns the identity the platform authenticated for this request.
+//
+// GET /api/v1/me
+func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetReadiness implements getReadiness operation.
 //
 // Returns ok once the API can serve traffic.

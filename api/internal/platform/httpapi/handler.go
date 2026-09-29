@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/auth"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 )
 
@@ -54,14 +55,27 @@ func (h *Handler) GetStatus(ctx context.Context) (oas.GetStatusRes, error) {
 	}}, nil
 }
 
+// GetMe returns the identity the platform authenticated.
+func (h *Handler) GetMe(ctx context.Context) (oas.GetMeRes, error) {
+	id, ok := auth.FromContext(ctx)
+	if !ok {
+		return problem(http.StatusUnauthorized, "Unauthorized", "Sign in to continue."), nil
+	}
+	return &oas.MeHeaders{Response: oas.Me{Subject: id.Subject}}, nil
+}
+
 func unavailable() *oas.ProblemStatusCodeWithHeaders {
+	return problem(http.StatusServiceUnavailable, "Service unavailable", "Try again shortly.")
+}
+
+func problem(status int, title, detail string) *oas.ProblemStatusCodeWithHeaders {
 	return &oas.ProblemStatusCodeWithHeaders{
-		StatusCode: http.StatusServiceUnavailable,
+		StatusCode: status,
 		Response: oas.Problem{
 			Type:   "about:blank",
-			Title:  "Service unavailable",
-			Status: http.StatusServiceUnavailable,
-			Detail: oas.NewOptString("Try again shortly."),
+			Title:  title,
+			Status: int32(status), //nolint:gosec // HTTP status codes fit in int32
+			Detail: oas.NewOptString(detail),
 		},
 	}
 }

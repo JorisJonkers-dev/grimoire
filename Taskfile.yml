@@ -74,7 +74,7 @@ tasks:
 
   test:go:
     dir: api
-    cmd: go test -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
+    cmd: go test -race -count=1 -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
 
   test:web:
     deps: [install]
