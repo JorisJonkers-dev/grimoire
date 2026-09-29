@@ -66,3 +66,8 @@ templates/**/.claude/commands/speckit*.md
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# Go
+api/bin/
+*.test
+coverage.out

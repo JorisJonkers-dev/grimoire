@@ -1,0 +1,83 @@
+# Lint gate for the API (ARCHITECTURE.md §6.3, §17.2). Zero issues is required.
+# NilAway joins as a module plugin (custom-gcl) once the domain packages land.
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - depguard
+    - errname
+    - errorlint
+    - exhaustive
+    - exhaustruct_v5
+    - gochecknoglobals
+    - gochecksumtype
+    - gocognit
+    - gocritic
+    - gosec
+    - nilerr
+    - nilnil
+    - noctx
+    - revive
+    - unparam
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: false
+    exhaustruct_v5:
+      enforce-patterns:
+        - .*/grimoire/api/internal/.*
+      # Standard-library structs (e.g. net/http.Server) are configured partially by design.
+      ignore-patterns:
+        - ^[^.]+\.[^.]+$
+    gocognit:
+      min-complexity: 15
+    depguard:
+      rules:
+        rules-engine-is-pure:
+          files:
+            - "**/internal/rules/**"
+          deny:
+            - pkg: net/http
+              desc: the rules engine is pure; I/O belongs in adapters
+            - pkg: database/sql
+              desc: the rules engine is pure; persistence belongs in adapters
+            - pkg: github.com/jackc/pgx
+              desc: the rules engine is pure; persistence belongs in adapters
+            - pkg: math/rand
+              desc: inject rng.Source instead
+            - pkg: time
+              desc: inject the clock instead
+        domain-has-no-transport:
+          files:
+            - "**/internal/*/domain/**"
+          deny:
+            - pkg: net/http
+              desc: domain code never sees transport
+            - pkg: github.com/jackc/pgx
+              desc: domain code never sees persistence
+            - pkg: github.com/JorisJonkers-dev/grimoire/api/internal/platform
+              desc: domain code never imports platform adapters
+  exclusions:
+    rules:
+      # Sparse comments by convention: no doc comment required on every exported name.
+      - linters:
+          - revive
+        text: "^(exported|package-comments):"
+
+      - path: _test\.go
+        linters:
+          - exhaustruct_v5
+          - gochecknoglobals
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/JorisJonkers-dev/grimoire

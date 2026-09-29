@@ -1,0 +1,3 @@
+# Live Sessions run in one goroutine on a single API replica
+
+Each live Session is owned by one goroutine that serialises commands (single writer, no locks) and writes through to Postgres before broadcasting; the API runs as one replica guarded by a per-Session Postgres advisory lock so a rolling deploy can never run two owners. This is deliberately not horizontally scaled yet: a private group's load fits one pod, and single-writer ownership removes a whole class of concurrency bugs. Scale-out is prepared behind two ports — `SessionOwner` (lock + command forwarding) and `Broadcaster` (in-process now, LISTEN/NOTIFY or NATS later) — so it is an adapter change, not a rewrite.

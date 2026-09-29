@@ -1,75 +1,66 @@
-# repo-template
+# Grimoire
 
-The template every [JorisJonkers-dev](https://github.com/JorisJonkers-dev) repository is
-bootstrapped from. It carries the org's shared conventions so each repo starts
-aligned instead of re-inventing CI, rulesets, templates, and release flow.
+A self-hosted D&D 5e table companion. Players use their phones, the DM uses a laptop or tablet, and
+a TV shows the shared table. The server computes the rules — modifiers, ranges, hit chances,
+effects, fog of war — and keeps every hidden thing hidden. Combat takes its cues from Baldur's Gate 3
+(hotbar, action economy, hit-chance previews, reaction prompts, roll cards) with far less animation.
+Players can still roll real dice: the app shows exactly which dice to throw and does the arithmetic.
 
-## What you get
+A DM can also prep and run sessions from an AI agent through Grimoire's MCP server: generate
+encounters from per-campaign pools, roll random encounters on rests and travel, stock town shops,
+and import their own adventures.
 
-- **One CI pipeline that ends in `Pipeline Complete`** — the single required
-  status check across the org. (`.github/workflows/ci.yml`)
-- **The common branch ruleset as code** — squash-only, linear history, and
-  `Pipeline Complete` required — plus an idempotent apply script.
-  (`.github/rulesets/main.json`, `scripts/apply-ruleset.sh`)
-- **Tag → release versioning** via release-please, with exact-pin consumption
-  and version-pinned deploys. (`release.yml`, `VERSIONING.md`)
-- **Release-please archetype templates** for simple, Node, and Gradle repos.
-  (`templates/release-please/`)
-- **Reusable workflow caller templates** for JVM, Node, Python, Nix, Dockerized
-  services, GitOps repos, project onboarding, repository hygiene, and deploy
-  bundles. (`templates/workflows/`)
-- **Private-repo push-protection hooks** for direct-main-push blocking and
-  Conventional Commit enforcement. (`scripts/install-git-hooks.sh`,
-  `templates/push-protection/`)
-- **Renovate** via the shared JorisJonkers-dev preset.
-- **Dependency policy templates** for Dependabot, Renovate, dependency-review,
-  Scorecard, and CodeQL. (`templates/dependency-policy/`)
-- **Root tooling and docs presets** for frontend lint/format hooks, Stryker,
-  gitleaks, ADR layout, and docs indexes. (`templates/root-tooling/`)
-- **Opt-in platform/deploy config validation** against
-  `@jorisjonkers-dev/deploy-config-schema` via a reusable workflow template.
-  (`templates/platform-config-validation/`)
-- **Deploy-platform service wiring** — release/publish/deploy-preview workflow
-  callers, the `deploy/` contract skeleton, a local CI-parity renderer with the
-  SC-11 readiness scorecard, and a worked minimal-service example.
-  (`templates/platform-deploy/`)
-- **Design-only Docker pattern skeletons** for JVM, CRaC JVM, OTel entrypoints,
-  Vue builds, package-manager builds, and nginx privilege variants.
-  (`templates/docker-patterns/`)
-- **Repository hygiene seeds** for `CODEOWNERS`, `SECURITY.md`,
-  `CONTRIBUTING.md`, `.editorconfig`, `.gitattributes`, `.gitignore`,
-  `.gitleaks.toml`, and `LICENSE`.
+> **Status:** pre-alpha. The repository currently holds the architecture, conventions and an empty
+> skeleton. Design mockups come next, then milestone M1 (see [ARCHITECTURE.md §20](ARCHITECTURE.md#20-milestones)).
 
-## Use it
+## Stack
 
-See [`docs/REPO_SETUP.md`](docs/REPO_SETUP.md) to bootstrap a new repo, and
-[`CONTRIBUTING.md`](CONTRIBUTING.md) / [`VERSIONING.md`](VERSIONING.md) for the
-conventions every repo follows.
+| Part | Tech |
+|---|---|
+| API | Go 1.26 · spec-first OpenAPI 3.1 (ogen) · sqlc · Atlas · WebSocket live runtime · MCP |
+| Web | Vue 3.5 · TypeScript (strict) · Vite · generated client + Zod · TanStack Query · Pinia · PixiJS + SVG map |
+| Apps | Installable PWA · Capacitor 7 shells for Android/iOS · kiosk browser for the Table |
+| Data | PostgreSQL 16+ (normalised, no JSONB) · S3-compatible object storage |
 
-Validate template assets locally with:
+## Documents
 
-```bash
-scripts/validate-templates.sh
+| Document | What it is |
+|---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | The source of truth: scope, contexts, contracts, data, rules engine, live play, gates, milestones |
+| [CONTEXT.md](CONTEXT.md) | The glossary. Use these words in code, API and UI |
+| [docs/adr/](docs/adr/) | Decisions that are hard to reverse |
+| [docs/blueprints/](docs/blueprints/) | Generic Go API and Vue SPA blueprints this project specialises |
+| [CLAUDE.md](CLAUDE.md) | Rules for AI agents working in this repo |
+| [ATTRIBUTION.md](ATTRIBUTION.md) | Credits for SRD content and third-party work |
+
+## Development
+
+Toolchain versions are pinned in [`mise.toml`](mise.toml); every workflow is a
+[Task](https://taskfile.dev) target.
+
+```sh
+mise install        # Go, Node, pnpm, task, golangci-lint, actionlint
+task                # list targets
+task check          # everything CI runs on a pull request
+task test           # unit tests
 ```
 
-Repos that carry platform/deploy YAML can opt into schema validation by copying
-`templates/platform-config-validation/platform-config-validate.yml.tmpl` to
-`.github/workflows/platform-config-validate.yml`. The workflow calls
-`JorisJonkers-dev/github-workflows/.github/workflows/platform-config-validate.yml@v0.7.3`
-with `schema-kind: auto` and defaults to `platform/**/*.yml`,
-`platform/**/*.yaml`, `deploy/**/*.yml`, and `deploy/**/*.yaml`.
+## Layout
 
-Project, repository-hygiene, and deploy-bundle caller templates require the
-matching reusable workflows to exist in `github-workflows`; render
-`{{github_workflows_ref}}` to a published tag before copying them into a repo.
+```
+api/        Go module: cmd/grimoire (composition root) and internal/<context>
+openapi/    The hand-authored OpenAPI 3.1 contract and its lint config
+web/        Vue app (arrives with the design system)
+design/     Design exports and tokens (arrives with the Claude Design mockups)
+docs/       ADRs and blueprints
+```
 
-## Links
+## Contributing
 
-- [Organization profile](https://github.com/JorisJonkers-dev)
-- [Security policy](https://github.com/JorisJonkers-dev/.github/security/policy)
-- [Changelog](./CHANGELOG.md)
-- [License](./LICENSE)
+See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.md).
 
-Copyright (c) Joris Jonkers. Source available for viewing only; use, copying,
-modification, redistribution, deployment, or reuse is not licensed. See
-[LICENSE](./LICENSE).
+## License
+
+[Attribution Assurance License](LICENSE). Forks and redistributions must credit **Joris Jonkers**
+(<https://jorisjonkers.dev>) visibly in their user interface and in their documentation. SRD content
+is used under CC-BY-4.0; see [ATTRIBUTION.md](ATTRIBUTION.md).

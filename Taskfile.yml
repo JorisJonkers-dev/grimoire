@@ -1,0 +1,81 @@
+# One command per loop (ARCHITECTURE.md §5). `task` lists targets; `task check` is what CI runs.
+version: "3"
+
+tasks:
+  default:
+    cmd: task --list
+    silent: true
+
+  install:
+    desc: Install JS tooling from the frozen lockfile
+    cmd: pnpm install --frozen-lockfile
+
+  gen:
+    desc: Regenerate code from the OpenAPI contract (ogen, sqlc and hey-api arrive with M1)
+    cmds:
+      - task: lint:spec
+
+  lint:
+    desc: All linters
+    cmds:
+      - task: lint:go
+      - task: lint:spec
+      - task: lint:actions
+
+  lint:go:
+    desc: golangci-lint (incl. depguard, exhaustive, gochecksumtype, exhaustruct) and format check
+    dir: api
+    cmds:
+      - golangci-lint run ./...
+      - golangci-lint fmt --diff ./...
+
+  lint:spec:
+    desc: OpenAPI conformance — Redocly recommended-strict, Spectral OWASP, vacuum
+    deps: [install]
+    cmds:
+      - pnpm --filter @grimoire/openapi run lint
+      - vacuum lint --details --fail-severity error openapi/v1/openapi.yaml
+
+  lint:actions:
+    desc: actionlint on every workflow
+    cmd: actionlint
+
+  test:
+    desc: Unit tests with the race detector
+    dir: api
+    cmd: go test -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
+
+  coverage:
+    desc: Enforce coverage thresholds (85% total, 100% rules)
+    dir: api
+    deps: [test]
+    cmd: go-test-coverage --config .testcoverage.yml
+
+  build:
+    desc: Build the API binary
+    dir: api
+    cmd: go build -trimpath -o bin/grimoire ./cmd/grimoire
+
+  secrets:
+    desc: Scan the working tree for secrets
+    cmd: gitleaks dir --no-banner --redact .
+
+  check:
+    desc: Everything CI runs on a pull request
+    cmds:
+      - task: lint
+      - task: coverage
+      - task: build
+      - task: secrets
+
+  fix:
+    desc: Apply formatters and autofixes
+    dir: api
+    cmds:
+      - golangci-lint fmt ./...
+      - golangci-lint run --fix ./...
+
+  dev:
+    desc: Run the API locally (Postgres, live reload and Vite join as they land)
+    dir: api
+    cmd: go run ./cmd/grimoire

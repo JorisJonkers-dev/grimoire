@@ -1,0 +1,135 @@
+openapi: 3.1.0
+info:
+  title: Grimoire API
+  version: 0.0.0
+  summary: Self-hosted D&D 5e table companion.
+  description: >-
+    Hand-authored source of truth for the REST API, the live-session WebSocket messages
+    (components only) and the MCP tool schemas. Generated code derives from this file.
+  license:
+    name: Attribution Assurance License
+    identifier: AAL
+  contact:
+    name: Joris Jonkers
+    url: https://jorisjonkers.dev
+servers:
+  - url: https://grimoire.jorisjonkers.dev
+    description: Production
+    x-internal: false
+security:
+  - forwardAuth: []
+tags:
+  - name: Operations
+    description: Liveness and readiness probes.
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      summary: Liveness probe
+      description: Returns ok while the process is serving requests.
+      tags: [Operations]
+      security: []
+      responses:
+        "200":
+          description: The process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+  /readyz:
+    get:
+      operationId: getReadiness
+      summary: Readiness probe
+      description: Returns ok once the API can serve traffic.
+      tags: [Operations]
+      security: []
+      responses:
+        "200":
+          description: The API is ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+components:
+  securitySchemes:
+    forwardAuth:
+      type: apiKey
+      in: header
+      name: X-User-Id
+      description: Identity injected by the platform's forward-auth; never sent by clients directly.
+  headers:
+    RateLimit-Limit:
+      description: Requests allowed in the current window.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 1000000
+    RateLimit-Remaining:
+      description: Requests left in the current window.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 1000000
+    RateLimit-Reset:
+      description: Seconds until the window resets.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 86400
+  responses:
+    Problem:
+      description: An RFC 9457 problem.
+      headers:
+        RateLimit-Limit:
+          $ref: "#/components/headers/RateLimit-Limit"
+        RateLimit-Remaining:
+          $ref: "#/components/headers/RateLimit-Remaining"
+        RateLimit-Reset:
+          $ref: "#/components/headers/RateLimit-Reset"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    HealthStatus:
+      type: object
+      description: Probe result.
+      additionalProperties: false
+      examples:
+        - status: ok
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok
+    Problem:
+      type: object
+      description: RFC 9457 problem details.
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          maxLength: 500
+        title:
+          type: string
+          maxLength: 200
+        status:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          maxLength: 2000
+        instance:
+          type: string
+          format: uri-reference
+          maxLength: 500
