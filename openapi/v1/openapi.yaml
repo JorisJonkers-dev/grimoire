@@ -20,8 +20,32 @@ security:
   - forwardAuth: []
 tags:
   - name: Operations
-    description: Liveness and readiness probes.
+    description: Liveness, readiness and service status.
 paths:
+  /api/v1/status:
+    get:
+      operationId: getStatus
+      summary: Service status
+      description: Reports the running version and whether the database answers.
+      tags: [Operations]
+      responses:
+        "200":
+          description: The service status.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Status"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -53,6 +77,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
         "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
           $ref: "#/components/responses/Problem"
 components:
   securitySchemes:
@@ -98,6 +124,31 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
   schemas:
+    Status:
+      type: object
+      description: Service status.
+      additionalProperties: false
+      required: [service, version, database, startedAt]
+      properties:
+        service:
+          type: string
+          const: grimoire
+        version:
+          type: string
+          maxLength: 64
+          pattern: "^[0-9A-Za-z.+-]+$"
+        database:
+          type: string
+          enum: [up]
+        startedAt:
+          type: string
+          format: date-time
+          maxLength: 40
+      examples:
+        - service: grimoire
+          version: 0.1.0
+          database: up
+          startedAt: "2026-09-29T20:00:00Z"
     HealthStatus:
       type: object
       description: Probe result.

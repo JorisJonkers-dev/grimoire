@@ -1,6 +1,9 @@
 # One command per loop (ARCHITECTURE.md §5). `task` lists targets; `task check` is what CI runs.
 version: "3"
 
+vars:
+  DATABASE_URL: postgres://grimoire:grimoire@localhost:5432/grimoire?sslmode=disable
+
 tasks:
   default:
     cmd: task --list
@@ -11,15 +14,26 @@ tasks:
     cmd: pnpm install --frozen-lockfile
 
   gen:
-    desc: Regenerate code from the OpenAPI contract (ogen, sqlc and hey-api arrive with M1)
+    desc: Regenerate code from the OpenAPI contract and SQL (ogen, sqlc, hey-api)
     cmds:
       - task: lint:spec
+      - cd api && go generate ./internal/platform/...
+      - cd api && sqlc generate
+      - pnpm --filter @grimoire/web gen
+
+  gen:check:
+    desc: Fail if generated code is stale
+    cmds:
+      - task: gen
+      - git diff --exit-code -- api/internal/platform/oas api/internal/platform/pg/queries web/src/infrastructure/api
 
   lint:
     desc: All linters
     cmds:
       - task: lint:go
       - task: lint:spec
+      - task: lint:sql
+      - task: lint:web
       - task: lint:actions
 
   lint:go:
@@ -36,46 +50,79 @@ tasks:
       - pnpm --filter @grimoire/openapi run lint
       - vacuum lint --details --fail-severity error openapi/v1/openapi.yaml
 
+  lint:sql:
+    desc: Migration safety lint (squawk)
+    dir: api
+    cmd: squawk db/migrations/*.sql
+
+  lint:web:
+    desc: ESLint (type-checked, a11y) and vue-tsc
+    deps: [install]
+    cmds:
+      - pnpm --filter @grimoire/web lint
+      - pnpm --filter @grimoire/web typecheck
+
   lint:actions:
     desc: actionlint on every workflow
     cmd: actionlint
 
   test:
-    desc: Unit tests with the race detector
+    desc: Go tests (race, real Postgres via testcontainers) and web unit tests with coverage
+    cmds:
+      - task: test:go
+      - task: test:web
+
+  test:go:
     dir: api
     cmd: go test -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
 
+  test:web:
+    deps: [install]
+    cmd: pnpm --filter @grimoire/web test
+
   coverage:
-    desc: Enforce coverage thresholds (85% total, 100% rules)
+    desc: Enforce Go coverage thresholds (95% total, 100% rules); web thresholds live in vite.config.ts
     dir: api
-    deps: [test]
+    deps: [test:go]
     cmd: go-test-coverage --config .testcoverage.yml
 
   build:
-    desc: Build the API binary
-    dir: api
-    cmd: go build -trimpath -o bin/grimoire ./cmd/grimoire
+    desc: Build the API binary and the web app
+    cmds:
+      - cd api && go build -trimpath -o bin/grimoire ./cmd/grimoire
+      - pnpm --filter @grimoire/web build
+
+  e2e:
+    desc: Playwright device matrix against a local stack (starts Postgres with Docker Compose)
+    cmds:
+      - docker compose up -d --wait postgres
+      - pnpm --filter @grimoire/web exec playwright install chromium
+      - pnpm --filter @grimoire/web e2e
 
   secrets:
     desc: Scan the working tree for secrets
     cmd: gitleaks dir --no-banner --redact .
 
   check:
-    desc: Everything CI runs on a pull request
+    desc: Everything CI runs on a pull request except E2E
     cmds:
       - task: lint
+      - task: gen:check
       - task: coverage
+      - task: test:web
       - task: build
       - task: secrets
 
   fix:
     desc: Apply formatters and autofixes
-    dir: api
     cmds:
-      - golangci-lint fmt ./...
-      - golangci-lint run --fix ./...
+      - cd api && golangci-lint fmt ./...
+      - cd api && golangci-lint run --fix ./...
+      - pnpm --filter @grimoire/web exec eslint . --fix
 
   dev:
-    desc: Run the API locally (Postgres, live reload and Vite join as they land)
-    dir: api
-    cmd: go run ./cmd/grimoire
+    desc: Run Postgres, the API with the dev identity, and Vite
+    cmds:
+      - docker compose up -d --wait postgres
+      - cmd: GRIMOIRE_DATABASE_URL='{{.DATABASE_URL}}' GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_DEV_SUBJECT=dev-dm go run ./cmd/grimoire serve & pnpm --filter @grimoire/web dev
+        dir: api

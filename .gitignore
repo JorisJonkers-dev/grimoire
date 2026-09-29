@@ -71,3 +71,9 @@ __pycache__/
 api/bin/
 *.test
 coverage.out
+
+# Web
+web/dist/
+web/coverage/
+web/playwright-report/
+web/test-results/
