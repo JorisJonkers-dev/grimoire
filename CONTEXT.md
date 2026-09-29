@@ -28,6 +28,18 @@ _Avoid_: Account, user
 The account currently driving a Combatant; normally its owner, reassignable by the DM.
 _Avoid_: Driver, operator
 
+**Table Display**:
+The shared screen (usually a TV) showing the party view, steered remotely by the DM.
+_Avoid_: Table view, TV mode, second screen
+
+**Portrait**:
+A Character's picture, uploaded by its Player.
+_Avoid_: Avatar, profile picture
+
+**Token Icon**:
+The image drawn inside a Character's Token, cropped from the Portrait or uploaded separately.
+_Avoid_: Avatar, token image
+
 ### Play
 
 **Session**:
@@ -37,6 +49,18 @@ _Avoid_: Game night, play session, live session
 **Encounter**:
 A prepared fight: which creatures, how many, and its difficulty budget.
 _Avoid_: Battle, fight template
+
+**Exploration**:
+The mode of a live Session with no noticed hostile creatures: no initiative, everyone moves freely.
+_Avoid_: Free roam, out of combat
+
+**Suggested Action**:
+The action and target the rules propose for a creature on its turn, from its tactics.
+_Avoid_: AI move, auto-attack
+
+**Tactics**:
+How a creature picks Suggested Actions: Simple, Cunning or Off, derived from Intelligence unless overridden.
+_Avoid_: AI level, behaviour
 
 **Combat**:
 A running fight inside a live Session, with rounds, initiative and turns.
@@ -143,8 +167,20 @@ An image with a calibrated hex grid; either a world map or a local tactical map.
 _Avoid_: Board (reserved), battlemap
 
 **Fog**:
-The server-enforced split between what exists on a Map and what the party has discovered.
+The server-enforced split between what exists on a Map and what the party perceives: never seen, remembered, or visible now.
 _Avoid_: Hidden layer, mask
+
+**Party Vision**:
+Everything any party member can perceive right now, shared by every Player and the Table Display.
+_Avoid_: Line of sight (for the combined set), team vision
+
+**Encounter Zone**:
+An area on a local Map holding hidden creatures that springs when the party comes within range or the DM triggers it.
+_Avoid_: Trap zone, trigger area
+
+**Surprised**:
+Unaware of the threat when Combat starts, so initiative is rolled at disadvantage.
+_Avoid_: Ambushed, caught off guard
 
 **Surface**:
 A hex-level terrain effect such as fire, grease, water, ice or web that the rules engine applies.
