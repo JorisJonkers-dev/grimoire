@@ -18,7 +18,7 @@ export async function mountApp(path: string, routes: Record<string, Route>) {
     calls.push(url)
     const key = Object.keys(routes).find((prefix) => url.pathname.startsWith(prefix))
     if (!key) return jsonResponse({ type: 'about:blank', title: 'Not found', status: 404 }, 404)
-    const body = routes[key]?.(url, request)
+    const body = await routes[key]?.(url, request)
     if (body instanceof Response) return body
     return jsonResponse(body)
   })

@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"github.com/JorisJonkers-dev/grimoire/api/db"
+	campaignapp "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
+	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/crosscheck"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/open5e"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
@@ -159,7 +161,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	}
 
 	handler, err := httpapi.New(httpapi.Options{
-		Handler:    &httpapi.Handler{Version: version, Store: store, Compendium: compendiumStore, Log: logger},
+		Handler: &httpapi.Handler{
+			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
+			Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())),
+		},
 		DevSubject: cfg.DevSubject,
 		RateLimit:  cfg.RateLimit,
 		Now:        time.Now,

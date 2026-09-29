@@ -13,12 +13,48 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// AcceptInvite implements acceptInvite operation.
+//
+// Joins the caller to the Campaign as a Player. A Member keeps their role.
+//
+// POST /api/v1/invites/accept
+func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept) (r AcceptInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateCampaign implements createCampaign operation.
+//
+// Starts a Campaign with the caller as its first DM.
+//
+// POST /api/v1/campaigns
+func (UnimplementedHandler) CreateCampaign(ctx context.Context, req *CampaignCreate) (r CreateCampaignRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateInvite implements createInvite operation.
+//
+// Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/invites
+func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInviteParams) (r CreateInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetAutomationCoverage implements getAutomationCoverage operation.
 //
 // How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
 //
 // GET /api/v1/compendium/automation
 func (UnimplementedHandler) GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (r GetAutomationCoverageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetCampaign implements getCampaign operation.
+//
+// A Campaign's home with its settings, the caller's role and every Member. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}
+func (UnimplementedHandler) GetCampaign(ctx context.Context, params GetCampaignParams) (r GetCampaignRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -76,6 +112,15 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// ListCampaigns implements listCampaigns operation.
+//
+// The Campaigns the caller is a Member of, newest first.
+//
+// GET /api/v1/campaigns
+func (UnimplementedHandler) ListCampaigns(ctx context.Context, params ListCampaignsParams) (r ListCampaignsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListEntries implements listEntries operation.
 //
 // Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -83,6 +128,15 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ er
 //
 // GET /api/v1/compendium/entries
 func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesParams) (r ListEntriesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListInvites implements listInvites operation.
+//
+// Invite links that still work. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/invites
+func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesParams) (r ListInvitesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -101,5 +155,50 @@ func (UnimplementedHandler) ListSources(ctx context.Context) (r ListSourcesRes, 
 //
 // GET /api/v1/compendium/spells
 func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsParams) (r ListSpellsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewInvite implements previewInvite operation.
+//
+// Which Campaign an invite link leads to, before joining.
+//
+// POST /api/v1/invites/preview
+func (UnimplementedHandler) PreviewInvite(ctx context.Context, req *InviteToken) (r PreviewInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RemoveMember implements removeMember operation.
+//
+// A DM removes a Member, or a Member leaves. The last DM cannot leave.
+//
+// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
+func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMemberParams) (r RemoveMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RevokeInvite implements revokeInvite operation.
+//
+// Closes an invite link. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
+func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInviteParams) (r RevokeInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateCampaign implements updateCampaign operation.
+//
+// Changes a Campaign's settings. DM only.
+//
+// PATCH /api/v1/campaigns/{campaignId}
+func (UnimplementedHandler) UpdateCampaign(ctx context.Context, req *CampaignUpdate, params UpdateCampaignParams) (r UpdateCampaignRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateMember implements updateMember operation.
+//
+// Makes a Member a DM or a Player. DM only; the last DM cannot step down.
+//
+// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
+func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (r UpdateMemberRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

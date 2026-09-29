@@ -8,12 +8,36 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// AcceptInvite implements acceptInvite operation.
+	//
+	// Joins the caller to the Campaign as a Player. A Member keeps their role.
+	//
+	// POST /api/v1/invites/accept
+	AcceptInvite(ctx context.Context, req *InviteAccept) (AcceptInviteRes, error)
+	// CreateCampaign implements createCampaign operation.
+	//
+	// Starts a Campaign with the caller as its first DM.
+	//
+	// POST /api/v1/campaigns
+	CreateCampaign(ctx context.Context, req *CampaignCreate) (CreateCampaignRes, error)
+	// CreateInvite implements createInvite operation.
+	//
+	// Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/invites
+	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
 	// GetAutomationCoverage implements getAutomationCoverage operation.
 	//
 	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
 	//
 	// GET /api/v1/compendium/automation
 	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
+	// GetCampaign implements getCampaign operation.
+	//
+	// A Campaign's home with its settings, the caller's role and every Member. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}
+	GetCampaign(ctx context.Context, params GetCampaignParams) (GetCampaignRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -50,6 +74,12 @@ type Handler interface {
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// ListCampaigns implements listCampaigns operation.
+	//
+	// The Campaigns the caller is a Member of, newest first.
+	//
+	// GET /api/v1/campaigns
+	ListCampaigns(ctx context.Context, params ListCampaignsParams) (ListCampaignsRes, error)
 	// ListEntries implements listEntries operation.
 	//
 	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -57,6 +87,12 @@ type Handler interface {
 	//
 	// GET /api/v1/compendium/entries
 	ListEntries(ctx context.Context, params ListEntriesParams) (ListEntriesRes, error)
+	// ListInvites implements listInvites operation.
+	//
+	// Invite links that still work. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/invites
+	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
 	// ListSources implements listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.
@@ -69,6 +105,36 @@ type Handler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PreviewInvite implements previewInvite operation.
+	//
+	// Which Campaign an invite link leads to, before joining.
+	//
+	// POST /api/v1/invites/preview
+	PreviewInvite(ctx context.Context, req *InviteToken) (PreviewInviteRes, error)
+	// RemoveMember implements removeMember operation.
+	//
+	// A DM removes a Member, or a Member leaves. The last DM cannot leave.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
+	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RevokeInvite implements revokeInvite operation.
+	//
+	// Closes an invite link. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
+	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
+	// UpdateCampaign implements updateCampaign operation.
+	//
+	// Changes a Campaign's settings. DM only.
+	//
+	// PATCH /api/v1/campaigns/{campaignId}
+	UpdateCampaign(ctx context.Context, req *CampaignUpdate, params UpdateCampaignParams) (UpdateCampaignRes, error)
+	// UpdateMember implements updateMember operation.
+	//
+	// Makes a Member a DM or a Player. DM only; the last DM cannot step down.
+	//
+	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
+	UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

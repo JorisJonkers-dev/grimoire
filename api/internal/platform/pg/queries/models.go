@@ -7,8 +7,37 @@ package queries
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type CampaignCampaign struct {
+	ID          uuid.UUID
+	Name        string
+	RulesetPref string
+	CreatedBy   string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type CampaignInvite struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	TokenHash  []byte
+	CreatedBy  uuid.UUID
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	RevokedAt  pgtype.Timestamptz
+}
+
+type CampaignMember struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	AuthSubject string
+	DisplayName string
+	Role        string
+	JoinedAt    time.Time
+}
 
 type CompendiumAbilityScore struct {
 	ID   int64

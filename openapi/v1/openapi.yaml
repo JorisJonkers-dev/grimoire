@@ -19,6 +19,8 @@ servers:
 security:
   - forwardAuth: []
 tags:
+  - name: Campaign
+    description: Campaigns, Members, roles and invites.
   - name: Compendium
     description: SRD reference data.
   - name: Identity
@@ -281,6 +283,317 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns:
+    get:
+      operationId: listCampaigns
+      summary: List my campaigns
+      description: The Campaigns the caller is a Member of, newest first.
+      tags: [Campaign]
+      parameters:
+        - name: cursor
+          in: query
+          description: Opaque cursor from the previous page.
+          schema: { type: string, minLength: 1, maxLength: 200, pattern: "^[A-Za-z0-9_-]+$" }
+        - name: limit
+          in: query
+          description: Page size.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        "200":
+          description: One page of campaigns.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignPage"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createCampaign
+      summary: Create a campaign
+      description: Starts a Campaign with the caller as its first DM.
+      tags: [Campaign]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignCreate"
+      responses:
+        "201":
+          description: The new campaign.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}:
+    get:
+      operationId: getCampaign
+      summary: Get a campaign
+      description: A Campaign's home with its settings, the caller's role and every Member. Members only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The campaign.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    patch:
+      operationId: updateCampaign
+      summary: Update a campaign
+      description: Changes a Campaign's settings. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignUpdate"
+      responses:
+        "200":
+          description: The updated campaign.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignSummary"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/members/{memberId}:
+    patch:
+      operationId: updateMember
+      summary: Change a member role
+      description: Makes a Member a DM or a Player. DM only; the last DM cannot step down.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/MemberId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdate"
+      responses:
+        "200":
+          description: The updated member.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: removeMember
+      summary: Remove a member
+      description: A DM removes a Member, or a Member leaves. The last DM cannot leave.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/MemberId"
+      responses:
+        "204":
+          description: Removed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/invites:
+    get:
+      operationId: listInvites
+      summary: List open invites
+      description: Invite links that still work. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: Open invites.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/Invite"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createInvite
+      summary: Create an invite link
+      description: Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "201":
+          description: The invite and its token.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewInvite"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/invites/{inviteId}:
+    delete:
+      operationId: revokeInvite
+      summary: Revoke an invite link
+      description: Closes an invite link. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/InviteId"
+      responses:
+        "204":
+          description: Revoked.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/invites/preview:
+    post:
+      operationId: previewInvite
+      summary: Preview an invite
+      description: Which Campaign an invite link leads to, before joining.
+      tags: [Campaign]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteToken"
+      responses:
+        "200":
+          description: The invite.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitePreview"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/invites/accept:
+    post:
+      operationId: acceptInvite
+      summary: Accept an invite
+      description: Joins the caller to the Campaign as a Player. A Member keeps their role.
+      tags: [Campaign]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteAccept"
+      responses:
+        "200":
+          description: The campaign joined.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignRef"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -371,6 +684,24 @@ components:
       name: X-User-Id
       description: Identity injected by the platform's forward-auth; never sent by clients directly.
   parameters:
+    CampaignId:
+      name: campaignId
+      in: path
+      required: true
+      description: Campaign id.
+      schema: { $ref: "#/components/schemas/Id" }
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      description: Member id.
+      schema: { $ref: "#/components/schemas/Id" }
+    InviteId:
+      name: inviteId
+      in: path
+      required: true
+      description: Invite id.
+      schema: { $ref: "#/components/schemas/Id" }
     IfNoneMatch:
       name: If-None-Match
       in: header
@@ -421,6 +752,159 @@ components:
           schema:
             $ref: "#/components/schemas/Problem"
   schemas:
+    Id:
+      type: string
+      format: uuid
+      description: Random identifier.
+      maxLength: 36
+    Role:
+      type: string
+      description: What a Member may do in a Campaign.
+      enum: [dm, player]
+    DisplayName:
+      type: string
+      description: How a Member appears to the rest of the table.
+      minLength: 1
+      maxLength: 60
+    CampaignName:
+      type: string
+      description: A Campaign's name.
+      minLength: 1
+      maxLength: 80
+    CampaignSummary:
+      type: object
+      description: A Campaign as it appears in the caller's list.
+      additionalProperties: false
+      required: [id, name, ruleset, myRole, memberCount, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { $ref: "#/components/schemas/CampaignName" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        myRole: { $ref: "#/components/schemas/Role" }
+        memberCount: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+    CampaignPage:
+      type: object
+      description: One page of campaigns.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/CampaignSummary" }
+        nextCursor:
+          type: string
+          maxLength: 200
+          pattern: "^[A-Za-z0-9_-]+$"
+    Member:
+      type: object
+      description: An account's participation in a Campaign.
+      additionalProperties: false
+      required: [id, displayName, role, joinedAt, isMe]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        displayName: { $ref: "#/components/schemas/DisplayName" }
+        role: { $ref: "#/components/schemas/Role" }
+        joinedAt: { type: string, format: date-time, maxLength: 40 }
+        isMe: { type: boolean }
+    Campaign:
+      type: object
+      description: A Campaign's home.
+      additionalProperties: false
+      required: [id, name, ruleset, myRole, memberCount, createdAt, me, members]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { $ref: "#/components/schemas/CampaignName" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        myRole: { $ref: "#/components/schemas/Role" }
+        memberCount: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        me: { $ref: "#/components/schemas/Member" }
+        members:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/Member" }
+    CampaignCreate:
+      type: object
+      description: A new Campaign.
+      additionalProperties: false
+      required: [name, displayName]
+      properties:
+        name: { $ref: "#/components/schemas/CampaignName" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        displayName: { $ref: "#/components/schemas/DisplayName" }
+    CampaignUpdate:
+      type: object
+      description: Settings to change; omitted fields stay as they are.
+      additionalProperties: false
+      properties:
+        name: { $ref: "#/components/schemas/CampaignName" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+    CampaignRef:
+      type: object
+      description: A reference to a Campaign.
+      additionalProperties: false
+      required: [id]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+    MemberUpdate:
+      type: object
+      description: A Member's new role.
+      additionalProperties: false
+      required: [role]
+      properties:
+        role: { $ref: "#/components/schemas/Role" }
+    Invite:
+      type: object
+      description: An open invite link.
+      additionalProperties: false
+      required: [id, createdAt, expiresAt, createdBy]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        expiresAt: { type: string, format: date-time, maxLength: 40 }
+        createdBy: { $ref: "#/components/schemas/DisplayName" }
+    NewInvite:
+      type: object
+      description: A new invite and the token for its link, shown once.
+      additionalProperties: false
+      required: [id, createdAt, expiresAt, createdBy, token]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        expiresAt: { type: string, format: date-time, maxLength: 40 }
+        createdBy: { $ref: "#/components/schemas/DisplayName" }
+        token: { $ref: "#/components/schemas/Token" }
+    InvitePreview:
+      type: object
+      description: Where an invite link leads.
+      additionalProperties: false
+      required: [campaignName, invitedBy]
+      properties:
+        campaignName: { $ref: "#/components/schemas/CampaignName" }
+        invitedBy: { $ref: "#/components/schemas/DisplayName" }
+    Token:
+      type: string
+      description: An invite token, as it appears in the invite link.
+      minLength: 43
+      maxLength: 43
+      pattern: "^[A-Za-z0-9_-]+$"
+    InviteToken:
+      type: object
+      description: An invite token.
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { $ref: "#/components/schemas/Token" }
+    InviteAccept:
+      type: object
+      description: The invite token and how the new Member wants to appear.
+      additionalProperties: false
+      required: [token, displayName]
+      properties:
+        token: { $ref: "#/components/schemas/Token" }
+        displayName: { $ref: "#/components/schemas/DisplayName" }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.
