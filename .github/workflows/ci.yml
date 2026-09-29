@@ -1,5 +1,5 @@
 # One pipeline ending in "Pipeline Complete", the only required check (estate convention).
-# Every step runs `task` targets so CI and `task check` cannot drift. Steps carry
+# Steps run `task` targets so CI and `task check` cannot drift. Steps carry
 # `if: ${{ !cancelled() }}` so one failure still surfaces the rest.
 name: CI
 
@@ -20,7 +20,22 @@ jobs:
   pipeline-complete:
     name: Pipeline Complete
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: grimoire
+          POSTGRES_PASSWORD: grimoire
+          POSTGRES_DB: grimoire
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grimoire"
+          --health-interval 2s
+          --health-retries 30
+    env:
+      GRIMOIRE_DATABASE_URL: postgres://grimoire:grimoire@localhost:5432/grimoire?sslmode=disable
     steps:
       - uses: actions/checkout@v7
 
@@ -39,13 +54,29 @@ jobs:
         if: ${{ !cancelled() }}
         run: task lint:spec
 
+      - name: Lint migrations
+        if: ${{ !cancelled() }}
+        run: task lint:sql
+
+      - name: Lint web
+        if: ${{ !cancelled() }}
+        run: task lint:web
+
       - name: Lint workflows
         if: ${{ !cancelled() }}
         run: task lint:actions
 
-      - name: Test and coverage
+      - name: Generated code is current
+        if: ${{ !cancelled() }}
+        run: task gen:check
+
+      - name: Go tests and coverage
         if: ${{ !cancelled() }}
         run: task coverage
+
+      - name: Web unit tests and coverage
+        if: ${{ !cancelled() }}
+        run: task test:web
 
       - name: Build
         if: ${{ !cancelled() }}
@@ -54,3 +85,24 @@ jobs:
       - name: Secret scan
         if: ${{ !cancelled() }}
         run: task secrets
+
+      - name: Start API and web preview
+        id: servers
+        if: ${{ !cancelled() }}
+        run: |
+          GRIMOIRE_ADDR=:18765 GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_DEV_SUBJECT=e2e-player api/bin/grimoire serve > /tmp/api.log 2>&1 &
+          GRIMOIRE_API_ORIGIN=http://localhost:18765 pnpm --filter @grimoire/web preview > /tmp/web.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -sf http://localhost:18765/readyz >/dev/null && curl -sf http://localhost:4173 >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/api.log /tmp/web.log
+          exit 1
+
+      - name: End-to-end (device matrix)
+        if: ${{ !cancelled() && steps.servers.outcome == 'success' }}
+        env:
+          E2E_EXTERNAL_SERVERS: "1"
+        run: |
+          pnpm --filter @grimoire/web exec playwright install --with-deps chromium
+          pnpm --filter @grimoire/web e2e

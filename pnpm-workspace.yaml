@@ -1,6 +1,6 @@
 packages:
   - openapi
-  # - web  (added with the design system)
+  - web
 
 # Supply-chain defaults (ARCHITECTURE.md §19.4).
 minimumReleaseAge: 10080
@@ -8,3 +8,4 @@ blockExoticSubdeps: true
 strictDepBuilds: true
 allowBuilds:
   '@scarf/scarf': false
+  vue-demi: true

@@ -1,0 +1,20 @@
+:root {
+  --color-ground: #0e0b09;
+  --color-surface: #17120e;
+  --color-raised: #211a14;
+  --color-line: #3a2e22;
+  --color-gold: #d4af5a;
+  --color-gold-high: #ebcb7a;
+  --color-text: #efe6d2;
+  --color-text-2: #bfb199;
+  --font-display: Cinzel, serif;
+  --font-flavour: Alegreya, serif;
+  --font-ui: 'Alegreya Sans', sans-serif;
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+}

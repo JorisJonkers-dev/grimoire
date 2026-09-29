@@ -17,7 +17,7 @@ and import their own adventures.
 
 | Part | Tech |
 |---|---|
-| API | Go 1.26 · spec-first OpenAPI 3.1 (ogen) · sqlc · Atlas · WebSocket live runtime · MCP |
+| API | Go 1.26 · spec-first OpenAPI 3.1 (ogen) · sqlc · goose + squawk · WebSocket live runtime · MCP |
 | Web | Vue 3.5 · TypeScript (strict) · Vite · generated client + Zod · TanStack Query · Pinia · PixiJS + SVG map |
 | Apps | Installable PWA · Capacitor 7 shells for Android/iOS · kiosk browser for the Table |
 | Data | PostgreSQL 16+ (normalised, no JSONB) · S3-compatible object storage |
@@ -39,7 +39,8 @@ Toolchain versions are pinned in [`mise.toml`](mise.toml); every workflow is a
 [Task](https://taskfile.dev) target.
 
 ```sh
-mise install        # Go, Node, pnpm, task, golangci-lint, actionlint
+mise install        # Go, Node, pnpm, task, sqlc, squawk, golangci-lint, actionlint
+task dev            # Postgres (Docker), API with a dev identity, Vite
 task                # list targets
 task check          # everything CI runs on a pull request
 task test           # unit tests

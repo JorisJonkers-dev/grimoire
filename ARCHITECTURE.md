@@ -421,9 +421,9 @@ generator rerolls stay exact. The clock is injected the same way.
 - Cross-context references to compendium entities are **two columns** `(slug, ruleset)`, never a FK
   (anti-corruption boundary).
 - Speed comes from indexes (btree on FKs and filters, composite, covering, partial) — not documents.
-- **Atlas** owns migrations (`db/schema` desired state → `atlas migrate diff`); `atlas migrate lint`
-  blocks destructive or locking changes; two-phase drops; backfills are separate migrations or River
-  jobs. The estate `migration-guard` workflow also runs.
+- **goose** applies forward-only SQL migrations embedded in the binary (`grimoire migrate`);
+  **squawk** lints them in CI and blocks locking or destructive changes; two-phase drops; backfills
+  are separate migrations or River jobs ([ADR-0005](docs/adr/0005-goose-and-squawk-for-migrations.md)).
 - sqlc queries live in `db/queries/<context>/*.sql`; no ORM, no lazy loading, so N+1 is
   structurally absent. A pgx tracer asserts query counts in adapter tests for list endpoints.
 
