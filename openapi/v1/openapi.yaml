@@ -2003,6 +2003,7 @@ components:
         memberCount: { type: integer, format: int32, minimum: 1, maximum: 1000 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
+        highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
     CampaignPage:
       type: object
       description: One page of campaigns.
@@ -2041,6 +2042,7 @@ components:
         memberCount: { type: integer, format: int32, minimum: 1, maximum: 1000 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
+        highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         me: { $ref: "#/components/schemas/Member" }
         members:
           type: array
@@ -2063,6 +2065,7 @@ components:
         name: { $ref: "#/components/schemas/CampaignName" }
         ruleset: { $ref: "#/components/schemas/Ruleset" }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
+        highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
     ReactionTimeout:
       type: integer
       format: int32
@@ -2833,7 +2836,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2873,6 +2876,79 @@ components:
         saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
         effectId: { $ref: "#/components/schemas/Id" }
         manualId: { $ref: "#/components/schemas/Id" }
+        surface: { type: string, enum: [fire, grease, water, ice, web, electrified], description: "With paint_surface; leave it out to clear." }
+        elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
+    LiveAreaPreview:
+      type: object
+      description: An area spell's hexes and every creature it would catch, allies flagged, sent only to whoever asked.
+      additionalProperties: false
+      required: [tokenId, effect, name, dc, hexes, targets, allies]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        effect: { type: string, maxLength: 80 }
+        name: { type: string, maxLength: 80 }
+        dc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        hexes:
+          type: array
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        targets:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LiveAreaTarget" }
+        allies: { type: integer, format: int32, minimum: 0, maximum: 200 }
+    LiveAreaTarget:
+      type: object
+      description: A creature an area catches.
+      additionalProperties: false
+      required: [tokenId, ally]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        ally: { type: boolean }
+    LiveArea:
+      type: object
+      description: An area spell waiting on its damage roll and saving throws.
+      additionalProperties: false
+      required: [casterId, name, hexes, saves]
+      properties:
+        casterId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        hexes:
+          type: array
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        damageRollId: { $ref: "#/components/schemas/Id" }
+        saves:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LiveAreaSave" }
+    LiveAreaSave:
+      type: object
+      description: One target's saving throw against an area.
+      additionalProperties: false
+      required: [tokenId]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        rollId: { $ref: "#/components/schemas/Id" }
+    LiveSurface:
+      type: object
+      description: A Surface on a hex.
+      additionalProperties: false
+      required: [q, r, kind]
+      properties:
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        kind: { type: string, enum: [fire, grease, water, ice, web, electrified] }
+        roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
+    LiveElevation:
+      type: object
+      description: A raised or sunken hex.
+      additionalProperties: false
+      required: [q, r, elevationFt]
+      properties:
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
     LiveEffect:
       type: object
       description: An Effect on a token, which everyone who sees the token sees.
@@ -2980,7 +3056,7 @@ components:
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         reason: { type: string, maxLength: 200 }
@@ -2992,6 +3068,7 @@ components:
           items: { $ref: "#/components/schemas/LiveView" }
         path: { $ref: "#/components/schemas/LivePath" }
         preview: { $ref: "#/components/schemas/LiveAttackPreview" }
+        area: { $ref: "#/components/schemas/LiveAreaPreview" }
     LivePath:
       type: object
       description: The route a walk would take, start first, and the movement it costs.
@@ -3064,6 +3141,15 @@ components:
           type: array
           maxItems: 100
           items: { $ref: "#/components/schemas/LiveSave" }
+        surfaces:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/LiveSurface" }
+        elevation:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/LiveElevation" }
+        area: { $ref: "#/components/schemas/LiveArea" }
         walls:
           type: array
           maxItems: 100000

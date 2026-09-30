@@ -43,10 +43,15 @@ const timeout = computed({
   get: () => reactionTimeout.value ?? campaign.data.value?.reactionTimeoutS ?? 10,
   set: (v: number) => (reactionTimeout.value = v),
 })
+const highGroundChoice = ref<boolean | null>(null)
+const highGround = computed({
+  get: () => highGroundChoice.value ?? campaign.data.value?.highGround ?? false,
+  set: (v: boolean) => (highGroundChoice.value = v),
+})
 const settings = useMutation(updateCampaignMutation())
 function saveSettings() {
   failed.value = ''
-  settings.mutate({ ...path.value, body: { reactionTimeoutS: timeout.value } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
+  settings.mutate({ ...path.value, body: { reactionTimeoutS: timeout.value, highGround: highGround.value } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
 const onError = (what: string) => () => (failed.value = what)
@@ -193,6 +198,10 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
           <span>Seconds to answer a reaction</span>
           <input v-model.number="timeout" type="number" min="3" max="120" data-testid="reaction-timeout" />
         </label>
+        <label class="check">
+          <input v-model="highGround" type="checkbox" data-testid="high-ground" />
+          <span>High ground gives +2 to hit (optional rule)</span>
+        </label>
         <GButton type="submit">Save settings</GButton>
         <p v-if="settings.isSuccess.value" role="status" data-testid="settings-saved">Saved.</p>
       </form>
@@ -279,5 +288,11 @@ section {
 .link .g-field {
   flex: 1 1 240px;
   min-width: 0;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
 }
 </style>

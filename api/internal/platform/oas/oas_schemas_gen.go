@@ -1081,8 +1081,10 @@ type Campaign struct {
 	MemberCount      int32              `json:"memberCount"`
 	CreatedAt        time.Time          `json:"createdAt"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
-	Me               Member             `json:"me"`
-	Members          []Member           `json:"members"`
+	// Optional rule: attacks from higher ground get +2 to hit.
+	HighGround OptBool  `json:"highGround"`
+	Me         Member   `json:"me"`
+	Members    []Member `json:"members"`
 }
 
 // GetID returns the value of ID.
@@ -1118,6 +1120,11 @@ func (s *Campaign) GetCreatedAt() time.Time {
 // GetReactionTimeoutS returns the value of ReactionTimeoutS.
 func (s *Campaign) GetReactionTimeoutS() OptReactionTimeout {
 	return s.ReactionTimeoutS
+}
+
+// GetHighGround returns the value of HighGround.
+func (s *Campaign) GetHighGround() OptBool {
+	return s.HighGround
 }
 
 // GetMe returns the value of Me.
@@ -1163,6 +1170,11 @@ func (s *Campaign) SetCreatedAt(val time.Time) {
 // SetReactionTimeoutS sets the value of ReactionTimeoutS.
 func (s *Campaign) SetReactionTimeoutS(val OptReactionTimeout) {
 	s.ReactionTimeoutS = val
+}
+
+// SetHighGround sets the value of HighGround.
+func (s *Campaign) SetHighGround(val OptBool) {
+	s.HighGround = val
 }
 
 // SetMe sets the value of Me.
@@ -1419,6 +1431,8 @@ type CampaignSummary struct {
 	MemberCount      int32              `json:"memberCount"`
 	CreatedAt        time.Time          `json:"createdAt"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
+	// Optional rule: attacks from higher ground get +2 to hit.
+	HighGround OptBool `json:"highGround"`
 }
 
 // GetID returns the value of ID.
@@ -1456,6 +1470,11 @@ func (s *CampaignSummary) GetReactionTimeoutS() OptReactionTimeout {
 	return s.ReactionTimeoutS
 }
 
+// GetHighGround returns the value of HighGround.
+func (s *CampaignSummary) GetHighGround() OptBool {
+	return s.HighGround
+}
+
 // SetID sets the value of ID.
 func (s *CampaignSummary) SetID(val ID) {
 	s.ID = val
@@ -1489,6 +1508,11 @@ func (s *CampaignSummary) SetCreatedAt(val time.Time) {
 // SetReactionTimeoutS sets the value of ReactionTimeoutS.
 func (s *CampaignSummary) SetReactionTimeoutS(val OptReactionTimeout) {
 	s.ReactionTimeoutS = val
+}
+
+// SetHighGround sets the value of HighGround.
+func (s *CampaignSummary) SetHighGround(val OptBool) {
+	s.HighGround = val
 }
 
 // CampaignSummaryHeaders wraps CampaignSummary with response headers.
@@ -1547,6 +1571,8 @@ type CampaignUpdate struct {
 	Name             OptCampaignName    `json:"name"`
 	Ruleset          OptRuleset         `json:"ruleset"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
+	// Optional rule: attacks from higher ground get +2 to hit.
+	HighGround OptBool `json:"highGround"`
 }
 
 // GetName returns the value of Name.
@@ -1564,6 +1590,11 @@ func (s *CampaignUpdate) GetReactionTimeoutS() OptReactionTimeout {
 	return s.ReactionTimeoutS
 }
 
+// GetHighGround returns the value of HighGround.
+func (s *CampaignUpdate) GetHighGround() OptBool {
+	return s.HighGround
+}
+
 // SetName sets the value of Name.
 func (s *CampaignUpdate) SetName(val OptCampaignName) {
 	s.Name = val
@@ -1577,6 +1608,11 @@ func (s *CampaignUpdate) SetRuleset(val OptRuleset) {
 // SetReactionTimeoutS sets the value of ReactionTimeoutS.
 func (s *CampaignUpdate) SetReactionTimeoutS(val OptReactionTimeout) {
 	s.ReactionTimeoutS = val
+}
+
+// SetHighGround sets the value of HighGround.
+func (s *CampaignUpdate) SetHighGround(val OptBool) {
+	s.HighGround = val
 }
 
 // The choices for a first-level Character.
@@ -5252,6 +5288,202 @@ func (s *ListSpellsNotModified) SetETag(val OptString) {
 
 func (*ListSpellsNotModified) listSpellsRes() {}
 
+// An area spell waiting on its damage roll and saving throws.
+// Ref: #/components/schemas/LiveArea
+type LiveArea struct {
+	CasterId     ID             `json:"casterId"`
+	Name         string         `json:"name"`
+	Hexes        []HexCoord     `json:"hexes"`
+	DamageRollId OptID          `json:"damageRollId"`
+	Saves        []LiveAreaSave `json:"saves"`
+}
+
+// GetCasterId returns the value of CasterId.
+func (s *LiveArea) GetCasterId() ID {
+	return s.CasterId
+}
+
+// GetName returns the value of Name.
+func (s *LiveArea) GetName() string {
+	return s.Name
+}
+
+// GetHexes returns the value of Hexes.
+func (s *LiveArea) GetHexes() []HexCoord {
+	return s.Hexes
+}
+
+// GetDamageRollId returns the value of DamageRollId.
+func (s *LiveArea) GetDamageRollId() OptID {
+	return s.DamageRollId
+}
+
+// GetSaves returns the value of Saves.
+func (s *LiveArea) GetSaves() []LiveAreaSave {
+	return s.Saves
+}
+
+// SetCasterId sets the value of CasterId.
+func (s *LiveArea) SetCasterId(val ID) {
+	s.CasterId = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveArea) SetName(val string) {
+	s.Name = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LiveArea) SetHexes(val []HexCoord) {
+	s.Hexes = val
+}
+
+// SetDamageRollId sets the value of DamageRollId.
+func (s *LiveArea) SetDamageRollId(val OptID) {
+	s.DamageRollId = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *LiveArea) SetSaves(val []LiveAreaSave) {
+	s.Saves = val
+}
+
+// An area spell's hexes and every creature it would catch, allies flagged, sent only to whoever asked.
+// Ref: #/components/schemas/LiveAreaPreview
+type LiveAreaPreview struct {
+	TokenId ID               `json:"tokenId"`
+	Effect  string           `json:"effect"`
+	Name    string           `json:"name"`
+	DC      int32            `json:"dc"`
+	Hexes   []HexCoord       `json:"hexes"`
+	Targets []LiveAreaTarget `json:"targets"`
+	Allies  int32            `json:"allies"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveAreaPreview) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetEffect returns the value of Effect.
+func (s *LiveAreaPreview) GetEffect() string {
+	return s.Effect
+}
+
+// GetName returns the value of Name.
+func (s *LiveAreaPreview) GetName() string {
+	return s.Name
+}
+
+// GetDC returns the value of DC.
+func (s *LiveAreaPreview) GetDC() int32 {
+	return s.DC
+}
+
+// GetHexes returns the value of Hexes.
+func (s *LiveAreaPreview) GetHexes() []HexCoord {
+	return s.Hexes
+}
+
+// GetTargets returns the value of Targets.
+func (s *LiveAreaPreview) GetTargets() []LiveAreaTarget {
+	return s.Targets
+}
+
+// GetAllies returns the value of Allies.
+func (s *LiveAreaPreview) GetAllies() int32 {
+	return s.Allies
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveAreaPreview) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *LiveAreaPreview) SetEffect(val string) {
+	s.Effect = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveAreaPreview) SetName(val string) {
+	s.Name = val
+}
+
+// SetDC sets the value of DC.
+func (s *LiveAreaPreview) SetDC(val int32) {
+	s.DC = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LiveAreaPreview) SetHexes(val []HexCoord) {
+	s.Hexes = val
+}
+
+// SetTargets sets the value of Targets.
+func (s *LiveAreaPreview) SetTargets(val []LiveAreaTarget) {
+	s.Targets = val
+}
+
+// SetAllies sets the value of Allies.
+func (s *LiveAreaPreview) SetAllies(val int32) {
+	s.Allies = val
+}
+
+// One target's saving throw against an area.
+// Ref: #/components/schemas/LiveAreaSave
+type LiveAreaSave struct {
+	TokenId ID    `json:"tokenId"`
+	RollId  OptID `json:"rollId"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveAreaSave) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveAreaSave) GetRollId() OptID {
+	return s.RollId
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveAreaSave) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveAreaSave) SetRollId(val OptID) {
+	s.RollId = val
+}
+
+// A creature an area catches.
+// Ref: #/components/schemas/LiveAreaTarget
+type LiveAreaTarget struct {
+	TokenId ID   `json:"tokenId"`
+	Ally    bool `json:"ally"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveAreaTarget) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetAlly returns the value of Ally.
+func (s *LiveAreaTarget) GetAlly() bool {
+	return s.Ally
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveAreaTarget) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetAlly sets the value of Ally.
+func (s *LiveAreaTarget) SetAlly(val bool) {
+	s.Ally = val
+}
+
 // One attack on a token's hotbar.
 // Ref: #/components/schemas/LiveAttack
 type LiveAttack struct {
@@ -5882,6 +6114,9 @@ type LiveCommand struct {
 	SaveDc      OptInt32   `json:"saveDc"`
 	EffectId    OptID      `json:"effectId"`
 	ManualId    OptID      `json:"manualId"`
+	// With paint_surface; leave it out to clear.
+	Surface     OptLiveCommandSurface `json:"surface"`
+	ElevationFt OptInt32              `json:"elevationFt"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -6059,6 +6294,16 @@ func (s *LiveCommand) GetManualId() OptID {
 	return s.ManualId
 }
 
+// GetSurface returns the value of Surface.
+func (s *LiveCommand) GetSurface() OptLiveCommandSurface {
+	return s.Surface
+}
+
+// GetElevationFt returns the value of ElevationFt.
+func (s *LiveCommand) GetElevationFt() OptInt32 {
+	return s.ElevationFt
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6234,6 +6479,16 @@ func (s *LiveCommand) SetManualId(val OptID) {
 	s.ManualId = val
 }
 
+// SetSurface sets the value of Surface.
+func (s *LiveCommand) SetSurface(val OptLiveCommandSurface) {
+	s.Surface = val
+}
+
+// SetElevationFt sets the value of ElevationFt.
+func (s *LiveCommand) SetElevationFt(val OptInt32) {
+	s.ElevationFt = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6262,6 +6517,10 @@ const (
 	LiveCommandKindApplyEffect    LiveCommandKind = "apply_effect"
 	LiveCommandKindEndEffect      LiveCommandKind = "end_effect"
 	LiveCommandKindResolveManual  LiveCommandKind = "resolve_manual"
+	LiveCommandKindPreviewArea    LiveCommandKind = "preview_area"
+	LiveCommandKindCastArea       LiveCommandKind = "cast_area"
+	LiveCommandKindPaintSurface   LiveCommandKind = "paint_surface"
+	LiveCommandKindSetElevation   LiveCommandKind = "set_elevation"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6292,6 +6551,10 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindApplyEffect,
 		LiveCommandKindEndEffect,
 		LiveCommandKindResolveManual,
+		LiveCommandKindPreviewArea,
+		LiveCommandKindCastArea,
+		LiveCommandKindPaintSurface,
+		LiveCommandKindSetElevation,
 	}
 }
 
@@ -6347,6 +6610,14 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindEndEffect:
 		return []byte(s), nil
 	case LiveCommandKindResolveManual:
+		return []byte(s), nil
+	case LiveCommandKindPreviewArea:
+		return []byte(s), nil
+	case LiveCommandKindCastArea:
+		return []byte(s), nil
+	case LiveCommandKindPaintSurface:
+		return []byte(s), nil
+	case LiveCommandKindSetElevation:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6431,6 +6702,18 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindResolveManual:
 		*s = LiveCommandKindResolveManual
 		return nil
+	case LiveCommandKindPreviewArea:
+		*s = LiveCommandKindPreviewArea
+		return nil
+	case LiveCommandKindCastArea:
+		*s = LiveCommandKindCastArea
+		return nil
+	case LiveCommandKindPaintSurface:
+		*s = LiveCommandKindPaintSurface
+		return nil
+	case LiveCommandKindSetElevation:
+		*s = LiveCommandKindSetElevation
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -6481,6 +6764,76 @@ func (s *LiveCommandResource) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandResourceReaction:
 		*s = LiveCommandResourceReaction
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// With paint_surface; leave it out to clear.
+type LiveCommandSurface string
+
+const (
+	LiveCommandSurfaceFire        LiveCommandSurface = "fire"
+	LiveCommandSurfaceGrease      LiveCommandSurface = "grease"
+	LiveCommandSurfaceWater       LiveCommandSurface = "water"
+	LiveCommandSurfaceIce         LiveCommandSurface = "ice"
+	LiveCommandSurfaceWeb         LiveCommandSurface = "web"
+	LiveCommandSurfaceElectrified LiveCommandSurface = "electrified"
+)
+
+// AllValues returns all LiveCommandSurface values.
+func (LiveCommandSurface) AllValues() []LiveCommandSurface {
+	return []LiveCommandSurface{
+		LiveCommandSurfaceFire,
+		LiveCommandSurfaceGrease,
+		LiveCommandSurfaceWater,
+		LiveCommandSurfaceIce,
+		LiveCommandSurfaceWeb,
+		LiveCommandSurfaceElectrified,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandSurface) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandSurfaceFire:
+		return []byte(s), nil
+	case LiveCommandSurfaceGrease:
+		return []byte(s), nil
+	case LiveCommandSurfaceWater:
+		return []byte(s), nil
+	case LiveCommandSurfaceIce:
+		return []byte(s), nil
+	case LiveCommandSurfaceWeb:
+		return []byte(s), nil
+	case LiveCommandSurfaceElectrified:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandSurface) UnmarshalText(data []byte) error {
+	switch LiveCommandSurface(data) {
+	case LiveCommandSurfaceFire:
+		*s = LiveCommandSurfaceFire
+		return nil
+	case LiveCommandSurfaceGrease:
+		*s = LiveCommandSurfaceGrease
+		return nil
+	case LiveCommandSurfaceWater:
+		*s = LiveCommandSurfaceWater
+		return nil
+	case LiveCommandSurfaceIce:
+		*s = LiveCommandSurfaceIce
+		return nil
+	case LiveCommandSurfaceWeb:
+		*s = LiveCommandSurfaceWeb
+		return nil
+	case LiveCommandSurfaceElectrified:
+		*s = LiveCommandSurfaceElectrified
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -6556,6 +6909,44 @@ func (s *LiveEffect) SetConcentration(val bool) {
 // SetRoundsLeft sets the value of RoundsLeft.
 func (s *LiveEffect) SetRoundsLeft(val OptInt32) {
 	s.RoundsLeft = val
+}
+
+// A raised or sunken hex.
+// Ref: #/components/schemas/LiveElevation
+type LiveElevation struct {
+	Q           int32 `json:"q"`
+	R           int32 `json:"r"`
+	ElevationFt int32 `json:"elevationFt"`
+}
+
+// GetQ returns the value of Q.
+func (s *LiveElevation) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveElevation) GetR() int32 {
+	return s.R
+}
+
+// GetElevationFt returns the value of ElevationFt.
+func (s *LiveElevation) GetElevationFt() int32 {
+	return s.ElevationFt
+}
+
+// SetQ sets the value of Q.
+func (s *LiveElevation) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveElevation) SetR(val int32) {
+	s.R = val
+}
+
+// SetElevationFt sets the value of ElevationFt.
+func (s *LiveElevation) SetElevationFt(val int32) {
+	s.ElevationFt = val
 }
 
 // A light on the Map, for the DM.
@@ -7204,6 +7595,124 @@ func (s *LiveSuggestion) SetReason(val string) {
 	s.Reason = val
 }
 
+// A Surface on a hex.
+// Ref: #/components/schemas/LiveSurface
+type LiveSurface struct {
+	Q          int32           `json:"q"`
+	R          int32           `json:"r"`
+	Kind       LiveSurfaceKind `json:"kind"`
+	RoundsLeft OptInt32        `json:"roundsLeft"`
+}
+
+// GetQ returns the value of Q.
+func (s *LiveSurface) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveSurface) GetR() int32 {
+	return s.R
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveSurface) GetKind() LiveSurfaceKind {
+	return s.Kind
+}
+
+// GetRoundsLeft returns the value of RoundsLeft.
+func (s *LiveSurface) GetRoundsLeft() OptInt32 {
+	return s.RoundsLeft
+}
+
+// SetQ sets the value of Q.
+func (s *LiveSurface) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveSurface) SetR(val int32) {
+	s.R = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveSurface) SetKind(val LiveSurfaceKind) {
+	s.Kind = val
+}
+
+// SetRoundsLeft sets the value of RoundsLeft.
+func (s *LiveSurface) SetRoundsLeft(val OptInt32) {
+	s.RoundsLeft = val
+}
+
+type LiveSurfaceKind string
+
+const (
+	LiveSurfaceKindFire        LiveSurfaceKind = "fire"
+	LiveSurfaceKindGrease      LiveSurfaceKind = "grease"
+	LiveSurfaceKindWater       LiveSurfaceKind = "water"
+	LiveSurfaceKindIce         LiveSurfaceKind = "ice"
+	LiveSurfaceKindWeb         LiveSurfaceKind = "web"
+	LiveSurfaceKindElectrified LiveSurfaceKind = "electrified"
+)
+
+// AllValues returns all LiveSurfaceKind values.
+func (LiveSurfaceKind) AllValues() []LiveSurfaceKind {
+	return []LiveSurfaceKind{
+		LiveSurfaceKindFire,
+		LiveSurfaceKindGrease,
+		LiveSurfaceKindWater,
+		LiveSurfaceKindIce,
+		LiveSurfaceKindWeb,
+		LiveSurfaceKindElectrified,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveSurfaceKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveSurfaceKindFire:
+		return []byte(s), nil
+	case LiveSurfaceKindGrease:
+		return []byte(s), nil
+	case LiveSurfaceKindWater:
+		return []byte(s), nil
+	case LiveSurfaceKindIce:
+		return []byte(s), nil
+	case LiveSurfaceKindWeb:
+		return []byte(s), nil
+	case LiveSurfaceKindElectrified:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveSurfaceKind) UnmarshalText(data []byte) error {
+	switch LiveSurfaceKind(data) {
+	case LiveSurfaceKindFire:
+		*s = LiveSurfaceKindFire
+		return nil
+	case LiveSurfaceKindGrease:
+		*s = LiveSurfaceKindGrease
+		return nil
+	case LiveSurfaceKindWater:
+		*s = LiveSurfaceKindWater
+		return nil
+	case LiveSurfaceKindIce:
+		*s = LiveSurfaceKindIce
+		return nil
+	case LiveSurfaceKindWeb:
+		*s = LiveSurfaceKindWeb
+		return nil
+	case LiveSurfaceKindElectrified:
+		*s = LiveSurfaceKindElectrified
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A Token as a connection sees it.
 // Ref: #/components/schemas/LiveToken
 type LiveToken struct {
@@ -7445,6 +7954,7 @@ type LiveUpdate struct {
 	Steps   []LiveView           `json:"steps"`
 	Path    OptLivePath          `json:"path"`
 	Preview OptLiveAttackPreview `json:"preview"`
+	Area    OptLiveAreaPreview   `json:"area"`
 }
 
 // GetKind returns the value of Kind.
@@ -7492,6 +8002,11 @@ func (s *LiveUpdate) GetPreview() OptLiveAttackPreview {
 	return s.Preview
 }
 
+// GetArea returns the value of Area.
+func (s *LiveUpdate) GetArea() OptLiveAreaPreview {
+	return s.Area
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -7537,6 +8052,11 @@ func (s *LiveUpdate) SetPreview(val OptLiveAttackPreview) {
 	s.Preview = val
 }
 
+// SetArea sets the value of Area.
+func (s *LiveUpdate) SetArea(val OptLiveAreaPreview) {
+	s.Area = val
+}
+
 type LiveUpdateKind string
 
 const (
@@ -7546,6 +8066,7 @@ const (
 	LiveUpdateKindEnded         LiveUpdateKind = "ended"
 	LiveUpdateKindPath          LiveUpdateKind = "path"
 	LiveUpdateKindAttackPreview LiveUpdateKind = "attack_preview"
+	LiveUpdateKindAreaPreview   LiveUpdateKind = "area_preview"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -7557,6 +8078,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindEnded,
 		LiveUpdateKindPath,
 		LiveUpdateKindAttackPreview,
+		LiveUpdateKindAreaPreview,
 	}
 }
 
@@ -7574,6 +8096,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindPath:
 		return []byte(s), nil
 	case LiveUpdateKindAttackPreview:
+		return []byte(s), nil
+	case LiveUpdateKindAreaPreview:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -7601,6 +8125,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 	case LiveUpdateKindAttackPreview:
 		*s = LiveUpdateKindAttackPreview
 		return nil
+	case LiveUpdateKindAreaPreview:
+		*s = LiveUpdateKindAreaPreview
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -7623,6 +8150,9 @@ type LiveView struct {
 	// The DM is resolving part of an Effect by hand.
 	Resolving OptBool         `json:"resolving"`
 	Saves     []LiveSave      `json:"saves"`
+	Surfaces  []LiveSurface   `json:"surfaces"`
+	Elevation []LiveElevation `json:"elevation"`
+	Area      OptLiveArea     `json:"area"`
 	Walls     []HexCoord      `json:"walls"`
 	Lights    []LiveLight     `json:"lights"`
 	Ambient   OptAmbientLight `json:"ambient"`
@@ -7671,6 +8201,21 @@ func (s *LiveView) GetResolving() OptBool {
 // GetSaves returns the value of Saves.
 func (s *LiveView) GetSaves() []LiveSave {
 	return s.Saves
+}
+
+// GetSurfaces returns the value of Surfaces.
+func (s *LiveView) GetSurfaces() []LiveSurface {
+	return s.Surfaces
+}
+
+// GetElevation returns the value of Elevation.
+func (s *LiveView) GetElevation() []LiveElevation {
+	return s.Elevation
+}
+
+// GetArea returns the value of Area.
+func (s *LiveView) GetArea() OptLiveArea {
+	return s.Area
 }
 
 // GetWalls returns the value of Walls.
@@ -7731,6 +8276,21 @@ func (s *LiveView) SetResolving(val OptBool) {
 // SetSaves sets the value of Saves.
 func (s *LiveView) SetSaves(val []LiveSave) {
 	s.Saves = val
+}
+
+// SetSurfaces sets the value of Surfaces.
+func (s *LiveView) SetSurfaces(val []LiveSurface) {
+	s.Surfaces = val
+}
+
+// SetElevation sets the value of Elevation.
+func (s *LiveView) SetElevation(val []LiveElevation) {
+	s.Elevation = val
+}
+
+// SetArea sets the value of Area.
+func (s *LiveView) SetArea(val OptLiveArea) {
+	s.Area = val
 }
 
 // SetWalls sets the value of Walls.
@@ -9114,6 +9674,98 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptLiveArea returns new OptLiveArea with value set to v.
+func NewOptLiveArea(v LiveArea) OptLiveArea {
+	return OptLiveArea{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveArea is optional LiveArea.
+type OptLiveArea struct {
+	Value LiveArea
+	Set   bool
+}
+
+// IsSet returns true if OptLiveArea was set.
+func (o OptLiveArea) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveArea) Reset() {
+	var v LiveArea
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveArea) SetTo(v LiveArea) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveArea) Get() (v LiveArea, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveArea) Or(d LiveArea) LiveArea {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveAreaPreview returns new OptLiveAreaPreview with value set to v.
+func NewOptLiveAreaPreview(v LiveAreaPreview) OptLiveAreaPreview {
+	return OptLiveAreaPreview{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveAreaPreview is optional LiveAreaPreview.
+type OptLiveAreaPreview struct {
+	Value LiveAreaPreview
+	Set   bool
+}
+
+// IsSet returns true if OptLiveAreaPreview was set.
+func (o OptLiveAreaPreview) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveAreaPreview) Reset() {
+	var v LiveAreaPreview
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveAreaPreview) SetTo(v LiveAreaPreview) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveAreaPreview) Get() (v LiveAreaPreview, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveAreaPreview) Or(d LiveAreaPreview) LiveAreaPreview {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveAttackPreview returns new OptLiveAttackPreview with value set to v.
 func NewOptLiveAttackPreview(v LiveAttackPreview) OptLiveAttackPreview {
 	return OptLiveAttackPreview{
@@ -9246,6 +9898,52 @@ func (o OptLiveCommandResource) Get() (v LiveCommandResource, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandResource) Or(d LiveCommandResource) LiveCommandResource {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandSurface returns new OptLiveCommandSurface with value set to v.
+func NewOptLiveCommandSurface(v LiveCommandSurface) OptLiveCommandSurface {
+	return OptLiveCommandSurface{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandSurface is optional LiveCommandSurface.
+type OptLiveCommandSurface struct {
+	Value LiveCommandSurface
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandSurface was set.
+func (o OptLiveCommandSurface) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandSurface) Reset() {
+	var v LiveCommandSurface
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandSurface) SetTo(v LiveCommandSurface) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandSurface) Get() (v LiveCommandSurface, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandSurface) Or(d LiveCommandSurface) LiveCommandSurface {
 	if v, ok := o.Get(); ok {
 		return v
 	}

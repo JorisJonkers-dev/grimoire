@@ -46,6 +46,10 @@ const (
 	CmdApplyEffect   = "apply_effect"
 	CmdEndEffect     = "end_effect"
 	CmdResolveManual = "resolve_manual"
+	CmdPreviewArea   = "preview_area"
+	CmdCastArea      = "cast_area"
+	CmdPaintSurface  = "paint_surface"
+	CmdSetElevation  = "set_elevation"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -109,6 +113,8 @@ type Command struct {
 	SaveDC       int              `json:"saveDc,omitempty"`
 	EffectID     string           `json:"effectId,omitempty"`
 	ManualID     string           `json:"manualId,omitempty"`
+	Surface      string           `json:"surface,omitempty"`
+	ElevationFt  int              `json:"elevationFt,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -120,6 +126,7 @@ const (
 	UpdRejected      = "rejected"
 	UpdPath          = "path"
 	UpdAttackPreview = "attack_preview"
+	UpdAreaPreview   = "area_preview"
 	UpdEnded         = "ended"
 )
 
@@ -246,9 +253,12 @@ type View struct {
 	Ambient    string      `json:"ambient,omitempty"`
 	Combat     *CombatView `json:"combat,omitempty"`
 	// Manual goes to the DM; everyone else only learns that something is being resolved.
-	Manual    []ManualView `json:"manual,omitempty"`
-	Resolving bool         `json:"resolving,omitempty"`
-	Saves     []SaveView   `json:"saves,omitempty"`
+	Manual    []ManualView    `json:"manual,omitempty"`
+	Resolving bool            `json:"resolving,omitempty"`
+	Saves     []SaveView      `json:"saves,omitempty"`
+	Surfaces  []SurfaceView   `json:"surfaces,omitempty"`
+	Elevation []ElevationView `json:"elevation,omitempty"`
+	Area      *AreaView       `json:"area,omitempty"`
 }
 
 // SaveView is a saving throw waiting on its Roll Card to end an Effect.
@@ -320,6 +330,54 @@ type Update struct {
 	Steps   []View         `json:"steps,omitempty"`
 	Path    *PathView      `json:"path,omitempty"`
 	Preview *AttackPreview `json:"preview,omitempty"`
+	Area    *AreaPreview   `json:"area,omitempty"`
+}
+
+// AreaPreview is an area spell's template and who it would catch, allies flagged, sent only to whoever asked.
+type AreaPreview struct {
+	TokenID string       `json:"tokenId"`
+	Effect  string       `json:"effect"`
+	Name    string       `json:"name"`
+	DC      int          `json:"dc"`
+	Hexes   []Hex        `json:"hexes"`
+	Targets []AreaTarget `json:"targets"`
+	Allies  int          `json:"allies"`
+}
+
+// AreaTarget is a creature an area catches.
+type AreaTarget struct {
+	TokenID string `json:"tokenId"`
+	Ally    bool   `json:"ally"`
+}
+
+// AreaView is an area spell waiting on its rolls.
+type AreaView struct {
+	CasterID     string     `json:"casterId"`
+	Name         string     `json:"name"`
+	Hexes        []Hex      `json:"hexes"`
+	DamageRollID string     `json:"damageRollId,omitempty"`
+	Saves        []AreaSave `json:"saves"`
+}
+
+// AreaSave is one target's saving throw against an area.
+type AreaSave struct {
+	TokenID string `json:"tokenId"`
+	RollID  string `json:"rollId,omitempty"`
+}
+
+// SurfaceView is a Surface on a hex.
+type SurfaceView struct {
+	Q          int    `json:"q"`
+	R          int    `json:"r"`
+	Kind       string `json:"kind"`
+	RoundsLeft int    `json:"roundsLeft,omitempty"`
+}
+
+// ElevationView is a raised or sunken hex.
+type ElevationView struct {
+	Q           int `json:"q"`
+	R           int `json:"r"`
+	ElevationFt int `json:"elevationFt"`
 }
 
 func tokenView(t domain.Token, a Audience) TokenView {

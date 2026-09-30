@@ -49,7 +49,7 @@ func (b bestiary) Character(_ context.Context, _ caller.Caller, _, id uuid.UUID)
 	if id == uuid.Nil {
 		return "", uuid.UUID{}, domain.Stats{}, errors.New("no such character")
 	}
-	return "Aria", b.owner, domain.Stats{Source: "character:" + id.String(), AC: 16, HP: 12, HPMax: 12, Attacks: []domain.Attack{
+	return "Aria", b.owner, domain.Stats{Source: "character:" + id.String(), AC: 16, HP: 12, HPMax: 12, SpellDC: 14, Saves: map[string]int{"constitution": 2}, Attacks: []domain.Attack{
 		{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"},
 		{Name: "Longbow", ToHit: 4, RangeFt: 150, LongRangeFt: 600, Damage: "1d8", DamageBonus: 2, DamageType: "piercing"},
 	}}, nil

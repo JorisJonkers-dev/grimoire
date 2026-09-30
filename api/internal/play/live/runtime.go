@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"maps"
+	"slices"
 	"sync"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -39,17 +42,29 @@ type Write struct {
 	frames    []*state
 	prompt    *domain.ReactionPrompt
 	// Effects is the Session's Effects after the change, for the store to save; nil when unchanged.
-	Effects  *domain.Effects
-	effect   *domain.Effect
-	ended    []domain.EffectID
-	manuals  []domain.ManualPrompt
-	newSaves []domain.PendingSave
-	resolved uuid.UUID
-	saved    domain.RollID
-	resume   *domain.Resume
-	answered *domain.ReactionPrompt
-	total    int
-	resource combat.Resource
+	Effects *domain.Effects
+	// Surfaces is the Session's Surfaces after the change when SaveSurfaces; Cast the area spell when SaveCast.
+	Surfaces     map[hex.Coord]domain.Surface
+	SaveSurfaces bool
+	Cast         *domain.AreaCast
+	SaveCast     bool
+	// ElevationFt is the height set on Hexes by an elevation_set.
+	ElevationFt int
+	cast        *domain.AreaCast
+	terrain     bool
+	damageType  string
+	created     effects.CreateSurface
+	elevation   int
+	effect      *domain.Effect
+	ended       []domain.EffectID
+	manuals     []domain.ManualPrompt
+	newSaves    []domain.PendingSave
+	resolved    uuid.UUID
+	saved       domain.RollID
+	resume      *domain.Resume
+	answered    *domain.ReactionPrompt
+	total       int
+	resource    combat.Resource
 }
 
 // Store is the runtime's persistence port.
@@ -58,6 +73,9 @@ type Store interface {
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
+	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
+	// HighGround reports whether the Campaign uses the high-ground optional rule.
+	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
 	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
@@ -106,20 +124,22 @@ type request struct {
 }
 
 type runtime struct {
-	store   Store
-	armed   uuid.UUID
-	members Members
-	stats   Statblocks
-	now     func() time.Time
-	log     *slog.Logger
-	release func()
-	st      *state
-	subs    map[*Subscriber]struct{}
-	join    chan *Subscriber
-	leave   chan *Subscriber
-	cmds    chan request
-	stop    chan struct{}
-	done    chan struct{}
+	store Store
+	// campaign never changes, so the hub may read it from other goroutines.
+	campaign uuid.UUID
+	armed    uuid.UUID
+	members  Members
+	stats    Statblocks
+	now      func() time.Time
+	log      *slog.Logger
+	release  func()
+	st       *state
+	subs     map[*Subscriber]struct{}
+	join     chan *Subscriber
+	leave    chan *Subscriber
+	cmds     chan request
+	stop     chan struct{}
+	done     chan struct{}
 }
 
 // Hub starts, finds and stops Session runtimes.
@@ -181,13 +201,18 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx}
+	ground, cast, err := h.Store.LoadTerrain(ctx, id)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
 	st.setBoard(board)
 	rt := &runtime{
-		store: h.Store, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		store: h.Store, campaign: s.CampaignID, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {
@@ -204,7 +229,7 @@ func (h *Hub) RollResolved(campaign uuid.UUID, id domain.RollID) {
 	h.mu.Lock()
 	var targets []*runtime
 	for _, rt := range h.runtimes {
-		if rt.st.session.CampaignID == campaign {
+		if rt.campaign == campaign {
 			targets = append(targets, rt)
 		}
 	}
@@ -331,6 +356,9 @@ func (r *runtime) handle(req request) {
 	case req.cmd.Kind == CmdPreviewAttack:
 		r.previewAttack(req)
 		return
+	case req.cmd.Kind == CmdPreviewArea:
+		r.previewArea(req)
+		return
 	case !req.from.Member.DM && !playerMay(req.cmd.Kind):
 		r.reject(req, "Only the DM can change the table.")
 		return
@@ -346,7 +374,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea:
 		return true
 	}
 	return false
@@ -396,6 +424,10 @@ func (r *runtime) viewUpdate(a Audience, seq int64, w *Write) Update {
 // down as turns start, concentration broken by damage, and those of a removed token.
 func apply(s *state, w *Write) {
 	before := s.acting()
+	round := 0
+	if s.combat != nil {
+		round = s.combat.Round
+	}
 	change(s, w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
@@ -404,6 +436,8 @@ func apply(s *state, w *Write) {
 		started[id] = !before[id]
 	}
 	changed = s.tick(started) || changed
+	changed = s.hazards(started, w) || changed
+	settleTerrain(s, w, round)
 	if w.Kind == domain.ActionDamageDealt {
 		changed = s.concentrate(*w.HP) || changed
 	}
@@ -414,6 +448,27 @@ func apply(s *state, w *Write) {
 	if changed {
 		fx := cloneEffects(s.fx)
 		w.Effects = &fx
+	}
+}
+
+// settleTerrain ages Surfaces as a round starts, drops a removed token from the waiting area spell, and
+// marks what the store must write.
+func settleTerrain(s *state, w *Write, round int) {
+	if s.combat != nil && s.combat.Round > round && round > 0 {
+		w.terrain = s.weather() || w.terrain
+	}
+	if w.Kind == domain.ActionTokenRemoved && s.cast != nil {
+		s.cast.Targets = slices.DeleteFunc(s.cast.Targets, func(t domain.AreaTarget) bool { return t.Token == w.Token.ID })
+		if s.cast.Caster == w.Token.ID {
+			s.cast = nil
+		}
+	}
+	switch w.Kind {
+	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionTokenRemoved:
+		w.Cast, w.SaveCast = s.cast, true
+	}
+	if w.terrain {
+		w.Surfaces, w.SaveSurfaces = maps.Clone(s.surfaces), true
 	}
 }
 
@@ -436,6 +491,9 @@ func change(s *state, w *Write) {
 		applyReaction(s, w)
 		return
 	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
+		return
+	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet:
+		applyTerrain(s, w)
 		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)

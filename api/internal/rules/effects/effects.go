@@ -5,6 +5,9 @@ package effects
 import (
 	"slices"
 	"sort"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
 // Component is one typed part of an Effect.
@@ -59,11 +62,42 @@ type Manual struct {
 	Instruction string
 }
 
-func (BonusDie) isComponent()    {}
-func (Edge) isComponent()        {}
-func (ExtraDamage) isComponent() {}
-func (MoveCost) isComponent()    {}
-func (Manual) isComponent()      {}
+// Area is an effect's template; RangeFt is how far away its point may be, 0 when it starts at the caster.
+type Area struct {
+	Shape   hex.Shape
+	SizeFt  int
+	RangeFt int
+}
+
+// SaveDamage hurts every creature in the area; a successful save halves it with Half, or avoids it.
+type SaveDamage struct {
+	Ability string
+	Dice    string
+	Type    string
+	Half    bool
+}
+
+// SaveCondition puts a condition on every creature in the area that fails the save.
+type SaveCondition struct {
+	Ability string
+	Slug    string
+}
+
+// CreateSurface leaves a Surface on the area for some rounds.
+type CreateSurface struct {
+	Kind   surface.Kind
+	Rounds int
+}
+
+func (BonusDie) isComponent()      {}
+func (Edge) isComponent()          {}
+func (ExtraDamage) isComponent()   {}
+func (MoveCost) isComponent()      {}
+func (Manual) isComponent()        {}
+func (Area) isComponent()          {}
+func (SaveDamage) isComponent()    {}
+func (SaveCondition) isComponent() {}
+func (CreateSurface) isComponent() {}
 
 // Definition is an Effect: what it is called, whether it needs concentration, and what it does.
 type Definition struct {
@@ -124,7 +158,7 @@ func (p *AttackProfile) attacking(d Definition) {
 			if !c.Against {
 				p.add(d.Name, c)
 			}
-		case ExtraDamage, MoveCost, Manual:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface:
 		}
 	}
 }
@@ -142,7 +176,7 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 				p.DamageDice = append(p.DamageDice, c.Dice)
 				p.Notes = append(p.Notes, d.Name+": +"+c.Dice+" damage")
 			}
-		case BonusDie, MoveCost, Manual:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface:
 		}
 	}
 }
@@ -208,6 +242,41 @@ func Instructions(slug, name string) []string {
 	return out
 }
 
+// AreaSpell is an area Effect laid out for casting.
+type AreaSpell struct {
+	Name         string
+	Area         Area
+	Save         string
+	Damage       SaveDamage
+	Condition    string
+	Surface      CreateSurface
+	Instructions []string
+}
+
+// AreaOf finds a modelled area Effect.
+func AreaOf(slug string) (AreaSpell, bool) {
+	d, known := catalog()[slug]
+	var out AreaSpell
+	out.Name = d.Name
+	found := false
+	for _, c := range d.Components {
+		switch c := c.(type) {
+		case Area:
+			out.Area, found = c, true
+		case SaveDamage:
+			out.Damage, out.Save = c, c.Ability
+		case SaveCondition:
+			out.Condition, out.Save = c.Slug, c.Ability
+		case CreateSurface:
+			out.Surface = c
+		case Manual:
+			out.Instructions = append(out.Instructions, c.Instruction)
+		case BonusDie, Edge, ExtraDamage, MoveCost:
+		}
+	}
+	return out, known && found
+}
+
 // Lookup finds a modelled Effect.
 func Lookup(slug string) (Definition, bool) {
 	d, ok := catalog()[slug]
@@ -250,6 +319,31 @@ func catalog() map[string]Definition {
 		}},
 		"hunters-mark": {Slug: "hunters-mark", Name: "Hunter's Mark", Concentration: true, Components: []Component{
 			ExtraDamage{Dice: "1d6"},
+		}},
+		"fireball": {Slug: "fireball", Name: "Fireball", Concentration: false, Components: []Component{
+			Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
+		}},
+		"burning-hands": {Slug: "burning-hands", Name: "Burning Hands", Concentration: false, Components: []Component{
+			Area{Shape: hex.ConeArea, SizeFt: 15, RangeFt: 0}, SaveDamage{Ability: "dexterity", Dice: "3d6", Type: "fire", Half: true},
+		}},
+		"lightning-bolt": {Slug: "lightning-bolt", Name: "Lightning Bolt", Concentration: false, Components: []Component{
+			Area{Shape: hex.LineArea, SizeFt: 100, RangeFt: 0}, SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "lightning", Half: true},
+		}},
+		"cone-of-cold": {Slug: "cone-of-cold", Name: "Cone of Cold", Concentration: false, Components: []Component{
+			Area{Shape: hex.ConeArea, SizeFt: 60, RangeFt: 0}, SaveDamage{Ability: "constitution", Dice: "8d8", Type: "cold", Half: true},
+		}},
+		"shatter": {Slug: "shatter", Name: "Shatter", Concentration: false, Components: []Component{
+			Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60}, SaveDamage{Ability: "constitution", Dice: "3d8", Type: "thunder", Half: true},
+		}},
+		"thunderwave": {Slug: "thunderwave", Name: "Thunderwave", Concentration: false, Components: []Component{
+			Area{Shape: hex.CubeArea, SizeFt: 15, RangeFt: 0},
+			SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder", Half: true},
+			Manual{Instruction: "Thunderwave: creatures that failed their save are pushed 10 feet away."},
+		}},
+		"grease": {Slug: "grease", Name: "Grease", Concentration: false, Components: []Component{
+			Area{Shape: hex.CylinderArea, SizeFt: 5, RangeFt: 60},
+			CreateSurface{Kind: surface.Grease, Rounds: 10},
+			SaveCondition{Ability: "dexterity", Slug: "prone"},
 		}},
 		"prone": {Slug: "prone", Name: "Prone", Concentration: false, Components: []Component{
 			Edge{Against: false, Advantage: false, Range: AnyRange},

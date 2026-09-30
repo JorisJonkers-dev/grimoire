@@ -37,6 +37,10 @@ export type CampaignSummary = {
     memberCount: number;
     createdAt: string;
     reactionTimeoutS?: ReactionTimeout;
+    /**
+     * Optional rule: attacks from higher ground get +2 to hit.
+     */
+    highGround?: boolean;
 };
 
 /**
@@ -69,6 +73,10 @@ export type Campaign = {
     memberCount: number;
     createdAt: string;
     reactionTimeoutS?: ReactionTimeout;
+    /**
+     * Optional rule: attacks from higher ground get +2 to hit.
+     */
+    highGround?: boolean;
     me: Member;
     members: Array<Member>;
 };
@@ -89,6 +97,10 @@ export type CampaignUpdate = {
     name?: CampaignName;
     ruleset?: Ruleset;
     reactionTimeoutS?: ReactionTimeout;
+    /**
+     * Optional rule: attacks from higher ground get +2 to hit.
+     */
+    highGround?: boolean;
 };
 
 /**
@@ -761,7 +773,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -804,6 +816,70 @@ export type LiveCommand = {
     saveDc?: number;
     effectId?: Id;
     manualId?: Id;
+    /**
+     * With paint_surface; leave it out to clear.
+     */
+    surface?: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
+    elevationFt?: number;
+};
+
+/**
+ * An area spell's hexes and every creature it would catch, allies flagged, sent only to whoever asked.
+ */
+export type LiveAreaPreview = {
+    tokenId: Id;
+    effect: string;
+    name: string;
+    dc: number;
+    hexes: Array<HexCoord>;
+    targets: Array<LiveAreaTarget>;
+    allies: number;
+};
+
+/**
+ * A creature an area catches.
+ */
+export type LiveAreaTarget = {
+    tokenId: Id;
+    ally: boolean;
+};
+
+/**
+ * An area spell waiting on its damage roll and saving throws.
+ */
+export type LiveArea = {
+    casterId: Id;
+    name: string;
+    hexes: Array<HexCoord>;
+    damageRollId?: Id;
+    saves: Array<LiveAreaSave>;
+};
+
+/**
+ * One target's saving throw against an area.
+ */
+export type LiveAreaSave = {
+    tokenId: Id;
+    rollId?: Id;
+};
+
+/**
+ * A Surface on a hex.
+ */
+export type LiveSurface = {
+    q: number;
+    r: number;
+    kind: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
+    roundsLeft?: number;
+};
+
+/**
+ * A raised or sunken hex.
+ */
+export type LiveElevation = {
+    q: number;
+    r: number;
+    elevationFt: number;
 };
 
 /**
@@ -909,7 +985,7 @@ export type LiveCombatant = {
  * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview';
     seq: number;
     nonce?: string;
     reason?: string;
@@ -918,6 +994,7 @@ export type LiveUpdate = {
     steps?: Array<LiveView>;
     path?: LivePath;
     preview?: LiveAttackPreview;
+    area?: LiveAreaPreview;
 };
 
 /**
@@ -976,6 +1053,9 @@ export type LiveView = {
      */
     resolving?: boolean;
     saves?: Array<LiveSave>;
+    surfaces?: Array<LiveSurface>;
+    elevation?: Array<LiveElevation>;
+    area?: LiveArea;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;

@@ -123,6 +123,28 @@ const box = computed(() => {
   fill: var(--color-enemy-fill);
   stroke: var(--color-enemy);
 }
+.hex--area polygon {
+  fill: rgb(212 120 40 / 45%);
+  stroke: var(--color-gold-high);
+}
+.hex--surface-fire polygon {
+  fill: #7a2a12;
+}
+.hex--surface-grease polygon {
+  fill: #4b4226;
+}
+.hex--surface-water polygon {
+  fill: #1f3f6b;
+}
+.hex--surface-ice polygon {
+  fill: #7fb2d1;
+}
+.hex--surface-web polygon {
+  fill: #5f5f5f;
+}
+.hex--surface-electrified polygon {
+  fill: #4b4bb3;
+}
 .hex--seen polygon {
   stroke: var(--color-gold-high);
   stroke-width: 2;

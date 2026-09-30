@@ -96,6 +96,9 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	for _, sv := range sheet.Derived.Saves {
 		stats.Saves[string(sv.Ability)] = sv.Bonus
 	}
+	if ability, casts := spellcasting()[sheet.Class]; casts {
+		stats.SpellDC = 8 + pb + rules.Modifier(sheet.Scores[ability])
+	}
 	for _, w := range sheet.Weapons {
 		props := attack.Weapon{
 			Finesse: slices.Contains(w.Properties, "Finesse"), Ammunition: slices.Contains(w.Properties, "Ammunition"),
@@ -122,4 +125,12 @@ func damage(notation string, bonus int) (string, int) {
 	}
 	n, _ := strconv.Atoi(notation)
 	return "", bonus + n
+}
+
+// spellcasting is the ability each spellcasting class casts with.
+func spellcasting() map[string]rules.Ability {
+	return map[string]rules.Ability{
+		"bard": rules.Charisma, "cleric": rules.Wisdom, "druid": rules.Wisdom, "paladin": rules.Charisma, "ranger": rules.Wisdom,
+		"sorcerer": rules.Charisma, "warlock": rules.Charisma, "wizard": rules.Intelligence,
+	}
 }

@@ -171,6 +171,10 @@ func TestUpdateChangesSettings(t *testing.T) {
 	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{ReactionTimeoutS: &slow}); err != nil || got.ReactionTimeoutS != 120 {
 		t.Fatalf("slow reactions = %+v %v", got, err)
 	}
+	on := true
+	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{HighGround: &on}); err != nil || !got.HighGround || got.ReactionTimeoutS != 120 {
+		t.Fatalf("high ground on = %+v %v", got, err)
+	}
 	for _, n := range []int{never, 121} {
 		if _, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{ReactionTimeoutS: &n}); err == nil {
 			t.Fatalf("%d seconds accepted", n)

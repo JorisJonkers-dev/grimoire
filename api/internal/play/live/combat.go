@@ -124,8 +124,7 @@ func (r *runtime) initiativeRoll(dm domain.Member, t domain.Token, bonus int) do
 // rolled takes a resolved Roll Request into the Combat it belongs to: an initiative, or the attack on
 // the table.
 func (r *runtime) rolled(req request) {
-	if i := slices.IndexFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.RollID == req.cmd.rollID }); i >= 0 {
-		r.saveRolled(r.st.fx.Saves[i])
+	if r.outOfCombatRoll(req.cmd.rollID) {
 		return
 	}
 	c := r.st.combat
@@ -153,8 +152,24 @@ func (r *runtime) rolled(req request) {
 	}
 }
 
-// catchUp takes in initiative rolled while the runtime was not running.
+// outOfCombatRoll takes a resolved roll that belongs to an Effect's save or an area spell.
+func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
+	if i := slices.IndexFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.RollID == id }); i >= 0 {
+		r.saveRolled(r.st.fx.Saves[i])
+		return true
+	}
+	if r.st.cast != nil && slices.Contains(castRolls(r.st.cast), id) {
+		r.areaRolled()
+		return true
+	}
+	return false
+}
+
+// catchUp takes in rolls resolved while the runtime was not running.
 func (r *runtime) catchUp() {
+	if r.st.cast != nil {
+		r.areaRolled()
+	}
 	if r.st.combat == nil {
 		return
 	}

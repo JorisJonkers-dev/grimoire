@@ -50,6 +50,12 @@ func samples() contract {
 	view.Tokens[0].Effects = []live.EffectView{{ID: "0190c7a8-0000-7000-8000-000000000017", Slug: "bless", Name: "Bless", SourceID: token.ID, Concentration: true, RoundsLeft: 9}}
 	view.Resolving = true
 	view.Saves = []live.SaveView{{RollID: "0190c7a8-0000-7000-8000-000000000019", TokenID: token.ID, Effect: "Hold Person", DC: 13}}
+	view.Surfaces = []live.SurfaceView{{Q: 1, R: 1, Kind: "grease", RoundsLeft: 9}}
+	view.Elevation = []live.ElevationView{{Q: 1, R: 1, ElevationFt: 10}}
+	view.Area = &live.AreaView{
+		CasterID: token.ID, Name: "Fireball", Hexes: []live.Hex{{Q: 3, R: 0}}, DamageRollID: "0190c7a8-0000-7000-8000-000000000020",
+		Saves: []live.AreaSave{{TokenID: token.ID, RollID: "0190c7a8-0000-7000-8000-000000000021"}},
+	}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
 	dmView.Resolving, dmView.Manual = false, []live.ManualView{{ID: "0190c7a8-0000-7000-8000-000000000018", Text: "Goblin: Resolve Hold Person by hand."}}
@@ -85,6 +91,10 @@ func samples() contract {
 			{Nonce: "n27", Kind: live.CmdApplyEffect, TargetID: token.ID, Effect: "hold-person", EffectName: "Hold Person", SourceID: token.ID, Rounds: 10, SaveAbility: "wisdom", SaveDC: 13},
 			{Nonce: "n28", Kind: live.CmdEndEffect, EffectID: "0190c7a8-0000-7000-8000-000000000017"},
 			{Nonce: "n29", Kind: live.CmdResolveManual, ManualID: "0190c7a8-0000-7000-8000-000000000018"},
+			{Nonce: "n30", Kind: live.CmdPreviewArea, TokenID: token.ID, Effect: "fireball", Q: 3, R: 0},
+			{Nonce: "n31", Kind: live.CmdCastArea, TokenID: token.ID, Effect: "fireball", Q: 3, R: 0},
+			{Nonce: "n32", Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "grease", Rounds: 10},
+			{Nonce: "n33", Kind: live.CmdSetElevation, Hexes: []live.Hex{{Q: 1, R: 1}}, ElevationFt: 10},
 		},
 		Updates: []live.Update{
 			{
@@ -99,6 +109,10 @@ func samples() contract {
 			{Kind: live.UpdAttackPreview, Seq: 7, Nonce: "n21", Preview: &live.AttackPreview{
 				TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", AttackNo: 1, Name: "Shortbow", HitChance: 30, Mode: "disadvantage",
 				DamageMin: 3, DamageMax: 8, CritMax: 14, Reasons: []string{"Shortbow: +4 to hit", "Disadvantage: long range"},
+			}},
+			{Kind: live.UpdAreaPreview, Seq: 7, Nonce: "n30", Area: &live.AreaPreview{
+				TokenID: token.ID, Effect: "fireball", Name: "Fireball", DC: 13, Hexes: []live.Hex{{Q: 3, R: 0}},
+				Targets: []live.AreaTarget{{TokenID: token.ID, Ally: true}}, Allies: 1,
 			}},
 			{Kind: live.UpdEnded, Seq: 7},
 		},

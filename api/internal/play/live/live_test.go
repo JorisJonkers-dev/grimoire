@@ -21,6 +21,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -400,6 +401,12 @@ func (failingEffects) LoadEffects(context.Context, domain.SessionID) (domain.Eff
 	return domain.Effects{}, errors.New("gone")
 }
 
+type failingTerrain struct{ live.Store }
+
+func (failingTerrain) LoadTerrain(context.Context, domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error) {
+	return nil, nil, errors.New("gone")
+}
+
 type failingOwner struct{}
 
 func (failingOwner) Acquire(context.Context, domain.SessionID) (func(), error) {
@@ -453,6 +460,10 @@ func TestFailuresAndLifecycle(t *testing.T) {
 	w.hub.Store = failingEffects{Store: pgstore.New(w.pool)}
 	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("effect load failure ignored")
+	}
+	w.hub.Store = failingTerrain{Store: pgstore.New(w.pool)}
+	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
+		t.Fatal("terrain load failure ignored")
 	}
 	if _, err := (&live.Hub{Store: pgstore.New(w.pool), Owner: failingOwner{}}).Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("owner failure ignored")

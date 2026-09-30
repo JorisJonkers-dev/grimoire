@@ -103,6 +103,7 @@ func summaryOut(s domain.Summary) oas.CampaignSummary {
 		ID: oas.ID(s.ID), Name: oas.CampaignName(s.Name), Ruleset: oas.Ruleset(s.Ruleset), MyRole: oas.Role(s.MyRole),
 		MemberCount: int32(s.MemberCount), CreatedAt: s.CreatedAt.UTC(), //nolint:gosec // member counts are small
 		ReactionTimeoutS: oas.NewOptReactionTimeout(oas.ReactionTimeout(s.ReactionTimeoutS)), //nolint:gosec // 3 to 120 seconds
+		HighGround:       oas.NewOptBool(s.HighGround),
 	}
 }
 
@@ -111,6 +112,7 @@ func detailOut(d domain.Detail) oas.Campaign {
 		ID: oas.ID(d.ID), Name: oas.CampaignName(d.Name), Ruleset: oas.Ruleset(d.Ruleset), MyRole: oas.Role(d.Me.Role),
 		MemberCount: int32(len(d.Members)), CreatedAt: d.CreatedAt.UTC(), Me: memberOut(d.Me, d.Me.Subject), //nolint:gosec // member counts are small
 		ReactionTimeoutS: oas.NewOptReactionTimeout(oas.ReactionTimeout(d.ReactionTimeoutS)), //nolint:gosec // 3 to 120 seconds
+		HighGround:       oas.NewOptBool(d.HighGround),
 		Members:          make([]oas.Member, 0, len(d.Members)),
 	}
 	for _, m := range d.Members {
@@ -197,6 +199,9 @@ func (h *Handler) UpdateCampaign(ctx context.Context, req *oas.CampaignUpdate, p
 	if v, set := req.ReactionTimeoutS.Get(); set {
 		timeout := int(v)
 		in.ReactionTimeoutS = &timeout
+	}
+	if v, set := req.HighGround.Get(); set {
+		in.HighGround = &v
 	}
 	camp, err := h.Campaigns.Update(ctx, c, domain.CampaignID(p.CampaignId), in)
 	if err != nil {

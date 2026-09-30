@@ -82,7 +82,7 @@ func (s *state) walkGrid(dm bool, mover domain.Token, seen map[hex.Coord]bool) h
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
 	for _, c := range s.ground() {
 		if dm || s.board == nil || seen[c] || s.board.Reveals[c] {
-			g.Cells[c] = hex.Cell{Blocked: s.board != nil && s.board.Walls[c]}
+			g.Cells[c] = s.cell(c)
 		}
 	}
 	for _, t := range s.tokens {
