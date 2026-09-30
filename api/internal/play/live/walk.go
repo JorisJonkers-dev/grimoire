@@ -1,6 +1,8 @@
 package live
 
 import (
+	"strconv"
+
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
@@ -31,6 +33,9 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 	if !ok {
 		return domain.Token{}, nil, 0, "There is no way there."
 	}
+	if reason := r.st.moveLeft(t, reach[to].CostFt); reason != "" {
+		return domain.Token{}, nil, 0, reason
+	}
 	return t, path, reach[to].CostFt, ""
 }
 
@@ -44,6 +49,24 @@ func (r *runtime) previewWalk(req request) {
 		Kind: UpdPath, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce,
 		Path: &PathView{TokenID: req.cmd.TokenID, Hexes: wireHexes(path), CostFt: cost},
 	})
+}
+
+// moveLeft refuses a walk a Combatant cannot make now: out of turn, or longer than its movement left.
+func (s *state) moveLeft(t domain.Token, cost int) string {
+	if s.combat == nil {
+		return ""
+	}
+	for _, x := range s.combat.Combatants {
+		switch {
+		case x.TokenID != t.ID:
+			continue
+		case !s.combat.Acting(x):
+			return "It is not " + t.Label + "'s turn."
+		case cost > x.Economy.MovementFt:
+			return t.Label + " has " + strconv.Itoa(x.Economy.MovementFt) + " ft of movement left."
+		}
+	}
+	return ""
 }
 
 // shows reports whether the party sees a token right now.

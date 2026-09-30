@@ -54,7 +54,7 @@ func notFound(err error) error {
 // InsertRoll stores a Roll Request with its labels, modifiers and empty dice.
 func (s *Store) InsertRoll(ctx context.Context, r domain.Roll, now time.Time) (domain.RollID, error) {
 	id, err := s.q.InsertRoll(ctx, queries.InsertRollParams{
-		CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, RequestedByName: r.RequestedBy,
+		ID: pgtype.UUID{Bytes: r.ID, Valid: r.ID != domain.RollID{}}, CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, RequestedByName: r.RequestedBy,
 		RollerMemberID: r.Roller.ID, RollerSubject: r.Roller.Subject, RollerName: r.Roller.Name, Now: now,
 	})
 	if err != nil {

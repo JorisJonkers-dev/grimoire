@@ -5219,26 +5219,317 @@ func (s *ListSpellsNotModified) SetETag(val OptString) {
 
 func (*ListSpellsNotModified) listSpellsRes() {}
 
+// The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share
+// a rank and act at the same time.
+// Ref: #/components/schemas/LiveCombat
+type LiveCombat struct {
+	Status     LiveCombatStatus `json:"status"`
+	Round      int32            `json:"round"`
+	Combatants []LiveCombatant  `json:"combatants"`
+}
+
+// GetStatus returns the value of Status.
+func (s *LiveCombat) GetStatus() LiveCombatStatus {
+	return s.Status
+}
+
+// GetRound returns the value of Round.
+func (s *LiveCombat) GetRound() int32 {
+	return s.Round
+}
+
+// GetCombatants returns the value of Combatants.
+func (s *LiveCombat) GetCombatants() []LiveCombatant {
+	return s.Combatants
+}
+
+// SetStatus sets the value of Status.
+func (s *LiveCombat) SetStatus(val LiveCombatStatus) {
+	s.Status = val
+}
+
+// SetRound sets the value of Round.
+func (s *LiveCombat) SetRound(val int32) {
+	s.Round = val
+}
+
+// SetCombatants sets the value of Combatants.
+func (s *LiveCombat) SetCombatants(val []LiveCombatant) {
+	s.Combatants = val
+}
+
+type LiveCombatStatus string
+
+const (
+	LiveCombatStatusRolling LiveCombatStatus = "rolling"
+	LiveCombatStatusActive  LiveCombatStatus = "active"
+)
+
+// AllValues returns all LiveCombatStatus values.
+func (LiveCombatStatus) AllValues() []LiveCombatStatus {
+	return []LiveCombatStatus{
+		LiveCombatStatusRolling,
+		LiveCombatStatusActive,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCombatStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCombatStatusRolling:
+		return []byte(s), nil
+	case LiveCombatStatusActive:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCombatStatus) UnmarshalText(data []byte) error {
+	switch LiveCombatStatus(data) {
+	case LiveCombatStatusRolling:
+		*s = LiveCombatStatusRolling
+		return nil
+	case LiveCombatStatusActive:
+		*s = LiveCombatStatusActive
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One Combatant in the initiative rail, with what is left of its action economy.
+// Ref: #/components/schemas/LiveCombatant
+type LiveCombatant struct {
+	ID           ID        `json:"id"`
+	TokenId      ID        `json:"tokenId"`
+	Label        string    `json:"label"`
+	Kind         TokenKind `json:"kind"`
+	ControllerId OptID     `json:"controllerId"`
+	RollId       ID        `json:"rollId"`
+	Initiative   OptInt32  `json:"initiative"`
+	Rank         OptInt32  `json:"rank"`
+	Acting       bool      `json:"acting"`
+	Done         bool      `json:"done"`
+	Action       bool      `json:"action"`
+	BonusAction  bool      `json:"bonusAction"`
+	Reaction     bool      `json:"reaction"`
+	MovementFt   int32     `json:"movementFt"`
+	SpeedFt      int32     `json:"speedFt"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveCombatant) GetID() ID {
+	return s.ID
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveCombatant) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveCombatant) GetLabel() string {
+	return s.Label
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveCombatant) GetKind() TokenKind {
+	return s.Kind
+}
+
+// GetControllerId returns the value of ControllerId.
+func (s *LiveCombatant) GetControllerId() OptID {
+	return s.ControllerId
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveCombatant) GetRollId() ID {
+	return s.RollId
+}
+
+// GetInitiative returns the value of Initiative.
+func (s *LiveCombatant) GetInitiative() OptInt32 {
+	return s.Initiative
+}
+
+// GetRank returns the value of Rank.
+func (s *LiveCombatant) GetRank() OptInt32 {
+	return s.Rank
+}
+
+// GetActing returns the value of Acting.
+func (s *LiveCombatant) GetActing() bool {
+	return s.Acting
+}
+
+// GetDone returns the value of Done.
+func (s *LiveCombatant) GetDone() bool {
+	return s.Done
+}
+
+// GetAction returns the value of Action.
+func (s *LiveCombatant) GetAction() bool {
+	return s.Action
+}
+
+// GetBonusAction returns the value of BonusAction.
+func (s *LiveCombatant) GetBonusAction() bool {
+	return s.BonusAction
+}
+
+// GetReaction returns the value of Reaction.
+func (s *LiveCombatant) GetReaction() bool {
+	return s.Reaction
+}
+
+// GetMovementFt returns the value of MovementFt.
+func (s *LiveCombatant) GetMovementFt() int32 {
+	return s.MovementFt
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *LiveCombatant) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// SetID sets the value of ID.
+func (s *LiveCombatant) SetID(val ID) {
+	s.ID = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveCombatant) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveCombatant) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveCombatant) SetKind(val TokenKind) {
+	s.Kind = val
+}
+
+// SetControllerId sets the value of ControllerId.
+func (s *LiveCombatant) SetControllerId(val OptID) {
+	s.ControllerId = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveCombatant) SetRollId(val ID) {
+	s.RollId = val
+}
+
+// SetInitiative sets the value of Initiative.
+func (s *LiveCombatant) SetInitiative(val OptInt32) {
+	s.Initiative = val
+}
+
+// SetRank sets the value of Rank.
+func (s *LiveCombatant) SetRank(val OptInt32) {
+	s.Rank = val
+}
+
+// SetActing sets the value of Acting.
+func (s *LiveCombatant) SetActing(val bool) {
+	s.Acting = val
+}
+
+// SetDone sets the value of Done.
+func (s *LiveCombatant) SetDone(val bool) {
+	s.Done = val
+}
+
+// SetAction sets the value of Action.
+func (s *LiveCombatant) SetAction(val bool) {
+	s.Action = val
+}
+
+// SetBonusAction sets the value of BonusAction.
+func (s *LiveCombatant) SetBonusAction(val bool) {
+	s.BonusAction = val
+}
+
+// SetReaction sets the value of Reaction.
+func (s *LiveCombatant) SetReaction(val bool) {
+	s.Reaction = val
+}
+
+// SetMovementFt sets the value of MovementFt.
+func (s *LiveCombatant) SetMovementFt(val int32) {
+	s.MovementFt = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *LiveCombatant) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// A Token joining a Combat, with its initiative bonus and speed.
+// Ref: #/components/schemas/LiveCombatantSetup
+type LiveCombatantSetup struct {
+	TokenId         ID    `json:"tokenId"`
+	InitiativeBonus int32 `json:"initiativeBonus"`
+	SpeedFt         int32 `json:"speedFt"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveCombatantSetup) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetInitiativeBonus returns the value of InitiativeBonus.
+func (s *LiveCombatantSetup) GetInitiativeBonus() int32 {
+	return s.InitiativeBonus
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *LiveCombatantSetup) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveCombatantSetup) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetInitiativeBonus sets the value of InitiativeBonus.
+func (s *LiveCombatantSetup) SetInitiativeBonus(val int32) {
+	s.InitiativeBonus = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *LiveCombatantSetup) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
 // A WebSocket frame from a client to a live Session.
 // Ref: #/components/schemas/LiveCommand
 type LiveCommand struct {
-	Nonce        string          `json:"nonce"`
-	Kind         LiveCommandKind `json:"kind"`
-	TokenId      OptID           `json:"tokenId"`
-	Label        OptString       `json:"label"`
-	TokenKind    OptTokenKind    `json:"tokenKind"`
-	Q            int32           `json:"q"`
-	R            int32           `json:"r"`
-	Hidden       bool            `json:"hidden"`
-	DarkvisionFt OptInt32        `json:"darkvisionFt"`
-	MapId        OptID           `json:"mapId"`
-	Hexes        []HexCoord      `json:"hexes"`
-	On           OptBool         `json:"on"`
-	LightId      OptID           `json:"lightId"`
-	BrightFt     OptInt32        `json:"brightFt"`
-	DimFt        OptInt32        `json:"dimFt"`
-	Ambient      OptAmbientLight `json:"ambient"`
-	ControllerId OptID           `json:"controllerId"`
+	Nonce        string                 `json:"nonce"`
+	Kind         LiveCommandKind        `json:"kind"`
+	TokenId      OptID                  `json:"tokenId"`
+	Label        OptString              `json:"label"`
+	TokenKind    OptTokenKind           `json:"tokenKind"`
+	Q            int32                  `json:"q"`
+	R            int32                  `json:"r"`
+	Hidden       bool                   `json:"hidden"`
+	DarkvisionFt OptInt32               `json:"darkvisionFt"`
+	MapId        OptID                  `json:"mapId"`
+	Hexes        []HexCoord             `json:"hexes"`
+	On           OptBool                `json:"on"`
+	LightId      OptID                  `json:"lightId"`
+	BrightFt     OptInt32               `json:"brightFt"`
+	DimFt        OptInt32               `json:"dimFt"`
+	Ambient      OptAmbientLight        `json:"ambient"`
+	ControllerId OptID                  `json:"controllerId"`
+	Combatants   []LiveCombatantSetup   `json:"combatants"`
+	CombatantId  OptID                  `json:"combatantId"`
+	Resource     OptLiveCommandResource `json:"resource"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -5326,6 +5617,21 @@ func (s *LiveCommand) GetControllerId() OptID {
 	return s.ControllerId
 }
 
+// GetCombatants returns the value of Combatants.
+func (s *LiveCommand) GetCombatants() []LiveCombatantSetup {
+	return s.Combatants
+}
+
+// GetCombatantId returns the value of CombatantId.
+func (s *LiveCommand) GetCombatantId() OptID {
+	return s.CombatantId
+}
+
+// GetResource returns the value of Resource.
+func (s *LiveCommand) GetResource() OptLiveCommandResource {
+	return s.Resource
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -5411,6 +5717,21 @@ func (s *LiveCommand) SetControllerId(val OptID) {
 	s.ControllerId = val
 }
 
+// SetCombatants sets the value of Combatants.
+func (s *LiveCommand) SetCombatants(val []LiveCombatantSetup) {
+	s.Combatants = val
+}
+
+// SetCombatantId sets the value of CombatantId.
+func (s *LiveCommand) SetCombatantId(val OptID) {
+	s.CombatantId = val
+}
+
+// SetResource sets the value of Resource.
+func (s *LiveCommand) SetResource(val OptLiveCommandResource) {
+	s.Resource = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -5427,6 +5748,10 @@ const (
 	LiveCommandKindSetAmbient     LiveCommandKind = "set_ambient"
 	LiveCommandKindPlanWalk       LiveCommandKind = "plan_walk"
 	LiveCommandKindWalk           LiveCommandKind = "walk"
+	LiveCommandKindStartCombat    LiveCommandKind = "start_combat"
+	LiveCommandKindEndTurn        LiveCommandKind = "end_turn"
+	LiveCommandKindSpend          LiveCommandKind = "spend"
+	LiveCommandKindEndCombat      LiveCommandKind = "end_combat"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -5445,6 +5770,10 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSetAmbient,
 		LiveCommandKindPlanWalk,
 		LiveCommandKindWalk,
+		LiveCommandKindStartCombat,
+		LiveCommandKindEndTurn,
+		LiveCommandKindSpend,
+		LiveCommandKindEndCombat,
 	}
 }
 
@@ -5476,6 +5805,14 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindPlanWalk:
 		return []byte(s), nil
 	case LiveCommandKindWalk:
+		return []byte(s), nil
+	case LiveCommandKindStartCombat:
+		return []byte(s), nil
+	case LiveCommandKindEndTurn:
+		return []byte(s), nil
+	case LiveCommandKindSpend:
+		return []byte(s), nil
+	case LiveCommandKindEndCombat:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5524,6 +5861,18 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindWalk:
 		*s = LiveCommandKindWalk
 		return nil
+	case LiveCommandKindStartCombat:
+		*s = LiveCommandKindStartCombat
+		return nil
+	case LiveCommandKindEndTurn:
+		*s = LiveCommandKindEndTurn
+		return nil
+	case LiveCommandKindSpend:
+		*s = LiveCommandKindSpend
+		return nil
+	case LiveCommandKindEndCombat:
+		*s = LiveCommandKindEndCombat
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -5531,6 +5880,54 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 
 // LiveCommandNoContent is response for LiveCommand operation.
 type LiveCommandNoContent struct{}
+
+type LiveCommandResource string
+
+const (
+	LiveCommandResourceAction      LiveCommandResource = "action"
+	LiveCommandResourceBonusAction LiveCommandResource = "bonus_action"
+	LiveCommandResourceReaction    LiveCommandResource = "reaction"
+)
+
+// AllValues returns all LiveCommandResource values.
+func (LiveCommandResource) AllValues() []LiveCommandResource {
+	return []LiveCommandResource{
+		LiveCommandResourceAction,
+		LiveCommandResourceBonusAction,
+		LiveCommandResourceReaction,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandResource) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandResourceAction:
+		return []byte(s), nil
+	case LiveCommandResourceBonusAction:
+		return []byte(s), nil
+	case LiveCommandResourceReaction:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandResource) UnmarshalText(data []byte) error {
+	switch LiveCommandResource(data) {
+	case LiveCommandResourceAction:
+		*s = LiveCommandResourceAction
+		return nil
+	case LiveCommandResourceBonusAction:
+		*s = LiveCommandResourceBonusAction
+		return nil
+	case LiveCommandResourceReaction:
+		*s = LiveCommandResourceReaction
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // A light on the Map, for the DM.
 // Ref: #/components/schemas/LiveLight
@@ -6093,6 +6490,7 @@ type LiveView struct {
 	Fog        bool            `json:"fog"`
 	Visible    []HexCoord      `json:"visible"`
 	Remembered []HexCoord      `json:"remembered"`
+	Combat     OptLiveCombat   `json:"combat"`
 	Walls      []HexCoord      `json:"walls"`
 	Lights     []LiveLight     `json:"lights"`
 	Ambient    OptAmbientLight `json:"ambient"`
@@ -6121,6 +6519,11 @@ func (s *LiveView) GetVisible() []HexCoord {
 // GetRemembered returns the value of Remembered.
 func (s *LiveView) GetRemembered() []HexCoord {
 	return s.Remembered
+}
+
+// GetCombat returns the value of Combat.
+func (s *LiveView) GetCombat() OptLiveCombat {
+	return s.Combat
 }
 
 // GetWalls returns the value of Walls.
@@ -6161,6 +6564,11 @@ func (s *LiveView) SetVisible(val []HexCoord) {
 // SetRemembered sets the value of Remembered.
 func (s *LiveView) SetRemembered(val []HexCoord) {
 	s.Remembered = val
+}
+
+// SetCombat sets the value of Combat.
+func (s *LiveView) SetCombat(val OptLiveCombat) {
+	s.Combat = val
 }
 
 // SetWalls sets the value of Walls.
@@ -7492,6 +7900,98 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCombat returns new OptLiveCombat with value set to v.
+func NewOptLiveCombat(v LiveCombat) OptLiveCombat {
+	return OptLiveCombat{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCombat is optional LiveCombat.
+type OptLiveCombat struct {
+	Value LiveCombat
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCombat was set.
+func (o OptLiveCombat) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCombat) Reset() {
+	var v LiveCombat
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCombat) SetTo(v LiveCombat) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCombat) Get() (v LiveCombat, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCombat) Or(d LiveCombat) LiveCombat {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandResource returns new OptLiveCommandResource with value set to v.
+func NewOptLiveCommandResource(v LiveCommandResource) OptLiveCommandResource {
+	return OptLiveCommandResource{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandResource is optional LiveCommandResource.
+type OptLiveCommandResource struct {
+	Value LiveCommandResource
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandResource was set.
+func (o OptLiveCommandResource) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandResource) Reset() {
+	var v LiveCommandResource
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandResource) SetTo(v LiveCommandResource) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandResource) Get() (v LiveCommandResource, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandResource) Or(d LiveCommandResource) LiveCommandResource {
 	if v, ok := o.Get(); ok {
 		return v
 	}

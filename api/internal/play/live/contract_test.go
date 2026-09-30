@@ -30,6 +30,11 @@ func samples() contract {
 			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2,
 		},
 	}
+	seventeen := 17
+	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
+		ID: "0190c7a8-0000-7000-8000-000000000010", TokenID: token.ID, Label: "Goblin", Kind: "enemy", RollID: "0190c7a8-0000-7000-8000-000000000011",
+		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30,
+	}}}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
 	dmView.Lights = []live.LightView{{ID: "0190c7a8-0000-7000-8000-00000000000e", Q: 4, R: 0, BrightFt: 20, DimFt: 40}}
@@ -49,6 +54,10 @@ func samples() contract {
 			{Nonce: "n12", Kind: live.CmdPlace, Label: "Aria", TokenKind: "party", ControllerID: "0190c7a8-0000-7000-8000-00000000000f"},
 			{Nonce: "n13", Kind: live.CmdPlanWalk, TokenID: token.ID, Q: 3, R: 0},
 			{Nonce: "n14", Kind: live.CmdWalk, TokenID: token.ID, Q: 3, R: 0},
+			{Nonce: "n15", Kind: live.CmdStartCombat, Combatants: []live.CombatantSetup{{TokenID: token.ID, InitiativeBonus: 2, SpeedFt: 30}}},
+			{Nonce: "n16", Kind: live.CmdSpend, CombatantID: "0190c7a8-0000-7000-8000-000000000010", Resource: live.ResourceBonusAction},
+			{Nonce: "n17", Kind: live.CmdEndTurn, CombatantID: "0190c7a8-0000-7000-8000-000000000010"},
+			{Nonce: "n18", Kind: live.CmdEndCombat},
 		},
 		Updates: []live.Update{
 			{

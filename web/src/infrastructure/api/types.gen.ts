@@ -701,7 +701,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -717,6 +717,48 @@ export type LiveCommand = {
     dimFt?: number;
     ambient?: AmbientLight;
     controllerId?: Id;
+    combatants?: Array<LiveCombatantSetup>;
+    combatantId?: Id;
+    resource?: 'action' | 'bonus_action' | 'reaction';
+};
+
+/**
+ * A Token joining a Combat, with its initiative bonus and speed.
+ */
+export type LiveCombatantSetup = {
+    tokenId: Id;
+    initiativeBonus: number;
+    speedFt: number;
+};
+
+/**
+ * The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share a rank and act at the same time.
+ */
+export type LiveCombat = {
+    status: 'rolling' | 'active';
+    round: number;
+    combatants: Array<LiveCombatant>;
+};
+
+/**
+ * One Combatant in the initiative rail, with what is left of its action economy.
+ */
+export type LiveCombatant = {
+    id: Id;
+    tokenId: Id;
+    label: string;
+    kind: TokenKind;
+    controllerId?: Id;
+    rollId: Id;
+    initiative?: number;
+    rank?: number;
+    acting: boolean;
+    done: boolean;
+    action: boolean;
+    bonusAction: boolean;
+    reaction: boolean;
+    movementFt: number;
+    speedFt: number;
 };
 
 /**
@@ -782,6 +824,7 @@ export type LiveView = {
     fog: boolean;
     visible: Array<HexCoord>;
     remembered: Array<HexCoord>;
+    combat?: LiveCombat;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;

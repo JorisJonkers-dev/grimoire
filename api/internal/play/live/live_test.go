@@ -382,6 +382,12 @@ func (failingLoad) Load(context.Context, domain.SessionID) (domain.Session, []do
 	return domain.Session{}, nil, nil, errors.New("gone")
 }
 
+type failingCombat struct{ live.Store }
+
+func (failingCombat) LoadCombat(context.Context, domain.SessionID) (*domain.Combat, error) {
+	return nil, errors.New("gone")
+}
+
 type failingOwner struct{}
 
 func (failingOwner) Acquire(context.Context, domain.SessionID) (func(), error) {
@@ -423,6 +429,10 @@ func TestFailuresAndLifecycle(t *testing.T) {
 	w.hub.Store = failingLoad{}
 	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("load failure ignored")
+	}
+	w.hub.Store = failingCombat{Store: pgstore.New(w.pool)}
+	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
+		t.Fatal("combat load failure ignored")
 	}
 	if _, err := (&live.Hub{Store: pgstore.New(w.pool), Owner: failingOwner{}}).Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("owner failure ignored")

@@ -221,6 +221,120 @@ describe('exploration', () => {
   })
 })
 
+describe('combat', () => {
+  const fighter = (label: string, extra: Record<string, unknown> = {}) => ({
+    id: `0190c7a8-0000-7000-8000-0000000001${label.length.toString().padStart(2, '0')}`, tokenId: goblin.id, label, kind: 'enemy',
+    rollId: `0190c7a8-0000-7000-8000-0000000002${label.length.toString().padStart(2, '0')}`, acting: false, done: false,
+    action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30, ...extra,
+  })
+  const initiativeRoll = (id: string) => ({
+    id, purpose: 'Initiative for Goblin Boss', notation: '1d20', requestedBy: 'Joris', roller: { id: member.id, name: 'Joris' }, mine: true, canRoll: true,
+    status: 'pending', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }], dice: [{ no: 0, group: 0, faces: 20, kept: false }],
+    modifiers: [{ label: 'Initiative', value: 2 }], createdAt: '2026-09-30T20:00:00Z',
+  })
+
+  it('lets the DM start a fight, roll for the monsters and run turns', async () => {
+    const rolled: string[] = []
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u, req) => {
+        const id = u.pathname.split('/')[6] ?? ''
+        if (req.method === 'POST') rolled.push(id)
+        if (req.method === 'POST' && rolled.length === 1) return jsonResponse({ type: 'about:blank', title: 'x', status: 500 }, 500)
+        if (rolled.length === 3) return { ...initiativeRoll(id), dice: [{ no: 0, group: 0, faces: 20, kept: false, value: 14 }] }
+        return initiativeRoll(id)
+      },
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const chest: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000f', label: 'Chest', kind: 'object', q: 2, r: 0 }
+    s.receive(snapshot([goblin, chest, lurker]))
+    await flushPromises()
+    await wrapper.get('[data-testid="choose-combatants"]').trigger('click')
+    expect(wrapper.get('[data-testid="fights-Chest"]').element).toHaveProperty('checked', false)
+    await wrapper.get('[data-testid="fights-Chest"]').setValue(true)
+    await wrapper.get('[data-testid="fights-Chest"]').setValue(false)
+    await wrapper.get('[data-testid="bonus-Goblin Boss"]').setValue(2)
+    await wrapper.get('[data-testid="speed-Lurker"]').setValue(40)
+    await wrapper.get('[data-testid="fights-Goblin Boss"]').setValue(false)
+    await wrapper.get('[data-testid="fights-Lurker"]').setValue(false)
+    await wrapper.get('[data-testid="start-combat"]').trigger('submit')
+    expect(s.sent).toHaveLength(0)
+    await wrapper.get('[data-testid="fights-Goblin Boss"]').setValue(true)
+    await wrapper.get('[data-testid="fights-Lurker"]').setValue(true)
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="start-combat"]').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({
+      kind: 'start_combat',
+      combatants: [{ tokenId: goblin.id, initiativeBonus: 2, speedFt: 30 }, { tokenId: lurker.id, initiativeBonus: 0, speedFt: 40 }],
+    })
+    expect(wrapper.find('[data-testid="start-combat"]').exists()).toBe(false)
+    const rolling = { status: 'rolling', round: 0, combatants: [fighter('Goblin Boss'), fighter('Lurker'), fighter('Aria', { kind: 'party', controllerId: player.id })] }
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin, lurker], fog: false, visible: [], remembered: [], combat: rolling } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Rolling initiative')
+    expect(wrapper.get('[data-testid="rail-Lurker"]').text()).toContain('rolling…')
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(2)
+    await wrapper.get('[data-testid="roll-all"]').trigger('click')
+    await flushPromises()
+    expect(rolled).toHaveLength(2)
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    await wrapper.get('[data-testid="auto-0"]').trigger('click')
+    await vi.waitFor(() => { expect(wrapper.get('[data-testid="die-0"]').text()).toContain('14') }, { timeout: 5000 })
+    const active = {
+      status: 'active', round: 1,
+      combatants: [
+        fighter('Goblin Boss', { initiative: 17, rank: 1, acting: true, action: false, movementFt: 10 }),
+        fighter('Aria', { kind: 'party', controllerId: player.id, initiative: 17, rank: 1, acting: true }),
+        fighter('Lurker', { initiative: 5, rank: 3, done: true }),
+      ],
+    }
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [goblin, lurker], fog: false, visible: [], remembered: [], combat: active } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Round 1')
+    expect(wrapper.get('[data-testid="rail-Goblin Boss"]').text()).toContain('17 · tied')
+    expect(wrapper.get('[data-testid="rail-Goblin Boss"]').attributes('aria-current')).toBe('step')
+    expect(wrapper.get('[data-testid="rail-Lurker"]').text()).not.toContain('tied')
+    expect(wrapper.findAll('[data-testid^="turn-"]')).toHaveLength(2)
+    const boss = wrapper.get('[data-testid="turn-Goblin Boss"]')
+    expect(boss.get('[data-testid="movement"]').text()).toBe('10 / 30 ft')
+    expect(boss.get('[data-testid="spend-action"]').attributes('disabled')).toBeDefined()
+    await boss.get('[data-testid="spend-bonus_action"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend', combatantId: fighter('Goblin Boss').id, resource: 'bonus_action' })
+    await boss.get('[data-testid="end-turn"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'end_turn', combatantId: fighter('Goblin Boss').id })
+    expect(wrapper.find('[data-testid="your-turn"]').exists()).toBe(false)
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="end-combat"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'end_combat' })
+  })
+
+  it('shows a player their turn, their initiative roll and the rail on the table', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => initiativeRoll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    const rolling = { status: 'rolling', round: 0, combatants: [fighter('Aria', { kind: 'party', controllerId: player.id }), fighter('Goblin Boss')] }
+    s.receive(snapshot([goblin], 'party', { combat: rolling }))
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+    expect(wrapper.find('[data-testid="roll-all"]').exists()).toBe(false)
+    const active = { status: 'active', round: 2, combatants: [fighter('Aria', { kind: 'party', controllerId: player.id, initiative: 12, rank: 1, acting: true }), fighter('Goblin Boss', { initiative: 3, rank: 2 })] }
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], fog: false, visible: [], remembered: [], combat: active } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="your-turn"]').text()).toBe('Your turn')
+    expect(wrapper.findAll('[data-testid^="turn-"]')).toHaveLength(1)
+    await wrapper.get('[data-testid="spend-reaction"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend', resource: 'reaction' })
+
+    const table = await mountApp(`/campaigns/${ID}/sessions/${SID}/table`, {})
+    FakeSocket.last().receive(snapshot([goblin], 'table', { combat: active }))
+    await flushPromises()
+    expect(table.wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Round 2')
+    expect(table.wrapper.findAll('[data-testid="table-display"] polygon')).toHaveLength(19)
+  })
+})
+
 describe('map geometry', () => {
   it('lists the hexes whose centres fall inside the picture', () => {
     const l = layoutOf(localMap)

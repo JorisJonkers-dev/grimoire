@@ -196,7 +196,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			},
 			Rolls: &playapp.Rolls{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
-				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,
+				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: hub.RollResolved,
 			},
 		},
 		DevSubject: cfg.DevSubject,

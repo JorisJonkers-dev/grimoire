@@ -480,6 +480,31 @@ type PlayActionTokenEvent struct {
 	Hidden   bool
 }
 
+type PlayCombat struct {
+	ID        uuid.UUID
+	SessionID uuid.UUID
+	Status    string
+	Round     int32
+	TurnCount pgtype.Int4
+	StartedAt time.Time
+	EndedAt   pgtype.Timestamptz
+}
+
+type PlayCombatant struct {
+	ID              uuid.UUID
+	CombatID        uuid.UUID
+	TokenID         uuid.UUID
+	RollID          uuid.UUID
+	InitiativeBonus int32
+	SpeedFt         int32
+	Initiative      pgtype.Int4
+	Done            bool
+	HasAction       bool
+	HasBonusAction  bool
+	HasReaction     bool
+	MovementFt      int32
+}
+
 type PlayRollDice struct {
 	RollID  uuid.UUID
 	DieNo   int32

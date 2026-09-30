@@ -34,7 +34,27 @@ const (
 	CmdSetAmbient  = "set_ambient"
 	CmdPlanWalk    = "plan_walk"
 	CmdWalk        = "walk"
+	CmdStartCombat = "start_combat"
+	CmdEndTurn     = "end_turn"
+	CmdSpend       = "spend"
+	CmdEndCombat   = "end_combat"
+	// cmdRollResolved comes from the rolls service, never from a client.
+	cmdRollResolved = "roll_resolved"
 )
+
+// Economy resources a spend command names.
+const (
+	ResourceAction      = "action"
+	ResourceBonusAction = "bonus_action"
+	ResourceReaction    = "reaction"
+)
+
+// CombatantSetup is one Token joining a Combat.
+type CombatantSetup struct {
+	TokenID         string `json:"tokenId"`
+	InitiativeBonus int    `json:"initiativeBonus"`
+	SpeedFt         int    `json:"speedFt"`
+}
 
 // Hex is an axial coordinate on the wire.
 type Hex struct {
@@ -44,23 +64,27 @@ type Hex struct {
 
 // Command is what a client asks for.
 type Command struct {
-	Nonce        string `json:"nonce"`
-	Kind         string `json:"kind"`
-	TokenID      string `json:"tokenId,omitempty"`
-	Label        string `json:"label,omitempty"`
-	TokenKind    string `json:"tokenKind,omitempty"`
-	Q            int    `json:"q"`
-	R            int    `json:"r"`
-	Hidden       bool   `json:"hidden"`
-	DarkvisionFt int    `json:"darkvisionFt,omitempty"`
-	MapID        string `json:"mapId,omitempty"`
-	Hexes        []Hex  `json:"hexes,omitempty"`
-	On           bool   `json:"on,omitempty"`
-	LightID      string `json:"lightId,omitempty"`
-	BrightFt     int    `json:"brightFt,omitempty"`
-	DimFt        int    `json:"dimFt,omitempty"`
-	Ambient      string `json:"ambient,omitempty"`
-	ControllerID string `json:"controllerId,omitempty"`
+	Nonce        string           `json:"nonce"`
+	Kind         string           `json:"kind"`
+	TokenID      string           `json:"tokenId,omitempty"`
+	Label        string           `json:"label,omitempty"`
+	TokenKind    string           `json:"tokenKind,omitempty"`
+	Q            int              `json:"q"`
+	R            int              `json:"r"`
+	Hidden       bool             `json:"hidden"`
+	DarkvisionFt int              `json:"darkvisionFt,omitempty"`
+	MapID        string           `json:"mapId,omitempty"`
+	Hexes        []Hex            `json:"hexes,omitempty"`
+	On           bool             `json:"on,omitempty"`
+	LightID      string           `json:"lightId,omitempty"`
+	BrightFt     int              `json:"brightFt,omitempty"`
+	DimFt        int              `json:"dimFt,omitempty"`
+	Ambient      string           `json:"ambient,omitempty"`
+	ControllerID string           `json:"controllerId,omitempty"`
+	Combatants   []CombatantSetup `json:"combatants,omitempty"`
+	CombatantID  string           `json:"combatantId,omitempty"`
+	Resource     string           `json:"resource,omitempty"`
+	rollID       domain.RollID
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -132,6 +156,33 @@ type View struct {
 	Walls      []Hex       `json:"walls,omitempty"`
 	Lights     []LightView `json:"lights,omitempty"`
 	Ambient    string      `json:"ambient,omitempty"`
+	Combat     *CombatView `json:"combat,omitempty"`
+}
+
+// CombatView is the running Combat: its round and every Combatant the audience can see, in turn order.
+type CombatView struct {
+	Status     string          `json:"status"`
+	Round      int             `json:"round"`
+	Combatants []CombatantView `json:"combatants"`
+}
+
+// CombatantView is one Combatant in the initiative rail. Tied initiatives share a rank and act together.
+type CombatantView struct {
+	ID           string `json:"id"`
+	TokenID      string `json:"tokenId"`
+	Label        string `json:"label"`
+	Kind         string `json:"kind"`
+	ControllerID string `json:"controllerId,omitempty"`
+	RollID       string `json:"rollId"`
+	Initiative   *int   `json:"initiative,omitempty"`
+	Rank         int    `json:"rank,omitempty"`
+	Acting       bool   `json:"acting"`
+	Done         bool   `json:"done"`
+	Action       bool   `json:"action"`
+	BonusAction  bool   `json:"bonusAction"`
+	Reaction     bool   `json:"reaction"`
+	MovementFt   int    `json:"movementFt"`
+	SpeedFt      int    `json:"speedFt"`
 }
 
 // Update is what the server sends. Every Update carries the Session sequence; a view whose sequence is
