@@ -53,6 +53,8 @@ type Token struct {
 	Controller *uuid.UUID
 	// Stats is the statblock a token fights with; nil for markers and objects.
 	Stats *Stats
+	// Tactics is the DM's override of how the creature picks Suggested Actions; "auto" follows Intelligence.
+	Tactics string
 }
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.
@@ -62,6 +64,8 @@ type Stats struct {
 	HP      int
 	HPMax   int
 	Attacks []Attack
+	// Intelligence drives Tactics; 0 when the statblock has none.
+	Intelligence int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.
@@ -83,6 +87,7 @@ const (
 	ActionAttackHit      = "attack_hit"
 	ActionDamageDealt    = "damage_dealt"
 	ActionDamageUndone   = "damage_undone"
+	ActionTacticsSet     = "tactics_set"
 )
 
 // Token action kinds in the Action Log.

@@ -41,6 +41,7 @@ const (
 	CmdPreviewAttack = "preview_attack"
 	CmdAttack        = "attack"
 	CmdUndoDamage    = "undo_damage"
+	CmdSetTactics    = "set_tactics"
 	// cmdRollResolved comes from the rolls service, never from a client.
 	cmdRollResolved = "roll_resolved"
 )
@@ -91,6 +92,7 @@ type Command struct {
 	CharacterID  string           `json:"characterId,omitempty"`
 	TargetID     string           `json:"targetId,omitempty"`
 	AttackNo     int              `json:"attackNo,omitempty"`
+	Tactics      string           `json:"tactics,omitempty"`
 	rollID       domain.RollID
 }
 
@@ -235,6 +237,16 @@ type CombatantView struct {
 	Reaction     bool   `json:"reaction"`
 	MovementFt   int    `json:"movementFt"`
 	SpeedFt      int    `json:"speedFt"`
+	// Tactics and Suggestion go to the DM only.
+	Tactics    string          `json:"tactics,omitempty"`
+	Suggestion *SuggestionView `json:"suggestion,omitempty"`
+}
+
+// SuggestionView is a creature's Suggested Action; without AttackNo nothing reaches yet and it should close in.
+type SuggestionView struct {
+	AttackNo *int   `json:"attackNo,omitempty"`
+	TargetID string `json:"targetId"`
+	Reason   string `json:"reason"`
 }
 
 // Update is what the server sends. Every Update carries the Session sequence; a view whose sequence is

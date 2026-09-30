@@ -5,9 +5,9 @@ async function enter(card: Locator, face: string) {
   await card.getByTestId('pad-0').getByRole('button', { name: face, exact: true }).click()
 }
 
-async function place(page: Page, hex: string, label: string) {
+async function place(page: Page, hex: string, label: string, kind = 'enemy') {
   await page.getByTestId('token-monster').fill('goblin-warrior')
-  await page.getByTestId('token-kind').selectOption('enemy')
+  await page.getByTestId('token-kind').selectOption(kind)
   await page.getByTestId('token-label').fill(label)
   await page.locator(`[data-hex="${hex}"]`).click()
   await expect(page.locator(`[data-hex="${hex}"]`)).toHaveAttribute('aria-label', new RegExp(`${label} \\(10/10 HP\\)`))
@@ -33,15 +33,20 @@ test('the DM attacks through the hotbar and hit points change on every screen', 
   await player.goto(new URL(page.url()).pathname)
   await place(page, '0,0', 'Grik')
   await place(page, '1,0', 'Snag')
+  await place(page, '0,3', 'Ally', 'party')
   await expect(player.locator('[data-hex="1,0"]')).toHaveAttribute('aria-label', /Snag \(unhurt\)/)
 
   await page.getByTestId('choose-combatants').click()
+  await page.getByTestId('fights-Ally').uncheck()
   await page.getByTestId('begin-combat').click()
   await enter(page.getByTestId('roll-card').filter({ hasText: 'Initiative for Grik' }), '20')
   await enter(page.getByTestId('roll-card').filter({ hasText: 'Initiative for Snag' }), '5')
   await expect(page.getByTestId('rail-Grik')).toHaveAttribute('aria-current', 'step')
 
   const bar = page.getByTestId('hotbar-Grik')
+  await expect(bar.getByTestId('suggestion')).toContainText('Shortbow attack against Ally. Simple: Ally is the nearest enemy, 15 ft away.')
+  await bar.getByTestId('tactics').selectOption('off')
+  await expect(bar.getByTestId('suggestion')).toHaveCount(0)
   await bar.getByTestId('attack-0').click()
   await page.locator('[data-hex="1,0"]').click()
   const preview = page.getByTestId('attack-preview')

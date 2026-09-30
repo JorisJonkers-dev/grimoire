@@ -388,6 +388,12 @@ func (failingCombat) LoadCombat(context.Context, domain.SessionID) (*domain.Comb
 	return nil, errors.New("gone")
 }
 
+type failingObservations struct{ live.Store }
+
+func (failingObservations) Observations(context.Context, domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error) {
+	return nil, errors.New("gone")
+}
+
 type failingOwner struct{}
 
 func (failingOwner) Acquire(context.Context, domain.SessionID) (func(), error) {
@@ -433,6 +439,10 @@ func TestFailuresAndLifecycle(t *testing.T) {
 	w.hub.Store = failingCombat{Store: pgstore.New(w.pool)}
 	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("combat load failure ignored")
+	}
+	w.hub.Store = failingObservations{Store: pgstore.New(w.pool)}
+	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
+		t.Fatal("observation load failure ignored")
 	}
 	if _, err := (&live.Hub{Store: pgstore.New(w.pool), Owner: failingOwner{}}).Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("owner failure ignored")

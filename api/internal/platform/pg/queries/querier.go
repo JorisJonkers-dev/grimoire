@@ -144,6 +144,7 @@ type Querier interface {
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
+	ObserveDamage(ctx context.Context, arg ObserveDamageParams) error
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
@@ -159,6 +160,7 @@ type Querier interface {
 	SaveCombat(ctx context.Context, arg SaveCombatParams) error
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
+	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
@@ -169,6 +171,7 @@ type Querier interface {
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
+	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)

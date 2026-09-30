@@ -4,7 +4,7 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { endSessionMutation, getCampaignOptions, listCharactersOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
-import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
+import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
@@ -96,6 +96,9 @@ const preview = computed(() => {
 function confirmAttack(p: { tokenId: string; attackNo: number; targetId: string }) {
   live.value?.send({ kind: 'attack', tokenId: p.tokenId, attackNo: p.attackNo, targetId: p.targetId })
   aiming.value = null
+}
+function useSuggestion(tokenId: string, s?: LiveSuggestion) {
+  if (s?.attackNo !== undefined) live.value?.send({ kind: 'attack', tokenId, attackNo: s.attackNo, targetId: s.targetId })
 }
 // Whoever throws the attacker's dice sees the attack's Roll Card: its Controller, or the DM.
 const attackRoll = computed(() => {
@@ -215,7 +218,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :token="b.token"
         :armed="aiming?.tokenId === b.token.id ? aiming.attackNo : null"
         :blocked="blockedFor(b.c)"
+        :suggestion="b.c.suggestion"
+        :target="b.c.suggestion ? tokenById(b.c.suggestion.targetId)?.label : undefined"
+        :tactics="b.c.tactics"
         @arm="(n) => arm(b.token, n)"
+        @use="useSuggestion(b.token.id, b.c.suggestion)"
+        @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
       />
       <AttackPreview
         v-if="preview"

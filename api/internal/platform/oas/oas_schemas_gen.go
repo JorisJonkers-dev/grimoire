@@ -5570,21 +5570,23 @@ func (s *LiveCombatStatus) UnmarshalText(data []byte) error {
 // One Combatant in the initiative rail, with what is left of its action economy.
 // Ref: #/components/schemas/LiveCombatant
 type LiveCombatant struct {
-	ID           ID        `json:"id"`
-	TokenId      ID        `json:"tokenId"`
-	Label        string    `json:"label"`
-	Kind         TokenKind `json:"kind"`
-	ControllerId OptID     `json:"controllerId"`
-	RollId       ID        `json:"rollId"`
-	Initiative   OptInt32  `json:"initiative"`
-	Rank         OptInt32  `json:"rank"`
-	Acting       bool      `json:"acting"`
-	Done         bool      `json:"done"`
-	Action       bool      `json:"action"`
-	BonusAction  bool      `json:"bonusAction"`
-	Reaction     bool      `json:"reaction"`
-	MovementFt   int32     `json:"movementFt"`
-	SpeedFt      int32     `json:"speedFt"`
+	ID           ID                `json:"id"`
+	TokenId      ID                `json:"tokenId"`
+	Label        string            `json:"label"`
+	Kind         TokenKind         `json:"kind"`
+	ControllerId OptID             `json:"controllerId"`
+	RollId       ID                `json:"rollId"`
+	Initiative   OptInt32          `json:"initiative"`
+	Rank         OptInt32          `json:"rank"`
+	Acting       bool              `json:"acting"`
+	Done         bool              `json:"done"`
+	Action       bool              `json:"action"`
+	BonusAction  bool              `json:"bonusAction"`
+	Reaction     bool              `json:"reaction"`
+	MovementFt   int32             `json:"movementFt"`
+	SpeedFt      int32             `json:"speedFt"`
+	Tactics      OptTactics        `json:"tactics"`
+	Suggestion   OptLiveSuggestion `json:"suggestion"`
 }
 
 // GetID returns the value of ID.
@@ -5662,6 +5664,16 @@ func (s *LiveCombatant) GetSpeedFt() int32 {
 	return s.SpeedFt
 }
 
+// GetTactics returns the value of Tactics.
+func (s *LiveCombatant) GetTactics() OptTactics {
+	return s.Tactics
+}
+
+// GetSuggestion returns the value of Suggestion.
+func (s *LiveCombatant) GetSuggestion() OptLiveSuggestion {
+	return s.Suggestion
+}
+
 // SetID sets the value of ID.
 func (s *LiveCombatant) SetID(val ID) {
 	s.ID = val
@@ -5737,6 +5749,16 @@ func (s *LiveCombatant) SetSpeedFt(val int32) {
 	s.SpeedFt = val
 }
 
+// SetTactics sets the value of Tactics.
+func (s *LiveCombatant) SetTactics(val OptTactics) {
+	s.Tactics = val
+}
+
+// SetSuggestion sets the value of Suggestion.
+func (s *LiveCombatant) SetSuggestion(val OptLiveSuggestion) {
+	s.Suggestion = val
+}
+
 // A Token joining a Combat, with its initiative bonus and speed.
 // Ref: #/components/schemas/LiveCombatantSetup
 type LiveCombatantSetup struct {
@@ -5802,6 +5824,7 @@ type LiveCommand struct {
 	CharacterId  OptID                  `json:"characterId"`
 	TargetId     OptID                  `json:"targetId"`
 	AttackNo     OptInt32               `json:"attackNo"`
+	Tactics      OptTactics             `json:"tactics"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -5924,6 +5947,11 @@ func (s *LiveCommand) GetAttackNo() OptInt32 {
 	return s.AttackNo
 }
 
+// GetTactics returns the value of Tactics.
+func (s *LiveCommand) GetTactics() OptTactics {
+	return s.Tactics
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6044,6 +6072,11 @@ func (s *LiveCommand) SetAttackNo(val OptInt32) {
 	s.AttackNo = val
 }
 
+// SetTactics sets the value of Tactics.
+func (s *LiveCommand) SetTactics(val OptTactics) {
+	s.Tactics = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6067,6 +6100,7 @@ const (
 	LiveCommandKindPreviewAttack  LiveCommandKind = "preview_attack"
 	LiveCommandKindAttack         LiveCommandKind = "attack"
 	LiveCommandKindUndoDamage     LiveCommandKind = "undo_damage"
+	LiveCommandKindSetTactics     LiveCommandKind = "set_tactics"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6092,6 +6126,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindPreviewAttack,
 		LiveCommandKindAttack,
 		LiveCommandKindUndoDamage,
+		LiveCommandKindSetTactics,
 	}
 }
 
@@ -6137,6 +6172,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindAttack:
 		return []byte(s), nil
 	case LiveCommandKindUndoDamage:
+		return []byte(s), nil
+	case LiveCommandKindSetTactics:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6205,6 +6242,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindUndoDamage:
 		*s = LiveCommandKindUndoDamage
+		return nil
+	case LiveCommandKindSetTactics:
+		*s = LiveCommandKindSetTactics
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -6671,6 +6711,45 @@ func (s *LiveSessionViewAudience) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A creature's Suggested Action for the DM. Without attackNo nothing reaches yet and it should close
+// in on the target.
+// Ref: #/components/schemas/LiveSuggestion
+type LiveSuggestion struct {
+	AttackNo OptInt32 `json:"attackNo"`
+	TargetId ID       `json:"targetId"`
+	Reason   string   `json:"reason"`
+}
+
+// GetAttackNo returns the value of AttackNo.
+func (s *LiveSuggestion) GetAttackNo() OptInt32 {
+	return s.AttackNo
+}
+
+// GetTargetId returns the value of TargetId.
+func (s *LiveSuggestion) GetTargetId() ID {
+	return s.TargetId
+}
+
+// GetReason returns the value of Reason.
+func (s *LiveSuggestion) GetReason() string {
+	return s.Reason
+}
+
+// SetAttackNo sets the value of AttackNo.
+func (s *LiveSuggestion) SetAttackNo(val OptInt32) {
+	s.AttackNo = val
+}
+
+// SetTargetId sets the value of TargetId.
+func (s *LiveSuggestion) SetTargetId(val ID) {
+	s.TargetId = val
+}
+
+// SetReason sets the value of Reason.
+func (s *LiveSuggestion) SetReason(val string) {
+	s.Reason = val
 }
 
 // A Token as a connection sees it.
@@ -8803,6 +8882,52 @@ func (o OptLiveSessionView) Or(d LiveSessionView) LiveSessionView {
 	return d
 }
 
+// NewOptLiveSuggestion returns new OptLiveSuggestion with value set to v.
+func NewOptLiveSuggestion(v LiveSuggestion) OptLiveSuggestion {
+	return OptLiveSuggestion{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveSuggestion is optional LiveSuggestion.
+type OptLiveSuggestion struct {
+	Value LiveSuggestion
+	Set   bool
+}
+
+// IsSet returns true if OptLiveSuggestion was set.
+func (o OptLiveSuggestion) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveSuggestion) Reset() {
+	var v LiveSuggestion
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveSuggestion) SetTo(v LiveSuggestion) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveSuggestion) Get() (v LiveSuggestion, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveSuggestion) Or(d LiveSuggestion) LiveSuggestion {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveTokenHealth returns new OptLiveTokenHealth with value set to v.
 func NewOptLiveTokenHealth(v LiveTokenHealth) OptLiveTokenHealth {
 	return OptLiveTokenHealth{
@@ -9119,6 +9244,52 @@ func (o OptString) Get() (v string, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptString) Or(d string) string {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptTactics returns new OptTactics with value set to v.
+func NewOptTactics(v Tactics) OptTactics {
+	return OptTactics{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTactics is optional Tactics.
+type OptTactics struct {
+	Value Tactics
+	Set   bool
+}
+
+// IsSet returns true if OptTactics was set.
+func (o OptTactics) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTactics) Reset() {
+	var v Tactics
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTactics) SetTo(v Tactics) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTactics) Get() (v Tactics, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTactics) Or(d Tactics) Tactics {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -11742,6 +11913,63 @@ func (s *StatusHeaders) SetResponse(val Status) {
 }
 
 func (*StatusHeaders) getStatusRes() {}
+
+// How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
+// Ref: #/components/schemas/Tactics
+type Tactics string
+
+const (
+	TacticsAuto    Tactics = "auto"
+	TacticsSimple  Tactics = "simple"
+	TacticsCunning Tactics = "cunning"
+	TacticsFalse   Tactics = "false"
+)
+
+// AllValues returns all Tactics values.
+func (Tactics) AllValues() []Tactics {
+	return []Tactics{
+		TacticsAuto,
+		TacticsSimple,
+		TacticsCunning,
+		TacticsFalse,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Tactics) MarshalText() ([]byte, error) {
+	switch s {
+	case TacticsAuto:
+		return []byte(s), nil
+	case TacticsSimple:
+		return []byte(s), nil
+	case TacticsCunning:
+		return []byte(s), nil
+	case TacticsFalse:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Tactics) UnmarshalText(data []byte) error {
+	switch Tactics(data) {
+	case TacticsAuto:
+		*s = TacticsAuto
+		return nil
+	case TacticsSimple:
+		*s = TacticsSimple
+		return nil
+	case TacticsCunning:
+		*s = TacticsCunning
+		return nil
+	case TacticsFalse:
+		*s = TacticsFalse
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 type Token string
 

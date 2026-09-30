@@ -251,17 +251,7 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 		if a != AudienceDM && !s.shows(t, seen) {
 			continue
 		}
-		cv := CombatantView{
-			ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
-			Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
-			Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt,
-		}
-		if x.Initiative != nil {
-			cv.Rank = combat.Rank(totals, *x.Initiative)
-		}
-		if t.Controller != nil {
-			cv.ControllerID = t.Controller.String()
-		}
+		cv := s.combatantView(x, t, totals, a)
 		v.Combat.Combatants = append(v.Combat.Combatants, cv)
 	}
 	v.Combat.Attack = s.pendingView(a, seen)
@@ -277,8 +267,36 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 	})
 }
 
-// applyAttack moves the attack on the table along and changes hit points.
+func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, a Audience) CombatantView {
+	c := s.combat
+	cv := CombatantView{
+		ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
+		Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
+		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt,
+	}
+	if x.Initiative != nil {
+		cv.Rank = combat.Rank(totals, *x.Initiative)
+	}
+	if t.Controller != nil {
+		cv.ControllerID = t.Controller.String()
+	}
+	if a == AudienceDM {
+		cv.Suggestion = s.suggest(x, t)
+		if t.Stats != nil && t.Kind != domain.TokenParty {
+			cv.Tactics = t.Tactics
+		}
+	}
+	return cv
+}
+
+// applyAttack moves the attack on the table along, changes hit points and records who saw it.
 func applyAttack(s *state, w *Write) {
+	for _, o := range w.Observers {
+		if s.observed[o] == nil {
+			s.observed[o] = map[domain.TokenID]int{}
+		}
+		s.observed[o][w.Token.ID] += w.HP.Before - w.HP.After
+	}
 	if h := w.HP; h != nil {
 		t := s.tokens[h.Token]
 		stats := *t.Stats

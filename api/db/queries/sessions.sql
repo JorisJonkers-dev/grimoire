@@ -23,13 +23,13 @@ UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE campaign_id = @
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max)
+    hp, hp_max, intelligence)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
-    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max));
+    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence));
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -84,12 +84,12 @@ INSERT INTO play.token_attacks (token_id, ordering, name, to_hit, reach_ft, rang
 VALUES (@token_id, @ordering, @name, @to_hit, @reach_ft, @range_ft, @long_range_ft, @damage_dice, @damage_bonus, @damage_type);
 
 -- name: CombatAttack :one
-SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id
+SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged
 FROM play.attacks WHERE combat_id = $1;
 
 -- name: SaveAttack :exec
-INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id)
-VALUES (@id, @combat_id, @attacker_token_id, @target_token_id, @attack_no, @mode, @cover_bonus, @stage, @critical, @roll_id)
+INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged)
+VALUES (@id, @combat_id, @attacker_token_id, @target_token_id, @attack_no, @mode, @cover_bonus, @stage, @critical, @roll_id, @ranged)
 ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id;
 
 -- name: ClearAttacks :exec
@@ -110,7 +110,7 @@ ORDER BY a.seq DESC LIMIT 1;
 SELECT ruleset_pref FROM campaign.campaigns WHERE id = $1;
 
 -- name: MonsterStatblock :one
-SELECT m.id, m.name, m.armor_class, m.hit_points FROM compendium.monsters m
+SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = @slug AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
 ORDER BY d.precedence DESC LIMIT 1;
@@ -121,3 +121,14 @@ SELECT k.name, k.to_hit, k.reach_feet, k.range_feet, k.long_range_feet, coalesce
        coalesce(k.extra_type, '')::text AS extra_type
 FROM compendium.monster_attacks k JOIN compendium.monster_actions a ON a.id = k.action_id
 WHERE a.monster_id = @monster_id ORDER BY a.ordering, k.ordering;
+
+-- name: SetTokenTactics :exec
+UPDATE play.tokens SET tactics = @tactics WHERE session_id = @session_id AND id = @id;
+
+-- name: SessionObservations :many
+SELECT o.observer_token_id, o.attacker_token_id, o.ranged_damage FROM play.observed_damage o
+JOIN play.tokens t ON t.id = o.observer_token_id WHERE t.session_id = $1;
+
+-- name: ObserveDamage :exec
+INSERT INTO play.observed_damage (observer_token_id, attacker_token_id, ranged_damage) VALUES (@observer, @attacker, @amount)
+ON CONFLICT (observer_token_id, attacker_token_id) DO UPDATE SET ranged_damage = play.observed_damage.ranged_damage + excluded.ranged_damage;

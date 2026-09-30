@@ -35,10 +35,11 @@ func samples() contract {
 		ID: "0190c7a8-0000-7000-8000-000000000013", Label: "Aria", Kind: "party", AC: &ac, HP: &hp, HPMax: &most,
 		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"}},
 	}, live.TokenView{ID: "0190c7a8-0000-7000-8000-000000000014", Label: "Orc", Kind: "enemy", Health: "bloodied"})
-	seventeen := 17
+	seventeen, zero := 17, 0
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
 		ID: "0190c7a8-0000-7000-8000-000000000010", TokenID: token.ID, Label: "Goblin", Kind: "enemy", RollID: "0190c7a8-0000-7000-8000-000000000011",
 		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30,
+		Tactics: "auto", Suggestion: &live.SuggestionView{AttackNo: &zero, TargetID: "0190c7a8-0000-7000-8000-000000000013", Reason: "Simple: Aria is the nearest enemy, 5 ft away."},
 	}}, Attack: &live.PendingAttackView{
 		AttackerID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", Name: "Scimitar", Stage: "damage",
 		RollID: "0190c7a8-0000-7000-8000-000000000015", Critical: true,
@@ -71,6 +72,7 @@ func samples() contract {
 			{Nonce: "n21", Kind: live.CmdPreviewAttack, TokenID: token.ID, AttackNo: 1, TargetID: "0190c7a8-0000-7000-8000-000000000013"},
 			{Nonce: "n22", Kind: live.CmdAttack, TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013"},
 			{Nonce: "n23", Kind: live.CmdUndoDamage},
+			{Nonce: "n24", Kind: live.CmdSetTactics, TokenID: token.ID, Tactics: "cunning"},
 		},
 		Updates: []live.Update{
 			{

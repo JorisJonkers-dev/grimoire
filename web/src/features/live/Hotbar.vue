@@ -1,9 +1,18 @@
 <script setup lang="ts">
-import type { LiveToken } from '@/infrastructure/api/types.gen'
+import type { LiveSuggestion, LiveToken, Tactics } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 
-defineProps<{ token: LiveToken; armed: number | null; blocked: string }>()
-const emit = defineEmits<{ arm: [attackNo: number] }>()
+withDefaults(
+  defineProps<{ token: LiveToken; armed: number | null; blocked: string; suggestion?: LiveSuggestion; target?: string; tactics?: Tactics }>(),
+  { suggestion: undefined, target: 'its target', tactics: undefined },
+)
+const emit = defineEmits<{ arm: [attackNo: number]; use: []; tactics: [value: Tactics] }>()
+const styles: { value: Tactics; label: string }[] = [
+  { value: 'auto', label: 'From Intelligence' },
+  { value: 'simple', label: 'Simple' },
+  { value: 'cunning', label: 'Cunning' },
+  { value: 'off', label: 'Off' },
+]
 const signed = (n: number) => (n >= 0 ? `+${String(n)}` : String(n))
 const damage = (a: NonNullable<LiveToken['attacks']>[number]) =>
   a.damage ? `${a.damage}${a.damageBonus ? signed(a.damageBonus) : ''}` : String(a.damageBonus)
@@ -26,6 +35,20 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
       <span class="name">{{ a.name }}</span>
       <span class="stat">{{ signed(a.toHit) }} · {{ damage(a) }} · {{ reach(a) }}</span>
     </GButton>
+    <div v-if="suggestion" class="suggestion" data-testid="suggestion">
+      <p>
+        <strong>Suggested: </strong>
+        <template v-if="suggestion.attackNo !== undefined">{{ token.attacks?.[suggestion.attackNo]?.name }} against {{ target }}.</template>
+        {{ suggestion.reason }}
+      </p>
+      <GButton v-if="suggestion.attackNo !== undefined" variant="primary" data-testid="use-suggestion" @click="emit('use')">Use suggestion</GButton>
+    </div>
+    <label v-if="tactics" class="g-field tactics">
+      <span>Tactics</span>
+      <select :value="tactics" data-testid="tactics" @change="emit('tactics', ($event.target as HTMLSelectElement).value as Tactics)">
+        <option v-for="s in styles" :key="s.value" :value="s.value">{{ s.label }}</option>
+      </select>
+    </label>
     <p v-if="blocked" class="blocked" data-testid="hotbar-blocked">{{ blocked }}</p>
     <p v-else-if="armed !== null" class="hint" role="status">Tap a creature to aim.</p>
   </section>
@@ -48,6 +71,19 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
 }
 .name {
   font-weight: 600;
+}
+.suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+.suggestion p {
+  margin: 0;
+}
+.tactics {
+  min-width: 160px;
 }
 .stat,
 .blocked,
