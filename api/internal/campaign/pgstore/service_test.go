@@ -297,6 +297,7 @@ func TestEveryDatabaseFaultSurfaces(t *testing.T) {
 	home, _ := base.Get(ctx, dmCaller, d.ID)
 	player := home.Members[1]
 	inv, _ := base.CreateInvite(ctx, dmCaller, d.ID)
+	doomed, _ := base.CreateInvite(ctx, dmCaller, d.ID)
 	name := "Renamed"
 	ops := map[string]func(s *app.Service) error{
 		"create": func(s *app.Service) error {
@@ -324,7 +325,7 @@ func TestEveryDatabaseFaultSurfaces(t *testing.T) {
 			_, err := s.AcceptInvite(ctx, playerCaller, inv.Token, "Ireena")
 			return err
 		},
-		"revoke": func(s *app.Service) error { return s.RevokeInvite(ctx, dmCaller, d.ID, domain.InviteID(inv.ID)) },
+		"revoke": func(s *app.Service) error { return s.RevokeInvite(ctx, dmCaller, d.ID, doomed.ID) },
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
