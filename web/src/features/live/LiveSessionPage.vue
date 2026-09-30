@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery } from '@tanstack/vue-query'
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { endSessionMutation, getCampaignOptions, listCharactersOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
@@ -48,6 +48,8 @@ watch(
   },
   { immediate: true },
 )
+// The session opens in a watcher, outside setup, so the page closes it itself.
+onBeforeUnmount(() => live.value?.close())
 
 const tool = ref<Tool>('tokens')
 const selected = ref<string | null>(null)
