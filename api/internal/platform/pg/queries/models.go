@@ -670,6 +670,19 @@ type PlaySurface struct {
 	RoundsLeft pgtype.Int4
 }
 
+type PlayTableDisplay struct {
+	SessionID uuid.UUID
+	Camera    string
+	Q         int32
+	R         int32
+	ZoomPct   int32
+	Scene     string
+	Title     string
+	Body      string
+	MapID     pgtype.UUID
+	Blackout  bool
+}
+
 type PlayToken struct {
 	ID                 uuid.UUID
 	SessionID          uuid.UUID

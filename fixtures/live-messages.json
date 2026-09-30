@@ -312,6 +312,41 @@
         }
       ],
       "elevationFt": 10
+    },
+    {
+      "nonce": "n34",
+      "kind": "table_camera",
+      "q": 2,
+      "r": -1,
+      "hidden": false,
+      "camera": "free",
+      "zoomPct": 150
+    },
+    {
+      "nonce": "n35",
+      "kind": "table_scene",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "mapId": "0190c7a8-0000-7000-8000-00000000000c",
+      "scene": "world",
+      "title": "Barovia",
+      "body": "Mists."
+    },
+    {
+      "nonce": "n36",
+      "kind": "table_blackout",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "on": true
+    },
+    {
+      "nonce": "n37",
+      "kind": "ping",
+      "q": 1,
+      "r": 0,
+      "hidden": false
     }
   ],
   "updates": [
@@ -490,6 +525,25 @@
               "rollId": "0190c7a8-0000-7000-8000-000000000021"
             }
           ]
+        },
+        "table": {
+          "camera": "free",
+          "q": 2,
+          "r": -1,
+          "zoomPct": 150,
+          "scene": "world",
+          "worldMap": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "blackout": false
         }
       }
     },
@@ -684,6 +738,25 @@
               "rollId": "0190c7a8-0000-7000-8000-000000000021"
             }
           ]
+        },
+        "table": {
+          "camera": "free",
+          "q": 2,
+          "r": -1,
+          "zoomPct": 150,
+          "scene": "world",
+          "worldMap": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "blackout": false
         }
       }
     },
@@ -896,6 +969,25 @@
               "rollId": "0190c7a8-0000-7000-8000-000000000021"
             }
           ]
+        },
+        "table": {
+          "camera": "free",
+          "q": 2,
+          "r": -1,
+          "zoomPct": 150,
+          "scene": "world",
+          "worldMap": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "blackout": false
         }
       },
       "steps": [
@@ -1065,6 +1157,25 @@
                 "rollId": "0190c7a8-0000-7000-8000-000000000021"
               }
             ]
+          },
+          "table": {
+            "camera": "free",
+            "q": 2,
+            "r": -1,
+            "zoomPct": 150,
+            "scene": "world",
+            "worldMap": {
+              "id": "0190c7a8-0000-7000-8000-00000000000c",
+              "name": "Crypt",
+              "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+              "width": 400,
+              "height": 300,
+              "hexSizePx": 40,
+              "originX": 34.64,
+              "originY": 40,
+              "imageVersion": 2
+            },
+            "blackout": false
           }
         }
       ]
@@ -1111,6 +1222,14 @@
           }
         ],
         "allies": 1
+      }
+    },
+    {
+      "kind": "ping",
+      "seq": 7,
+      "ping": {
+        "q": 1,
+        "r": 0
       }
     },
     {

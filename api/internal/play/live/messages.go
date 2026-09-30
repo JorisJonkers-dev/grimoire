@@ -50,6 +50,10 @@ const (
 	CmdCastArea      = "cast_area"
 	CmdPaintSurface  = "paint_surface"
 	CmdSetElevation  = "set_elevation"
+	CmdTableCamera   = "table_camera"
+	CmdTableScene    = "table_scene"
+	CmdTableBlackout = "table_blackout"
+	CmdPing          = "ping"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -115,6 +119,11 @@ type Command struct {
 	ManualID     string           `json:"manualId,omitempty"`
 	Surface      string           `json:"surface,omitempty"`
 	ElevationFt  int              `json:"elevationFt,omitempty"`
+	Camera       string           `json:"camera,omitempty"`
+	ZoomPct      int              `json:"zoomPct,omitempty"`
+	Scene        string           `json:"scene,omitempty"`
+	Title        string           `json:"title,omitempty"`
+	Body         string           `json:"body,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -127,6 +136,7 @@ const (
 	UpdPath          = "path"
 	UpdAttackPreview = "attack_preview"
 	UpdAreaPreview   = "area_preview"
+	UpdPing          = "ping"
 	UpdEnded         = "ended"
 )
 
@@ -259,6 +269,7 @@ type View struct {
 	Surfaces  []SurfaceView   `json:"surfaces,omitempty"`
 	Elevation []ElevationView `json:"elevation,omitempty"`
 	Area      *AreaView       `json:"area,omitempty"`
+	Table     *TableView      `json:"table,omitempty"`
 }
 
 // SaveView is a saving throw waiting on its Roll Card to end an Effect.
@@ -331,6 +342,20 @@ type Update struct {
 	Path    *PathView      `json:"path,omitempty"`
 	Preview *AttackPreview `json:"preview,omitempty"`
 	Area    *AreaPreview   `json:"area,omitempty"`
+	Ping    *Hex           `json:"ping,omitempty"`
+}
+
+// TableView is what the Table Display shows: its camera, its scene and whether it is blacked out.
+type TableView struct {
+	Camera   string   `json:"camera"`
+	Q        int      `json:"q"`
+	R        int      `json:"r"`
+	ZoomPct  int      `json:"zoomPct"`
+	Scene    string   `json:"scene"`
+	Title    string   `json:"title,omitempty"`
+	Body     string   `json:"body,omitempty"`
+	WorldMap *MapView `json:"worldMap,omitempty"`
+	Blackout bool     `json:"blackout"`
 }
 
 // AreaPreview is an area spell's template and who it would catch, allies flagged, sent only to whoever asked.

@@ -26,6 +26,9 @@ type state struct {
 	// surfaces is terrain on hexes this Session; cast is the area spell waiting on its rolls.
 	surfaces map[hex.Coord]domain.Surface
 	cast     *domain.AreaCast
+	// table is what the Table Display shows; world is the map of its world scene.
+	table domain.TableDisplay
+	world *domain.Map
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -42,7 +45,7 @@ func (s *state) clone() *state {
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
-	next.surfaces = maps.Clone(s.surfaces)
+	next.surfaces, next.table, next.world = maps.Clone(s.surfaces), s.table, s.world
 	if s.cast != nil {
 		c := *s.cast
 		next.cast = &c
@@ -117,6 +120,9 @@ func (s *state) vision() map[hex.Coord]bool {
 // project builds what one audience may see. This is the security boundary: party and Table never get
 // hidden tokens, tokens outside current sight, never-seen hexes, walls or lights.
 func (s *state) project(a Audience) View {
+	if a == AudienceTable && s.table.Blackout {
+		return View{Tokens: []TokenView{}, Visible: []Hex{}, Remembered: []Hex{}, Table: s.tableView()}
+	}
 	v := View{Tokens: []TokenView{}, Visible: []Hex{}, Remembered: []Hex{}}
 	seen := s.vision()
 	if s.board != nil {
@@ -132,6 +138,12 @@ func (s *state) project(a Audience) View {
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
+	s.projectPending(&v, a, seen)
+	v.Table = s.tableView()
+	return v
+}
+
+func (s *state) projectPending(v *View, a Audience, seen map[hex.Coord]bool) {
 	for _, p := range s.fx.Saves {
 		i := slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.ID == p.Effect })
 		e := s.fx.Active[i]
@@ -146,7 +158,6 @@ func (s *state) project(a Audience) View {
 	} else {
 		v.Resolving = len(s.fx.Manual) > 0
 	}
-	return v
 }
 
 func (s *state) projectBoard(v *View, a Audience, seen map[hex.Coord]bool) {

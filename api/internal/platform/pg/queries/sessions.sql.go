@@ -1202,6 +1202,42 @@ func (q *Queries) SavePrompt(ctx context.Context, arg SavePromptParams) error {
 	return err
 }
 
+const saveTable = `-- name: SaveTable :exec
+INSERT INTO play.table_displays (session_id, camera, q, r, zoom_pct, scene, title, body, map_id, blackout)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+ON CONFLICT (session_id) DO UPDATE SET camera = excluded.camera, q = excluded.q, r = excluded.r, zoom_pct = excluded.zoom_pct,
+    scene = excluded.scene, title = excluded.title, body = excluded.body, map_id = excluded.map_id, blackout = excluded.blackout
+`
+
+type SaveTableParams struct {
+	SessionID uuid.UUID
+	Camera    string
+	Q         int32
+	R         int32
+	ZoomPct   int32
+	Scene     string
+	Title     string
+	Body      string
+	MapID     pgtype.UUID
+	Blackout  bool
+}
+
+func (q *Queries) SaveTable(ctx context.Context, arg SaveTableParams) error {
+	_, err := q.db.Exec(ctx, saveTable,
+		arg.SessionID,
+		arg.Camera,
+		arg.Q,
+		arg.R,
+		arg.ZoomPct,
+		arg.Scene,
+		arg.Title,
+		arg.Body,
+		arg.MapID,
+		arg.Blackout,
+	)
+	return err
+}
+
 const sessionByID = `-- name: SessionByID :one
 SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id FROM play.sessions WHERE id = $1
 `
@@ -1413,6 +1449,39 @@ func (q *Queries) SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]S
 		return nil, err
 	}
 	return items, nil
+}
+
+const sessionTable = `-- name: SessionTable :one
+SELECT camera, q, r, zoom_pct, scene, title, body, map_id, blackout FROM play.table_displays WHERE session_id = $1
+`
+
+type SessionTableRow struct {
+	Camera   string
+	Q        int32
+	R        int32
+	ZoomPct  int32
+	Scene    string
+	Title    string
+	Body     string
+	MapID    pgtype.UUID
+	Blackout bool
+}
+
+func (q *Queries) SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error) {
+	row := q.db.QueryRow(ctx, sessionTable, sessionID)
+	var i SessionTableRow
+	err := row.Scan(
+		&i.Camera,
+		&i.Q,
+		&i.R,
+		&i.ZoomPct,
+		&i.Scene,
+		&i.Title,
+		&i.Body,
+		&i.MapID,
+		&i.Blackout,
+	)
+	return i, err
 }
 
 const sessionTokenAttacks = `-- name: SessionTokenAttacks :many

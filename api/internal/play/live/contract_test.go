@@ -56,6 +56,7 @@ func samples() contract {
 		CasterID: token.ID, Name: "Fireball", Hexes: []live.Hex{{Q: 3, R: 0}}, DamageRollID: "0190c7a8-0000-7000-8000-000000000020",
 		Saves: []live.AreaSave{{TokenID: token.ID, RollID: "0190c7a8-0000-7000-8000-000000000021"}},
 	}
+	view.Table = &live.TableView{Camera: "free", Q: 2, R: -1, ZoomPct: 150, Scene: "world", WorldMap: view.Map}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
 	dmView.Resolving, dmView.Manual = false, []live.ManualView{{ID: "0190c7a8-0000-7000-8000-000000000018", Text: "Goblin: Resolve Hold Person by hand."}}
@@ -95,6 +96,10 @@ func samples() contract {
 			{Nonce: "n31", Kind: live.CmdCastArea, TokenID: token.ID, Effect: "fireball", Q: 3, R: 0},
 			{Nonce: "n32", Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "grease", Rounds: 10},
 			{Nonce: "n33", Kind: live.CmdSetElevation, Hexes: []live.Hex{{Q: 1, R: 1}}, ElevationFt: 10},
+			{Nonce: "n34", Kind: live.CmdTableCamera, Camera: "free", Q: 2, R: -1, ZoomPct: 150},
+			{Nonce: "n35", Kind: live.CmdTableScene, Scene: "world", MapID: id, Title: "Barovia", Body: "Mists."},
+			{Nonce: "n36", Kind: live.CmdTableBlackout, On: true},
+			{Nonce: "n37", Kind: live.CmdPing, Q: 1, R: 0},
 		},
 		Updates: []live.Update{
 			{
@@ -114,6 +119,7 @@ func samples() contract {
 				TokenID: token.ID, Effect: "fireball", Name: "Fireball", DC: 13, Hexes: []live.Hex{{Q: 3, R: 0}},
 				Targets: []live.AreaTarget{{TokenID: token.ID, Ally: true}}, Allies: 1,
 			}},
+			{Kind: live.UpdPing, Seq: 7, Ping: &live.Hex{Q: 1, R: 0}},
 			{Kind: live.UpdEnded, Seq: 7},
 		},
 	}

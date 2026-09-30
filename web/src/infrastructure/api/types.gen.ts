@@ -773,7 +773,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -821,6 +821,36 @@ export type LiveCommand = {
      */
     surface?: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
     elevationFt?: number;
+    camera?: TableCamera;
+    zoomPct?: number;
+    scene?: TableScene;
+    title?: string;
+    body?: string;
+};
+
+/**
+ * How the Table Display's camera moves.
+ */
+export type TableCamera = 'follow_turn' | 'show_party' | 'free';
+
+/**
+ * What the Table Display shows.
+ */
+export type TableScene = 'local' | 'world' | 'handout' | 'title';
+
+/**
+ * What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap.
+ */
+export type LiveTable = {
+    camera: TableCamera;
+    q: number;
+    r: number;
+    zoomPct: number;
+    scene: TableScene;
+    title?: string;
+    body?: string;
+    worldMap?: LiveMap;
+    blackout: boolean;
 };
 
 /**
@@ -985,7 +1015,7 @@ export type LiveCombatant = {
  * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview' | 'ping';
     seq: number;
     nonce?: string;
     reason?: string;
@@ -995,6 +1025,7 @@ export type LiveUpdate = {
     path?: LivePath;
     preview?: LiveAttackPreview;
     area?: LiveAreaPreview;
+    ping?: HexCoord;
 };
 
 /**
@@ -1056,6 +1087,7 @@ export type LiveView = {
     surfaces?: Array<LiveSurface>;
     elevation?: Array<LiveElevation>;
     area?: LiveArea;
+    table?: LiveTable;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;
