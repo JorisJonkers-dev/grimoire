@@ -7,7 +7,7 @@ import { jsonResponse } from '@/test/mountWithQuery'
 const ID = '0190c7a8-0000-7000-8000-000000000001'
 const NPC = '0190c7a8-0000-7000-8000-000000000007'
 const npc = (extra = {}) => ({
-  id: NPC, name: 'Strahd', title: 'Count', description: 'A vampire.', dmNotes: 'Old', disposition: 'hostile', updatedAt: '2026-09-30T20:00:00Z', ...extra,
+  id: NPC, name: 'Morvain', title: 'Count', description: 'A vampire.', dmNotes: 'Old', disposition: 'hostile', updatedAt: '2026-09-30T20:00:00Z', ...extra,
 })
 const revisions = [
   { no: 3, action: 'restore', author: 'Joris', origin: 'ui', restoredFrom: 1, createdAt: '2026-09-30T22:00:00Z' },
@@ -70,13 +70,13 @@ describe('npc page', () => {
         return npc()
       },
     })
-    expect(wrapper.get('h1').text()).toBe('Strahd')
+    expect(wrapper.get('h1').text()).toBe('Morvain')
     const history = wrapper.get('[data-testid="npc-history"]')
     expect(history.text()).toContain('#2 update')
     expect(history.text()).toContain('mcp (claude)')
     expect(history.text()).toContain('from #1')
     const fields = wrapper.findAll('[data-testid="npc-form"] input')
-    await fields[0]?.setValue('Strahd')
+    await fields[0]?.setValue('Morvain')
     await fields[1]?.setValue('Count')
     await wrapper.get('[data-testid="npc-form"] select').setValue('hostile')
     await wrapper.findAll('[data-testid="npc-form"] textarea')[0]?.setValue('A vampire.')

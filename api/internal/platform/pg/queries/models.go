@@ -88,6 +88,15 @@ type CampaignMap struct {
 	Ambient    string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+	Kind       string
+}
+
+type CampaignMapEdge struct {
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	FromNodeID uuid.UUID
+	ToNodeID   uuid.UUID
+	DistanceMi int32
 }
 
 type CampaignMapElevation struct {
@@ -104,6 +113,19 @@ type CampaignMapLight struct {
 	R        int32
 	BrightFt int32
 	DimFt    int32
+}
+
+type CampaignMapNode struct {
+	ID    uuid.UUID
+	MapID uuid.UUID
+	Name  string
+	Q     int32
+	R     int32
+}
+
+type CampaignMapParty struct {
+	MapID  uuid.UUID
+	NodeID uuid.UUID
 }
 
 type CampaignMapReveal struct {
@@ -660,6 +682,7 @@ type PlaySession struct {
 	StartedAt  time.Time
 	EndedAt    pgtype.Timestamptz
 	MapID      pgtype.UUID
+	WorldMapID pgtype.UUID
 }
 
 type PlaySurface struct {
@@ -720,4 +743,16 @@ type PlayTokenSafe struct {
 	TokenID uuid.UUID
 	Ability string
 	Bonus   int32
+}
+
+type PlayTravelLeg struct {
+	ActionID   uuid.UUID
+	SessionID  uuid.UUID
+	MapID      uuid.UUID
+	FromName   string
+	ToName     string
+	Pace       string
+	DistanceMi int32
+	Minutes    int32
+	Days       int32
 }

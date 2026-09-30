@@ -57,6 +57,16 @@ func samples() contract {
 		Saves: []live.AreaSave{{TokenID: token.ID, RollID: "0190c7a8-0000-7000-8000-000000000021"}},
 	}
 	view.Table = &live.TableView{Camera: "free", Q: 2, R: -1, ZoomPct: 150, Scene: "world", WorldMap: view.Map}
+	view.World = &live.WorldView{
+		Map: *view.Map, Revealed: []live.Hex{{Q: 0, R: 0}},
+		Nodes: []live.NodeView{{ID: "0190c7a8-0000-7000-8000-000000000022", Name: "Oakford", Q: 0, R: 0}, {ID: "0190c7a8-0000-7000-8000-000000000023", Name: "Mill", Q: 5, R: 0}},
+		Routes: []live.RouteView{{
+			ID: "0190c7a8-0000-7000-8000-000000000024", FromNodeID: "0190c7a8-0000-7000-8000-000000000022", ToNodeID: "0190c7a8-0000-7000-8000-000000000023", DistanceMi: 12,
+			Plans: []live.PlanView{{Pace: "slow", Minutes: 360, Days: 1}, {Pace: "normal", Minutes: 240, Days: 1}, {Pace: "fast", Minutes: 180, Days: 1}},
+		}},
+		PartyNodeID: "0190c7a8-0000-7000-8000-000000000022",
+		Legs:        []live.LegView{{From: "Mill", To: "Oakford", Pace: "normal", DistanceMi: 12, Minutes: 240, Days: 1}},
+	}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
 	dmView.Resolving, dmView.Manual = false, []live.ManualView{{ID: "0190c7a8-0000-7000-8000-000000000018", Text: "Goblin: Resolve Hold Person by hand."}}
@@ -97,9 +107,16 @@ func samples() contract {
 			{Nonce: "n32", Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "grease", Rounds: 10},
 			{Nonce: "n33", Kind: live.CmdSetElevation, Hexes: []live.Hex{{Q: 1, R: 1}}, ElevationFt: 10},
 			{Nonce: "n34", Kind: live.CmdTableCamera, Camera: "free", Q: 2, R: -1, ZoomPct: 150},
-			{Nonce: "n35", Kind: live.CmdTableScene, Scene: "world", MapID: id, Title: "Barovia", Body: "Mists."},
+			{Nonce: "n35", Kind: live.CmdTableScene, Scene: "world", MapID: id, Title: "Greyfen", Body: "Mists."},
 			{Nonce: "n36", Kind: live.CmdTableBlackout, On: true},
 			{Nonce: "n37", Kind: live.CmdPing, Q: 1, R: 0},
+			{Nonce: "n38", Kind: live.CmdSetWorld, MapID: id},
+			{Nonce: "n39", Kind: live.CmdAddNode, Label: "Oakford", Q: 0, R: 0},
+			{Nonce: "n40", Kind: live.CmdAddRoute, NodeID: "0190c7a8-0000-7000-8000-000000000022", ToNodeID: "0190c7a8-0000-7000-8000-000000000023", DistanceMi: 12},
+			{Nonce: "n41", Kind: live.CmdRemoveNode, NodeID: "0190c7a8-0000-7000-8000-000000000023"},
+			{Nonce: "n42", Kind: live.CmdRemoveRoute, RouteID: "0190c7a8-0000-7000-8000-000000000024"},
+			{Nonce: "n43", Kind: live.CmdPlaceParty, NodeID: "0190c7a8-0000-7000-8000-000000000022"},
+			{Nonce: "n44", Kind: live.CmdTravel, RouteID: "0190c7a8-0000-7000-8000-000000000024", Pace: "fast"},
 		},
 		Updates: []live.Update{
 			{

@@ -21,19 +21,19 @@ func npcs(t *testing.T, repo app.Repository) (*app.NPCs, domain.Detail) {
 	return &app.NPCs{Repo: repo, Now: func() time.Time { return time.Date(2026, 9, 30, 21, 0, 0, 0, time.UTC) }}, d
 }
 
-func strahd() app.NPCInput {
-	return app.NPCInput{Name: " Strahd ", Title: "Count", Description: "A vampire.", DMNotes: "Wants Ireena.", Disposition: "hostile"}
+func morvain() app.NPCInput {
+	return app.NPCInput{Name: " Morvain ", Title: "Count", Description: "A vampire.", DMNotes: "Wants Ireena.", Disposition: "hostile"}
 }
 
 func TestNPCRevisionsDiffAndRestore(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	n, d := npcs(t, pgstore.New(open(t).Pool()))
-	created, err := n.Create(ctx, dmCaller, d.ID, strahd())
-	if err != nil || created.Name != "Strahd" {
+	created, err := n.Create(ctx, dmCaller, d.ID, morvain())
+	if err != nil || created.Name != "Morvain" {
 		t.Fatalf("create = %+v %v", created, err)
 	}
-	edit := strahd()
+	edit := morvain()
 	edit.Disposition, edit.DMNotes = "neutral", "Bargains."
 	mcp := caller.Caller{Subject: dmCaller.Subject, Origin: caller.OriginMCP, Client: "claude"}
 	if _, err := n.Update(ctx, mcp, d.ID, created.ID, edit); err != nil {
@@ -61,7 +61,7 @@ func TestDeletedNPCsComeBack(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	n, d := npcs(t, pgstore.New(open(t).Pool()))
-	a, _ := n.Create(ctx, dmCaller, d.ID, strahd())
+	a, _ := n.Create(ctx, dmCaller, d.ID, morvain())
 	b, _ := n.Create(ctx, dmCaller, d.ID, app.NPCInput{Name: "Ismark", Disposition: "friendly"})
 	if err := n.Delete(ctx, dmCaller, d.ID, a.ID); err != nil {
 		t.Fatal(err)
@@ -70,7 +70,7 @@ func TestDeletedNPCsComeBack(t *testing.T) {
 		t.Fatalf("list = %+v", list)
 	}
 	gone, err := n.Deleted(ctx, dmCaller, d.ID)
-	if err != nil || len(gone) != 1 || gone[0].Name != "Strahd" {
+	if err != nil || len(gone) != 1 || gone[0].Name != "Morvain" {
 		t.Fatalf("deleted = %+v %v", gone, err)
 	}
 	revs, _ := n.Revisions(ctx, dmCaller, d.ID, a.ID)
@@ -78,7 +78,7 @@ func TestDeletedNPCsComeBack(t *testing.T) {
 		t.Fatalf("revisions = %+v", revs)
 	}
 	back, err := n.Restore(ctx, dmCaller, d.ID, a.ID, 2)
-	if err != nil || back.ID != a.ID || back.Name != "Strahd" {
+	if err != nil || back.ID != a.ID || back.Name != "Morvain" {
 		t.Fatalf("restore deleted = %+v %v", back, err)
 	}
 	if gone, _ := n.Deleted(ctx, dmCaller, d.ID); len(gone) != 0 {
@@ -90,13 +90,13 @@ func TestNPCsAreDMPrep(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	n, d := npcs(t, pgstore.New(open(t).Pool()))
-	a, _ := n.Create(ctx, dmCaller, d.ID, strahd())
+	a, _ := n.Create(ctx, dmCaller, d.ID, morvain())
 	checks := map[string]func(c caller.Caller) error{
 		"list":    func(c caller.Caller) error { _, err := n.List(ctx, c, d.ID); return err },
 		"deleted": func(c caller.Caller) error { _, err := n.Deleted(ctx, c, d.ID); return err },
 		"get":     func(c caller.Caller) error { _, err := n.Get(ctx, c, d.ID, a.ID); return err },
-		"create":  func(c caller.Caller) error { _, err := n.Create(ctx, c, d.ID, strahd()); return err },
-		"update":  func(c caller.Caller) error { _, err := n.Update(ctx, c, d.ID, a.ID, strahd()); return err },
+		"create":  func(c caller.Caller) error { _, err := n.Create(ctx, c, d.ID, morvain()); return err },
+		"update":  func(c caller.Caller) error { _, err := n.Update(ctx, c, d.ID, a.ID, morvain()); return err },
 		"delete":  func(c caller.Caller) error { return n.Delete(ctx, c, d.ID, a.ID) },
 		"revs":    func(c caller.Caller) error { _, err := n.Revisions(ctx, c, d.ID, a.ID); return err },
 		"diff":    func(c caller.Caller) error { _, err := n.Diff(ctx, c, d.ID, a.ID, 1, 1); return err },
@@ -116,7 +116,7 @@ func TestNPCInputAndMissingThings(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	n, d := npcs(t, pgstore.New(open(t).Pool()))
-	a, _ := n.Create(ctx, dmCaller, d.ID, strahd())
+	a, _ := n.Create(ctx, dmCaller, d.ID, morvain())
 	long := strings.Repeat("x", 8001)
 	for name, in := range map[string]app.NPCInput{
 		"blank":       {Name: " ", Disposition: "neutral"},
@@ -132,7 +132,7 @@ func TestNPCInputAndMissingThings(t *testing.T) {
 		}
 	}
 	missing := domain.NPCID{}
-	if _, err := n.Update(ctx, dmCaller, d.ID, missing, strahd()); !errors.Is(err, domain.ErrNotFound) {
+	if _, err := n.Update(ctx, dmCaller, d.ID, missing, morvain()); !errors.Is(err, domain.ErrNotFound) {
 		t.Errorf("update missing: %v", err)
 	}
 	if err := n.Delete(ctx, dmCaller, d.ID, missing); !errors.Is(err, domain.ErrNotFound) {
@@ -160,13 +160,13 @@ func TestEveryNPCDatabaseFaultSurfaces(t *testing.T) {
 	ctx := context.Background()
 	db := open(t)
 	base, d := npcs(t, pgstore.New(db.Pool()))
-	a, _ := base.Create(ctx, dmCaller, d.ID, strahd())
-	gone, _ := base.Create(ctx, dmCaller, d.ID, strahd())
+	a, _ := base.Create(ctx, dmCaller, d.ID, morvain())
+	gone, _ := base.Create(ctx, dmCaller, d.ID, morvain())
 	_ = base.Delete(ctx, dmCaller, d.ID, gone.ID)
-	doomed, _ := base.Create(ctx, dmCaller, d.ID, strahd())
+	doomed, _ := base.Create(ctx, dmCaller, d.ID, morvain())
 	ops := map[string]func(n *app.NPCs) error{
-		"create":   func(n *app.NPCs) error { _, err := n.Create(ctx, dmCaller, d.ID, strahd()); return err },
-		"update":   func(n *app.NPCs) error { _, err := n.Update(ctx, dmCaller, d.ID, a.ID, strahd()); return err },
+		"create":   func(n *app.NPCs) error { _, err := n.Create(ctx, dmCaller, d.ID, morvain()); return err },
+		"update":   func(n *app.NPCs) error { _, err := n.Update(ctx, dmCaller, d.ID, a.ID, morvain()); return err },
 		"restore":  func(n *app.NPCs) error { _, err := n.Restore(ctx, dmCaller, d.ID, a.ID, 1); return err },
 		"recreate": func(n *app.NPCs) error { _, err := n.Restore(ctx, dmCaller, d.ID, gone.ID, 1); return err },
 		"delete":   func(n *app.NPCs) error { return n.Delete(ctx, dmCaller, d.ID, doomed.ID) },

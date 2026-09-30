@@ -7,7 +7,7 @@ test('a DM edits an NPC, compares two revisions and restores the first', async (
   await page.getByTestId('campaign-display-name').fill('DM')
   await page.getByRole('button', { name: 'Start as DM' }).click()
   await page.getByTestId('npcs-link').click()
-  await page.getByTestId('npc-name').fill('Strahd')
+  await page.getByTestId('npc-name').fill('Morvain')
   await page.getByRole('button', { name: 'Add NPC' }).click()
 
   await page.getByTestId('npc-notes').fill('Wants Ireena.')

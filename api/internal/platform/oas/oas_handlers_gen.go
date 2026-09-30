@@ -6401,7 +6401,7 @@ func (s *Server) handleListInvitesRequest(args [1]string, argsEscaped bool, w ht
 
 // handleListMapsRequest handles listMaps operation.
 //
-// The Campaign's local Maps. DM only.
+// The Campaign's local and world Maps. DM only.
 //
 // GET /api/v1/campaigns/{campaignId}/maps
 func (s *Server) handleListMapsRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -11266,6 +11266,10 @@ func (s *Server) handleUploadMapRequest(args [1]string, argsEscaped bool, w http
 					Name: "name",
 					In:   "query",
 				}: params.Name,
+				{
+					Name: "kind",
+					In:   "query",
+				}: params.Kind,
 			},
 			Raw: r,
 		}

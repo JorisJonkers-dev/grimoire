@@ -1,6 +1,6 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveTable, LiveToken } from '@/infrastructure/api/types.gen'
+import type { LiveTable, LiveToken, LiveWorld } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { mountApp } from '@/test/mountApp'
@@ -8,6 +8,7 @@ import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials } from './board'
 import { focus } from './camera'
 import { cellsFor, key, layoutOf } from './geometry'
+import { duration, journey } from './travel'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
 const SID = '0190c7a8-0000-7000-8000-00000000000b'
@@ -15,7 +16,7 @@ const member = { id: '0190c7a8-0000-7000-8000-000000000004', displayName: 'Joris
 const player = { id: '0190c7a8-0000-7000-8000-000000000005', displayName: 'Aria', role: 'player', joinedAt: '2026-09-30T20:00:00Z', isMe: false }
 const campaign = (myRole = 'dm') => {
   const me = myRole === 'dm' ? member : { ...player, isMe: true }
-  return { id: ID, name: 'Strahd', ruleset: 'srd-2024', myRole, memberCount: 2, createdAt: '2026-09-30T20:00:00Z', me, members: [member, player] }
+  return { id: ID, name: 'Morvain', ruleset: 'srd-2024', myRole, memberCount: 2, createdAt: '2026-09-30T20:00:00Z', me, members: [member, player] }
 }
 const goblin: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Goblin Boss', kind: 'enemy', q: 1, r: 0, hidden: false, darkvisionFt: 0 }
 const lurker: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000c', label: 'Lurker', kind: 'enemy', q: -1, r: 0, hidden: true, darkvisionFt: 60 }
@@ -24,7 +25,24 @@ const snapshot = (tokens: unknown[], audience = 'dm', extra: object = {}) => ({
 })
 const MID = '0190c7a8-0000-7000-8000-00000000000d'
 const liveMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image?v=0`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, imageVersion: 0 }
-const localMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'dark' }
+const localMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'dark', kind: 'local' as const }
+const WID = '0190c7a8-0000-7000-8000-000000000020'
+const realmMap = { ...localMap, id: WID, name: 'Realm', kind: 'world' as const }
+const OAK = '0190c7a8-0000-7000-8000-000000000022'
+const MILL = '0190c7a8-0000-7000-8000-000000000023'
+const ROAD = '0190c7a8-0000-7000-8000-000000000024'
+const realm = (extra: Partial<LiveWorld> = {}): LiveWorld => ({
+  map: { ...liveMap, id: WID, name: 'Realm' },
+  revealed: [{ q: 0, r: 0 }, { q: 1, r: 0 }],
+  nodes: [{ id: OAK, name: 'Oakford', q: 0, r: 0 }, { id: MILL, name: 'Mill', q: 2, r: 0 }],
+  routes: [{
+    id: ROAD, fromNodeId: OAK, toNodeId: MILL, distanceMi: 12,
+    plans: [{ pace: 'slow', minutes: 360, days: 1 }, { pace: 'normal', minutes: 240, days: 1 }, { pace: 'fast', minutes: 180, days: 1 }],
+  }],
+  partyNodeId: OAK,
+  legs: [{ from: 'Mill', to: 'Oakford', pace: 'normal', distanceMi: 12, minutes: 240, days: 1 }, { from: 'Oakford', to: 'Mill', pace: 'slow', distanceMi: 30, minutes: 900, days: 2 }],
+  ...extra,
+})
 
 beforeEach(() => {
   FakeSocket.all = []
@@ -746,7 +764,7 @@ describe('table remote', () => {
 
   it('lets the DM steer the table from the session page', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
-      [`/api/v1/campaigns/${ID}/maps`]: () => [localMap],
+      [`/api/v1/campaigns/${ID}/maps`]: () => [localMap, realmMap],
       [`/api/v1/campaigns/${ID}/characters`]: () => [],
       [`/api/v1/campaigns/${ID}`]: () => campaign(),
     })
@@ -764,9 +782,10 @@ describe('table remote', () => {
     await remote.get('form').trigger('submit')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'table_scene', scene: 'title', title: 'Chapter One', body: 'Mists.' })
     await remote.get('[data-testid="scene"]').setValue('world')
-    await remote.get('[data-testid="scene-map"]').setValue(MID)
+    expect(remote.get('[data-testid="scene-map"]').findAll('option').map((o) => o.text())).toEqual(['Realm'])
+    await remote.get('[data-testid="scene-map"]').setValue(WID)
     await remote.get('form').trigger('submit')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_scene', scene: 'world', mapId: MID })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_scene', scene: 'world', mapId: WID })
     expect(s.sent.at(-1)).not.toHaveProperty('title')
     await remote.get('[data-testid="scene"]').setValue('local')
     await remote.get('form').trigger('submit')
@@ -807,24 +826,25 @@ describe('maps pages', () => {
       },
       [`/api/v1/campaigns/${ID}/maps`]: async (u, req) => {
         if (req.method === 'POST') {
-          writes.push(`POST ${String(u.searchParams.get('name'))} ${String((await req.arrayBuffer()).byteLength)}`)
+          writes.push(`POST ${String(u.searchParams.get('name'))} ${String(u.searchParams.get('kind'))} ${String((await req.arrayBuffer()).byteLength)}`)
           return localMap
         }
         return [localMap]
       },
     })
     expect(wrapper.get('[data-testid="map-list"]').text()).toContain('Crypt')
-    expect(wrapper.get('[data-testid="map-list"]').text()).toContain('200 × 160 px')
+    expect(wrapper.get('[data-testid="map-list"]').text()).toContain('local map · 200 × 160 px')
     const form = wrapper.get('[data-testid="map-upload"]')
     expect(form.get('button').attributes('disabled')).toBeDefined()
     await wrapper.get('[data-testid="map-name"]').setValue('Crypt')
+    await wrapper.get('[data-testid="map-kind"]').setValue('world')
     const input = wrapper.get('[data-testid="map-file"]')
     Object.defineProperty(input.element, 'files', { value: [new File([new Uint8Array(5)], 'crypt.png', { type: 'image/png' })], configurable: true })
     await input.trigger('change')
     await expectAccessible(wrapper.element as Element)
     await form.trigger('submit')
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('map') }, { timeout: 5000 })
-    expect(writes).toEqual(['POST Crypt 5'])
+    expect(writes).toEqual(['POST Crypt world 5'])
     await flushPromises()
     expect(wrapper.get('h1').text()).toBe('Crypt')
     expect(wrapper.findAll('[data-testid="map-board"] g').length).toBeGreaterThan(0)
@@ -891,5 +911,124 @@ describe('table display', () => {
     s.receive({ kind: 'ended', seq: 1 })
     await flushPromises()
     expect(wrapper.text()).toContain('The session has ended')
+  })
+})
+
+describe('world map', () => {
+  it('says how long a journey takes', () => {
+    expect([duration(0, 0), duration(45, 1), duration(240, 1), duration(270, 1), duration(600, 2)]).toEqual([
+      '0 min', '45 min', '4 h', '4 h 30 min', '2 days (10 h on the road)',
+    ])
+    expect(journey(realm().legs)).toBe('42 mi · 3 days (19 h on the road)')
+  })
+
+  it('lets the DM choose, draw and travel the world map', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/maps`]: () => [localMap, realmMap],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'dm'))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="map-choice"]').findAll('option').map((o) => o.text())).toEqual(['No map (open grid)', 'Crypt'])
+    await wrapper.get('[data-testid="scope-world"]').setValue(true)
+    expect(wrapper.get('[data-testid="no-world"]').text()).toContain('Choose a world map')
+    expect(wrapper.get('[data-testid="dm-controls"]').isVisible()).toBe(false)
+    await wrapper.get('[data-testid="use-world"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'set_world' })
+    expect(s.sent.at(-1)).not.toHaveProperty('mapId')
+    await wrapper.get('[data-testid="world-choice"]').setValue(WID)
+    await wrapper.get('[data-testid="use-world"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'set_world', mapId: WID })
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], fog: false, visible: [], remembered: [], world: realm() } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="party-marker"]').exists()).toBe(true)
+    expect(wrapper.find('[data-node="Mill"]').exists()).toBe(true)
+    expect(wrapper.find(`[data-route="${ROAD}"]`).exists()).toBe(true)
+    expect(wrapper.get('[data-testid="party-at"]').text()).toBe('The party is at Oakford.')
+    const roads = wrapper.get('[data-testid="roads"]')
+    expect(roads.text()).toContain('Mill · 12 mi · 4 h')
+    await roads.get('[data-testid="pace"]').setValue('fast')
+    expect(roads.text()).toContain('Mill · 12 mi · 3 h')
+    await roads.get('button').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'travel', routeId: ROAD, pace: 'fast' })
+    expect(wrapper.get('[data-testid="legs"]').text()).toContain('Oakford → Mill · 30 mi at a slow pace · 2 days (15 h on the road)')
+    expect(wrapper.get('[data-testid="journey"]').text()).toBe('In all: 42 mi · 3 days (19 h on the road)')
+    const sent = () => s.sent.length
+    let before = sent()
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    expect(sent()).toBe(before)
+    await wrapper.get('[data-testid="world-node-name"]').setValue(' Ford ')
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(sent()).toBe(before)
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'add_node', label: 'Ford', q: 1, r: 1 })
+    await wrapper.get('[data-testid="world-tool-party"]').setValue(true)
+    before = sent()
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    expect(sent()).toBe(before)
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_party', nodeId: MILL })
+    await wrapper.get('[data-testid="world-tool-remove"]').setValue(true)
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'remove_node', nodeId: OAK })
+    await wrapper.get('[data-testid="world-tool-route"]').setValue(true)
+    await wrapper.get('[data-testid="world-distance"]').setValue(30)
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(wrapper.text()).toContain('From Oakford: now tap where the route goes.')
+    expect(wrapper.get('[data-node="Oakford"] circle').classes()).toContain('node--from')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'add_route', nodeId: OAK, toNodeId: MILL, distanceMi: 30 })
+    expect(wrapper.text()).toContain('Tap the location the route starts from.')
+    await wrapper.get(`[data-testid="remove-route-${ROAD}"]`).trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'remove_route', routeId: ROAD })
+    await expectAccessible(wrapper.element as Element)
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [goblin], fog: false, visible: [], remembered: [], world: realm({ partyNodeId: undefined, legs: [], routes: [{ id: ROAD, fromNodeId: OAK, toNodeId: '0190c7a8-0000-7000-8000-000000000099', distanceMi: 12, plans: [] }] }) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="party-at"]').text()).toBe('The party is not on this map yet.')
+    expect(wrapper.find('[data-testid="legs"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Oakford – somewhere unseen · 12 mi')
+    await wrapper.get('[data-testid="scope-local"]').setValue(true)
+    expect(wrapper.get('[data-testid="dm-controls"]').isVisible()).toBe(true)
+  })
+
+  it('shows players the world map without the DM tools', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party'))
+    await flushPromises()
+    await wrapper.get('[data-testid="scope-world"]').setValue(true)
+    expect(wrapper.get('[data-testid="no-world"]').text()).toBe('The DM has not opened a world map yet.')
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [], fog: false, visible: [], remembered: [], world: realm() } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="world-choice"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="roads"]').text()).toContain('Mill · 12 mi · 4 h')
+    expect(wrapper.get('[data-testid="roads"]').find('button').exists()).toBe(false)
+    const before = s.sent.length
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    expect(s.sent.length).toBe(before)
+    expect(wrapper.get('[data-hex="2,0"]').classes()).toContain('cell--unseen')
+    await expectAccessible(wrapper.element as Element)
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [], fog: false, visible: [], remembered: [], world: realm({ partyNodeId: MILL, routes: [{ ...realm().routes[0], plans: [] } as LiveWorld['routes'][number]] }) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="roads"]').text()).toContain('Oakford · 12 mi ·')
+  })
+
+  it('draws the party travels on the Table Display when it shows their world map', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}/table`, {})
+    const s = FakeSocket.last()
+    const scene: LiveTable = { camera: 'follow_turn', q: 0, r: 0, zoomPct: 100, scene: 'world', blackout: false, worldMap: { ...liveMap, id: WID, name: 'Realm' } }
+    s.receive(snapshot([], 'table', { table: scene, world: realm() }))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="party-marker"]').exists()).toBe(true)
+    expect(wrapper.get('[data-hex="2,0"]').classes()).toContain('cell--unseen')
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [], fog: false, visible: [], remembered: [], table: { ...scene, worldMap: liveMap }, world: realm() } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="party-marker"]').exists()).toBe(false)
+    expect(wrapper.get('[data-hex="2,0"]').classes()).toContain('cell--lit')
   })
 })

@@ -5,6 +5,9 @@ import { SessionState } from './sessionState'
 export type Audience = 'dm' | 'party' | 'table'
 export type Connection = 'connecting' | 'open' | 'reconnecting' | 'ended'
 
+// A command as a page sends it; the session fills in the nonce and any missing coordinates.
+export type Outgoing = Omit<LiveCommand, 'nonce' | 'q' | 'r' | 'hidden'> & Partial<Pick<LiveCommand, 'q' | 'r' | 'hidden'>>
+
 type Socket = Pick<WebSocket, 'send' | 'close'> & {
   onopen: ((ev: Event) => void) | null
   onmessage: ((ev: MessageEvent) => void) | null
@@ -65,7 +68,7 @@ export function useLiveSession(
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }
-  function send(cmd: Omit<LiveCommand, 'nonce' | 'q' | 'r' | 'hidden'> & Partial<Pick<LiveCommand, 'q' | 'r' | 'hidden'>>) {
+  function send(cmd: Outgoing) {
     nonce++
     state.rejection = ''
     view.rejection = ''

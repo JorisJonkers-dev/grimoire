@@ -103,7 +103,7 @@ func call(h http.Handler, method, path, subject, body string) *httptest.Response
 // campaignWithPlayer returns the id of a campaign run by "dm" that "player" joined.
 func campaignWithPlayer(t *testing.T, h http.Handler) (string, map[string]any) {
 	t.Helper()
-	rec := call(h, http.MethodPost, "/api/v1/campaigns", "dm", `{"name":"Strahd","displayName":"Joris"}`)
+	rec := call(h, http.MethodPost, "/api/v1/campaigns", "dm", `{"name":"Morvain","displayName":"Joris"}`)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("create: %d %s", rec.Code, rec.Body.String())
 	}
@@ -127,7 +127,7 @@ func TestCampaignLifecycleOverHTTP(t *testing.T) {
 	id, invite := campaignWithPlayer(t, h)
 	token, _ := invite["token"].(string)
 	rec := call(h, http.MethodPost, "/api/v1/invites/preview", "someone", `{"token":"`+token+`"}`)
-	if rec.Code != 200 || decode(t, rec)["campaignName"] != "Strahd" {
+	if rec.Code != 200 || decode(t, rec)["campaignName"] != "Morvain" {
 		t.Fatalf("preview: %d %s", rec.Code, rec.Body.String())
 	}
 	rec = call(h, http.MethodGet, "/api/v1/campaigns/"+id, "player", "")
@@ -141,7 +141,7 @@ func TestCampaignLifecycleOverHTTP(t *testing.T) {
 	if player["isMe"] != true {
 		t.Fatalf("player row = %v", player)
 	}
-	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Barovia","ruleset":"srd-2014","reactionTimeoutS":5,"highGround":true}`)
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2014","reactionTimeoutS":5,"highGround":true}`)
 	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2014" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true {
 		t.Fatalf("update: %d %s", rec.Code, rec.Body.String())
 	}

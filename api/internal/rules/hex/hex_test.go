@@ -83,3 +83,25 @@ func TestCover(t *testing.T) {
 		t.Fatal("unknown cover")
 	}
 }
+
+func TestDiskHoldsEveryHexWithinTheRadius(t *testing.T) {
+	t.Parallel()
+	centre := c(3, -2)
+	for radius, size := range []int{1, 7, 19} {
+		got := hex.Disk(centre, radius)
+		if len(got) != size {
+			t.Fatalf("Disk(%d) has %d hexes, want %d", radius, len(got), size)
+		}
+		in := map[hex.Coord]bool{}
+		for _, x := range got {
+			in[x] = true
+		}
+		for q := -4; q <= 10; q++ {
+			for r := -9; r <= 5; r++ {
+				if want := hex.Distance(centre, c(q, r)) <= radius; in[c(q, r)] != want {
+					t.Fatalf("Disk(%d) holds %v = %v, want %v", radius, c(q, r), in[c(q, r)], want)
+				}
+			}
+		}
+	}
+}

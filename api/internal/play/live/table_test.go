@@ -29,7 +29,7 @@ func TestTheDMSteersTheTableDisplay(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	w := setup(t)
-	m := w.dungeon(t)
+	m := w.realm(t)
 	dm := join(t, w, w.dm, dmCaller, live.AudienceDM)
 	player := join(t, w, w.player, playerCaller, live.AudienceParty)
 	table := join(t, w, w.player, playerCaller, live.AudienceTable)
@@ -57,7 +57,7 @@ func TestTheDMSteersTheTableDisplay(t *testing.T) {
 		t.Fatalf("title card = %+v", tv)
 	}
 	_, tb = say(live.Command{Kind: live.CmdTableScene, Scene: domain.SceneWorld, MapID: uuid.UUID(m.ID).String()})
-	if wm := tb.View.Table.WorldMap; wm == nil || wm.Name != "Crypt" || !strings.HasSuffix(wm.ImageURL, "/image") || tb.View.Table.Title != "" {
+	if wm := tb.View.Table.WorldMap; wm == nil || wm.Name != "Realm" || !strings.HasSuffix(wm.ImageURL, "/image") || tb.View.Table.Title != "" {
 		t.Fatalf("world scene = %+v", tb.View.Table)
 	}
 	d, tb := say(live.Command{Kind: live.CmdTableBlackout, On: true})
@@ -79,7 +79,8 @@ func TestTheDMSteersTheTableDisplay(t *testing.T) {
 		"zoom runs":          {Kind: live.CmdTableCamera, Camera: domain.CameraFree, ZoomPct: 40},
 		"scenes are":         {Kind: live.CmdTableScene, Scene: "credits"},
 		"titles run":         {Kind: live.CmdTableScene, Scene: domain.SceneTitle, Title: strings.Repeat("x", 81)},
-		"choose a map":       {Kind: live.CmdTableScene, Scene: domain.SceneWorld, MapID: uuid.NewString()},
+		"choose a world map": {Kind: live.CmdTableScene, Scene: domain.SceneWorld, MapID: uuid.NewString()},
+		"a world map for":    {Kind: live.CmdTableScene, Scene: domain.SceneWorld, MapID: uuid.UUID(w.dungeon(t).ID).String()},
 	} {
 		w.hub.Submit(dm, cmd)
 		if u := next(t, dm); u.Kind != live.UpdRejected || !strings.Contains(strings.ToLower(u.Reason), want) {

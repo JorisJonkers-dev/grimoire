@@ -46,7 +46,7 @@ func TestMapsUploadCalibrateAndMaskTheirPicture(t *testing.T) {
 	ctx := context.Background()
 	tb := setup(t)
 	s := maps(tb, pgstore.New(tb.pool), storage.Dir{Path: t.TempDir()})
-	m, err := s.Upload(ctx, dm, tb.campaign, " Crypt ", mapPicture(t))
+	m, err := s.Upload(ctx, dm, tb.campaign, " Crypt ", "local", mapPicture(t))
 	if err != nil || m.Name != "Crypt" || m.Width != 400 || m.ImageType != "image/png" || m.HexSize != app.DefaultHexSize {
 		t.Fatalf("upload = %+v %v", m, err)
 	}
@@ -89,12 +89,13 @@ func TestMapsRefuseAndValidate(t *testing.T) {
 	ctx := context.Background()
 	tb := setup(t)
 	s := maps(tb, pgstore.New(tb.pool), storage.Dir{Path: t.TempDir()})
-	m, _ := s.Upload(ctx, dm, tb.campaign, "Crypt", mapPicture(t))
+	m, _ := s.Upload(ctx, dm, tb.campaign, "Crypt", "local", mapPicture(t))
 	var rule *apperr.RuleError
 	bad := map[string]error{}
-	_, bad["name"] = s.Upload(ctx, dm, tb.campaign, " ", mapPicture(t))
-	_, bad["huge"] = s.Upload(ctx, dm, tb.campaign, "Big", make([]byte, app.MaxMapBytes+1))
-	_, bad["garbage"] = s.Upload(ctx, dm, tb.campaign, "Junk", []byte("not a picture"))
+	_, bad["name"] = s.Upload(ctx, dm, tb.campaign, " ", "local", mapPicture(t))
+	_, bad["huge"] = s.Upload(ctx, dm, tb.campaign, "Big", "local", make([]byte, app.MaxMapBytes+1))
+	_, bad["garbage"] = s.Upload(ctx, dm, tb.campaign, "Junk", "local", []byte("not a picture"))
+	_, bad["kind"] = s.Upload(ctx, dm, tb.campaign, "Odd", "dungeon", mapPicture(t))
 	_, bad["hex"] = s.Update(ctx, dm, tb.campaign, m.ID, app.MapEdit{Name: "A", HexSize: 2, Ambient: domain.AmbientDim})
 	_, bad["ambient"] = s.Update(ctx, dm, tb.campaign, m.ID, app.MapEdit{Name: "A", HexSize: 40, Ambient: "noon"})
 	_, bad["rename"] = s.Update(ctx, dm, tb.campaign, m.ID, app.MapEdit{Name: " ", HexSize: 40, Ambient: domain.AmbientDim})
@@ -104,7 +105,7 @@ func TestMapsRefuseAndValidate(t *testing.T) {
 		}
 	}
 	forbidden := map[string]error{}
-	_, forbidden["upload"] = s.Upload(ctx, player, tb.campaign, "Mine", mapPicture(t))
+	_, forbidden["upload"] = s.Upload(ctx, player, tb.campaign, "Mine", "local", mapPicture(t))
 	_, forbidden["list"] = s.List(ctx, player, tb.campaign)
 	_, forbidden["get"] = s.Get(ctx, player, tb.campaign, m.ID)
 	_, forbidden["update"] = s.Update(ctx, player, tb.campaign, m.ID, app.MapEdit{Name: "A", HexSize: 40, Ambient: domain.AmbientDim})
@@ -127,7 +128,7 @@ func TestMapsRefuseAndValidate(t *testing.T) {
 		t.Fatalf("update missing = %v", err)
 	}
 	broken := maps(tb, pgstore.New(tb.pool), brokenBlobs{})
-	if _, err := broken.Upload(ctx, dm, tb.campaign, "A", mapPicture(t)); err == nil {
+	if _, err := broken.Upload(ctx, dm, tb.campaign, "A", "local", mapPicture(t)); err == nil {
 		t.Fatal("storage failure on upload ignored")
 	}
 	if _, _, err := broken.Image(ctx, dm, tb.campaign, m.ID); err == nil {
@@ -145,10 +146,13 @@ func TestEveryMapDatabaseFaultSurfaces(t *testing.T) {
 	ctx := context.Background()
 	tb := setup(t)
 	blobs := storage.Dir{Path: t.TempDir()}
-	m, _ := maps(tb, pgstore.New(tb.pool), blobs).Upload(ctx, dm, tb.campaign, "Crypt", mapPicture(t))
+	m, _ := maps(tb, pgstore.New(tb.pool), blobs).Upload(ctx, dm, tb.campaign, "Crypt", "local", mapPicture(t))
 	ops := map[string]func(s *app.Maps) error{
-		"upload": func(s *app.Maps) error { _, err := s.Upload(ctx, dm, tb.campaign, "Other", mapPicture(t)); return err },
-		"list":   func(s *app.Maps) error { _, err := s.List(ctx, dm, tb.campaign); return err },
+		"upload": func(s *app.Maps) error {
+			_, err := s.Upload(ctx, dm, tb.campaign, "Other", "local", mapPicture(t))
+			return err
+		},
+		"list": func(s *app.Maps) error { _, err := s.List(ctx, dm, tb.campaign); return err },
 		"update": func(s *app.Maps) error {
 			_, err := s.Update(ctx, dm, tb.campaign, m.ID, app.MapEdit{Name: "B", HexSize: 40, Ambient: domain.AmbientDim})
 			return err

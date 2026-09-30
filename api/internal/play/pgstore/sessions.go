@@ -36,6 +36,10 @@ func session(s queries.PlaySession) domain.Session {
 		id := domain.MapID(s.MapID.Bytes)
 		out.MapID = &id
 	}
+	if s.WorldMapID.Valid {
+		id := domain.MapID(s.WorldMapID.Bytes)
+		out.WorldMapID = &id
+	}
 	return out
 }
 
@@ -201,13 +205,23 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 				return err
 			}
 		}
-		actionID, err := tx.sessionAction(ctx, sess.CampaignID, sess.ID, w.Kind, actor, c, now)
-		if err != nil {
-			return err
-		}
-		return tx.logWrite(ctx, actionID, w)
+		return tx.record(ctx, sess, w, actor, c, now)
 	})
 	return seq, err
+}
+
+// record appends the change's Action with what it touched.
+func (s *Store) record(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
+	actionID, err := s.sessionAction(ctx, sess.CampaignID, sess.ID, w.Kind, actor, c, now)
+	if err != nil {
+		return err
+	}
+	if w.Leg != nil {
+		if err := s.logLeg(ctx, actionID, uuid.UUID(sess.ID), w); err != nil {
+			return err
+		}
+	}
+	return s.logWrite(ctx, actionID, w)
 }
 
 //nolint:gosec // coordinates and ranges are bounded by the map
@@ -227,6 +241,9 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
 		return s.writeHP(ctx, sid, w)
+	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
+		domain.ActionPartyPlaced, domain.ActionTravelLeg:
+		return s.writeWorld(ctx, sid, w)
 	case domain.ActionTacticsSet:
 		return s.q.SetTokenTactics(ctx, queries.SetTokenTacticsParams{SessionID: sid, ID: uuid.UUID(w.Token.ID), Tactics: w.Token.Tactics})
 	case domain.ActionMapSet:
@@ -701,7 +718,7 @@ func (s *Store) LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID
 
 func mapRow(m queries.CampaignMap) domain.Map {
 	return domain.Map{
-		ID: domain.MapID(m.ID), CampaignID: m.CampaignID, Name: m.Name, ImageKey: m.ImageKey, ImageType: m.ImageType,
+		ID: domain.MapID(m.ID), CampaignID: m.CampaignID, Name: m.Name, Kind: m.Kind, ImageKey: m.ImageKey, ImageType: m.ImageType,
 		Width: int(m.WidthPx), Height: int(m.HeightPx), HexSize: m.HexSizePx, OriginX: m.OriginX, OriginY: m.OriginY,
 		Ambient: m.Ambient, UpdatedAt: m.UpdatedAt,
 	}

@@ -4,7 +4,6 @@ import (
 	"maps"
 	"slices"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,9 +25,12 @@ type state struct {
 	// surfaces is terrain on hexes this Session; cast is the area spell waiting on its rolls.
 	surfaces map[hex.Coord]domain.Surface
 	cast     *domain.AreaCast
-	// table is what the Table Display shows; world is the map of its world scene.
-	table domain.TableDisplay
-	world *domain.Map
+	// table is what the Table Display shows; tableMap is the map of its world scene.
+	table    domain.TableDisplay
+	tableMap *domain.Map
+	// world is the world map the party travels; worldCells are its hexes.
+	world      *domain.World
+	worldCells map[hex.Coord]bool
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -41,11 +43,14 @@ func cloneEffects(fx domain.Effects) domain.Effects {
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx)}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx)}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
-	next.surfaces, next.table, next.world = maps.Clone(s.surfaces), s.table, s.world
+	next.surfaces, next.table, next.tableMap = maps.Clone(s.surfaces), s.table, s.tableMap
+	if s.world != nil {
+		next.world = s.world.Clone()
+	}
 	if s.cast != nil {
 		c := *s.cast
 		next.cast = &c
@@ -139,7 +144,7 @@ func (s *state) project(a Audience) View {
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
-	v.Table = s.tableView()
+	v.Table, v.World = s.tableView(), s.worldView(a)
 	return v
 }
 
@@ -164,11 +169,8 @@ func (s *state) projectBoard(v *View, a Audience, seen map[hex.Coord]bool) {
 	{
 		m := s.board.Map
 		v.Fog = true
-		v.Map = &MapView{
-			ID: uuid.UUID(m.ID).String(), Name: m.Name, Width: m.Width, Height: m.Height, HexSizePx: m.HexSize,
-			OriginX: m.OriginX, OriginY: m.OriginY, ImageVersion: len(s.board.Reveals),
-			ImageURL: "/api/v1/campaigns/" + m.CampaignID.String() + "/maps/" + uuid.UUID(m.ID).String() + "/image?v=" + strconv.Itoa(len(s.board.Reveals)),
-		}
+		mv := mapView(m, len(s.board.Reveals))
+		v.Map = &mv
 		v.Visible = hexes(seen)
 		remembered := map[hex.Coord]bool{}
 		for c := range s.board.Reveals {

@@ -11,6 +11,7 @@ import { focus } from './camera'
 import { layoutOf } from './geometry'
 import InitiativeRail from './InitiativeRail.vue'
 import MapBoard from './MapBoard.vue'
+import WorldOverlay from './WorldOverlay.vue'
 
 const HEX = 36
 const route = useRoute()
@@ -30,7 +31,9 @@ const px = (c: Coord) => {
 }
 const centre = computed(() => (state.view ? px(focus(state.view)) : { x: 0, y: 0 }))
 const ping = computed(() => (state.ping ? { ...px(state.ping), n: state.ping.n } : null))
-const nothing = { tokens: [], fog: false, visible: [], remembered: [] }
+// The world scene shows the party's travels when it is the map they travel; any other map shows bare.
+const world = computed(() => (state.view?.world && state.view.world.map.id === table.value?.worldMap?.id ? state.view.world : null))
+const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visible: world.value?.revealed ?? [], remembered: [] }))
 </script>
 
 <template>
@@ -44,7 +47,11 @@ const nothing = { tokens: [], fog: false, visible: [], remembered: [] }
       <p>{{ table.body }}</p>
     </section>
     <div v-else-if="table?.scene === 'world' && table.worldMap" class="stage" data-testid="scene-world">
-      <MapBoard :map="table.worldMap" :view="nothing" :title="table.worldMap.name" />
+      <MapBoard :map="world?.map ?? table.worldMap" :view="worldBoard" :title="table.worldMap.name">
+        <template v-if="world" #default="{ layout }">
+          <WorldOverlay :world="world" :layout="layout" :from="null" />
+        </template>
+      </MapBoard>
     </div>
     <div v-else class="stage">
       <InitiativeRail v-if="state.view.combat" :combat="state.view.combat" />

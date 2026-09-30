@@ -80,8 +80,10 @@ type Querier interface {
 	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
 	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
+	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
+	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
@@ -113,6 +115,7 @@ type Querier interface {
 	InsertCastHex(ctx context.Context, arg InsertCastHexParams) error
 	InsertCastTarget(ctx context.Context, arg InsertCastTargetParams) error
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
+	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
@@ -121,6 +124,7 @@ type Querier interface {
 	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
+	InsertNode(ctx context.Context, arg InsertNodeParams) error
 	InsertPendingSave(ctx context.Context, arg InsertPendingSaveParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
 	InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error)
@@ -135,6 +139,7 @@ type Querier interface {
 	InsertTokenAttack(ctx context.Context, arg InsertTokenAttackParams) error
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
 	InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error
+	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
@@ -154,8 +159,11 @@ type Querier interface {
 	LockEntity(ctx context.Context, lockKey string) error
 	LockRoll(ctx context.Context, arg LockRollParams) (string, error)
 	LockSessionOwner(ctx context.Context, lockKey string) (bool, error)
+	MapEdges(ctx context.Context, mapID uuid.UUID) ([]MapEdgesRow, error)
 	MapElevations(ctx context.Context, mapID uuid.UUID) ([]MapElevationsRow, error)
 	MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRow, error)
+	MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow, error)
+	MapParty(ctx context.Context, mapID uuid.UUID) ([]uuid.UUID, error)
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
@@ -197,14 +205,17 @@ type Querier interface {
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
+	SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
+	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
+	SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)

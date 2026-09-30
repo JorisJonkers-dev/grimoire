@@ -330,7 +330,7 @@
       "hidden": false,
       "mapId": "0190c7a8-0000-7000-8000-00000000000c",
       "scene": "world",
-      "title": "Barovia",
+      "title": "Greyfen",
       "body": "Mists."
     },
     {
@@ -347,6 +347,65 @@
       "q": 1,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n38",
+      "kind": "set_world",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "mapId": "0190c7a8-0000-7000-8000-00000000000c"
+    },
+    {
+      "nonce": "n39",
+      "kind": "add_node",
+      "label": "Oakford",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n40",
+      "kind": "add_route",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "nodeId": "0190c7a8-0000-7000-8000-000000000022",
+      "toNodeId": "0190c7a8-0000-7000-8000-000000000023",
+      "distanceMi": 12
+    },
+    {
+      "nonce": "n41",
+      "kind": "remove_node",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "nodeId": "0190c7a8-0000-7000-8000-000000000023"
+    },
+    {
+      "nonce": "n42",
+      "kind": "remove_route",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "routeId": "0190c7a8-0000-7000-8000-000000000024"
+    },
+    {
+      "nonce": "n43",
+      "kind": "place_party",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "nodeId": "0190c7a8-0000-7000-8000-000000000022"
+    },
+    {
+      "nonce": "n44",
+      "kind": "travel",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "routeId": "0190c7a8-0000-7000-8000-000000000024",
+      "pace": "fast"
     }
   ],
   "updates": [
@@ -544,6 +603,75 @@
             "imageVersion": 2
           },
           "blackout": false
+        },
+        "world": {
+          "map": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "revealed": [
+            {
+              "q": 0,
+              "r": 0
+            }
+          ],
+          "nodes": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000022",
+              "name": "Oakford",
+              "q": 0,
+              "r": 0
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000023",
+              "name": "Mill",
+              "q": 5,
+              "r": 0
+            }
+          ],
+          "routes": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000024",
+              "fromNodeId": "0190c7a8-0000-7000-8000-000000000022",
+              "toNodeId": "0190c7a8-0000-7000-8000-000000000023",
+              "distanceMi": 12,
+              "plans": [
+                {
+                  "pace": "slow",
+                  "minutes": 360,
+                  "days": 1
+                },
+                {
+                  "pace": "normal",
+                  "minutes": 240,
+                  "days": 1
+                },
+                {
+                  "pace": "fast",
+                  "minutes": 180,
+                  "days": 1
+                }
+              ]
+            }
+          ],
+          "partyNodeId": "0190c7a8-0000-7000-8000-000000000022",
+          "legs": [
+            {
+              "from": "Mill",
+              "to": "Oakford",
+              "pace": "normal",
+              "distanceMi": 12,
+              "minutes": 240,
+              "days": 1
+            }
+          ]
         }
       }
     },
@@ -757,6 +885,75 @@
             "imageVersion": 2
           },
           "blackout": false
+        },
+        "world": {
+          "map": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "revealed": [
+            {
+              "q": 0,
+              "r": 0
+            }
+          ],
+          "nodes": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000022",
+              "name": "Oakford",
+              "q": 0,
+              "r": 0
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000023",
+              "name": "Mill",
+              "q": 5,
+              "r": 0
+            }
+          ],
+          "routes": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000024",
+              "fromNodeId": "0190c7a8-0000-7000-8000-000000000022",
+              "toNodeId": "0190c7a8-0000-7000-8000-000000000023",
+              "distanceMi": 12,
+              "plans": [
+                {
+                  "pace": "slow",
+                  "minutes": 360,
+                  "days": 1
+                },
+                {
+                  "pace": "normal",
+                  "minutes": 240,
+                  "days": 1
+                },
+                {
+                  "pace": "fast",
+                  "minutes": 180,
+                  "days": 1
+                }
+              ]
+            }
+          ],
+          "partyNodeId": "0190c7a8-0000-7000-8000-000000000022",
+          "legs": [
+            {
+              "from": "Mill",
+              "to": "Oakford",
+              "pace": "normal",
+              "distanceMi": 12,
+              "minutes": 240,
+              "days": 1
+            }
+          ]
         }
       }
     },
@@ -988,6 +1185,75 @@
             "imageVersion": 2
           },
           "blackout": false
+        },
+        "world": {
+          "map": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "revealed": [
+            {
+              "q": 0,
+              "r": 0
+            }
+          ],
+          "nodes": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000022",
+              "name": "Oakford",
+              "q": 0,
+              "r": 0
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000023",
+              "name": "Mill",
+              "q": 5,
+              "r": 0
+            }
+          ],
+          "routes": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000024",
+              "fromNodeId": "0190c7a8-0000-7000-8000-000000000022",
+              "toNodeId": "0190c7a8-0000-7000-8000-000000000023",
+              "distanceMi": 12,
+              "plans": [
+                {
+                  "pace": "slow",
+                  "minutes": 360,
+                  "days": 1
+                },
+                {
+                  "pace": "normal",
+                  "minutes": 240,
+                  "days": 1
+                },
+                {
+                  "pace": "fast",
+                  "minutes": 180,
+                  "days": 1
+                }
+              ]
+            }
+          ],
+          "partyNodeId": "0190c7a8-0000-7000-8000-000000000022",
+          "legs": [
+            {
+              "from": "Mill",
+              "to": "Oakford",
+              "pace": "normal",
+              "distanceMi": 12,
+              "minutes": 240,
+              "days": 1
+            }
+          ]
         }
       },
       "steps": [
@@ -1176,6 +1442,75 @@
               "imageVersion": 2
             },
             "blackout": false
+          },
+          "world": {
+            "map": {
+              "id": "0190c7a8-0000-7000-8000-00000000000c",
+              "name": "Crypt",
+              "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+              "width": 400,
+              "height": 300,
+              "hexSizePx": 40,
+              "originX": 34.64,
+              "originY": 40,
+              "imageVersion": 2
+            },
+            "revealed": [
+              {
+                "q": 0,
+                "r": 0
+              }
+            ],
+            "nodes": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000022",
+                "name": "Oakford",
+                "q": 0,
+                "r": 0
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000023",
+                "name": "Mill",
+                "q": 5,
+                "r": 0
+              }
+            ],
+            "routes": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000024",
+                "fromNodeId": "0190c7a8-0000-7000-8000-000000000022",
+                "toNodeId": "0190c7a8-0000-7000-8000-000000000023",
+                "distanceMi": 12,
+                "plans": [
+                  {
+                    "pace": "slow",
+                    "minutes": 360,
+                    "days": 1
+                  },
+                  {
+                    "pace": "normal",
+                    "minutes": 240,
+                    "days": 1
+                  },
+                  {
+                    "pace": "fast",
+                    "minutes": 180,
+                    "days": 1
+                  }
+                ]
+              }
+            ],
+            "partyNodeId": "0190c7a8-0000-7000-8000-000000000022",
+            "legs": [
+              {
+                "from": "Mill",
+                "to": "Oakford",
+                "pace": "normal",
+                "distanceMi": 12,
+                "minutes": 240,
+                "days": 1
+              }
+            ]
           }
         }
       ]

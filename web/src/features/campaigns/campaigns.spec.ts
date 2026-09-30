@@ -12,7 +12,7 @@ const summary = (id: string, name: string, extra = {}) => ({
 const dm = { id: '0190c7a8-0000-7000-8000-000000000004', displayName: 'Joris', role: 'dm', joinedAt: '2026-09-30T20:00:00Z', isMe: true }
 const player = { id: '0190c7a8-0000-7000-8000-000000000005', displayName: 'Ireena', role: 'player', joinedAt: '2026-09-30T20:00:00Z', isMe: false }
 const home = (myRole: 'dm' | 'player') => ({
-  ...summary(ID, 'Strahd', { myRole }),
+  ...summary(ID, 'Morvain', { myRole }),
   me: myRole === 'dm' ? dm : { ...player, isMe: true },
   members: myRole === 'dm' ? [dm, player] : [{ ...dm, isMe: false }, { ...player, isMe: true }],
 })
@@ -42,9 +42,9 @@ describe('campaign list', () => {
       '/api/v1/campaigns': (url) =>
         url.searchParams.get('cursor')
           ? { items: [summary('0190c7a8-0000-7000-8000-000000000003', 'Tomb', { myRole: 'player', memberCount: 1, ruleset: 'srd-2014' })] }
-          : { items: [summary('0190c7a8-0000-7000-8000-000000000002', 'Strahd')], nextCursor: 'next' },
+          : { items: [summary('0190c7a8-0000-7000-8000-000000000002', 'Morvain')], nextCursor: 'next' },
     })
-    expect(wrapper.get('[data-testid="campaign-list"]').text()).toContain('Strahd')
+    expect(wrapper.get('[data-testid="campaign-list"]').text()).toContain('Morvain')
     expect(wrapper.text()).toContain('2 members · 2024 rules')
     await wrapper.get('button.g-button').trigger('click')
     await flushPromises()
@@ -70,12 +70,12 @@ describe('campaign list', () => {
     })
     const submit = wrapper.get('[data-testid="campaign-create"] button[type="submit"]')
     expect(submit.attributes('disabled')).toBeDefined()
-    await wrapper.get('[data-testid="campaign-name"]').setValue(' Strahd ')
+    await wrapper.get('[data-testid="campaign-name"]').setValue(' Morvain ')
     await wrapper.get('[data-testid="campaign-display-name"]').setValue('Joris')
     await wrapper.get('[data-testid="campaign-create"] select').setValue('srd-2014')
     await wrapper.get('[data-testid="campaign-create"]').trigger('submit')
     await flushPromises()
-    expect(seen.find((s) => s.method === 'POST')?.body).toEqual({ name: 'Strahd', displayName: 'Joris', ruleset: 'srd-2014' })
+    expect(seen.find((s) => s.method === 'POST')?.body).toEqual({ name: 'Morvain', displayName: 'Joris', ruleset: 'srd-2014' })
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign') }, { timeout: 5000 })
   })
 
@@ -83,7 +83,7 @@ describe('campaign list', () => {
     const { wrapper } = await mountApp('/campaigns', {
       '/api/v1/campaigns': (_url, req) => (req.method === 'POST' ? problem(422)() : { items: [] }),
     })
-    await wrapper.get('[data-testid="campaign-name"]').setValue('Strahd')
+    await wrapper.get('[data-testid="campaign-name"]').setValue('Morvain')
     await wrapper.get('[data-testid="campaign-display-name"]').setValue('Joris')
     await wrapper.get('[data-testid="campaign-create"]').trigger('submit')
     await flushPromises()
@@ -115,7 +115,7 @@ describe('campaign home', () => {
       ),
       [`/api/v1/campaigns/${ID}`]: () => home('dm'),
     })
-    expect(wrapper.get('h1').text()).toBe('Strahd')
+    expect(wrapper.get('h1').text()).toBe('Morvain')
     expect(wrapper.get('[data-testid="party"]').text()).toContain('Kara (yours)')
     expect(wrapper.find('[data-testid="npcs-link"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="maps-link"]').exists()).toBe(true)
@@ -189,11 +189,11 @@ describe('join', () => {
   it('previews the invite and joins as a Player', async () => {
     const { seen, record } = recorder()
     const { wrapper, router } = await mountApp(`/join#${token}`, {
-      '/api/v1/invites/preview': record(() => ({ campaignName: 'Strahd', invitedBy: 'Joris' })),
+      '/api/v1/invites/preview': record(() => ({ campaignName: 'Morvain', invitedBy: 'Joris' })),
       '/api/v1/invites/accept': record(() => ({ id: ID })),
       [`/api/v1/campaigns/${ID}`]: () => home('player'),
     })
-    expect(wrapper.get('[data-testid="join-form"]').text()).toContain('Joris invites you to Strahd')
+    expect(wrapper.get('[data-testid="join-form"]').text()).toContain('Joris invites you to Morvain')
     await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="join-display-name"]').setValue(' Ireena ')
     await wrapper.get('[data-testid="join-form"]').trigger('submit')
@@ -211,7 +211,7 @@ describe('join', () => {
     expect(expired.wrapper.find('[data-testid="invite-invalid"]').exists()).toBe(true)
     document.body.innerHTML = ''
     const failing = await mountApp(`/join#${token}`, {
-      '/api/v1/invites/preview': () => ({ campaignName: 'Strahd', invitedBy: 'Joris' }),
+      '/api/v1/invites/preview': () => ({ campaignName: 'Morvain', invitedBy: 'Joris' }),
       '/api/v1/invites/accept': problem(404),
     })
     await failing.wrapper.get('[data-testid="join-display-name"]').setValue('Ireena')
@@ -231,7 +231,7 @@ describe('table settings', () => {
       [`/api/v1/campaigns/${ID}`]: async (_u, req) => {
         if (req.method === 'PATCH') {
           sent.push(await req.json())
-          return { ...summary(ID, 'Strahd', { myRole: 'dm' }), reactionTimeoutS: 5 }
+          return { ...summary(ID, 'Morvain', { myRole: 'dm' }), reactionTimeoutS: 5 }
         }
         return { ...home('dm'), reactionTimeoutS: 20 }
       },

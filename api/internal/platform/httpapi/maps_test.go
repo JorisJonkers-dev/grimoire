@@ -94,7 +94,7 @@ func TestMapsOverHTTP(t *testing.T) {
 
 type brokenMaps struct{ err error }
 
-func (b brokenMaps) Upload(context.Context, caller.Caller, uuid.UUID, string, []byte) (playdomain.Map, error) {
+func (b brokenMaps) Upload(context.Context, caller.Caller, uuid.UUID, string, string, []byte) (playdomain.Map, error) {
 	return playdomain.Map{}, b.err
 }
 

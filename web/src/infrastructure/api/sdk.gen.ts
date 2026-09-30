@@ -862,7 +862,7 @@ export const endSession = <ThrowOnError extends boolean = false>(options: Option
 /**
  * List maps
  *
- * The Campaign's local Maps. DM only.
+ * The Campaign's local and world Maps. DM only.
  */
 export const listMaps = <ThrowOnError extends boolean = false>(options: Options<ListMapsData, ThrowOnError>): RequestResult<ListMapsResponses, ListMapsErrors, ThrowOnError> => (options.client ?? client).get<ListMapsResponses, ListMapsErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({

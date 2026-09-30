@@ -6122,6 +6122,11 @@ type LiveCommand struct {
 	Scene       OptTableScene         `json:"scene"`
 	Title       OptString             `json:"title"`
 	Body        OptString             `json:"body"`
+	NodeId      OptID                 `json:"nodeId"`
+	ToNodeId    OptID                 `json:"toNodeId"`
+	RouteId     OptID                 `json:"routeId"`
+	DistanceMi  OptInt32              `json:"distanceMi"`
+	Pace        OptTravelPace         `json:"pace"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -6334,6 +6339,31 @@ func (s *LiveCommand) GetBody() OptString {
 	return s.Body
 }
 
+// GetNodeId returns the value of NodeId.
+func (s *LiveCommand) GetNodeId() OptID {
+	return s.NodeId
+}
+
+// GetToNodeId returns the value of ToNodeId.
+func (s *LiveCommand) GetToNodeId() OptID {
+	return s.ToNodeId
+}
+
+// GetRouteId returns the value of RouteId.
+func (s *LiveCommand) GetRouteId() OptID {
+	return s.RouteId
+}
+
+// GetDistanceMi returns the value of DistanceMi.
+func (s *LiveCommand) GetDistanceMi() OptInt32 {
+	return s.DistanceMi
+}
+
+// GetPace returns the value of Pace.
+func (s *LiveCommand) GetPace() OptTravelPace {
+	return s.Pace
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6544,6 +6574,31 @@ func (s *LiveCommand) SetBody(val OptString) {
 	s.Body = val
 }
 
+// SetNodeId sets the value of NodeId.
+func (s *LiveCommand) SetNodeId(val OptID) {
+	s.NodeId = val
+}
+
+// SetToNodeId sets the value of ToNodeId.
+func (s *LiveCommand) SetToNodeId(val OptID) {
+	s.ToNodeId = val
+}
+
+// SetRouteId sets the value of RouteId.
+func (s *LiveCommand) SetRouteId(val OptID) {
+	s.RouteId = val
+}
+
+// SetDistanceMi sets the value of DistanceMi.
+func (s *LiveCommand) SetDistanceMi(val OptInt32) {
+	s.DistanceMi = val
+}
+
+// SetPace sets the value of Pace.
+func (s *LiveCommand) SetPace(val OptTravelPace) {
+	s.Pace = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6580,6 +6635,13 @@ const (
 	LiveCommandKindTableScene     LiveCommandKind = "table_scene"
 	LiveCommandKindTableBlackout  LiveCommandKind = "table_blackout"
 	LiveCommandKindPing           LiveCommandKind = "ping"
+	LiveCommandKindSetWorld       LiveCommandKind = "set_world"
+	LiveCommandKindAddNode        LiveCommandKind = "add_node"
+	LiveCommandKindAddRoute       LiveCommandKind = "add_route"
+	LiveCommandKindRemoveNode     LiveCommandKind = "remove_node"
+	LiveCommandKindRemoveRoute    LiveCommandKind = "remove_route"
+	LiveCommandKindPlaceParty     LiveCommandKind = "place_party"
+	LiveCommandKindTravel         LiveCommandKind = "travel"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6618,6 +6680,13 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindTableScene,
 		LiveCommandKindTableBlackout,
 		LiveCommandKindPing,
+		LiveCommandKindSetWorld,
+		LiveCommandKindAddNode,
+		LiveCommandKindAddRoute,
+		LiveCommandKindRemoveNode,
+		LiveCommandKindRemoveRoute,
+		LiveCommandKindPlaceParty,
+		LiveCommandKindTravel,
 	}
 }
 
@@ -6689,6 +6758,20 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindTableBlackout:
 		return []byte(s), nil
 	case LiveCommandKindPing:
+		return []byte(s), nil
+	case LiveCommandKindSetWorld:
+		return []byte(s), nil
+	case LiveCommandKindAddNode:
+		return []byte(s), nil
+	case LiveCommandKindAddRoute:
+		return []byte(s), nil
+	case LiveCommandKindRemoveNode:
+		return []byte(s), nil
+	case LiveCommandKindRemoveRoute:
+		return []byte(s), nil
+	case LiveCommandKindPlaceParty:
+		return []byte(s), nil
+	case LiveCommandKindTravel:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6796,6 +6879,27 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindPing:
 		*s = LiveCommandKindPing
+		return nil
+	case LiveCommandKindSetWorld:
+		*s = LiveCommandKindSetWorld
+		return nil
+	case LiveCommandKindAddNode:
+		*s = LiveCommandKindAddNode
+		return nil
+	case LiveCommandKindAddRoute:
+		*s = LiveCommandKindAddRoute
+		return nil
+	case LiveCommandKindRemoveNode:
+		*s = LiveCommandKindRemoveNode
+		return nil
+	case LiveCommandKindRemoveRoute:
+		*s = LiveCommandKindRemoveRoute
+		return nil
+	case LiveCommandKindPlaceParty:
+		*s = LiveCommandKindPlaceParty
+		return nil
+	case LiveCommandKindTravel:
+		*s = LiveCommandKindTravel
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -8128,6 +8232,115 @@ func (s *LiveTokenHealth) UnmarshalText(data []byte) error {
 	}
 }
 
+// One Travel Leg the party made this Session.
+// Ref: #/components/schemas/LiveTravelLeg
+type LiveTravelLeg struct {
+	From       string     `json:"from"`
+	To         string     `json:"to"`
+	Pace       TravelPace `json:"pace"`
+	DistanceMi int32      `json:"distanceMi"`
+	Minutes    int32      `json:"minutes"`
+	Days       int32      `json:"days"`
+}
+
+// GetFrom returns the value of From.
+func (s *LiveTravelLeg) GetFrom() string {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *LiveTravelLeg) GetTo() string {
+	return s.To
+}
+
+// GetPace returns the value of Pace.
+func (s *LiveTravelLeg) GetPace() TravelPace {
+	return s.Pace
+}
+
+// GetDistanceMi returns the value of DistanceMi.
+func (s *LiveTravelLeg) GetDistanceMi() int32 {
+	return s.DistanceMi
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *LiveTravelLeg) GetMinutes() int32 {
+	return s.Minutes
+}
+
+// GetDays returns the value of Days.
+func (s *LiveTravelLeg) GetDays() int32 {
+	return s.Days
+}
+
+// SetFrom sets the value of From.
+func (s *LiveTravelLeg) SetFrom(val string) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *LiveTravelLeg) SetTo(val string) {
+	s.To = val
+}
+
+// SetPace sets the value of Pace.
+func (s *LiveTravelLeg) SetPace(val TravelPace) {
+	s.Pace = val
+}
+
+// SetDistanceMi sets the value of DistanceMi.
+func (s *LiveTravelLeg) SetDistanceMi(val int32) {
+	s.DistanceMi = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *LiveTravelLeg) SetMinutes(val int32) {
+	s.Minutes = val
+}
+
+// SetDays sets the value of Days.
+func (s *LiveTravelLeg) SetDays(val int32) {
+	s.Days = val
+}
+
+// How long a route takes at one pace, in minutes on the road and the travel days they span.
+// Ref: #/components/schemas/LiveTravelPlan
+type LiveTravelPlan struct {
+	Pace    TravelPace `json:"pace"`
+	Minutes int32      `json:"minutes"`
+	Days    int32      `json:"days"`
+}
+
+// GetPace returns the value of Pace.
+func (s *LiveTravelPlan) GetPace() TravelPace {
+	return s.Pace
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *LiveTravelPlan) GetMinutes() int32 {
+	return s.Minutes
+}
+
+// GetDays returns the value of Days.
+func (s *LiveTravelPlan) GetDays() int32 {
+	return s.Days
+}
+
+// SetPace sets the value of Pace.
+func (s *LiveTravelPlan) SetPace(val TravelPace) {
+	s.Pace = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *LiveTravelPlan) SetMinutes(val int32) {
+	s.Minutes = val
+}
+
+// SetDays sets the value of Days.
+func (s *LiveTravelPlan) SetDays(val int32) {
+	s.Days = val
+}
+
 // A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
 // change, and a view whose seq is not the next one means resync. A walk's view carries the views along
 // the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
@@ -8360,6 +8573,7 @@ type LiveView struct {
 	Elevation []LiveElevation `json:"elevation"`
 	Area      OptLiveArea     `json:"area"`
 	Table     OptLiveTable    `json:"table"`
+	World     OptLiveWorld    `json:"world"`
 	Walls     []HexCoord      `json:"walls"`
 	Lights    []LiveLight     `json:"lights"`
 	Ambient   OptAmbientLight `json:"ambient"`
@@ -8428,6 +8642,11 @@ func (s *LiveView) GetArea() OptLiveArea {
 // GetTable returns the value of Table.
 func (s *LiveView) GetTable() OptLiveTable {
 	return s.Table
+}
+
+// GetWorld returns the value of World.
+func (s *LiveView) GetWorld() OptLiveWorld {
+	return s.World
 }
 
 // GetWalls returns the value of Walls.
@@ -8510,6 +8729,11 @@ func (s *LiveView) SetTable(val OptLiveTable) {
 	s.Table = val
 }
 
+// SetWorld sets the value of World.
+func (s *LiveView) SetWorld(val OptLiveWorld) {
+	s.World = val
+}
+
 // SetWalls sets the value of Walls.
 func (s *LiveView) SetWalls(val []HexCoord) {
 	s.Walls = val
@@ -8525,11 +8749,193 @@ func (s *LiveView) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
 }
 
+// The world map the party travels. The DM gets every location and route; players and the Table get the
+// locations the party has seen or can reach from where it stands, and the routes between them.
+// Ref: #/components/schemas/LiveWorld
+type LiveWorld struct {
+	Map         LiveMap          `json:"map"`
+	Revealed    []HexCoord       `json:"revealed"`
+	Nodes       []LiveWorldNode  `json:"nodes"`
+	Routes      []LiveWorldRoute `json:"routes"`
+	PartyNodeId OptID            `json:"partyNodeId"`
+	Legs        []LiveTravelLeg  `json:"legs"`
+}
+
+// GetMap returns the value of Map.
+func (s *LiveWorld) GetMap() LiveMap {
+	return s.Map
+}
+
+// GetRevealed returns the value of Revealed.
+func (s *LiveWorld) GetRevealed() []HexCoord {
+	return s.Revealed
+}
+
+// GetNodes returns the value of Nodes.
+func (s *LiveWorld) GetNodes() []LiveWorldNode {
+	return s.Nodes
+}
+
+// GetRoutes returns the value of Routes.
+func (s *LiveWorld) GetRoutes() []LiveWorldRoute {
+	return s.Routes
+}
+
+// GetPartyNodeId returns the value of PartyNodeId.
+func (s *LiveWorld) GetPartyNodeId() OptID {
+	return s.PartyNodeId
+}
+
+// GetLegs returns the value of Legs.
+func (s *LiveWorld) GetLegs() []LiveTravelLeg {
+	return s.Legs
+}
+
+// SetMap sets the value of Map.
+func (s *LiveWorld) SetMap(val LiveMap) {
+	s.Map = val
+}
+
+// SetRevealed sets the value of Revealed.
+func (s *LiveWorld) SetRevealed(val []HexCoord) {
+	s.Revealed = val
+}
+
+// SetNodes sets the value of Nodes.
+func (s *LiveWorld) SetNodes(val []LiveWorldNode) {
+	s.Nodes = val
+}
+
+// SetRoutes sets the value of Routes.
+func (s *LiveWorld) SetRoutes(val []LiveWorldRoute) {
+	s.Routes = val
+}
+
+// SetPartyNodeId sets the value of PartyNodeId.
+func (s *LiveWorld) SetPartyNodeId(val OptID) {
+	s.PartyNodeId = val
+}
+
+// SetLegs sets the value of Legs.
+func (s *LiveWorld) SetLegs(val []LiveTravelLeg) {
+	s.Legs = val
+}
+
+// A named location on the world map.
+// Ref: #/components/schemas/LiveWorldNode
+type LiveWorldNode struct {
+	ID   ID     `json:"id"`
+	Name string `json:"name"`
+	Q    int32  `json:"q"`
+	R    int32  `json:"r"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveWorldNode) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LiveWorldNode) GetName() string {
+	return s.Name
+}
+
+// GetQ returns the value of Q.
+func (s *LiveWorldNode) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveWorldNode) GetR() int32 {
+	return s.R
+}
+
+// SetID sets the value of ID.
+func (s *LiveWorldNode) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveWorldNode) SetName(val string) {
+	s.Name = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveWorldNode) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveWorldNode) SetR(val int32) {
+	s.R = val
+}
+
+// A route between two locations, travelled either way, with how long it takes at each pace.
+// Ref: #/components/schemas/LiveWorldRoute
+type LiveWorldRoute struct {
+	ID         ID               `json:"id"`
+	FromNodeId ID               `json:"fromNodeId"`
+	ToNodeId   ID               `json:"toNodeId"`
+	DistanceMi int32            `json:"distanceMi"`
+	Plans      []LiveTravelPlan `json:"plans"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveWorldRoute) GetID() ID {
+	return s.ID
+}
+
+// GetFromNodeId returns the value of FromNodeId.
+func (s *LiveWorldRoute) GetFromNodeId() ID {
+	return s.FromNodeId
+}
+
+// GetToNodeId returns the value of ToNodeId.
+func (s *LiveWorldRoute) GetToNodeId() ID {
+	return s.ToNodeId
+}
+
+// GetDistanceMi returns the value of DistanceMi.
+func (s *LiveWorldRoute) GetDistanceMi() int32 {
+	return s.DistanceMi
+}
+
+// GetPlans returns the value of Plans.
+func (s *LiveWorldRoute) GetPlans() []LiveTravelPlan {
+	return s.Plans
+}
+
+// SetID sets the value of ID.
+func (s *LiveWorldRoute) SetID(val ID) {
+	s.ID = val
+}
+
+// SetFromNodeId sets the value of FromNodeId.
+func (s *LiveWorldRoute) SetFromNodeId(val ID) {
+	s.FromNodeId = val
+}
+
+// SetToNodeId sets the value of ToNodeId.
+func (s *LiveWorldRoute) SetToNodeId(val ID) {
+	s.ToNodeId = val
+}
+
+// SetDistanceMi sets the value of DistanceMi.
+func (s *LiveWorldRoute) SetDistanceMi(val int32) {
+	s.DistanceMi = val
+}
+
+// SetPlans sets the value of Plans.
+func (s *LiveWorldRoute) SetPlans(val []LiveTravelPlan) {
+	s.Plans = val
+}
+
 // An uploaded Map and its hex calibration.
 // Ref: #/components/schemas/LocalMap
 type LocalMap struct {
 	ID        ID           `json:"id"`
 	Name      string       `json:"name"`
+	Kind      MapKind      `json:"kind"`
 	Width     int32        `json:"width"`
 	Height    int32        `json:"height"`
 	HexSizePx float64      `json:"hexSizePx"`
@@ -8547,6 +8953,11 @@ func (s *LocalMap) GetID() ID {
 // GetName returns the value of Name.
 func (s *LocalMap) GetName() string {
 	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *LocalMap) GetKind() MapKind {
+	return s.Kind
 }
 
 // GetWidth returns the value of Width.
@@ -8592,6 +9003,11 @@ func (s *LocalMap) SetID(val ID) {
 // SetName sets the value of Name.
 func (s *LocalMap) SetName(val string) {
 	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LocalMap) SetKind(val MapKind) {
+	s.Kind = val
 }
 
 // SetWidth sets the value of Width.
@@ -8739,6 +9155,49 @@ func (s *MapEdit) SetOriginY(val float64) {
 // SetAmbient sets the value of Ambient.
 func (s *MapEdit) SetAmbient(val AmbientLight) {
 	s.Ambient = val
+}
+
+// A local tactical map, or a world map of locations and routes.
+// Ref: #/components/schemas/MapKind
+type MapKind string
+
+const (
+	MapKindLocal MapKind = "local"
+	MapKindWorld MapKind = "world"
+)
+
+// AllValues returns all MapKind values.
+func (MapKind) AllValues() []MapKind {
+	return []MapKind{
+		MapKindLocal,
+		MapKindWorld,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MapKind) MarshalText() ([]byte, error) {
+	switch s {
+	case MapKindLocal:
+		return []byte(s), nil
+	case MapKindWorld:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MapKind) UnmarshalText(data []byte) error {
+	switch MapKind(data) {
+	case MapKindLocal:
+		*s = MapKindLocal
+		return nil
+	case MapKindWorld:
+		*s = MapKindWorld
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // The authenticated account.
@@ -10581,6 +11040,98 @@ func (o OptLiveView) Or(d LiveView) LiveView {
 	return d
 }
 
+// NewOptLiveWorld returns new OptLiveWorld with value set to v.
+func NewOptLiveWorld(v LiveWorld) OptLiveWorld {
+	return OptLiveWorld{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveWorld is optional LiveWorld.
+type OptLiveWorld struct {
+	Value LiveWorld
+	Set   bool
+}
+
+// IsSet returns true if OptLiveWorld was set.
+func (o OptLiveWorld) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveWorld) Reset() {
+	var v LiveWorld
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveWorld) SetTo(v LiveWorld) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveWorld) Get() (v LiveWorld, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveWorld) Or(d LiveWorld) LiveWorld {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMapKind returns new OptMapKind with value set to v.
+func NewOptMapKind(v MapKind) OptMapKind {
+	return OptMapKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMapKind is optional MapKind.
+type OptMapKind struct {
+	Value MapKind
+	Set   bool
+}
+
+// IsSet returns true if OptMapKind was set.
+func (o OptMapKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMapKind) Reset() {
+	var v MapKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMapKind) SetTo(v MapKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMapKind) Get() (v MapKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMapKind) Or(d MapKind) MapKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNamedRef returns new OptNamedRef with value set to v.
 func NewOptNamedRef(v NamedRef) OptNamedRef {
 	return OptNamedRef{
@@ -11035,6 +11586,52 @@ func (o OptTokenKind) Get() (v TokenKind, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptTokenKind) Or(d TokenKind) TokenKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptTravelPace returns new OptTravelPace with value set to v.
+func NewOptTravelPace(v TravelPace) OptTravelPace {
+	return OptTravelPace{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTravelPace is optional TravelPace.
+type OptTravelPace struct {
+	Value TravelPace
+	Set   bool
+}
+
+// IsSet returns true if OptTravelPace was set.
+func (o OptTravelPace) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTravelPace) Reset() {
+	var v TravelPace
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTravelPace) SetTo(v TravelPace) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTravelPace) Get() (v TravelPace, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTravelPace) Or(d TravelPace) TravelPace {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -13832,6 +14429,57 @@ func (s *TokenKind) UnmarshalText(data []byte) error {
 		return nil
 	case TokenKindObject:
 		*s = TokenKindObject
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// How fast the party travels overland; slow, normal and fast cover 2, 3 and 4 miles an hour for 8
+// hours a day.
+// Ref: #/components/schemas/TravelPace
+type TravelPace string
+
+const (
+	TravelPaceSlow   TravelPace = "slow"
+	TravelPaceNormal TravelPace = "normal"
+	TravelPaceFast   TravelPace = "fast"
+)
+
+// AllValues returns all TravelPace values.
+func (TravelPace) AllValues() []TravelPace {
+	return []TravelPace{
+		TravelPaceSlow,
+		TravelPaceNormal,
+		TravelPaceFast,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TravelPace) MarshalText() ([]byte, error) {
+	switch s {
+	case TravelPaceSlow:
+		return []byte(s), nil
+	case TravelPaceNormal:
+		return []byte(s), nil
+	case TravelPaceFast:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TravelPace) UnmarshalText(data []byte) error {
+	switch TravelPace(data) {
+	case TravelPaceSlow:
+		*s = TravelPaceSlow
+		return nil
+	case TravelPaceNormal:
+		*s = TravelPaceNormal
+		return nil
+	case TravelPaceFast:
+		*s = TravelPaceFast
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

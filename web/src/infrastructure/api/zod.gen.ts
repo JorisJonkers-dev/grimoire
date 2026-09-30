@@ -538,6 +538,57 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * How fast the party travels overland; slow, normal and fast cover 2, 3 and 4 miles an hour for 8 hours a day.
+ */
+export const zTravelPace = z.enum([
+    'slow',
+    'normal',
+    'fast'
+]);
+
+/**
+ * A named location on the world map.
+ */
+export const zLiveWorldNode = z.object({
+    id: zId,
+    name: z.string().max(40),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500)
+});
+
+/**
+ * How long a route takes at one pace, in minutes on the road and the travel days they span.
+ */
+export const zLiveTravelPlan = z.object({
+    pace: zTravelPace,
+    minutes: z.int().gte(0).lte(100000),
+    days: z.int().gte(0).lte(1000)
+});
+
+/**
+ * A route between two locations, travelled either way, with how long it takes at each pace.
+ */
+export const zLiveWorldRoute = z.object({
+    id: zId,
+    fromNodeId: zId,
+    toNodeId: zId,
+    distanceMi: z.int().gte(1).lte(2000),
+    plans: z.array(zLiveTravelPlan).max(3)
+});
+
+/**
+ * One Travel Leg the party made this Session.
+ */
+export const zLiveTravelLeg = z.object({
+    from: z.string().max(40),
+    to: z.string().max(40),
+    pace: zTravelPace,
+    distanceMi: z.int().gte(1).lte(2000),
+    minutes: z.int().gte(0).lte(100000),
+    days: z.int().gte(0).lte(1000)
+});
+
+/**
  * How the Table Display's camera moves.
  */
 export const zTableCamera = z.enum([
@@ -762,6 +813,11 @@ export const zLivePath = z.object({
 });
 
 /**
+ * A local tactical map, or a world map of locations and routes.
+ */
+export const zMapKind = z.enum(['local', 'world']);
+
+/**
  * The light that fills a Map everywhere.
  */
 export const zAmbientLight = z.enum([
@@ -783,6 +839,18 @@ export const zLiveMap = z.object({
     originX: z.number().gte(-100000).lte(100000),
     originY: z.number().gte(-100000).lte(100000),
     imageVersion: z.int().gte(0).lte(1000000)
+});
+
+/**
+ * The world map the party travels. The DM gets every location and route; players and the Table get the locations the party has seen or can reach from where it stands, and the routes between them.
+ */
+export const zLiveWorld = z.object({
+    map: zLiveMap,
+    revealed: z.array(zHexCoord).max(100000),
+    nodes: z.array(zLiveWorldNode).max(1000),
+    routes: z.array(zLiveWorldRoute).max(5000),
+    partyNodeId: zId.optional(),
+    legs: z.array(zLiveTravelLeg).max(500)
 });
 
 /**
@@ -828,6 +896,7 @@ export const zLiveView = z.object({
     elevation: z.array(zLiveElevation).max(100000).optional(),
     area: zLiveArea.optional(),
     table: zLiveTable.optional(),
+    world: zLiveWorld.optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -865,6 +934,7 @@ export const zLiveUpdate = z.object({
 export const zLocalMap = z.object({
     id: zId,
     name: z.string().max(80),
+    kind: zMapKind,
     width: z.int().gte(1).lte(36000000),
     height: z.int().gte(1).lte(36000000),
     hexSizePx: z.number().gte(8).lte(400),
@@ -1069,7 +1139,14 @@ export const zLiveCommand = z.object({
         'table_camera',
         'table_scene',
         'table_blackout',
-        'ping'
+        'ping',
+        'set_world',
+        'add_node',
+        'add_route',
+        'remove_node',
+        'remove_route',
+        'place_party',
+        'travel'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1121,7 +1198,12 @@ export const zLiveCommand = z.object({
     zoomPct: z.int().gte(50).lte(300).optional(),
     scene: zTableScene.optional(),
     title: z.string().max(80).optional(),
-    body: z.string().max(1000).optional()
+    body: z.string().max(1000).optional(),
+    nodeId: zId.optional(),
+    toNodeId: zId.optional(),
+    routeId: zId.optional(),
+    distanceMi: z.int().gte(1).lte(2000).optional(),
+    pace: zTravelPace.optional()
 });
 
 /**
@@ -2025,7 +2107,8 @@ export const zUploadMapPath = z.object({
 });
 
 export const zUploadMapQuery = z.object({
-    name: z.string().min(1).max(80)
+    name: z.string().min(1).max(80),
+    kind: zMapKind.optional()
 });
 
 /**

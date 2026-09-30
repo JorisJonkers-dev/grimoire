@@ -50,7 +50,7 @@ func service(t *testing.T, repo app.Repository) (*app.Service, *clock) {
 func table(t *testing.T, s *app.Service) domain.Detail {
 	t.Helper()
 	ctx := context.Background()
-	d, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "  Curse of Strahd ", DisplayName: "Joris"})
+	d, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "  Curse of Morvain ", DisplayName: "Joris"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func TestCreateMakesTheCreatorDM(t *testing.T) {
 	ctx := context.Background()
 	s, _ := service(t, pgstore.New(open(t).Pool()))
 	d := table(t, s)
-	if d.Name != "Curse of Strahd" || d.Ruleset != "srd-2024" || d.Me.Role != domain.RoleDM || len(d.Members) != 1 {
+	if d.Name != "Curse of Morvain" || d.Ruleset != "srd-2024" || d.Me.Role != domain.RoleDM || len(d.Members) != 1 {
 		t.Fatalf("created = %+v", d)
 	}
 	home, err := s.Get(ctx, playerCaller, d.ID)
@@ -249,7 +249,7 @@ func TestInvitesExpireAndRevoke(t *testing.T) {
 		t.Fatalf("invite = %+v %v", inv, err)
 	}
 	pv, err := s.PreviewInvite(ctx, inv.Token)
-	if err != nil || pv.CampaignName != "Curse of Strahd" || pv.InvitedBy != "Joris" {
+	if err != nil || pv.CampaignName != "Curse of Morvain" || pv.InvitedBy != "Joris" {
 		t.Fatalf("preview = %+v %v", pv, err)
 	}
 	open, _ := s.Invites(ctx, dmCaller, d.ID)

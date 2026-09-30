@@ -9,7 +9,7 @@ const ID = '0190c7a8-0000-7000-8000-000000000001'
 const ROLL = '0190c7a8-0000-7000-8000-000000000005'
 const member = { id: '0190c7a8-0000-7000-8000-000000000004', displayName: 'Joris', role: 'dm', joinedAt: '2026-09-30T20:00:00Z', isMe: true }
 const campaign = (myRole = 'dm') => ({
-  id: ID, name: 'Strahd', ruleset: 'srd-2024', myRole, memberCount: 1, createdAt: '2026-09-30T20:00:00Z', me: member, members: [member],
+  id: ID, name: 'Morvain', ruleset: 'srd-2024', myRole, memberCount: 1, createdAt: '2026-09-30T20:00:00Z', me: member, members: [member],
 })
 const roller = { id: member.id, name: 'Joris' }
 const roll = (extra: Record<string, unknown> = {}) => ({

@@ -1468,7 +1468,7 @@ paths:
     get:
       operationId: listMaps
       summary: List maps
-      description: The Campaign's local Maps. DM only.
+      description: The Campaign's local and world Maps. DM only.
       tags: [Prep]
       parameters:
         - $ref: "#/components/parameters/CampaignId"
@@ -1505,6 +1505,12 @@ paths:
           required: true
           description: The map's name.
           schema: { type: string, minLength: 1, maxLength: 80 }
+        - name: kind
+          in: query
+          required: false
+          description: Whether this is a local or a world map; local when left out.
+          schema:
+            $ref: "#/components/schemas/MapKind"
       requestBody:
         required: true
         content:
@@ -2836,7 +2842,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2883,6 +2889,84 @@ components:
         scene: { $ref: "#/components/schemas/TableScene" }
         title: { type: string, maxLength: 80 }
         body: { type: string, maxLength: 1000 }
+        nodeId: { $ref: "#/components/schemas/Id" }
+        toNodeId: { $ref: "#/components/schemas/Id" }
+        routeId: { $ref: "#/components/schemas/Id" }
+        distanceMi: { type: integer, format: int32, minimum: 1, maximum: 2000 }
+        pace: { $ref: "#/components/schemas/TravelPace" }
+    TravelPace:
+      type: string
+      description: How fast the party travels overland; slow, normal and fast cover 2, 3 and 4 miles an hour for 8 hours a day.
+      enum: [slow, normal, fast]
+    LiveWorld:
+      type: object
+      description: The world map the party travels. The DM gets every location and route; players and the Table get the locations the party has seen or can reach from where it stands, and the routes between them.
+      additionalProperties: false
+      required: [map, revealed, nodes, routes, legs]
+      properties:
+        map: { $ref: "#/components/schemas/LiveMap" }
+        revealed:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        nodes:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LiveWorldNode" }
+        routes:
+          type: array
+          maxItems: 5000
+          items: { $ref: "#/components/schemas/LiveWorldRoute" }
+        partyNodeId: { $ref: "#/components/schemas/Id" }
+        legs:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/LiveTravelLeg" }
+    LiveWorldNode:
+      type: object
+      description: A named location on the world map.
+      additionalProperties: false
+      required: [id, name, q, r]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 40 }
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+    LiveWorldRoute:
+      type: object
+      description: A route between two locations, travelled either way, with how long it takes at each pace.
+      additionalProperties: false
+      required: [id, fromNodeId, toNodeId, distanceMi, plans]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        fromNodeId: { $ref: "#/components/schemas/Id" }
+        toNodeId: { $ref: "#/components/schemas/Id" }
+        distanceMi: { type: integer, format: int32, minimum: 1, maximum: 2000 }
+        plans:
+          type: array
+          maxItems: 3
+          items: { $ref: "#/components/schemas/LiveTravelPlan" }
+    LiveTravelPlan:
+      type: object
+      description: How long a route takes at one pace, in minutes on the road and the travel days they span.
+      additionalProperties: false
+      required: [pace, minutes, days]
+      properties:
+        pace: { $ref: "#/components/schemas/TravelPace" }
+        minutes: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        days: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+    LiveTravelLeg:
+      type: object
+      description: One Travel Leg the party made this Session.
+      additionalProperties: false
+      required: [from, to, pace, distanceMi, minutes, days]
+      properties:
+        from: { type: string, maxLength: 40 }
+        to: { type: string, maxLength: 40 }
+        pace: { $ref: "#/components/schemas/TravelPace" }
+        distanceMi: { type: integer, format: int32, minimum: 1, maximum: 2000 }
+        minutes: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        days: { type: integer, format: int32, minimum: 0, maximum: 1000 }
     TableCamera:
       type: string
       description: How the Table Display's camera moves.
@@ -3110,6 +3194,10 @@ components:
           maxItems: 61
           items: { $ref: "#/components/schemas/HexCoord" }
         costFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+    MapKind:
+      type: string
+      description: A local tactical map, or a world map of locations and routes.
+      enum: [local, world]
     AmbientLight:
       type: string
       description: The light that fills a Map everywhere.
@@ -3180,6 +3268,7 @@ components:
           items: { $ref: "#/components/schemas/LiveElevation" }
         area: { $ref: "#/components/schemas/LiveArea" }
         table: { $ref: "#/components/schemas/LiveTable" }
+        world: { $ref: "#/components/schemas/LiveWorld" }
         walls:
           type: array
           maxItems: 100000
@@ -3193,10 +3282,11 @@ components:
       type: object
       description: An uploaded Map and its hex calibration.
       additionalProperties: false
-      required: [id, name, width, height, hexSizePx, originX, originY, ambient, imageUrl]
+      required: [id, name, kind, width, height, hexSizePx, originX, originY, ambient, imageUrl]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
+        kind: { $ref: "#/components/schemas/MapKind" }
         width: { type: integer, format: int32, minimum: 1, maximum: 36000000 }
         height: { type: integer, format: int32, minimum: 1, maximum: 36000000 }
         hexSizePx: { type: number, format: double, minimum: 8, maximum: 400 }

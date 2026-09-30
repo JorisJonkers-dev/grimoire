@@ -19,7 +19,7 @@ func TestNPCRevisionsOverHTTP(t *testing.T) {
 	h := realCampaigns(t)
 	id, _ := campaignWithPlayer(t, h)
 	base := "/api/v1/campaigns/" + id + "/npcs"
-	rec := call(h, http.MethodPost, base, "dm", `{"name":"Strahd","title":"Count","dmNotes":"Old","disposition":"hostile"}`)
+	rec := call(h, http.MethodPost, base, "dm", `{"name":"Morvain","title":"Count","dmNotes":"Old","disposition":"hostile"}`)
 	npcID, _ := decode(t, rec)["id"].(string)
 	if rec.Code != http.StatusCreated || npcID == "" {
 		t.Fatalf("create: %d %s", rec.Code, rec.Body.String())
@@ -28,7 +28,7 @@ func TestNPCRevisionsOverHTTP(t *testing.T) {
 	if rec := call(h, http.MethodGet, base, "dm", ""); !strings.Contains(rec.Body.String(), `"title":"Count"`) {
 		t.Fatalf("list: %s", rec.Body.String())
 	}
-	if rec := call(h, http.MethodPut, one, "dm", `{"name":"Strahd","dmNotes":"New","disposition":"neutral"}`); rec.Code != 200 {
+	if rec := call(h, http.MethodPut, one, "dm", `{"name":"Morvain","dmNotes":"New","disposition":"neutral"}`); rec.Code != 200 {
 		t.Fatalf("update: %d %s", rec.Code, rec.Body.String())
 	}
 	rec = call(h, http.MethodGet, one+"/revisions/diff?from=1&to=2", "dm", "")
@@ -49,7 +49,7 @@ func TestDeletedNPCsOverHTTP(t *testing.T) {
 	h := realCampaigns(t)
 	id, _ := campaignWithPlayer(t, h)
 	base := "/api/v1/campaigns/" + id + "/npcs"
-	npcID, _ := decode(t, call(h, http.MethodPost, base, "dm", `{"name":"Strahd","disposition":"hostile"}`))["id"].(string)
+	npcID, _ := decode(t, call(h, http.MethodPost, base, "dm", `{"name":"Morvain","disposition":"hostile"}`))["id"].(string)
 	one := base + "/" + npcID
 	if rec := call(h, http.MethodGet, one, "dm", ""); rec.Code != 200 {
 		t.Fatalf("get: %d", rec.Code)
@@ -58,7 +58,7 @@ func TestDeletedNPCsOverHTTP(t *testing.T) {
 		t.Fatalf("delete: %d", rec.Code)
 	}
 	rec := call(h, http.MethodGet, base+"/deleted", "dm", "")
-	if rec.Code != 200 || !strings.Contains(rec.Body.String(), "Strahd") {
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), "Morvain") {
 		t.Fatalf("deleted: %d %s", rec.Code, rec.Body.String())
 	}
 	if rec := call(h, http.MethodGet, base, "dm", ""); rec.Code != 200 || rec.Body.String() != "[]" {

@@ -239,7 +239,7 @@ type Invoker interface {
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
 	// ListMaps invokes listMaps operation.
 	//
-	// The Campaign's local Maps. DM only.
+	// The Campaign's local and world Maps. DM only.
 	//
 	// GET /api/v1/campaigns/{campaignId}/maps
 	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)
@@ -5397,7 +5397,7 @@ func (c *Client) sendListInvites(ctx context.Context, params ListInvitesParams) 
 
 // ListMaps invokes listMaps operation.
 //
-// The Campaign's local Maps. DM only.
+// The Campaign's local and world Maps. DM only.
 //
 // GET /api/v1/campaigns/{campaignId}/maps
 func (c *Client) ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error) {
@@ -9112,6 +9112,23 @@ func (c *Client) sendUploadMap(ctx context.Context, request UploadMapReq, params
 
 		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
 			return e.EncodeValue(conv.StringToString(params.Name))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "kind" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "kind",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Kind.Get(); ok {
+				return e.EncodeValue(conv.StringToString(string(val)))
+			}
+			return nil
 		}); err != nil {
 			return res, errors.Wrap(err, "encode query")
 		}

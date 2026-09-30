@@ -26,6 +26,8 @@ type Session struct {
 	StartedAt  time.Time
 	EndedAt    time.Time
 	MapID      *MapID
+	// WorldMapID is the world Map the party travels this Session.
+	WorldMapID *MapID
 }
 
 // TokenID identifies a Token.
