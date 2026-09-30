@@ -52,8 +52,11 @@ func build() golden {
 			}
 		}
 		for i := range 40 {
-			x := l.Origin.X - 3*l.Size + float64(i*37%400)/400*6*l.Size
-			y := l.Origin.Y - 3*l.Size + float64(i*53%400)/400*6*l.Size
+			want := hex.Coord{Q: i%7 - 3, R: i/7%7 - 3}
+			centre := l.ToPixel(want)
+			angle := float64(i) * 0.7
+			x := math.Round((centre.X+0.6*l.Size*math.Cos(angle))*1000) / 1000
+			y := math.Round((centre.Y+0.6*l.Size*math.Sin(angle))*1000) / 1000
 			c := l.FromPixel(hex.Point{X: x, Y: y})
 			gl.Picks = append(gl.Picks, goldenPixel{Q: c.Q, R: c.R, X: x, Y: y})
 		}
@@ -69,22 +72,62 @@ func build() golden {
 	return g
 }
 
-// TestGoldenGeometry pins the Go geometry to the fixture the web client is tested against.
+// TestGoldenGeometry pins the Go geometry to the fixture the web client is tested against. It compares
+// values rather than bytes, because floating point differs in the last digits between CPUs.
 func TestGoldenGeometry(t *testing.T) {
-	got, err := json.MarshalIndent(build(), "", "  ")
-	if err != nil {
-		t.Fatal(err)
-	}
 	if *update {
+		got, err := json.MarshalIndent(build(), "", "  ")
+		if err != nil {
+			t.Fatal(err)
+		}
 		if err := os.WriteFile(fixture, append(got, '\n'), 0o600); err != nil {
 			t.Fatal(err)
 		}
 	}
-	want, err := os.ReadFile(fixture)
+	raw, err := os.ReadFile(fixture)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(want) != string(got)+"\n" {
-		t.Fatal("geometry changed; rerun with -update and check the web client agrees")
+	var want golden
+	if err := json.Unmarshal(raw, &want); err != nil {
+		t.Fatal(err)
+	}
+	for _, gl := range want.Layouts {
+		checkLayout(t, gl)
+	}
+	for _, gl := range want.Lines {
+		checkLine(t, gl)
+	}
+}
+
+func checkLayout(t *testing.T, gl goldenLayout) {
+	t.Helper()
+	l := hex.Layout{Size: gl.Size, Origin: hex.Point{X: gl.OriginX, Y: gl.OriginY}}
+	for _, p := range gl.Centres {
+		got := l.ToPixel(hex.Coord{Q: p.Q, R: p.R})
+		if math.Abs(got.X-p.X) > 1e-3 || math.Abs(got.Y-p.Y) > 1e-3 {
+			t.Errorf("centre of %d,%d = %v, fixture %v,%v", p.Q, p.R, got, p.X, p.Y)
+		}
+	}
+	for _, p := range gl.Picks {
+		if got := l.FromPixel(hex.Point{X: p.X, Y: p.Y}); got != (hex.Coord{Q: p.Q, R: p.R}) {
+			t.Errorf("pick %v,%v = %v, fixture %d,%d", p.X, p.Y, got, p.Q, p.R)
+		}
+	}
+}
+
+func checkLine(t *testing.T, gl goldenLine) {
+	t.Helper()
+	{
+		a, b := hex.Coord{Q: gl.From[0], R: gl.From[1]}, hex.Coord{Q: gl.To[0], R: gl.To[1]}
+		line := hex.Line(a, b)
+		if hex.Distance(a, b) != gl.Distance || len(line) != len(gl.Hexes) {
+			t.Fatalf("line %v-%v = %v", a, b, line)
+		}
+		for i, c := range line {
+			if [2]int{c.Q, c.R} != gl.Hexes[i] {
+				t.Errorf("line %v-%v step %d = %v, fixture %v", a, b, i, c, gl.Hexes[i])
+			}
+		}
 	}
 }
