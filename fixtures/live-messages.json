@@ -265,6 +265,53 @@
       "r": 0,
       "hidden": false,
       "manualId": "0190c7a8-0000-7000-8000-000000000018"
+    },
+    {
+      "nonce": "n30",
+      "kind": "preview_area",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 3,
+      "r": 0,
+      "hidden": false,
+      "effect": "fireball"
+    },
+    {
+      "nonce": "n31",
+      "kind": "cast_area",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 3,
+      "r": 0,
+      "hidden": false,
+      "effect": "fireball"
+    },
+    {
+      "nonce": "n32",
+      "kind": "paint_surface",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "hexes": [
+        {
+          "q": 1,
+          "r": 1
+        }
+      ],
+      "rounds": 10,
+      "surface": "grease"
+    },
+    {
+      "nonce": "n33",
+      "kind": "set_elevation",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "hexes": [
+        {
+          "q": 1,
+          "r": 1
+        }
+      ],
+      "elevationFt": 10
     }
   ],
   "updates": [
@@ -411,7 +458,39 @@
             "effect": "Hold Person",
             "dc": 13
           }
-        ]
+        ],
+        "surfaces": [
+          {
+            "q": 1,
+            "r": 1,
+            "kind": "grease",
+            "roundsLeft": 9
+          }
+        ],
+        "elevation": [
+          {
+            "q": 1,
+            "r": 1,
+            "elevationFt": 10
+          }
+        ],
+        "area": {
+          "casterId": "0190c7a8-0000-7000-8000-00000000000a",
+          "name": "Fireball",
+          "hexes": [
+            {
+              "q": 3,
+              "r": 0
+            }
+          ],
+          "damageRollId": "0190c7a8-0000-7000-8000-000000000020",
+          "saves": [
+            {
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "rollId": "0190c7a8-0000-7000-8000-000000000021"
+            }
+          ]
+        }
       }
     },
     {
@@ -573,7 +652,39 @@
             "effect": "Hold Person",
             "dc": 13
           }
-        ]
+        ],
+        "surfaces": [
+          {
+            "q": 1,
+            "r": 1,
+            "kind": "grease",
+            "roundsLeft": 9
+          }
+        ],
+        "elevation": [
+          {
+            "q": 1,
+            "r": 1,
+            "elevationFt": 10
+          }
+        ],
+        "area": {
+          "casterId": "0190c7a8-0000-7000-8000-00000000000a",
+          "name": "Fireball",
+          "hexes": [
+            {
+              "q": 3,
+              "r": 0
+            }
+          ],
+          "damageRollId": "0190c7a8-0000-7000-8000-000000000020",
+          "saves": [
+            {
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "rollId": "0190c7a8-0000-7000-8000-000000000021"
+            }
+          ]
+        }
       }
     },
     {
@@ -753,7 +864,39 @@
             "effect": "Hold Person",
             "dc": 13
           }
-        ]
+        ],
+        "surfaces": [
+          {
+            "q": 1,
+            "r": 1,
+            "kind": "grease",
+            "roundsLeft": 9
+          }
+        ],
+        "elevation": [
+          {
+            "q": 1,
+            "r": 1,
+            "elevationFt": 10
+          }
+        ],
+        "area": {
+          "casterId": "0190c7a8-0000-7000-8000-00000000000a",
+          "name": "Fireball",
+          "hexes": [
+            {
+              "q": 3,
+              "r": 0
+            }
+          ],
+          "damageRollId": "0190c7a8-0000-7000-8000-000000000020",
+          "saves": [
+            {
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "rollId": "0190c7a8-0000-7000-8000-000000000021"
+            }
+          ]
+        }
       },
       "steps": [
         {
@@ -890,7 +1033,39 @@
               "effect": "Hold Person",
               "dc": 13
             }
-          ]
+          ],
+          "surfaces": [
+            {
+              "q": 1,
+              "r": 1,
+              "kind": "grease",
+              "roundsLeft": 9
+            }
+          ],
+          "elevation": [
+            {
+              "q": 1,
+              "r": 1,
+              "elevationFt": 10
+            }
+          ],
+          "area": {
+            "casterId": "0190c7a8-0000-7000-8000-00000000000a",
+            "name": "Fireball",
+            "hexes": [
+              {
+                "q": 3,
+                "r": 0
+              }
+            ],
+            "damageRollId": "0190c7a8-0000-7000-8000-000000000020",
+            "saves": [
+              {
+                "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+                "rollId": "0190c7a8-0000-7000-8000-000000000021"
+              }
+            ]
+          }
         }
       ]
     },
@@ -912,6 +1087,30 @@
           "Shortbow: +4 to hit",
           "Disadvantage: long range"
         ]
+      }
+    },
+    {
+      "kind": "area_preview",
+      "seq": 7,
+      "nonce": "n30",
+      "area": {
+        "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+        "effect": "fireball",
+        "name": "Fireball",
+        "dc": 13,
+        "hexes": [
+          {
+            "q": 3,
+            "r": 0
+          }
+        ],
+        "targets": [
+          {
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "ally": true
+          }
+        ],
+        "allies": 1
       }
     },
     {

@@ -603,6 +603,103 @@ describe('effects', () => {
   })
 })
 
+describe('areas and terrain', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id, hp: 12, hpMax: 12, attacks: [] }
+  const boss: LiveToken = { ...goblin, ac: 15, hp: 7, hpMax: 7, attacks: [{ name: 'Scimitar', toHit: 4, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d6', damageBonus: 2 }] }
+  const fighter = (t: LiveToken, extra: Record<string, unknown> = {}) => ({
+    id: `${t.id.slice(0, -3)}1${t.id.slice(-2)}`, tokenId: t.id, label: t.label, kind: t.kind, controllerId: t.controllerId,
+    rollId: `${t.id.slice(0, -3)}2${t.id.slice(-2)}`, initiative: 10, rank: 1, acting: false, done: false, action: true, bonusAction: true,
+    reaction: true, movementFt: 30, speedFt: 30, ...extra,
+  })
+  const pending = (id: string) => ({
+    id, purpose: 'Fireball damage', notation: '8d6', requestedBy: 'Joris', roller: { id: member.id, name: 'Joris' }, mine: true, canRoll: true,
+    status: 'pending', groups: [{ index: 0, count: 8, faces: 6, sign: 1 }], dice: Array.from({ length: 8 }, (_, no) => ({ no, group: 0, faces: 6, kept: false })),
+    modifiers: [], createdAt: '2026-09-30T20:00:00Z',
+  })
+  const area = {
+    casterId: boss.id, name: 'Fireball', hexes: [{ q: 1, r: 0 }, { q: 0, r: 0 }], damageRollId: '0190c7a8-0000-7000-8000-000000000071',
+    saves: [{ tokenId: aria.id, rollId: '0190c7a8-0000-7000-8000-000000000072' }, { tokenId: boss.id, rollId: '0190c7a8-0000-7000-8000-000000000073' }],
+  }
+
+  it('lets the DM aim an area spell, see who it catches and cast it', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pending(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const combat = { status: 'active', round: 1, combatants: [fighter(boss, { acting: true }), fighter(aria)] }
+    s.receive(snapshot([aria, boss], 'dm', { combat, surfaces: [{ q: 0, r: 1, kind: 'fire', roundsLeft: 2 }] }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toBe('Hex 0, 1: fire')
+    await wrapper.get('[data-testid="area-spell"]').setValue('fireball')
+    expect(wrapper.get('[data-testid="area-aiming"]').text()).toBe('Tap where the spell goes.')
+    await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'preview_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0 })
+    const preview = { tokenId: boss.id, effect: 'fireball', name: 'Fireball', dc: 13, hexes: area.hexes, targets: [{ tokenId: aria.id, ally: false }, { tokenId: boss.id, ally: true }, { tokenId: '0190c7a8-0000-7000-8000-000000000099', ally: false }], allies: 1 }
+    s.receive({ kind: 'area_preview', seq: 1, area: { ...preview, effect: 'shatter' } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="area-preview"]').exists()).toBe(false)
+    s.receive({ kind: 'area_preview', seq: 1, area: preview })
+    await flushPromises()
+    const card = wrapper.get('[data-testid="area-preview"]')
+    expect(card.get('h2').text()).toBe('Fireball · DC 13')
+    expect(card.get('[data-testid="ally-warning"]').text()).toBe('This catches 1 ally.')
+    expect(card.text()).toContain('Goblin Boss (ally)')
+    expect(card.text()).toContain('Someone')
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in the area')
+    await expectAccessible(wrapper.element as Element)
+    await card.get('[data-testid="cancel-area"]').trigger('click')
+    expect(wrapper.find('[data-testid="area-preview"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="area-spell"]').setValue('')
+    expect(wrapper.find('[data-testid="area-aiming"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="area-spell"]').setValue('fireball')
+    await wrapper.get('[data-hex="1,0"]').trigger('click')
+    s.receive({ kind: 'area_preview', seq: 1, area: { ...preview, allies: 2, targets: [] } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="ally-warning"]').text()).toBe('This catches 2 allies.')
+    expect(wrapper.find('[data-testid="area-empty"]').exists()).toBe(true)
+    await wrapper.get('[data-testid="confirm-area"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'cast_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0 })
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat, area } })
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(2)
+
+    await wrapper.get('[data-testid="tool-surface"]').setValue(true)
+    await wrapper.get('[data-testid="surface-kind"]').setValue('grease')
+    await wrapper.get('[data-testid="surface-rounds"]').setValue(3)
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat } })
+    await flushPromises()
+    await wrapper.get('[data-hex="-1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'paint_surface', hexes: [{ q: -1, r: 1 }], surface: 'grease', rounds: 3 })
+    await wrapper.get('[data-testid="surface-kind"]').setValue('')
+    await wrapper.get('[data-testid="surface-rounds"]').setValue(0)
+    await wrapper.get('[data-hex="-1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toEqual({ kind: 'paint_surface', hexes: [{ q: -1, r: 1 }], q: 0, r: 0, hidden: false, nonce: String(s.sent.length) })
+    await wrapper.get('[data-testid="tool-elevation"]').setValue(true)
+    await wrapper.get('[data-testid="elevation-ft"]').setValue(15)
+    await wrapper.get('[data-hex="-1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'set_elevation', hexes: [{ q: -1, r: 1 }], elevationFt: 15 })
+  })
+
+  it('shows height and surfaces on a map and hands players their own area rolls', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pending(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria, boss], 'party', {
+      map: liveMap, fog: false, visible: [], remembered: [], area,
+      surfaces: [{ q: 1, r: 1, kind: 'ice' }], elevation: [{ q: 1, r: 1, elevationFt: 10 }],
+    }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="1,1"]').attributes('aria-label')).toBe('Hex 1, 1: ice: 10 ft high')
+    expect(wrapper.get('[data-hex="1,1"]').classes()).toContain('cell--surface-ice')
+    expect(wrapper.get('[data-hex="1,0"]').classes()).toContain('cell--area')
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+  })
+})
+
 describe('map geometry', () => {
   it('lists the hexes whose centres fall inside the picture', () => {
     const l = layoutOf(localMap)

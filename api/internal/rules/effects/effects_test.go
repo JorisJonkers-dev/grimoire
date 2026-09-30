@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 )
 
 func TestAttackProfilesFoldBothSides(t *testing.T) {
@@ -65,10 +67,11 @@ func TestManualFallback(t *testing.T) {
 	if got := effects.Instructions("bless", "Bless"); got != nil {
 		t.Fatalf("fully modelled = %v", got)
 	}
-	if got := effects.Automated(); !reflect.DeepEqual(got, []string{"bless", "faerie-fire", "hunters-mark", "prone"}) {
+	want := []string{"bless", "burning-hands", "cone-of-cold", "faerie-fire", "fireball", "grease", "hunters-mark", "lightning-bolt", "prone", "shatter"}
+	if got := effects.Automated(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("automated = %v", got)
 	}
-	if got := effects.Partial(); !reflect.DeepEqual(got, []string{"poisoned"}) {
+	if got := effects.Partial(); !reflect.DeepEqual(got, []string{"poisoned", "thunderwave"}) {
 		t.Fatalf("partial = %v", got)
 	}
 	d, ok := effects.Lookup("bless")
@@ -80,5 +83,29 @@ func TestManualFallback(t *testing.T) {
 	}
 	if d, _ := effects.Lookup("poisoned"); d.Automated() || d.Concentration {
 		t.Fatalf("poisoned = %+v", d)
+	}
+}
+
+func TestAreaSpells(t *testing.T) {
+	t.Parallel()
+	fb, ok := effects.AreaOf("fireball")
+	if !ok || fb.Name != "Fireball" || fb.Area.Shape != hex.SphereArea || fb.Area.SizeFt != 20 || fb.Area.RangeFt != 150 || fb.Save != "dexterity" ||
+		fb.Damage.Dice != "8d6" || fb.Damage.Type != "fire" || !fb.Damage.Half || fb.Condition != "" || fb.Surface.Kind != surface.None || fb.Instructions != nil {
+		t.Fatalf("fireball = %+v", fb)
+	}
+	g, _ := effects.AreaOf("grease")
+	if g.Save != "dexterity" || g.Condition != "prone" || g.Surface.Kind != surface.Grease || g.Surface.Rounds != 10 || g.Damage.Dice != "" {
+		t.Fatalf("grease = %+v", g)
+	}
+	if tw, _ := effects.AreaOf("thunderwave"); len(tw.Instructions) != 1 || tw.Save != "constitution" {
+		t.Fatalf("thunderwave = %+v", tw)
+	}
+	for _, slug := range []string{"bless", "wish"} {
+		if _, ok := effects.AreaOf(slug); ok {
+			t.Errorf("%s is not an area spell", slug)
+		}
+	}
+	if p := effects.ForAttack([]effects.Active{{Slug: "fireball"}}, []effects.Active{{Slug: "grease"}}, "", true); !reflect.DeepEqual(p, effects.AttackProfile{}) {
+		t.Fatalf("areas do nothing to attacks = %+v", p)
 	}
 }

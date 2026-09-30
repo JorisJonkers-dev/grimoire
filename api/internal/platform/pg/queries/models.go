@@ -19,6 +19,7 @@ type CampaignCampaign struct {
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	ReactionTimeoutS int32
+	HighGround       bool
 }
 
 type CampaignCharacter struct {
@@ -87,6 +88,13 @@ type CampaignMap struct {
 	Ambient    string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+}
+
+type CampaignMapElevation struct {
+	MapID       uuid.UUID
+	Q           int32
+	R           int32
+	ElevationFt int32
 }
 
 type CampaignMapLight struct {
@@ -502,6 +510,27 @@ type PlayActiveEffect struct {
 	SaveDc        pgtype.Int4
 }
 
+type PlayAreaCast struct {
+	ID            uuid.UUID
+	SessionID     uuid.UUID
+	CasterTokenID uuid.UUID
+	Spell         string
+	Dc            int32
+	DamageRollID  pgtype.UUID
+}
+
+type PlayAreaHex struct {
+	CastID uuid.UUID
+	Q      int32
+	R      int32
+}
+
+type PlayAreaTarget struct {
+	CastID     uuid.UUID
+	TokenID    uuid.UUID
+	SaveRollID pgtype.UUID
+}
+
 type PlayAttack struct {
 	ID              uuid.UUID
 	CombatID        uuid.UUID
@@ -633,6 +662,14 @@ type PlaySession struct {
 	MapID      pgtype.UUID
 }
 
+type PlaySurface struct {
+	SessionID  uuid.UUID
+	Q          int32
+	R          int32
+	Kind       string
+	RoundsLeft pgtype.Int4
+}
+
 type PlayToken struct {
 	ID                 uuid.UUID
 	SessionID          uuid.UUID
@@ -650,6 +687,7 @@ type PlayToken struct {
 	Intelligence       pgtype.Int4
 	Tactics            string
 	CanShield          bool
+	SpellDc            pgtype.Int4
 }
 
 type PlayTokenAttack struct {

@@ -1,5 +1,5 @@
 import { onBeforeUnmount, reactive } from 'vue'
-import type { LiveAttackPreview, LiveCommand, LivePath, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveAreaPreview, LiveAttackPreview, LiveCommand, LivePath, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
 import { SessionState } from './sessionState'
 
 export type Audience = 'dm' | 'party' | 'table'
@@ -23,6 +23,7 @@ export type LiveState = {
   view: LiveView | null
   path: LivePath | null
   preview: LiveAttackPreview | null
+  areaPreview: LiveAreaPreview | null
   rejection: string
 }
 
@@ -38,7 +39,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -58,6 +59,7 @@ export function useLiveSession(
     play([...state.steps, ...(state.view ? [state.view] : [])])
     view.path = state.path
     view.preview = state.preview
+    view.areaPreview = state.areaPreview
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }

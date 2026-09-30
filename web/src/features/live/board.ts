@@ -1,4 +1,4 @@
-import type { LiveToken } from '@/infrastructure/api/types.gen'
+import type { LiveSurface, LiveToken } from '@/infrastructure/api/types.gen'
 import { type Coord, distance } from '@/shared/hex'
 import type { GridCell } from '@/shared/map/grid'
 
@@ -29,15 +29,31 @@ export function initials(label: string): string {
     .join('')
 }
 
-/** Paints tokens and a walk preview onto the grid; hidden tokens only ever arrive for the DM. */
-export function board(radius: number, tokens: LiveToken[], selected: string | null, path: Coord[] = []): GridCell[] {
-  const at = new Map(tokens.map((t) => [`${String(t.q)},${String(t.r)}`, t]))
-  const route = new Set(path.map((c) => `${String(c.q)},${String(c.r)}`))
+export type Ground = { surfaces?: LiveSurface[]; area?: Coord[] }
+
+/** What lies on a hex besides a token: a Surface, and whether an area spell covers it. */
+export function groundNotes(k: string, surfaces: Map<string, LiveSurface>, area: Set<string>): string[] {
+  const s = surfaces.get(k)
+  return [s ? s.kind : '', area.has(k) ? 'in the area' : ''].filter(Boolean)
+}
+
+/** Paints tokens, a walk preview, Surfaces and an area onto the grid; hidden tokens only ever arrive for the DM. */
+export function board(radius: number, tokens: LiveToken[], selected: string | null, path: Coord[] = [], ground: Ground = {}): GridCell[] {
+  const key = (c: Coord) => `${String(c.q)},${String(c.r)}`
+  const at = new Map(tokens.map((t) => [key(t), t]))
+  const route = new Set(path.map(key))
+  const surfaces = new Map((ground.surfaces ?? []).map((s) => [key(s), s]))
+  const area = new Set((ground.area ?? []).map(key))
   return hexes(radius).map((c) => {
-    const k = `${String(c.q)},${String(c.r)}`
+    const k = key(c)
     const t = at.get(k)
-    if (!t) return route.has(k) ? { ...c, tone: 'path', label: 'on the path' } : c
+    const notes = groundNotes(k, surfaces, area)
+    if (!t) {
+      const tone = route.has(k) ? 'path' : area.has(k) ? 'area' : surfaces.has(k) ? `surface-${surfaces.get(k)?.kind ?? ''}` : undefined
+      const label = [route.has(k) ? 'on the path' : '', ...notes].filter(Boolean).join(', ')
+      return tone ? { ...c, tone, label } : c
+    }
     const tone = t.hidden ? 'hidden' : t.kind === 'party' ? 'ally' : t.kind
-    return { ...c, tone: t.id === selected ? 'selected' : tone, label: describe(t), mark: initials(t.label) }
+    return { ...c, tone: t.id === selected ? 'selected' : tone, label: [describe(t), ...notes].join(', '), mark: initials(t.label) }
   })
 }

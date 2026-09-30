@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 )
 
@@ -210,6 +211,32 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 			roll := running.Rolls[0].ID
 			fx.Saves = []domain.PendingSave{{RollID: roll, Effect: fx.Active[0].ID, DC: 12}}
 			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionEffectApplied, Token: tok, Effects: &fx}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"terrain": func(_ *app.Sessions, repo *pgstore.Store) error {
+			roll := running.Rolls[0].ID
+			cast := &domain.AreaCast{
+				ID: uuid.New(), Caster: tok.ID, Spell: "fireball", DC: 13, DamageRoll: &roll, Hexes: []hex.Coord{{Q: 0, R: 0}},
+				Targets: []domain.AreaTarget{{Token: tok.ID, SaveRoll: &roll}},
+			}
+			w := live.Write{
+				Kind: domain.ActionAreaCast, Token: tok, Cast: cast, SaveCast: true, SaveSurfaces: true,
+				Surfaces: map[hex.Coord]domain.Surface{{Q: 1, R: 1}: {Kind: surface.Fire, RoundsLeft: 2}, {Q: 2, R: 1}: {Kind: surface.Water}},
+			}
+			if _, err := repo.Commit(ctx, live1, nil, w, tb.dmMember(t), dm, time.Now()); err != nil {
+				return err
+			}
+			for _, h := range []int{10, 0} {
+				el := live.Write{Kind: domain.ActionElevationSet, Hexes: []hex.Coord{{Q: 0, R: 0}}, ElevationFt: h}
+				if _, err := repo.Commit(ctx, live1, board, el, tb.dmMember(t), dm, time.Now()); err != nil {
+					return err
+				}
+			}
+			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionAreaResolved, Token: tok, SaveCast: true}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"loadterrain": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, _, err := repo.LoadTerrain(ctx, live1.ID)
 			return err
 		},
 		"loadeffects": func(_ *app.Sessions, repo *pgstore.Store) error {

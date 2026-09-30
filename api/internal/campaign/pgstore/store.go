@@ -48,8 +48,8 @@ func notFound(err error) error {
 	return err
 }
 
-func campaign(id uuid.UUID, name, ruleset string, timeout int32, created time.Time) domain.Campaign {
-	return domain.Campaign{ID: domain.CampaignID(id), Name: name, Ruleset: ruleset, ReactionTimeoutS: int(timeout), CreatedAt: created}
+func campaign(id uuid.UUID, name, ruleset string, timeout int32, highGround bool, created time.Time) domain.Campaign {
+	return domain.Campaign{ID: domain.CampaignID(id), Name: name, Ruleset: ruleset, ReactionTimeoutS: int(timeout), HighGround: highGround, CreatedAt: created}
 }
 
 func member(m queries.CampaignMember) domain.Member {
@@ -75,12 +75,15 @@ func (s *Store) CreateCampaign(ctx context.Context, name, ruleset, subject strin
 	if err != nil {
 		return domain.Campaign{}, err
 	}
-	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.CreatedAt), nil
+	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.HighGround, r.CreatedAt), nil
 }
 
 // UpdateCampaign changes the given fields.
-func (s *Store) UpdateCampaign(ctx context.Context, id domain.CampaignID, name, ruleset *string, timeout *int, now time.Time) (domain.Campaign, error) {
+func (s *Store) UpdateCampaign(ctx context.Context, id domain.CampaignID, name, ruleset *string, timeout *int, highGround *bool, now time.Time) (domain.Campaign, error) {
 	p := queries.UpdateCampaignParams{ID: uuid.UUID(id), Name: optText(name), RulesetPref: optText(ruleset), Now: now}
+	if highGround != nil {
+		p.HighGround = pgtype.Bool{Bool: *highGround, Valid: true}
+	}
 	if timeout != nil {
 		p.ReactionTimeoutS = pgtype.Int4{Int32: int32(*timeout), Valid: true} //nolint:gosec // 3 to 120 seconds
 	}
@@ -88,7 +91,7 @@ func (s *Store) UpdateCampaign(ctx context.Context, id domain.CampaignID, name, 
 	if err != nil {
 		return domain.Campaign{}, notFound(err)
 	}
-	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.CreatedAt), nil
+	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.HighGround, r.CreatedAt), nil
 }
 
 // GetCampaign reads one Campaign.
@@ -97,7 +100,7 @@ func (s *Store) GetCampaign(ctx context.Context, id domain.CampaignID) (domain.C
 	if err != nil {
 		return domain.Campaign{}, notFound(err)
 	}
-	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.CreatedAt), nil
+	return campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.HighGround, r.CreatedAt), nil
 }
 
 // ListCampaigns returns a subject's Campaigns, newest first.
@@ -114,7 +117,7 @@ func (s *Store) ListCampaigns(ctx context.Context, subject string, after *domain
 	out := make([]domain.Summary, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, domain.Summary{
-			Campaign: campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.CreatedAt), MyRole: domain.Role(r.Role), MemberCount: int(r.MemberCount),
+			Campaign: campaign(r.ID, r.Name, r.RulesetPref, r.ReactionTimeoutS, r.HighGround, r.CreatedAt), MyRole: domain.Role(r.Role), MemberCount: int(r.MemberCount),
 		})
 	}
 	return out, nil

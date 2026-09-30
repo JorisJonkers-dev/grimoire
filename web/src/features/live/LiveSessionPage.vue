@@ -4,13 +4,14 @@ import { computed, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { endSessionMutation, getCampaignOptions, listCharactersOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
-import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
+import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
 import { GButton } from '@/shared/ui'
 import { board, describe } from './board'
 import { key } from './geometry'
+import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
 import Hotbar from './Hotbar.vue'
@@ -21,7 +22,7 @@ import ReactionPrompt from './ReactionPrompt.vue'
 import StartCombat from './StartCombat.vue'
 import TurnPanel from './TurnPanel.vue'
 
-type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light'
+type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation'
 
 const route = useRoute()
 const router = useRouter()
@@ -55,10 +56,18 @@ const mapChoice = ref('')
 const controller = ref('')
 const monster = ref('')
 const knowsShield = ref(false)
+const surfaceKind = ref('')
+const surfaceRounds = ref(0)
+const elevationFt = ref(10)
 const character = ref('')
 const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
 const walkPath = computed(() => state.value?.path?.hexes ?? [])
-const cells = computed(() => board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value))
+const cells = computed(() =>
+  board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value, {
+    surfaces: view.value?.surfaces,
+    area: areaHexes.value,
+  }),
+)
 const chosen = computed(() => view.value?.tokens.find((t) => t.id === selected.value) ?? null)
 const mine = computed(() => view.value?.tokens.filter((t) => t.controllerId && t.controllerId === campaign.data.value?.me.id) ?? [])
 const walker = computed(() => (isDM.value ? chosen.value : (mine.value.find((t) => t.id === selected.value) ?? mine.value[0] ?? null)))
@@ -110,6 +119,34 @@ const mySaves = computed(() =>
     return isDM.value ? !owner : owner === campaign.data.value?.me.id
   }),
 )
+const areaAiming = ref<{ tokenId: string; effect: string; q?: number; r?: number } | null>(null)
+function aimArea(token: LiveToken, effect: string) {
+  aiming.value = null
+  areaAiming.value = effect ? { tokenId: token.id, effect } : null
+}
+const areaPreview = computed(() => {
+  const p = state.value?.areaPreview
+  return p && p.tokenId === areaAiming.value?.tokenId && p.effect === areaAiming.value.effect ? p : null
+})
+const areaHexes = computed(() => areaPreview.value?.hexes ?? view.value?.area?.hexes ?? [])
+const names = computed(() => Object.fromEntries((view.value?.tokens ?? []).map((t) => [t.id, t.label])))
+function castArea() {
+  const a = areaAiming.value
+  if (!a) return
+  live.value?.send({ kind: 'cast_area', tokenId: a.tokenId, effect: a.effect, q: a.q ?? 0, r: a.r ?? 0 })
+  areaAiming.value = null
+}
+// Whoever rolls a creature's dice sees the Roll Cards of an area spell: its damage and each save.
+const rollsFor = (tokenId: string) => {
+  const owner = tokenById(tokenId)?.controllerId
+  return isDM.value ? !owner : owner === campaign.data.value?.me.id
+}
+const areaRolls = computed(() => {
+  const a = view.value?.area
+  if (!a) return []
+  const damage = a.damageRollId && rollsFor(a.casterId) ? [a.damageRollId] : []
+  return [...damage, ...a.saves.filter((s) => s.rollId && rollsFor(s.tokenId)).map((s) => s.rollId ?? '')]
+})
 const prompt = computed(() => combat.value?.prompt ?? null)
 const answerable = computed(() => {
   const reactor = prompt.value ? tokenById(prompt.value.reactorId) : undefined
@@ -156,6 +193,11 @@ function explore(c: Coord) {
 }
 function pick(c: Coord) {
   if (!live.value) return
+  if (areaAiming.value) {
+    areaAiming.value = { ...areaAiming.value, q: c.q, r: c.r }
+    live.value.send({ kind: 'preview_area', tokenId: areaAiming.value.tokenId, effect: areaAiming.value.effect, q: c.q, r: c.r })
+    return
+  }
   const target = tokenAt(c)
   if (aiming.value && target) {
     live.value.send({ kind: 'preview_attack', ...aiming.value, targetId: target.id })
@@ -176,6 +218,12 @@ function pick(c: Coord) {
     case 'wall':
     case 'unwall':
       live.value.send({ kind: 'set_walls', hexes: [c], on: tool.value === 'wall' })
+      return
+    case 'surface':
+      live.value.send({ kind: 'paint_surface', hexes: [c], ...(surfaceKind.value ? { surface: surfaceKind.value as LiveSurface['kind'] } : {}), ...(surfaceRounds.value ? { rounds: surfaceRounds.value } : {}) })
+      return
+    case 'elevation':
+      live.value.send({ kind: 'set_elevation', hexes: [c], elevationFt: elevationFt.value })
       return
     default: {
       const lit = view.value?.lights?.find((l) => key(l) === key(c))
@@ -240,7 +288,11 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @arm="(n) => arm(b.token, n)"
         @use="useSuggestion(b.token.id, b.c.suggestion)"
         @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
+        @area="(e) => aimArea(b.token, e)"
       />
+      <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
+      <AreaPreviewCard v-if="areaPreview" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
+      <LiveRoll v-for="id in areaRolls" :key="id" :campaign-id="campaignId" :roll-id="id" />
       <AttackPreview
         v-if="preview"
         :preview="preview"
@@ -270,7 +322,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </li>
         </ul>
       </section>
-      <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :title="view.map.name" @select="pick" />
+      <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
         Walk {{ state.path.costFt }} ft. Tap the same hex again to go.
@@ -290,9 +342,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <fieldset class="tools">
           <legend>Tap the map to</legend>
-          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light'] as const)" :key="t" class="tool">
+          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation'] as const)" :key="t" class="tool">
             <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light' }[t] }}</span>
+            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground' }[t] }}</span>
           </label>
         </fieldset>
         <div v-if="view?.map" class="row">
@@ -300,6 +352,19 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <GButton v-for="a in (['bright', 'dim', 'dark'] as const)" :key="a" :data-testid="`ambient-${a}`" @click="setAmbient(a)">
             {{ a }}{{ view.ambient === a ? ' ✓' : '' }}
           </GButton>
+        </div>
+        <div v-if="tool === 'surface'" class="row">
+          <label class="g-field">
+            <span>Surface</span>
+            <select v-model="surfaceKind" data-testid="surface-kind">
+              <option value="">Clear</option>
+              <option v-for="k in ['fire', 'grease', 'water', 'ice', 'web', 'electrified']" :key="k" :value="k">{{ k }}</option>
+            </select>
+          </label>
+          <label class="g-field"><span>Rounds</span><input v-model.number="surfaceRounds" type="number" min="0" max="100" data-testid="surface-rounds" /></label>
+        </div>
+        <div v-if="tool === 'elevation'" class="row">
+          <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>
         </div>
         <div v-if="tool === 'light'" class="row">
           <label class="g-field"><span>Bright (ft)</span><input v-model.number="brightFt" type="number" min="0" max="600" /></label>

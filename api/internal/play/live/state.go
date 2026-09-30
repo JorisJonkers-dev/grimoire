@@ -12,6 +12,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/imaging"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/vision"
 )
 
@@ -22,6 +23,9 @@ type state struct {
 	board   *domain.MapState
 	cells   map[hex.Coord]bool
 	combat  *domain.Combat
+	// surfaces is terrain on hexes this Session; cast is the area spell waiting on its rolls.
+	surfaces map[hex.Coord]domain.Surface
+	cast     *domain.AreaCast
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -38,6 +42,11 @@ func (s *state) clone() *state {
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
+	next.surfaces = maps.Clone(s.surfaces)
+	if s.cast != nil {
+		c := *s.cast
+		next.cast = &c
+	}
 	if s.combat != nil {
 		c := *s.combat
 		c.Combatants = slices.Clone(c.Combatants)
@@ -45,7 +54,7 @@ func (s *state) clone() *state {
 	}
 	if s.board != nil {
 		b := *s.board
-		b.Walls, b.Reveals = maps.Clone(b.Walls), maps.Clone(b.Reveals)
+		b.Walls, b.Reveals, b.Elevation = maps.Clone(b.Walls), maps.Clone(b.Reveals), maps.Clone(b.Elevation)
 		b.Lights = append([]domain.MapLight(nil), b.Lights...)
 		next.board = &b
 	}
@@ -90,8 +99,7 @@ func (s *state) vision() map[hex.Coord]bool {
 	}
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: nil}
 	for c := range s.cells {
-		wall := s.board.Walls[c]
-		g.Cells[c] = hex.Cell{Blocked: wall, BlocksSight: wall}
+		g.Cells[c] = s.cell(c)
 	}
 	scene := vision.Scene{Grid: g, Ambient: ambient(s.board.Map.Ambient)}
 	for _, l := range s.board.Lights {
@@ -123,6 +131,7 @@ func (s *state) project(a Audience) View {
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
 	s.projectCombat(&v, a, seen)
+	s.terrainViews(&v, a, seen)
 	for _, p := range s.fx.Saves {
 		i := slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.ID == p.Effect })
 		e := s.fx.Active[i]
@@ -168,4 +177,13 @@ func (s *state) projectBoard(v *View, a Audience, seen map[hex.Coord]bool) {
 
 func sortHexes(hs []Hex) {
 	sort.Slice(hs, func(i, j int) bool { return hs[i].Q < hs[j].Q || (hs[i].Q == hs[j].Q && hs[i].R < hs[j].R) })
+}
+
+// cell is what the rules see of a hex: walls, difficult Surfaces and height.
+func (s *state) cell(c hex.Coord) hex.Cell {
+	out := hex.Cell{Difficult: surface.Difficult(s.surfaces[c].Kind), Blocked: false, BlocksSight: false, ElevationFt: 0, Cover: hex.NoCover}
+	if s.board != nil {
+		out.Blocked, out.BlocksSight, out.ElevationFt = s.board.Walls[c], s.board.Walls[c], s.board.Elevation[c]
+	}
+	return out
 }

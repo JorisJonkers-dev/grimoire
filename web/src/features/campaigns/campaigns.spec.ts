@@ -239,9 +239,10 @@ describe('table settings', () => {
     const input = wrapper.get('[data-testid="reaction-timeout"]')
     expect((input.element as HTMLInputElement).value).toBe('20')
     await input.setValue(5)
+    await wrapper.get('[data-testid="high-ground"]').setValue(true)
     await wrapper.get('[data-testid="settings"]').trigger('submit')
     await flushPromises()
-    expect(sent).toEqual([{ reactionTimeoutS: 5 }])
+    expect(sent).toEqual([{ reactionTimeoutS: 5, highGround: true }])
     expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
   })
 

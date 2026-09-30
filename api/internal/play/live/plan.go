@@ -27,6 +27,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planTactics(cmd)
 	case CmdApplyEffect, CmdEndEffect, CmdResolveManual:
 		return r.planEffect(cmd)
+	case CmdCastArea:
+		return r.planCast(m, cmd)
+	case CmdPaintSurface, CmdSetElevation:
+		return r.planTerrain(cmd)
 	case CmdReact:
 		return r.planReact(m, cmd)
 	case CmdWalk:
@@ -223,7 +227,7 @@ func (r *runtime) planLight(cmd Command) (Write, string) {
 // waiting holds back what would move the fight on while a Reaction Prompt is open.
 func (r *runtime) waiting(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdAttack, CmdEndTurn, CmdSpend:
+	case CmdWalk, CmdAttack, CmdEndTurn, CmdSpend, CmdCastArea:
 		return r.st.combat != nil && r.st.combat.Prompt != nil
 	}
 	return false

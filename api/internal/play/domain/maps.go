@@ -56,6 +56,8 @@ type MapState struct {
 	Walls   map[hex.Coord]bool
 	Lights  []MapLight
 	Reveals map[hex.Coord]bool
+	// Elevation is each raised or sunken hex's height in feet.
+	Elevation map[hex.Coord]int
 }
 
 // Map action kinds in the Action Log.

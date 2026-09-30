@@ -538,6 +538,72 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * A creature an area catches.
+ */
+export const zLiveAreaTarget = z.object({
+    tokenId: zId,
+    ally: z.boolean()
+});
+
+/**
+ * An area spell's hexes and every creature it would catch, allies flagged, sent only to whoever asked.
+ */
+export const zLiveAreaPreview = z.object({
+    tokenId: zId,
+    effect: z.string().max(80),
+    name: z.string().max(80),
+    dc: z.int().gte(1).lte(40),
+    hexes: z.array(zHexCoord).max(2000),
+    targets: z.array(zLiveAreaTarget).max(200),
+    allies: z.int().gte(0).lte(200)
+});
+
+/**
+ * One target's saving throw against an area.
+ */
+export const zLiveAreaSave = z.object({
+    tokenId: zId,
+    rollId: zId.optional()
+});
+
+/**
+ * An area spell waiting on its damage roll and saving throws.
+ */
+export const zLiveArea = z.object({
+    casterId: zId,
+    name: z.string().max(80),
+    hexes: z.array(zHexCoord).max(2000),
+    damageRollId: zId.optional(),
+    saves: z.array(zLiveAreaSave).max(200)
+});
+
+/**
+ * A Surface on a hex.
+ */
+export const zLiveSurface = z.object({
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    kind: z.enum([
+        'fire',
+        'grease',
+        'water',
+        'ice',
+        'web',
+        'electrified'
+    ]),
+    roundsLeft: z.int().gte(1).lte(100).optional()
+});
+
+/**
+ * A raised or sunken hex.
+ */
+export const zLiveElevation = z.object({
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    elevationFt: z.int().gte(-100).lte(100)
+});
+
+/**
  * An Effect on a token, which everyone who sees the token sees.
  */
 export const zLiveEffect = z.object({
@@ -724,6 +790,9 @@ export const zLiveView = z.object({
     manual: z.array(zLiveManual).max(100).optional(),
     resolving: z.boolean().optional(),
     saves: z.array(zLiveSave).max(100).optional(),
+    surfaces: z.array(zLiveSurface).max(100000).optional(),
+    elevation: z.array(zLiveElevation).max(100000).optional(),
+    area: zLiveArea.optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -739,7 +808,8 @@ export const zLiveUpdate = z.object({
         'rejected',
         'ended',
         'path',
-        'attack_preview'
+        'attack_preview',
+        'area_preview'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
@@ -748,7 +818,8 @@ export const zLiveUpdate = z.object({
     view: zLiveView.optional(),
     steps: z.array(zLiveView).max(60).optional(),
     path: zLivePath.optional(),
-    preview: zLiveAttackPreview.optional()
+    preview: zLiveAttackPreview.optional(),
+    area: zLiveAreaPreview.optional()
 });
 
 /**
@@ -953,7 +1024,11 @@ export const zLiveCommand = z.object({
         'react',
         'apply_effect',
         'end_effect',
-        'resolve_manual'
+        'resolve_manual',
+        'preview_area',
+        'cast_area',
+        'paint_surface',
+        'set_elevation'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -991,7 +1066,16 @@ export const zLiveCommand = z.object({
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),
-    manualId: zId.optional()
+    manualId: zId.optional(),
+    surface: z.enum([
+        'fire',
+        'grease',
+        'water',
+        'ice',
+        'web',
+        'electrified'
+    ]).optional(),
+    elevationFt: z.int().gte(-100).lte(100).optional()
 });
 
 /**
@@ -1009,7 +1093,8 @@ export const zCampaignSummary = z.object({
     myRole: zRole,
     memberCount: z.int().gte(1).lte(1000),
     createdAt: z.iso.datetime().max(40),
-    reactionTimeoutS: zReactionTimeout.optional()
+    reactionTimeoutS: zReactionTimeout.optional(),
+    highGround: z.boolean().optional()
 });
 
 /**
@@ -1031,6 +1116,7 @@ export const zCampaign = z.object({
     memberCount: z.int().gte(1).lte(1000),
     createdAt: z.iso.datetime().max(40),
     reactionTimeoutS: zReactionTimeout.optional(),
+    highGround: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
 });
@@ -1050,7 +1136,8 @@ export const zCampaignCreate = z.object({
 export const zCampaignUpdate = z.object({
     name: zCampaignName.optional(),
     ruleset: zRuleset.optional(),
-    reactionTimeoutS: zReactionTimeout.optional()
+    reactionTimeoutS: zReactionTimeout.optional(),
+    highGround: z.boolean().optional()
 });
 
 /**

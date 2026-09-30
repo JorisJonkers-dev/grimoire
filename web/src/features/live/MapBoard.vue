@@ -2,12 +2,12 @@
 import { computed } from 'vue'
 import type { LiveMap, LiveView } from '@/infrastructure/api/types.gen'
 import { type Coord, corners, toPixel } from '@/shared/hex'
-import { describe, initials } from './board'
+import { describe, groundNotes, initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const props = withDefaults(
-  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; title: string }>(),
-  { dm: false, selected: null, path: () => [] },
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; area?: Coord[]; title: string }>(),
+  { dm: false, selected: null, path: () => [], area: () => [] },
 )
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
@@ -18,6 +18,9 @@ const walls = computed(() => new Set((props.view.walls ?? []).map(key)))
 const lights = computed(() => new Map((props.view.lights ?? []).map((l) => [key(l), l])))
 const tokens = computed(() => new Map(props.view.tokens.map((t) => [key(t), t])))
 const route = computed(() => new Set(props.path.map(key)))
+const surfaces = computed(() => new Map((props.view.surfaces ?? []).map((s) => [key(s), s])))
+const heights = computed(() => new Map((props.view.elevation ?? []).map((e) => [key(e), e.elevationFt])))
+const area = computed(() => new Set(props.area.map(key)))
 const points = (c: Coord) =>
   corners(layout.value, c)
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
@@ -34,6 +37,8 @@ const cells = computed(() =>
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
       route.value.has(k) ? 'on the path' : '',
+      ...groundNotes(k, surfaces.value, area.value),
+      heights.value.has(k) ? `${String(heights.value.get(k))} ft high` : '',
     ]
       .filter(Boolean)
       .join(': ')
@@ -57,7 +62,7 @@ const cells = computed(() =>
       <g
         v-for="c in cells"
         :key="c.k"
-        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k) }]"
+        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--area': area.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
         role="button"
         tabindex="0"
         :aria-label="c.label"
@@ -105,6 +110,27 @@ const cells = computed(() =>
 .cell--wall polygon {
   stroke: var(--color-enemy);
   stroke-width: 3;
+}
+.cell--area polygon {
+  fill: rgb(212 120 40 / 40%);
+}
+.cell--surface-fire polygon {
+  fill: rgb(200 60 20 / 45%);
+}
+.cell--surface-grease polygon {
+  fill: rgb(90 80 40 / 55%);
+}
+.cell--surface-water polygon {
+  fill: rgb(30 70 140 / 45%);
+}
+.cell--surface-ice polygon {
+  fill: rgb(170 220 250 / 45%);
+}
+.cell--surface-web polygon {
+  fill: rgb(200 200 200 / 35%);
+}
+.cell--surface-electrified polygon {
+  fill: rgb(90 90 230 / 45%);
 }
 .cell--path polygon {
   fill: rgb(212 175 55 / 30%);

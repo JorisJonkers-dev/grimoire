@@ -17,8 +17,13 @@ const { view: state } = useLiveSession(String(route.params.id), String(route.par
     <p v-else-if="!state.session || !state.view" class="ended" role="status">Waiting for the table…</p>
     <div v-else class="stage">
       <InitiativeRail v-if="state.view.combat" :combat="state.view.combat" />
-      <MapBoard v-if="state.view.map" :map="state.view.map" :view="state.view" title="The table" />
-      <HexGrid v-else :cells="board(state.session.gridRadius, state.view.tokens, null)" :size="36" title="The table" />
+      <MapBoard v-if="state.view.map" :map="state.view.map" :view="state.view" :area="state.view.area?.hexes" title="The table" />
+      <HexGrid
+        v-else
+        :cells="board(state.session.gridRadius, state.view.tokens, null, [], { surfaces: state.view.surfaces, area: state.view.area?.hexes })"
+        :size="36"
+        title="The table"
+      />
     </div>
   </main>
 </template>

@@ -57,6 +57,8 @@ type Campaign struct {
 	CreatedAt time.Time
 	// ReactionTimeoutS is how long a Reaction Prompt waits before it declines.
 	ReactionTimeoutS int
+	// HighGround turns on the optional rule: +2 to hit from higher ground.
+	HighGround bool
 }
 
 // Member is an account's participation in a Campaign.

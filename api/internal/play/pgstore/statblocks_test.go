@@ -24,7 +24,10 @@ type armoury struct{}
 func (armoury) BuilderOptions(_ context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	return compendium.BuilderOptions{
 		Ruleset: ruleset, RulesetYear: 2024,
-		Classes:     []compendium.ClassOption{{Slug: "fighter", Name: "Fighter", HitDie: 10, Saves: []string{"strength", "constitution"}}},
+		Classes: []compendium.ClassOption{
+			{Slug: "fighter", Name: "Fighter", HitDie: 10, Saves: []string{"strength", "constitution"}},
+			{Slug: "wizard", Name: "Wizard", HitDie: 6, Saves: []string{"intelligence", "wisdom"}},
+		},
 		Species:     []compendium.SpeciesOption{{Slug: "human", Name: "Human", SpeedFeet: 30}},
 		Backgrounds: []compendium.BackgroundOption{{Slug: "soldier", Name: "Soldier", Abilities: []string{"strength", "dexterity", "constitution"}, Skills: []string{"athletics", "intimidation"}}},
 		Weapons: []compendium.WeaponOption{
@@ -45,7 +48,7 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 			Entry: snapshot.Entry{Document: doc, Slug: slug, Name: "Ogre"}, Size: "large", Type: "giant", Alignment: "chaotic evil", ArmorClass: ac,
 			HitPoints: 59, HitDice: "7d10", ChallengeRating: 2, XP: 450,
 			Abilities: map[string]int{"strength": 19, "dexterity": 8, "constitution": 16, "intelligence": 5, "wisdom": 7, "charisma": 7},
-			Saves:     map[string]int{}, Skills: map[string]int{}, Speeds: map[string]int{"walk": 40}, Senses: map[string]int{},
+			Saves:     map[string]int{"wisdom": 1}, Skills: map[string]int{}, Speeds: map[string]int{"walk": 40}, Senses: map[string]int{},
 			Resistances: []string{}, Immunities: []string{}, Vulnerabilities: []string{}, ConditionImmunities: []string{}, Traits: []snapshot.Named{},
 			Actions: []snapshot.Action{{Name: "Hits", Description: "Hits.", Type: "action", Attacks: attacks}},
 		}
@@ -72,7 +75,7 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 	s := pgstore.Statblocks{Store: pgstore.New(tb.pool), Characters: chars}
 
 	name, ogre, err := s.Monster(ctx, tb.campaign, "ogre")
-	if err != nil || name != "Ogre" || ogre.AC != 11 || ogre.HP != 59 || ogre.HPMax != 59 || len(ogre.Attacks) != 3 {
+	if err != nil || name != "Ogre" || ogre.AC != 11 || ogre.HP != 59 || ogre.HPMax != 59 || len(ogre.Attacks) != 3 || ogre.Saves["strength"] != 4 || ogre.Saves["wisdom"] != 1 || ogre.Intelligence != 5 {
 		t.Fatalf("ogre = %s %+v %v", name, ogre, err)
 	}
 	want := []domain.Attack{
@@ -119,6 +122,21 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 		if mira.Attacks[i] != a {
 			t.Errorf("mira's attack %d = %+v, want %+v", i, mira.Attacks[i], a)
 		}
+	}
+	if mira.SpellDC != 0 || mira.Shield || mira.Saves["strength"] != 2 {
+		t.Fatalf("a fighter casts nothing = %+v", mira)
+	}
+	nim, err := chars.Create(ctx, player, campaigndomain.CampaignID(tb.campaign), campaigndomain.Build{
+		Name: "Nim", Species: "human", Class: "wizard", Background: "soldier", Method: "standard-array",
+		Base:   map[string]int{"strength": 8, "dexterity": 14, "constitution": 13, "intelligence": 15, "wisdom": 12, "charisma": 10},
+		Bonus:  map[string]int{"dexterity": 1, "constitution": 2},
+		Skills: []string{"arcana", "history"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, st, err := s.Character(ctx, dm, tb.campaign, uuid.UUID(nim.ID)); err != nil || st.SpellDC != 12 || !st.Shield || st.Saves["intelligence"] != 4 {
+		t.Fatalf("a wizard = %+v %v", st, err)
 	}
 	if _, _, _, err := s.Character(ctx, dm, tb.campaign, uuid.New()); !errors.Is(err, apperr.ErrNotFound) {
 		t.Fatalf("unknown character = %v", err)

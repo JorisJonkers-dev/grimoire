@@ -34,6 +34,8 @@ type aim struct {
 	ranged           bool
 	reasons          []string
 	prof             effects.AttackProfile
+	// bonus is added to the attack roll, from high ground.
+	bonus int
 }
 
 // aimAt checks an attack a member asks for: in combat, on the attacker's turn with its action left,
@@ -70,7 +72,29 @@ func (r *runtime) aimAt(m domain.Member, cmd Command) (aim, string) {
 	if !ok || t.ID == a.ID {
 		return aim{}, "Choose a creature to attack."
 	}
-	return r.st.shape(aim{attacker: a, target: t, no: cmd.AttackNo, with: a.Stats.Attacks[cmd.AttackNo]})
+	p, reason := r.st.shape(aim{attacker: a, target: t, no: cmd.AttackNo, with: a.Stats.Attacks[cmd.AttackNo]})
+	if reason == "" {
+		r.highGround(&p)
+	}
+	return p, reason
+}
+
+// highGround gives +2 to hit from higher ground when the Campaign uses that optional rule.
+func (r *runtime) highGround(p *aim) {
+	if r.st.height(p.attacker) <= r.st.height(p.target) {
+		return
+	}
+	if on, err := r.store.HighGround(context.Background(), r.st.session.CampaignID); err == nil && on {
+		p.bonus, p.reasons = 2, append(p.reasons, "High ground: +2 to hit")
+	}
+}
+
+// height is the elevation of the hex a token stands on.
+func (s *state) height(t domain.Token) int {
+	if s.board == nil {
+		return 0
+	}
+	return s.board.Elevation[hex.Coord{Q: t.Q, R: t.R}]
 }
 
 // combatantOf finds a token's Combatant and whether it is acting now.
@@ -93,8 +117,7 @@ func (s *state) shape(p aim) (aim, string) {
 	p.ranged = band != attack.InReach
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
 	for _, c := range s.ground() {
-		wall := s.board != nil && s.board.Walls[c]
-		g.Cells[c] = hex.Cell{Blocked: wall, BlocksSight: wall}
+		g.Cells[c] = s.cell(c)
 	}
 	for _, t := range s.tokens {
 		if t.ID != p.attacker.ID && t.ID != p.target.ID && standing(t) {
@@ -154,7 +177,7 @@ func (r *runtime) previewAttack(req request) {
 	_, critMost := attack.DamageRange(attack.CriticalDice(spec), p.with.DamageBonus)
 	r.send(req.from, Update{Kind: UpdAttackPreview, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Preview: &AttackPreview{
 		TokenID: req.cmd.TokenID, TargetID: req.cmd.TargetID, AttackNo: p.no, Name: p.with.Name,
-		HitChance: attack.HitChanceDice(p.with.ToHit, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
+		HitChance: attack.HitChanceDice(p.with.ToHit+p.bonus, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
 		DamageMin: least, DamageMax: most, CritMax: critMost, Reasons: p.reasons,
 	}})
 }
@@ -166,7 +189,8 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, reason
 	}
 	notation := strings.Join(append([]string{attack.D20(p.mode)}, p.prof.AttackDice...), "+")
-	roll := r.request(m, p.attacker, p.with.Name+" attack against "+p.target.Label, notation, domain.Modifier{Label: p.with.Name, Value: p.with.ToHit})
+	roll := r.request(m, p.attacker, p.with.Name+" attack against "+p.target.Label, notation, domain.Modifier{Label: p.with.Name, Value: p.with.ToHit},
+		domain.Modifier{Label: "High ground", Value: p.bonus})
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
@@ -271,8 +295,7 @@ func (s *state) witnesses(t domain.Token) []domain.TokenID {
 func (s *state) sightGrid() hex.Grid {
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: nil}
 	for _, c := range s.ground() {
-		wall := s.board != nil && s.board.Walls[c]
-		g.Cells[c] = hex.Cell{Blocked: wall, BlocksSight: wall}
+		g.Cells[c] = s.cell(c)
 	}
 	return g
 }

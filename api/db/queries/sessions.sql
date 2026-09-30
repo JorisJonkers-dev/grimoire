@@ -23,13 +23,13 @@ UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE campaign_id = @
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield)
+    hp, hp_max, intelligence, can_shield, spell_dc)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
-    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield);
+    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc));
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -201,3 +201,47 @@ INSERT INTO play.token_saves (token_id, ability, bonus) VALUES (@token_id, @abil
 
 -- name: MonsterSaves :many
 SELECT name, value FROM compendium.monster_stats WHERE monster_id = @monster_id AND kind = 'save';
+
+-- name: SessionSurfaces :many
+SELECT q, r, kind, rounds_left FROM play.surfaces WHERE session_id = $1;
+
+-- name: ClearSurfaces :exec
+DELETE FROM play.surfaces WHERE session_id = $1;
+
+-- name: InsertSurface :exec
+INSERT INTO play.surfaces (session_id, q, r, kind, rounds_left) VALUES (@session_id, @q, @r, @kind, sqlc.narg(rounds_left));
+
+-- name: SessionCast :one
+SELECT id, caster_token_id, spell, dc, damage_roll_id FROM play.area_casts WHERE session_id = $1;
+
+-- name: CastHexes :many
+SELECT q, r FROM play.area_hexes WHERE cast_id = $1 ORDER BY q, r;
+
+-- name: CastTargets :many
+SELECT token_id, save_roll_id FROM play.area_targets WHERE cast_id = $1 ORDER BY token_id;
+
+-- name: ClearCasts :exec
+DELETE FROM play.area_casts WHERE session_id = $1;
+
+-- name: InsertCast :exec
+INSERT INTO play.area_casts (id, session_id, caster_token_id, spell, dc, damage_roll_id)
+VALUES (@id, @session_id, @caster_token_id, @spell, @dc, sqlc.narg(damage_roll_id));
+
+-- name: InsertCastHex :exec
+INSERT INTO play.area_hexes (cast_id, q, r) VALUES (@cast_id, @q, @r);
+
+-- name: InsertCastTarget :exec
+INSERT INTO play.area_targets (cast_id, token_id, save_roll_id) VALUES (@cast_id, @token_id, sqlc.narg(save_roll_id));
+
+-- name: MapElevations :many
+SELECT q, r, elevation_ft FROM campaign.map_elevations WHERE map_id = $1;
+
+-- name: SetElevation :exec
+INSERT INTO campaign.map_elevations (map_id, q, r, elevation_ft) VALUES (@map_id, @q, @r, @elevation_ft)
+ON CONFLICT (map_id, q, r) DO UPDATE SET elevation_ft = excluded.elevation_ft;
+
+-- name: ClearElevation :exec
+DELETE FROM campaign.map_elevations WHERE map_id = @map_id AND q = @q AND r = @r;
+
+-- name: CampaignHighGround :one
+SELECT high_ground FROM campaign.campaigns WHERE id = $1;

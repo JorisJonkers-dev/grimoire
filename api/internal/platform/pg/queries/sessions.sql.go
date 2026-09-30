@@ -45,6 +45,17 @@ func (q *Queries) BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, erro
 	return seq, err
 }
 
+const campaignHighGround = `-- name: CampaignHighGround :one
+SELECT high_ground FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, campaignHighGround, id)
+	var high_ground bool
+	err := row.Scan(&high_ground)
+	return high_ground, err
+}
+
 const campaignReactionTimeout = `-- name: CampaignReactionTimeout :one
 SELECT reaction_timeout_s FROM campaign.campaigns WHERE id = $1
 `
@@ -67,6 +78,64 @@ func (q *Queries) CampaignRuleset(ctx context.Context, id uuid.UUID) (string, er
 	return ruleset_pref, err
 }
 
+const castHexes = `-- name: CastHexes :many
+SELECT q, r FROM play.area_hexes WHERE cast_id = $1 ORDER BY q, r
+`
+
+type CastHexesRow struct {
+	Q int32
+	R int32
+}
+
+func (q *Queries) CastHexes(ctx context.Context, castID uuid.UUID) ([]CastHexesRow, error) {
+	rows, err := q.db.Query(ctx, castHexes, castID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CastHexesRow{}
+	for rows.Next() {
+		var i CastHexesRow
+		if err := rows.Scan(&i.Q, &i.R); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const castTargets = `-- name: CastTargets :many
+SELECT token_id, save_roll_id FROM play.area_targets WHERE cast_id = $1 ORDER BY token_id
+`
+
+type CastTargetsRow struct {
+	TokenID    uuid.UUID
+	SaveRollID pgtype.UUID
+}
+
+func (q *Queries) CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error) {
+	rows, err := q.db.Query(ctx, castTargets, castID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CastTargetsRow{}
+	for rows.Next() {
+		var i CastTargetsRow
+		if err := rows.Scan(&i.TokenID, &i.SaveRollID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const clearAttacks = `-- name: ClearAttacks :exec
 DELETE FROM play.attacks WHERE combat_id = $1
 `
@@ -76,12 +145,36 @@ func (q *Queries) ClearAttacks(ctx context.Context, combatID uuid.UUID) error {
 	return err
 }
 
+const clearCasts = `-- name: ClearCasts :exec
+DELETE FROM play.area_casts WHERE session_id = $1
+`
+
+func (q *Queries) ClearCasts(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearCasts, sessionID)
+	return err
+}
+
 const clearEffects = `-- name: ClearEffects :exec
 DELETE FROM play.active_effects WHERE session_id = $1
 `
 
 func (q *Queries) ClearEffects(ctx context.Context, sessionID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, clearEffects, sessionID)
+	return err
+}
+
+const clearElevation = `-- name: ClearElevation :exec
+DELETE FROM campaign.map_elevations WHERE map_id = $1 AND q = $2 AND r = $3
+`
+
+type ClearElevationParams struct {
+	MapID uuid.UUID
+	Q     int32
+	R     int32
+}
+
+func (q *Queries) ClearElevation(ctx context.Context, arg ClearElevationParams) error {
+	_, err := q.db.Exec(ctx, clearElevation, arg.MapID, arg.Q, arg.R)
 	return err
 }
 
@@ -118,6 +211,15 @@ DELETE FROM play.combat_resume_path WHERE combat_id = $1
 
 func (q *Queries) ClearResumePath(ctx context.Context, combatID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, clearResumePath, combatID)
+	return err
+}
+
+const clearSurfaces = `-- name: ClearSurfaces :exec
+DELETE FROM play.surfaces WHERE session_id = $1
+`
+
+func (q *Queries) ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearSurfaces, sessionID)
 	return err
 }
 
@@ -274,6 +376,62 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 		&i.MapID,
 	)
 	return i, err
+}
+
+const insertCast = `-- name: InsertCast :exec
+INSERT INTO play.area_casts (id, session_id, caster_token_id, spell, dc, damage_roll_id)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertCastParams struct {
+	ID            uuid.UUID
+	SessionID     uuid.UUID
+	CasterTokenID uuid.UUID
+	Spell         string
+	Dc            int32
+	DamageRollID  pgtype.UUID
+}
+
+func (q *Queries) InsertCast(ctx context.Context, arg InsertCastParams) error {
+	_, err := q.db.Exec(ctx, insertCast,
+		arg.ID,
+		arg.SessionID,
+		arg.CasterTokenID,
+		arg.Spell,
+		arg.Dc,
+		arg.DamageRollID,
+	)
+	return err
+}
+
+const insertCastHex = `-- name: InsertCastHex :exec
+INSERT INTO play.area_hexes (cast_id, q, r) VALUES ($1, $2, $3)
+`
+
+type InsertCastHexParams struct {
+	CastID uuid.UUID
+	Q      int32
+	R      int32
+}
+
+func (q *Queries) InsertCastHex(ctx context.Context, arg InsertCastHexParams) error {
+	_, err := q.db.Exec(ctx, insertCastHex, arg.CastID, arg.Q, arg.R)
+	return err
+}
+
+const insertCastTarget = `-- name: InsertCastTarget :exec
+INSERT INTO play.area_targets (cast_id, token_id, save_roll_id) VALUES ($1, $2, $3)
+`
+
+type InsertCastTargetParams struct {
+	CastID     uuid.UUID
+	TokenID    uuid.UUID
+	SaveRollID pgtype.UUID
+}
+
+func (q *Queries) InsertCastTarget(ctx context.Context, arg InsertCastTargetParams) error {
+	_, err := q.db.Exec(ctx, insertCastTarget, arg.CastID, arg.TokenID, arg.SaveRollID)
+	return err
 }
 
 const insertEffect = `-- name: InsertEffect :exec
@@ -440,11 +598,34 @@ func (q *Queries) InsertSessionAction(ctx context.Context, arg InsertSessionActi
 	return id, err
 }
 
+const insertSurface = `-- name: InsertSurface :exec
+INSERT INTO play.surfaces (session_id, q, r, kind, rounds_left) VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertSurfaceParams struct {
+	SessionID  uuid.UUID
+	Q          int32
+	R          int32
+	Kind       string
+	RoundsLeft pgtype.Int4
+}
+
+func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) error {
+	_, err := q.db.Exec(ctx, insertSurface,
+		arg.SessionID,
+		arg.Q,
+		arg.R,
+		arg.Kind,
+		arg.RoundsLeft,
+	)
+	return err
+}
+
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield)
+    hp, hp_max, intelligence, can_shield, spell_dc)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13, $14, $15)
+    $11, $12, $13, $14, $15, $16)
 `
 
 type InsertTokenParams struct {
@@ -463,6 +644,7 @@ type InsertTokenParams struct {
 	HpMax              pgtype.Int4
 	Intelligence       pgtype.Int4
 	CanShield          bool
+	SpellDc            pgtype.Int4
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -482,6 +664,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.HpMax,
 		arg.Intelligence,
 		arg.CanShield,
+		arg.SpellDc,
 	)
 	return err
 }
@@ -631,6 +814,36 @@ func (q *Queries) LockSessionOwner(ctx context.Context, lockKey string) (bool, e
 	var pg_try_advisory_lock bool
 	err := row.Scan(&pg_try_advisory_lock)
 	return pg_try_advisory_lock, err
+}
+
+const mapElevations = `-- name: MapElevations :many
+SELECT q, r, elevation_ft FROM campaign.map_elevations WHERE map_id = $1
+`
+
+type MapElevationsRow struct {
+	Q           int32
+	R           int32
+	ElevationFt int32
+}
+
+func (q *Queries) MapElevations(ctx context.Context, mapID uuid.UUID) ([]MapElevationsRow, error) {
+	rows, err := q.db.Query(ctx, mapElevations, mapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MapElevationsRow{}
+	for rows.Next() {
+		var i MapElevationsRow
+		if err := rows.Scan(&i.Q, &i.R, &i.ElevationFt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const monsterAttackRows = `-- name: MonsterAttackRows :many
@@ -1010,6 +1223,31 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 	return i, err
 }
 
+const sessionCast = `-- name: SessionCast :one
+SELECT id, caster_token_id, spell, dc, damage_roll_id FROM play.area_casts WHERE session_id = $1
+`
+
+type SessionCastRow struct {
+	ID            uuid.UUID
+	CasterTokenID uuid.UUID
+	Spell         string
+	Dc            int32
+	DamageRollID  pgtype.UUID
+}
+
+func (q *Queries) SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error) {
+	row := q.db.QueryRow(ctx, sessionCast, sessionID)
+	var i SessionCastRow
+	err := row.Scan(
+		&i.ID,
+		&i.CasterTokenID,
+		&i.Spell,
+		&i.Dc,
+		&i.DamageRollID,
+	)
+	return i, err
+}
+
 const sessionEffects = `-- name: SessionEffects :many
 SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc
 FROM play.active_effects WHERE session_id = $1 ORDER BY id
@@ -1141,6 +1379,42 @@ func (q *Queries) SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) 
 	return items, nil
 }
 
+const sessionSurfaces = `-- name: SessionSurfaces :many
+SELECT q, r, kind, rounds_left FROM play.surfaces WHERE session_id = $1
+`
+
+type SessionSurfacesRow struct {
+	Q          int32
+	R          int32
+	Kind       string
+	RoundsLeft pgtype.Int4
+}
+
+func (q *Queries) SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error) {
+	rows, err := q.db.Query(ctx, sessionSurfaces, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionSurfacesRow{}
+	for rows.Next() {
+		var i SessionSurfacesRow
+		if err := rows.Scan(
+			&i.Q,
+			&i.R,
+			&i.Kind,
+			&i.RoundsLeft,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionTokenAttacks = `-- name: SessionTokenAttacks :many
 SELECT a.token_id, a.ordering, a.name, a.to_hit, a.reach_ft, a.range_ft, a.long_range_ft, a.damage_dice, a.damage_bonus, a.damage_type
 FROM play.token_attacks a JOIN play.tokens t ON t.id = a.token_id WHERE t.session_id = $1 ORDER BY a.token_id, a.ordering
@@ -1202,7 +1476,7 @@ func (q *Queries) SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([
 }
 
 const sessionTokens = `-- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -1221,6 +1495,7 @@ type SessionTokensRow struct {
 	Intelligence       pgtype.Int4
 	Tactics            string
 	CanShield          bool
+	SpellDc            pgtype.Int4
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -1248,6 +1523,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Intelligence,
 			&i.Tactics,
 			&i.CanShield,
+			&i.SpellDc,
 		); err != nil {
 			return nil, err
 		}
@@ -1257,6 +1533,28 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 		return nil, err
 	}
 	return items, nil
+}
+
+const setElevation = `-- name: SetElevation :exec
+INSERT INTO campaign.map_elevations (map_id, q, r, elevation_ft) VALUES ($1, $2, $3, $4)
+ON CONFLICT (map_id, q, r) DO UPDATE SET elevation_ft = excluded.elevation_ft
+`
+
+type SetElevationParams struct {
+	MapID       uuid.UUID
+	Q           int32
+	R           int32
+	ElevationFt int32
+}
+
+func (q *Queries) SetElevation(ctx context.Context, arg SetElevationParams) error {
+	_, err := q.db.Exec(ctx, setElevation,
+		arg.MapID,
+		arg.Q,
+		arg.R,
+		arg.ElevationFt,
+	)
+	return err
 }
 
 const setTokenHP = `-- name: SetTokenHP :exec

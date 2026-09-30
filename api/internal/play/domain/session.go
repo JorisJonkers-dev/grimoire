@@ -72,6 +72,8 @@ type Stats struct {
 	Shield bool
 	// Saves are saving throw bonuses by ability.
 	Saves map[string]int
+	// SpellDC is the save DC of the token's spells; 0 when it casts none.
+	SpellDC int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

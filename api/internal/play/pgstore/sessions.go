@@ -138,7 +138,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 		if t.StatSource.Valid {
 			tok.Stats = &domain.Stats{
 				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
-				Intelligence: int(t.Intelligence.Int32),
+				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32),
 			}
 		}
 		tokens = append(tokens, tok)
@@ -183,17 +183,20 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 		if seq, err = tx.q.BumpSessionSeq(ctx, sid); err != nil {
 			return err
 		}
-		if err := tx.write(ctx, sid, board, w, now); err != nil {
-			return err
+		steps := []func() error{
+			func() error { return tx.write(ctx, sid, board, w, now) },
+			func() error { return tx.saveCombat(ctx, sess, w, actor, c, now) },
+			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
+			func() error { return tx.saveTerrain(ctx, sid, board, w) },
+			func() error {
+				if board == nil {
+					return nil
+				}
+				return tx.addReveals(ctx, board.Map.ID, w.AutoReveal)
+			},
 		}
-		if err := tx.saveCombat(ctx, sess, w, actor, c, now); err != nil {
-			return err
-		}
-		if err := tx.saveEffects(ctx, sid, w.Effects); err != nil {
-			return err
-		}
-		if board != nil {
-			if err := tx.addReveals(ctx, board.Map.ID, w.AutoReveal); err != nil {
+		for _, step := range steps {
+			if err := step(); err != nil {
 				return err
 			}
 		}
@@ -219,7 +222,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
 		domain.ActionReactionDeclined, domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
-		domain.ActionManualResolved:
+		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet:
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
 		return s.writeHP(ctx, sid, w)
@@ -251,6 +254,9 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	st := t.Stats
 	p.StatSource = pgtype.Text{String: st.Source, Valid: true}
 	p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
+	if st.SpellDC > 0 {
+		p.SpellDc = pgInt(st.SpellDC)
+	}
 	if st.Intelligence > 0 {
 		p.Intelligence = pgInt(st.Intelligence)
 	}
@@ -339,7 +345,8 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved,
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
-		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed:
+		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
+		domain.ActionAreaResolved:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -659,7 +666,14 @@ func (s *Store) LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID
 	if err != nil {
 		return nil, notFound(err)
 	}
-	out := &domain.MapState{Map: mapRow(m), Walls: map[hex.Coord]bool{}, Lights: []domain.MapLight{}, Reveals: map[hex.Coord]bool{}}
+	out := &domain.MapState{Map: mapRow(m), Walls: map[hex.Coord]bool{}, Lights: []domain.MapLight{}, Reveals: map[hex.Coord]bool{}, Elevation: map[hex.Coord]int{}}
+	heights, err := s.q.MapElevations(ctx, m.ID)
+	if err != nil {
+		return nil, err
+	}
+	for _, h := range heights {
+		out.Elevation[hex.Coord{Q: int(h.Q), R: int(h.R)}] = int(h.ElevationFt)
+	}
 	walls, err := s.q.MapWalls(ctx, m.ID)
 	if err != nil {
 		return nil, err

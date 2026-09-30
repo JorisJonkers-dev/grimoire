@@ -6,7 +6,16 @@ withDefaults(
   defineProps<{ token: LiveToken; armed: number | null; blocked: string; suggestion?: LiveSuggestion; target?: string; tactics?: Tactics }>(),
   { suggestion: undefined, target: 'its target', tactics: undefined },
 )
-const emit = defineEmits<{ arm: [attackNo: number]; use: []; tactics: [value: Tactics] }>()
+const emit = defineEmits<{ arm: [attackNo: number]; use: []; tactics: [value: Tactics]; area: [effect: string] }>()
+const spells = [
+  { slug: 'burning-hands', name: 'Burning Hands' },
+  { slug: 'thunderwave', name: 'Thunderwave' },
+  { slug: 'shatter', name: 'Shatter' },
+  { slug: 'grease', name: 'Grease' },
+  { slug: 'fireball', name: 'Fireball' },
+  { slug: 'lightning-bolt', name: 'Lightning Bolt' },
+  { slug: 'cone-of-cold', name: 'Cone of Cold' },
+]
 const styles: { value: Tactics; label: string }[] = [
   { value: 'auto', label: 'From Intelligence' },
   { value: 'simple', label: 'Simple' },
@@ -43,6 +52,13 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
       </p>
       <GButton v-if="suggestion.attackNo !== undefined" variant="primary" data-testid="use-suggestion" @click="emit('use')">Use suggestion</GButton>
     </div>
+    <label class="g-field tactics">
+      <span>Area spell</span>
+      <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value)">
+        <option value="">Choose to aim…</option>
+        <option v-for="s in spells" :key="s.slug" :value="s.slug">{{ s.name }}</option>
+      </select>
+    </label>
     <label v-if="tactics" class="g-field tactics">
       <span>Tactics</span>
       <select :value="tactics" data-testid="tactics" @change="emit('tactics', ($event.target as HTMLSelectElement).value as Tactics)">
