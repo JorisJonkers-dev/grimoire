@@ -42,22 +42,49 @@ const darkvision = ref(0)
 const brightFt = ref(20)
 const dimFt = ref(40)
 const mapChoice = ref('')
-const cells = computed(() => board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value))
+const controller = ref('')
+const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
+const walkPath = computed(() => state.value?.path?.hexes ?? [])
+const cells = computed(() => board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value))
 const chosen = computed(() => view.value?.tokens.find((t) => t.id === selected.value) ?? null)
+const mine = computed(() => view.value?.tokens.filter((t) => t.controllerId && t.controllerId === campaign.data.value?.me.id) ?? [])
+const walker = computed(() => (isDM.value ? chosen.value : (mine.value.find((t) => t.id === selected.value) ?? mine.value[0] ?? null)))
+const tokenAt = (c: Coord) => view.value?.tokens.find((t) => t.q === c.q && t.r === c.r)
 
+// The first tap on a hex previews the walk there; a second tap on the same hex walks it.
+function walkTo(c: Coord) {
+  const t = walker.value
+  if (!t) return
+  const p = state.value?.path
+  const end = p?.hexes.at(-1)
+  const confirmed = p?.tokenId === t.id && end?.q === c.q && end.r === c.r
+  live.value?.send({ kind: confirmed ? 'walk' : 'plan_walk', tokenId: t.id, q: c.q, r: c.r })
+}
 function tokenTool(c: Coord) {
-  const there = view.value?.tokens.find((t) => t.q === c.q && t.r === c.r)
+  const there = tokenAt(c)
   if (there) {
     selected.value = there.id === selected.value ? null : there.id
   } else if (chosen.value) {
-    live.value?.send({ kind: 'move_token', tokenId: chosen.value.id, q: c.q, r: c.r })
+    walkTo(c)
   } else if (label.value.trim()) {
-    live.value?.send({ kind: 'place_token', label: label.value.trim(), tokenKind: kind.value, q: c.q, r: c.r, hidden: hidden.value, darkvisionFt: darkvision.value })
+    live.value?.send({
+      kind: 'place_token', label: label.value.trim(), tokenKind: kind.value, q: c.q, r: c.r, hidden: hidden.value, darkvisionFt: darkvision.value,
+      ...(controller.value ? { controllerId: controller.value } : {}),
+    })
     label.value = ''
   }
 }
+function explore(c: Coord) {
+  const there = tokenAt(c)
+  if (there && mine.value.some((t) => t.id === there.id)) selected.value = there.id
+  else walkTo(c)
+}
 function pick(c: Coord) {
-  if (!isDM.value || !live.value) return
+  if (!live.value) return
+  if (!isDM.value) {
+    explore(c)
+    return
+  }
   switch (tool.value) {
     case 'tokens':
       tokenTool(c)
@@ -108,8 +135,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <RouterLink :to="{ name: 'table', params: { id: campaignId, sid: sessionId } }" class="table-link">Table display</RouterLink>
       </header>
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
-      <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :title="view.map.name" @select="pick" />
+      <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
+      <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
+        Walk {{ state.path.costFt }} ft. Tap the same hex again to go.
+      </p>
+      <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
       <section v-if="isDM" class="g-card controls" data-testid="dm-controls">
         <div class="row">
           <label class="g-field grow">
@@ -126,7 +157,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <legend>Tap the map to</legend>
           <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light'] as const)" :key="t" class="tool">
             <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-            <span>{{ { tokens: 'Place or move tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light' }[t] }}</span>
+            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light' }[t] }}</span>
           </label>
         </fieldset>
         <div v-if="view?.map" class="row">
@@ -148,6 +179,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
               <option value="enemy">Enemy</option>
               <option value="npc">NPC</option>
               <option value="object">Object</option>
+            </select>
+          </label>
+          <label class="g-field">
+            <span>Controlled by</span>
+            <select v-model="controller" data-testid="token-controller">
+              <option value="">Only the DM</option>
+              <option v-for="m in players" :key="m.id" :value="m.id">{{ m.displayName }}</option>
             </select>
           </label>
           <label class="g-field"><span>Darkvision (ft)</span><input v-model.number="darkvision" type="number" min="0" max="300" data-testid="token-darkvision" /></label>
@@ -228,6 +266,10 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   align-items: center;
   gap: 6px;
   min-height: 44px;
+}
+.walk {
+  margin: 0;
+  color: var(--color-gold-high);
 }
 .tokens {
   font-size: 14px;

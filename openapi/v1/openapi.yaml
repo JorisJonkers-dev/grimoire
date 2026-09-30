@@ -2745,6 +2745,7 @@ components:
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
+        controllerId: { $ref: "#/components/schemas/Id" }
     LiveSessionView:
       type: object
       description: The Session as a connection sees it.
@@ -2762,7 +2763,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2780,18 +2781,36 @@ components:
         brightFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
         dimFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
         ambient: { $ref: "#/components/schemas/AmbientLight" }
+        controllerId: { $ref: "#/components/schemas/Id" }
     LiveUpdate:
       type: object
-      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync.
+      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, view, rejected, ended] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended, path] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         reason: { type: string, maxLength: 200 }
         session: { $ref: "#/components/schemas/LiveSessionView" }
         view: { $ref: "#/components/schemas/LiveView" }
+        steps:
+          type: array
+          maxItems: 60
+          items: { $ref: "#/components/schemas/LiveView" }
+        path: { $ref: "#/components/schemas/LivePath" }
+    LivePath:
+      type: object
+      description: The route a walk would take, start first, and the movement it costs.
+      additionalProperties: false
+      required: [tokenId, hexes, costFt]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        hexes:
+          type: array
+          maxItems: 61
+          items: { $ref: "#/components/schemas/HexCoord" }
+        costFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
     AmbientLight:
       type: string
       description: The light that fills a Map everywhere.

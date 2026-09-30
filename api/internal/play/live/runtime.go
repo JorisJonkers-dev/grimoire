@@ -23,8 +23,10 @@ type Write struct {
 	Light      domain.MapLight
 	Ambient    string
 	MapID      *domain.MapID
+	Path       []hex.Coord
 	AutoReveal []hex.Coord
 	board      *domain.MapState
+	frames     []*state
 }
 
 // Store is the runtime's persistence port.
@@ -32,6 +34,11 @@ type Store interface {
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error)
+}
+
+// Members finds a Campaign's members.
+type Members interface {
+	Member(ctx context.Context, campaign, id uuid.UUID) (domain.Member, error)
 }
 
 // Owner guarantees one runtime per Session across processes.
@@ -62,6 +69,7 @@ type request struct {
 
 type runtime struct {
 	store   Store
+	members Members
 	now     func() time.Time
 	log     *slog.Logger
 	release func()
@@ -76,10 +84,11 @@ type runtime struct {
 
 // Hub starts, finds and stops Session runtimes.
 type Hub struct {
-	Store Store
-	Owner Owner
-	Now   func() time.Time
-	Log   *slog.Logger
+	Store   Store
+	Members Members
+	Owner   Owner
+	Now     func() time.Time
+	Log     *slog.Logger
 
 	mu       sync.Mutex
 	runtimes map[domain.SessionID]*runtime
@@ -122,7 +131,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	}
 	st.setBoard(board)
 	rt := &runtime{
-		store: h.Store, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		store: h.Store, members: h.Members, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {
@@ -229,15 +238,18 @@ func (r *runtime) reject(req request, reason string) {
 }
 
 func (r *runtime) handle(req request) {
-	if req.cmd.Kind == CmdResync {
+	switch {
+	case req.cmd.Kind == CmdResync:
 		r.send(req.from, r.snapshot(req.from.Audience))
 		return
-	}
-	if !req.from.Member.DM {
+	case req.cmd.Kind == CmdPlanWalk:
+		r.previewWalk(req)
+		return
+	case !req.from.Member.DM && req.cmd.Kind != CmdWalk:
 		r.reject(req, "Only the DM can change the table.")
 		return
 	}
-	w, reason := r.plan(req.cmd)
+	w, reason := r.plan(req.from.Member, req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
@@ -252,14 +264,13 @@ func (r *runtime) handle(req request) {
 	}
 	next.session.Seq = seq
 	r.st = next
-	views := map[Audience]*View{}
+	views := map[Audience]Update{}
 	for sub := range r.subs {
-		v, ok := views[sub.Audience]
+		u, ok := views[sub.Audience]
 		if !ok {
-			projected := r.st.project(sub.Audience)
-			v, views[sub.Audience] = &projected, &projected
+			u = r.viewUpdate(sub.Audience, seq, &w)
+			views[sub.Audience] = u
 		}
-		u := Update{Kind: UpdView, Seq: seq, View: v}
 		if sub == req.from {
 			u.Nonce = req.cmd.Nonce
 		}
@@ -267,9 +278,29 @@ func (r *runtime) handle(req request) {
 	}
 }
 
+// viewUpdate projects a change for one audience, with a view per step when a token walked.
+func (r *runtime) viewUpdate(a Audience, seq int64, w *Write) Update {
+	v := r.st.project(a)
+	u := Update{Kind: UpdView, Seq: seq, View: &v}
+	if len(w.frames) > 1 {
+		for _, f := range w.frames[:len(w.frames)-1] {
+			u.Steps = append(u.Steps, f.project(a))
+		}
+	}
+	return u
+}
+
 // apply changes a copy of the state and records the hexes the party now sees for the first time.
 func apply(s *state, w *Write) {
 	switch w.Kind {
+	case domain.ActionTokenWalked:
+		for _, c := range w.Path[1:] {
+			w.Token.Q, w.Token.R = c.Q, c.R
+			s.tokens[w.Token.ID] = w.Token
+			s.reveal(w)
+			w.frames = append(w.frames, s.clone())
+		}
+		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)
 	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed:
@@ -280,6 +311,11 @@ func apply(s *state, w *Write) {
 	default:
 		applyBoard(s.board, w)
 	}
+	s.reveal(w)
+}
+
+// reveal remembers every hex the party sees now and records the ones it sees for the first time.
+func (s *state) reveal(w *Write) {
 	if s.board == nil {
 		return
 	}

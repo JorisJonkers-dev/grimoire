@@ -5238,6 +5238,7 @@ type LiveCommand struct {
 	BrightFt     OptInt32        `json:"brightFt"`
 	DimFt        OptInt32        `json:"dimFt"`
 	Ambient      OptAmbientLight `json:"ambient"`
+	ControllerId OptID           `json:"controllerId"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -5320,6 +5321,11 @@ func (s *LiveCommand) GetAmbient() OptAmbientLight {
 	return s.Ambient
 }
 
+// GetControllerId returns the value of ControllerId.
+func (s *LiveCommand) GetControllerId() OptID {
+	return s.ControllerId
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -5400,6 +5406,11 @@ func (s *LiveCommand) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
 }
 
+// SetControllerId sets the value of ControllerId.
+func (s *LiveCommand) SetControllerId(val OptID) {
+	s.ControllerId = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -5414,6 +5425,8 @@ const (
 	LiveCommandKindPlaceLight     LiveCommandKind = "place_light"
 	LiveCommandKindRemoveLight    LiveCommandKind = "remove_light"
 	LiveCommandKindSetAmbient     LiveCommandKind = "set_ambient"
+	LiveCommandKindPlanWalk       LiveCommandKind = "plan_walk"
+	LiveCommandKindWalk           LiveCommandKind = "walk"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -5430,6 +5443,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindPlaceLight,
 		LiveCommandKindRemoveLight,
 		LiveCommandKindSetAmbient,
+		LiveCommandKindPlanWalk,
+		LiveCommandKindWalk,
 	}
 }
 
@@ -5457,6 +5472,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindRemoveLight:
 		return []byte(s), nil
 	case LiveCommandKindSetAmbient:
+		return []byte(s), nil
+	case LiveCommandKindPlanWalk:
+		return []byte(s), nil
+	case LiveCommandKindWalk:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5498,6 +5517,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindSetAmbient:
 		*s = LiveCommandKindSetAmbient
+		return nil
+	case LiveCommandKindPlanWalk:
+		*s = LiveCommandKindPlanWalk
+		return nil
+	case LiveCommandKindWalk:
+		*s = LiveCommandKindWalk
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -5671,6 +5696,44 @@ func (s *LiveMap) SetImageVersion(val int32) {
 	s.ImageVersion = val
 }
 
+// The route a walk would take, start first, and the movement it costs.
+// Ref: #/components/schemas/LivePath
+type LivePath struct {
+	TokenId ID         `json:"tokenId"`
+	Hexes   []HexCoord `json:"hexes"`
+	CostFt  int32      `json:"costFt"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LivePath) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetHexes returns the value of Hexes.
+func (s *LivePath) GetHexes() []HexCoord {
+	return s.Hexes
+}
+
+// GetCostFt returns the value of CostFt.
+func (s *LivePath) GetCostFt() int32 {
+	return s.CostFt
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LivePath) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LivePath) SetHexes(val []HexCoord) {
+	s.Hexes = val
+}
+
+// SetCostFt sets the value of CostFt.
+func (s *LivePath) SetCostFt(val int32) {
+	s.CostFt = val
+}
+
 // The Session as a connection sees it.
 // Ref: #/components/schemas/LiveSessionView
 type LiveSessionView struct {
@@ -5778,6 +5841,7 @@ type LiveToken struct {
 	Q            int32     `json:"q"`
 	R            int32     `json:"r"`
 	Hidden       bool      `json:"hidden"`
+	ControllerId OptID     `json:"controllerId"`
 }
 
 // GetID returns the value of ID.
@@ -5815,6 +5879,11 @@ func (s *LiveToken) GetHidden() bool {
 	return s.Hidden
 }
 
+// GetControllerId returns the value of ControllerId.
+func (s *LiveToken) GetControllerId() OptID {
+	return s.ControllerId
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -5850,8 +5919,14 @@ func (s *LiveToken) SetHidden(val bool) {
 	s.Hidden = val
 }
 
+// SetControllerId sets the value of ControllerId.
+func (s *LiveToken) SetControllerId(val OptID) {
+	s.ControllerId = val
+}
+
 // A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
-// change, and a view whose seq is not the next one means resync.
+// change, and a view whose seq is not the next one means resync. A walk's view carries the views along
+// the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
 	Kind    LiveUpdateKind     `json:"kind"`
@@ -5860,6 +5935,8 @@ type LiveUpdate struct {
 	Reason  OptString          `json:"reason"`
 	Session OptLiveSessionView `json:"session"`
 	View    OptLiveView        `json:"view"`
+	Steps   []LiveView         `json:"steps"`
+	Path    OptLivePath        `json:"path"`
 }
 
 // GetKind returns the value of Kind.
@@ -5892,6 +5969,16 @@ func (s *LiveUpdate) GetView() OptLiveView {
 	return s.View
 }
 
+// GetSteps returns the value of Steps.
+func (s *LiveUpdate) GetSteps() []LiveView {
+	return s.Steps
+}
+
+// GetPath returns the value of Path.
+func (s *LiveUpdate) GetPath() OptLivePath {
+	return s.Path
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -5922,6 +6009,16 @@ func (s *LiveUpdate) SetView(val OptLiveView) {
 	s.View = val
 }
 
+// SetSteps sets the value of Steps.
+func (s *LiveUpdate) SetSteps(val []LiveView) {
+	s.Steps = val
+}
+
+// SetPath sets the value of Path.
+func (s *LiveUpdate) SetPath(val OptLivePath) {
+	s.Path = val
+}
+
 type LiveUpdateKind string
 
 const (
@@ -5929,6 +6026,7 @@ const (
 	LiveUpdateKindView     LiveUpdateKind = "view"
 	LiveUpdateKindRejected LiveUpdateKind = "rejected"
 	LiveUpdateKindEnded    LiveUpdateKind = "ended"
+	LiveUpdateKindPath     LiveUpdateKind = "path"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -5938,6 +6036,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindView,
 		LiveUpdateKindRejected,
 		LiveUpdateKindEnded,
+		LiveUpdateKindPath,
 	}
 }
 
@@ -5951,6 +6050,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindRejected:
 		return []byte(s), nil
 	case LiveUpdateKindEnded:
+		return []byte(s), nil
+	case LiveUpdateKindPath:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5971,6 +6072,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveUpdateKindEnded:
 		*s = LiveUpdateKindEnded
+		return nil
+	case LiveUpdateKindPath:
+		*s = LiveUpdateKindPath
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -7434,6 +7538,52 @@ func (o OptLiveMap) Get() (v LiveMap, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveMap) Or(d LiveMap) LiveMap {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLivePath returns new OptLivePath with value set to v.
+func NewOptLivePath(v LivePath) OptLivePath {
+	return OptLivePath{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLivePath is optional LivePath.
+type OptLivePath struct {
+	Value LivePath
+	Set   bool
+}
+
+// IsSet returns true if OptLivePath was set.
+func (o OptLivePath) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLivePath) Reset() {
+	var v LivePath
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLivePath) SetTo(v LivePath) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLivePath) Get() (v LivePath, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLivePath) Or(d LivePath) LivePath {
 	if v, ok := o.Get(); ok {
 		return v
 	}

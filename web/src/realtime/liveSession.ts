@@ -1,5 +1,5 @@
 import { onBeforeUnmount, reactive } from 'vue'
-import type { LiveCommand, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveCommand, LivePath, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
 import { SessionState } from './sessionState'
 
 export type Audience = 'dm' | 'party' | 'table'
@@ -21,8 +21,12 @@ export type LiveState = {
   connection: Connection
   session: LiveSessionView | null
   view: LiveView | null
+  path: LivePath | null
   rejection: string
 }
+
+/** How long a token takes to walk one hex on screen. */
+export const STEP_MS = 250
 
 /** One live Session socket: applies Updates by sequence, resyncs on a gap, reconnects with backoff. */
 export function useLiveSession(
@@ -33,22 +37,32 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
   let timer: ReturnType<typeof setTimeout> | undefined
   let nonce = 0
+  let pace: ReturnType<typeof setTimeout> | undefined
 
+  // A walk plays its steps one hex at a time; anything newer cuts the walk short.
+  const play = (frames: LiveView[]) => {
+    clearTimeout(pace)
+    const [first, ...rest] = frames
+    view.view = first ?? null
+    if (rest.length > 0) pace = setTimeout(() => { play(rest) }, STEP_MS)
+  }
   const sync = () => {
     view.session = state.session
-    view.view = state.view
+    play([...state.steps, ...(state.view ? [state.view] : [])])
+    view.path = state.path
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }
   function send(cmd: Omit<LiveCommand, 'nonce' | 'q' | 'r' | 'hidden'> & Partial<Pick<LiveCommand, 'q' | 'r' | 'hidden'>>) {
     nonce++
     state.rejection = ''
+    view.rejection = ''
     socket?.send(JSON.stringify({ q: 0, r: 0, hidden: false, ...cmd, nonce: String(nonce) }))
   }
   function connect() {
@@ -81,6 +95,7 @@ export function useLiveSession(
   function close() {
     stopped = true
     clearTimeout(timer)
+    clearTimeout(pace)
     socket?.close()
   }
   connect()

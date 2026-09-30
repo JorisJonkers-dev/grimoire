@@ -11,9 +11,11 @@ import { cellsFor, key, layoutOf } from './geometry'
 const ID = '0190c7a8-0000-7000-8000-000000000001'
 const SID = '0190c7a8-0000-7000-8000-00000000000b'
 const member = { id: '0190c7a8-0000-7000-8000-000000000004', displayName: 'Joris', role: 'dm', joinedAt: '2026-09-30T20:00:00Z', isMe: true }
-const campaign = (myRole = 'dm') => ({
-  id: ID, name: 'Strahd', ruleset: 'srd-2024', myRole, memberCount: 1, createdAt: '2026-09-30T20:00:00Z', me: member, members: [member],
-})
+const player = { id: '0190c7a8-0000-7000-8000-000000000005', displayName: 'Aria', role: 'player', joinedAt: '2026-09-30T20:00:00Z', isMe: false }
+const campaign = (myRole = 'dm') => {
+  const me = myRole === 'dm' ? member : { ...player, isMe: true }
+  return { id: ID, name: 'Strahd', ruleset: 'srd-2024', myRole, memberCount: 2, createdAt: '2026-09-30T20:00:00Z', me, members: [member, player] }
+}
 const goblin: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Goblin Boss', kind: 'enemy', q: 1, r: 0, hidden: false, darkvisionFt: 0 }
 const lurker: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000c', label: 'Lurker', kind: 'enemy', q: -1, r: 0, hidden: true, darkvisionFt: 60 }
 const snapshot = (tokens: unknown[], audience = 'dm', extra: object = {}) => ({
@@ -61,16 +63,23 @@ describe('live session page', () => {
     expect(wrapper.get('h1').text()).toBe('Session 3')
     await wrapper.get('[data-testid="token-label"]').setValue('Ireena')
     await wrapper.get('[data-testid="token-kind"]').setValue('party')
+    await wrapper.get('[data-testid="token-controller"]').setValue(player.id)
     await wrapper.get('[data-testid="token-hidden"]').setValue(true)
     await wrapper.get('[data-testid="token-darkvision"]').setValue(60)
     await wrapper.get('[data-hex="0,1"]').trigger('click')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', label: 'Ireena', tokenKind: 'party', q: 0, r: 1, hidden: true, darkvisionFt: 60 })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', label: 'Ireena', tokenKind: 'party', q: 0, r: 1, hidden: true, darkvisionFt: 60, controllerId: player.id })
     await wrapper.get('[data-hex="0,-1"]').trigger('click')
     expect(s.sent).toHaveLength(1)
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(wrapper.get('[data-testid="selected-token"]').text()).toContain('Goblin Boss')
     await wrapper.get('[data-hex="2,0"]').trigger('click')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_token', tokenId: goblin.id, q: 2, r: 0 })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', tokenId: goblin.id, q: 2, r: 0 })
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: goblin.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5 } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="walk-preview"]').text()).toContain('Walk 5 ft')
+    expect(wrapper.get('[data-hex="2,0"]').attributes('aria-label')).toContain('on the path')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: goblin.id, q: 2, r: 0 })
     await wrapper.get('[data-testid="toggle-hidden"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'set_token_hidden', tokenId: goblin.id, hidden: true })
     await wrapper.get('[data-hex="-1,0"]').trigger('click')
@@ -171,6 +180,44 @@ describe('live session on a map', () => {
     expect(wrapper.get('[data-hex="2,0"]').attributes('aria-label')).toBe('Hex 2, 0: never seen')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(s.sent).toHaveLength(0)
+  })
+})
+
+describe('exploration', () => {
+  it('lets a player preview and walk their own tokens, played back hex by hex', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
+    const brom: LiveToken = { ...aria, id: '0190c7a8-0000-7000-8000-00000000000f', label: 'Brom', q: 0, r: 1 }
+    s.receive(snapshot([aria, brom, goblin], 'party'))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="walker"]').text()).toBe('Tap a hex to walk Aria there.')
+    await wrapper.get('[data-hex="0,1"]').trigger('click')
+    expect(s.sent).toHaveLength(0)
+    expect(wrapper.get('[data-testid="walker"]').text()).toContain('Brom')
+    await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', tokenId: brom.id, q: 1, r: 0 })
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 0 }], costFt: 5 } })
+    await flushPromises()
+    await wrapper.get('[data-hex="2,-1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', q: 2, r: -1 })
+    s.receive({ kind: 'rejected', seq: 1, reason: 'There is no way there.' })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="rejection"]').text()).toBe('There is no way there.')
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 1 }, { q: 2, r: 0 }], costFt: 10 } })
+    await flushPromises()
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: brom.id, q: 2, r: 0 })
+    const at = (q: number, r: number) => ({ tokens: [aria, { ...brom, q, r }], fog: false, visible: [], remembered: [] })
+    s.receive({ kind: 'view', seq: 2, steps: [at(1, 1)], view: at(2, 0) })
+    await flushPromises()
+    expect(wrapper.get('[data-hex="1,1"]').attributes('aria-label')).toContain('Brom')
+    await vi.advanceTimersByTimeAsync(250)
+    expect(wrapper.get('[data-hex="2,0"]').attributes('aria-label')).toContain('Brom')
+    expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
+    vi.useRealTimers()
   })
 })
 

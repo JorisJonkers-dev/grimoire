@@ -32,6 +32,8 @@ const (
 	CmdPlaceLight  = "place_light"
 	CmdRemoveLight = "remove_light"
 	CmdSetAmbient  = "set_ambient"
+	CmdPlanWalk    = "plan_walk"
+	CmdWalk        = "walk"
 )
 
 // Hex is an axial coordinate on the wire.
@@ -58,6 +60,7 @@ type Command struct {
 	BrightFt     int    `json:"brightFt,omitempty"`
 	DimFt        int    `json:"dimFt,omitempty"`
 	Ambient      string `json:"ambient,omitempty"`
+	ControllerID string `json:"controllerId,omitempty"`
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -65,6 +68,7 @@ const (
 	UpdSnapshot = "snapshot"
 	UpdView     = "view"
 	UpdRejected = "rejected"
+	UpdPath     = "path"
 	UpdEnded    = "ended"
 )
 
@@ -85,6 +89,14 @@ type TokenView struct {
 	R            int    `json:"r"`
 	Hidden       bool   `json:"hidden"`
 	DarkvisionFt int    `json:"darkvisionFt"`
+	ControllerID string `json:"controllerId,omitempty"`
+}
+
+// PathView is the route a walk would take and what it costs, sent only to whoever asked.
+type PathView struct {
+	TokenID string `json:"tokenId"`
+	Hexes   []Hex  `json:"hexes"`
+	CostFt  int    `json:"costFt"`
 }
 
 // MapView is the active Map's geometry and picture.
@@ -131,10 +143,25 @@ type Update struct {
 	Reason  string       `json:"reason,omitempty"`
 	Session *SessionView `json:"session,omitempty"`
 	View    *View        `json:"view,omitempty"`
+	// Steps are the views along a walk before its final View, for clients to play back at walking pace.
+	Steps []View    `json:"steps,omitempty"`
+	Path  *PathView `json:"path,omitempty"`
 }
 
 func tokenView(t domain.Token) TokenView {
-	return TokenView{ID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, Q: t.Q, R: t.R, Hidden: t.Hidden, DarkvisionFt: t.DarkvisionFt}
+	v := TokenView{ID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, Q: t.Q, R: t.R, Hidden: t.Hidden, DarkvisionFt: t.DarkvisionFt}
+	if t.Controller != nil {
+		v.ControllerID = t.Controller.String()
+	}
+	return v
+}
+
+func wireHexes(cs []hex.Coord) []Hex {
+	out := make([]Hex, 0, len(cs))
+	for _, c := range cs {
+		out = append(out, Hex{Q: c.Q, R: c.R})
+	}
+	return out
 }
 
 func hexes(set map[hex.Coord]bool) []Hex {

@@ -56,7 +56,7 @@ func setup(t *testing.T) world {
 	members := pgstore.CampaignMembers{Store: campaignpg.New(store.Pool())}
 	dm, _ := members.Membership(ctx, uuid.UUID(d.ID), dmCaller.Subject)
 	player, _ := members.Membership(ctx, uuid.UUID(d.ID), playerCaller.Subject)
-	hub := &live.Hub{Store: pgstore.New(store.Pool()), Owner: pgstore.Owner{Pool: store.Pool()}, Now: time.Now, Log: quiet}
+	hub := &live.Hub{Store: pgstore.New(store.Pool()), Members: members, Owner: pgstore.Owner{Pool: store.Pool()}, Now: time.Now, Log: quiet}
 	t.Cleanup(hub.Shutdown)
 	sessions := &app.Sessions{Repo: pgstore.New(store.Pool()), Members: members, Live: hub, Now: time.Now}
 	s, err := sessions.Start(ctx, dmCaller, uuid.UUID(d.ID))

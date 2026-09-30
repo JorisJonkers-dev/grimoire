@@ -478,7 +478,8 @@ export const zLiveToken = z.object({
     darkvisionFt: z.int().gte(0).lte(300),
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
-    hidden: z.boolean()
+    hidden: z.boolean(),
+    controllerId: zId.optional()
 });
 
 /**
@@ -493,6 +494,15 @@ export const zLiveSessionView = z.object({
         'party',
         'table'
     ])
+});
+
+/**
+ * The route a walk would take, start first, and the movement it costs.
+ */
+export const zLivePath = z.object({
+    tokenId: zId,
+    hexes: z.array(zHexCoord).max(61),
+    costFt: z.int().gte(0).lte(1000)
 });
 
 /**
@@ -520,7 +530,9 @@ export const zLiveCommand = z.object({
         'set_walls',
         'place_light',
         'remove_light',
-        'set_ambient'
+        'set_ambient',
+        'plan_walk',
+        'walk'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -535,7 +547,8 @@ export const zLiveCommand = z.object({
     lightId: zId.optional(),
     brightFt: z.int().gte(0).lte(600).optional(),
     dimFt: z.int().gte(0).lte(600).optional(),
-    ambient: zAmbientLight.optional()
+    ambient: zAmbientLight.optional(),
+    controllerId: zId.optional()
 });
 
 /**
@@ -579,20 +592,23 @@ export const zLiveView = z.object({
 });
 
 /**
- * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync.
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export const zLiveUpdate = z.object({
     kind: z.enum([
         'snapshot',
         'view',
         'rejected',
-        'ended'
+        'ended',
+        'path'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
     reason: z.string().max(200).optional(),
     session: zLiveSessionView.optional(),
-    view: zLiveView.optional()
+    view: zLiveView.optional(),
+    steps: z.array(zLiveView).max(60).optional(),
+    path: zLivePath.optional()
 });
 
 /**

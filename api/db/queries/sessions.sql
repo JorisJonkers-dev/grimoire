@@ -23,10 +23,11 @@ UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE campaign_id = @
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
-INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft) VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft);
+INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id)
+VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;

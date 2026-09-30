@@ -683,6 +683,7 @@ export type LiveToken = {
     q: number;
     r: number;
     hidden: boolean;
+    controllerId?: Id;
 };
 
 /**
@@ -700,7 +701,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -715,18 +716,30 @@ export type LiveCommand = {
     brightFt?: number;
     dimFt?: number;
     ambient?: AmbientLight;
+    controllerId?: Id;
 };
 
 /**
- * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync.
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'view' | 'rejected' | 'ended';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path';
     seq: number;
     nonce?: string;
     reason?: string;
     session?: LiveSessionView;
     view?: LiveView;
+    steps?: Array<LiveView>;
+    path?: LivePath;
+};
+
+/**
+ * The route a walk would take, start first, and the movement it costs.
+ */
+export type LivePath = {
+    tokenId: Id;
+    hexes: Array<HexCoord>;
+    costFt: number;
 };
 
 /**

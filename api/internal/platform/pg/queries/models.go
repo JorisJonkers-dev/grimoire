@@ -530,12 +530,13 @@ type PlaySession struct {
 }
 
 type PlayToken struct {
-	ID           uuid.UUID
-	SessionID    uuid.UUID
-	Label        string
-	Kind         string
-	Q            int32
-	R            int32
-	Hidden       bool
-	DarkvisionFt int32
+	ID                 uuid.UUID
+	SessionID          uuid.UUID
+	Label              string
+	Kind               string
+	Q                  int32
+	R                  int32
+	Hidden             bool
+	DarkvisionFt       int32
+	ControllerMemberID pgtype.UUID
 }

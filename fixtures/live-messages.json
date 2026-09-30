@@ -101,6 +101,32 @@
       "r": 0,
       "hidden": false,
       "ambient": "dark"
+    },
+    {
+      "nonce": "n12",
+      "kind": "place_token",
+      "label": "Aria",
+      "tokenKind": "party",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+    },
+    {
+      "nonce": "n13",
+      "kind": "plan_walk",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 3,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n14",
+      "kind": "walk",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 3,
+      "r": 0,
+      "hidden": false
     }
   ],
   "updates": [
@@ -122,7 +148,8 @@
             "q": 2,
             "r": -1,
             "hidden": false,
-            "darkvisionFt": 0
+            "darkvisionFt": 0,
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
           }
         ],
         "map": {
@@ -164,7 +191,8 @@
             "q": 2,
             "r": -1,
             "hidden": false,
-            "darkvisionFt": 0
+            "darkvisionFt": 0,
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
           }
         ],
         "map": {
@@ -226,8 +254,114 @@
       "reason": "Only the DM can change the table."
     },
     {
+      "kind": "path",
+      "seq": 6,
+      "nonce": "n13",
+      "path": {
+        "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+        "hexes": [
+          {
+            "q": 2,
+            "r": -1
+          },
+          {
+            "q": 3,
+            "r": -1
+          },
+          {
+            "q": 3,
+            "r": 0
+          }
+        ],
+        "costFt": 10
+      }
+    },
+    {
+      "kind": "view",
+      "seq": 7,
+      "nonce": "n14",
+      "view": {
+        "tokens": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "q": 2,
+            "r": -1,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+          }
+        ],
+        "map": {
+          "id": "0190c7a8-0000-7000-8000-00000000000c",
+          "name": "Crypt",
+          "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+          "width": 400,
+          "height": 300,
+          "hexSizePx": 40,
+          "originX": 34.64,
+          "originY": 40,
+          "imageVersion": 2
+        },
+        "fog": true,
+        "visible": [
+          {
+            "q": 0,
+            "r": 0
+          }
+        ],
+        "remembered": [
+          {
+            "q": 1,
+            "r": 0
+          }
+        ]
+      },
+      "steps": [
+        {
+          "tokens": [
+            {
+              "id": "0190c7a8-0000-7000-8000-00000000000a",
+              "label": "Goblin",
+              "kind": "enemy",
+              "q": 2,
+              "r": -1,
+              "hidden": false,
+              "darkvisionFt": 0,
+              "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+            }
+          ],
+          "map": {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Crypt",
+            "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+            "width": 400,
+            "height": 300,
+            "hexSizePx": 40,
+            "originX": 34.64,
+            "originY": 40,
+            "imageVersion": 2
+          },
+          "fog": true,
+          "visible": [
+            {
+              "q": 0,
+              "r": 0
+            }
+          ],
+          "remembered": [
+            {
+              "q": 1,
+              "r": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
       "kind": "ended",
-      "seq": 6
+      "seq": 7
     }
   ]
 }
