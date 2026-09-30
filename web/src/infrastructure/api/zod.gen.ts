@@ -538,6 +538,25 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * How the Table Display's camera moves.
+ */
+export const zTableCamera = z.enum([
+    'follow_turn',
+    'show_party',
+    'free'
+]);
+
+/**
+ * What the Table Display shows.
+ */
+export const zTableScene = z.enum([
+    'local',
+    'world',
+    'handout',
+    'title'
+]);
+
+/**
  * A creature an area catches.
  */
 export const zLiveAreaTarget = z.object({
@@ -767,6 +786,21 @@ export const zLiveMap = z.object({
 });
 
 /**
+ * What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap.
+ */
+export const zLiveTable = z.object({
+    camera: zTableCamera,
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    zoomPct: z.int().gte(50).lte(300),
+    scene: zTableScene,
+    title: z.string().max(80).optional(),
+    body: z.string().max(1000).optional(),
+    worldMap: zLiveMap.optional(),
+    blackout: z.boolean()
+});
+
+/**
  * A light on the Map, for the DM.
  */
 export const zLiveLight = z.object({
@@ -793,6 +827,7 @@ export const zLiveView = z.object({
     surfaces: z.array(zLiveSurface).max(100000).optional(),
     elevation: z.array(zLiveElevation).max(100000).optional(),
     area: zLiveArea.optional(),
+    table: zLiveTable.optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -809,7 +844,8 @@ export const zLiveUpdate = z.object({
         'ended',
         'path',
         'attack_preview',
-        'area_preview'
+        'area_preview',
+        'ping'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
@@ -819,7 +855,8 @@ export const zLiveUpdate = z.object({
     steps: z.array(zLiveView).max(60).optional(),
     path: zLivePath.optional(),
     preview: zLiveAttackPreview.optional(),
-    area: zLiveAreaPreview.optional()
+    area: zLiveAreaPreview.optional(),
+    ping: zHexCoord.optional()
 });
 
 /**
@@ -1028,7 +1065,11 @@ export const zLiveCommand = z.object({
         'preview_area',
         'cast_area',
         'paint_surface',
-        'set_elevation'
+        'set_elevation',
+        'table_camera',
+        'table_scene',
+        'table_blackout',
+        'ping'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1075,7 +1116,12 @@ export const zLiveCommand = z.object({
         'web',
         'electrified'
     ]).optional(),
-    elevationFt: z.int().gte(-100).lte(100).optional()
+    elevationFt: z.int().gte(-100).lte(100).optional(),
+    camera: zTableCamera.optional(),
+    zoomPct: z.int().gte(50).lte(300).optional(),
+    scene: zTableScene.optional(),
+    title: z.string().max(80).optional(),
+    body: z.string().max(1000).optional()
 });
 
 /**

@@ -15,6 +15,8 @@ export class SessionState {
   path: LivePath | null = null
   preview: LiveAttackPreview | null = null
   areaPreview: LiveAreaPreview | null = null
+  /** The last pinged hex, with a count so the same hex can be pinged twice. */
+  ping: { q: number; r: number; n: number } | null = null
 
   apply(frame: unknown): Outcome {
     const parsed = zLiveUpdate.safeParse(frame)
@@ -32,6 +34,9 @@ export class SessionState {
         this.path = null
         this.preview = null
         this.areaPreview = null
+        return 'applied'
+      case 'ping':
+        this.ping = u.ping ? { ...u.ping, n: (this.ping?.n ?? 0) + 1 } : null
         return 'applied'
       case 'area_preview':
         this.areaPreview = u.area ?? null

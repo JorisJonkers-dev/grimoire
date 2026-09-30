@@ -20,9 +20,10 @@ import LiveRoll from './LiveRoll.vue'
 import MapBoard from './MapBoard.vue'
 import ReactionPrompt from './ReactionPrompt.vue'
 import StartCombat from './StartCombat.vue'
+import TableRemote from './TableRemote.vue'
 import TurnPanel from './TurnPanel.vue'
 
-type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation'
+type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'camera' | 'ping'
 
 const route = useRoute()
 const router = useRouter()
@@ -225,6 +226,12 @@ function pick(c: Coord) {
     case 'elevation':
       live.value.send({ kind: 'set_elevation', hexes: [c], elevationFt: elevationFt.value })
       return
+    case 'camera':
+      live.value.send({ kind: 'table_camera', camera: 'free', q: c.q, r: c.r, zoomPct: view.value?.table?.zoomPct ?? 100 })
+      return
+    case 'ping':
+      live.value.send({ kind: 'ping', q: c.q, r: c.r })
+      return
     default: {
       const lit = view.value?.lights?.find((l) => key(l) === key(c))
       if (lit) live.value.send({ kind: 'remove_light', lightId: lit.id })
@@ -342,9 +349,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <fieldset class="tools">
           <legend>Tap the map to</legend>
-          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation'] as const)" :key="t" class="tool">
+          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'camera', 'ping'] as const)" :key="t" class="tool">
             <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground' }[t] }}</span>
+            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
           </label>
         </fieldset>
         <div v-if="view?.map" class="row">
@@ -424,6 +431,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </GButton>
         </div>
         <StartCombat v-if="choosing && !combat" :tokens="view?.tokens ?? []" @start="startCombat" />
+        <TableRemote
+          :table="view?.table"
+          :maps="maps.data.value ?? []"
+          @camera="(camera, zoomPct) => live?.send({ kind: 'table_camera', camera, zoomPct, q: view?.table?.q ?? 0, r: view?.table?.r ?? 0 })"
+          @scene="(s) => live?.send({ kind: 'table_scene', ...s })"
+          @blackout="(on) => live?.send({ kind: 'table_blackout', on })"
+        />
         <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
       </section>
       <ul class="g-list tokens" aria-label="Tokens in view">

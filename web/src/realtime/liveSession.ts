@@ -24,6 +24,7 @@ export type LiveState = {
   path: LivePath | null
   preview: LiveAttackPreview | null
   areaPreview: LiveAreaPreview | null
+  ping: { q: number; r: number; n: number } | null
   rejection: string
 }
 
@@ -39,7 +40,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -60,6 +61,7 @@ export function useLiveSession(
     view.path = state.path
     view.preview = state.preview
     view.areaPreview = state.areaPreview
+    view.ping = state.ping
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }

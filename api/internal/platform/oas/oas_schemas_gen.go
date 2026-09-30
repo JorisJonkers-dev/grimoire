@@ -6117,6 +6117,11 @@ type LiveCommand struct {
 	// With paint_surface; leave it out to clear.
 	Surface     OptLiveCommandSurface `json:"surface"`
 	ElevationFt OptInt32              `json:"elevationFt"`
+	Camera      OptTableCamera        `json:"camera"`
+	ZoomPct     OptInt32              `json:"zoomPct"`
+	Scene       OptTableScene         `json:"scene"`
+	Title       OptString             `json:"title"`
+	Body        OptString             `json:"body"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -6304,6 +6309,31 @@ func (s *LiveCommand) GetElevationFt() OptInt32 {
 	return s.ElevationFt
 }
 
+// GetCamera returns the value of Camera.
+func (s *LiveCommand) GetCamera() OptTableCamera {
+	return s.Camera
+}
+
+// GetZoomPct returns the value of ZoomPct.
+func (s *LiveCommand) GetZoomPct() OptInt32 {
+	return s.ZoomPct
+}
+
+// GetScene returns the value of Scene.
+func (s *LiveCommand) GetScene() OptTableScene {
+	return s.Scene
+}
+
+// GetTitle returns the value of Title.
+func (s *LiveCommand) GetTitle() OptString {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *LiveCommand) GetBody() OptString {
+	return s.Body
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6489,6 +6519,31 @@ func (s *LiveCommand) SetElevationFt(val OptInt32) {
 	s.ElevationFt = val
 }
 
+// SetCamera sets the value of Camera.
+func (s *LiveCommand) SetCamera(val OptTableCamera) {
+	s.Camera = val
+}
+
+// SetZoomPct sets the value of ZoomPct.
+func (s *LiveCommand) SetZoomPct(val OptInt32) {
+	s.ZoomPct = val
+}
+
+// SetScene sets the value of Scene.
+func (s *LiveCommand) SetScene(val OptTableScene) {
+	s.Scene = val
+}
+
+// SetTitle sets the value of Title.
+func (s *LiveCommand) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *LiveCommand) SetBody(val OptString) {
+	s.Body = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6521,6 +6576,10 @@ const (
 	LiveCommandKindCastArea       LiveCommandKind = "cast_area"
 	LiveCommandKindPaintSurface   LiveCommandKind = "paint_surface"
 	LiveCommandKindSetElevation   LiveCommandKind = "set_elevation"
+	LiveCommandKindTableCamera    LiveCommandKind = "table_camera"
+	LiveCommandKindTableScene     LiveCommandKind = "table_scene"
+	LiveCommandKindTableBlackout  LiveCommandKind = "table_blackout"
+	LiveCommandKindPing           LiveCommandKind = "ping"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6555,6 +6614,10 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindCastArea,
 		LiveCommandKindPaintSurface,
 		LiveCommandKindSetElevation,
+		LiveCommandKindTableCamera,
+		LiveCommandKindTableScene,
+		LiveCommandKindTableBlackout,
+		LiveCommandKindPing,
 	}
 }
 
@@ -6618,6 +6681,14 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindPaintSurface:
 		return []byte(s), nil
 	case LiveCommandKindSetElevation:
+		return []byte(s), nil
+	case LiveCommandKindTableCamera:
+		return []byte(s), nil
+	case LiveCommandKindTableScene:
+		return []byte(s), nil
+	case LiveCommandKindTableBlackout:
+		return []byte(s), nil
+	case LiveCommandKindPing:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6713,6 +6784,18 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindSetElevation:
 		*s = LiveCommandKindSetElevation
+		return nil
+	case LiveCommandKindTableCamera:
+		*s = LiveCommandKindTableCamera
+		return nil
+	case LiveCommandKindTableScene:
+		*s = LiveCommandKindTableScene
+		return nil
+	case LiveCommandKindTableBlackout:
+		*s = LiveCommandKindTableBlackout
+		return nil
+	case LiveCommandKindPing:
+		*s = LiveCommandKindPing
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -7713,6 +7796,111 @@ func (s *LiveSurfaceKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows
+// worldMap.
+// Ref: #/components/schemas/LiveTable
+type LiveTable struct {
+	Camera   TableCamera `json:"camera"`
+	Q        int32       `json:"q"`
+	R        int32       `json:"r"`
+	ZoomPct  int32       `json:"zoomPct"`
+	Scene    TableScene  `json:"scene"`
+	Title    OptString   `json:"title"`
+	Body     OptString   `json:"body"`
+	WorldMap OptLiveMap  `json:"worldMap"`
+	Blackout bool        `json:"blackout"`
+}
+
+// GetCamera returns the value of Camera.
+func (s *LiveTable) GetCamera() TableCamera {
+	return s.Camera
+}
+
+// GetQ returns the value of Q.
+func (s *LiveTable) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveTable) GetR() int32 {
+	return s.R
+}
+
+// GetZoomPct returns the value of ZoomPct.
+func (s *LiveTable) GetZoomPct() int32 {
+	return s.ZoomPct
+}
+
+// GetScene returns the value of Scene.
+func (s *LiveTable) GetScene() TableScene {
+	return s.Scene
+}
+
+// GetTitle returns the value of Title.
+func (s *LiveTable) GetTitle() OptString {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *LiveTable) GetBody() OptString {
+	return s.Body
+}
+
+// GetWorldMap returns the value of WorldMap.
+func (s *LiveTable) GetWorldMap() OptLiveMap {
+	return s.WorldMap
+}
+
+// GetBlackout returns the value of Blackout.
+func (s *LiveTable) GetBlackout() bool {
+	return s.Blackout
+}
+
+// SetCamera sets the value of Camera.
+func (s *LiveTable) SetCamera(val TableCamera) {
+	s.Camera = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveTable) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveTable) SetR(val int32) {
+	s.R = val
+}
+
+// SetZoomPct sets the value of ZoomPct.
+func (s *LiveTable) SetZoomPct(val int32) {
+	s.ZoomPct = val
+}
+
+// SetScene sets the value of Scene.
+func (s *LiveTable) SetScene(val TableScene) {
+	s.Scene = val
+}
+
+// SetTitle sets the value of Title.
+func (s *LiveTable) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *LiveTable) SetBody(val OptString) {
+	s.Body = val
+}
+
+// SetWorldMap sets the value of WorldMap.
+func (s *LiveTable) SetWorldMap(val OptLiveMap) {
+	s.WorldMap = val
+}
+
+// SetBlackout sets the value of Blackout.
+func (s *LiveTable) SetBlackout(val bool) {
+	s.Blackout = val
+}
+
 // A Token as a connection sees it.
 // Ref: #/components/schemas/LiveToken
 type LiveToken struct {
@@ -7955,6 +8143,7 @@ type LiveUpdate struct {
 	Path    OptLivePath          `json:"path"`
 	Preview OptLiveAttackPreview `json:"preview"`
 	Area    OptLiveAreaPreview   `json:"area"`
+	Ping    OptHexCoord          `json:"ping"`
 }
 
 // GetKind returns the value of Kind.
@@ -8007,6 +8196,11 @@ func (s *LiveUpdate) GetArea() OptLiveAreaPreview {
 	return s.Area
 }
 
+// GetPing returns the value of Ping.
+func (s *LiveUpdate) GetPing() OptHexCoord {
+	return s.Ping
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -8057,6 +8251,11 @@ func (s *LiveUpdate) SetArea(val OptLiveAreaPreview) {
 	s.Area = val
 }
 
+// SetPing sets the value of Ping.
+func (s *LiveUpdate) SetPing(val OptHexCoord) {
+	s.Ping = val
+}
+
 type LiveUpdateKind string
 
 const (
@@ -8067,6 +8266,7 @@ const (
 	LiveUpdateKindPath          LiveUpdateKind = "path"
 	LiveUpdateKindAttackPreview LiveUpdateKind = "attack_preview"
 	LiveUpdateKindAreaPreview   LiveUpdateKind = "area_preview"
+	LiveUpdateKindPing          LiveUpdateKind = "ping"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -8079,6 +8279,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindPath,
 		LiveUpdateKindAttackPreview,
 		LiveUpdateKindAreaPreview,
+		LiveUpdateKindPing,
 	}
 }
 
@@ -8098,6 +8299,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindAttackPreview:
 		return []byte(s), nil
 	case LiveUpdateKindAreaPreview:
+		return []byte(s), nil
+	case LiveUpdateKindPing:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -8128,6 +8331,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 	case LiveUpdateKindAreaPreview:
 		*s = LiveUpdateKindAreaPreview
 		return nil
+	case LiveUpdateKindPing:
+		*s = LiveUpdateKindPing
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -8153,6 +8359,7 @@ type LiveView struct {
 	Surfaces  []LiveSurface   `json:"surfaces"`
 	Elevation []LiveElevation `json:"elevation"`
 	Area      OptLiveArea     `json:"area"`
+	Table     OptLiveTable    `json:"table"`
 	Walls     []HexCoord      `json:"walls"`
 	Lights    []LiveLight     `json:"lights"`
 	Ambient   OptAmbientLight `json:"ambient"`
@@ -8216,6 +8423,11 @@ func (s *LiveView) GetElevation() []LiveElevation {
 // GetArea returns the value of Area.
 func (s *LiveView) GetArea() OptLiveArea {
 	return s.Area
+}
+
+// GetTable returns the value of Table.
+func (s *LiveView) GetTable() OptLiveTable {
+	return s.Table
 }
 
 // GetWalls returns the value of Walls.
@@ -8291,6 +8503,11 @@ func (s *LiveView) SetElevation(val []LiveElevation) {
 // SetArea sets the value of Area.
 func (s *LiveView) SetArea(val OptLiveArea) {
 	s.Area = val
+}
+
+// SetTable sets the value of Table.
+func (s *LiveView) SetTable(val OptLiveTable) {
+	s.Table = val
 }
 
 // SetWalls sets the value of Walls.
@@ -10226,6 +10443,52 @@ func (o OptLiveSuggestion) Or(d LiveSuggestion) LiveSuggestion {
 	return d
 }
 
+// NewOptLiveTable returns new OptLiveTable with value set to v.
+func NewOptLiveTable(v LiveTable) OptLiveTable {
+	return OptLiveTable{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveTable is optional LiveTable.
+type OptLiveTable struct {
+	Value LiveTable
+	Set   bool
+}
+
+// IsSet returns true if OptLiveTable was set.
+func (o OptLiveTable) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveTable) Reset() {
+	var v LiveTable
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveTable) SetTo(v LiveTable) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveTable) Get() (v LiveTable, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveTable) Or(d LiveTable) LiveTable {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveTokenHealth returns new OptLiveTokenHealth with value set to v.
 func NewOptLiveTokenHealth(v LiveTokenHealth) OptLiveTokenHealth {
 	return OptLiveTokenHealth{
@@ -10588,6 +10851,98 @@ func (o OptString) Get() (v string, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptString) Or(d string) string {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptTableCamera returns new OptTableCamera with value set to v.
+func NewOptTableCamera(v TableCamera) OptTableCamera {
+	return OptTableCamera{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTableCamera is optional TableCamera.
+type OptTableCamera struct {
+	Value TableCamera
+	Set   bool
+}
+
+// IsSet returns true if OptTableCamera was set.
+func (o OptTableCamera) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTableCamera) Reset() {
+	var v TableCamera
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTableCamera) SetTo(v TableCamera) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTableCamera) Get() (v TableCamera, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTableCamera) Or(d TableCamera) TableCamera {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptTableScene returns new OptTableScene with value set to v.
+func NewOptTableScene(v TableScene) OptTableScene {
+	return OptTableScene{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTableScene is optional TableScene.
+type OptTableScene struct {
+	Value TableScene
+	Set   bool
+}
+
+// IsSet returns true if OptTableScene was set.
+func (o OptTableScene) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTableScene) Reset() {
+	var v TableScene
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTableScene) SetTo(v TableScene) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTableScene) Get() (v TableScene, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTableScene) Or(d TableScene) TableScene {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -13259,6 +13614,113 @@ func (s *StatusHeaders) SetResponse(val Status) {
 }
 
 func (*StatusHeaders) getStatusRes() {}
+
+// How the Table Display's camera moves.
+// Ref: #/components/schemas/TableCamera
+type TableCamera string
+
+const (
+	TableCameraFollowTurn TableCamera = "follow_turn"
+	TableCameraShowParty  TableCamera = "show_party"
+	TableCameraFree       TableCamera = "free"
+)
+
+// AllValues returns all TableCamera values.
+func (TableCamera) AllValues() []TableCamera {
+	return []TableCamera{
+		TableCameraFollowTurn,
+		TableCameraShowParty,
+		TableCameraFree,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TableCamera) MarshalText() ([]byte, error) {
+	switch s {
+	case TableCameraFollowTurn:
+		return []byte(s), nil
+	case TableCameraShowParty:
+		return []byte(s), nil
+	case TableCameraFree:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TableCamera) UnmarshalText(data []byte) error {
+	switch TableCamera(data) {
+	case TableCameraFollowTurn:
+		*s = TableCameraFollowTurn
+		return nil
+	case TableCameraShowParty:
+		*s = TableCameraShowParty
+		return nil
+	case TableCameraFree:
+		*s = TableCameraFree
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// What the Table Display shows.
+// Ref: #/components/schemas/TableScene
+type TableScene string
+
+const (
+	TableSceneLocal   TableScene = "local"
+	TableSceneWorld   TableScene = "world"
+	TableSceneHandout TableScene = "handout"
+	TableSceneTitle   TableScene = "title"
+)
+
+// AllValues returns all TableScene values.
+func (TableScene) AllValues() []TableScene {
+	return []TableScene{
+		TableSceneLocal,
+		TableSceneWorld,
+		TableSceneHandout,
+		TableSceneTitle,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TableScene) MarshalText() ([]byte, error) {
+	switch s {
+	case TableSceneLocal:
+		return []byte(s), nil
+	case TableSceneWorld:
+		return []byte(s), nil
+	case TableSceneHandout:
+		return []byte(s), nil
+	case TableSceneTitle:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TableScene) UnmarshalText(data []byte) error {
+	switch TableScene(data) {
+	case TableSceneLocal:
+		*s = TableSceneLocal
+		return nil
+	case TableSceneWorld:
+		*s = TableSceneWorld
+		return nil
+	case TableSceneHandout:
+		*s = TableSceneHandout
+		return nil
+	case TableSceneTitle:
+		*s = TableSceneTitle
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
 // Ref: #/components/schemas/Tactics

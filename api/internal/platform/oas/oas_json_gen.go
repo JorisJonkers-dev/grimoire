@@ -9572,9 +9572,39 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 			s.ElevationFt.Encode(e)
 		}
 	}
+	{
+		if s.Camera.Set {
+			e.FieldStart("camera")
+			s.Camera.Encode(e)
+		}
+	}
+	{
+		if s.ZoomPct.Set {
+			e.FieldStart("zoomPct")
+			s.ZoomPct.Encode(e)
+		}
+	}
+	{
+		if s.Scene.Set {
+			e.FieldStart("scene")
+			s.Scene.Encode(e)
+		}
+	}
+	{
+		if s.Title.Set {
+			e.FieldStart("title")
+			s.Title.Encode(e)
+		}
+	}
+	{
+		if s.Body.Set {
+			e.FieldStart("body")
+			s.Body.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveCommand = [37]string{
+var jsonFieldsNameOfLiveCommand = [42]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -9612,6 +9642,11 @@ var jsonFieldsNameOfLiveCommand = [37]string{
 	34: "manualId",
 	35: "surface",
 	36: "elevationFt",
+	37: "camera",
+	38: "zoomPct",
+	39: "scene",
+	40: "title",
+	41: "body",
 }
 
 // Decode decodes LiveCommand from json.
@@ -9619,7 +9654,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveCommand to nil")
 	}
-	var requiredBitSet [5]uint8
+	var requiredBitSet [6]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -10015,6 +10050,56 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"elevationFt\"")
 			}
+		case "camera":
+			if err := func() error {
+				s.Camera.Reset()
+				if err := s.Camera.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"camera\"")
+			}
+		case "zoomPct":
+			if err := func() error {
+				s.ZoomPct.Reset()
+				if err := s.ZoomPct.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"zoomPct\"")
+			}
+		case "scene":
+			if err := func() error {
+				s.Scene.Reset()
+				if err := s.Scene.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scene\"")
+			}
+		case "title":
+			if err := func() error {
+				s.Title.Reset()
+				if err := s.Title.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"title\"")
+			}
+		case "body":
+			if err := func() error {
+				s.Body.Reset()
+				if err := s.Body.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"body\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -10024,8 +10109,9 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [5]uint8{
+	for i, mask := range [6]uint8{
 		0b11100011,
+		0b00000000,
 		0b00000000,
 		0b00000000,
 		0b00000000,
@@ -10149,6 +10235,14 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindPaintSurface
 	case LiveCommandKindSetElevation:
 		*s = LiveCommandKindSetElevation
+	case LiveCommandKindTableCamera:
+		*s = LiveCommandKindTableCamera
+	case LiveCommandKindTableScene:
+		*s = LiveCommandKindTableScene
+	case LiveCommandKindTableBlackout:
+		*s = LiveCommandKindTableBlackout
+	case LiveCommandKindPing:
+		*s = LiveCommandKindPing
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -12286,6 +12380,235 @@ func (s *LiveSurfaceKind) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *LiveTable) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveTable) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("camera")
+		s.Camera.Encode(e)
+	}
+	{
+		e.FieldStart("q")
+		e.Int32(s.Q)
+	}
+	{
+		e.FieldStart("r")
+		e.Int32(s.R)
+	}
+	{
+		e.FieldStart("zoomPct")
+		e.Int32(s.ZoomPct)
+	}
+	{
+		e.FieldStart("scene")
+		s.Scene.Encode(e)
+	}
+	{
+		if s.Title.Set {
+			e.FieldStart("title")
+			s.Title.Encode(e)
+		}
+	}
+	{
+		if s.Body.Set {
+			e.FieldStart("body")
+			s.Body.Encode(e)
+		}
+	}
+	{
+		if s.WorldMap.Set {
+			e.FieldStart("worldMap")
+			s.WorldMap.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("blackout")
+		e.Bool(s.Blackout)
+	}
+}
+
+var jsonFieldsNameOfLiveTable = [9]string{
+	0: "camera",
+	1: "q",
+	2: "r",
+	3: "zoomPct",
+	4: "scene",
+	5: "title",
+	6: "body",
+	7: "worldMap",
+	8: "blackout",
+}
+
+// Decode decodes LiveTable from json.
+func (s *LiveTable) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveTable to nil")
+	}
+	var requiredBitSet [2]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "camera":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.Camera.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"camera\"")
+			}
+		case "q":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Int32()
+				s.Q = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"q\"")
+			}
+		case "r":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Int32()
+				s.R = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"r\"")
+			}
+		case "zoomPct":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int32()
+				s.ZoomPct = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"zoomPct\"")
+			}
+		case "scene":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				if err := s.Scene.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"scene\"")
+			}
+		case "title":
+			if err := func() error {
+				s.Title.Reset()
+				if err := s.Title.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"title\"")
+			}
+		case "body":
+			if err := func() error {
+				s.Body.Reset()
+				if err := s.Body.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"body\"")
+			}
+		case "worldMap":
+			if err := func() error {
+				s.WorldMap.Reset()
+				if err := s.WorldMap.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"worldMap\"")
+			}
+		case "blackout":
+			requiredBitSet[1] |= 1 << 0
+			if err := func() error {
+				v, err := d.Bool()
+				s.Blackout = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"blackout\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveTable")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [2]uint8{
+		0b00011111,
+		0b00000001,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveTable) {
+					name = jsonFieldsNameOfLiveTable[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveTable) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveTable) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *LiveToken) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -12751,19 +13074,26 @@ func (s *LiveUpdate) encodeFields(e *jx.Encoder) {
 			s.Area.Encode(e)
 		}
 	}
+	{
+		if s.Ping.Set {
+			e.FieldStart("ping")
+			s.Ping.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveUpdate = [10]string{
-	0: "kind",
-	1: "seq",
-	2: "nonce",
-	3: "reason",
-	4: "session",
-	5: "view",
-	6: "steps",
-	7: "path",
-	8: "preview",
-	9: "area",
+var jsonFieldsNameOfLiveUpdate = [11]string{
+	0:  "kind",
+	1:  "seq",
+	2:  "nonce",
+	3:  "reason",
+	4:  "session",
+	5:  "view",
+	6:  "steps",
+	7:  "path",
+	8:  "preview",
+	9:  "area",
+	10: "ping",
 }
 
 // Decode decodes LiveUpdate from json.
@@ -12884,6 +13214,16 @@ func (s *LiveUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"area\"")
 			}
+		case "ping":
+			if err := func() error {
+				s.Ping.Reset()
+				if err := s.Ping.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"ping\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -12971,6 +13311,8 @@ func (s *LiveUpdateKind) Decode(d *jx.Decoder) error {
 		*s = LiveUpdateKindAttackPreview
 	case LiveUpdateKindAreaPreview:
 		*s = LiveUpdateKindAreaPreview
+	case LiveUpdateKindPing:
+		*s = LiveUpdateKindPing
 	default:
 		*s = LiveUpdateKind(v)
 	}
@@ -13093,6 +13435,12 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Table.Set {
+			e.FieldStart("table")
+			s.Table.Encode(e)
+		}
+	}
+	{
 		if s.Walls != nil {
 			e.FieldStart("walls")
 			e.ArrStart()
@@ -13120,7 +13468,7 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveView = [15]string{
+var jsonFieldsNameOfLiveView = [16]string{
 	0:  "tokens",
 	1:  "map",
 	2:  "fog",
@@ -13133,9 +13481,10 @@ var jsonFieldsNameOfLiveView = [15]string{
 	9:  "surfaces",
 	10: "elevation",
 	11: "area",
-	12: "walls",
-	13: "lights",
-	14: "ambient",
+	12: "table",
+	13: "walls",
+	14: "lights",
+	15: "ambient",
 }
 
 // Decode decodes LiveView from json.
@@ -13320,6 +13669,16 @@ func (s *LiveView) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"area\"")
+			}
+		case "table":
+			if err := func() error {
+				s.Table.Reset()
+				if err := s.Table.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"table\"")
 			}
 		case "walls":
 			if err := func() error {
@@ -15724,6 +16083,39 @@ func (s *OptLiveSuggestion) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes LiveTable as json.
+func (o OptLiveTable) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveTable from json.
+func (o *OptLiveTable) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveTable to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveTable) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveTable) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes LiveTokenHealth as json.
 func (o OptLiveTokenHealth) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -15986,6 +16378,72 @@ func (s OptString) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptString) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes TableCamera as json.
+func (o OptTableCamera) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes TableCamera from json.
+func (o *OptTableCamera) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptTableCamera to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptTableCamera) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptTableCamera) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes TableScene as json.
+func (o OptTableScene) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes TableScene from json.
+func (o *OptTableScene) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptTableScene to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptTableScene) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptTableScene) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -20490,6 +20948,92 @@ func (s StatusDatabase) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *StatusDatabase) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes TableCamera as json.
+func (s TableCamera) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes TableCamera from json.
+func (s *TableCamera) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode TableCamera to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch TableCamera(v) {
+	case TableCameraFollowTurn:
+		*s = TableCameraFollowTurn
+	case TableCameraShowParty:
+		*s = TableCameraShowParty
+	case TableCameraFree:
+		*s = TableCameraFree
+	default:
+		*s = TableCamera(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s TableCamera) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *TableCamera) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes TableScene as json.
+func (s TableScene) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes TableScene from json.
+func (s *TableScene) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode TableScene to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch TableScene(v) {
+	case TableSceneLocal:
+		*s = TableSceneLocal
+	case TableSceneWorld:
+		*s = TableSceneWorld
+	case TableSceneHandout:
+		*s = TableSceneHandout
+	case TableSceneTitle:
+		*s = TableSceneTitle
+	default:
+		*s = TableScene(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s TableScene) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *TableScene) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -48,6 +48,9 @@ type Write struct {
 	SaveSurfaces bool
 	Cast         *domain.AreaCast
 	SaveCast     bool
+	// Table is the Table Display after a table_set.
+	Table *domain.TableDisplay
+	world *domain.Map
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -74,6 +77,7 @@ type Store interface {
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
+	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -206,7 +210,12 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast}
+	table, world, err := h.loadTable(ctx, s)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, world: world}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -221,6 +230,19 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	h.runtimes[id] = rt
 	go rt.run()
 	return rt, nil
+}
+
+// loadTable reads the Table Display and the world map it shows, if any.
+func (h *Hub) loadTable(ctx context.Context, s domain.Session) (domain.TableDisplay, *domain.Map, error) {
+	t, err := h.Store.LoadTable(ctx, s.ID)
+	if err != nil || t.MapID == nil {
+		return t, nil, err
+	}
+	board, err := h.Store.LoadMap(ctx, s.CampaignID, *t.MapID)
+	if err != nil {
+		return t, nil, err
+	}
+	return t, &board.Map, nil
 }
 
 // RollResolved tells the Campaign's running Sessions that a Roll Request resolved, so an initiative
@@ -359,6 +381,9 @@ func (r *runtime) handle(req request) {
 	case req.cmd.Kind == CmdPreviewArea:
 		r.previewArea(req)
 		return
+	case req.cmd.Kind == CmdPing && req.from.Member.DM:
+		r.ping(req)
+		return
 	case !req.from.Member.DM && !playerMay(req.cmd.Kind):
 		r.reject(req, "Only the DM can change the table.")
 		return
@@ -494,6 +519,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet:
 		applyTerrain(s, w)
+		return
+	case domain.ActionTableSet:
+		s.table, s.world = *w.Table, w.world
 		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)

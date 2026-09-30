@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { type Coord, corners, type Layout, toPixel } from '@/shared/hex'
-import type { GridCell } from './grid'
+import { type GridCell, gridBox } from './grid'
 
 
 const props = withDefaults(defineProps<{ cells: GridCell[]; size?: number; title: string }>(), { size: 24 })
@@ -17,14 +17,7 @@ const shapes = computed(() =>
     centre: toPixel(layout.value, c),
   })),
 )
-const box = computed(() => {
-  const xs = shapes.value.map((s) => s.centre.x)
-  const ys = shapes.value.map((s) => s.centre.y)
-  const pad = props.size
-  const x = Math.min(...xs, 0) - pad
-  const y = Math.min(...ys, 0) - pad
-  return { x, y, w: Math.max(...xs, 0) + pad - x, h: Math.max(...ys, 0) + pad - y }
-})
+const box = computed(() => gridBox(props.cells, props.size))
 </script>
 
 <template>

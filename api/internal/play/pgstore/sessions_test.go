@@ -235,6 +235,16 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionAreaResolved, Token: tok, SaveCast: true}, tb.dmMember(t), dm, time.Now())
 			return err
 		},
+		"table": func(_ *app.Sessions, repo *pgstore.Store) error {
+			tbl := domain.DefaultTable()
+			tbl.Scene, tbl.MapID = domain.SceneWorld, &mid
+			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionTableSet, Table: &tbl}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"loadtable": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.LoadTable(ctx, live1.ID)
+			return err
+		},
 		"loadterrain": func(_ *app.Sessions, repo *pgstore.Store) error {
 			_, _, err := repo.LoadTerrain(ctx, live1.ID)
 			return err

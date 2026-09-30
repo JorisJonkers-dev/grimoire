@@ -1,11 +1,12 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveToken } from '@/infrastructure/api/types.gen'
+import type { LiveTable, LiveToken } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials } from './board'
+import { focus } from './camera'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
@@ -697,6 +698,92 @@ describe('areas and terrain', () => {
     expect(wrapper.get('[data-hex="1,1"]').classes()).toContain('cell--surface-ice')
     expect(wrapper.get('[data-hex="1,0"]').classes()).toContain('cell--area')
     expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+  })
+})
+
+describe('table remote', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 2 }
+  const brom: LiveToken = { ...aria, id: '0190c7a8-0000-7000-8000-00000000000f', label: 'Brom', q: 2, r: 0 }
+  const table = (extra: Partial<LiveTable> = {}): LiveTable => ({ camera: 'follow_turn', q: 0, r: 0, zoomPct: 100, scene: 'local', blackout: false, ...extra })
+
+  it('points the camera at the turn, the party or where the DM put it', () => {
+    const base = { tokens: [goblin, aria, brom], fog: false, visible: [], remembered: [] }
+    expect(focus({ ...base, table: table({ camera: 'free', q: 3, r: -2 }) })).toEqual({ q: 3, r: -2 })
+    expect(focus({ ...base, table: table({ camera: 'show_party' }) })).toEqual({ q: 1, r: 1 })
+    const combat = { status: 'active' as const, round: 1, combatants: [{ id: goblin.id, tokenId: goblin.id, label: 'Goblin Boss', kind: 'enemy' as const, rollId: goblin.id, acting: true, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30 }] }
+    expect(focus({ ...base, combat, table: table() })).toEqual({ q: 1, r: 0 })
+    expect(focus({ ...base, table: table() })).toEqual({ q: 1, r: 1 })
+    expect(focus({ ...base, tokens: [goblin] })).toEqual({ q: 0, r: 0 })
+  })
+
+  it('shows the Table Display scene the DM chose, dark when blacked out', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}/table`, {})
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin, aria], 'table', { table: table({ camera: 'free', q: 1, r: 0, zoomPct: 200 }) }))
+    await flushPromises()
+    const world = wrapper.get('[data-testid="camera-world"]')
+    expect(world.attributes('style')).toContain('scale(2)')
+    s.receive({ kind: 'ping', seq: 1, ping: { q: 1, r: 0 } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="ping"]').attributes('aria-label')).toBe('The DM pinged here')
+    const views = [
+      [table({ scene: 'title', title: 'Chapter One', body: 'The mists close in.' }), 'scene-title', 'Chapter One'],
+      [table({ scene: 'handout', title: 'A letter', body: 'Come quickly.' }), 'scene-handout', 'Come quickly.'],
+      [table({ scene: 'world', worldMap: liveMap }), 'scene-world', ''],
+      [table({ blackout: true }), 'blackout', ''],
+    ] as const
+    let seq = 2
+    for (const [t, id, text] of views) {
+      s.receive({ kind: 'view', seq: seq++, view: { tokens: [], fog: false, visible: [], remembered: [], table: t } })
+      await flushPromises()
+      expect(wrapper.get(`[data-testid="${id}"]`).text()).toContain(text)
+    }
+    s.receive({ kind: 'view', seq: seq++, view: { tokens: [aria], fog: false, visible: [], remembered: [], map: liveMap, table: table({ camera: 'show_party' }) } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="map-board"]').exists()).toBe(true)
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('lets the DM steer the table from the session page', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/maps`]: () => [localMap],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'dm', { table: table({ zoomPct: 120 }) }))
+    await flushPromises()
+    const remote = wrapper.get('[data-testid="table-remote"]')
+    await remote.get('[data-testid="camera-show_party"]').setValue(true)
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_camera', camera: 'show_party', zoomPct: 120 })
+    await remote.get('[data-testid="camera-zoom"]').setValue(200)
+    await remote.get('[data-testid="camera-zoom"]').trigger('change')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_camera', camera: 'follow_turn', zoomPct: 200 })
+    await remote.get('[data-testid="scene-title"]').setValue('Chapter One')
+    await remote.get('[data-testid="scene-body"]').setValue('Mists.')
+    await remote.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_scene', scene: 'title', title: 'Chapter One', body: 'Mists.' })
+    await remote.get('[data-testid="scene"]').setValue('world')
+    await remote.get('[data-testid="scene-map"]').setValue(MID)
+    await remote.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_scene', scene: 'world', mapId: MID })
+    expect(s.sent.at(-1)).not.toHaveProperty('title')
+    await remote.get('[data-testid="scene"]').setValue('local')
+    await remote.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_scene', scene: 'local' })
+    await remote.get('[data-testid="blackout-toggle"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_blackout', on: true })
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], fog: false, visible: [], remembered: [], table: table({ blackout: true, zoomPct: 150 }) } })
+    await flushPromises()
+    expect(remote.get('[data-testid="blackout-toggle"]').text()).toBe('Lights back on')
+    expect((remote.get('[data-testid="camera-zoom"]').element as HTMLInputElement).value).toBe('150')
+    await wrapper.get('[data-testid="tool-camera"]').setValue(true)
+    await wrapper.get('[data-hex="1,-1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'table_camera', camera: 'free', q: 1, r: -1, zoomPct: 150 })
+    await wrapper.get('[data-testid="tool-ping"]').setValue(true)
+    await wrapper.get('[data-hex="1,-1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'ping', q: 1, r: -1 })
+    await expectAccessible(wrapper.element as Element)
   })
 })
 
