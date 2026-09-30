@@ -60,12 +60,30 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// CreateNpc invokes createNpc operation.
+	//
+	// Adds an NPC and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/npcs
+	CreateNpc(ctx context.Context, request *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
 	// DeleteCharacter invokes deleteCharacter operation.
 	//
 	// Removes a Character. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
+	// DeleteNpc invokes deleteNpc operation.
+	//
+	// Removes the NPC; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
+	// DiffNpcRevisions invokes diffNpcRevisions operation.
+	//
+	// The fields that differ between two Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
+	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
 	// GetAutomationCoverage invokes getAutomationCoverage operation.
 	//
 	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
@@ -109,6 +127,12 @@ type Invoker interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetNpc invokes getNpc operation.
+	//
+	// One NPC. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	GetNpc(ctx context.Context, params GetNpcParams) (GetNpcRes, error)
 	// GetPortrait invokes getPortrait operation.
 	//
 	// The picture itself, served only to Members of the Campaign.
@@ -151,6 +175,12 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters
 	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
+	// ListDeletedNpcs invokes listDeletedNpcs operation.
+	//
+	// NPCs that were deleted and can still be restored from their Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
+	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
 	// ListEntries invokes listEntries operation.
 	//
 	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -164,6 +194,18 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListNpcRevisions invokes listNpcRevisions operation.
+	//
+	// Every Revision of the NPC, newest first, with its author and origin. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions
+	ListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (ListNpcRevisionsRes, error)
+	// ListNpcs invokes listNpcs operation.
+	//
+	// The Campaign's NPCs. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs
+	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
 	// ListSources invokes listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.
@@ -194,6 +236,13 @@ type Invoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RestoreNpcRevision invokes restoreNpcRevision operation.
+	//
+	// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
+	RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (RestoreNpcRevisionRes, error)
 	// RevokeInvite invokes revokeInvite operation.
 	//
 	// Closes an invite link. DM only.
@@ -230,6 +279,12 @@ type Invoker interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
 	UpdateMember(ctx context.Context, request *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
+	// UpdateNpc invokes updateNpc operation.
+	//
+	// Replaces the NPC and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	UpdateNpc(ctx context.Context, request *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
 }
 
 // Client implements OAS client.
@@ -935,6 +990,144 @@ func (c *Client) sendCreateInvite(ctx context.Context, params CreateInviteParams
 	return result, nil
 }
 
+// CreateNpc invokes createNpc operation.
+//
+// Adds an NPC and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/npcs
+func (c *Client) CreateNpc(ctx context.Context, request *NpcInput, params CreateNpcParams) (CreateNpcRes, error) {
+	res, err := c.sendCreateNpc(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendCreateNpc(ctx context.Context, request *NpcInput, params CreateNpcParams) (res CreateNpcRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createNpc"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateNpcOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreateNpcRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, CreateNpcOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreateNpcResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // DeleteCharacter invokes deleteCharacter operation.
 //
 // Removes a Character. The owner or a DM, never during Combat.
@@ -1084,6 +1277,351 @@ func (c *Client) sendDeleteCharacter(ctx context.Context, params DeleteCharacter
 
 	stage = "DecodeResponse"
 	result, err := decodeDeleteCharacterResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DeleteNpc invokes deleteNpc operation.
+//
+// Removes the NPC; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
+func (c *Client) DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error) {
+	res, err := c.sendDeleteNpc(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDeleteNpc(ctx context.Context, params DeleteNpcParams) (res DeleteNpcRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("deleteNpc"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/{npcId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, DeleteNpcOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/"
+	{
+		// Encode "npcId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "npcId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.NpcId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, DeleteNpcOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeDeleteNpcResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DiffNpcRevisions invokes diffNpcRevisions operation.
+//
+// The fields that differ between two Revisions. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
+func (c *Client) DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error) {
+	res, err := c.sendDiffNpcRevisions(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendDiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (res DiffNpcRevisionsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("diffNpcRevisions"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, DiffNpcRevisionsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/"
+	{
+		// Encode "npcId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "npcId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.NpcId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/revisions/diff"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "from" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "from",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.Int32ToString(params.From))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "to" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "to",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.Int32ToString(params.To))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, DiffNpcRevisionsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeDiffNpcRevisionsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -2037,6 +2575,162 @@ func (c *Client) sendGetMe(ctx context.Context) (res GetMeRes, err error) {
 
 	stage = "DecodeResponse"
 	result, err := decodeGetMeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetNpc invokes getNpc operation.
+//
+// One NPC. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}
+func (c *Client) GetNpc(ctx context.Context, params GetNpcParams) (GetNpcRes, error) {
+	res, err := c.sendGetNpc(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetNpc(ctx context.Context, params GetNpcParams) (res GetNpcRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getNpc"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/{npcId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetNpcOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/"
+	{
+		// Encode "npcId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "npcId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.NpcId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetNpcOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetNpcResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -3009,6 +3703,141 @@ func (c *Client) sendListCharacters(ctx context.Context, params ListCharactersPa
 	return result, nil
 }
 
+// ListDeletedNpcs invokes listDeletedNpcs operation.
+//
+// NPCs that were deleted and can still be restored from their Revisions. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/deleted
+func (c *Client) ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error) {
+	res, err := c.sendListDeletedNpcs(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (res ListDeletedNpcsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listDeletedNpcs"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/deleted"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListDeletedNpcsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/deleted"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListDeletedNpcsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListDeletedNpcsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ListEntries invokes listEntries operation.
 //
 // Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -3354,6 +4183,298 @@ func (c *Client) sendListInvites(ctx context.Context, params ListInvitesParams) 
 
 	stage = "DecodeResponse"
 	result, err := decodeListInvitesResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListNpcRevisions invokes listNpcRevisions operation.
+//
+// Every Revision of the NPC, newest first, with its author and origin. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions
+func (c *Client) ListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (ListNpcRevisionsRes, error) {
+	res, err := c.sendListNpcRevisions(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (res ListNpcRevisionsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listNpcRevisions"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListNpcRevisionsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/"
+	{
+		// Encode "npcId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "npcId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.NpcId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/revisions"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListNpcRevisionsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListNpcRevisionsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListNpcs invokes listNpcs operation.
+//
+// The Campaign's NPCs. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs
+func (c *Client) ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error) {
+	res, err := c.sendListNpcs(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendListNpcs(ctx context.Context, params ListNpcsParams) (res ListNpcsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listNpcs"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListNpcsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListNpcsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListNpcsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -4136,6 +5257,183 @@ func (c *Client) sendRemoveMember(ctx context.Context, params RemoveMemberParams
 
 	stage = "DecodeResponse"
 	result, err := decodeRemoveMemberResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// RestoreNpcRevision invokes restoreNpcRevision operation.
+//
+// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
+func (c *Client) RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (RestoreNpcRevisionRes, error) {
+	res, err := c.sendRestoreNpcRevision(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendRestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (res RestoreNpcRevisionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("restoreNpcRevision"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, RestoreNpcRevisionOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [7]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/"
+	{
+		// Encode "npcId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "npcId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.NpcId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/revisions/"
+	{
+		// Encode "revisionNo" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "revisionNo",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			return e.EncodeValue(conv.Int32ToString(params.RevisionNo))
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[5] = encoded
+	}
+	pathParts[6] = "/restore"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, RestoreNpcRevisionOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeRestoreNpcRevisionResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -5067,6 +6365,165 @@ func (c *Client) sendUpdateMember(ctx context.Context, request *MemberUpdate, pa
 
 	stage = "DecodeResponse"
 	result, err := decodeUpdateMemberResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// UpdateNpc invokes updateNpc operation.
+//
+// Replaces the NPC and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
+func (c *Client) UpdateNpc(ctx context.Context, request *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error) {
+	res, err := c.sendUpdateNpc(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendUpdateNpc(ctx context.Context, request *NpcInput, params UpdateNpcParams) (res UpdateNpcRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("updateNpc"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/npcs/{npcId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdateNpcOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [4]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/npcs/"
+	{
+		// Encode "npcId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "npcId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.NpcId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeUpdateNpcRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, UpdateNpcOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeUpdateNpcResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

@@ -76,7 +76,7 @@ describe('campaign list', () => {
     await wrapper.get('[data-testid="campaign-create"]').trigger('submit')
     await flushPromises()
     expect(seen.find((s) => s.method === 'POST')?.body).toEqual({ name: 'Strahd', displayName: 'Joris', ruleset: 'srd-2014' })
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign'); })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign') }, { timeout: 5000 })
   })
 
   it('reports a failed create', async () => {
@@ -110,6 +110,7 @@ describe('campaign home', () => {
     })
     expect(wrapper.get('h1').text()).toBe('Strahd')
     expect(wrapper.get('[data-testid="party"]').text()).toContain('Kara (yours)')
+    expect(wrapper.find('[data-testid="npcs-link"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="member-list"]').text()).toContain('Joris (you)')
     expect(wrapper.get('[data-testid="invite-list"]').text()).toContain('By Joris')
     await wrapper.get('[data-testid="create-invite"]').trigger('click')

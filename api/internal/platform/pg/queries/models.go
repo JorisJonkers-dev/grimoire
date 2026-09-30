@@ -81,6 +81,41 @@ type CampaignMember struct {
 	JoinedAt    time.Time
 }
 
+type CampaignNpc struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	Name        string
+	Title       string
+	Description string
+	DmNotes     string
+	Disposition string
+	UpdatedAt   time.Time
+}
+
+type CampaignNpcRevision struct {
+	RevisionID  uuid.UUID
+	Name        string
+	Title       string
+	Description string
+	DmNotes     string
+	Disposition string
+}
+
+type CampaignRevision struct {
+	ID            uuid.UUID
+	CampaignID    uuid.UUID
+	EntityType    string
+	EntityID      uuid.UUID
+	RevisionNo    int32
+	Action        string
+	CallerSubject string
+	CallerName    string
+	Origin        string
+	Client        string
+	RestoredFrom  pgtype.Int4
+	CreatedAt     time.Time
+}
+
 type CompendiumAbilityScore struct {
 	ID   int64
 	Slug string

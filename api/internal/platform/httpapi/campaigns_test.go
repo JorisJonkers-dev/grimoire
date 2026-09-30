@@ -21,14 +21,20 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
-func campaignServer(t *testing.T, c httpapi.Campaigns, chars ...httpapi.CharacterService) http.Handler {
+func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handler {
 	t.Helper()
 	var cs httpapi.CharacterService
-	if len(chars) > 0 {
-		cs = chars[0]
+	var ns httpapi.NPCService
+	for _, e := range extra {
+		switch v := e.(type) {
+		case httpapi.CharacterService:
+			cs = v
+		case httpapi.NPCService:
+			ns = v
+		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
@@ -47,7 +53,7 @@ func realCampaigns(t *testing.T) http.Handler {
 	repo := campaignpg.New(store.Pool())
 	return campaignServer(t, app.NewService(repo), &app.Characters{
 		Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
-	})
+	}, &app.NPCs{Repo: repo, Now: time.Now})
 }
 
 func call(h http.Handler, method, path, subject, body string) *httptest.ResponseRecorder {

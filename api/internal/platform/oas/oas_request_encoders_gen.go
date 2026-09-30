@@ -52,6 +52,20 @@ func encodeCreateCharacterRequest(
 	return nil
 }
 
+func encodeCreateNpcRequest(
+	req *NpcInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewCharacterRequest(
 	req *CharacterBuild,
 	r *http.Request,
@@ -130,6 +144,20 @@ func encodeUpdateCharacterRequest(
 
 func encodeUpdateMemberRequest(
 	req *MemberUpdate,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateNpcRequest(
+	req *NpcInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

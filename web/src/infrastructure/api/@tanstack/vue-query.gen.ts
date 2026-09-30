@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, deleteCharacter, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getPortrait, getReadiness, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listEntries, listInvites, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, revokeInvite, setPortrait, setTokenIcon, updateCampaign, updateCharacter, updateMember } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse } from '../types.gen';
+import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, createNpc, deleteCharacter, deleteNpc, diffNpcRevisions, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getNpc, getPortrait, getReadiness, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEntries, listInvites, listNpcRevisions, listNpcs, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, restoreNpcRevision, revokeInvite, setPortrait, setTokenIcon, updateCampaign, updateCharacter, updateMember, updateNpc } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -681,6 +681,182 @@ export const setTokenIconMutation = (options?: Partial<Options<SetTokenIconData>
     const mutationOptions: UseMutationOptions<SetTokenIconResponse, SetTokenIconError, Options<SetTokenIconData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await setTokenIcon({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listNpcsQueryKey = (options: Options<ListNpcsData>) => createQueryKey('listNpcs', options);
+
+/**
+ * List NPCs
+ *
+ * The Campaign's NPCs. DM only.
+ */
+export const listNpcsOptions = (options: Options<ListNpcsData>) => queryOptions<ListNpcsResponse, ListNpcsError, ListNpcsResponse, ReturnType<typeof listNpcsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listNpcs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listNpcsQueryKey(options)
+});
+
+/**
+ * Create an NPC
+ *
+ * Adds an NPC and records its first Revision. DM only.
+ */
+export const createNpcMutation = (options?: Partial<Options<CreateNpcData>>): UseMutationOptions<CreateNpcResponse, CreateNpcError, Options<CreateNpcData>> => {
+    const mutationOptions: UseMutationOptions<CreateNpcResponse, CreateNpcError, Options<CreateNpcData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createNpc({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listDeletedNpcsQueryKey = (options: Options<ListDeletedNpcsData>) => createQueryKey('listDeletedNpcs', options);
+
+/**
+ * List deleted NPCs
+ *
+ * NPCs that were deleted and can still be restored from their Revisions. DM only.
+ */
+export const listDeletedNpcsOptions = (options: Options<ListDeletedNpcsData>) => queryOptions<ListDeletedNpcsResponse, ListDeletedNpcsError, ListDeletedNpcsResponse, ReturnType<typeof listDeletedNpcsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listDeletedNpcs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listDeletedNpcsQueryKey(options)
+});
+
+/**
+ * Delete an NPC
+ *
+ * Removes the NPC; its Revisions keep it restorable. DM only.
+ */
+export const deleteNpcMutation = (options?: Partial<Options<DeleteNpcData>>): UseMutationOptions<DeleteNpcResponse, DeleteNpcError, Options<DeleteNpcData>> => {
+    const mutationOptions: UseMutationOptions<DeleteNpcResponse, DeleteNpcError, Options<DeleteNpcData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteNpc({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getNpcQueryKey = (options: Options<GetNpcData>) => createQueryKey('getNpc', options);
+
+/**
+ * Get an NPC
+ *
+ * One NPC. DM only.
+ */
+export const getNpcOptions = (options: Options<GetNpcData>) => queryOptions<GetNpcResponse, GetNpcError, GetNpcResponse, ReturnType<typeof getNpcQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getNpc({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getNpcQueryKey(options)
+});
+
+/**
+ * Update an NPC
+ *
+ * Replaces the NPC and records a Revision. DM only.
+ */
+export const updateNpcMutation = (options?: Partial<Options<UpdateNpcData>>): UseMutationOptions<UpdateNpcResponse, UpdateNpcError, Options<UpdateNpcData>> => {
+    const mutationOptions: UseMutationOptions<UpdateNpcResponse, UpdateNpcError, Options<UpdateNpcData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateNpc({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listNpcRevisionsQueryKey = (options: Options<ListNpcRevisionsData>) => createQueryKey('listNpcRevisions', options);
+
+/**
+ * List NPC revisions
+ *
+ * Every Revision of the NPC, newest first, with its author and origin. DM only.
+ */
+export const listNpcRevisionsOptions = (options: Options<ListNpcRevisionsData>) => queryOptions<ListNpcRevisionsResponse, ListNpcRevisionsError, ListNpcRevisionsResponse, ReturnType<typeof listNpcRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listNpcRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listNpcRevisionsQueryKey(options)
+});
+
+export const diffNpcRevisionsQueryKey = (options: Options<DiffNpcRevisionsData>) => createQueryKey('diffNpcRevisions', options);
+
+/**
+ * Compare two NPC revisions
+ *
+ * The fields that differ between two Revisions. DM only.
+ */
+export const diffNpcRevisionsOptions = (options: Options<DiffNpcRevisionsData>) => queryOptions<DiffNpcRevisionsResponse, DiffNpcRevisionsError, DiffNpcRevisionsResponse, ReturnType<typeof diffNpcRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await diffNpcRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: diffNpcRevisionsQueryKey(options)
+});
+
+/**
+ * Restore an NPC revision
+ *
+ * Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
+ */
+export const restoreNpcRevisionMutation = (options?: Partial<Options<RestoreNpcRevisionData>>): UseMutationOptions<RestoreNpcRevisionResponse, RestoreNpcRevisionError, Options<RestoreNpcRevisionData>> => {
+    const mutationOptions: UseMutationOptions<RestoreNpcRevisionResponse, RestoreNpcRevisionError, Options<RestoreNpcRevisionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await restoreNpcRevision({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

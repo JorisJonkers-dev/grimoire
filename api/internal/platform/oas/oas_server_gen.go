@@ -38,12 +38,30 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// CreateNpc implements createNpc operation.
+	//
+	// Adds an NPC and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/npcs
+	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
 	// DeleteCharacter implements deleteCharacter operation.
 	//
 	// Removes a Character. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
+	// DeleteNpc implements deleteNpc operation.
+	//
+	// Removes the NPC; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
+	// DiffNpcRevisions implements diffNpcRevisions operation.
+	//
+	// The fields that differ between two Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
+	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
 	// GetAutomationCoverage implements getAutomationCoverage operation.
 	//
 	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
@@ -87,6 +105,12 @@ type Handler interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetNpc implements getNpc operation.
+	//
+	// One NPC. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	GetNpc(ctx context.Context, params GetNpcParams) (GetNpcRes, error)
 	// GetPortrait implements getPortrait operation.
 	//
 	// The picture itself, served only to Members of the Campaign.
@@ -129,6 +153,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters
 	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
+	// ListDeletedNpcs implements listDeletedNpcs operation.
+	//
+	// NPCs that were deleted and can still be restored from their Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
+	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
 	// ListEntries implements listEntries operation.
 	//
 	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -142,6 +172,18 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListNpcRevisions implements listNpcRevisions operation.
+	//
+	// Every Revision of the NPC, newest first, with its author and origin. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions
+	ListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (ListNpcRevisionsRes, error)
+	// ListNpcs implements listNpcs operation.
+	//
+	// The Campaign's NPCs. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs
+	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
 	// ListSources implements listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.
@@ -172,6 +214,13 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RestoreNpcRevision implements restoreNpcRevision operation.
+	//
+	// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
+	RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (RestoreNpcRevisionRes, error)
 	// RevokeInvite implements revokeInvite operation.
 	//
 	// Closes an invite link. DM only.
@@ -208,6 +257,12 @@ type Handler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
 	UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
+	// UpdateNpc implements updateNpc operation.
+	//
+	// Replaces the NPC and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

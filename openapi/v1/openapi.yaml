@@ -23,6 +23,8 @@ tags:
     description: Campaigns, Members, roles and invites.
   - name: Compendium
     description: SRD reference data.
+  - name: Prep
+    description: The DM's prepared material and its Revisions.
   - name: Identity
     description: The signed-in account.
   - name: Operations
@@ -893,6 +895,274 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/npcs:
+    get:
+      operationId: listNpcs
+      summary: List NPCs
+      description: The Campaign's NPCs. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The NPCs.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/Npc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createNpc
+      summary: Create an NPC
+      description: Adds an NPC and records its first Revision. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NpcInput"
+      responses:
+        "201":
+          description: The new NPC.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Npc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/npcs/deleted:
+    get:
+      operationId: listDeletedNpcs
+      summary: List deleted NPCs
+      description: NPCs that were deleted and can still be restored from their Revisions. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The deleted NPCs.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/DeletedNpc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/npcs/{npcId}:
+    get:
+      operationId: getNpc
+      summary: Get an NPC
+      description: One NPC. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/NpcId"
+      responses:
+        "200":
+          description: The NPC.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Npc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: updateNpc
+      summary: Update an NPC
+      description: Replaces the NPC and records a Revision. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/NpcId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NpcInput"
+      responses:
+        "200":
+          description: The updated NPC.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Npc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteNpc
+      summary: Delete an NPC
+      description: Removes the NPC; its Revisions keep it restorable. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/NpcId"
+      responses:
+        "204":
+          description: Deleted.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions:
+    get:
+      operationId: listNpcRevisions
+      summary: List NPC revisions
+      description: Every Revision of the NPC, newest first, with its author and origin. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/NpcId"
+      responses:
+        "200":
+          description: The revisions.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/Revision"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff:
+    get:
+      operationId: diffNpcRevisions
+      summary: Compare two NPC revisions
+      description: The fields that differ between two Revisions. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/NpcId"
+        - name: from
+          in: query
+          required: true
+          description: The earlier revision number.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        - name: to
+          in: query
+          required: true
+          description: The later revision number.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+      responses:
+        "200":
+          description: The changed fields.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/FieldChange"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore:
+    post:
+      operationId: restoreNpcRevision
+      summary: Restore an NPC revision
+      description: Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/NpcId"
+        - $ref: "#/components/parameters/RevisionNo"
+      responses:
+        "200":
+          description: The restored NPC.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Npc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
@@ -1061,6 +1331,18 @@ components:
       required: true
       description: Character id.
       schema: { $ref: "#/components/schemas/Id" }
+    NpcId:
+      name: npcId
+      in: path
+      required: true
+      description: NPC id.
+      schema: { $ref: "#/components/schemas/Id" }
+    RevisionNo:
+      name: revisionNo
+      in: path
+      required: true
+      description: Revision number.
+      schema: { type: integer, format: int32, minimum: 1, maximum: 100000 }
     InviteId:
       name: inviteId
       in: path
@@ -1580,6 +1862,65 @@ components:
           type: array
           maxItems: 18
           items: { $ref: "#/components/schemas/SkillChoice" }
+    Disposition:
+      type: string
+      description: How an NPC feels about the party.
+      enum: [friendly, neutral, hostile]
+    NpcInput:
+      type: object
+      description: The editable fields of an NPC.
+      additionalProperties: false
+      required: [name, disposition]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        title: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 8000 }
+        dmNotes: { type: string, maxLength: 8000 }
+        disposition: { $ref: "#/components/schemas/Disposition" }
+    Npc:
+      type: object
+      description: A non-player character in the DM's prep.
+      additionalProperties: false
+      required: [id, name, title, description, dmNotes, disposition, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        title: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 8000 }
+        dmNotes: { type: string, maxLength: 8000 }
+        disposition: { $ref: "#/components/schemas/Disposition" }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    DeletedNpc:
+      type: object
+      description: An NPC that only its Revisions remember.
+      additionalProperties: false
+      required: [id, name, deletedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        deletedAt: { type: string, format: date-time, maxLength: 40 }
+    Revision:
+      type: object
+      description: One recorded version of a piece of prep data.
+      additionalProperties: false
+      required: [no, action, author, origin, createdAt]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        action: { type: string, enum: [create, update, delete, restore] }
+        author: { $ref: "#/components/schemas/DisplayName" }
+        origin: { type: string, enum: [ui, mcp, generator, system] }
+        client: { type: string, maxLength: 80 }
+        restoredFrom: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+    FieldChange:
+      type: object
+      description: A field whose value differs between two Revisions.
+      additionalProperties: false
+      required: [field, before, after]
+      properties:
+        field: { type: string, maxLength: 60 }
+        before: { type: string, maxLength: 8000 }
+        after: { type: string, maxLength: 8000 }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

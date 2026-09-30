@@ -58,12 +58,39 @@ func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInvit
 	return r, ht.ErrNotImplemented
 }
 
+// CreateNpc implements createNpc operation.
+//
+// Adds an NPC and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/npcs
+func (UnimplementedHandler) CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (r CreateNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteCharacter implements deleteCharacter operation.
 //
 // Removes a Character. The owner or a DM, never during Combat.
 //
 // DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (r DeleteCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteNpc implements deleteNpc operation.
+//
+// Removes the NPC; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
+func (UnimplementedHandler) DeleteNpc(ctx context.Context, params DeleteNpcParams) (r DeleteNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DiffNpcRevisions implements diffNpcRevisions operation.
+//
+// The fields that differ between two Revisions. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
+func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (r DiffNpcRevisionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -131,6 +158,15 @@ func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
+// GetNpc implements getNpc operation.
+//
+// One NPC. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}
+func (UnimplementedHandler) GetNpc(ctx context.Context, params GetNpcParams) (r GetNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetPortrait implements getPortrait operation.
 //
 // The picture itself, served only to Members of the Campaign.
@@ -194,6 +230,15 @@ func (UnimplementedHandler) ListCharacters(ctx context.Context, params ListChara
 	return r, ht.ErrNotImplemented
 }
 
+// ListDeletedNpcs implements listDeletedNpcs operation.
+//
+// NPCs that were deleted and can still be restored from their Revisions. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/deleted
+func (UnimplementedHandler) ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (r ListDeletedNpcsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListEntries implements listEntries operation.
 //
 // Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -210,6 +255,24 @@ func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesP
 //
 // GET /api/v1/campaigns/{campaignId}/invites
 func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesParams) (r ListInvitesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListNpcRevisions implements listNpcRevisions operation.
+//
+// Every Revision of the NPC, newest first, with its author and origin. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions
+func (UnimplementedHandler) ListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (r ListNpcRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListNpcs implements listNpcs operation.
+//
+// The Campaign's NPCs. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/npcs
+func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams) (r ListNpcsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -255,6 +318,16 @@ func (UnimplementedHandler) PreviewInvite(ctx context.Context, req *InviteToken)
 //
 // DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMemberParams) (r RemoveMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RestoreNpcRevision implements restoreNpcRevision operation.
+//
+// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
+func (UnimplementedHandler) RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (r RestoreNpcRevisionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -309,5 +382,14 @@ func (UnimplementedHandler) UpdateCharacter(ctx context.Context, req *CharacterE
 //
 // PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
 func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (r UpdateMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateNpc implements updateNpc operation.
+//
+// Replaces the NPC and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
+func (UnimplementedHandler) UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (r UpdateNpcRes, _ error) {
 	return r, ht.ErrNotImplemented
 }

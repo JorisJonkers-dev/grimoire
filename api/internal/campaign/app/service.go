@@ -10,6 +10,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -39,6 +41,15 @@ type Repository interface {
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
 	DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error
 	SetCharacterImage(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, img *domain.Image, now time.Time) error
+	InsertNPC(ctx context.Context, id domain.CampaignID, npcID *domain.NPCID, n domain.NPC, now time.Time) (domain.NPCID, error)
+	UpdateNPC(ctx context.Context, id domain.CampaignID, n domain.NPC, now time.Time) (bool, error)
+	DeleteNPC(ctx context.Context, id domain.CampaignID, npcID domain.NPCID) (bool, error)
+	NPC(ctx context.Context, id domain.CampaignID, npcID domain.NPCID) (domain.NPC, error)
+	NPCs(ctx context.Context, id domain.CampaignID) ([]domain.NPC, error)
+	DeletedNPCs(ctx context.Context, id domain.CampaignID) ([]domain.DeletedNPC, error)
+	RecordNPCRevision(ctx context.Context, id domain.CampaignID, r domain.Revision, c caller.Caller, n domain.NPC) (int, error)
+	Revisions(ctx context.Context, id domain.CampaignID, t domain.EntityType, entity uuid.UUID) ([]domain.Revision, error)
+	NPCRevision(ctx context.Context, id domain.CampaignID, npcID domain.NPCID, no int) (domain.NPC, error)
 }
 
 // DefaultInviteTTL is how long an invite link stays valid.

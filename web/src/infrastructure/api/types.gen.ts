@@ -403,6 +403,66 @@ export type BuilderOptions = {
 };
 
 /**
+ * How an NPC feels about the party.
+ */
+export type Disposition = 'friendly' | 'neutral' | 'hostile';
+
+/**
+ * The editable fields of an NPC.
+ */
+export type NpcInput = {
+    name: string;
+    title?: string;
+    description?: string;
+    dmNotes?: string;
+    disposition: Disposition;
+};
+
+/**
+ * A non-player character in the DM's prep.
+ */
+export type Npc = {
+    id: Id;
+    name: string;
+    title: string;
+    description: string;
+    dmNotes: string;
+    disposition: Disposition;
+    updatedAt: string;
+};
+
+/**
+ * An NPC that only its Revisions remember.
+ */
+export type DeletedNpc = {
+    id: Id;
+    name: string;
+    deletedAt: string;
+};
+
+/**
+ * One recorded version of a piece of prep data.
+ */
+export type Revision = {
+    no: number;
+    action: 'create' | 'update' | 'delete' | 'restore';
+    author: DisplayName;
+    origin: 'ui' | 'mcp' | 'generator' | 'system';
+    client?: string;
+    restoredFrom?: number;
+    createdAt: string;
+};
+
+/**
+ * A field whose value differs between two Revisions.
+ */
+export type FieldChange = {
+    field: string;
+    before: string;
+    after: string;
+};
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export type Slug = string;
@@ -610,6 +670,16 @@ export type MemberId = Id;
  * Character id.
  */
 export type CharacterId = Id;
+
+/**
+ * NPC id.
+ */
+export type NpcId = Id;
+
+/**
+ * Revision number.
+ */
+export type RevisionNo = number;
 
 /**
  * Invite id.
@@ -1666,6 +1736,349 @@ export type SetTokenIconResponses = {
 };
 
 export type SetTokenIconResponse = SetTokenIconResponses[keyof SetTokenIconResponses];
+
+export type ListNpcsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs';
+};
+
+export type ListNpcsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListNpcsError = ListNpcsErrors[keyof ListNpcsErrors];
+
+export type ListNpcsResponses = {
+    /**
+     * The NPCs.
+     */
+    200: Array<Npc>;
+};
+
+export type ListNpcsResponse = ListNpcsResponses[keyof ListNpcsResponses];
+
+export type CreateNpcData = {
+    body: NpcInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs';
+};
+
+export type CreateNpcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateNpcError = CreateNpcErrors[keyof CreateNpcErrors];
+
+export type CreateNpcResponses = {
+    /**
+     * The new NPC.
+     */
+    201: Npc;
+};
+
+export type CreateNpcResponse = CreateNpcResponses[keyof CreateNpcResponses];
+
+export type ListDeletedNpcsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs/deleted';
+};
+
+export type ListDeletedNpcsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListDeletedNpcsError = ListDeletedNpcsErrors[keyof ListDeletedNpcsErrors];
+
+export type ListDeletedNpcsResponses = {
+    /**
+     * The deleted NPCs.
+     */
+    200: Array<DeletedNpc>;
+};
+
+export type ListDeletedNpcsResponse = ListDeletedNpcsResponses[keyof ListDeletedNpcsResponses];
+
+export type DeleteNpcData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * NPC id.
+         */
+        npcId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}';
+};
+
+export type DeleteNpcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteNpcError = DeleteNpcErrors[keyof DeleteNpcErrors];
+
+export type DeleteNpcResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteNpcResponse = DeleteNpcResponses[keyof DeleteNpcResponses];
+
+export type GetNpcData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * NPC id.
+         */
+        npcId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}';
+};
+
+export type GetNpcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetNpcError = GetNpcErrors[keyof GetNpcErrors];
+
+export type GetNpcResponses = {
+    /**
+     * The NPC.
+     */
+    200: Npc;
+};
+
+export type GetNpcResponse = GetNpcResponses[keyof GetNpcResponses];
+
+export type UpdateNpcData = {
+    body: NpcInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * NPC id.
+         */
+        npcId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}';
+};
+
+export type UpdateNpcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateNpcError = UpdateNpcErrors[keyof UpdateNpcErrors];
+
+export type UpdateNpcResponses = {
+    /**
+     * The updated NPC.
+     */
+    200: Npc;
+};
+
+export type UpdateNpcResponse = UpdateNpcResponses[keyof UpdateNpcResponses];
+
+export type ListNpcRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * NPC id.
+         */
+        npcId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions';
+};
+
+export type ListNpcRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListNpcRevisionsError = ListNpcRevisionsErrors[keyof ListNpcRevisionsErrors];
+
+export type ListNpcRevisionsResponses = {
+    /**
+     * The revisions.
+     */
+    200: Array<Revision>;
+};
+
+export type ListNpcRevisionsResponse = ListNpcRevisionsResponses[keyof ListNpcRevisionsResponses];
+
+export type DiffNpcRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * NPC id.
+         */
+        npcId: Id;
+    };
+    query: {
+        /**
+         * The earlier revision number.
+         */
+        from: number;
+        /**
+         * The later revision number.
+         */
+        to: number;
+    };
+    url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff';
+};
+
+export type DiffNpcRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DiffNpcRevisionsError = DiffNpcRevisionsErrors[keyof DiffNpcRevisionsErrors];
+
+export type DiffNpcRevisionsResponses = {
+    /**
+     * The changed fields.
+     */
+    200: Array<FieldChange>;
+};
+
+export type DiffNpcRevisionsResponse = DiffNpcRevisionsResponses[keyof DiffNpcRevisionsResponses];
+
+export type RestoreNpcRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * NPC id.
+         */
+        npcId: Id;
+        /**
+         * Revision number.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreNpcRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreNpcRevisionError = RestoreNpcRevisionErrors[keyof RestoreNpcRevisionErrors];
+
+export type RestoreNpcRevisionResponses = {
+    /**
+     * The restored NPC.
+     */
+    200: Npc;
+};
+
+export type RestoreNpcRevisionResponse = RestoreNpcRevisionResponses[keyof RestoreNpcRevisionResponses];
 
 export type PreviewInviteData = {
     body: InviteToken;

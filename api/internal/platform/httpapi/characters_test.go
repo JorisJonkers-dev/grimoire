@@ -137,7 +137,7 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodDelete, one + "/token", ""},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
-		h := campaignServer(t, brokenCampaigns{}, brokenCharacters{err: err})
+		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
 		for _, o := range ops {
 			if rec := call(h, o.method, o.path, "u", o.body); rec.Code != code {
 				t.Errorf("%v %s %s: %d", err, o.method, o.path, rec.Code)

@@ -178,6 +178,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
 				Blobs: blobs(cfg, logger),
 			},
+			NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 		},
 		DevSubject: cfg.DevSubject,
 		RateLimit:  cfg.RateLimit,
