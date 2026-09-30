@@ -47,8 +47,12 @@ func samples() contract {
 		ID: "0190c7a8-0000-7000-8000-000000000016", Kind: "shield", ReactorID: "0190c7a8-0000-7000-8000-000000000013", TriggerID: token.ID,
 		Effect: "Shield: AC 15 → 20, so the attack (18) would miss.", SecondsLeft: 9,
 	}}
+	view.Tokens[0].Effects = []live.EffectView{{ID: "0190c7a8-0000-7000-8000-000000000017", Slug: "bless", Name: "Bless", SourceID: token.ID, Concentration: true, RoundsLeft: 9}}
+	view.Resolving = true
+	view.Saves = []live.SaveView{{RollID: "0190c7a8-0000-7000-8000-000000000019", TokenID: token.ID, Effect: "Hold Person", DC: 13}}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
+	dmView.Resolving, dmView.Manual = false, []live.ManualView{{ID: "0190c7a8-0000-7000-8000-000000000018", Text: "Goblin: Resolve Hold Person by hand."}}
 	dmView.Lights = []live.LightView{{ID: "0190c7a8-0000-7000-8000-00000000000e", Q: 4, R: 0, BrightFt: 20, DimFt: 40}}
 	return contract{
 		Commands: []live.Command{
@@ -78,6 +82,9 @@ func samples() contract {
 			{Nonce: "n24", Kind: live.CmdSetTactics, TokenID: token.ID, Tactics: "cunning"},
 			{Nonce: "n25", Kind: live.CmdReact, Use: true},
 			{Nonce: "n26", Kind: live.CmdPlace, Label: "Mage", TokenKind: "party", Shield: true},
+			{Nonce: "n27", Kind: live.CmdApplyEffect, TargetID: token.ID, Effect: "hold-person", EffectName: "Hold Person", SourceID: token.ID, Rounds: 10, SaveAbility: "wisdom", SaveDC: 13},
+			{Nonce: "n28", Kind: live.CmdEndEffect, EffectID: "0190c7a8-0000-7000-8000-000000000017"},
+			{Nonce: "n29", Kind: live.CmdResolveManual, ManualID: "0190c7a8-0000-7000-8000-000000000018"},
 		},
 		Updates: []live.Update{
 			{

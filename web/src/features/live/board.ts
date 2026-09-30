@@ -16,7 +16,8 @@ export function hexes(radius: number): Coord[] {
 /** A token as the screen reader and the token list name it, with what its audience knows of its health. */
 export function describe(t: LiveToken): string {
   const health = t.hp !== undefined && t.hpMax !== undefined ? ` (${String(t.hp)}/${String(t.hpMax)} HP)` : t.health ? ` (${t.health})` : ''
-  return `${t.label}${t.hidden ? ' (hidden)' : ''}${health}`
+  const effects = t.effects?.length ? ` · ${t.effects.map((e) => e.name).join(', ')}` : ''
+  return `${t.label}${t.hidden ? ' (hidden)' : ''}${health}${effects}`
 }
 
 export function initials(label: string): string {

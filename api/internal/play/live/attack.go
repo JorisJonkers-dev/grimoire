@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -31,6 +33,7 @@ type aim struct {
 	cover            int
 	ranged           bool
 	reasons          []string
+	prof             effects.AttackProfile
 }
 
 // aimAt checks an attack a member asks for: in combat, on the attacker's turn with its action left,
@@ -118,7 +121,9 @@ func (s *state) shape(p aim) (aim, string) {
 		disadvantages++
 		p.reasons = append(p.reasons, "Disadvantage: a hostile creature is next to the attacker")
 	}
-	p.mode = attack.ModeOf(0, disadvantages)
+	p.prof = effects.ForAttack(s.actives(p.attacker.ID), s.actives(p.target.ID), uuid.UUID(p.attacker.ID).String(), hex.Distance(from, to) <= 1)
+	p.reasons = append(append(append(p.reasons, p.prof.Advantages...), p.prof.Disadvantages...), p.prof.Notes...)
+	p.mode = attack.ModeOf(len(p.prof.Advantages), disadvantages+len(p.prof.Disadvantages))
 	return p, ""
 }
 
@@ -144,12 +149,12 @@ func (r *runtime) previewAttack(req request) {
 		r.reject(req, reason)
 		return
 	}
-	spec, _ := dice.Parse(p.with.Damage)
+	spec := joinDice(p.with.Damage, p.prof.DamageDice)
 	least, most := attack.DamageRange(spec, p.with.DamageBonus)
 	_, critMost := attack.DamageRange(attack.CriticalDice(spec), p.with.DamageBonus)
 	r.send(req.from, Update{Kind: UpdAttackPreview, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Preview: &AttackPreview{
 		TokenID: req.cmd.TokenID, TargetID: req.cmd.TargetID, AttackNo: p.no, Name: p.with.Name,
-		HitChance: attack.HitChance(p.with.ToHit, r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
+		HitChance: attack.HitChanceDice(p.with.ToHit, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
 		DamageMin: least, DamageMax: most, CritMax: critMost, Reasons: p.reasons,
 	}})
 }
@@ -160,7 +165,8 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 	if reason != "" {
 		return Write{}, reason
 	}
-	roll := r.request(m, p.attacker, p.with.Name+" attack against "+p.target.Label, attack.D20(p.mode), domain.Modifier{Label: p.with.Name, Value: p.with.ToHit})
+	notation := strings.Join(append([]string{attack.D20(p.mode)}, p.prof.AttackDice...), "+")
+	roll := r.request(m, p.attacker, p.with.Name+" attack against "+p.target.Label, notation, domain.Modifier{Label: p.with.Name, Value: p.with.ToHit})
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
@@ -205,7 +211,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 		r.commit(request{}, r.hurt(t, roll.Total, Write{Token: a, attack: &p}), roll.Roller, sys)
 		return
 	}
-	result := attack.Outcome(natural(roll), a.Stats.Attacks[p.AttackNo].ToHit, r.st.armor(t)+p.CoverBonus)
+	result := attack.Outcome(natural(roll), roll.Total-natural(roll), r.st.armor(t)+p.CoverBonus)
 	if result == attack.Miss {
 		r.commit(request{}, Write{Kind: domain.ActionAttackMissed, Token: a}, roll.Roller, sys)
 		return
@@ -221,7 +227,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 // hit opens the damage roll of an attack that hit, every die doubled on a critical; flat damage lands at once.
 func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, roll domain.Roll) Write {
 	with := a.Stats.Attacks[p.AttackNo]
-	spec, _ := dice.Parse(with.Damage)
+	spec := joinDice(with.Damage, effects.ForAttack(nil, r.st.actives(t.ID), uuid.UUID(a.ID).String(), false).DamageDice)
 	if len(spec.Groups) == 0 {
 		return r.hurt(t, with.DamageBonus, Write{Token: a, attack: &p})
 	}
@@ -290,4 +296,11 @@ func (r *runtime) planUndo() (Write, string) {
 	}
 	healed := min(t.Stats.HP+last.Before-last.After, t.Stats.HPMax)
 	return Write{Kind: domain.ActionDamageUndone, Token: t, HP: &HPChange{Token: t.ID, Before: t.Stats.HP, After: healed, Undoes: last.Undoes}}, ""
+}
+
+// joinDice adds extra dice to a notation; with nothing at all it is no dice.
+func joinDice(base string, extra []string) dice.Spec {
+	parts := slices.DeleteFunc(append([]string{base}, extra...), func(s string) bool { return s == "" })
+	spec, _ := dice.Parse(strings.Join(parts, "+"))
+	return spec
 }

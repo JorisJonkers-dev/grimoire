@@ -701,6 +701,7 @@ export type LiveToken = {
     health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
     attacks?: Array<LiveAttack>;
     shield?: boolean;
+    effects?: Array<LiveEffect>;
 };
 
 /**
@@ -760,7 +761,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -792,6 +793,47 @@ export type LiveCommand = {
      * With place_token, the token can cast Shield.
      */
     shield?: boolean;
+    /**
+     * With apply_effect, the Effect's compendium slug.
+     */
+    effect?: string;
+    effectName?: string;
+    sourceId?: Id;
+    rounds?: number;
+    saveAbility?: Ability;
+    saveDc?: number;
+    effectId?: Id;
+    manualId?: Id;
+};
+
+/**
+ * An Effect on a token, which everyone who sees the token sees.
+ */
+export type LiveEffect = {
+    id: Id;
+    slug: string;
+    name: string;
+    sourceId?: Id;
+    concentration: boolean;
+    roundsLeft?: number;
+};
+
+/**
+ * Part of an Effect the engine cannot compute, for the DM to resolve by hand.
+ */
+export type LiveManual = {
+    id: Id;
+    text: string;
+};
+
+/**
+ * A saving throw waiting on its Roll Card to end an Effect.
+ */
+export type LiveSave = {
+    rollId: Id;
+    tokenId: Id;
+    effect: string;
+    dc: number;
 };
 
 /**
@@ -928,6 +970,12 @@ export type LiveView = {
     visible: Array<HexCoord>;
     remembered: Array<HexCoord>;
     combat?: LiveCombat;
+    manual?: Array<LiveManual>;
+    /**
+     * The DM is resolving part of an Effect by hand.
+     */
+    resolving?: boolean;
+    saves?: Array<LiveSave>;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;

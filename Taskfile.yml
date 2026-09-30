@@ -97,6 +97,7 @@ tasks:
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/combat
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/attack
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/tactics
+      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/effects
 
   build:
     desc: Build the API binary and the web app

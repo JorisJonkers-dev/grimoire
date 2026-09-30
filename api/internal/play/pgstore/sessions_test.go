@@ -201,6 +201,21 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 			_, err := repo.Commit(ctx, live1, nil, fight(domain.CombatEnded), tb.dmMember(t), dm, time.Now())
 			return err
 		},
+		"effects": func(_ *app.Sessions, repo *pgstore.Store) error {
+			src := tok.ID
+			fx := domain.Effects{
+				Active: []domain.Effect{{ID: domain.EffectID(uuid.New()), Target: tok.ID, Source: &src, Slug: "bless", Name: "Bless", RoundsLeft: 3, SaveAbility: "wisdom", SaveDC: 12}},
+				Manual: []domain.ManualPrompt{{ID: uuid.New(), Text: "Resolve it."}},
+			}
+			roll := running.Rolls[0].ID
+			fx.Saves = []domain.PendingSave{{RollID: roll, Effect: fx.Active[0].ID, DC: 12}}
+			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionEffectApplied, Token: tok, Effects: &fx}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"loadeffects": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.LoadEffects(ctx, live1.ID)
+			return err
+		},
 		"observations": func(_ *app.Sessions, repo *pgstore.Store) error {
 			_, err := repo.Observations(ctx, live1.ID)
 			return err

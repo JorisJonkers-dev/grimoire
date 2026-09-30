@@ -62,6 +62,31 @@ func TestHitChance(t *testing.T) {
 	}
 }
 
+func TestHitChanceWithExtraDice(t *testing.T) {
+	t.Parallel()
+	bless, _ := dice.Parse("1d4")
+	bane, _ := dice.Parse("-1d4")
+	two, _ := dice.Parse("2d4")
+	cases := []struct {
+		extra     dice.Spec
+		bonus, ac int
+		m         attack.Mode
+		want      int
+	}{
+		{dice.Spec{}, 5, 15, attack.Normal, 55},
+		{bless, 5, 15, attack.Normal, 68},
+		{bane, 5, 15, attack.Normal, 43},
+		{bless, 5, 15, attack.Advantage, 89},
+		{two, 0, 20, attack.Normal, 30},
+		{bless, 30, 5, attack.Normal, 95},
+	}
+	for _, c := range cases {
+		if got := attack.HitChanceDice(c.bonus, c.extra, c.ac, c.m); got != c.want {
+			t.Errorf("%s +%d vs %d (%v) = %d, want %d", c.extra.String(), c.bonus, c.ac, c.m, got, c.want)
+		}
+	}
+}
+
 func TestOutcome(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

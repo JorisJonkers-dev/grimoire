@@ -11,6 +11,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
 // ListEntries returns one page of a kind, blended so the newest ruleset leads unless one is chosen.
@@ -83,16 +84,17 @@ func (s *Store) GetEntry(ctx context.Context, kind, slug, ruleset string) (compe
 	return e, nil
 }
 
-// AutomationCoverage counts every kind by Automation Level. Nothing is computed by the rules engine yet.
+// AutomationCoverage counts every kind by Automation Level: full or partial where the effects engine
+// models an entry, manual otherwise.
 func (s *Store) AutomationCoverage(ctx context.Context) ([]compendium.AutomationCount, error) {
-	rows, err := s.q.CountEntriesByKind(ctx)
+	rows, err := s.q.CountEntriesByKind(ctx, queries.CountEntriesByKindParams{FullSlugs: effects.Automated(), PartialSlugs: effects.Partial()})
 	if err != nil {
 		return nil, err
 	}
 	out := make([]compendium.AutomationCount, 0, len(rows))
 	for _, r := range rows {
-		total := int(r.Total)
-		out = append(out, compendium.AutomationCount{Kind: r.Kind, Total: total, Manual: total})
+		total, full, partial := int(r.Total), int(r.Full), int(r.Partial)
+		out = append(out, compendium.AutomationCount{Kind: r.Kind, Total: total, Full: full, Partial: partial, Manual: total - full - partial})
 	}
 	return out, nil
 }

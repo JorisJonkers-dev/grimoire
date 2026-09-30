@@ -489,6 +489,19 @@ type PlayActionTokenEvent struct {
 	Hidden   bool
 }
 
+type PlayActiveEffect struct {
+	ID            uuid.UUID
+	SessionID     uuid.UUID
+	TargetTokenID uuid.UUID
+	SourceTokenID pgtype.UUID
+	Slug          string
+	Name          string
+	Concentration bool
+	RoundsLeft    pgtype.Int4
+	SaveAbility   pgtype.Text
+	SaveDc        pgtype.Int4
+}
+
 type PlayAttack struct {
 	ID              uuid.UUID
 	CombatID        uuid.UUID
@@ -540,10 +553,24 @@ type PlayCombatant struct {
 	Shielded        bool
 }
 
+type PlayManualPrompt struct {
+	ID        uuid.UUID
+	SessionID uuid.UUID
+	Ordering  int32
+	Text      string
+}
+
 type PlayObservedDamage struct {
 	ObserverTokenID uuid.UUID
 	AttackerTokenID uuid.UUID
 	RangedDamage    int32
+}
+
+type PlayPendingSafe struct {
+	RollID    uuid.UUID
+	EffectID  uuid.UUID
+	SessionID uuid.UUID
+	Dc        int32
 }
 
 type PlayReactionPrompt struct {
@@ -636,4 +663,10 @@ type PlayTokenAttack struct {
 	DamageDice  string
 	DamageBonus int32
 	DamageType  string
+}
+
+type PlayTokenSafe struct {
+	TokenID uuid.UUID
+	Ability string
+	Bonus   int32
 }

@@ -394,6 +394,12 @@ func (failingObservations) Observations(context.Context, domain.SessionID) (map[
 	return nil, errors.New("gone")
 }
 
+type failingEffects struct{ live.Store }
+
+func (failingEffects) LoadEffects(context.Context, domain.SessionID) (domain.Effects, error) {
+	return domain.Effects{}, errors.New("gone")
+}
+
 type failingOwner struct{}
 
 func (failingOwner) Acquire(context.Context, domain.SessionID) (func(), error) {
@@ -443,6 +449,10 @@ func TestFailuresAndLifecycle(t *testing.T) {
 	w.hub.Store = failingObservations{Store: pgstore.New(w.pool)}
 	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("observation load failure ignored")
+	}
+	w.hub.Store = failingEffects{Store: pgstore.New(w.pool)}
+	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
+		t.Fatal("effect load failure ignored")
 	}
 	if _, err := (&live.Hub{Store: pgstore.New(w.pool), Owner: failingOwner{}}).Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("owner failure ignored")

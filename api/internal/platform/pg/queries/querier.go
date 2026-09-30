@@ -54,8 +54,11 @@ type Querier interface {
 	ClearBackgroundBenefits(ctx context.Context, backgroundID int64) error
 	ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error
 	ClearClassChildren(ctx context.Context, classID int64) error
+	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
+	ClearManuals(ctx context.Context, sessionID uuid.UUID) error
 	ClearMonsterChildren(ctx context.Context, monsterID int64) error
+	ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error
 	ClearPrompts(ctx context.Context, combatID uuid.UUID) error
 	ClearResumePath(ctx context.Context, combatID uuid.UUID) error
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
@@ -67,7 +70,7 @@ type Querier interface {
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
-	CountEntriesByKind(ctx context.Context) ([]CountEntriesByKindRow, error)
+	CountEntriesByKind(ctx context.Context, arg CountEntriesByKindParams) ([]CountEntriesByKindRow, error)
 	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
 	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
@@ -101,12 +104,15 @@ type Querier interface {
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
+	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
 	InsertLight(ctx context.Context, arg InsertLightParams) error
+	InsertManual(ctx context.Context, arg InsertManualParams) error
 	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
+	InsertPendingSave(ctx context.Context, arg InsertPendingSaveParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
 	InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error)
 	InsertRollDie(ctx context.Context, arg InsertRollDieParams) error
@@ -118,6 +124,7 @@ type Querier interface {
 	InsertToken(ctx context.Context, arg InsertTokenParams) error
 	InsertTokenAttack(ctx context.Context, arg InsertTokenAttackParams) error
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
+	InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
@@ -143,6 +150,7 @@ type Querier interface {
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
 	MonsterAttackRows(ctx context.Context, monsterID int64) ([]MonsterAttackRowsRow, error)
 	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
+	MonsterSaves(ctx context.Context, monsterID int64) ([]MonsterSavesRow, error)
 	MonsterStatblock(ctx context.Context, arg MonsterStatblockParams) (MonsterStatblockRow, error)
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
@@ -167,8 +175,12 @@ type Querier interface {
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SavePrompt(ctx context.Context, arg SavePromptParams) error
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
+	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
+	SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error)
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
+	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
+	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error

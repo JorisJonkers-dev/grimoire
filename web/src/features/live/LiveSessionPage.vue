@@ -12,6 +12,7 @@ import { GButton } from '@/shared/ui'
 import { board, describe } from './board'
 import { key } from './geometry'
 import AttackPreview from './AttackPreview.vue'
+import EffectsPanel from './EffectsPanel.vue'
 import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
@@ -102,6 +103,13 @@ function confirmAttack(p: { tokenId: string; attackNo: number; targetId: string 
 function useSuggestion(tokenId: string, s?: LiveSuggestion) {
   if (s?.attackNo !== undefined) live.value?.send({ kind: 'attack', tokenId, attackNo: s.attackNo, targetId: s.targetId })
 }
+// Whoever rolls a creature's saves sees their Roll Cards: its Controller, or the DM.
+const mySaves = computed(() =>
+  (view.value?.saves ?? []).filter((s) => {
+    const owner = tokenById(s.tokenId)?.controllerId
+    return isDM.value ? !owner : owner === campaign.data.value?.me.id
+  }),
+)
 const prompt = computed(() => combat.value?.prompt ?? null)
 const answerable = computed(() => {
   const reactor = prompt.value ? tokenById(prompt.value.reactorId) : undefined
@@ -251,6 +259,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for {{ { to_hit: 'the attack roll', reaction: 'a reaction', damage: 'the damage roll' }[pending.stage] }}.
       </p>
       <LiveRoll v-if="attackRoll" :key="attackRoll" :campaign-id="campaignId" :roll-id="attackRoll" />
+      <LiveRoll v-for="s in mySaves" :key="s.rollId" :campaign-id="campaignId" :roll-id="s.rollId" />
+      <p v-if="view?.resolving" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
+      <section v-if="view?.manual?.length" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
+        <h2>Resolve by hand</h2>
+        <ul class="g-list">
+          <li v-for="m in view.manual" :key="m.id" class="row">
+            <span>{{ m.text }}</span>
+            <GButton :data-testid="`manual-done-${m.id}`" @click="live?.send({ kind: 'resolve_manual', manualId: m.id })">Done</GButton>
+          </li>
+        </ul>
+      </section>
       <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
@@ -319,6 +338,14 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
           <label class="check"><input v-model="knowsShield" type="checkbox" data-testid="token-shield" /><span>Knows Shield</span></label>
         </div>
+        <EffectsPanel
+          v-if="chosen"
+          :key="chosen.id"
+          :token="chosen"
+          :tokens="view?.tokens ?? []"
+          @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
+          @end="(id) => live?.send({ kind: 'end_effect', effectId: id })"
+        />
         <div v-if="chosen" class="row" data-testid="selected-token">
           <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
           <GButton data-testid="toggle-hidden" @click="toggleHidden()">{{ chosen.hidden ? 'Reveal' : 'Hide' }}</GButton>

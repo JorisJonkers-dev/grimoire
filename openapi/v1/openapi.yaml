@@ -2767,6 +2767,10 @@ components:
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveAttack" }
         shield: { type: boolean }
+        effects:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/LiveEffect" }
     LiveAttack:
       type: object
       description: One attack on a token's hotbar.
@@ -2829,7 +2833,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2861,6 +2865,44 @@ components:
         tactics: { $ref: "#/components/schemas/Tactics" }
         use: { type: boolean, description: "With react, whether the reaction is used or declined." }
         shield: { type: boolean, description: "With place_token, the token can cast Shield." }
+        effect: { type: string, minLength: 1, maxLength: 80, description: "With apply_effect, the Effect's compendium slug." }
+        effectName: { type: string, maxLength: 80 }
+        sourceId: { $ref: "#/components/schemas/Id" }
+        rounds: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        saveAbility: { $ref: "#/components/schemas/Ability" }
+        saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        effectId: { $ref: "#/components/schemas/Id" }
+        manualId: { $ref: "#/components/schemas/Id" }
+    LiveEffect:
+      type: object
+      description: An Effect on a token, which everyone who sees the token sees.
+      additionalProperties: false
+      required: [id, slug, name, concentration]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        slug: { type: string, maxLength: 80 }
+        name: { type: string, maxLength: 80 }
+        sourceId: { $ref: "#/components/schemas/Id" }
+        concentration: { type: boolean }
+        roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
+    LiveManual:
+      type: object
+      description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.
+      additionalProperties: false
+      required: [id, text]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        text: { type: string, maxLength: 300 }
+    LiveSave:
+      type: object
+      description: A saving throw waiting on its Roll Card to end an Effect.
+      additionalProperties: false
+      required: [rollId, tokenId, effect, dc]
+      properties:
+        rollId: { $ref: "#/components/schemas/Id" }
+        tokenId: { $ref: "#/components/schemas/Id" }
+        effect: { type: string, maxLength: 80 }
+        dc: { type: integer, format: int32, minimum: 1, maximum: 40 }
     Tactics:
       type: string
       description: How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
@@ -3013,6 +3055,15 @@ components:
           maxItems: 100000
           items: { $ref: "#/components/schemas/HexCoord" }
         combat: { $ref: "#/components/schemas/LiveCombat" }
+        manual:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LiveManual" }
+        resolving: { type: boolean, description: "The DM is resolving part of an Effect by hand." }
+        saves:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LiveSave" }
         walls:
           type: array
           maxItems: 100000

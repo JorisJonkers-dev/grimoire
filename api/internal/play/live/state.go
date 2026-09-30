@@ -25,10 +25,16 @@ type state struct {
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
+	fx       domain.Effects
+}
+
+// cloneEffects copies a Session's Effects so a change never touches the committed state.
+func cloneEffects(fx domain.Effects) domain.Effects {
+	return domain.Effects{Active: slices.Clone(fx.Active), Manual: slices.Clone(fx.Manual), Saves: slices.Clone(fx.Saves)}
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx)}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
@@ -110,11 +116,27 @@ func (s *state) project(a Audience) View {
 	}
 	for _, t := range s.tokens {
 		if a == AudienceDM || (!t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])) {
-			v.Tokens = append(v.Tokens, tokenView(t, a))
+			tv := tokenView(t, a)
+			tv.Effects = s.effectViews(t.ID)
+			v.Tokens = append(v.Tokens, tv)
 		}
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
 	s.projectCombat(&v, a, seen)
+	for _, p := range s.fx.Saves {
+		i := slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.ID == p.Effect })
+		e := s.fx.Active[i]
+		if a == AudienceDM || s.shows(s.tokens[e.Target], seen) {
+			v.Saves = append(v.Saves, SaveView{RollID: uuid.UUID(p.RollID).String(), TokenID: uuid.UUID(e.Target).String(), Effect: e.Name, DC: p.DC})
+		}
+	}
+	if a == AudienceDM {
+		for _, m := range s.fx.Manual {
+			v.Manual = append(v.Manual, ManualView{ID: m.ID.String(), Text: m.Text})
+		}
+	} else {
+		v.Resolving = len(s.fx.Manual) > 0
+	}
 	return v
 }
 

@@ -43,6 +43,9 @@ const (
 	CmdUndoDamage    = "undo_damage"
 	CmdSetTactics    = "set_tactics"
 	CmdReact         = "react"
+	CmdApplyEffect   = "apply_effect"
+	CmdEndEffect     = "end_effect"
+	CmdResolveManual = "resolve_manual"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -98,6 +101,14 @@ type Command struct {
 	Tactics      string           `json:"tactics,omitempty"`
 	Use          bool             `json:"use,omitempty"`
 	Shield       bool             `json:"shield,omitempty"`
+	Effect       string           `json:"effect,omitempty"`
+	EffectName   string           `json:"effectName,omitempty"`
+	SourceID     string           `json:"sourceId,omitempty"`
+	Rounds       int              `json:"rounds,omitempty"`
+	SaveAbility  string           `json:"saveAbility,omitempty"`
+	SaveDC       int              `json:"saveDc,omitempty"`
+	EffectID     string           `json:"effectId,omitempty"`
+	ManualID     string           `json:"manualId,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -137,6 +148,23 @@ type TokenView struct {
 	Health  string       `json:"health,omitempty"`
 	Attacks []AttackView `json:"attacks,omitempty"`
 	Shield  bool         `json:"shield,omitempty"`
+	Effects []EffectView `json:"effects,omitempty"`
+}
+
+// EffectView is an Effect on a token, which everyone who sees the token sees.
+type EffectView struct {
+	ID            string `json:"id"`
+	Slug          string `json:"slug"`
+	Name          string `json:"name"`
+	SourceID      string `json:"sourceId,omitempty"`
+	Concentration bool   `json:"concentration"`
+	RoundsLeft    int    `json:"roundsLeft,omitempty"`
+}
+
+// ManualView is part of an Effect the DM resolves by hand.
+type ManualView struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
 }
 
 // AttackView is one attack on a hotbar.
@@ -217,6 +245,18 @@ type View struct {
 	Lights     []LightView `json:"lights,omitempty"`
 	Ambient    string      `json:"ambient,omitempty"`
 	Combat     *CombatView `json:"combat,omitempty"`
+	// Manual goes to the DM; everyone else only learns that something is being resolved.
+	Manual    []ManualView `json:"manual,omitempty"`
+	Resolving bool         `json:"resolving,omitempty"`
+	Saves     []SaveView   `json:"saves,omitempty"`
+}
+
+// SaveView is a saving throw waiting on its Roll Card to end an Effect.
+type SaveView struct {
+	RollID  string `json:"rollId"`
+	TokenID string `json:"tokenId"`
+	Effect  string `json:"effect"`
+	DC      int    `json:"dc"`
 }
 
 // CombatView is the running Combat: its round and every Combatant the audience can see, in turn order.
