@@ -6,7 +6,7 @@ const crypt = Buffer.from(
   'base64',
 )
 
-test('the party sees only lit hexes of a dark map and never the creatures beyond them', async ({ page, browser }, info) => {
+test('the party sees only what light and darkvision show, and walking pushes the fog back', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
   const stamp = String(Date.now())
   await page.goto('/campaigns')
@@ -55,9 +55,13 @@ test('the party sees only lit hexes of a dark map and never the creatures beyond
   await page.getByTestId('tool-tokens').check()
   await page.getByTestId('token-label').fill('Aria')
   await page.getByTestId('token-kind').selectOption('party')
+  await page.getByTestId('token-controller').selectOption({ label: 'Aria' })
+  await page.getByTestId('token-darkvision').fill('10')
   await page.locator('[data-hex="0,0"]').click()
   await page.getByTestId('token-label').fill('Shade')
   await page.getByTestId('token-kind').selectOption('enemy')
+  await page.getByTestId('token-controller').selectOption('')
+  await page.getByTestId('token-darkvision').fill('0')
   await page.locator('[data-hex="5,0"]').click()
   await page.getByTestId('token-label').fill('Lurker')
   await page.getByTestId('token-hidden').check()
@@ -80,4 +84,18 @@ test('the party sees only lit hexes of a dark map and never the creatures beyond
   const masked = await player.request.get(String(image), { headers: { 'X-User-Id': `e2e-fog-${stamp}` } })
   expect(masked.headers()['content-type']).toBe('image/png')
   expect(Buffer.compare(await masked.body(), crypt)).not.toBe(0)
+
+  await expect(player.getByTestId('walker')).toHaveText('Tap a hex to walk Aria there.')
+  const walk = async (hex: string, cost: string) => {
+    await player.locator(`[data-hex="${hex}"]`).click()
+    await expect(player.getByTestId('walk-preview')).toContainText(`Walk ${cost} ft`)
+    await expect(player.locator(`[data-hex="${hex}"]`)).toHaveAttribute('aria-label', /on the path/)
+    await player.locator(`[data-hex="${hex}"]`).click()
+    for (const p of [player, page]) await expect(p.locator(`[data-hex="${hex}"]`)).toHaveAttribute('aria-label', /Aria/)
+  }
+  await walk('2,0', '10')
+  await expect(player.locator('[data-hex="5,0"]')).toHaveAttribute('aria-label', 'Hex 5, 0: never seen')
+  await walk('3,0', '5')
+  await expect(player.locator('[data-hex="5,0"]')).toHaveAttribute('aria-label', /Shade/)
+  expect(frames.join('\n')).not.toContain('Lurker')
 })

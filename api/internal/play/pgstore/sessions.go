@@ -122,9 +122,14 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	}
 	tokens := make([]domain.Token, 0, len(rows))
 	for _, t := range rows {
-		tokens = append(tokens, domain.Token{
+		tok := domain.Token{
 			ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
-		})
+		}
+		if t.ControllerMemberID.Valid {
+			id := uuid.UUID(t.ControllerMemberID.Bytes)
+			tok.Controller = &id
+		}
+		tokens = append(tokens, tok)
 	}
 	sess := session(row)
 	if sess.MapID == nil {
@@ -166,12 +171,16 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	t := w.Token
 	switch w.Kind {
 	case domain.ActionTokenPlaced:
-		return s.q.InsertToken(ctx, queries.InsertTokenParams{
+		p := queries.InsertTokenParams{
 			ID: uuid.UUID(t.ID), SessionID: sid, Label: t.Label, Kind: t.Kind, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden, DarkvisionFt: int32(t.DarkvisionFt),
-		})
+		}
+		if t.Controller != nil {
+			p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
+		}
+		return s.q.InsertToken(ctx, p)
 	case domain.ActionTokenRemoved:
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
-	case domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed:
+	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
 	case domain.ActionMapSet:
 		p := queries.SetSessionMapParams{ID: sid}
@@ -232,7 +241,7 @@ func (s *Store) addReveals(ctx context.Context, id domain.MapID, hs []hex.Coord)
 //nolint:gosec // coordinates are bounded by the map
 func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) error {
 	switch w.Kind {
-	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved:
+	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,

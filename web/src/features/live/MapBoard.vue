@@ -5,10 +5,10 @@ import { type Coord, corners, toPixel } from '@/shared/hex'
 import { initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
-const props = withDefaults(defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; title: string }>(), {
-  dm: false,
-  selected: null,
-})
+const props = withDefaults(
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; title: string }>(),
+  { dm: false, selected: null, path: () => [] },
+)
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
 const layout = computed(() => layoutOf(props.map))
@@ -17,6 +17,7 @@ const remembered = computed(() => new Set(props.view.remembered.map(key)))
 const walls = computed(() => new Set((props.view.walls ?? []).map(key)))
 const lights = computed(() => new Map((props.view.lights ?? []).map((l) => [key(l), l])))
 const tokens = computed(() => new Map(props.view.tokens.map((t) => [key(t), t])))
+const route = computed(() => new Set(props.path.map(key)))
 const points = (c: Coord) =>
   corners(layout.value, c)
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
@@ -32,6 +33,7 @@ const cells = computed(() =>
       t ? `${t.label}${t.hidden ? ' (hidden)' : ''}` : '',
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
+      route.value.has(k) ? 'on the path' : '',
     ]
       .filter(Boolean)
       .join(': ')
@@ -55,7 +57,7 @@ const cells = computed(() =>
       <g
         v-for="c in cells"
         :key="c.k"
-        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm }]"
+        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k) }]"
         role="button"
         tabindex="0"
         :aria-label="c.label"
@@ -103,6 +105,10 @@ const cells = computed(() =>
 .cell--wall polygon {
   stroke: var(--color-enemy);
   stroke-width: 3;
+}
+.cell--path polygon {
+  fill: rgb(212 175 55 / 30%);
+  stroke: var(--color-gold-high);
 }
 .cell--selected polygon {
   stroke: var(--color-gold-high);

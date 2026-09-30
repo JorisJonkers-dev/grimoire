@@ -175,7 +175,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		}
 	}
 
-	hub := &live.Hub{Store: playpg.New(store.Pool()), Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger}
+	hub := &live.Hub{Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger}
 	defer hub.Shutdown()
 	handler, err := httpapi.New(httpapi.Options{
 		Handler: &httpapi.Handler{

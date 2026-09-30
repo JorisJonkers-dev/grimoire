@@ -1,4 +1,4 @@
-import type { LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
+import type { LivePath, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
 import { zLiveUpdate } from '@/infrastructure/api/zod.gen'
 
 export type Outcome = 'applied' | 'resync' | 'ignored'
@@ -10,11 +10,15 @@ export class SessionState {
   view: LiveView | null = null
   ended = false
   rejection = ''
+  /** The views along the last walk, before its final view. */
+  steps: LiveView[] = []
+  path: LivePath | null = null
 
   apply(frame: unknown): Outcome {
     const parsed = zLiveUpdate.safeParse(frame)
     if (!parsed.success) return 'ignored'
     const u: LiveUpdate = parsed.data
+    this.steps = []
     switch (u.kind) {
       case 'snapshot':
         this.seq = u.seq
@@ -23,6 +27,10 @@ export class SessionState {
         return 'applied'
       case 'rejected':
         this.rejection = u.reason ?? 'That was not allowed.'
+        this.path = null
+        return 'applied'
+      case 'path':
+        this.path = u.path ?? null
         return 'applied'
       case 'ended':
         this.ended = true
@@ -31,6 +39,8 @@ export class SessionState {
         if (this.seq < 0 || u.seq !== this.seq + 1) return 'resync'
         this.seq = u.seq
         this.view = u.view ?? this.view
+        this.steps = u.steps ?? []
+        this.path = null
         return 'applied'
     }
   }

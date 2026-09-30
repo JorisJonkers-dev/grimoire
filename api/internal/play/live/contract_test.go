@@ -21,7 +21,7 @@ type contract struct {
 
 // samples covers every command and update kind; the web client parses each with its generated schemas.
 func samples() contract {
-	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0}
+	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
 	id := "0190c7a8-0000-7000-8000-00000000000c"
 	view := &live.View{
 		Tokens: []live.TokenView{token}, Fog: true, Visible: []live.Hex{{Q: 0, R: 0}}, Remembered: []live.Hex{{Q: 1, R: 0}},
@@ -46,6 +46,9 @@ func samples() contract {
 			{Nonce: "n9", Kind: live.CmdPlaceLight, Q: 4, R: 0, BrightFt: 20, DimFt: 40},
 			{Nonce: "n10", Kind: live.CmdRemoveLight, LightID: "0190c7a8-0000-7000-8000-00000000000e"},
 			{Nonce: "n11", Kind: live.CmdSetAmbient, Ambient: "dark"},
+			{Nonce: "n12", Kind: live.CmdPlace, Label: "Aria", TokenKind: "party", ControllerID: "0190c7a8-0000-7000-8000-00000000000f"},
+			{Nonce: "n13", Kind: live.CmdPlanWalk, TokenID: token.ID, Q: 3, R: 0},
+			{Nonce: "n14", Kind: live.CmdWalk, TokenID: token.ID, Q: 3, R: 0},
 		},
 		Updates: []live.Update{
 			{
@@ -55,7 +58,9 @@ func samples() contract {
 			{Kind: live.UpdView, Seq: 5, Nonce: "n3", View: &dmView},
 			{Kind: live.UpdView, Seq: 6, View: &live.View{Tokens: []live.TokenView{}, Visible: []live.Hex{}, Remembered: []live.Hex{}}},
 			{Kind: live.UpdRejected, Seq: 6, Nonce: "n9", Reason: "Only the DM can change the table."},
-			{Kind: live.UpdEnded, Seq: 6},
+			{Kind: live.UpdPath, Seq: 6, Nonce: "n13", Path: &live.PathView{TokenID: token.ID, Hexes: []live.Hex{{Q: 2, R: -1}, {Q: 3, R: -1}, {Q: 3, R: 0}}, CostFt: 10}},
+			{Kind: live.UpdView, Seq: 7, Nonce: "n14", View: view, Steps: []live.View{*view}},
+			{Kind: live.UpdEnded, Seq: 7},
 		},
 	}
 }

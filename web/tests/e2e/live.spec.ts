@@ -58,6 +58,8 @@ test('tokens move live on every screen and hidden ones never leave the DM', asyn
   }
   await page.locator('[data-hex="1,0"]').click()
   await page.locator('[data-hex="2,0"]').click()
+  await expect(page.getByTestId('walk-preview')).toContainText('Walk 5 ft')
+  await page.locator('[data-hex="2,0"]').click()
   for (const p of [one.page, two.page, table]) {
     await expect(p.locator('[data-hex="2,0"]')).toHaveAttribute('aria-label', /Goblin/)
     await expect(p.locator('[data-hex="-1,0"]')).toHaveAttribute('aria-label', 'Hex -1, 0')

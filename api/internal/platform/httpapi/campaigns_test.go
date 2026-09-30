@@ -364,9 +364,9 @@ func TestCampaignHandlersNeedAnIdentity(t *testing.T) {
 
 func liveParts(t *testing.T, pool *pgxpool.Pool, repo *campaignpg.Store) []any {
 	t.Helper()
-	hub := &live.Hub{Store: playpg.New(pool), Owner: playpg.Owner{Pool: pool}, Now: time.Now, Log: quiet}
-	t.Cleanup(hub.Shutdown)
 	members := playpg.CampaignMembers{Store: repo}
+	hub := &live.Hub{Store: playpg.New(pool), Members: members, Owner: playpg.Owner{Pool: pool}, Now: time.Now, Log: quiet}
+	t.Cleanup(hub.Shutdown)
 	sessions := &playapp.Sessions{Repo: playpg.New(pool), Members: members, Live: hub, Now: time.Now}
 	maps := &playapp.Maps{Repo: playpg.New(pool), Members: members, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now}
 	return []any{httpapi.SessionService(sessions), httpapi.LiveHub(hub), httpapi.LiveMembers(members), httpapi.MapService(maps)}

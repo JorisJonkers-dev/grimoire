@@ -49,6 +49,8 @@ type Token struct {
 	Hidden bool
 	// DarkvisionFt lets a party token see in darkness.
 	DarkvisionFt int
+	// Controller is the member who may walk the token besides the DM.
+	Controller *uuid.UUID
 }
 
 // Token action kinds in the Action Log.
@@ -60,4 +62,5 @@ const (
 	ActionTokenHidden    = "token_hidden"
 	ActionTokenRevealed  = "token_revealed"
 	ActionTokenRemoved   = "token_removed"
+	ActionTokenWalked    = "token_walked"
 )
