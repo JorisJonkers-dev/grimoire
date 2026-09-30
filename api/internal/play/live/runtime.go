@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"strings"
 	"sync"
 	"time"
 
@@ -15,16 +14,24 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
-// Change is one token change the runtime asks the store to write.
-type Change struct {
-	Kind  string
-	Token domain.Token
+// Write is one change the runtime commits: the action kind plus what it touches. AutoReveal lists the
+// hexes the party sees for the first time because of it; they are remembered from then on.
+type Write struct {
+	Kind       string
+	Token      domain.Token
+	Hexes      []hex.Coord
+	Light      domain.MapLight
+	Ambient    string
+	MapID      *domain.MapID
+	AutoReveal []hex.Coord
+	board      *domain.MapState
 }
 
 // Store is the runtime's persistence port.
 type Store interface {
-	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, error)
-	Apply(ctx context.Context, s domain.Session, ch Change, actor domain.Member, c caller.Caller, now time.Time) (int64, domain.Token, error)
+	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
+	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
+	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error)
 }
 
 // Owner guarantees one runtime per Session across processes.
@@ -58,8 +65,7 @@ type runtime struct {
 	now     func() time.Time
 	log     *slog.Logger
 	release func()
-	session domain.Session
-	tokens  map[domain.TokenID]domain.Token
+	st      *state
 	subs    map[*Subscriber]struct{}
 	join    chan *Subscriber
 	leave   chan *Subscriber
@@ -101,7 +107,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	if err != nil {
 		return nil, err
 	}
-	s, tokens, err := h.Store.Load(ctx, id)
+	s, tokens, board, err := h.Store.Load(ctx, id)
 	if err != nil {
 		release()
 		return nil, err
@@ -110,13 +116,14 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, ErrClosed
 	}
-	rt := &runtime{
-		store: h.Store, now: h.Now, log: h.Log, release: release, session: s, tokens: map[domain.TokenID]domain.Token{},
-		subs: map[*Subscriber]struct{}{}, join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request),
-		stop: make(chan struct{}), done: make(chan struct{}),
-	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}}
 	for _, t := range tokens {
-		rt.tokens[t.ID] = t
+		st.tokens[t.ID] = t
+	}
+	st.setBoard(board)
+	rt := &runtime{
+		store: h.Store, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {
 		h.runtimes = map[domain.SessionID]*runtime{}
@@ -181,7 +188,7 @@ func (r *runtime) run() {
 			r.handle(req)
 		case <-r.stop:
 			for sub := range r.subs {
-				r.send(sub, Update{Kind: UpdEnded, Seq: r.session.Seq})
+				r.send(sub, Update{Kind: UpdEnded, Seq: r.st.session.Seq})
 				r.drop(sub)
 			}
 			return
@@ -209,20 +216,16 @@ func (r *runtime) drop(sub *Subscriber) {
 }
 
 func (r *runtime) snapshot(a Audience) Update {
-	u := Update{
-		Kind: UpdSnapshot, Seq: r.session.Seq, Tokens: []TokenView{},
-		Session: &SessionView{ID: uuid.UUID(r.session.ID).String(), Number: r.session.Number, GridRadius: r.session.GridRadius, Audience: a},
+	v := r.st.project(a)
+	s := r.st.session
+	return Update{
+		Kind: UpdSnapshot, Seq: s.Seq, View: &v,
+		Session: &SessionView{ID: uuid.UUID(s.ID).String(), Number: s.Number, GridRadius: s.GridRadius, Audience: a},
 	}
-	for _, t := range r.tokens {
-		if sees(a, t) {
-			u.Tokens = append(u.Tokens, view(t))
-		}
-	}
-	return u
 }
 
 func (r *runtime) reject(req request, reason string) {
-	r.send(req.from, Update{Kind: UpdRejected, Seq: r.session.Seq, Nonce: req.cmd.Nonce, Reason: reason})
+	r.send(req.from, Update{Kind: UpdRejected, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Reason: reason})
 }
 
 func (r *runtime) handle(req request) {
@@ -231,86 +234,86 @@ func (r *runtime) handle(req request) {
 		return
 	}
 	if !req.from.Member.DM {
-		r.reject(req, "Only the DM can change tokens.")
+		r.reject(req, "Only the DM can change the table.")
 		return
 	}
-	ch, reason := r.change(req.cmd)
+	w, reason := r.plan(req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
 	}
-	before, existed := r.tokens[ch.Token.ID]
-	seq, after, err := r.store.Apply(context.Background(), r.session, ch, req.from.Member, req.from.Caller, r.now())
+	next := r.st.clone()
+	apply(next, &w)
+	seq, err := r.store.Commit(context.Background(), next.session, next.board, w, req.from.Member, req.from.Caller, r.now())
 	if err != nil {
-		r.log.Error("live: apply", "error", err)
+		r.log.Error("live: commit", "error", err)
 		r.reject(req, "That change could not be saved.")
 		return
 	}
-	r.session.Seq = seq
-	if ch.Kind == domain.ActionTokenRemoved {
-		delete(r.tokens, after.ID)
-	} else {
-		r.tokens[after.ID] = after
-	}
+	next.session.Seq = seq
+	r.st = next
+	views := map[Audience]*View{}
 	for sub := range r.subs {
-		r.send(sub, r.project(sub.Audience, before, existed, after, ch.Kind != domain.ActionTokenRemoved, seq, req))
+		v, ok := views[sub.Audience]
+		if !ok {
+			projected := r.st.project(sub.Audience)
+			v, views[sub.Audience] = &projected, &projected
+		}
+		u := Update{Kind: UpdView, Seq: seq, View: v}
+		if sub == req.from {
+			u.Nonce = req.cmd.Nonce
+		}
+		r.send(sub, u)
 	}
 }
 
-// project turns one change into what an audience may learn from it.
-func (r *runtime) project(a Audience, before domain.Token, existed bool, after domain.Token, exists bool, seq int64, req request) Update {
-	u := Update{Kind: UpdTick, Seq: seq}
-	was, is := existed && sees(a, before), exists && sees(a, after)
-	switch {
-	case is:
-		v := view(after)
-		u.Kind, u.Token = UpdToken, &v
-	case was:
-		u.Kind, u.TokenID = UpdTokenRemoved, uuid.UUID(after.ID).String()
-	}
-	if a == AudienceDM && req.from.Audience == AudienceDM {
-		u.Nonce = req.cmd.Nonce
-	}
-	return u
-}
-
-// change validates a command against the Session and builds the token change it asks for.
-func (r *runtime) change(cmd Command) (Change, string) {
-	inside := hex.Distance(hex.Coord{Q: 0, R: 0}, hex.Coord{Q: cmd.Q, R: cmd.R}) <= r.session.GridRadius
-	if cmd.Kind == CmdPlace {
-		label := strings.TrimSpace(cmd.Label)
-		switch {
-		case label == "" || len([]rune(label)) > 40:
-			return Change{}, "Give the token a name of up to 40 characters."
-		case cmd.TokenKind != domain.TokenParty && cmd.TokenKind != domain.TokenEnemy && cmd.TokenKind != domain.TokenNPC && cmd.TokenKind != domain.TokenObject:
-			return Change{}, "Unknown token kind."
-		case !inside:
-			return Change{}, "That hex is off the map."
-		}
-		return Change{Kind: domain.ActionTokenPlaced, Token: domain.Token{Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden}}, ""
-	}
-	id, err := uuid.Parse(cmd.TokenID)
-	t, ok := r.tokens[domain.TokenID(id)]
-	if err != nil || !ok {
-		return Change{}, "No such token."
-	}
-	switch cmd.Kind {
-	case CmdMove:
-		if !inside {
-			return Change{}, "That hex is off the map."
-		}
-		t.Q, t.R = cmd.Q, cmd.R
-		return Change{Kind: domain.ActionTokenMoved, Token: t}, ""
-	case CmdSetHidden:
-		t.Hidden = cmd.Hidden
-		kind := domain.ActionTokenRevealed
-		if cmd.Hidden {
-			kind = domain.ActionTokenHidden
-		}
-		return Change{Kind: kind, Token: t}, ""
-	case CmdRemove:
-		return Change{Kind: domain.ActionTokenRemoved, Token: t}, ""
+// apply changes a copy of the state and records the hexes the party now sees for the first time.
+func apply(s *state, w *Write) {
+	switch w.Kind {
+	case domain.ActionTokenRemoved:
+		delete(s.tokens, w.Token.ID)
+	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed:
+		s.tokens[w.Token.ID] = w.Token
+	case domain.ActionMapSet:
+		s.session.MapID = w.MapID
+		s.setBoard(w.board)
 	default:
-		return Change{}, "Unknown command."
+		applyBoard(s.board, w)
+	}
+	if s.board == nil {
+		return
+	}
+	for c := range s.vision() {
+		if !s.board.Reveals[c] {
+			s.board.Reveals[c] = true
+			w.AutoReveal = append(w.AutoReveal, c)
+		}
+	}
+}
+
+func applyBoard(b *domain.MapState, w *Write) {
+	switch w.Kind {
+	case domain.ActionHexesRevealed, domain.ActionWallsSet:
+		set := map[bool]map[hex.Coord]bool{true: b.Reveals, false: b.Walls}[w.Kind == domain.ActionHexesRevealed]
+		for _, c := range w.Hexes {
+			set[c] = true
+		}
+	case domain.ActionHexesConcealed, domain.ActionWallsCleared:
+		set := map[bool]map[hex.Coord]bool{true: b.Reveals, false: b.Walls}[w.Kind == domain.ActionHexesConcealed]
+		for _, c := range w.Hexes {
+			delete(set, c)
+		}
+	case domain.ActionLightPlaced:
+		b.Lights = append(b.Lights, w.Light)
+	case domain.ActionLightRemoved:
+		kept := b.Lights[:0]
+		for _, l := range b.Lights {
+			if l.ID != w.Light.ID {
+				kept = append(kept, l)
+			}
+		}
+		b.Lights = kept
+	default:
+		b.Map.Ambient = w.Ambient
 	}
 }

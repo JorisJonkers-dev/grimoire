@@ -108,6 +108,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
       <nav class="prep" aria-label="Campaign tools">
         <RouterLink :to="{ name: 'dice', params: { id } }" data-testid="dice-link">Dice</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'npcs', params: { id } }" data-testid="npcs-link">NPCs</RouterLink>
+        <RouterLink v-if="isDM" :to="{ name: 'maps', params: { id } }" data-testid="maps-link">Maps</RouterLink>
       </nav>
 
       <section class="g-card" data-testid="sessions">

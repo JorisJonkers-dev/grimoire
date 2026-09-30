@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, createNpc, createRoll, deleteCharacter, deleteNpc, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getNpc, getPortrait, getReadiness, getRoll, getSession, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEntries, listInvites, listNpcRevisions, listNpcs, listRolls, listSessions, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, restoreNpcRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, startSession, updateCampaign, updateCharacter, updateMember, updateNpc } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse } from '../types.gen';
+import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, createNpc, createRoll, deleteCharacter, deleteNpc, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getReadiness, getRoll, getSession, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEntries, listInvites, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, restoreNpcRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, startSession, updateCampaign, updateCharacter, updateMap, updateMember, updateNpc, uploadMap } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UploadMapData, UploadMapError, UploadMapResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -1061,6 +1061,104 @@ export const endSessionMutation = (options?: Partial<Options<EndSessionData>>): 
     };
     return mutationOptions;
 };
+
+export const listMapsQueryKey = (options: Options<ListMapsData>) => createQueryKey('listMaps', options);
+
+/**
+ * List maps
+ *
+ * The Campaign's local Maps. DM only.
+ */
+export const listMapsOptions = (options: Options<ListMapsData>) => queryOptions<ListMapsResponse, ListMapsError, ListMapsResponse, ReturnType<typeof listMapsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listMaps({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listMapsQueryKey(options)
+});
+
+/**
+ * Upload a map
+ *
+ * A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM only.
+ */
+export const uploadMapMutation = (options?: Partial<Options<UploadMapData>>): UseMutationOptions<UploadMapResponse, UploadMapError, Options<UploadMapData>> => {
+    const mutationOptions: UseMutationOptions<UploadMapResponse, UploadMapError, Options<UploadMapData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadMap({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getMapQueryKey = (options: Options<GetMapData>) => createQueryKey('getMap', options);
+
+/**
+ * Get a map
+ *
+ * One Map with its calibration. DM only.
+ */
+export const getMapOptions = (options: Options<GetMapData>) => queryOptions<GetMapResponse, GetMapError, GetMapResponse, ReturnType<typeof getMapQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMap({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMapQueryKey(options)
+});
+
+/**
+ * Calibrate a map
+ *
+ * Renames a Map and sets its hex size, grid origin and ambient light. DM only.
+ */
+export const updateMapMutation = (options?: Partial<Options<UpdateMapData>>): UseMutationOptions<UpdateMapResponse, UpdateMapError, Options<UpdateMapData>> => {
+    const mutationOptions: UseMutationOptions<UpdateMapResponse, UpdateMapError, Options<UpdateMapData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateMap({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getMapImageQueryKey = (options: Options<GetMapImageData>) => createQueryKey('getMapImage', options);
+
+/**
+ * Get a map picture
+ *
+ * The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted black on the server.
+ */
+export const getMapImageOptions = (options: Options<GetMapImageData>) => queryOptions<GetMapImageResponse, GetMapImageError, GetMapImageResponse, ReturnType<typeof getMapImageQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMapImage({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMapImageQueryKey(options)
+});
 
 /**
  * Preview an invite

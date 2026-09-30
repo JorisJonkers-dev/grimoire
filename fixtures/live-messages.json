@@ -14,7 +14,8 @@
       "tokenKind": "enemy",
       "q": 2,
       "r": -1,
-      "hidden": true
+      "hidden": true,
+      "darkvisionFt": 60
     },
     {
       "nonce": "n3",
@@ -39,6 +40,67 @@
       "q": 0,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n6",
+      "kind": "set_map",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "mapId": "0190c7a8-0000-7000-8000-00000000000c"
+    },
+    {
+      "nonce": "n7",
+      "kind": "reveal_hexes",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "hexes": [
+        {
+          "q": 1,
+          "r": 1
+        }
+      ],
+      "on": true
+    },
+    {
+      "nonce": "n8",
+      "kind": "set_walls",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "hexes": [
+        {
+          "q": 2,
+          "r": 0
+        }
+      ],
+      "on": true
+    },
+    {
+      "nonce": "n9",
+      "kind": "place_light",
+      "q": 4,
+      "r": 0,
+      "hidden": false,
+      "brightFt": 20,
+      "dimFt": 40
+    },
+    {
+      "nonce": "n10",
+      "kind": "remove_light",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "lightId": "0190c7a8-0000-7000-8000-00000000000e"
+    },
+    {
+      "nonce": "n11",
+      "kind": "set_ambient",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "ambient": "dark"
     }
   ],
   "updates": [
@@ -51,48 +113,121 @@
         "gridRadius": 10,
         "audience": "party"
       },
-      "tokens": [
-        {
-          "id": "0190c7a8-0000-7000-8000-00000000000a",
-          "label": "Goblin",
-          "kind": "enemy",
-          "q": 2,
-          "r": -1,
-          "hidden": false
-        }
-      ]
-    },
-    {
-      "kind": "token",
-      "seq": 5,
-      "nonce": "n3",
-      "token": {
-        "id": "0190c7a8-0000-7000-8000-00000000000a",
-        "label": "Goblin",
-        "kind": "enemy",
-        "q": 2,
-        "r": -1,
-        "hidden": false
+      "view": {
+        "tokens": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "q": 2,
+            "r": -1,
+            "hidden": false,
+            "darkvisionFt": 0
+          }
+        ],
+        "map": {
+          "id": "0190c7a8-0000-7000-8000-00000000000c",
+          "name": "Crypt",
+          "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+          "width": 400,
+          "height": 300,
+          "hexSizePx": 40,
+          "originX": 34.64,
+          "originY": 40,
+          "imageVersion": 2
+        },
+        "fog": true,
+        "visible": [
+          {
+            "q": 0,
+            "r": 0
+          }
+        ],
+        "remembered": [
+          {
+            "q": 1,
+            "r": 0
+          }
+        ]
       }
     },
     {
-      "kind": "token_removed",
-      "seq": 6,
-      "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+      "kind": "view",
+      "seq": 5,
+      "nonce": "n3",
+      "view": {
+        "tokens": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000a",
+            "label": "Goblin",
+            "kind": "enemy",
+            "q": 2,
+            "r": -1,
+            "hidden": false,
+            "darkvisionFt": 0
+          }
+        ],
+        "map": {
+          "id": "0190c7a8-0000-7000-8000-00000000000c",
+          "name": "Crypt",
+          "imageUrl": "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/0190c7a8-0000-7000-8000-00000000000c/image?v=2",
+          "width": 400,
+          "height": 300,
+          "hexSizePx": 40,
+          "originX": 34.64,
+          "originY": 40,
+          "imageVersion": 2
+        },
+        "fog": true,
+        "visible": [
+          {
+            "q": 0,
+            "r": 0
+          }
+        ],
+        "remembered": [
+          {
+            "q": 1,
+            "r": 0
+          }
+        ],
+        "walls": [
+          {
+            "q": 2,
+            "r": 0
+          }
+        ],
+        "lights": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000e",
+            "q": 4,
+            "r": 0,
+            "brightFt": 20,
+            "dimFt": 40
+          }
+        ],
+        "ambient": "dark"
+      }
     },
     {
-      "kind": "tick",
-      "seq": 7
+      "kind": "view",
+      "seq": 6,
+      "view": {
+        "tokens": [],
+        "fog": false,
+        "visible": [],
+        "remembered": []
+      }
     },
     {
       "kind": "rejected",
-      "seq": 7,
+      "seq": 6,
       "nonce": "n9",
-      "reason": "Only the DM can change tokens."
+      "reason": "Only the DM can change the table."
     },
     {
       "kind": "ended",
-      "seq": 7
+      "seq": 6
     }
   ]
 }

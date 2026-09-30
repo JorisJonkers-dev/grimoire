@@ -66,9 +66,11 @@ linters:
           - revive
         text: "^(exported|package-comments):"
 
+      # Scenario tests read top to bottom; splitting them for a complexity score hides the story.
       - path: _test\.go
         linters:
           - exhaustruct_v5
+          - gocognit
           - gochecknoglobals
       - path: pgtest/
         linters:

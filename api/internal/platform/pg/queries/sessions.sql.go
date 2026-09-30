@@ -57,7 +57,7 @@ func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (int64, 
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
 FROM play.sessions WHERE campaign_id = $1 AND id = $2
 `
 
@@ -78,13 +78,14 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 		&i.GridRadius,
 		&i.StartedAt,
 		&i.EndedAt,
+		&i.MapID,
 	)
 	return i, err
 }
 
 const insertSession = `-- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES ($1, $2, 'live', $3)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
 `
 
 type InsertSessionParams struct {
@@ -105,6 +106,7 @@ func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) (P
 		&i.GridRadius,
 		&i.StartedAt,
 		&i.EndedAt,
+		&i.MapID,
 	)
 	return i, err
 }
@@ -144,31 +146,33 @@ func (q *Queries) InsertSessionAction(ctx context.Context, arg InsertSessionActi
 	return id, err
 }
 
-const insertToken = `-- name: InsertToken :one
-INSERT INTO play.tokens (session_id, label, kind, q, r, hidden) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
+const insertToken = `-- name: InsertToken :exec
+INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type InsertTokenParams struct {
-	SessionID uuid.UUID
-	Label     string
-	Kind      string
-	Q         int32
-	R         int32
-	Hidden    bool
+	ID           uuid.UUID
+	SessionID    uuid.UUID
+	Label        string
+	Kind         string
+	Q            int32
+	R            int32
+	Hidden       bool
+	DarkvisionFt int32
 }
 
-func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, insertToken,
+func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
+	_, err := q.db.Exec(ctx, insertToken,
+		arg.ID,
 		arg.SessionID,
 		arg.Label,
 		arg.Kind,
 		arg.Q,
 		arg.R,
 		arg.Hidden,
+		arg.DarkvisionFt,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	return err
 }
 
 const insertTokenEvent = `-- name: InsertTokenEvent :exec
@@ -197,7 +201,7 @@ func (q *Queries) InsertTokenEvent(ctx context.Context, arg InsertTokenEventPara
 }
 
 const listSessions = `-- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50
 `
 
@@ -219,6 +223,7 @@ func (q *Queries) ListSessions(ctx context.Context, campaignID uuid.UUID) ([]Pla
 			&i.GridRadius,
 			&i.StartedAt,
 			&i.EndedAt,
+			&i.MapID,
 		); err != nil {
 			return nil, err
 		}
@@ -253,7 +258,7 @@ func (q *Queries) NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (
 }
 
 const sessionByID = `-- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at FROM play.sessions WHERE id = $1
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id FROM play.sessions WHERE id = $1
 `
 
 func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error) {
@@ -268,21 +273,23 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 		&i.GridRadius,
 		&i.StartedAt,
 		&i.EndedAt,
+		&i.MapID,
 	)
 	return i, err
 }
 
 const sessionTokens = `-- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+SELECT id, label, kind, q, r, hidden, darkvision_ft FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
-	ID     uuid.UUID
-	Label  string
-	Kind   string
-	Q      int32
-	R      int32
-	Hidden bool
+	ID           uuid.UUID
+	Label        string
+	Kind         string
+	Q            int32
+	R            int32
+	Hidden       bool
+	DarkvisionFt int32
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -301,6 +308,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Q,
 			&i.R,
 			&i.Hidden,
+			&i.DarkvisionFt,
 		); err != nil {
 			return nil, err
 		}

@@ -1,5 +1,5 @@
 import { onBeforeUnmount, reactive } from 'vue'
-import type { LiveCommand, LiveSessionView, LiveToken } from '@/infrastructure/api/types.gen'
+import type { LiveCommand, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
 import { SessionState } from './sessionState'
 
 export type Audience = 'dm' | 'party' | 'table'
@@ -17,10 +17,10 @@ export function socketUrl(loc: Pick<Location, 'protocol' | 'host'>, campaignId: 
   return `${scheme}://${loc.host}/api/v1/campaigns/${campaignId}/sessions/${sessionId}/live?audience=${audience}`
 }
 
-export type LiveView = {
+export type LiveState = {
   connection: Connection
   session: LiveSessionView | null
-  tokens: LiveToken[]
+  view: LiveView | null
   rejection: string
 }
 
@@ -33,7 +33,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveView>({ connection: 'connecting', session: null, tokens: [], rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -42,7 +42,7 @@ export function useLiveSession(
 
   const sync = () => {
     view.session = state.session
-    view.tokens = [...state.tokens.values()]
+    view.view = state.view
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }

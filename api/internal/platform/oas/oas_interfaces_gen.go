@@ -73,6 +73,14 @@ type GetHealthRes interface {
 	getHealthRes()
 }
 
+type GetMapImageRes interface {
+	getMapImageRes()
+}
+
+type GetMapRes interface {
+	getMapRes()
+}
+
 type GetMeRes interface {
 	getMeRes()
 }
@@ -127,6 +135,10 @@ type ListEntriesRes interface {
 
 type ListInvitesRes interface {
 	listInvitesRes()
+}
+
+type ListMapsRes interface {
+	listMapsRes()
 }
 
 type ListNpcRevisionsRes interface {
@@ -209,10 +221,18 @@ type UpdateCharacterRes interface {
 	updateCharacterRes()
 }
 
+type UpdateMapRes interface {
+	updateMapRes()
+}
+
 type UpdateMemberRes interface {
 	updateMemberRes()
 }
 
 type UpdateNpcRes interface {
 	updateNpcRes()
+}
+
+type UploadMapRes interface {
+	uploadMapRes()
 }

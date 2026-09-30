@@ -1464,6 +1464,166 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/maps:
+    get:
+      operationId: listMaps
+      summary: List maps
+      description: The Campaign's local Maps. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The maps.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 500
+                items:
+                  $ref: "#/components/schemas/LocalMap"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: uploadMap
+      summary: Upload a map
+      description: A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: name
+          in: query
+          required: true
+          description: The map's name.
+          schema: { type: string, minLength: 1, maxLength: 80 }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary, maxLength: 26214400 }
+      responses:
+        "201":
+          description: The new map.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalMap"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/maps/{mapId}:
+    get:
+      operationId: getMap
+      summary: Get a map
+      description: One Map with its calibration. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/MapId"
+      responses:
+        "200":
+          description: The map.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalMap"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: updateMap
+      summary: Calibrate a map
+      description: Renames a Map and sets its hex size, grid origin and ambient light. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/MapId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MapEdit"
+      responses:
+        "200":
+          description: The calibrated map.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalMap"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/maps/{mapId}/image:
+    get:
+      operationId: getMapImage
+      summary: Get a map picture
+      description: The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted black on the server.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/MapId"
+        - name: v
+          in: query
+          description: Cache-busting version; the picture changes as the party explores.
+          schema: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+      responses:
+        "200":
+          description: The picture.
+          headers:
+            Cache-Control:
+              description: Private; the version query changes as the party explores.
+              schema: { type: string, maxLength: 100 }
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            image/png:
+              schema: { type: string, format: binary, maxLength: 104857600 }
+            image/jpeg:
+              schema: { type: string, format: binary, maxLength: 104857600 }
+            image/webp:
+              schema: { type: string, format: binary, maxLength: 104857600 }
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
@@ -1736,6 +1896,12 @@ components:
       in: path
       required: true
       description: Roll Request id.
+      schema: { $ref: "#/components/schemas/Id" }
+    MapId:
+      name: mapId
+      in: path
+      required: true
+      description: Map id.
       schema: { $ref: "#/components/schemas/Id" }
     NpcId:
       name: npcId
@@ -2570,11 +2736,12 @@ components:
       type: object
       description: A Token as a connection sees it.
       additionalProperties: false
-      required: [id, label, kind, q, r, hidden]
+      required: [id, label, kind, q, r, hidden, darkvisionFt]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         label: { type: string, minLength: 1, maxLength: 40 }
         kind: { $ref: "#/components/schemas/TokenKind" }
+        darkvisionFt: { type: integer, format: int32, minimum: 0, maximum: 300 }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
@@ -2595,30 +2762,121 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
+        darkvisionFt: { type: integer, format: int32, minimum: 0, maximum: 300 }
+        mapId: { $ref: "#/components/schemas/Id" }
+        hexes:
+          type: array
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        "on": { type: boolean }
+        lightId: { $ref: "#/components/schemas/Id" }
+        brightFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
+        dimFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
+        ambient: { $ref: "#/components/schemas/AmbientLight" }
     LiveUpdate:
       type: object
-      description: A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means resync.
+      description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync.
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, token, token_removed, tick, rejected, ended] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         reason: { type: string, maxLength: 200 }
         session: { $ref: "#/components/schemas/LiveSessionView" }
+        view: { $ref: "#/components/schemas/LiveView" }
+    AmbientLight:
+      type: string
+      description: The light that fills a Map everywhere.
+      enum: [bright, dim, dark]
+    LiveMap:
+      type: object
+      description: The active Map's picture and hex calibration.
+      additionalProperties: false
+      required: [id, name, imageUrl, width, height, hexSizePx, originX, originY, imageVersion]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        imageUrl: { $ref: "#/components/schemas/AssetUrl" }
+        width: { type: integer, format: int32, minimum: 1, maximum: 36000000 }
+        height: { type: integer, format: int32, minimum: 1, maximum: 36000000 }
+        hexSizePx: { type: number, format: double, minimum: 8, maximum: 400 }
+        originX: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        imageVersion: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+    LiveLight:
+      type: object
+      description: A light on the Map, for the DM.
+      additionalProperties: false
+      required: [id, q, r, brightFt, dimFt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        brightFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
+        dimFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
+    LiveView:
+      type: object
+      description: What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
+      additionalProperties: false
+      required: [tokens, fog, visible, remembered]
+      properties:
         tokens:
           type: array
           maxItems: 1000
           items: { $ref: "#/components/schemas/LiveToken" }
-        token: { $ref: "#/components/schemas/LiveToken" }
-        tokenId: { $ref: "#/components/schemas/Id" }
+        map: { $ref: "#/components/schemas/LiveMap" }
+        fog: { type: boolean }
+        visible:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        remembered:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        walls:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        lights:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/LiveLight" }
+        ambient: { $ref: "#/components/schemas/AmbientLight" }
+    LocalMap:
+      type: object
+      description: An uploaded Map and its hex calibration.
+      additionalProperties: false
+      required: [id, name, width, height, hexSizePx, originX, originY, ambient, imageUrl]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        width: { type: integer, format: int32, minimum: 1, maximum: 36000000 }
+        height: { type: integer, format: int32, minimum: 1, maximum: 36000000 }
+        hexSizePx: { type: number, format: double, minimum: 8, maximum: 400 }
+        originX: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        ambient: { $ref: "#/components/schemas/AmbientLight" }
+        imageUrl: { $ref: "#/components/schemas/AssetUrl" }
+    MapEdit:
+      type: object
+      description: A Map's name, calibration and ambient light.
+      additionalProperties: false
+      required: [name, hexSizePx, originX, originY, ambient]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        hexSizePx: { type: number, format: double, minimum: 8, maximum: 400 }
+        originX: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
+        ambient: { $ref: "#/components/schemas/AmbientLight" }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

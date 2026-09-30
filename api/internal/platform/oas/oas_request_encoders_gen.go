@@ -198,6 +198,20 @@ func encodeUpdateCharacterRequest(
 	return nil
 }
 
+func encodeUpdateMapRequest(
+	req *MapEdit,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeUpdateMemberRequest(
 	req *MemberUpdate,
 	r *http.Request,
@@ -223,6 +237,16 @@ func encodeUpdateNpcRequest(
 	}
 	encoded := e.Bytes()
 	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUploadMapRequest(
+	req UploadMapReq,
+	r *http.Request,
+) error {
+	const contentType = "application/octet-stream"
+	body := req
+	ht.SetBody(r, body, contentType)
 	return nil
 }
 

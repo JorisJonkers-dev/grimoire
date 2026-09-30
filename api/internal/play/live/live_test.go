@@ -66,6 +66,19 @@ func setup(t *testing.T) world {
 	return world{pool: store.Pool(), hub: hub, session: s, dm: dm, player: player}
 }
 
+// dungeon stores a dark 400 × 300 px map with 40 px hexes; its hexes include row r=0 from q=0 to q=5.
+func (w world) dungeon(t *testing.T) domain.Map {
+	t.Helper()
+	m, err := pgstore.New(w.pool).InsertMap(context.Background(), domain.Map{
+		CampaignID: w.session.CampaignID, Name: "Crypt", ImageKey: "sha256/x.png", ImageType: "image/png", Width: 400, Height: 300,
+		HexSize: 40, OriginX: 34.64, OriginY: 40,
+	}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return m
+}
+
 func next(t *testing.T, sub *live.Subscriber) live.Update {
 	t.Helper()
 	select {
@@ -86,13 +99,30 @@ func join(t *testing.T, w world, m domain.Member, c caller.Caller, a live.Audien
 	if err != nil {
 		t.Fatal(err)
 	}
-	if u := next(t, sub); u.Kind != live.UpdSnapshot || u.Session.Audience != a {
+	if u := next(t, sub); u.Kind != live.UpdSnapshot || u.Session.Audience != a || u.View == nil {
 		t.Fatalf("first update = %+v", u)
 	}
 	return sub
 }
 
-// payloads records everything an audience received, as the bytes the socket would carry.
+func token(v *live.View, label string) *live.TokenView {
+	for i := range v.Tokens {
+		if v.Tokens[i].Label == label {
+			return &v.Tokens[i]
+		}
+	}
+	return nil
+}
+
+func has(hs []live.Hex, q, r int) bool {
+	for _, h := range hs {
+		if h.Q == q && h.R == r {
+			return true
+		}
+	}
+	return false
+}
+
 func payloads(t *testing.T, updates ...live.Update) string {
 	t.Helper()
 	raw, err := json.Marshal(updates)
@@ -109,38 +139,31 @@ func TestHiddenTokensNeverReachPlayersOrTheTable(t *testing.T) {
 	player := join(t, w, w.player, playerCaller, live.AudienceParty)
 	table := join(t, w, w.player, playerCaller, live.AudienceTable)
 	var seen []live.Update
-	collect := func(n int) {
-		for range n {
-			seen = append(seen, next(t, player), next(t, table))
-		}
-	}
 	w.hub.Submit(dm, live.Command{Nonce: "1", Kind: live.CmdPlace, Label: "Ambusher", TokenKind: domain.TokenEnemy, Q: 2, R: 1, Hidden: true})
 	placed := next(t, dm)
-	if placed.Kind != live.UpdToken || placed.Nonce != "1" || !placed.Token.Hidden || placed.Seq != 1 {
+	amb := token(placed.View, "Ambusher")
+	if placed.Kind != live.UpdView || placed.Nonce != "1" || amb == nil || !amb.Hidden || placed.Seq != 1 || placed.View.Fog {
 		t.Fatalf("dm sees = %+v", placed)
 	}
-	collect(1)
-	w.hub.Submit(dm, live.Command{Nonce: "2", Kind: live.CmdMove, TokenID: placed.Token.ID, Q: 3, R: 1})
-	if u := next(t, dm); u.Kind != live.UpdToken || u.Token.Q != 3 {
-		t.Fatalf("dm move = %+v", u)
-	}
-	collect(1)
+	seen = append(seen, next(t, player), next(t, table))
+	w.hub.Submit(dm, live.Command{Nonce: "2", Kind: live.CmdMove, TokenID: amb.ID, Q: 3, R: 1})
+	next(t, dm)
+	seen = append(seen, next(t, player), next(t, table))
 	w.hub.Submit(player, live.Command{Nonce: "x", Kind: live.CmdResync})
 	seen = append(seen, next(t, player))
 	late := join(t, w, w.player, playerCaller, live.AudienceParty)
 	w.hub.Submit(late, live.Command{Nonce: "y", Kind: live.CmdResync})
 	seen = append(seen, next(t, late))
 	for _, u := range seen {
-		if u.Kind != live.UpdTick && u.Kind != live.UpdSnapshot {
+		if len(u.View.Tokens) != 0 || u.Nonce != "" {
 			t.Fatalf("hidden change leaked as %+v", u)
 		}
 	}
-	body := payloads(t, seen...)
-	if strings.Contains(body, placed.Token.ID) || strings.Contains(body, "Ambusher") {
+	if body := payloads(t, seen...); strings.Contains(body, amb.ID) || strings.Contains(body, "Ambusher") {
 		t.Fatalf("hidden token in player or table payloads: %s", body)
 	}
 	if seen[0].Seq != 1 || seen[2].Seq != 2 {
-		t.Fatalf("ticks keep the sequence whole: %+v", seen)
+		t.Fatalf("every audience gets every sequence: %+v", seen)
 	}
 }
 
@@ -149,45 +172,37 @@ func TestRevealHideMoveAndRemove(t *testing.T) {
 	w := setup(t)
 	dm := join(t, w, w.dm, dmCaller, live.AudienceDM)
 	player := join(t, w, w.player, playerCaller, live.AudienceParty)
-	w.hub.Submit(dm, live.Command{Nonce: "1", Kind: live.CmdPlace, Label: " Goblin ", TokenKind: domain.TokenEnemy, Q: 0, R: 0, Hidden: true})
-	id := next(t, dm).Token.ID
+	w.hub.Submit(dm, live.Command{Kind: live.CmdPlace, Label: " Goblin ", TokenKind: domain.TokenEnemy, Hidden: true})
+	id := token(next(t, dm).View, "Goblin").ID
 	next(t, player)
 	steps := []struct {
-		cmd    live.Command
-		player string
+		cmd     live.Command
+		visible bool
 	}{
-		{live.Command{Kind: live.CmdSetHidden, TokenID: id, Hidden: false}, live.UpdToken},
-		{live.Command{Kind: live.CmdMove, TokenID: id, Q: 1, R: -1}, live.UpdToken},
-		{live.Command{Kind: live.CmdSetHidden, TokenID: id, Hidden: true}, live.UpdTokenRemoved},
-		{live.Command{Kind: live.CmdSetHidden, TokenID: id, Hidden: false}, live.UpdToken},
-		{live.Command{Kind: live.CmdRemove, TokenID: id}, live.UpdTokenRemoved},
+		{live.Command{Kind: live.CmdSetHidden, TokenID: id, Hidden: false}, true},
+		{live.Command{Kind: live.CmdMove, TokenID: id, Q: 1, R: -1}, true},
+		{live.Command{Kind: live.CmdSetHidden, TokenID: id, Hidden: true}, false},
+		{live.Command{Kind: live.CmdSetHidden, TokenID: id, Hidden: false}, true},
+		{live.Command{Kind: live.CmdRemove, TokenID: id}, false},
 	}
 	for i, s := range steps {
 		w.hub.Submit(dm, s.cmd)
 		d, p := next(t, dm), next(t, player)
-		if p.Kind != s.player || d.Seq != int64(i+2) || p.Seq != d.Seq {
+		if (token(p.View, "Goblin") != nil) != s.visible || d.Seq != int64(i+2) || p.Seq != d.Seq {
 			t.Fatalf("step %d: dm %+v player %+v", i, d, p)
 		}
 	}
-	w.hub.Submit(player, live.Command{Kind: live.CmdResync})
-	if u := next(t, player); len(u.Tokens) != 0 || u.Seq != 6 {
-		t.Fatalf("after removal = %+v", u)
-	}
-	w.hub.Submit(dm, live.Command{Kind: live.CmdPlace, Label: "Ireena", TokenKind: domain.TokenParty, Q: 0, R: 1})
-	if u := next(t, player); u.Kind != live.UpdToken || u.Token.Label != "Ireena" {
+	w.hub.Submit(dm, live.Command{Kind: live.CmdPlace, Label: "Ireena", TokenKind: domain.TokenParty, Q: 0, R: 1, DarkvisionFt: 60})
+	if u := next(t, player); token(u.View, "Ireena") == nil || token(u.View, "Ireena").DarkvisionFt != 60 {
 		t.Fatalf("visible placement = %+v", u)
 	}
-	placed := next(t, dm)
-	w.hub.Submit(dm, live.Command{Nonce: "t", Kind: "teleport", TokenID: placed.Token.ID})
-	if u := next(t, dm); u.Kind != live.UpdRejected || u.Reason != "Unknown command." {
-		t.Fatalf("unknown command = %+v", u)
-	}
+	next(t, dm)
 	w.hub.Close(w.session.ID)
 	reloaded, err := w.hub.Join(context.Background(), w.session.ID, w.dm, dmCaller, live.AudienceDM)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if snap := next(t, reloaded); len(snap.Tokens) != 1 || snap.Tokens[0].Label != "Ireena" || snap.Seq != 7 {
+	if snap := next(t, reloaded); len(snap.View.Tokens) != 1 || snap.Seq != 7 {
 		t.Fatalf("reloaded state = %+v", snap)
 	}
 	late := join(t, w, w.player, playerCaller, live.AudienceParty)
@@ -208,13 +223,18 @@ func TestCommandsAreValidated(t *testing.T) {
 		t.Fatalf("player command = %+v", u)
 	}
 	bad := map[string]live.Command{
-		"label":  {Kind: live.CmdPlace, Label: " ", TokenKind: domain.TokenEnemy},
-		"long":   {Kind: live.CmdPlace, Label: strings.Repeat("x", 41), TokenKind: domain.TokenEnemy},
-		"kind":   {Kind: live.CmdPlace, Label: "A", TokenKind: "dragon"},
-		"off":    {Kind: live.CmdPlace, Label: "A", TokenKind: domain.TokenEnemy, Q: 99},
-		"token":  {Kind: live.CmdMove, TokenID: uuid.NewString()},
-		"id":     {Kind: live.CmdMove, TokenID: "nope"},
-		"unkown": {Kind: "teleport"},
+		"label":   {Kind: live.CmdPlace, Label: " ", TokenKind: domain.TokenEnemy},
+		"long":    {Kind: live.CmdPlace, Label: strings.Repeat("x", 41), TokenKind: domain.TokenEnemy},
+		"kind":    {Kind: live.CmdPlace, Label: "A", TokenKind: "dragon"},
+		"vision":  {Kind: live.CmdPlace, Label: "A", TokenKind: domain.TokenParty, DarkvisionFt: 400},
+		"off":     {Kind: live.CmdPlace, Label: "A", TokenKind: domain.TokenEnemy, Q: 99},
+		"token":   {Kind: live.CmdMove, TokenID: uuid.NewString()},
+		"id":      {Kind: live.CmdMove, TokenID: "nope"},
+		"unknown": {Kind: "teleport"},
+		"mapid":   {Kind: live.CmdSetMap, MapID: "nope"},
+		"nomap":   {Kind: live.CmdSetMap, MapID: uuid.NewString()},
+		"reveal":  {Kind: live.CmdRevealHexes, Hexes: []live.Hex{{Q: 0, R: 0}}},
+		"light":   {Kind: live.CmdPlaceLight},
 	}
 	for name, cmd := range bad {
 		cmd.Nonce = name
@@ -224,7 +244,7 @@ func TestCommandsAreValidated(t *testing.T) {
 		}
 	}
 	w.hub.Submit(dm, live.Command{Kind: live.CmdPlace, Label: "A", TokenKind: domain.TokenObject})
-	id := next(t, dm).Token.ID
+	id := token(next(t, dm).View, "A").ID
 	next(t, player)
 	w.hub.Submit(dm, live.Command{Nonce: "far", Kind: live.CmdMove, TokenID: id, Q: 50, R: 50})
 	if u := next(t, dm); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, "off the map") {
@@ -232,18 +252,140 @@ func TestCommandsAreValidated(t *testing.T) {
 	}
 }
 
+func TestFogOfWarOnADarkMap(t *testing.T) {
+	t.Parallel()
+	w := setup(t)
+	m := w.dungeon(t)
+	dm := join(t, w, w.dm, dmCaller, live.AudienceDM)
+	player := join(t, w, w.player, playerCaller, live.AudienceParty)
+	table := join(t, w, w.player, playerCaller, live.AudienceTable)
+	var partySaw []live.Update
+	send := func(cmd live.Command) (live.Update, live.Update) {
+		t.Helper()
+		w.hub.Submit(dm, cmd)
+		d, p := next(t, dm), next(t, player)
+		if d.Kind != live.UpdView {
+			t.Fatalf("%s rejected: %+v", cmd.Kind, d)
+		}
+		partySaw = append(partySaw, p, next(t, table))
+		return d, p
+	}
+	send(live.Command{Kind: live.CmdSetMap, MapID: uuid.UUID(m.ID).String()})
+	send(live.Command{Kind: live.CmdSetAmbient, Ambient: domain.AmbientDark})
+	send(live.Command{Kind: live.CmdPlace, Label: "Orc", TokenKind: domain.TokenEnemy, Q: 4, R: 0})
+	d, p := send(live.Command{Kind: live.CmdPlace, Label: "Aria", TokenKind: domain.TokenParty, Q: 0, R: 0, DarkvisionFt: 10})
+	if !p.View.Fog || p.View.Map == nil || !has(p.View.Visible, 2, 0) || has(p.View.Visible, 3, 0) || token(p.View, "Orc") != nil {
+		t.Fatalf("darkvision 10 ft = %+v", p.View)
+	}
+	if token(d.View, "Orc") == nil || d.View.Ambient != domain.AmbientDark {
+		t.Fatalf("dm sees everything = %+v", d.View)
+	}
+	d, p = send(live.Command{Kind: live.CmdPlaceLight, Q: 4, R: 0, BrightFt: 5, DimFt: 10})
+	if !has(p.View.Visible, 4, 0) || token(p.View, "Orc") == nil || len(d.View.Lights) != 1 {
+		t.Fatalf("the light shows the orc: %+v", p.View)
+	}
+	lightID := d.View.Lights[0].ID
+	_, p = send(live.Command{Kind: live.CmdSetWalls, Hexes: []live.Hex{{Q: 2, R: 0}}, On: true})
+	if has(p.View.Visible, 4, 0) || !has(p.View.Remembered, 4, 0) || token(p.View, "Orc") != nil {
+		t.Fatalf("behind the wall the orc is only remembered ground: %+v", p.View)
+	}
+	_, p = send(live.Command{Kind: live.CmdSetWalls, Hexes: []live.Hex{{Q: 2, R: 0}}, On: false})
+	if token(p.View, "Orc") == nil {
+		t.Fatalf("wall cleared: %+v", p.View)
+	}
+	d, _ = send(live.Command{Kind: live.CmdPlaceLight, Q: 5, R: 0, DimFt: 5})
+	if len(d.View.Lights) != 2 {
+		t.Fatalf("second light = %+v", d.View.Lights)
+	}
+	_, p = send(live.Command{Kind: live.CmdRemoveLight, LightID: lightID})
+	if token(p.View, "Orc") == nil {
+		t.Fatalf("the second light still shows the orc: %+v", p.View)
+	}
+	_, p = send(live.Command{Kind: live.CmdRevealHexes, Hexes: []live.Hex{{Q: 0, R: 3}}, On: true})
+	if !has(p.View.Remembered, 0, 3) {
+		t.Fatalf("painted reveal: %+v", p.View)
+	}
+	_, p = send(live.Command{Kind: live.CmdRevealHexes, Hexes: []live.Hex{{Q: 0, R: 3}}, On: false})
+	if has(p.View.Remembered, 0, 3) {
+		t.Fatalf("painted conceal: %+v", p.View)
+	}
+	for _, u := range partySaw {
+		if u.View.Walls != nil || u.View.Lights != nil || u.View.Ambient != "" {
+			t.Fatalf("DM-only layers reached the party: %+v", u.View)
+		}
+		for _, h := range append(append([]live.Hex{}, u.View.Visible...), u.View.Remembered...) {
+			if h.Q == 1 && h.R == 2 {
+				t.Fatalf("never-seen hex (1,2) was sent: %+v", u.View)
+			}
+		}
+	}
+	if body := payloads(t, partySaw[:6]...); strings.Contains(body, "Orc") {
+		t.Fatalf("the orc was sent before anyone could see it: %s", body)
+	}
+	_, p = send(live.Command{Kind: live.CmdSetAmbient, Ambient: domain.AmbientDim})
+	if !has(p.View.Visible, 1, 2) {
+		t.Fatalf("dim ambient lights everything in sight: %+v", p.View)
+	}
+	_, p = send(live.Command{Kind: live.CmdSetAmbient, Ambient: domain.AmbientDark})
+	if !has(p.View.Remembered, 1, 2) {
+		t.Fatalf("back in the dark, what was seen is remembered: %+v", p.View)
+	}
+	w.hub.Close(w.session.ID)
+	again := join(t, w, w.player, playerCaller, live.AudienceParty)
+	w.hub.Submit(again, live.Command{Kind: live.CmdResync})
+	if u := next(t, again); !has(u.View.Remembered, 1, 2) {
+		t.Fatalf("reveals survive a restart: %+v", u.View)
+	}
+}
+
+func TestMapCommandsAreValidated(t *testing.T) {
+	t.Parallel()
+	w := setup(t)
+	m := w.dungeon(t)
+	dm := join(t, w, w.dm, dmCaller, live.AudienceDM)
+	w.hub.Submit(dm, live.Command{Kind: live.CmdSetMap, MapID: uuid.UUID(m.ID).String()})
+	if u := next(t, dm); !u.View.Fog || u.View.Map.Name != "Crypt" || !strings.Contains(u.View.Map.ImageURL, "/maps/") {
+		t.Fatalf("set map = %+v", u)
+	}
+	bad := map[string]live.Command{
+		"none":    {Kind: live.CmdRevealHexes},
+		"off":     {Kind: live.CmdSetWalls, Hexes: []live.Hex{{Q: 90, R: 90}}},
+		"light":   {Kind: live.CmdPlaceLight, Q: 90},
+		"range":   {Kind: live.CmdPlaceLight, BrightFt: 700},
+		"unlit":   {Kind: live.CmdRemoveLight, LightID: uuid.NewString()},
+		"ambient": {Kind: live.CmdSetAmbient, Ambient: "twilight"},
+	}
+	for name, cmd := range bad {
+		cmd.Nonce = name
+		w.hub.Submit(dm, cmd)
+		if u := next(t, dm); u.Kind != live.UpdRejected || u.Nonce != name {
+			t.Errorf("%s = %+v", name, u)
+		}
+	}
+	w.hub.Submit(dm, live.Command{Kind: live.CmdSetMap})
+	if u := next(t, dm); u.View.Fog || u.View.Map != nil {
+		t.Fatalf("clear map = %+v", u)
+	}
+}
+
 type brokenStore struct {
 	live.Store
 }
 
-func (brokenStore) Apply(context.Context, domain.Session, live.Change, domain.Member, caller.Caller, time.Time) (int64, domain.Token, error) {
-	return 0, domain.Token{}, errors.New("disk full")
+func (brokenStore) Commit(context.Context, domain.Session, *domain.MapState, live.Write, domain.Member, caller.Caller, time.Time) (int64, error) {
+	return 0, errors.New("disk full")
 }
 
 type failingLoad struct{ live.Store }
 
-func (failingLoad) Load(context.Context, domain.SessionID) (domain.Session, []domain.Token, error) {
-	return domain.Session{}, nil, errors.New("gone")
+func (failingLoad) Load(context.Context, domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error) {
+	return domain.Session{}, nil, nil, errors.New("gone")
+}
+
+type failingOwner struct{}
+
+func (failingOwner) Acquire(context.Context, domain.SessionID) (func(), error) {
+	return nil, errors.New("no lock")
 }
 
 func TestFailuresAndLifecycle(t *testing.T) {
@@ -285,12 +427,6 @@ func TestFailuresAndLifecycle(t *testing.T) {
 	if _, err := (&live.Hub{Store: pgstore.New(w.pool), Owner: failingOwner{}}).Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("owner failure ignored")
 	}
-}
-
-type failingOwner struct{}
-
-func (failingOwner) Acquire(context.Context, domain.SessionID) (func(), error) {
-	return nil, errors.New("no lock")
 }
 
 func TestEndedSessionsCannotBeJoined(t *testing.T) {

@@ -8,9 +8,10 @@ import { FakeSocket } from '@/test/fakeSocket'
 import { socketUrl, useLiveSession } from './liveSession'
 import { SessionState } from './sessionState'
 
-const token = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Goblin', kind: 'enemy', q: 1, r: 0, hidden: false }
+const token = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Goblin', kind: 'enemy', q: 1, r: 0, hidden: false, darkvisionFt: 0 }
+const view = (tokens = [token]) => ({ tokens, fog: false, visible: [], remembered: [] })
 const snapshot = (seq: number, tokens = [token]) => ({
-  kind: 'snapshot', seq, tokens, session: { id: '0190c7a8-0000-7000-8000-00000000000b', number: 2, gridRadius: 5, audience: 'party' },
+  kind: 'snapshot', seq, view: view(tokens), session: { id: '0190c7a8-0000-7000-8000-00000000000b', number: 2, gridRadius: 5, audience: 'party' },
 })
 
 describe('the wire contract', () => {
@@ -23,16 +24,17 @@ describe('the wire contract', () => {
 describe('SessionState', () => {
   it('applies updates in order and asks to resync on a gap', () => {
     const s = new SessionState()
-    expect(s.apply({ kind: 'tick', seq: 1 })).toBe('resync')
+    expect(s.apply({ kind: 'view', seq: 1, view: view() })).toBe('resync')
     expect(s.apply(snapshot(3))).toBe('applied')
-    expect(s.tokens.get(token.id)?.label).toBe('Goblin')
-    expect(s.apply({ kind: 'token', seq: 4, token: { ...token, q: 2 } })).toBe('applied')
-    expect(s.tokens.get(token.id)?.q).toBe(2)
-    expect(s.apply({ kind: 'tick', seq: 5 })).toBe('applied')
-    expect(s.apply({ kind: 'token_removed', seq: 7, tokenId: token.id })).toBe('resync')
-    expect(s.tokens.size).toBe(1)
-    expect(s.apply({ kind: 'token_removed', seq: 6, tokenId: token.id })).toBe('applied')
-    expect(s.tokens.size).toBe(0)
+    expect(s.view?.tokens[0]?.label).toBe('Goblin')
+    expect(s.apply({ kind: 'view', seq: 4, view: view([{ ...token, q: 2 }]) })).toBe('applied')
+    expect(s.view?.tokens[0]?.q).toBe(2)
+    expect(s.apply({ kind: 'view', seq: 5 })).toBe('applied')
+    expect(s.view?.tokens).toHaveLength(1)
+    expect(s.apply({ kind: 'view', seq: 7, view: view([]) })).toBe('resync')
+    expect(s.view?.tokens).toHaveLength(1)
+    expect(s.apply({ kind: 'view', seq: 6, view: view([]) })).toBe('applied')
+    expect(s.view?.tokens).toHaveLength(0)
     expect(s.apply({ kind: 'rejected', seq: 6, reason: 'Nope' })).toBe('applied')
     expect(s.rejection).toBe('Nope')
     expect(s.apply({ kind: 'rejected', seq: 6 })).toBe('applied')
@@ -40,6 +42,7 @@ describe('SessionState', () => {
     expect(s.apply({ kind: 'weird' })).toBe('ignored')
     expect(s.apply({ kind: 'snapshot', seq: 8 })).toBe('applied')
     expect(s.session?.number).toBe(2)
+    expect(s.view?.tokens).toHaveLength(0)
     expect(s.apply({ kind: 'ended', seq: 8 })).toBe('applied')
     expect(s.ended).toBe(true)
   })
@@ -75,9 +78,9 @@ describe('useLiveSession', () => {
     s.open()
     expect(api().view.connection).toBe('open')
     s.receive(snapshot(1))
-    expect(api().view.tokens).toHaveLength(1)
+    expect(api().view.view?.tokens).toHaveLength(1)
     s.receive('not json')
-    s.receive({ kind: 'tick', seq: 5 })
+    s.receive({ kind: 'view', seq: 5 })
     expect(s.sent.at(-1)).toMatchObject({ kind: 'resync', q: 0, r: 0, hidden: false })
     api().send({ kind: 'move_token', tokenId: token.id, q: 3, r: 1 })
     expect(s.sent.at(-1)).toMatchObject({ kind: 'move_token', q: 3, r: 1, nonce: '2' })

@@ -37,8 +37,11 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var ss httpapi.SessionService
 	var hub httpapi.LiveHub
 	var lm httpapi.LiveMembers
+	var ms httpapi.MapService
 	for _, e := range extra {
 		switch v := e.(type) {
+		case httpapi.MapService:
+			ms = v
 		case httpapi.SessionService:
 			ss = v
 		case httpapi.LiveHub:
@@ -54,7 +57,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
@@ -365,7 +368,8 @@ func liveParts(t *testing.T, pool *pgxpool.Pool, repo *campaignpg.Store) []any {
 	t.Cleanup(hub.Shutdown)
 	members := playpg.CampaignMembers{Store: repo}
 	sessions := &playapp.Sessions{Repo: playpg.New(pool), Members: members, Live: hub, Now: time.Now}
-	return []any{httpapi.SessionService(sessions), httpapi.LiveHub(hub), httpapi.LiveMembers(members)}
+	maps := &playapp.Maps{Repo: playpg.New(pool), Members: members, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now}
+	return []any{httpapi.SessionService(sessions), httpapi.LiveHub(hub), httpapi.LiveMembers(members), httpapi.MapService(maps)}
 }
 
 func jsonUnmarshal(data []byte, v any) error { return json.Unmarshal(data, v) }

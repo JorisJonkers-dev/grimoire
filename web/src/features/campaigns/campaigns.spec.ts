@@ -118,6 +118,7 @@ describe('campaign home', () => {
     expect(wrapper.get('h1').text()).toBe('Strahd')
     expect(wrapper.get('[data-testid="party"]').text()).toContain('Kara (yours)')
     expect(wrapper.find('[data-testid="npcs-link"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="maps-link"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="sessions"]').text()).toContain('Session 1 is live')
     expect(wrapper.get('[data-testid="member-list"]').text()).toContain('Joris (you)')
     expect(wrapper.get('[data-testid="invite-list"]').text()).toContain('By Joris')

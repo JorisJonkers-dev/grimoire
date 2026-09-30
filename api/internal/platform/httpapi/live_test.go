@@ -107,24 +107,22 @@ func hiddenStaysHidden(t *testing.T, dm, player, table *socket) {
 	}
 	dm.send(live.Command{Nonce: "1", Kind: live.CmdPlace, Label: "Lurker", TokenKind: "enemy", Q: 1, R: 1, Hidden: true})
 	placed := dm.next()
-	if placed.Token == nil || !placed.Token.Hidden {
+	if placed.View == nil || len(placed.View.Tokens) != 1 || !placed.View.Tokens[0].Hidden {
 		t.Fatalf("dm place = %+v", placed)
 	}
-	if u := player.next(); u.Kind != live.UpdTick {
-		t.Fatalf("player saw %+v", u)
-	}
-	if u := table.next(); u.Kind != live.UpdTick {
-		t.Fatalf("table saw %+v", u)
-	}
+	id := placed.View.Tokens[0].ID
 	for _, s := range []*socket{player, table} {
+		if u := s.next(); u.Kind != live.UpdView || len(u.View.Tokens) != 0 {
+			t.Fatalf("party or table saw %+v", u)
+		}
 		joined := strings.Join(s.raw, "\n")
-		if strings.Contains(joined, "Lurker") || strings.Contains(joined, placed.Token.ID) {
+		if strings.Contains(joined, "Lurker") || strings.Contains(joined, id) {
 			t.Fatalf("hidden token crossed the wire: %s", joined)
 		}
 	}
-	dm.send(live.Command{Nonce: "2", Kind: live.CmdSetHidden, TokenID: placed.Token.ID, Hidden: false})
+	dm.send(live.Command{Nonce: "2", Kind: live.CmdSetHidden, TokenID: id, Hidden: false})
 	dm.next()
-	if u := player.next(); u.Kind != live.UpdToken || u.Token.Label != "Lurker" {
+	if u := player.next(); len(u.View.Tokens) != 1 || u.View.Tokens[0].Label != "Lurker" {
 		t.Fatalf("reveal = %+v", u)
 	}
 }

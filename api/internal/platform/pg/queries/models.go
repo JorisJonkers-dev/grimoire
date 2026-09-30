@@ -72,6 +72,43 @@ type CampaignInvite struct {
 	RevokedAt  pgtype.Timestamptz
 }
 
+type CampaignMap struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	ImageKey   string
+	ImageType  string
+	WidthPx    int32
+	HeightPx   int32
+	HexSizePx  float64
+	OriginX    float64
+	OriginY    float64
+	Ambient    string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type CampaignMapLight struct {
+	ID       uuid.UUID
+	MapID    uuid.UUID
+	Q        int32
+	R        int32
+	BrightFt int32
+	DimFt    int32
+}
+
+type CampaignMapReveal struct {
+	MapID uuid.UUID
+	Q     int32
+	R     int32
+}
+
+type CampaignMapWall struct {
+	MapID uuid.UUID
+	Q     int32
+	R     int32
+}
+
 type CampaignMember struct {
 	ID          uuid.UUID
 	CampaignID  uuid.UUID
@@ -421,6 +458,12 @@ type PlayAction struct {
 	SessionID     pgtype.UUID
 }
 
+type PlayActionHexEvent struct {
+	ActionID uuid.UUID
+	Q        int32
+	R        int32
+}
+
 type PlayActionRollEvent struct {
 	ActionID uuid.UUID
 	RollID   uuid.UUID
@@ -483,14 +526,16 @@ type PlaySession struct {
 	GridRadius int32
 	StartedAt  time.Time
 	EndedAt    pgtype.Timestamptz
+	MapID      pgtype.UUID
 }
 
 type PlayToken struct {
-	ID        uuid.UUID
-	SessionID uuid.UUID
-	Label     string
-	Kind      string
-	Q         int32
-	R         int32
-	Hidden    bool
+	ID           uuid.UUID
+	SessionID    uuid.UUID
+	Label        string
+	Kind         string
+	Q            int32
+	R            int32
+	Hidden       bool
+	DarkvisionFt int32
 }

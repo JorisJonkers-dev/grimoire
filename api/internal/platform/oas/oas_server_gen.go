@@ -117,6 +117,19 @@ type Handler interface {
 	//
 	// GET /healthz
 	GetHealth(ctx context.Context) (GetHealthRes, error)
+	// GetMap implements getMap operation.
+	//
+	// One Map with its calibration. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/maps/{mapId}
+	GetMap(ctx context.Context, params GetMapParams) (GetMapRes, error)
+	// GetMapImage implements getMapImage operation.
+	//
+	// The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted
+	// black on the server.
+	//
+	// GET /api/v1/campaigns/{campaignId}/maps/{mapId}/image
+	GetMapImage(ctx context.Context, params GetMapImageParams) (GetMapImageRes, error)
 	// GetMe implements getMe operation.
 	//
 	// Returns the identity the platform authenticated for this request.
@@ -202,6 +215,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListMaps implements listMaps operation.
+	//
+	// The Campaign's local Maps. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/maps
+	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)
 	// ListNpcRevisions implements listNpcRevisions operation.
 	//
 	// Every Revision of the NPC, newest first, with its author and origin. DM only.
@@ -326,6 +345,12 @@ type Handler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
 	UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (UpdateCharacterRes, error)
+	// UpdateMap implements updateMap operation.
+	//
+	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/maps/{mapId}
+	UpdateMap(ctx context.Context, req *MapEdit, params UpdateMapParams) (UpdateMapRes, error)
 	// UpdateMember implements updateMember operation.
 	//
 	// Makes a Member a DM or a Player. DM only; the last DM cannot step down.
@@ -338,6 +363,13 @@ type Handler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
+	// UploadMap implements uploadMap operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/maps
+	UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (UploadMapRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and
