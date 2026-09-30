@@ -3,7 +3,8 @@ import { useMutation } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { previewReachMutation, previewSightMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { Coord } from '@/shared/hex'
-import HexGrid, { type GridCell } from './HexGrid.vue'
+import type { GridCell } from './grid'
+import HexGrid from './HexGrid.vue'
 import { key, sandbox } from './sandbox'
 
 const field = sandbox()

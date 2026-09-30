@@ -26,7 +26,11 @@ type Handler struct {
 	Characters CharacterService
 	NPCs       NPCService
 	Rolls      RollService
-	Log        *slog.Logger
+	Sessions   SessionService
+	Hub        LiveHub
+	// LiveMembers answers membership for the live socket, which sits outside the generated router.
+	LiveMembers LiveMembers
+	Log         *slog.Logger
 }
 
 var _ oas.Handler = (*Handler)(nil)

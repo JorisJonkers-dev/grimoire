@@ -4777,6 +4777,56 @@ func (s *ListRollsOKHeaders) SetResponse(val []RollRequest) {
 
 func (*ListRollsOKHeaders) listRollsRes() {}
 
+// ListSessionsOKHeaders wraps []PlaySession with response headers.
+type ListSessionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []PlaySession
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSessionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSessionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSessionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSessionsOKHeaders) GetResponse() []PlaySession {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSessionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSessionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSessionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSessionsOKHeaders) SetResponse(val []PlaySession) {
+	s.Response = val
+}
+
+func (*ListSessionsOKHeaders) listSessionsRes() {}
+
 // ListSourcesOKHeaders wraps []Source with response headers.
 type ListSourcesOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -4843,6 +4893,498 @@ func (s *ListSpellsNotModified) SetETag(val OptString) {
 }
 
 func (*ListSpellsNotModified) listSpellsRes() {}
+
+// A WebSocket frame from a client to a live Session.
+// Ref: #/components/schemas/LiveCommand
+type LiveCommand struct {
+	Nonce     string          `json:"nonce"`
+	Kind      LiveCommandKind `json:"kind"`
+	TokenId   OptID           `json:"tokenId"`
+	Label     OptString       `json:"label"`
+	TokenKind OptTokenKind    `json:"tokenKind"`
+	Q         int32           `json:"q"`
+	R         int32           `json:"r"`
+	Hidden    bool            `json:"hidden"`
+}
+
+// GetNonce returns the value of Nonce.
+func (s *LiveCommand) GetNonce() string {
+	return s.Nonce
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveCommand) GetKind() LiveCommandKind {
+	return s.Kind
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveCommand) GetTokenId() OptID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveCommand) GetLabel() OptString {
+	return s.Label
+}
+
+// GetTokenKind returns the value of TokenKind.
+func (s *LiveCommand) GetTokenKind() OptTokenKind {
+	return s.TokenKind
+}
+
+// GetQ returns the value of Q.
+func (s *LiveCommand) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveCommand) GetR() int32 {
+	return s.R
+}
+
+// GetHidden returns the value of Hidden.
+func (s *LiveCommand) GetHidden() bool {
+	return s.Hidden
+}
+
+// SetNonce sets the value of Nonce.
+func (s *LiveCommand) SetNonce(val string) {
+	s.Nonce = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveCommand) SetKind(val LiveCommandKind) {
+	s.Kind = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveCommand) SetTokenId(val OptID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveCommand) SetLabel(val OptString) {
+	s.Label = val
+}
+
+// SetTokenKind sets the value of TokenKind.
+func (s *LiveCommand) SetTokenKind(val OptTokenKind) {
+	s.TokenKind = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveCommand) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveCommand) SetR(val int32) {
+	s.R = val
+}
+
+// SetHidden sets the value of Hidden.
+func (s *LiveCommand) SetHidden(val bool) {
+	s.Hidden = val
+}
+
+type LiveCommandKind string
+
+const (
+	LiveCommandKindResync         LiveCommandKind = "resync"
+	LiveCommandKindPlaceToken     LiveCommandKind = "place_token"
+	LiveCommandKindMoveToken      LiveCommandKind = "move_token"
+	LiveCommandKindSetTokenHidden LiveCommandKind = "set_token_hidden"
+	LiveCommandKindRemoveToken    LiveCommandKind = "remove_token"
+)
+
+// AllValues returns all LiveCommandKind values.
+func (LiveCommandKind) AllValues() []LiveCommandKind {
+	return []LiveCommandKind{
+		LiveCommandKindResync,
+		LiveCommandKindPlaceToken,
+		LiveCommandKindMoveToken,
+		LiveCommandKindSetTokenHidden,
+		LiveCommandKindRemoveToken,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandKindResync:
+		return []byte(s), nil
+	case LiveCommandKindPlaceToken:
+		return []byte(s), nil
+	case LiveCommandKindMoveToken:
+		return []byte(s), nil
+	case LiveCommandKindSetTokenHidden:
+		return []byte(s), nil
+	case LiveCommandKindRemoveToken:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandKind) UnmarshalText(data []byte) error {
+	switch LiveCommandKind(data) {
+	case LiveCommandKindResync:
+		*s = LiveCommandKindResync
+		return nil
+	case LiveCommandKindPlaceToken:
+		*s = LiveCommandKindPlaceToken
+		return nil
+	case LiveCommandKindMoveToken:
+		*s = LiveCommandKindMoveToken
+		return nil
+	case LiveCommandKindSetTokenHidden:
+		*s = LiveCommandKindSetTokenHidden
+		return nil
+	case LiveCommandKindRemoveToken:
+		*s = LiveCommandKindRemoveToken
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// LiveCommandNoContent is response for LiveCommand operation.
+type LiveCommandNoContent struct{}
+
+// The Session as a connection sees it.
+// Ref: #/components/schemas/LiveSessionView
+type LiveSessionView struct {
+	ID         ID                      `json:"id"`
+	Number     int32                   `json:"number"`
+	GridRadius int32                   `json:"gridRadius"`
+	Audience   LiveSessionViewAudience `json:"audience"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveSessionView) GetID() ID {
+	return s.ID
+}
+
+// GetNumber returns the value of Number.
+func (s *LiveSessionView) GetNumber() int32 {
+	return s.Number
+}
+
+// GetGridRadius returns the value of GridRadius.
+func (s *LiveSessionView) GetGridRadius() int32 {
+	return s.GridRadius
+}
+
+// GetAudience returns the value of Audience.
+func (s *LiveSessionView) GetAudience() LiveSessionViewAudience {
+	return s.Audience
+}
+
+// SetID sets the value of ID.
+func (s *LiveSessionView) SetID(val ID) {
+	s.ID = val
+}
+
+// SetNumber sets the value of Number.
+func (s *LiveSessionView) SetNumber(val int32) {
+	s.Number = val
+}
+
+// SetGridRadius sets the value of GridRadius.
+func (s *LiveSessionView) SetGridRadius(val int32) {
+	s.GridRadius = val
+}
+
+// SetAudience sets the value of Audience.
+func (s *LiveSessionView) SetAudience(val LiveSessionViewAudience) {
+	s.Audience = val
+}
+
+type LiveSessionViewAudience string
+
+const (
+	LiveSessionViewAudienceDm    LiveSessionViewAudience = "dm"
+	LiveSessionViewAudienceParty LiveSessionViewAudience = "party"
+	LiveSessionViewAudienceTable LiveSessionViewAudience = "table"
+)
+
+// AllValues returns all LiveSessionViewAudience values.
+func (LiveSessionViewAudience) AllValues() []LiveSessionViewAudience {
+	return []LiveSessionViewAudience{
+		LiveSessionViewAudienceDm,
+		LiveSessionViewAudienceParty,
+		LiveSessionViewAudienceTable,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveSessionViewAudience) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveSessionViewAudienceDm:
+		return []byte(s), nil
+	case LiveSessionViewAudienceParty:
+		return []byte(s), nil
+	case LiveSessionViewAudienceTable:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveSessionViewAudience) UnmarshalText(data []byte) error {
+	switch LiveSessionViewAudience(data) {
+	case LiveSessionViewAudienceDm:
+		*s = LiveSessionViewAudienceDm
+		return nil
+	case LiveSessionViewAudienceParty:
+		*s = LiveSessionViewAudienceParty
+		return nil
+	case LiveSessionViewAudienceTable:
+		*s = LiveSessionViewAudienceTable
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Token as a connection sees it.
+// Ref: #/components/schemas/LiveToken
+type LiveToken struct {
+	ID     ID        `json:"id"`
+	Label  string    `json:"label"`
+	Kind   TokenKind `json:"kind"`
+	Q      int32     `json:"q"`
+	R      int32     `json:"r"`
+	Hidden bool      `json:"hidden"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveToken) GetID() ID {
+	return s.ID
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveToken) GetLabel() string {
+	return s.Label
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveToken) GetKind() TokenKind {
+	return s.Kind
+}
+
+// GetQ returns the value of Q.
+func (s *LiveToken) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveToken) GetR() int32 {
+	return s.R
+}
+
+// GetHidden returns the value of Hidden.
+func (s *LiveToken) GetHidden() bool {
+	return s.Hidden
+}
+
+// SetID sets the value of ID.
+func (s *LiveToken) SetID(val ID) {
+	s.ID = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveToken) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveToken) SetKind(val TokenKind) {
+	s.Kind = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveToken) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveToken) SetR(val int32) {
+	s.R = val
+}
+
+// SetHidden sets the value of Hidden.
+func (s *LiveToken) SetHidden(val bool) {
+	s.Hidden = val
+}
+
+// A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means
+// resync.
+// Ref: #/components/schemas/LiveUpdate
+type LiveUpdate struct {
+	Kind    LiveUpdateKind     `json:"kind"`
+	Seq     int32              `json:"seq"`
+	Nonce   OptString          `json:"nonce"`
+	Reason  OptString          `json:"reason"`
+	Session OptLiveSessionView `json:"session"`
+	Tokens  []LiveToken        `json:"tokens"`
+	Token   OptLiveToken       `json:"token"`
+	TokenId OptID              `json:"tokenId"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveUpdate) GetKind() LiveUpdateKind {
+	return s.Kind
+}
+
+// GetSeq returns the value of Seq.
+func (s *LiveUpdate) GetSeq() int32 {
+	return s.Seq
+}
+
+// GetNonce returns the value of Nonce.
+func (s *LiveUpdate) GetNonce() OptString {
+	return s.Nonce
+}
+
+// GetReason returns the value of Reason.
+func (s *LiveUpdate) GetReason() OptString {
+	return s.Reason
+}
+
+// GetSession returns the value of Session.
+func (s *LiveUpdate) GetSession() OptLiveSessionView {
+	return s.Session
+}
+
+// GetTokens returns the value of Tokens.
+func (s *LiveUpdate) GetTokens() []LiveToken {
+	return s.Tokens
+}
+
+// GetToken returns the value of Token.
+func (s *LiveUpdate) GetToken() OptLiveToken {
+	return s.Token
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveUpdate) GetTokenId() OptID {
+	return s.TokenId
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
+	s.Kind = val
+}
+
+// SetSeq sets the value of Seq.
+func (s *LiveUpdate) SetSeq(val int32) {
+	s.Seq = val
+}
+
+// SetNonce sets the value of Nonce.
+func (s *LiveUpdate) SetNonce(val OptString) {
+	s.Nonce = val
+}
+
+// SetReason sets the value of Reason.
+func (s *LiveUpdate) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetSession sets the value of Session.
+func (s *LiveUpdate) SetSession(val OptLiveSessionView) {
+	s.Session = val
+}
+
+// SetTokens sets the value of Tokens.
+func (s *LiveUpdate) SetTokens(val []LiveToken) {
+	s.Tokens = val
+}
+
+// SetToken sets the value of Token.
+func (s *LiveUpdate) SetToken(val OptLiveToken) {
+	s.Token = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveUpdate) SetTokenId(val OptID) {
+	s.TokenId = val
+}
+
+type LiveUpdateKind string
+
+const (
+	LiveUpdateKindSnapshot     LiveUpdateKind = "snapshot"
+	LiveUpdateKindToken        LiveUpdateKind = "token"
+	LiveUpdateKindTokenRemoved LiveUpdateKind = "token_removed"
+	LiveUpdateKindTick         LiveUpdateKind = "tick"
+	LiveUpdateKindRejected     LiveUpdateKind = "rejected"
+	LiveUpdateKindEnded        LiveUpdateKind = "ended"
+)
+
+// AllValues returns all LiveUpdateKind values.
+func (LiveUpdateKind) AllValues() []LiveUpdateKind {
+	return []LiveUpdateKind{
+		LiveUpdateKindSnapshot,
+		LiveUpdateKindToken,
+		LiveUpdateKindTokenRemoved,
+		LiveUpdateKindTick,
+		LiveUpdateKindRejected,
+		LiveUpdateKindEnded,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveUpdateKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveUpdateKindSnapshot:
+		return []byte(s), nil
+	case LiveUpdateKindToken:
+		return []byte(s), nil
+	case LiveUpdateKindTokenRemoved:
+		return []byte(s), nil
+	case LiveUpdateKindTick:
+		return []byte(s), nil
+	case LiveUpdateKindRejected:
+		return []byte(s), nil
+	case LiveUpdateKindEnded:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
+	switch LiveUpdateKind(data) {
+	case LiveUpdateKindSnapshot:
+		*s = LiveUpdateKindSnapshot
+		return nil
+	case LiveUpdateKindToken:
+		*s = LiveUpdateKindToken
+		return nil
+	case LiveUpdateKindTokenRemoved:
+		*s = LiveUpdateKindTokenRemoved
+		return nil
+	case LiveUpdateKindTick:
+		*s = LiveUpdateKindTick
+		return nil
+	case LiveUpdateKindRejected:
+		*s = LiveUpdateKindRejected
+		return nil
+	case LiveUpdateKindEnded:
+		*s = LiveUpdateKindEnded
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// LiveUpdateNoContent is response for LiveUpdate operation.
+type LiveUpdateNoContent struct{}
 
 // The authenticated account.
 // Ref: #/components/schemas/Me
@@ -5902,6 +6444,98 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptLiveSessionView returns new OptLiveSessionView with value set to v.
+func NewOptLiveSessionView(v LiveSessionView) OptLiveSessionView {
+	return OptLiveSessionView{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveSessionView is optional LiveSessionView.
+type OptLiveSessionView struct {
+	Value LiveSessionView
+	Set   bool
+}
+
+// IsSet returns true if OptLiveSessionView was set.
+func (o OptLiveSessionView) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveSessionView) Reset() {
+	var v LiveSessionView
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveSessionView) SetTo(v LiveSessionView) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveSessionView) Get() (v LiveSessionView, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveSessionView) Or(d LiveSessionView) LiveSessionView {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveToken returns new OptLiveToken with value set to v.
+func NewOptLiveToken(v LiveToken) OptLiveToken {
+	return OptLiveToken{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveToken is optional LiveToken.
+type OptLiveToken struct {
+	Value LiveToken
+	Set   bool
+}
+
+// IsSet returns true if OptLiveToken was set.
+func (o OptLiveToken) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveToken) Reset() {
+	var v LiveToken
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveToken) SetTo(v LiveToken) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveToken) Get() (v LiveToken, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveToken) Or(d LiveToken) LiveToken {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNamedRef returns new OptNamedRef with value set to v.
 func NewOptNamedRef(v NamedRef) OptNamedRef {
 	return OptNamedRef{
@@ -6132,6 +6766,227 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// NewOptTokenKind returns new OptTokenKind with value set to v.
+func NewOptTokenKind(v TokenKind) OptTokenKind {
+	return OptTokenKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptTokenKind is optional TokenKind.
+type OptTokenKind struct {
+	Value TokenKind
+	Set   bool
+}
+
+// IsSet returns true if OptTokenKind was set.
+func (o OptTokenKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptTokenKind) Reset() {
+	var v TokenKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptTokenKind) SetTo(v TokenKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptTokenKind) Get() (v TokenKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptTokenKind) Or(d TokenKind) TokenKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// One evening of play.
+// Ref: #/components/schemas/PlaySession
+type PlaySession struct {
+	ID         ID                `json:"id"`
+	Number     int32             `json:"number"`
+	Status     PlaySessionStatus `json:"status"`
+	Seq        int32             `json:"seq"`
+	GridRadius int32             `json:"gridRadius"`
+	StartedAt  time.Time         `json:"startedAt"`
+	EndedAt    OptDateTime       `json:"endedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *PlaySession) GetID() ID {
+	return s.ID
+}
+
+// GetNumber returns the value of Number.
+func (s *PlaySession) GetNumber() int32 {
+	return s.Number
+}
+
+// GetStatus returns the value of Status.
+func (s *PlaySession) GetStatus() PlaySessionStatus {
+	return s.Status
+}
+
+// GetSeq returns the value of Seq.
+func (s *PlaySession) GetSeq() int32 {
+	return s.Seq
+}
+
+// GetGridRadius returns the value of GridRadius.
+func (s *PlaySession) GetGridRadius() int32 {
+	return s.GridRadius
+}
+
+// GetStartedAt returns the value of StartedAt.
+func (s *PlaySession) GetStartedAt() time.Time {
+	return s.StartedAt
+}
+
+// GetEndedAt returns the value of EndedAt.
+func (s *PlaySession) GetEndedAt() OptDateTime {
+	return s.EndedAt
+}
+
+// SetID sets the value of ID.
+func (s *PlaySession) SetID(val ID) {
+	s.ID = val
+}
+
+// SetNumber sets the value of Number.
+func (s *PlaySession) SetNumber(val int32) {
+	s.Number = val
+}
+
+// SetStatus sets the value of Status.
+func (s *PlaySession) SetStatus(val PlaySessionStatus) {
+	s.Status = val
+}
+
+// SetSeq sets the value of Seq.
+func (s *PlaySession) SetSeq(val int32) {
+	s.Seq = val
+}
+
+// SetGridRadius sets the value of GridRadius.
+func (s *PlaySession) SetGridRadius(val int32) {
+	s.GridRadius = val
+}
+
+// SetStartedAt sets the value of StartedAt.
+func (s *PlaySession) SetStartedAt(val time.Time) {
+	s.StartedAt = val
+}
+
+// SetEndedAt sets the value of EndedAt.
+func (s *PlaySession) SetEndedAt(val OptDateTime) {
+	s.EndedAt = val
+}
+
+// PlaySessionHeaders wraps PlaySession with response headers.
+type PlaySessionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           PlaySession
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *PlaySessionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *PlaySessionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *PlaySessionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *PlaySessionHeaders) GetResponse() PlaySession {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *PlaySessionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *PlaySessionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *PlaySessionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *PlaySessionHeaders) SetResponse(val PlaySession) {
+	s.Response = val
+}
+
+func (*PlaySessionHeaders) endSessionRes()   {}
+func (*PlaySessionHeaders) getSessionRes()   {}
+func (*PlaySessionHeaders) startSessionRes() {}
+
+type PlaySessionStatus string
+
+const (
+	PlaySessionStatusLive  PlaySessionStatus = "live"
+	PlaySessionStatusEnded PlaySessionStatus = "ended"
+)
+
+// AllValues returns all PlaySessionStatus values.
+func (PlaySessionStatus) AllValues() []PlaySessionStatus {
+	return []PlaySessionStatus{
+		PlaySessionStatusLive,
+		PlaySessionStatusEnded,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PlaySessionStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case PlaySessionStatusLive:
+		return []byte(s), nil
+	case PlaySessionStatusEnded:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PlaySessionStatus) UnmarshalText(data []byte) error {
+	switch PlaySessionStatus(data) {
+	case PlaySessionStatusLive:
+		*s = PlaySessionStatusLive
+		return nil
+	case PlaySessionStatusEnded:
+		*s = PlaySessionStatusEnded
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // RFC 9457 problem details.
 // Ref: #/components/schemas/Problem
 type Problem struct {
@@ -6261,6 +7116,7 @@ func (*ProblemStatusCodeWithHeaders) createRollRes()            {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()             {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()      {}
+func (*ProblemStatusCodeWithHeaders) endSessionRes()            {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()          {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()     {}
@@ -6273,6 +7129,7 @@ func (*ProblemStatusCodeWithHeaders) getNpcRes()                {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
 func (*ProblemStatusCodeWithHeaders) getRollRes()               {}
+func (*ProblemStatusCodeWithHeaders) getSessionRes()            {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()          {}
@@ -6284,6 +7141,7 @@ func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()      {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()             {}
+func (*ProblemStatusCodeWithHeaders) listSessionsRes()          {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
@@ -6297,6 +7155,7 @@ func (*ProblemStatusCodeWithHeaders) rollRestRes()              {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()          {}
+func (*ProblemStatusCodeWithHeaders) startSessionRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
@@ -8521,6 +9380,63 @@ func (s *StatusHeaders) SetResponse(val Status) {
 func (*StatusHeaders) getStatusRes() {}
 
 type Token string
+
+// What a Token stands for.
+// Ref: #/components/schemas/TokenKind
+type TokenKind string
+
+const (
+	TokenKindParty  TokenKind = "party"
+	TokenKindEnemy  TokenKind = "enemy"
+	TokenKindNpc    TokenKind = "npc"
+	TokenKindObject TokenKind = "object"
+)
+
+// AllValues returns all TokenKind values.
+func (TokenKind) AllValues() []TokenKind {
+	return []TokenKind{
+		TokenKindParty,
+		TokenKindEnemy,
+		TokenKindNpc,
+		TokenKindObject,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TokenKind) MarshalText() ([]byte, error) {
+	switch s {
+	case TokenKindParty:
+		return []byte(s), nil
+	case TokenKindEnemy:
+		return []byte(s), nil
+	case TokenKindNpc:
+		return []byte(s), nil
+	case TokenKindObject:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TokenKind) UnmarshalText(data []byte) error {
+	switch TokenKind(data) {
+	case TokenKindParty:
+		*s = TokenKindParty
+		return nil
+	case TokenKindEnemy:
+		*s = TokenKindEnemy
+		return nil
+	case TokenKindNpc:
+		*s = TokenKindNpc
+		return nil
+	case TokenKindObject:
+		*s = TokenKindObject
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // A carried weapon.
 // Ref: #/components/schemas/WeaponLine

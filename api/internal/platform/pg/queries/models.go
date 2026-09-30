@@ -418,6 +418,7 @@ type PlayAction struct {
 	Client        string
 	Seed          pgtype.Int8
 	CreatedAt     time.Time
+	SessionID     pgtype.UUID
 }
 
 type PlayActionRollEvent struct {
@@ -425,6 +426,15 @@ type PlayActionRollEvent struct {
 	RollID   uuid.UUID
 	DieNo    pgtype.Int4
 	Value    int32
+}
+
+type PlayActionTokenEvent struct {
+	ActionID uuid.UUID
+	TokenID  uuid.UUID
+	Label    string
+	Q        int32
+	R        int32
+	Hidden   bool
 }
 
 type PlayRollDice struct {
@@ -462,4 +472,25 @@ type PlayRollRequestModifier struct {
 	Ordering int32
 	Label    string
 	Value    int32
+}
+
+type PlaySession struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Number     int32
+	Status     string
+	Seq        int64
+	GridRadius int32
+	StartedAt  time.Time
+	EndedAt    pgtype.Timestamptz
+}
+
+type PlayToken struct {
+	ID        uuid.UUID
+	SessionID uuid.UUID
+	Label     string
+	Kind      string
+	Q         int32
+	R         int32
+	Hidden    bool
 }

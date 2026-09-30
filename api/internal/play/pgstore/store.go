@@ -226,3 +226,5 @@ func (c CampaignMembers) Member(ctx context.Context, campaign, id uuid.UUID) (do
 	m, err := c.Store.Member(ctx, campaigndomain.CampaignID(campaign), campaigndomain.MemberID(id))
 	return member(m), err
 }
+
+func pgtypeTime(t time.Time) pgtype.Timestamptz { return pgtype.Timestamptz{Time: t, Valid: true} }

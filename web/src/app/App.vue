@@ -1,5 +1,14 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const bare = computed(() => route.meta.bare === true)
+</script>
+
 <template>
-  <div class="shell">
+  <RouterView v-if="bare" />
+  <div v-else class="shell">
     <header class="bar">
       <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
       <nav aria-label="Main">

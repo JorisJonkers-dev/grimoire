@@ -41,6 +41,10 @@ type DiffNpcRevisionsRes interface {
 	diffNpcRevisionsRes()
 }
 
+type EndSessionRes interface {
+	endSessionRes()
+}
+
 type GetActionLogRes interface {
 	getActionLogRes()
 }
@@ -89,6 +93,10 @@ type GetRollRes interface {
 	getRollRes()
 }
 
+type GetSessionRes interface {
+	getSessionRes()
+}
+
 type GetSpellRes interface {
 	getSpellRes()
 }
@@ -131,6 +139,10 @@ type ListNpcsRes interface {
 
 type ListRollsRes interface {
 	listRollsRes()
+}
+
+type ListSessionsRes interface {
+	listSessionsRes()
 }
 
 type ListSourcesRes interface {
@@ -183,6 +195,10 @@ type SetPortraitRes interface {
 
 type SetTokenIconRes interface {
 	setTokenIconRes()
+}
+
+type StartSessionRes interface {
+	startSessionRes()
 }
 
 type UpdateCampaignRes interface {

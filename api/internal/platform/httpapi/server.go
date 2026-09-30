@@ -41,6 +41,13 @@ func New(o Options) (http.Handler, error) {
 		api = httpx.DevIdentity(o.DevSubject, api)
 	}
 	mux := http.NewServeMux()
+	if o.Handler.Hub != nil {
+		socket := http.Handler(http.HandlerFunc(o.Handler.LiveSocket))
+		if o.DevSubject != "" {
+			socket = httpx.DevIdentity(o.DevSubject, socket)
+		}
+		mux.Handle("GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live", socket)
+	}
 	mux.Handle("/api/", api)
 	mux.Handle("/healthz", api)
 	mux.Handle("/readyz", api)

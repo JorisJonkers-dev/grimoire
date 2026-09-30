@@ -1356,6 +1356,114 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/sessions:
+    get:
+      operationId: listSessions
+      summary: List sessions
+      description: The Campaign's Sessions, newest first. Members only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The sessions.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 50
+                items:
+                  $ref: "#/components/schemas/PlaySession"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: startSession
+      summary: Start a session
+      description: Opens the next live Session. DM only. Live play then runs over the WebSocket at /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are LiveCommand and LiveUpdate.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "201":
+          description: The new session.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaySession"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/sessions/{sessionId}:
+    get:
+      operationId: getSession
+      summary: Get a session
+      description: One Session. Members only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: The session.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaySession"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end:
+    post:
+      operationId: endSession
+      summary: End a session
+      description: Ends a live Session and disconnects everyone. DM only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: The ended session.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaySession"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
@@ -1558,6 +1666,39 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+webhooks:
+  liveCommand:
+    post:
+      operationId: liveCommand
+      summary: Live command frame
+      description: Not an HTTP call. The shape of every WebSocket frame a client sends on /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live.
+      tags: [Play]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LiveCommand"
+      responses:
+        "204":
+          description: Frames are not answered individually.
+  liveUpdate:
+    post:
+      operationId: liveUpdate
+      summary: Live update frame
+      description: Not an HTTP call. The shape of every WebSocket frame the server sends on the live Session socket.
+      tags: [Play]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LiveUpdate"
+      responses:
+        "204":
+          description: Frames are not answered individually.
 components:
   securitySchemes:
     forwardAuth:
@@ -1583,6 +1724,12 @@ components:
       in: path
       required: true
       description: Character id.
+      schema: { $ref: "#/components/schemas/Id" }
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: Session id.
       schema: { $ref: "#/components/schemas/Id" }
     RollId:
       name: rollId
@@ -2402,6 +2549,76 @@ components:
         visible: { type: boolean }
         cover: { $ref: "#/components/schemas/CoverLevel" }
         acBonus: { type: integer, format: int32, minimum: 0, maximum: 5 }
+    PlaySession:
+      type: object
+      description: One evening of play.
+      additionalProperties: false
+      required: [id, number, status, seq, gridRadius, startedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        number: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        status: { type: string, enum: [live, ended] }
+        seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
+        gridRadius: { type: integer, format: int32, minimum: 1, maximum: 60 }
+        startedAt: { type: string, format: date-time, maxLength: 40 }
+        endedAt: { type: string, format: date-time, maxLength: 40 }
+    TokenKind:
+      type: string
+      description: What a Token stands for.
+      enum: [party, enemy, npc, object]
+    LiveToken:
+      type: object
+      description: A Token as a connection sees it.
+      additionalProperties: false
+      required: [id, label, kind, q, r, hidden]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        label: { type: string, minLength: 1, maxLength: 40 }
+        kind: { $ref: "#/components/schemas/TokenKind" }
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        hidden: { type: boolean }
+    LiveSessionView:
+      type: object
+      description: The Session as a connection sees it.
+      additionalProperties: false
+      required: [id, number, gridRadius, audience]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        number: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        gridRadius: { type: integer, format: int32, minimum: 1, maximum: 60 }
+        audience: { type: string, enum: [dm, party, table] }
+    LiveCommand:
+      type: object
+      description: A WebSocket frame from a client to a live Session.
+      additionalProperties: false
+      required: [nonce, kind, q, r, hidden]
+      properties:
+        nonce: { type: string, minLength: 1, maxLength: 64 }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token] }
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 40 }
+        tokenKind: { $ref: "#/components/schemas/TokenKind" }
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        hidden: { type: boolean }
+    LiveUpdate:
+      type: object
+      description: A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means resync.
+      additionalProperties: false
+      required: [kind, seq]
+      properties:
+        kind: { type: string, enum: [snapshot, token, token_removed, tick, rejected, ended] }
+        seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
+        nonce: { type: string, maxLength: 64 }
+        reason: { type: string, maxLength: 200 }
+        session: { $ref: "#/components/schemas/LiveSessionView" }
+        tokens:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LiveToken" }
+        token: { $ref: "#/components/schemas/LiveToken" }
+        tokenId: { $ref: "#/components/schemas/Id" }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

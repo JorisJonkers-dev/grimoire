@@ -4,6 +4,8 @@ export type ClientOptions = {
     baseUrl: 'https://grimoire.jorisjonkers.dev' | (string & {});
 };
 
+export type Webhooks = LiveCommandWebhookRequest | LiveUpdateWebhookRequest;
+
 /**
  * Random identifier.
  */
@@ -653,6 +655,74 @@ export type SightPreview = {
 };
 
 /**
+ * One evening of play.
+ */
+export type PlaySession = {
+    id: Id;
+    number: number;
+    status: 'live' | 'ended';
+    seq: number;
+    gridRadius: number;
+    startedAt: string;
+    endedAt?: string;
+};
+
+/**
+ * What a Token stands for.
+ */
+export type TokenKind = 'party' | 'enemy' | 'npc' | 'object';
+
+/**
+ * A Token as a connection sees it.
+ */
+export type LiveToken = {
+    id: Id;
+    label: string;
+    kind: TokenKind;
+    q: number;
+    r: number;
+    hidden: boolean;
+};
+
+/**
+ * The Session as a connection sees it.
+ */
+export type LiveSessionView = {
+    id: Id;
+    number: number;
+    gridRadius: number;
+    audience: 'dm' | 'party' | 'table';
+};
+
+/**
+ * A WebSocket frame from a client to a live Session.
+ */
+export type LiveCommand = {
+    nonce: string;
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token';
+    tokenId?: Id;
+    label?: string;
+    tokenKind?: TokenKind;
+    q: number;
+    r: number;
+    hidden: boolean;
+};
+
+/**
+ * A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means resync.
+ */
+export type LiveUpdate = {
+    kind: 'snapshot' | 'token' | 'token_removed' | 'tick' | 'rejected' | 'ended';
+    seq: number;
+    nonce?: string;
+    reason?: string;
+    session?: LiveSessionView;
+    tokens?: Array<LiveToken>;
+    token?: LiveToken;
+    tokenId?: Id;
+};
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export type Slug = string;
@@ -860,6 +930,11 @@ export type MemberId = Id;
  * Character id.
  */
 export type CharacterId = Id;
+
+/**
+ * Session id.
+ */
+export type SessionId = Id;
 
 /**
  * Roll Request id.
@@ -2505,6 +2580,150 @@ export type GetActionLogResponses = {
 
 export type GetActionLogResponse = GetActionLogResponses[keyof GetActionLogResponses];
 
+export type ListSessionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/sessions';
+};
+
+export type ListSessionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSessionsError = ListSessionsErrors[keyof ListSessionsErrors];
+
+export type ListSessionsResponses = {
+    /**
+     * The sessions.
+     */
+    200: Array<PlaySession>;
+};
+
+export type ListSessionsResponse = ListSessionsResponses[keyof ListSessionsResponses];
+
+export type StartSessionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/sessions';
+};
+
+export type StartSessionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartSessionError = StartSessionErrors[keyof StartSessionErrors];
+
+export type StartSessionResponses = {
+    /**
+     * The new session.
+     */
+    201: PlaySession;
+};
+
+export type StartSessionResponse = StartSessionResponses[keyof StartSessionResponses];
+
+export type GetSessionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Session id.
+         */
+        sessionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/sessions/{sessionId}';
+};
+
+export type GetSessionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSessionError = GetSessionErrors[keyof GetSessionErrors];
+
+export type GetSessionResponses = {
+    /**
+     * The session.
+     */
+    200: PlaySession;
+};
+
+export type GetSessionResponse = GetSessionResponses[keyof GetSessionResponses];
+
+export type EndSessionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Session id.
+         */
+        sessionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/sessions/{sessionId}/end';
+};
+
+export type EndSessionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type EndSessionError = EndSessionErrors[keyof EndSessionErrors];
+
+export type EndSessionResponses = {
+    /**
+     * The ended session.
+     */
+    200: PlaySession;
+};
+
+export type EndSessionResponse = EndSessionResponses[keyof EndSessionResponses];
+
 export type PreviewInviteData = {
     body: InviteToken;
     path?: never;
@@ -2732,3 +2951,21 @@ export type GetReadinessResponses = {
 };
 
 export type GetReadinessResponse = GetReadinessResponses[keyof GetReadinessResponses];
+
+export type LiveCommandWebhookPayload = LiveCommand;
+
+export type LiveCommandWebhookRequest = {
+    body: LiveCommandWebhookPayload;
+    key: 'liveCommand';
+    path?: never;
+    query?: never;
+};
+
+export type LiveUpdateWebhookPayload = LiveUpdate;
+
+export type LiveUpdateWebhookRequest = {
+    body: LiveUpdateWebhookPayload;
+    key: 'liveUpdate';
+    path?: never;
+    query?: never;
+};
