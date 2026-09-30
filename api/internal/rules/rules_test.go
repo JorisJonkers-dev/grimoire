@@ -25,7 +25,7 @@ func isViolation(t *testing.T, err error, want string) {
 
 func TestModifierAndProficiency(t *testing.T) {
 	t.Parallel()
-	for score, want := range map[int]int{1: -5, 3: -4, 8: -1, 9: -1, 10: 0, 11: 0, 12: 1, 15: 2, 20: 5} {
+	for score, want := range map[int]int{1: -5, 2: -4, 3: -4, 8: -1, 9: -1, 10: 0, 11: 0, 12: 1, 15: 2, 20: 5, 30: 10} {
 		if got := rules.Modifier(score); got != want {
 			t.Errorf("Modifier(%d) = %d, want %d", score, got, want)
 		}
@@ -117,6 +117,9 @@ func TestFinalScores(t *testing.T) {
 	if err != nil || got[rules.Strength] != 17 || got[rules.Constitution] != 14 || got[rules.Charisma] != 8 {
 		t.Fatalf("final = %v %v", got, err)
 	}
+	if top, err := rules.FinalScores(scores(18, 10, 10, 10, 10, 10), map[rules.Ability]int{rules.Strength: 2}); err != nil || top[rules.Strength] != 20 {
+		t.Fatalf("20 refused: %v", err)
+	}
 	_, err = rules.FinalScores(scores(19, 10, 10, 10, 10, 10), map[rules.Ability]int{rules.Strength: 2})
 	isViolation(t, err, "cannot exceed 20")
 }
@@ -155,6 +158,8 @@ func TestArmorClassAndHP(t *testing.T) {
 		{3, &rules.Armor{Base: 14, AddDex: true, DexCap: 2}, 2, 18},
 		{1, &rules.Armor{Base: 14, AddDex: true, DexCap: 2}, 0, 15},
 		{3, &rules.Armor{Base: 18}, 0, 18},
+		{3, &rules.Armor{Base: 12, AddDex: true, DexCap: 0}, 0, 12},
+		{-1, &rules.Armor{Base: 12, AddDex: true, DexCap: 2}, 0, 11},
 	}
 	for _, c := range cases {
 		if got := rules.ArmorClass(c.dex, c.armor, c.shield); got != c.want {
@@ -187,6 +192,9 @@ func TestResourcesByCaster(t *testing.T) {
 			t.Errorf("%s: %d slots", key, got)
 		}
 	}
+	if n := len(rules.FirstLevelResources("fighter", 10, 2024)); n != 1 {
+		t.Fatalf("fighter has %d resources", n)
+	}
 	if r := rules.FirstLevelResources("wizard", 6, 2024)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 {
 		t.Fatalf("hit dice = %+v", r)
 	}
@@ -211,6 +219,10 @@ func TestBuildSheet(t *testing.T) {
 	}
 	if len(s.Skills) != 18 || s.Skills[3].Skill != "athletics" || s.Skills[3].Bonus != 3 || len(s.Warnings) != 2 {
 		t.Fatalf("skills/warnings = %+v %v", s.Skills[3], s.Warnings)
+	}
+	in.Armor = &rules.Armor{Base: 16, StrengthRequired: 13}
+	if exact := rules.BuildSheet(in); exact.SpeedFeet != 30 || len(exact.Warnings) != 0 {
+		t.Fatalf("strength exactly enough = %+v", exact)
 	}
 	in.Armor = nil
 	if light := rules.BuildSheet(in); light.SpeedFeet != 30 || len(light.Warnings) != 0 || light.ArmorClass != 14 {

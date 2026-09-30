@@ -66,6 +66,20 @@ func encodeCreateNpcRequest(
 	return nil
 }
 
+func encodeCreateRollRequest(
+	req *RollCreate,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewCharacterRequest(
 	req *CharacterBuild,
 	r *http.Request,
@@ -82,6 +96,20 @@ func encodePreviewCharacterRequest(
 
 func encodePreviewInviteRequest(
 	req *InviteToken,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSetDieRequest(
+	req *DieFill,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

@@ -283,6 +283,231 @@ func (s *AbilityLine) SetSaveProficient(val bool) {
 	s.SaveProficient = val
 }
 
+// One entry of the Action Log.
+// Ref: #/components/schemas/ActionEntry
+type ActionEntry struct {
+	Seq       int64             `json:"seq"`
+	Kind      ActionEntryKind   `json:"kind"`
+	Actor     DisplayName       `json:"actor"`
+	Origin    ActionEntryOrigin `json:"origin"`
+	Client    OptString         `json:"client"`
+	Seed      OptString         `json:"seed"`
+	RollId    OptID             `json:"rollId"`
+	DieNo     OptInt32          `json:"dieNo"`
+	Value     int32             `json:"value"`
+	CreatedAt time.Time         `json:"createdAt"`
+}
+
+// GetSeq returns the value of Seq.
+func (s *ActionEntry) GetSeq() int64 {
+	return s.Seq
+}
+
+// GetKind returns the value of Kind.
+func (s *ActionEntry) GetKind() ActionEntryKind {
+	return s.Kind
+}
+
+// GetActor returns the value of Actor.
+func (s *ActionEntry) GetActor() DisplayName {
+	return s.Actor
+}
+
+// GetOrigin returns the value of Origin.
+func (s *ActionEntry) GetOrigin() ActionEntryOrigin {
+	return s.Origin
+}
+
+// GetClient returns the value of Client.
+func (s *ActionEntry) GetClient() OptString {
+	return s.Client
+}
+
+// GetSeed returns the value of Seed.
+func (s *ActionEntry) GetSeed() OptString {
+	return s.Seed
+}
+
+// GetRollId returns the value of RollId.
+func (s *ActionEntry) GetRollId() OptID {
+	return s.RollId
+}
+
+// GetDieNo returns the value of DieNo.
+func (s *ActionEntry) GetDieNo() OptInt32 {
+	return s.DieNo
+}
+
+// GetValue returns the value of Value.
+func (s *ActionEntry) GetValue() int32 {
+	return s.Value
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ActionEntry) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetSeq sets the value of Seq.
+func (s *ActionEntry) SetSeq(val int64) {
+	s.Seq = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ActionEntry) SetKind(val ActionEntryKind) {
+	s.Kind = val
+}
+
+// SetActor sets the value of Actor.
+func (s *ActionEntry) SetActor(val DisplayName) {
+	s.Actor = val
+}
+
+// SetOrigin sets the value of Origin.
+func (s *ActionEntry) SetOrigin(val ActionEntryOrigin) {
+	s.Origin = val
+}
+
+// SetClient sets the value of Client.
+func (s *ActionEntry) SetClient(val OptString) {
+	s.Client = val
+}
+
+// SetSeed sets the value of Seed.
+func (s *ActionEntry) SetSeed(val OptString) {
+	s.Seed = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *ActionEntry) SetRollId(val OptID) {
+	s.RollId = val
+}
+
+// SetDieNo sets the value of DieNo.
+func (s *ActionEntry) SetDieNo(val OptInt32) {
+	s.DieNo = val
+}
+
+// SetValue sets the value of Value.
+func (s *ActionEntry) SetValue(val int32) {
+	s.Value = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ActionEntry) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+type ActionEntryKind string
+
+const (
+	ActionEntryKindRollRequested ActionEntryKind = "roll_requested"
+	ActionEntryKindDieRolled     ActionEntryKind = "die_rolled"
+	ActionEntryKindDieEntered    ActionEntryKind = "die_entered"
+	ActionEntryKindRollResolved  ActionEntryKind = "roll_resolved"
+)
+
+// AllValues returns all ActionEntryKind values.
+func (ActionEntryKind) AllValues() []ActionEntryKind {
+	return []ActionEntryKind{
+		ActionEntryKindRollRequested,
+		ActionEntryKindDieRolled,
+		ActionEntryKindDieEntered,
+		ActionEntryKindRollResolved,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ActionEntryKind) MarshalText() ([]byte, error) {
+	switch s {
+	case ActionEntryKindRollRequested:
+		return []byte(s), nil
+	case ActionEntryKindDieRolled:
+		return []byte(s), nil
+	case ActionEntryKindDieEntered:
+		return []byte(s), nil
+	case ActionEntryKindRollResolved:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ActionEntryKind) UnmarshalText(data []byte) error {
+	switch ActionEntryKind(data) {
+	case ActionEntryKindRollRequested:
+		*s = ActionEntryKindRollRequested
+		return nil
+	case ActionEntryKindDieRolled:
+		*s = ActionEntryKindDieRolled
+		return nil
+	case ActionEntryKindDieEntered:
+		*s = ActionEntryKindDieEntered
+		return nil
+	case ActionEntryKindRollResolved:
+		*s = ActionEntryKindRollResolved
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type ActionEntryOrigin string
+
+const (
+	ActionEntryOriginUI        ActionEntryOrigin = "ui"
+	ActionEntryOriginMcp       ActionEntryOrigin = "mcp"
+	ActionEntryOriginGenerator ActionEntryOrigin = "generator"
+	ActionEntryOriginSystem    ActionEntryOrigin = "system"
+)
+
+// AllValues returns all ActionEntryOrigin values.
+func (ActionEntryOrigin) AllValues() []ActionEntryOrigin {
+	return []ActionEntryOrigin{
+		ActionEntryOriginUI,
+		ActionEntryOriginMcp,
+		ActionEntryOriginGenerator,
+		ActionEntryOriginSystem,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ActionEntryOrigin) MarshalText() ([]byte, error) {
+	switch s {
+	case ActionEntryOriginUI:
+		return []byte(s), nil
+	case ActionEntryOriginMcp:
+		return []byte(s), nil
+	case ActionEntryOriginGenerator:
+		return []byte(s), nil
+	case ActionEntryOriginSystem:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ActionEntryOrigin) UnmarshalText(data []byte) error {
+	switch ActionEntryOrigin(data) {
+	case ActionEntryOriginUI:
+		*s = ActionEntryOriginUI
+		return nil
+	case ActionEntryOriginMcp:
+		*s = ActionEntryOriginMcp
+		return nil
+	case ActionEntryOriginGenerator:
+		*s = ActionEntryOriginGenerator
+		return nil
+	case ActionEntryOriginSystem:
+		*s = ActionEntryOriginSystem
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // An Effect currently on the Character.
 // Ref: #/components/schemas/ActiveEffect
 type ActiveEffect struct {
@@ -2333,6 +2558,197 @@ func (s *DeletedNpc) SetDeletedAt(val time.Time) {
 	s.DeletedAt = val
 }
 
+// A group of identical dice and which of them count.
+// Ref: #/components/schemas/DiceGroup
+type DiceGroup struct {
+	Index     int32            `json:"index"`
+	Label     OptString        `json:"label"`
+	Count     int32            `json:"count"`
+	Faces     int32            `json:"faces"`
+	Sign      int32            `json:"sign"`
+	Keep      OptDiceGroupKeep `json:"keep"`
+	KeepCount OptInt32         `json:"keepCount"`
+}
+
+// GetIndex returns the value of Index.
+func (s *DiceGroup) GetIndex() int32 {
+	return s.Index
+}
+
+// GetLabel returns the value of Label.
+func (s *DiceGroup) GetLabel() OptString {
+	return s.Label
+}
+
+// GetCount returns the value of Count.
+func (s *DiceGroup) GetCount() int32 {
+	return s.Count
+}
+
+// GetFaces returns the value of Faces.
+func (s *DiceGroup) GetFaces() int32 {
+	return s.Faces
+}
+
+// GetSign returns the value of Sign.
+func (s *DiceGroup) GetSign() int32 {
+	return s.Sign
+}
+
+// GetKeep returns the value of Keep.
+func (s *DiceGroup) GetKeep() OptDiceGroupKeep {
+	return s.Keep
+}
+
+// GetKeepCount returns the value of KeepCount.
+func (s *DiceGroup) GetKeepCount() OptInt32 {
+	return s.KeepCount
+}
+
+// SetIndex sets the value of Index.
+func (s *DiceGroup) SetIndex(val int32) {
+	s.Index = val
+}
+
+// SetLabel sets the value of Label.
+func (s *DiceGroup) SetLabel(val OptString) {
+	s.Label = val
+}
+
+// SetCount sets the value of Count.
+func (s *DiceGroup) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetFaces sets the value of Faces.
+func (s *DiceGroup) SetFaces(val int32) {
+	s.Faces = val
+}
+
+// SetSign sets the value of Sign.
+func (s *DiceGroup) SetSign(val int32) {
+	s.Sign = val
+}
+
+// SetKeep sets the value of Keep.
+func (s *DiceGroup) SetKeep(val OptDiceGroupKeep) {
+	s.Keep = val
+}
+
+// SetKeepCount sets the value of KeepCount.
+func (s *DiceGroup) SetKeepCount(val OptInt32) {
+	s.KeepCount = val
+}
+
+type DiceGroupKeep string
+
+const (
+	DiceGroupKeepHighest DiceGroupKeep = "highest"
+	DiceGroupKeepLowest  DiceGroupKeep = "lowest"
+)
+
+// AllValues returns all DiceGroupKeep values.
+func (DiceGroupKeep) AllValues() []DiceGroupKeep {
+	return []DiceGroupKeep{
+		DiceGroupKeepHighest,
+		DiceGroupKeepLowest,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DiceGroupKeep) MarshalText() ([]byte, error) {
+	switch s {
+	case DiceGroupKeepHighest:
+		return []byte(s), nil
+	case DiceGroupKeepLowest:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DiceGroupKeep) UnmarshalText(data []byte) error {
+	switch DiceGroupKeep(data) {
+	case DiceGroupKeepHighest:
+		*s = DiceGroupKeepHighest
+		return nil
+	case DiceGroupKeepLowest:
+		*s = DiceGroupKeepLowest
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Roll the die on the server, or enter the face of a physical die.
+// Ref: #/components/schemas/DieFill
+type DieFill struct {
+	Mode  DieFillMode `json:"mode"`
+	Value OptInt32    `json:"value"`
+}
+
+// GetMode returns the value of Mode.
+func (s *DieFill) GetMode() DieFillMode {
+	return s.Mode
+}
+
+// GetValue returns the value of Value.
+func (s *DieFill) GetValue() OptInt32 {
+	return s.Value
+}
+
+// SetMode sets the value of Mode.
+func (s *DieFill) SetMode(val DieFillMode) {
+	s.Mode = val
+}
+
+// SetValue sets the value of Value.
+func (s *DieFill) SetValue(val OptInt32) {
+	s.Value = val
+}
+
+type DieFillMode string
+
+const (
+	DieFillModeAuto   DieFillMode = "auto"
+	DieFillModeManual DieFillMode = "manual"
+)
+
+// AllValues returns all DieFillMode values.
+func (DieFillMode) AllValues() []DieFillMode {
+	return []DieFillMode{
+		DieFillModeAuto,
+		DieFillModeManual,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DieFillMode) MarshalText() ([]byte, error) {
+	switch s {
+	case DieFillModeAuto:
+		return []byte(s), nil
+	case DieFillModeManual:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DieFillMode) UnmarshalText(data []byte) error {
+	switch DieFillMode(data) {
+	case DieFillModeAuto:
+		*s = DieFillModeAuto
+		return nil
+	case DieFillModeManual:
+		*s = DieFillModeManual
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // DiffNpcRevisionsOKHeaders wraps []FieldChange with response headers.
 type DiffNpcRevisionsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -2953,6 +3369,56 @@ func (s *ForwardAuth) SetRoles(val []string) {
 	s.Roles = val
 }
 
+// GetActionLogOKHeaders wraps []ActionEntry with response headers.
+type GetActionLogOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []ActionEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetActionLogOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetActionLogOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetActionLogOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetActionLogOKHeaders) GetResponse() []ActionEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetActionLogOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetActionLogOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetActionLogOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetActionLogOKHeaders) SetResponse(val []ActionEntry) {
+	s.Response = val
+}
+
+func (*GetActionLogOKHeaders) getActionLogRes() {}
+
 // GetAutomationCoverageNotModified is response for GetAutomationCoverage operation.
 type GetAutomationCoverageNotModified struct {
 	ETag OptString
@@ -3532,6 +3998,33 @@ func (s *GetTokenIconOKImageWEBPHeaders) SetResponse(val GetTokenIconOKImageWEBP
 
 func (*GetTokenIconOKImageWEBPHeaders) getTokenIconRes() {}
 
+// Why a group of dice is thrown, such as Bless.
+// Ref: #/components/schemas/GroupLabel
+type GroupLabel struct {
+	Group int32  `json:"group"`
+	Label string `json:"label"`
+}
+
+// GetGroup returns the value of Group.
+func (s *GroupLabel) GetGroup() int32 {
+	return s.Group
+}
+
+// GetLabel returns the value of Label.
+func (s *GroupLabel) GetLabel() string {
+	return s.Label
+}
+
+// SetGroup sets the value of Group.
+func (s *GroupLabel) SetGroup(val int32) {
+	s.Group = val
+}
+
+// SetLabel sets the value of Label.
+func (s *GroupLabel) SetLabel(val string) {
+	s.Label = val
+}
+
 // Probe result.
 // Ref: #/components/schemas/HealthStatus
 type HealthStatus struct {
@@ -3989,6 +4482,56 @@ func (s *ListNpcsOKHeaders) SetResponse(val []Npc) {
 
 func (*ListNpcsOKHeaders) listNpcsRes() {}
 
+// ListRollsOKHeaders wraps []RollRequest with response headers.
+type ListRollsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []RollRequest
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListRollsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListRollsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListRollsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListRollsOKHeaders) GetResponse() []RollRequest {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListRollsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListRollsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListRollsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListRollsOKHeaders) SetResponse(val []RollRequest) {
+	s.Response = val
+}
+
+func (*ListRollsOKHeaders) listRollsRes() {}
+
 // ListSourcesOKHeaders wraps []Source with response headers.
 type ListSourcesOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -4232,6 +4775,33 @@ func (s *MemberHeaders) SetResponse(val Member) {
 }
 
 func (*MemberHeaders) updateMemberRes() {}
+
+// A Member by id and name.
+// Ref: #/components/schemas/MemberRef
+type MemberRef struct {
+	ID   ID          `json:"id"`
+	Name DisplayName `json:"name"`
+}
+
+// GetID returns the value of ID.
+func (s *MemberRef) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *MemberRef) GetName() DisplayName {
+	return s.Name
+}
+
+// SetID sets the value of ID.
+func (s *MemberRef) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *MemberRef) SetName(val DisplayName) {
+	s.Name = val
+}
 
 // A Member's new role.
 // Ref: #/components/schemas/MemberUpdate
@@ -4811,6 +5381,98 @@ func (o OptCharacterName) Or(d CharacterName) CharacterName {
 	return d
 }
 
+// NewOptDateTime returns new OptDateTime with value set to v.
+func NewOptDateTime(v time.Time) OptDateTime {
+	return OptDateTime{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDateTime is optional time.Time.
+type OptDateTime struct {
+	Value time.Time
+	Set   bool
+}
+
+// IsSet returns true if OptDateTime was set.
+func (o OptDateTime) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDateTime) Reset() {
+	var v time.Time
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDateTime) SetTo(v time.Time) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDateTime) Get() (v time.Time, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDiceGroupKeep returns new OptDiceGroupKeep with value set to v.
+func NewOptDiceGroupKeep(v DiceGroupKeep) OptDiceGroupKeep {
+	return OptDiceGroupKeep{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDiceGroupKeep is optional DiceGroupKeep.
+type OptDiceGroupKeep struct {
+	Value DiceGroupKeep
+	Set   bool
+}
+
+// IsSet returns true if OptDiceGroupKeep was set.
+func (o OptDiceGroupKeep) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDiceGroupKeep) Reset() {
+	var v DiceGroupKeep
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDiceGroupKeep) SetTo(v DiceGroupKeep) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDiceGroupKeep) Get() (v DiceGroupKeep, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDiceGroupKeep) Or(d DiceGroupKeep) DiceGroupKeep {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptID returns new OptID with value set to v.
 func NewOptID(v ID) OptID {
 	return OptID{
@@ -4943,6 +5605,52 @@ func (o OptNamedRef) Get() (v NamedRef, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptNamedRef) Or(d NamedRef) NamedRef {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptRollDieMode returns new OptRollDieMode with value set to v.
+func NewOptRollDieMode(v RollDieMode) OptRollDieMode {
+	return OptRollDieMode{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptRollDieMode is optional RollDieMode.
+type OptRollDieMode struct {
+	Value RollDieMode
+	Set   bool
+}
+
+// IsSet returns true if OptRollDieMode was set.
+func (o OptRollDieMode) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptRollDieMode) Reset() {
+	var v RollDieMode
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptRollDieMode) SetTo(v RollDieMode) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptRollDieMode) Get() (v RollDieMode, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptRollDieMode) Or(d RollDieMode) RollDieMode {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -5212,9 +5920,11 @@ func (*ProblemStatusCodeWithHeaders) createCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()             {}
+func (*ProblemStatusCodeWithHeaders) createRollRes()            {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()             {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()      {}
+func (*ProblemStatusCodeWithHeaders) getActionLogRes()          {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()     {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()           {}
@@ -5225,6 +5935,7 @@ func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
+func (*ProblemStatusCodeWithHeaders) getRollRes()               {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()          {}
@@ -5235,6 +5946,7 @@ func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()      {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()              {}
+func (*ProblemStatusCodeWithHeaders) listRollsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
@@ -5242,6 +5954,8 @@ func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()    {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) rollRestRes()              {}
+func (*ProblemStatusCodeWithHeaders) setDieRes()                {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
@@ -5605,6 +6319,458 @@ func (s *Role) UnmarshalText(data []byte) error {
 		return nil
 	case RolePlayer:
 		*s = RolePlayer
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// What to roll and why.
+// Ref: #/components/schemas/RollCreate
+type RollCreate struct {
+	Purpose   string         `json:"purpose"`
+	Notation  string         `json:"notation"`
+	Labels    []GroupLabel   `json:"labels"`
+	Modifiers []RollModifier `json:"modifiers"`
+	RollerId  OptID          `json:"rollerId"`
+}
+
+// GetPurpose returns the value of Purpose.
+func (s *RollCreate) GetPurpose() string {
+	return s.Purpose
+}
+
+// GetNotation returns the value of Notation.
+func (s *RollCreate) GetNotation() string {
+	return s.Notation
+}
+
+// GetLabels returns the value of Labels.
+func (s *RollCreate) GetLabels() []GroupLabel {
+	return s.Labels
+}
+
+// GetModifiers returns the value of Modifiers.
+func (s *RollCreate) GetModifiers() []RollModifier {
+	return s.Modifiers
+}
+
+// GetRollerId returns the value of RollerId.
+func (s *RollCreate) GetRollerId() OptID {
+	return s.RollerId
+}
+
+// SetPurpose sets the value of Purpose.
+func (s *RollCreate) SetPurpose(val string) {
+	s.Purpose = val
+}
+
+// SetNotation sets the value of Notation.
+func (s *RollCreate) SetNotation(val string) {
+	s.Notation = val
+}
+
+// SetLabels sets the value of Labels.
+func (s *RollCreate) SetLabels(val []GroupLabel) {
+	s.Labels = val
+}
+
+// SetModifiers sets the value of Modifiers.
+func (s *RollCreate) SetModifiers(val []RollModifier) {
+	s.Modifiers = val
+}
+
+// SetRollerId sets the value of RollerId.
+func (s *RollCreate) SetRollerId(val OptID) {
+	s.RollerId = val
+}
+
+// One die of a Roll Request.
+// Ref: #/components/schemas/RollDie
+type RollDie struct {
+	No    int32          `json:"no"`
+	Group int32          `json:"group"`
+	Faces int32          `json:"faces"`
+	Value OptInt32       `json:"value"`
+	Mode  OptRollDieMode `json:"mode"`
+	Kept  bool           `json:"kept"`
+}
+
+// GetNo returns the value of No.
+func (s *RollDie) GetNo() int32 {
+	return s.No
+}
+
+// GetGroup returns the value of Group.
+func (s *RollDie) GetGroup() int32 {
+	return s.Group
+}
+
+// GetFaces returns the value of Faces.
+func (s *RollDie) GetFaces() int32 {
+	return s.Faces
+}
+
+// GetValue returns the value of Value.
+func (s *RollDie) GetValue() OptInt32 {
+	return s.Value
+}
+
+// GetMode returns the value of Mode.
+func (s *RollDie) GetMode() OptRollDieMode {
+	return s.Mode
+}
+
+// GetKept returns the value of Kept.
+func (s *RollDie) GetKept() bool {
+	return s.Kept
+}
+
+// SetNo sets the value of No.
+func (s *RollDie) SetNo(val int32) {
+	s.No = val
+}
+
+// SetGroup sets the value of Group.
+func (s *RollDie) SetGroup(val int32) {
+	s.Group = val
+}
+
+// SetFaces sets the value of Faces.
+func (s *RollDie) SetFaces(val int32) {
+	s.Faces = val
+}
+
+// SetValue sets the value of Value.
+func (s *RollDie) SetValue(val OptInt32) {
+	s.Value = val
+}
+
+// SetMode sets the value of Mode.
+func (s *RollDie) SetMode(val OptRollDieMode) {
+	s.Mode = val
+}
+
+// SetKept sets the value of Kept.
+func (s *RollDie) SetKept(val bool) {
+	s.Kept = val
+}
+
+type RollDieMode string
+
+const (
+	RollDieModeAuto   RollDieMode = "auto"
+	RollDieModeManual RollDieMode = "manual"
+)
+
+// AllValues returns all RollDieMode values.
+func (RollDieMode) AllValues() []RollDieMode {
+	return []RollDieMode{
+		RollDieModeAuto,
+		RollDieModeManual,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s RollDieMode) MarshalText() ([]byte, error) {
+	switch s {
+	case RollDieModeAuto:
+		return []byte(s), nil
+	case RollDieModeManual:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *RollDieMode) UnmarshalText(data []byte) error {
+	switch RollDieMode(data) {
+	case RollDieModeAuto:
+		*s = RollDieModeAuto
+		return nil
+	case RollDieModeManual:
+		*s = RollDieModeManual
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A named flat bonus or penalty.
+// Ref: #/components/schemas/RollModifier
+type RollModifier struct {
+	Label string `json:"label"`
+	Value int32  `json:"value"`
+}
+
+// GetLabel returns the value of Label.
+func (s *RollModifier) GetLabel() string {
+	return s.Label
+}
+
+// GetValue returns the value of Value.
+func (s *RollModifier) GetValue() int32 {
+	return s.Value
+}
+
+// SetLabel sets the value of Label.
+func (s *RollModifier) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetValue sets the value of Value.
+func (s *RollModifier) SetValue(val int32) {
+	s.Value = val
+}
+
+// A Roll Request with exactly what to throw and every modifier source.
+// Ref: #/components/schemas/RollRequest
+type RollRequest struct {
+	ID          ID                `json:"id"`
+	Purpose     string            `json:"purpose"`
+	Notation    string            `json:"notation"`
+	RequestedBy DisplayName       `json:"requestedBy"`
+	Roller      MemberRef         `json:"roller"`
+	Mine        bool              `json:"mine"`
+	CanRoll     bool              `json:"canRoll"`
+	Status      RollRequestStatus `json:"status"`
+	Total       OptInt32          `json:"total"`
+	Groups      []DiceGroup       `json:"groups"`
+	Dice        []RollDie         `json:"dice"`
+	Modifiers   []RollModifier    `json:"modifiers"`
+	CreatedAt   time.Time         `json:"createdAt"`
+	ResolvedAt  OptDateTime       `json:"resolvedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *RollRequest) GetID() ID {
+	return s.ID
+}
+
+// GetPurpose returns the value of Purpose.
+func (s *RollRequest) GetPurpose() string {
+	return s.Purpose
+}
+
+// GetNotation returns the value of Notation.
+func (s *RollRequest) GetNotation() string {
+	return s.Notation
+}
+
+// GetRequestedBy returns the value of RequestedBy.
+func (s *RollRequest) GetRequestedBy() DisplayName {
+	return s.RequestedBy
+}
+
+// GetRoller returns the value of Roller.
+func (s *RollRequest) GetRoller() MemberRef {
+	return s.Roller
+}
+
+// GetMine returns the value of Mine.
+func (s *RollRequest) GetMine() bool {
+	return s.Mine
+}
+
+// GetCanRoll returns the value of CanRoll.
+func (s *RollRequest) GetCanRoll() bool {
+	return s.CanRoll
+}
+
+// GetStatus returns the value of Status.
+func (s *RollRequest) GetStatus() RollRequestStatus {
+	return s.Status
+}
+
+// GetTotal returns the value of Total.
+func (s *RollRequest) GetTotal() OptInt32 {
+	return s.Total
+}
+
+// GetGroups returns the value of Groups.
+func (s *RollRequest) GetGroups() []DiceGroup {
+	return s.Groups
+}
+
+// GetDice returns the value of Dice.
+func (s *RollRequest) GetDice() []RollDie {
+	return s.Dice
+}
+
+// GetModifiers returns the value of Modifiers.
+func (s *RollRequest) GetModifiers() []RollModifier {
+	return s.Modifiers
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *RollRequest) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetResolvedAt returns the value of ResolvedAt.
+func (s *RollRequest) GetResolvedAt() OptDateTime {
+	return s.ResolvedAt
+}
+
+// SetID sets the value of ID.
+func (s *RollRequest) SetID(val ID) {
+	s.ID = val
+}
+
+// SetPurpose sets the value of Purpose.
+func (s *RollRequest) SetPurpose(val string) {
+	s.Purpose = val
+}
+
+// SetNotation sets the value of Notation.
+func (s *RollRequest) SetNotation(val string) {
+	s.Notation = val
+}
+
+// SetRequestedBy sets the value of RequestedBy.
+func (s *RollRequest) SetRequestedBy(val DisplayName) {
+	s.RequestedBy = val
+}
+
+// SetRoller sets the value of Roller.
+func (s *RollRequest) SetRoller(val MemberRef) {
+	s.Roller = val
+}
+
+// SetMine sets the value of Mine.
+func (s *RollRequest) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetCanRoll sets the value of CanRoll.
+func (s *RollRequest) SetCanRoll(val bool) {
+	s.CanRoll = val
+}
+
+// SetStatus sets the value of Status.
+func (s *RollRequest) SetStatus(val RollRequestStatus) {
+	s.Status = val
+}
+
+// SetTotal sets the value of Total.
+func (s *RollRequest) SetTotal(val OptInt32) {
+	s.Total = val
+}
+
+// SetGroups sets the value of Groups.
+func (s *RollRequest) SetGroups(val []DiceGroup) {
+	s.Groups = val
+}
+
+// SetDice sets the value of Dice.
+func (s *RollRequest) SetDice(val []RollDie) {
+	s.Dice = val
+}
+
+// SetModifiers sets the value of Modifiers.
+func (s *RollRequest) SetModifiers(val []RollModifier) {
+	s.Modifiers = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *RollRequest) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetResolvedAt sets the value of ResolvedAt.
+func (s *RollRequest) SetResolvedAt(val OptDateTime) {
+	s.ResolvedAt = val
+}
+
+// RollRequestHeaders wraps RollRequest with response headers.
+type RollRequestHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RollRequest
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RollRequestHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RollRequestHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RollRequestHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RollRequestHeaders) GetResponse() RollRequest {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RollRequestHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RollRequestHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RollRequestHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RollRequestHeaders) SetResponse(val RollRequest) {
+	s.Response = val
+}
+
+func (*RollRequestHeaders) createRollRes() {}
+func (*RollRequestHeaders) getRollRes()    {}
+func (*RollRequestHeaders) rollRestRes()   {}
+func (*RollRequestHeaders) setDieRes()     {}
+
+type RollRequestStatus string
+
+const (
+	RollRequestStatusPending  RollRequestStatus = "pending"
+	RollRequestStatusResolved RollRequestStatus = "resolved"
+)
+
+// AllValues returns all RollRequestStatus values.
+func (RollRequestStatus) AllValues() []RollRequestStatus {
+	return []RollRequestStatus{
+		RollRequestStatusPending,
+		RollRequestStatusResolved,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s RollRequestStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case RollRequestStatusPending:
+		return []byte(s), nil
+	case RollRequestStatusResolved:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *RollRequestStatus) UnmarshalText(data []byte) error {
+	switch RollRequestStatus(data) {
+	case RollRequestStatusPending:
+		*s = RollRequestStatusPending
+		return nil
+	case RollRequestStatusResolved:
+		*s = RollRequestStatusResolved
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

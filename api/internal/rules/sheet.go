@@ -45,8 +45,8 @@ func ArmorClass(dexMod int, armor *Armor, shield int) int {
 	dex := 0
 	if armor.AddDex {
 		dex = dexMod
-		if armor.DexCap >= 0 && dex > armor.DexCap {
-			dex = armor.DexCap
+		if armor.DexCap >= 0 {
+			dex = min(dex, armor.DexCap)
 		}
 	}
 	return armor.Base + dex + shield

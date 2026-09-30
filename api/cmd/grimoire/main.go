@@ -26,8 +26,12 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/webui"
+	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
+	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
 
 // version is set at build time with -ldflags "-X main.version=…".
@@ -179,6 +183,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Blobs: blobs(cfg, logger),
 			},
 			NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
+			Rolls: &playapp.Rolls{
+				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
+				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,
+			},
 		},
 		DevSubject: cfg.DevSubject,
 		RateLimit:  cfg.RateLimit,

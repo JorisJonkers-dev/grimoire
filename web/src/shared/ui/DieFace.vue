@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 const props = withDefaults(
-  defineProps<{ sides: 4 | 6 | 8 | 20; value?: number | null; state?: 'idle' | 'rolling' | 'kept' | 'dropped'; size?: number }>(),
+  defineProps<{ sides: 4 | 6 | 8 | 10 | 12 | 20 | 100; value?: number | null; state?: 'idle' | 'rolling' | 'kept' | 'dropped'; size?: number }>(),
   { value: null, state: 'idle', size: 84 },
 )
 const face = computed(() => (props.value === null ? '?' : String(props.value)))
@@ -43,6 +43,20 @@ const label = computed(() => {
         <polygon points="90,28 50,48 50,94 90,74" fill="#B8A57C" />
         <polygon points="50,8 90,28 90,74 50,94 10,74 10,28" fill="none" stroke="#2B2118" stroke-width="2" />
         <text x="50" y="35" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="18" fill="#2B2118">{{ face }}</text>
+      </template>
+      <template v-else-if="sides === 10 || sides === 100">
+        <polygon points="50,4 92,44 50,56" fill="#B7D9A8" />
+        <polygon points="50,4 8,44 50,56" fill="#D2E8C6" />
+        <polygon points="8,44 50,96 50,56" fill="#8FBF7C" />
+        <polygon points="92,44 50,96 50,56" fill="#6E9E5C" />
+        <polygon points="50,4 92,44 50,96 8,44" fill="none" stroke="#1D2B23" stroke-width="2" />
+        <text x="50" y="44" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="16" fill="#1D2B23">{{ face }}</text>
+      </template>
+      <template v-else-if="sides === 12">
+        <polygon points="50,6 93,37 77,88 23,88 7,37" fill="#D9B8E8" />
+        <polygon points="50,24 72,40 64,68 36,68 28,40" fill="#C49BD8" />
+        <polygon points="50,6 93,37 77,88 23,88 7,37" fill="none" stroke="#2E1A38" stroke-width="2" />
+        <text x="50" y="56" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="17" fill="#2E1A38">{{ face }}</text>
       </template>
       <template v-else>
         <polygon points="50,4 94,50 50,58" fill="#9EC6E8" />

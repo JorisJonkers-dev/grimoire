@@ -46,11 +46,7 @@ func (a Ability) Valid() bool {
 
 // Modifier is the ability modifier for a score.
 func Modifier(score int) int {
-	m := score - 10
-	if m < 0 {
-		m--
-	}
-	return m / 2
+	return (score+10)/2 - 10
 }
 
 // ProficiencyBonus is the proficiency bonus at a character level (1..20).

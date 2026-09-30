@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses } from './types.gen';
-import { zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateInvitePath, zCreateInviteResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteNpcPath, zDeleteNpcResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse } from './zod.gen';
+import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreateRollData, CreateRollErrors, CreateRollResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SetDieData, SetDieErrors, SetDieResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses } from './types.gen';
+import { zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateInvitePath, zCreateInviteResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteNpcPath, zDeleteNpcResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -678,6 +678,116 @@ export const restoreNpcRevision = <ThrowOnError extends boolean = false>(options
     responseValidator: async (data) => await zRestoreNpcRevisionResponse.parseAsync(data),
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore',
+    ...options
+});
+
+/**
+ * List roll requests
+ *
+ * Recent Roll Requests in the Campaign. Members only.
+ */
+export const listRolls = <ThrowOnError extends boolean = false>(options: Options<ListRollsData, ThrowOnError>): RequestResult<ListRollsResponses, ListRollsErrors, ThrowOnError> => (options.client ?? client).get<ListRollsResponses, ListRollsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zListRollsPath,
+        query: zListRollsQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListRollsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/rolls',
+    ...options
+});
+
+/**
+ * Request a roll
+ *
+ * Opens a Roll Request for the caller, or, from a DM, for another Member.
+ */
+export const createRoll = <ThrowOnError extends boolean = false>(options: Options<CreateRollData, ThrowOnError>): RequestResult<CreateRollResponses, CreateRollErrors, ThrowOnError> => (options.client ?? client).post<CreateRollResponses, CreateRollErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateRollBody,
+        path: zCreateRollPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateRollResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/rolls',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get a roll request
+ *
+ * One Roll Request with every die. Members only.
+ */
+export const getRoll = <ThrowOnError extends boolean = false>(options: Options<GetRollData, ThrowOnError>): RequestResult<GetRollResponses, GetRollErrors, ThrowOnError> => (options.client ?? client).get<GetRollResponses, GetRollErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetRollPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetRollResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}',
+    ...options
+});
+
+/**
+ * Roll or enter one die
+ *
+ * The server rolls the die from a logged seed, or takes the face read off a physical die. The roller or a DM; the last die resolves the request.
+ */
+export const setDie = <ThrowOnError extends boolean = false>(options: Options<SetDieData, ThrowOnError>): RequestResult<SetDieResponses, SetDieErrors, ThrowOnError> => (options.client ?? client).post<SetDieResponses, SetDieErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSetDieBody,
+        path: zSetDiePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetDieResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Roll the rest
+ *
+ * The server rolls every die still empty. The roller or a DM.
+ */
+export const rollRest = <ThrowOnError extends boolean = false>(options: Options<RollRestData, ThrowOnError>): RequestResult<RollRestResponses, RollRestErrors, ThrowOnError> => (options.client ?? client).post<RollRestResponses, RollRestErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zRollRestPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zRollRestResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/rest',
+    ...options
+});
+
+/**
+ * Read the Action Log
+ *
+ * The Campaign's recent Actions with their seeds. DM only.
+ */
+export const getActionLog = <ThrowOnError extends boolean = false>(options: Options<GetActionLogData, ThrowOnError>): RequestResult<GetActionLogResponses, GetActionLogErrors, ThrowOnError> => (options.client ?? client).get<GetActionLogResponses, GetActionLogErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetActionLogPath,
+        query: zGetActionLogQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetActionLogResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/log',
     ...options
 });
 

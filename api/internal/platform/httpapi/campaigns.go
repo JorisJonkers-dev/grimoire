@@ -14,6 +14,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/auth"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -34,7 +35,7 @@ type Campaigns interface {
 
 // campaignProblem maps a use-case error to a problem; anything unexpected is logged and hidden.
 func (h *Handler) campaignProblem(ctx context.Context, op string, err error) *oas.ProblemStatusCodeWithHeaders {
-	var rule *app.RuleError
+	var rule *apperr.RuleError
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		return problem(http.StatusNotFound, "Not found", "No such campaign, member or invite.")
@@ -53,6 +54,8 @@ func (h *Handler) campaignProblem(ctx context.Context, op string, err error) *oa
 		return unavailable()
 	}
 }
+
+func campaignID(id uuid.UUID) domain.CampaignID { return domain.CampaignID(id) }
 
 func uiCaller(ctx context.Context) (caller.Caller, bool) {
 	id, ok := auth.FromContext(ctx)

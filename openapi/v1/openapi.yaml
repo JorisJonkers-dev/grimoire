@@ -23,6 +23,8 @@ tags:
     description: Campaigns, Members, roles and invites.
   - name: Compendium
     description: SRD reference data.
+  - name: Play
+    description: Rolls and the Action Log.
   - name: Prep
     description: The DM's prepared material and its Revisions.
   - name: Identity
@@ -1163,6 +1165,195 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/rolls:
+    get:
+      operationId: listRolls
+      summary: List roll requests
+      description: Recent Roll Requests in the Campaign. Members only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: limit
+          in: query
+          description: How many to return, newest first.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100, default: 30 }
+      responses:
+        "200":
+          description: The rolls.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createRoll
+      summary: Request a roll
+      description: Opens a Roll Request for the caller, or, from a DM, for another Member.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RollCreate"
+      responses:
+        "201":
+          description: The new request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/rolls/{rollId}:
+    get:
+      operationId: getRoll
+      summary: Get a roll request
+      description: One Roll Request with every die. Members only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RollId"
+      responses:
+        "200":
+          description: The request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}:
+    post:
+      operationId: setDie
+      summary: Roll or enter one die
+      description: The server rolls the die from a logged seed, or takes the face read off a physical die. The roller or a DM; the last die resolves the request.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RollId"
+        - name: dieNo
+          in: path
+          required: true
+          description: Which die, counting from 0.
+          schema: { type: integer, format: int32, minimum: 0, maximum: 119 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DieFill"
+      responses:
+        "200":
+          description: The request after the die.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest:
+    post:
+      operationId: rollRest
+      summary: Roll the rest
+      description: The server rolls every die still empty. The roller or a DM.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RollId"
+      responses:
+        "200":
+          description: The resolved request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/log:
+    get:
+      operationId: getActionLog
+      summary: Read the Action Log
+      description: The Campaign's recent Actions with their seeds. DM only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: limit
+          in: query
+          description: How many to return, newest first.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100, default: 30 }
+      responses:
+        "200":
+          description: The actions.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/ActionEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
@@ -1330,6 +1521,12 @@ components:
       in: path
       required: true
       description: Character id.
+      schema: { $ref: "#/components/schemas/Id" }
+    RollId:
+      name: rollId
+      in: path
+      required: true
+      description: Roll Request id.
       schema: { $ref: "#/components/schemas/Id" }
     NpcId:
       name: npcId
@@ -1921,6 +2118,125 @@ components:
         field: { type: string, maxLength: 60 }
         before: { type: string, maxLength: 8000 }
         after: { type: string, maxLength: 8000 }
+    RollModifier:
+      type: object
+      description: A named flat bonus or penalty.
+      additionalProperties: false
+      required: [label, value]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 80 }
+        value: { type: integer, format: int32, minimum: -100, maximum: 100 }
+    GroupLabel:
+      type: object
+      description: Why a group of dice is thrown, such as Bless.
+      additionalProperties: false
+      required: [group, label]
+      properties:
+        group: { type: integer, format: int32, minimum: 0, maximum: 5 }
+        label: { type: string, minLength: 1, maxLength: 80 }
+    RollCreate:
+      type: object
+      description: What to roll and why.
+      additionalProperties: false
+      required: [purpose, notation]
+      properties:
+        purpose: { type: string, minLength: 1, maxLength: 120 }
+        notation: { type: string, minLength: 2, maxLength: 80, pattern: "^[0-9dDkKhHlL+\\- ]+$" }
+        labels:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/GroupLabel" }
+        modifiers:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/RollModifier" }
+        rollerId: { $ref: "#/components/schemas/Id" }
+    DieFill:
+      type: object
+      description: Roll the die on the server, or enter the face of a physical die.
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode: { type: string, enum: [auto, manual] }
+        value: { type: integer, format: int32, minimum: 1, maximum: 100 }
+    DiceGroup:
+      type: object
+      description: A group of identical dice and which of them count.
+      additionalProperties: false
+      required: [index, count, faces, sign]
+      properties:
+        index: { type: integer, format: int32, minimum: 0, maximum: 5 }
+        label: { type: string, maxLength: 80 }
+        count: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        faces: { type: integer, format: int32, minimum: 4, maximum: 100 }
+        sign: { type: integer, format: int32, minimum: -1, maximum: 1 }
+        keep: { type: string, enum: [highest, lowest] }
+        keepCount: { type: integer, format: int32, minimum: 1, maximum: 19 }
+    RollDie:
+      type: object
+      description: One die of a Roll Request.
+      additionalProperties: false
+      required: [no, group, faces, kept]
+      properties:
+        no: { type: integer, format: int32, minimum: 0, maximum: 119 }
+        group: { type: integer, format: int32, minimum: 0, maximum: 5 }
+        faces: { type: integer, format: int32, minimum: 4, maximum: 100 }
+        value: { type: integer, format: int32, minimum: 1, maximum: 100 }
+        mode: { type: string, enum: [auto, manual] }
+        kept: { type: boolean }
+    MemberRef:
+      type: object
+      description: A Member by id and name.
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { $ref: "#/components/schemas/DisplayName" }
+    RollRequest:
+      type: object
+      description: A Roll Request with exactly what to throw and every modifier source.
+      additionalProperties: false
+      required: [id, purpose, notation, requestedBy, roller, mine, canRoll, status, groups, dice, modifiers, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        purpose: { type: string, maxLength: 120 }
+        notation: { type: string, maxLength: 80 }
+        requestedBy: { $ref: "#/components/schemas/DisplayName" }
+        roller: { $ref: "#/components/schemas/MemberRef" }
+        mine: { type: boolean }
+        canRoll: { type: boolean }
+        status: { type: string, enum: [pending, resolved] }
+        total: { type: integer, format: int32, minimum: -10000, maximum: 10000 }
+        groups:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/DiceGroup" }
+        dice:
+          type: array
+          maxItems: 120
+          items: { $ref: "#/components/schemas/RollDie" }
+        modifiers:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/RollModifier" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        resolvedAt: { type: string, format: date-time, maxLength: 40 }
+    ActionEntry:
+      type: object
+      description: One entry of the Action Log.
+      additionalProperties: false
+      required: [seq, kind, actor, origin, value, createdAt]
+      properties:
+        seq: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        kind: { type: string, enum: [roll_requested, die_rolled, die_entered, roll_resolved] }
+        actor: { $ref: "#/components/schemas/DisplayName" }
+        origin: { type: string, enum: [ui, mcp, generator, system] }
+        client: { type: string, maxLength: 80 }
+        seed: { type: string, maxLength: 20, pattern: "^[0-9]+$" }
+        rollId: { $ref: "#/components/schemas/Id" }
+        dieNo: { type: integer, format: int32, minimum: 0, maximum: 119 }
+        value: { type: integer, format: int32, minimum: -10000, maximum: 10000 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

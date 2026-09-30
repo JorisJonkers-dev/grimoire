@@ -25,6 +25,7 @@ type Handler struct {
 	Campaigns  Campaigns
 	Characters CharacterService
 	NPCs       NPCService
+	Rolls      RollService
 	Log        *slog.Logger
 }
 

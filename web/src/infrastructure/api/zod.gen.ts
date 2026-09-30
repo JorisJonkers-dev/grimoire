@@ -241,6 +241,120 @@ export const zFieldChange = z.object({
 });
 
 /**
+ * A named flat bonus or penalty.
+ */
+export const zRollModifier = z.object({
+    label: z.string().min(1).max(80),
+    value: z.int().gte(-100).lte(100)
+});
+
+/**
+ * Why a group of dice is thrown, such as Bless.
+ */
+export const zGroupLabel = z.object({
+    group: z.int().gte(0).lte(5),
+    label: z.string().min(1).max(80)
+});
+
+/**
+ * What to roll and why.
+ */
+export const zRollCreate = z.object({
+    purpose: z.string().min(1).max(120),
+    notation: z.string().min(2).max(80).regex(/^[0-9dDkKhHlL+\- ]+$/),
+    labels: z.array(zGroupLabel).max(6).optional(),
+    modifiers: z.array(zRollModifier).max(12).optional(),
+    rollerId: zId.optional()
+});
+
+/**
+ * Roll the die on the server, or enter the face of a physical die.
+ */
+export const zDieFill = z.object({
+    mode: z.enum(['auto', 'manual']),
+    value: z.int().gte(1).lte(100).optional()
+});
+
+/**
+ * A group of identical dice and which of them count.
+ */
+export const zDiceGroup = z.object({
+    index: z.int().gte(0).lte(5),
+    label: z.string().max(80).optional(),
+    count: z.int().gte(1).lte(20),
+    faces: z.int().gte(4).lte(100),
+    sign: z.int().gte(-1).lte(1),
+    keep: z.enum(['highest', 'lowest']).optional(),
+    keepCount: z.int().gte(1).lte(19).optional()
+});
+
+/**
+ * One die of a Roll Request.
+ */
+export const zRollDie = z.object({
+    no: z.int().gte(0).lte(119),
+    group: z.int().gte(0).lte(5),
+    faces: z.int().gte(4).lte(100),
+    value: z.int().gte(1).lte(100).optional(),
+    mode: z.enum(['auto', 'manual']).optional(),
+    kept: z.boolean()
+});
+
+/**
+ * A Member by id and name.
+ */
+export const zMemberRef = z.object({
+    id: zId,
+    name: zDisplayName
+});
+
+/**
+ * A Roll Request with exactly what to throw and every modifier source.
+ */
+export const zRollRequest = z.object({
+    id: zId,
+    purpose: z.string().max(120),
+    notation: z.string().max(80),
+    requestedBy: zDisplayName,
+    roller: zMemberRef,
+    mine: z.boolean(),
+    canRoll: z.boolean(),
+    status: z.enum(['pending', 'resolved']),
+    total: z.int().gte(-10000).lte(10000).optional(),
+    groups: z.array(zDiceGroup).max(6),
+    dice: z.array(zRollDie).max(120),
+    modifiers: z.array(zRollModifier).max(12),
+    createdAt: z.iso.datetime().max(40),
+    resolvedAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * One entry of the Action Log.
+ */
+export const zActionEntry = z.object({
+    seq: z.coerce.bigint().gte(BigInt(1)).lte(BigInt(9007199254740991)),
+    kind: z.enum([
+        'roll_requested',
+        'die_rolled',
+        'die_entered',
+        'roll_resolved'
+    ]),
+    actor: zDisplayName,
+    origin: z.enum([
+        'ui',
+        'mcp',
+        'generator',
+        'system'
+    ]),
+    client: z.string().max(80).optional(),
+    seed: z.string().max(20).regex(/^[0-9]+$/).optional(),
+    rollId: zId.optional(),
+    dieNo: z.int().gte(0).lte(119).optional(),
+    value: z.int().gte(-10000).lte(10000),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -719,6 +833,11 @@ export const zMemberId = zId;
 export const zCharacterId = zId;
 
 /**
+ * Roll Request id.
+ */
+export const zRollId = zId;
+
+/**
  * NPC id.
  */
 export const zNpcId = zId;
@@ -1141,6 +1260,76 @@ export const zRestoreNpcRevisionPath = z.object({
  * The restored NPC.
  */
 export const zRestoreNpcRevisionResponse = zNpc;
+
+export const zListRollsPath = z.object({
+    campaignId: zId
+});
+
+export const zListRollsQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(30)
+});
+
+/**
+ * The rolls.
+ */
+export const zListRollsResponse = z.array(zRollRequest).max(100);
+
+export const zCreateRollBody = zRollCreate;
+
+export const zCreateRollPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new request.
+ */
+export const zCreateRollResponse = zRollRequest;
+
+export const zGetRollPath = z.object({
+    campaignId: zId,
+    rollId: zId
+});
+
+/**
+ * The request.
+ */
+export const zGetRollResponse = zRollRequest;
+
+export const zSetDieBody = zDieFill;
+
+export const zSetDiePath = z.object({
+    campaignId: zId,
+    rollId: zId,
+    dieNo: z.int().gte(0).lte(119)
+});
+
+/**
+ * The request after the die.
+ */
+export const zSetDieResponse = zRollRequest;
+
+export const zRollRestPath = z.object({
+    campaignId: zId,
+    rollId: zId
+});
+
+/**
+ * The resolved request.
+ */
+export const zRollRestResponse = zRollRequest;
+
+export const zGetActionLogPath = z.object({
+    campaignId: zId
+});
+
+export const zGetActionLogQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(30)
+});
+
+/**
+ * The actions.
+ */
+export const zGetActionLogResponse = z.array(zActionEntry).max(100);
 
 export const zPreviewInviteBody = zInviteToken;
 

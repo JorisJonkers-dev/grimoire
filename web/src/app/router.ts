@@ -15,6 +15,7 @@ const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilde
 const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
 const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
+const DiceTrayPage = () => import('@/features/rolls/DiceTrayPage.vue')
 
 export function createAppRouter(history: RouterHistory = createWebHistory()) {
   return createRouter({
@@ -34,6 +35,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/characters/:characterId', name: 'character', component: CharacterSheetPage },
       { path: '/campaigns/:id/npcs', name: 'npcs', component: NpcListPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
+      { path: '/campaigns/:id/dice', name: 'dice', component: DiceTrayPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
     ],

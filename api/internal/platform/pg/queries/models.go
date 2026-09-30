@@ -406,3 +406,60 @@ type OpsInstance struct {
 	ID        int64
 	CreatedAt time.Time
 }
+
+type PlayAction struct {
+	ID            uuid.UUID
+	CampaignID    uuid.UUID
+	Seq           int64
+	Kind          string
+	ActorMemberID uuid.UUID
+	ActorName     string
+	Origin        string
+	Client        string
+	Seed          pgtype.Int8
+	CreatedAt     time.Time
+}
+
+type PlayActionRollEvent struct {
+	ActionID uuid.UUID
+	RollID   uuid.UUID
+	DieNo    pgtype.Int4
+	Value    int32
+}
+
+type PlayRollDice struct {
+	RollID  uuid.UUID
+	DieNo   int32
+	GroupNo int32
+	Faces   int32
+	Value   pgtype.Int4
+	Mode    pgtype.Text
+}
+
+type PlayRollRequest struct {
+	ID              uuid.UUID
+	CampaignID      uuid.UUID
+	Purpose         string
+	Notation        string
+	RequestedByName string
+	RollerMemberID  uuid.UUID
+	RollerSubject   string
+	RollerName      string
+	Status          string
+	Total           pgtype.Int4
+	CreatedAt       time.Time
+	ResolvedAt      pgtype.Timestamptz
+}
+
+type PlayRollRequestLabel struct {
+	RollID  uuid.UUID
+	GroupNo int32
+	Label   string
+}
+
+type PlayRollRequestModifier struct {
+	RollID   uuid.UUID
+	Ordering int32
+	Label    string
+	Value    int32
+}
