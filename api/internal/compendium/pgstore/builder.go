@@ -125,7 +125,7 @@ func (s *Store) builderWeapons(ctx context.Context, out *compendium.BuilderOptio
 	for _, r := range rows {
 		out.Weapons = append(out.Weapons, compendium.WeaponOption{
 			Slug: r.Slug, Name: r.Name, DamageDice: r.DamageDice, DamageType: r.DamageType, Simple: r.Simple,
-			RangeFeet: int(r.RangeFeet), LongRangeFeet: int(r.LongRangeFeet),
+			RangeFeet: int(r.RangeFeet), LongRangeFeet: int(r.LongRangeFeet), Properties: r.Properties,
 		})
 	}
 	return nil

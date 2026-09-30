@@ -181,7 +181,8 @@ func (q *Queries) BuilderSpecies(ctx context.Context, key string) ([]BuilderSpec
 }
 
 const builderWeapons = `-- name: BuilderWeapons :many
-SELECT w.slug, w.name, w.damage_dice, coalesce(dt.slug, '')::text AS damage_type, w.simple, w.range_feet, w.long_range_feet
+SELECT w.slug, w.name, w.damage_dice, coalesce(dt.slug, '')::text AS damage_type, w.simple, w.range_feet, w.long_range_feet,
+       ARRAY(SELECT p.name FROM compendium.weapon_properties p WHERE p.weapon_id = w.id ORDER BY p.name)::text[] AS properties
 FROM compendium.weapons w
 JOIN compendium.documents d ON d.id = w.document_id
 LEFT JOIN compendium.damage_types dt ON dt.id = w.damage_type_id
@@ -197,6 +198,7 @@ type BuilderWeaponsRow struct {
 	Simple        bool
 	RangeFeet     int32
 	LongRangeFeet int32
+	Properties    []string
 }
 
 func (q *Queries) BuilderWeapons(ctx context.Context, key string) ([]BuilderWeaponsRow, error) {
@@ -216,6 +218,7 @@ func (q *Queries) BuilderWeapons(ctx context.Context, key string) ([]BuilderWeap
 			&i.Simple,
 			&i.RangeFeet,
 			&i.LongRangeFeet,
+			&i.Properties,
 		); err != nil {
 			return nil, err
 		}

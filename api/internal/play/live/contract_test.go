@@ -30,11 +30,19 @@ func samples() contract {
 			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2,
 		},
 	}
+	ac, hp, most := 15, 4, 7
+	view.Tokens = append(view.Tokens, live.TokenView{
+		ID: "0190c7a8-0000-7000-8000-000000000013", Label: "Aria", Kind: "party", AC: &ac, HP: &hp, HPMax: &most,
+		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"}},
+	}, live.TokenView{ID: "0190c7a8-0000-7000-8000-000000000014", Label: "Orc", Kind: "enemy", Health: "bloodied"})
 	seventeen := 17
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
 		ID: "0190c7a8-0000-7000-8000-000000000010", TokenID: token.ID, Label: "Goblin", Kind: "enemy", RollID: "0190c7a8-0000-7000-8000-000000000011",
 		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30,
-	}}}
+	}}, Attack: &live.PendingAttackView{
+		AttackerID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", Name: "Scimitar", Stage: "damage",
+		RollID: "0190c7a8-0000-7000-8000-000000000015", Critical: true,
+	}}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
 	dmView.Lights = []live.LightView{{ID: "0190c7a8-0000-7000-8000-00000000000e", Q: 4, R: 0, BrightFt: 20, DimFt: 40}}
@@ -58,6 +66,11 @@ func samples() contract {
 			{Nonce: "n16", Kind: live.CmdSpend, CombatantID: "0190c7a8-0000-7000-8000-000000000010", Resource: live.ResourceBonusAction},
 			{Nonce: "n17", Kind: live.CmdEndTurn, CombatantID: "0190c7a8-0000-7000-8000-000000000010"},
 			{Nonce: "n18", Kind: live.CmdEndCombat},
+			{Nonce: "n19", Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: "enemy"},
+			{Nonce: "n20", Kind: live.CmdPlace, CharacterID: "0190c7a8-0000-7000-8000-000000000012"},
+			{Nonce: "n21", Kind: live.CmdPreviewAttack, TokenID: token.ID, AttackNo: 1, TargetID: "0190c7a8-0000-7000-8000-000000000013"},
+			{Nonce: "n22", Kind: live.CmdAttack, TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013"},
+			{Nonce: "n23", Kind: live.CmdUndoDamage},
 		},
 		Updates: []live.Update{
 			{
@@ -69,6 +82,10 @@ func samples() contract {
 			{Kind: live.UpdRejected, Seq: 6, Nonce: "n9", Reason: "Only the DM can change the table."},
 			{Kind: live.UpdPath, Seq: 6, Nonce: "n13", Path: &live.PathView{TokenID: token.ID, Hexes: []live.Hex{{Q: 2, R: -1}, {Q: 3, R: -1}, {Q: 3, R: 0}}, CostFt: 10}},
 			{Kind: live.UpdView, Seq: 7, Nonce: "n14", View: view, Steps: []live.View{*view}},
+			{Kind: live.UpdAttackPreview, Seq: 7, Nonce: "n21", Preview: &live.AttackPreview{
+				TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", AttackNo: 1, Name: "Shortbow", HitChance: 30, Mode: "disadvantage",
+				DamageMin: 3, DamageMax: 8, CritMax: 14, Reasons: []string{"Shortbow: +4 to hit", "Disadvantage: long range"},
+			}},
 			{Kind: live.UpdEnded, Seq: 7},
 		},
 	}

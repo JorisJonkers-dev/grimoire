@@ -31,6 +31,8 @@ type Write struct {
 	Combat    *domain.Combat
 	Rolls     []domain.Roll
 	Combatant domain.CombatantID
+	HP        *HPChange
+	attack    *domain.PendingAttack
 	board     *domain.MapState
 	frames    []*state
 	total     int
@@ -43,7 +45,15 @@ type Store interface {
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
+	// LastDamage is the Session's latest damage not undone yet; its Undoes names that damage's Action.
+	LastDamage(ctx context.Context, id domain.SessionID) (HPChange, bool, error)
 	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error)
+}
+
+// Statblocks copies fighting stats onto new tokens.
+type Statblocks interface {
+	Monster(ctx context.Context, campaign uuid.UUID, slug string) (string, domain.Stats, error)
+	Character(ctx context.Context, c caller.Caller, campaign, id uuid.UUID) (string, uuid.UUID, domain.Stats, error)
 }
 
 // Members finds a Campaign's members.
@@ -80,6 +90,7 @@ type request struct {
 type runtime struct {
 	store   Store
 	members Members
+	stats   Statblocks
 	now     func() time.Time
 	log     *slog.Logger
 	release func()
@@ -96,6 +107,7 @@ type runtime struct {
 type Hub struct {
 	Store   Store
 	Members Members
+	Stats   Statblocks
 	Owner   Owner
 	Now     func() time.Time
 	Log     *slog.Logger
@@ -146,7 +158,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	}
 	st.setBoard(board)
 	rt := &runtime{
-		store: h.Store, members: h.Members, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		store: h.Store, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {
@@ -283,16 +295,28 @@ func (r *runtime) handle(req request) {
 	case req.cmd.Kind == CmdPlanWalk:
 		r.previewWalk(req)
 		return
-	case !req.from.Member.DM && req.cmd.Kind != CmdWalk && req.cmd.Kind != CmdEndTurn && req.cmd.Kind != CmdSpend:
+	case req.cmd.Kind == CmdPreviewAttack:
+		r.previewAttack(req)
+		return
+	case !req.from.Member.DM && !playerMay(req.cmd.Kind):
 		r.reject(req, "Only the DM can change the table.")
 		return
 	}
-	w, reason := r.plan(req.from.Member, req.cmd)
+	w, reason := r.plan(req)
 	if reason != "" {
 		r.reject(req, reason)
 		return
 	}
 	r.commit(req, w, req.from.Member, req.from.Caller)
+}
+
+// playerMay lists the changes a Player may ask for; each is checked against what they control.
+func playerMay(kind string) bool {
+	switch kind {
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack:
+		return true
+	}
+	return false
 }
 
 // commit applies a planned write to a copy of the state, writes it through, then broadcasts it.
@@ -341,6 +365,9 @@ func apply(s *state, w *Write) {
 		return
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded:
 		applyCombat(s, w)
+		return
+	case domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionDamageDealt, domain.ActionDamageUndone:
+		applyAttack(s, w)
 		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)

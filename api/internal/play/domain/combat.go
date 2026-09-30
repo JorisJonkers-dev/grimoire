@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 )
 
@@ -29,8 +30,10 @@ type Combat struct {
 	// Turn is the initiative count now acting; every Combatant on it acts at the same time.
 	Turn       int
 	Combatants []Combatant
-	StartedAt  time.Time
-	EndedAt    time.Time
+	// Attack is the attack waiting on a roll, if any.
+	Attack    *PendingAttack
+	StartedAt time.Time
+	EndedAt   time.Time
 }
 
 // Combatant is a Token taking part in a Combat.
@@ -45,6 +48,25 @@ type Combatant struct {
 	// Done is set once the Combatant ends its turn this round.
 	Done    bool
 	Economy combat.Economy
+}
+
+// Attack stages: the attack roll, then damage on a hit.
+const (
+	StageToHit  = "to_hit"
+	StageDamage = "damage"
+)
+
+// PendingAttack is an attack waiting on its attack or damage Roll Request.
+type PendingAttack struct {
+	ID         uuid.UUID
+	Attacker   TokenID
+	Target     TokenID
+	AttackNo   int
+	Mode       attack.Mode
+	CoverBonus int
+	Stage      string
+	Critical   bool
+	RollID     RollID
 }
 
 // Totals lists every rolled initiative.

@@ -3,6 +3,7 @@ package pgstore
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
@@ -132,7 +134,21 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 			id := uuid.UUID(t.ControllerMemberID.Bytes)
 			tok.Controller = &id
 		}
+		if t.StatSource.Valid {
+			tok.Stats = &domain.Stats{Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{}}
+		}
 		tokens = append(tokens, tok)
+	}
+	attacks, err := s.q.SessionTokenAttacks(ctx, row.ID)
+	if err != nil {
+		return domain.Session{}, nil, nil, err
+	}
+	for _, a := range attacks {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == a.TokenID })
+		tokens[i].Stats.Attacks = append(tokens[i].Stats.Attacks, domain.Attack{
+			Name: a.Name, ToHit: int(a.ToHit), ReachFt: int(a.ReachFt), RangeFt: int(a.RangeFt), LongRangeFt: int(a.LongRangeFt),
+			Damage: a.DamageDice, DamageBonus: int(a.DamageBonus), DamageType: a.DamageType,
+		})
 	}
 	sess := session(row)
 	if sess.MapID == nil {
@@ -183,13 +199,33 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		if t.Controller != nil {
 			p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
 		}
-		return s.q.InsertToken(ctx, p)
+		if t.Stats == nil {
+			return s.q.InsertToken(ctx, p)
+		}
+		st := t.Stats
+		p.StatSource = pgtype.Text{String: st.Source, Valid: true}
+		p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
+		if err := s.q.InsertToken(ctx, p); err != nil {
+			return err
+		}
+		for i, a := range st.Attacks {
+			if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
+				TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
+				LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
 	case domain.ActionTokenRemoved:
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
 	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
-	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded:
+	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
+		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed:
 		return nil
+	case domain.ActionDamageDealt, domain.ActionDamageUndone:
+		return s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)})
 	case domain.ActionMapSet:
 		p := queries.SetSessionMapParams{ID: sid}
 		if w.MapID != nil {
@@ -250,11 +286,19 @@ func (s *Store) addReveals(ctx context.Context, id domain.MapID, hs []hex.Coord)
 func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) error {
 	switch w.Kind {
 	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved,
-		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent:
+		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
+		domain.ActionAttackMissed:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
 		})
+	}
+	if h := w.HP; h != nil {
+		p := queries.InsertHPEventParams{ActionID: actionID, TokenID: uuid.UUID(h.Token), HpBefore: int32(h.Before), HpAfter: int32(h.After)}
+		if h.Undoes != (uuid.UUID{}) {
+			p.UndoesActionID = pgtype.UUID{Bytes: h.Undoes, Valid: true}
+		}
+		return s.q.InsertHPEvent(ctx, p)
 	}
 	hs := append(append([]hex.Coord{}, w.Hexes...), w.AutoReveal...)
 	if w.Kind == domain.ActionLightPlaced || w.Kind == domain.ActionLightRemoved {
@@ -294,6 +338,9 @@ func (s *Store) saveCombat(ctx context.Context, sess domain.Session, w live.Writ
 	if err := s.q.SaveCombat(ctx, p); err != nil {
 		return err
 	}
+	if err := s.saveAttack(ctx, f); err != nil {
+		return err
+	}
 	for _, x := range f.Combatants {
 		cp := queries.SaveCombatantParams{
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
@@ -309,6 +356,32 @@ func (s *Store) saveCombat(ctx context.Context, sess domain.Session, w live.Writ
 	}
 	return nil
 }
+
+//nolint:gosec // attack numbers and cover are bounded by the rules
+func (s *Store) saveAttack(ctx context.Context, f *domain.Combat) error {
+	a := f.Attack
+	if a == nil {
+		return s.q.ClearAttacks(ctx, uuid.UUID(f.ID))
+	}
+	return s.q.SaveAttack(ctx, queries.SaveAttackParams{
+		ID: a.ID, CombatID: uuid.UUID(f.ID), AttackerTokenID: uuid.UUID(a.Attacker), TargetTokenID: uuid.UUID(a.Target), AttackNo: int32(a.AttackNo),
+		Mode: a.Mode.String(), CoverBonus: int32(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: uuid.UUID(a.RollID),
+	})
+}
+
+// LastDamage finds the Session's latest damage that no undo has reverted.
+func (s *Store) LastDamage(ctx context.Context, id domain.SessionID) (live.HPChange, bool, error) {
+	row, err := s.q.LastDamage(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return live.HPChange{}, false, nil
+	}
+	if err != nil {
+		return live.HPChange{}, false, err
+	}
+	return live.HPChange{Token: domain.TokenID(row.TokenID), Before: int(row.HpBefore), After: int(row.HpAfter), Undoes: row.ID}, true, nil
+}
+
+func pgInt(n int) pgtype.Int4 { return pgtype.Int4{Int32: int32(n), Valid: true} } //nolint:gosec // bounded by the rules
 
 // LoadCombat reads a Session's running Combat, or nil when there is none.
 func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error) {
@@ -335,6 +408,18 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 			c.Initiative = &n
 		}
 		out.Combatants = append(out.Combatants, c)
+	}
+	a, err := s.q.CombatAttack(ctx, row.ID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return out, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	mode := slices.IndexFunc([]string{"normal", "advantage", "disadvantage"}, func(m string) bool { return m == a.Mode })
+	out.Attack = &domain.PendingAttack{
+		ID: a.ID, Attacker: domain.TokenID(a.AttackerTokenID), Target: domain.TokenID(a.TargetTokenID), AttackNo: int(a.AttackNo),
+		Mode: attack.Mode(mode), CoverBonus: int(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: domain.RollID(a.RollID),
 	}
 	return out, nil
 }
@@ -383,9 +468,10 @@ type Owner struct {
 	Pool *pgxpool.Pool
 }
 
-// Acquire takes the lock on a dedicated connection and returns its release.
+// Acquire takes the lock on a connection of its own, outside the pool: a running Session holds it for
+// hours, and pooled connections held that long starve every request once enough Sessions run.
 func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error) {
-	conn, err := o.Pool.Acquire(ctx)
+	conn, err := pgx.ConnectConfig(ctx, o.Pool.Config().ConnConfig.Copy())
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +479,7 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 	key := "session:" + uuid.UUID(id).String()
 	ok, err := q.LockSessionOwner(ctx, key)
 	if err != nil || !ok {
-		conn.Release()
+		_ = conn.Close(context.Background())
 		if err == nil {
 			err = apperr.ErrConflict
 		}
@@ -401,6 +487,6 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 	}
 	return func() {
 		_, _ = q.UnlockSessionOwner(context.Background(), key)
-		conn.Release()
+		_ = conn.Close(context.Background())
 	}, nil
 }

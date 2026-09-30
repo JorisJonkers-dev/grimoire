@@ -26,7 +26,7 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 	}
 	if cmd.Kind == CmdEndCombat {
 		ended := *c
-		ended.Status, ended.EndedAt = domain.CombatEnded, r.now()
+		ended.Status, ended.EndedAt, ended.Attack = domain.CombatEnded, r.now(), nil
 		return Write{Kind: domain.ActionCombatEnded, Combat: &ended}, ""
 	}
 	x, t, reason := r.combatant(m, cmd.CombatantID)
@@ -120,10 +120,18 @@ func (r *runtime) initiativeRoll(dm domain.Member, t domain.Token, bonus int) do
 	return roll
 }
 
-// rolled takes a resolved initiative Roll Request into the Combat it belongs to.
+// rolled takes a resolved Roll Request into the Combat it belongs to: an initiative, or the attack on
+// the table.
 func (r *runtime) rolled(req request) {
 	c := r.st.combat
 	if c == nil {
+		return
+	}
+	if c.Attack != nil && c.Attack.RollID == req.cmd.rollID {
+		roll, err := r.store.Roll(context.Background(), r.st.session.CampaignID, c.Attack.RollID)
+		if err == nil && roll.Status == domain.StatusResolved {
+			r.attackRolled(roll)
+		}
 		return
 	}
 	for _, x := range c.Combatants {
@@ -149,6 +157,9 @@ func (r *runtime) catchUp() {
 		if x.Initiative == nil {
 			r.rolled(request{cmd: Command{rollID: x.RollID}})
 		}
+	}
+	if a := r.st.combat.Attack; a != nil {
+		r.rolled(request{cmd: Command{rollID: a.RollID}})
 	}
 }
 
@@ -220,6 +231,9 @@ func dropCombatant(s *state, w *Write) {
 		return
 	}
 	s.combat.Combatants = slices.DeleteFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.TokenID == w.Token.ID })
+	if a := s.combat.Attack; a != nil && (a.Attacker == w.Token.ID || a.Target == w.Token.ID) {
+		s.combat.Attack = nil
+	}
 	settle(s.combat)
 	w.Combat = s.combat
 }
@@ -250,6 +264,7 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 		}
 		v.Combat.Combatants = append(v.Combat.Combatants, cv)
 	}
+	v.Combat.Attack = s.pendingView(a, seen)
 	sort.SliceStable(v.Combat.Combatants, func(i, j int) bool {
 		a, b := v.Combat.Combatants[i], v.Combat.Combatants[j]
 		if (a.Rank == 0) != (b.Rank == 0) {
@@ -260,4 +275,40 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 		}
 		return a.Label < b.Label
 	})
+}
+
+// applyAttack moves the attack on the table along and changes hit points.
+func applyAttack(s *state, w *Write) {
+	if h := w.HP; h != nil {
+		t := s.tokens[h.Token]
+		stats := *t.Stats
+		stats.HP = h.After
+		t.Stats = &stats
+		s.tokens[t.ID] = t
+	}
+	if s.combat == nil || w.Kind == domain.ActionDamageUndone {
+		return
+	}
+	s.combat.Attack = w.attack
+	if w.Kind == domain.ActionAttackDeclared {
+		i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
+		s.combat.Combatants[i].Economy, _ = s.combat.Combatants[i].Economy.Spend(combat.Action)
+	}
+	w.Combat = s.combat
+}
+
+// pendingView shows the attack on the table to an audience that sees both creatures in it.
+func (s *state) pendingView(a Audience, seen map[hex.Coord]bool) *PendingAttackView {
+	p := s.combat.Attack
+	if p == nil {
+		return nil
+	}
+	from, to := s.tokens[p.Attacker], s.tokens[p.Target]
+	if a != AudienceDM && (!s.shows(from, seen) || !s.shows(to, seen)) {
+		return nil
+	}
+	return &PendingAttackView{
+		AttackerID: uuid.UUID(p.Attacker).String(), TargetID: uuid.UUID(p.Target).String(), Name: from.Stats.Attacks[p.AttackNo].Name,
+		Stage: p.Stage, RollID: uuid.UUID(p.RollID).String(), Critical: p.Critical,
+	}
 }

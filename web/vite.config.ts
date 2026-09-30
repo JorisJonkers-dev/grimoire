@@ -13,6 +13,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['src/**/*.spec.ts'],
+    // Whole-app scenario tests mount the router and query client; under coverage they need headroom.
+    testTimeout: 15_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{ts,vue}'],

@@ -469,6 +469,20 @@ export const zTokenKind = z.enum([
 ]);
 
 /**
+ * One attack on a token's hotbar.
+ */
+export const zLiveAttack = z.object({
+    name: z.string().min(1).max(80),
+    toHit: z.int().gte(-10).lte(30),
+    reachFt: z.int().gte(0).lte(60),
+    rangeFt: z.int().gte(0).lte(10000),
+    longRangeFt: z.int().gte(0).lte(10000),
+    damage: z.string().max(40).optional(),
+    damageBonus: z.int().gte(-10).lte(50),
+    damageType: z.string().max(80).optional()
+});
+
+/**
  * A Token as a connection sees it.
  */
 export const zLiveToken = z.object({
@@ -479,7 +493,49 @@ export const zLiveToken = z.object({
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
     hidden: z.boolean(),
-    controllerId: zId.optional()
+    controllerId: zId.optional(),
+    ac: z.int().gte(0).lte(40).optional(),
+    hp: z.int().gte(0).lte(10000).optional(),
+    hpMax: z.int().gte(1).lte(10000).optional(),
+    health: z.enum([
+        'unhurt',
+        'hurt',
+        'bloodied',
+        'down'
+    ]).optional(),
+    attacks: z.array(zLiveAttack).max(50).optional()
+});
+
+/**
+ * What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
+ */
+export const zLiveAttackPreview = z.object({
+    tokenId: zId,
+    targetId: zId,
+    attackNo: z.int().gte(0).lte(50),
+    name: z.string().max(80),
+    hitChance: z.int().gte(0).lte(100),
+    mode: z.enum([
+        'normal',
+        'advantage',
+        'disadvantage'
+    ]),
+    damageMin: z.int().gte(0).lte(10000),
+    damageMax: z.int().gte(0).lte(10000),
+    critMax: z.int().gte(0).lte(10000),
+    reasons: z.array(z.string().max(200)).max(20)
+});
+
+/**
+ * An attack waiting on its attack or damage Roll Card.
+ */
+export const zLivePendingAttack = z.object({
+    attackerId: zId,
+    targetId: zId,
+    name: z.string().max(80),
+    stage: z.enum(['to_hit', 'damage']),
+    rollId: zId,
+    critical: z.boolean()
 });
 
 /**
@@ -532,7 +588,8 @@ export const zLiveCombatant = z.object({
 export const zLiveCombat = z.object({
     status: z.enum(['rolling', 'active']),
     round: z.int().gte(0).lte(100000),
-    combatants: z.array(zLiveCombatant).max(50)
+    combatants: z.array(zLiveCombatant).max(50),
+    attack: zLivePendingAttack.optional()
 });
 
 /**
@@ -552,54 +609,6 @@ export const zAmbientLight = z.enum([
     'dim',
     'dark'
 ]);
-
-/**
- * A WebSocket frame from a client to a live Session.
- */
-export const zLiveCommand = z.object({
-    nonce: z.string().min(1).max(64),
-    kind: z.enum([
-        'resync',
-        'place_token',
-        'move_token',
-        'set_token_hidden',
-        'remove_token',
-        'set_map',
-        'reveal_hexes',
-        'set_walls',
-        'place_light',
-        'remove_light',
-        'set_ambient',
-        'plan_walk',
-        'walk',
-        'start_combat',
-        'end_turn',
-        'spend',
-        'end_combat'
-    ]),
-    tokenId: zId.optional(),
-    label: z.string().max(40).optional(),
-    tokenKind: zTokenKind.optional(),
-    q: z.int().gte(-500).lte(500),
-    r: z.int().gte(-500).lte(500),
-    hidden: z.boolean(),
-    darkvisionFt: z.int().gte(0).lte(300).optional(),
-    mapId: zId.optional(),
-    hexes: z.array(zHexCoord).max(2000).optional(),
-    on: z.boolean().optional(),
-    lightId: zId.optional(),
-    brightFt: z.int().gte(0).lte(600).optional(),
-    dimFt: z.int().gte(0).lte(600).optional(),
-    ambient: zAmbientLight.optional(),
-    controllerId: zId.optional(),
-    combatants: z.array(zLiveCombatantSetup).max(50).optional(),
-    combatantId: zId.optional(),
-    resource: z.enum([
-        'action',
-        'bonus_action',
-        'reaction'
-    ]).optional()
-});
 
 /**
  * The active Map's picture and hex calibration.
@@ -651,7 +660,8 @@ export const zLiveUpdate = z.object({
         'view',
         'rejected',
         'ended',
-        'path'
+        'path',
+        'attack_preview'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
@@ -659,7 +669,8 @@ export const zLiveUpdate = z.object({
     session: zLiveSessionView.optional(),
     view: zLiveView.optional(),
     steps: z.array(zLiveView).max(60).optional(),
-    path: zLivePath.optional()
+    path: zLivePath.optional(),
+    preview: zLiveAttackPreview.optional()
 });
 
 /**
@@ -832,6 +843,61 @@ export const zArmorOptionItem = z.object({
 export const zSkillChoice = z.object({
     skill: zSlug,
     ability: zAbility
+});
+
+/**
+ * A WebSocket frame from a client to a live Session.
+ */
+export const zLiveCommand = z.object({
+    nonce: z.string().min(1).max(64),
+    kind: z.enum([
+        'resync',
+        'place_token',
+        'move_token',
+        'set_token_hidden',
+        'remove_token',
+        'set_map',
+        'reveal_hexes',
+        'set_walls',
+        'place_light',
+        'remove_light',
+        'set_ambient',
+        'plan_walk',
+        'walk',
+        'start_combat',
+        'end_turn',
+        'spend',
+        'end_combat',
+        'preview_attack',
+        'attack',
+        'undo_damage'
+    ]),
+    tokenId: zId.optional(),
+    label: z.string().max(40).optional(),
+    tokenKind: zTokenKind.optional(),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    hidden: z.boolean(),
+    darkvisionFt: z.int().gte(0).lte(300).optional(),
+    mapId: zId.optional(),
+    hexes: z.array(zHexCoord).max(2000).optional(),
+    on: z.boolean().optional(),
+    lightId: zId.optional(),
+    brightFt: z.int().gte(0).lte(600).optional(),
+    dimFt: z.int().gte(0).lte(600).optional(),
+    ambient: zAmbientLight.optional(),
+    controllerId: zId.optional(),
+    combatants: z.array(zLiveCombatantSetup).max(50).optional(),
+    combatantId: zId.optional(),
+    resource: z.enum([
+        'action',
+        'bonus_action',
+        'reaction'
+    ]).optional(),
+    monsterSlug: zSlug.optional(),
+    characterId: zId.optional(),
+    targetId: zId.optional(),
+    attackNo: z.int().gte(0).lte(50).optional()
 });
 
 /**
