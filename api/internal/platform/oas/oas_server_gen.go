@@ -20,24 +20,49 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns
 	CreateCampaign(ctx context.Context, req *CampaignCreate) (CreateCampaignRes, error)
+	// CreateCharacter implements createCharacter operation.
+	//
+	// Builds a first-level Character owned by the caller, validated against the campaign ruleset.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters
+	CreateCharacter(ctx context.Context, req *CharacterBuild, params CreateCharacterParams) (CreateCharacterRes, error)
 	// CreateInvite implements createInvite operation.
 	//
 	// Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// DeleteCharacter implements deleteCharacter operation.
+	//
+	// Removes a Character. The owner or a DM, never during Combat.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
+	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
 	// GetAutomationCoverage implements getAutomationCoverage operation.
 	//
 	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
 	//
 	// GET /api/v1/compendium/automation
 	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
+	// GetBuilderOptions implements getBuilderOptions operation.
+	//
+	// Every class, species, background, armour and weapon a first-level character can choose in one
+	// ruleset.
+	//
+	// GET /api/v1/compendium/builder
+	GetBuilderOptions(ctx context.Context, params GetBuilderOptionsParams) (GetBuilderOptionsRes, error)
 	// GetCampaign implements getCampaign operation.
 	//
 	// A Campaign's home with its settings, the caller's role and every Member. Members only.
 	//
 	// GET /api/v1/campaigns/{campaignId}
 	GetCampaign(ctx context.Context, params GetCampaignParams) (GetCampaignRes, error)
+	// GetCharacter implements getCharacter operation.
+	//
+	// A Character's sheet. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}
+	GetCharacter(ctx context.Context, params GetCharacterParams) (GetCharacterRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -80,6 +105,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns
 	ListCampaigns(ctx context.Context, params ListCampaignsParams) (ListCampaignsRes, error)
+	// ListCharacters implements listCharacters operation.
+	//
+	// The party's Characters. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters
+	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
 	// ListEntries implements listEntries operation.
 	//
 	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -105,6 +136,12 @@ type Handler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PreviewCharacter implements previewCharacter operation.
+	//
+	// Validates a build and returns the sheet it would make, without saving it.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/preview
+	PreviewCharacter(ctx context.Context, req *CharacterBuild, params PreviewCharacterParams) (PreviewCharacterRes, error)
 	// PreviewInvite implements previewInvite operation.
 	//
 	// Which Campaign an invite link leads to, before joining.
@@ -129,6 +166,12 @@ type Handler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}
 	UpdateCampaign(ctx context.Context, req *CampaignUpdate, params UpdateCampaignParams) (UpdateCampaignRes, error)
+	// UpdateCharacter implements updateCharacter operation.
+	//
+	// Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
+	//
+	// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
+	UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (UpdateCharacterRes, error)
 	// UpdateMember implements updateMember operation.
 	//
 	// Makes a Member a DM or a Player. DM only; the last DM cannot step down.

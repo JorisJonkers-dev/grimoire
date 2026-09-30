@@ -100,12 +100,16 @@ describe('campaign home', () => {
       [`/api/v1/campaigns/${ID}/invites`]: record((req) =>
         req.method === 'POST' ? { ...invite, token } : req.method === 'DELETE' ? new Response(null, { status: 204 }) : [invite],
       ),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [
+        { id: '0190c7a8-0000-7000-8000-000000000009', name: 'Kara', ownerName: 'Joris', mine: true, species: 'human', class: 'fighter', level: 1, hpCurrent: 12, hpMax: 12 },
+      ],
       [`/api/v1/campaigns/${ID}/members`]: record((req) =>
         req.method === 'DELETE' ? new Response(null, { status: 204 }) : { ...player, role: 'dm' },
       ),
       [`/api/v1/campaigns/${ID}`]: () => home('dm'),
     })
     expect(wrapper.get('h1').text()).toBe('Strahd')
+    expect(wrapper.get('[data-testid="party"]').text()).toContain('Kara (yours)')
     expect(wrapper.get('[data-testid="member-list"]').text()).toContain('Joris (you)')
     expect(wrapper.get('[data-testid="invite-list"]').text()).toContain('By Joris')
     await wrapper.get('[data-testid="create-invite"]').trigger('click')

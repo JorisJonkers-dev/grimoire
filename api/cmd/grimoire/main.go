@@ -164,6 +164,9 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Handler: &httpapi.Handler{
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())),
+			Characters: &campaignapp.Characters{
+				Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
+			},
 		},
 		DevSubject: cfg.DevSubject,
 		RateLimit:  cfg.RateLimit,

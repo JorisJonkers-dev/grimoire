@@ -256,6 +256,44 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/compendium/builder:
+    get:
+      operationId: getBuilderOptions
+      summary: Get character builder options
+      description: Every class, species, background, armour and weapon a first-level character can choose in one ruleset.
+      tags: [Compendium]
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+        - name: ruleset
+          in: query
+          required: true
+          description: The ruleset to build in.
+          schema: { $ref: "#/components/schemas/Ruleset" }
+      responses:
+        "200":
+          description: The options.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuilderOptions"
+        "304":
+          description: Not modified since the given ETag.
+          headers:
+            ETag:
+              $ref: "#/components/headers/ETag"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/compendium/sources:
     get:
       operationId: listSources
@@ -534,6 +572,179 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters:
+    get:
+      operationId: listCharacters
+      summary: List characters
+      description: The party's Characters. Members only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The characters.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/CharacterSummary"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createCharacter
+      summary: Create a character
+      description: Builds a first-level Character owned by the caller, validated against the campaign ruleset.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterBuild"
+      responses:
+        "201":
+          description: The new character.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/preview:
+    post:
+      operationId: previewCharacter
+      summary: Preview a character
+      description: Validates a build and returns the sheet it would make, without saving it.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterBuild"
+      responses:
+        "200":
+          description: The sheet.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}:
+    get:
+      operationId: getCharacter
+      summary: Get a character sheet
+      description: A Character's sheet. Members only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The sheet.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    patch:
+      operationId: updateCharacter
+      summary: Edit a character
+      description: Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterEdit"
+      responses:
+        "200":
+          description: The updated sheet.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteCharacter
+      summary: Delete a character
+      description: Removes a Character. The owner or a DM, never during Combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "204":
+          description: Deleted.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
@@ -695,6 +906,12 @@ components:
       in: path
       required: true
       description: Member id.
+      schema: { $ref: "#/components/schemas/Id" }
+    CharacterId:
+      name: characterId
+      in: path
+      required: true
+      description: Character id.
       schema: { $ref: "#/components/schemas/Id" }
     InviteId:
       name: inviteId
@@ -905,6 +1122,308 @@ components:
       properties:
         token: { $ref: "#/components/schemas/Token" }
         displayName: { $ref: "#/components/schemas/DisplayName" }
+    Ability:
+      type: string
+      description: One of the six abilities.
+      enum: [strength, dexterity, constitution, intelligence, wisdom, charisma]
+    AbilityBase:
+      type: object
+      description: Base ability scores before origin increases.
+      additionalProperties: false
+      required: [strength, dexterity, constitution, intelligence, wisdom, charisma]
+      properties:
+        strength: { type: integer, format: int32, minimum: 3, maximum: 18 }
+        dexterity: { type: integer, format: int32, minimum: 3, maximum: 18 }
+        constitution: { type: integer, format: int32, minimum: 3, maximum: 18 }
+        intelligence: { type: integer, format: int32, minimum: 3, maximum: 18 }
+        wisdom: { type: integer, format: int32, minimum: 3, maximum: 18 }
+        charisma: { type: integer, format: int32, minimum: 3, maximum: 18 }
+    AbilityBonus:
+      type: object
+      description: Origin ability increases, +2 and +1 or +1 to three abilities.
+      additionalProperties: false
+      properties:
+        strength: { type: integer, format: int32, minimum: 1, maximum: 2 }
+        dexterity: { type: integer, format: int32, minimum: 1, maximum: 2 }
+        constitution: { type: integer, format: int32, minimum: 1, maximum: 2 }
+        intelligence: { type: integer, format: int32, minimum: 1, maximum: 2 }
+        wisdom: { type: integer, format: int32, minimum: 1, maximum: 2 }
+        charisma: { type: integer, format: int32, minimum: 1, maximum: 2 }
+    CharacterName:
+      type: string
+      description: A Character's name.
+      minLength: 1
+      maxLength: 60
+    ArmorChoice:
+      type: string
+      description: Body armour slug, or empty for none.
+      maxLength: 80
+      pattern: "^([a-z0-9]+(-[a-z0-9]+)*)?$"
+    CharacterBuild:
+      type: object
+      description: The choices for a first-level Character.
+      additionalProperties: false
+      required: [name, species, class, background, method, base, bonus, skills, shield, weapons]
+      properties:
+        name: { $ref: "#/components/schemas/CharacterName" }
+        species: { $ref: "#/components/schemas/Slug" }
+        class: { $ref: "#/components/schemas/Slug" }
+        background: { $ref: "#/components/schemas/Slug" }
+        method: { type: string, enum: [standard-array, point-buy, rolled] }
+        base: { $ref: "#/components/schemas/AbilityBase" }
+        bonus: { $ref: "#/components/schemas/AbilityBonus" }
+        skills:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        armor: { $ref: "#/components/schemas/ArmorChoice" }
+        shield: { type: boolean }
+        weapons:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+    CharacterEdit:
+      type: object
+      description: Out-of-combat changes; omitted fields stay as they are.
+      additionalProperties: false
+      properties:
+        name: { $ref: "#/components/schemas/CharacterName" }
+        hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        armor: { $ref: "#/components/schemas/ArmorChoice" }
+        shield: { type: boolean }
+        weapons:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+    NamedRef:
+      type: object
+      description: A compendium entry by slug and name.
+      additionalProperties: false
+      required: [slug, name]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+    AbilityLine:
+      type: object
+      description: One ability on the sheet with its saving throw.
+      additionalProperties: false
+      required: [ability, score, modifier, save, saveProficient]
+      properties:
+        ability: { $ref: "#/components/schemas/Ability" }
+        score: { type: integer, format: int32, minimum: 1, maximum: 30 }
+        modifier: { type: integer, format: int32, minimum: -5, maximum: 10 }
+        save: { type: integer, format: int32, minimum: -5, maximum: 30 }
+        saveProficient: { type: boolean }
+    SkillLine:
+      type: object
+      description: One skill on the sheet.
+      additionalProperties: false
+      required: [skill, ability, bonus, proficient]
+      properties:
+        skill: { $ref: "#/components/schemas/Slug" }
+        ability: { $ref: "#/components/schemas/Ability" }
+        bonus: { type: integer, format: int32, minimum: -5, maximum: 30 }
+        proficient: { type: boolean }
+    ResourcePool:
+      type: object
+      description: A spendable pool such as hit dice or spell slots.
+      additionalProperties: false
+      required: [key, label, current, max]
+      properties:
+        key: { $ref: "#/components/schemas/Slug" }
+        label: { type: string, maxLength: 80 }
+        current: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        max: { type: integer, format: int32, minimum: 0, maximum: 100 }
+    WeaponLine:
+      type: object
+      description: A carried weapon.
+      additionalProperties: false
+      required: [slug, name, damageDice, damageType, rangeFeet, longRangeFeet]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        damageDice: { type: string, maxLength: 20 }
+        damageType: { type: string, maxLength: 40 }
+        rangeFeet: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        longRangeFeet: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+    ActiveEffect:
+      type: object
+      description: An Effect currently on the Character.
+      additionalProperties: false
+      required: [name, detail]
+      properties:
+        name: { type: string, maxLength: 120 }
+        detail: { type: string, maxLength: 500 }
+    CharacterSheet:
+      type: object
+      description: A Character's sheet with every value derived by the rules.
+      additionalProperties: false
+      required: [name, ruleset, level, ownerName, mine, editable, species, class, background, method, base, bonus, abilities, skills, classSkills, backgroundSkills, hpCurrent, hpMax, armorClass, initiative, speedFeet, proficiencyBonus, passivePerception, shield, weapons, resources, effects, warnings]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { $ref: "#/components/schemas/CharacterName" }
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        ownerName: { $ref: "#/components/schemas/DisplayName" }
+        mine: { type: boolean }
+        editable: { type: boolean }
+        species: { $ref: "#/components/schemas/NamedRef" }
+        class: { $ref: "#/components/schemas/NamedRef" }
+        background: { $ref: "#/components/schemas/NamedRef" }
+        method: { type: string, enum: [standard-array, point-buy, rolled] }
+        base: { $ref: "#/components/schemas/AbilityBase" }
+        bonus: { $ref: "#/components/schemas/AbilityBonus" }
+        abilities:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/AbilityLine" }
+        skills:
+          type: array
+          maxItems: 18
+          items: { $ref: "#/components/schemas/SkillLine" }
+        classSkills:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        backgroundSkills:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        armorClass: { type: integer, format: int32, minimum: 0, maximum: 50 }
+        initiative: { type: integer, format: int32, minimum: -5, maximum: 30 }
+        speedFeet: { type: integer, format: int32, minimum: 0, maximum: 200 }
+        proficiencyBonus: { type: integer, format: int32, minimum: 2, maximum: 6 }
+        passivePerception: { type: integer, format: int32, minimum: 0, maximum: 50 }
+        armor: { $ref: "#/components/schemas/NamedRef" }
+        shield: { type: boolean }
+        weapons:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/WeaponLine" }
+        resources:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/ResourcePool" }
+        effects:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/ActiveEffect" }
+        warnings:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 200 }
+    CharacterSummary:
+      type: object
+      description: A Character in the party list.
+      additionalProperties: false
+      required: [id, name, ownerName, mine, species, class, level, hpCurrent, hpMax]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { $ref: "#/components/schemas/CharacterName" }
+        ownerName: { $ref: "#/components/schemas/DisplayName" }
+        mine: { type: boolean }
+        species: { $ref: "#/components/schemas/Slug" }
+        class: { $ref: "#/components/schemas/Slug" }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+    ClassChoice:
+      type: object
+      description: A class and what it gives at level 1.
+      additionalProperties: false
+      required: [slug, name, hitDie, saves, skillChoices]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        hitDie: { type: integer, format: int32, minimum: 0, maximum: 12 }
+        saves:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/Ability" }
+        skillChoices: { type: integer, format: int32, minimum: 0, maximum: 6 }
+    SpeciesChoice:
+      type: object
+      description: A playable species.
+      additionalProperties: false
+      required: [slug, name, speedFeet]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        speedFeet: { type: integer, format: int32, minimum: 0, maximum: 200 }
+    BackgroundChoice:
+      type: object
+      description: A background and what it grants; empty abilities means a free choice.
+      additionalProperties: false
+      required: [slug, name, abilities, skills]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        abilities:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/Ability" }
+        skills:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/Slug" }
+    ArmorOptionItem:
+      type: object
+      description: A suit of armour or a shield.
+      additionalProperties: false
+      required: [slug, name, category, shield, acBase, addDex, strengthRequired, stealthDisadvantage]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        category: { type: string, maxLength: 40 }
+        shield: { type: boolean }
+        acBase: { type: integer, format: int32, minimum: 0, maximum: 30 }
+        addDex: { type: boolean }
+        dexCap: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        strengthRequired: { type: integer, format: int32, minimum: 0, maximum: 30 }
+        stealthDisadvantage: { type: boolean }
+    SkillChoice:
+      type: object
+      description: A skill and its ability.
+      additionalProperties: false
+      required: [skill, ability]
+      properties:
+        skill: { $ref: "#/components/schemas/Slug" }
+        ability: { $ref: "#/components/schemas/Ability" }
+    BuilderOptions:
+      type: object
+      description: What a first-level character can choose in one ruleset.
+      additionalProperties: false
+      required: [ruleset, rulesetYear, pointBuyBudget, classes, species, backgrounds, armor, weapons, skills]
+      properties:
+        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        rulesetYear: { type: integer, format: int32, minimum: 2000, maximum: 2100 }
+        pointBuyBudget: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        classes:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ClassChoice" }
+        species:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SpeciesChoice" }
+        backgrounds:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/BackgroundChoice" }
+        armor:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ArmorOptionItem" }
+        weapons:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/WeaponLine" }
+        skills:
+          type: array
+          maxItems: 18
+          items: { $ref: "#/components/schemas/SkillChoice" }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

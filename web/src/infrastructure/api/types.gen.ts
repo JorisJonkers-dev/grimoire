@@ -150,6 +150,251 @@ export type InviteAccept = {
 };
 
 /**
+ * One of the six abilities.
+ */
+export type Ability = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
+
+/**
+ * Base ability scores before origin increases.
+ */
+export type AbilityBase = {
+    strength: number;
+    dexterity: number;
+    constitution: number;
+    intelligence: number;
+    wisdom: number;
+    charisma: number;
+};
+
+/**
+ * Origin ability increases, +2 and +1 or +1 to three abilities.
+ */
+export type AbilityBonus = {
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+};
+
+/**
+ * A Character's name.
+ */
+export type CharacterName = string;
+
+/**
+ * Body armour slug, or empty for none.
+ */
+export type ArmorChoice = string;
+
+/**
+ * The choices for a first-level Character.
+ */
+export type CharacterBuild = {
+    name: CharacterName;
+    species: Slug;
+    class: Slug;
+    background: Slug;
+    method: 'standard-array' | 'point-buy' | 'rolled';
+    base: AbilityBase;
+    bonus: AbilityBonus;
+    skills: Array<Slug>;
+    armor?: ArmorChoice;
+    shield: boolean;
+    weapons: Array<Slug>;
+};
+
+/**
+ * Out-of-combat changes; omitted fields stay as they are.
+ */
+export type CharacterEdit = {
+    name?: CharacterName;
+    hpCurrent?: number;
+    armor?: ArmorChoice;
+    shield?: boolean;
+    weapons?: Array<Slug>;
+};
+
+/**
+ * A compendium entry by slug and name.
+ */
+export type NamedRef = {
+    slug: Slug;
+    name: string;
+};
+
+/**
+ * One ability on the sheet with its saving throw.
+ */
+export type AbilityLine = {
+    ability: Ability;
+    score: number;
+    modifier: number;
+    save: number;
+    saveProficient: boolean;
+};
+
+/**
+ * One skill on the sheet.
+ */
+export type SkillLine = {
+    skill: Slug;
+    ability: Ability;
+    bonus: number;
+    proficient: boolean;
+};
+
+/**
+ * A spendable pool such as hit dice or spell slots.
+ */
+export type ResourcePool = {
+    key: Slug;
+    label: string;
+    current: number;
+    max: number;
+};
+
+/**
+ * A carried weapon.
+ */
+export type WeaponLine = {
+    slug: Slug;
+    name: string;
+    damageDice: string;
+    damageType: string;
+    rangeFeet: number;
+    longRangeFeet: number;
+};
+
+/**
+ * An Effect currently on the Character.
+ */
+export type ActiveEffect = {
+    name: string;
+    detail: string;
+};
+
+/**
+ * A Character's sheet with every value derived by the rules.
+ */
+export type CharacterSheet = {
+    id?: Id;
+    name: CharacterName;
+    ruleset: Ruleset;
+    level: number;
+    ownerName: DisplayName;
+    mine: boolean;
+    editable: boolean;
+    species: NamedRef;
+    class: NamedRef;
+    background: NamedRef;
+    method: 'standard-array' | 'point-buy' | 'rolled';
+    base: AbilityBase;
+    bonus: AbilityBonus;
+    abilities: Array<AbilityLine>;
+    skills: Array<SkillLine>;
+    classSkills: Array<Slug>;
+    backgroundSkills: Array<Slug>;
+    hpCurrent: number;
+    hpMax: number;
+    armorClass: number;
+    initiative: number;
+    speedFeet: number;
+    proficiencyBonus: number;
+    passivePerception: number;
+    armor?: NamedRef;
+    shield: boolean;
+    weapons: Array<WeaponLine>;
+    resources: Array<ResourcePool>;
+    effects: Array<ActiveEffect>;
+    warnings: Array<string>;
+};
+
+/**
+ * A Character in the party list.
+ */
+export type CharacterSummary = {
+    id: Id;
+    name: CharacterName;
+    ownerName: DisplayName;
+    mine: boolean;
+    species: Slug;
+    class: Slug;
+    level: number;
+    hpCurrent: number;
+    hpMax: number;
+};
+
+/**
+ * A class and what it gives at level 1.
+ */
+export type ClassChoice = {
+    slug: Slug;
+    name: string;
+    hitDie: number;
+    saves: Array<Ability>;
+    skillChoices: number;
+};
+
+/**
+ * A playable species.
+ */
+export type SpeciesChoice = {
+    slug: Slug;
+    name: string;
+    speedFeet: number;
+};
+
+/**
+ * A background and what it grants; empty abilities means a free choice.
+ */
+export type BackgroundChoice = {
+    slug: Slug;
+    name: string;
+    abilities: Array<Ability>;
+    skills: Array<Slug>;
+};
+
+/**
+ * A suit of armour or a shield.
+ */
+export type ArmorOptionItem = {
+    slug: Slug;
+    name: string;
+    category: string;
+    shield: boolean;
+    acBase: number;
+    addDex: boolean;
+    dexCap?: number;
+    strengthRequired: number;
+    stealthDisadvantage: boolean;
+};
+
+/**
+ * A skill and its ability.
+ */
+export type SkillChoice = {
+    skill: Slug;
+    ability: Ability;
+};
+
+/**
+ * What a first-level character can choose in one ruleset.
+ */
+export type BuilderOptions = {
+    ruleset: Ruleset;
+    rulesetYear: number;
+    pointBuyBudget: number;
+    classes: Array<ClassChoice>;
+    species: Array<SpeciesChoice>;
+    backgrounds: Array<BackgroundChoice>;
+    armor: Array<ArmorOptionItem>;
+    weapons: Array<WeaponLine>;
+    skills: Array<SkillChoice>;
+};
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export type Slug = string;
@@ -352,6 +597,11 @@ export type CampaignId = Id;
  * Member id.
  */
 export type MemberId = Id;
+
+/**
+ * Character id.
+ */
+export type CharacterId = Id;
 
 /**
  * Invite id.
@@ -616,6 +866,46 @@ export type GetAutomationCoverageResponses = {
 };
 
 export type GetAutomationCoverageResponse = GetAutomationCoverageResponses[keyof GetAutomationCoverageResponses];
+
+export type GetBuilderOptionsData = {
+    body?: never;
+    headers?: {
+        /**
+         * ETag from an earlier response; the server answers 304 when nothing changed.
+         */
+        'If-None-Match'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * The ruleset to build in.
+         */
+        ruleset: Ruleset;
+    };
+    url: '/api/v1/compendium/builder';
+};
+
+export type GetBuilderOptionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetBuilderOptionsError = GetBuilderOptionsErrors[keyof GetBuilderOptionsErrors];
+
+export type GetBuilderOptionsResponses = {
+    /**
+     * The options.
+     */
+    200: BuilderOptions;
+};
+
+export type GetBuilderOptionsResponse = GetBuilderOptionsResponses[keyof GetBuilderOptionsResponses];
 
 export type ListSourcesData = {
     body?: never;
@@ -962,6 +1252,222 @@ export type RevokeInviteResponses = {
 };
 
 export type RevokeInviteResponse = RevokeInviteResponses[keyof RevokeInviteResponses];
+
+export type ListCharactersData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters';
+};
+
+export type ListCharactersErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCharactersError = ListCharactersErrors[keyof ListCharactersErrors];
+
+export type ListCharactersResponses = {
+    /**
+     * The characters.
+     */
+    200: Array<CharacterSummary>;
+};
+
+export type ListCharactersResponse = ListCharactersResponses[keyof ListCharactersResponses];
+
+export type CreateCharacterData = {
+    body: CharacterBuild;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters';
+};
+
+export type CreateCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateCharacterError = CreateCharacterErrors[keyof CreateCharacterErrors];
+
+export type CreateCharacterResponses = {
+    /**
+     * The new character.
+     */
+    201: CharacterSheet;
+};
+
+export type CreateCharacterResponse = CreateCharacterResponses[keyof CreateCharacterResponses];
+
+export type PreviewCharacterData = {
+    body: CharacterBuild;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/preview';
+};
+
+export type PreviewCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewCharacterError = PreviewCharacterErrors[keyof PreviewCharacterErrors];
+
+export type PreviewCharacterResponses = {
+    /**
+     * The sheet.
+     */
+    200: CharacterSheet;
+};
+
+export type PreviewCharacterResponse = PreviewCharacterResponses[keyof PreviewCharacterResponses];
+
+export type DeleteCharacterData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}';
+};
+
+export type DeleteCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteCharacterError = DeleteCharacterErrors[keyof DeleteCharacterErrors];
+
+export type DeleteCharacterResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteCharacterResponse = DeleteCharacterResponses[keyof DeleteCharacterResponses];
+
+export type GetCharacterData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}';
+};
+
+export type GetCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetCharacterError = GetCharacterErrors[keyof GetCharacterErrors];
+
+export type GetCharacterResponses = {
+    /**
+     * The sheet.
+     */
+    200: CharacterSheet;
+};
+
+export type GetCharacterResponse = GetCharacterResponses[keyof GetCharacterResponses];
+
+export type UpdateCharacterData = {
+    body: CharacterEdit;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}';
+};
+
+export type UpdateCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateCharacterError = UpdateCharacterErrors[keyof UpdateCharacterErrors];
+
+export type UpdateCharacterResponses = {
+    /**
+     * The updated sheet.
+     */
+    200: CharacterSheet;
+};
+
+export type UpdateCharacterResponse = UpdateCharacterResponses[keyof UpdateCharacterResponses];
 
 export type PreviewInviteData = {
     body: InviteToken;

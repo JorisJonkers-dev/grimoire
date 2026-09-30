@@ -20,10 +20,14 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
-func campaignServer(t *testing.T, c httpapi.Campaigns) http.Handler {
+func campaignServer(t *testing.T, c httpapi.Campaigns, chars ...httpapi.CharacterService) http.Handler {
 	t.Helper()
+	var cs httpapi.CharacterService
+	if len(chars) > 0 {
+		cs = chars[0]
+	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
@@ -39,7 +43,8 @@ func realCampaigns(t *testing.T) http.Handler {
 		t.Fatal(err)
 	}
 	t.Cleanup(store.Close)
-	return campaignServer(t, app.NewService(campaignpg.New(store.Pool())))
+	repo := campaignpg.New(store.Pool())
+	return campaignServer(t, app.NewService(repo), &app.Characters{Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Now: time.Now})
 }
 
 func call(h http.Handler, method, path, subject, body string) *httptest.ResponseRecorder {

@@ -166,3 +166,62 @@ type AutomationCount struct {
 	Partial int
 	Manual  int
 }
+
+// ClassOption is a class a first-level character can take.
+type ClassOption struct {
+	Slug   string
+	Name   string
+	HitDie int
+	Saves  []string
+}
+
+// SpeciesOption is a playable species.
+type SpeciesOption struct {
+	Slug      string
+	Name      string
+	SpeedFeet int
+}
+
+// BackgroundOption is a background and what it grants. Abilities is empty where the ruleset lets
+// the player choose freely.
+type BackgroundOption struct {
+	Slug      string
+	Name      string
+	Abilities []string
+	Skills    []string
+}
+
+// ArmorOption is a suit of armour or a shield. DexCap is negative when uncapped.
+type ArmorOption struct {
+	Slug             string
+	Name             string
+	Category         string
+	Shield           bool
+	ACBase           int
+	AddDex           bool
+	DexCap           int
+	StrengthRequired int
+	Stealth          bool
+}
+
+// WeaponOption is a weapon a character can start with.
+type WeaponOption struct {
+	Slug          string
+	Name          string
+	DamageDice    string
+	DamageType    string
+	Simple        bool
+	RangeFeet     int
+	LongRangeFeet int
+}
+
+// BuilderOptions is everything the character builder offers for one ruleset.
+type BuilderOptions struct {
+	Ruleset     string
+	RulesetYear int
+	Classes     []ClassOption
+	Species     []SpeciesOption
+	Backgrounds []BackgroundOption
+	Armor       []ArmorOption
+	Weapons     []WeaponOption
+}

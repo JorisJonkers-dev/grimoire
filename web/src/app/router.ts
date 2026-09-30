@@ -11,6 +11,8 @@ const AutomationPage = () => import('@/features/compendium/AutomationPage.vue')
 const CampaignListPage = () => import('@/features/campaigns/CampaignListPage.vue')
 const CampaignHomePage = () => import('@/features/campaigns/CampaignHomePage.vue')
 const JoinPage = () => import('@/features/campaigns/JoinPage.vue')
+const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilderPage.vue')
+const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
 
 export function createAppRouter(history: RouterHistory = createWebHistory()) {
   return createRouter({
@@ -26,6 +28,8 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/about/automation', name: 'automation', component: AutomationPage },
       { path: '/campaigns', name: 'campaigns', component: CampaignListPage },
       { path: '/campaigns/:id', name: 'campaign', component: CampaignHomePage },
+      { path: '/campaigns/:id/characters/new', name: 'character-new', component: CharacterBuilderPage },
+      { path: '/campaigns/:id/characters/:characterId', name: 'character', component: CharacterSheetPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
     ],

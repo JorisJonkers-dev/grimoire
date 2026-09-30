@@ -169,3 +169,17 @@ func TestEntryReadsFailWhenDatabaseIsGone(t *testing.T) {
 		t.Error("coverage")
 	}
 }
+
+func TestBuilderOptionsFromSample(t *testing.T) {
+	t.Parallel()
+	o, err := entryStore(t).BuilderOptions(context.Background(), "srd-2024")
+	if err != nil || len(o.Classes) != 1 || o.Classes[0].HitDie != 10 || len(o.Classes[0].Saves) != 2 {
+		t.Fatalf("classes = %+v %v", o.Classes, err)
+	}
+	if o.Species[0].SpeedFeet != 30 || len(o.Backgrounds[0].Skills) != 0 || o.Armor[0].DexCap != -1 || o.Armor[1].DexCap != 2 {
+		t.Fatalf("options = %+v", o)
+	}
+	if o.Weapons[0].Slug != "club" || o.Weapons[1].DamageType != "fire" {
+		t.Fatalf("weapons = %+v", o.Weapons)
+	}
+}

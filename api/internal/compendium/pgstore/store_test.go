@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"strings"
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/db"
@@ -210,5 +211,39 @@ func TestEmbeddedSnapshotImports(t *testing.T) {
 	fireball, err := s.GetSpell(ctx, "fireball", "")
 	if err != nil || fireball.Ruleset != "srd-2024" || fireball.Level != 3 || len(fireball.Scaling) == 0 {
 		t.Fatalf("fireball = %+v %v", fireball.SpellSummary, err)
+	}
+	assertBuilderOptions(t, s)
+}
+
+func assertBuilderOptions(t *testing.T, s *pgstore.Store) {
+	t.Helper()
+	ctx := context.Background()
+	o, err := s.BuilderOptions(ctx, "srd-2024")
+	if err != nil || o.RulesetYear != 2024 || len(o.Classes) != 12 || len(o.Backgrounds) != 4 || len(o.Weapons) == 0 {
+		t.Fatalf("2024 options = %d classes %d backgrounds %v", len(o.Classes), len(o.Backgrounds), err)
+	}
+	acolyte := o.Backgrounds[0]
+	if acolyte.Slug != "acolyte" || strings.Join(acolyte.Abilities, ",") != "intelligence,wisdom,charisma" ||
+		strings.Join(acolyte.Skills, ",") != "insight,religion" {
+		t.Fatalf("acolyte = %+v", acolyte)
+	}
+	shield := false
+	for _, a := range o.Armor {
+		shield = shield || (a.Shield && a.ACBase == 2)
+	}
+	if !shield {
+		t.Fatalf("no shield in %+v", o.Armor)
+	}
+	old, err := s.BuilderOptions(ctx, "srd-2014")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, sp := range old.Species {
+		if sp.Slug == "dwarf" && sp.SpeedFeet != 25 {
+			t.Fatalf("2014 dwarf speed = %d", sp.SpeedFeet)
+		}
+	}
+	if _, err := s.BuilderOptions(ctx, "homebrew"); !errors.Is(err, compendium.ErrNotFound) {
+		t.Fatalf("unknown ruleset: %v", err)
 	}
 }

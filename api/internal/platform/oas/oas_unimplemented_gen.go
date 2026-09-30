@@ -31,12 +31,30 @@ func (UnimplementedHandler) CreateCampaign(ctx context.Context, req *CampaignCre
 	return r, ht.ErrNotImplemented
 }
 
+// CreateCharacter implements createCharacter operation.
+//
+// Builds a first-level Character owned by the caller, validated against the campaign ruleset.
+//
+// POST /api/v1/campaigns/{campaignId}/characters
+func (UnimplementedHandler) CreateCharacter(ctx context.Context, req *CharacterBuild, params CreateCharacterParams) (r CreateCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateInvite implements createInvite operation.
 //
 // Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/invites
 func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInviteParams) (r CreateInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteCharacter implements deleteCharacter operation.
+//
+// Removes a Character. The owner or a DM, never during Combat.
+//
+// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
+func (UnimplementedHandler) DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (r DeleteCharacterRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -49,12 +67,31 @@ func (UnimplementedHandler) GetAutomationCoverage(ctx context.Context, params Ge
 	return r, ht.ErrNotImplemented
 }
 
+// GetBuilderOptions implements getBuilderOptions operation.
+//
+// Every class, species, background, armour and weapon a first-level character can choose in one
+// ruleset.
+//
+// GET /api/v1/compendium/builder
+func (UnimplementedHandler) GetBuilderOptions(ctx context.Context, params GetBuilderOptionsParams) (r GetBuilderOptionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetCampaign implements getCampaign operation.
 //
 // A Campaign's home with its settings, the caller's role and every Member. Members only.
 //
 // GET /api/v1/campaigns/{campaignId}
 func (UnimplementedHandler) GetCampaign(ctx context.Context, params GetCampaignParams) (r GetCampaignRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetCharacter implements getCharacter operation.
+//
+// A Character's sheet. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}
+func (UnimplementedHandler) GetCharacter(ctx context.Context, params GetCharacterParams) (r GetCharacterRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -121,6 +158,15 @@ func (UnimplementedHandler) ListCampaigns(ctx context.Context, params ListCampai
 	return r, ht.ErrNotImplemented
 }
 
+// ListCharacters implements listCharacters operation.
+//
+// The party's Characters. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/characters
+func (UnimplementedHandler) ListCharacters(ctx context.Context, params ListCharactersParams) (r ListCharactersRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListEntries implements listEntries operation.
 //
 // Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -158,6 +204,15 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewCharacter implements previewCharacter operation.
+//
+// Validates a build and returns the sheet it would make, without saving it.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/preview
+func (UnimplementedHandler) PreviewCharacter(ctx context.Context, req *CharacterBuild, params PreviewCharacterParams) (r PreviewCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewInvite implements previewInvite operation.
 //
 // Which Campaign an invite link leads to, before joining.
@@ -191,6 +246,15 @@ func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInvit
 //
 // PATCH /api/v1/campaigns/{campaignId}
 func (UnimplementedHandler) UpdateCampaign(ctx context.Context, req *CampaignUpdate, params UpdateCampaignParams) (r UpdateCampaignRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateCharacter implements updateCharacter operation.
+//
+// Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
+//
+// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
+func (UnimplementedHandler) UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (r UpdateCharacterRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

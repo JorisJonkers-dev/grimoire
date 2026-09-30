@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses } from './types.gen';
-import { zAcceptInviteBody, zAcceptInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateInvitePath, zCreateInviteResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetCampaignPath, zGetCampaignResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListCampaignsQuery, zListCampaignsResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRevokeInvitePath, zRevokeInviteResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse } from './zod.gen';
+import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses } from './types.gen';
+import { zAcceptInviteBody, zAcceptInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateInvitePath, zCreateInviteResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRevokeInvitePath, zRevokeInviteResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -108,6 +108,24 @@ export const getAutomationCoverage = <ThrowOnError extends boolean = false>(opti
     responseValidator: async (data) => await zGetAutomationCoverageResponse.parseAsync(data),
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/compendium/automation',
+    ...options
+});
+
+/**
+ * Get character builder options
+ *
+ * Every class, species, background, armour and weapon a first-level character can choose in one ruleset.
+ */
+export const getBuilderOptions = <ThrowOnError extends boolean = false>(options: Options<GetBuilderOptionsData, ThrowOnError>): RequestResult<GetBuilderOptionsResponses, GetBuilderOptionsErrors, ThrowOnError> => (options.client ?? client).get<GetBuilderOptionsResponses, GetBuilderOptionsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        headers: zGetBuilderOptionsHeaders.optional(),
+        path: z.never().optional(),
+        query: zGetBuilderOptionsQuery
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetBuilderOptionsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/compendium/builder',
     ...options
 });
 
@@ -291,6 +309,120 @@ export const revokeInvite = <ThrowOnError extends boolean = false>(options: Opti
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/campaigns/{campaignId}/invites/{inviteId}',
     ...options
+});
+
+/**
+ * List characters
+ *
+ * The party's Characters. Members only.
+ */
+export const listCharacters = <ThrowOnError extends boolean = false>(options: Options<ListCharactersData, ThrowOnError>): RequestResult<ListCharactersResponses, ListCharactersErrors, ThrowOnError> => (options.client ?? client).get<ListCharactersResponses, ListCharactersErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zListCharactersPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListCharactersResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters',
+    ...options
+});
+
+/**
+ * Create a character
+ *
+ * Builds a first-level Character owned by the caller, validated against the campaign ruleset.
+ */
+export const createCharacter = <ThrowOnError extends boolean = false>(options: Options<CreateCharacterData, ThrowOnError>): RequestResult<CreateCharacterResponses, CreateCharacterErrors, ThrowOnError> => (options.client ?? client).post<CreateCharacterResponses, CreateCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateCharacterBody,
+        path: zCreateCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Preview a character
+ *
+ * Validates a build and returns the sheet it would make, without saving it.
+ */
+export const previewCharacter = <ThrowOnError extends boolean = false>(options: Options<PreviewCharacterData, ThrowOnError>): RequestResult<PreviewCharacterResponses, PreviewCharacterErrors, ThrowOnError> => (options.client ?? client).post<PreviewCharacterResponses, PreviewCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zPreviewCharacterBody,
+        path: zPreviewCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zPreviewCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/preview',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a character
+ *
+ * Removes a Character. The owner or a DM, never during Combat.
+ */
+export const deleteCharacter = <ThrowOnError extends boolean = false>(options: Options<DeleteCharacterData, ThrowOnError>): RequestResult<DeleteCharacterResponses, DeleteCharacterErrors, ThrowOnError> => (options.client ?? client).delete<DeleteCharacterResponses, DeleteCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zDeleteCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zDeleteCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}',
+    ...options
+});
+
+/**
+ * Get a character sheet
+ *
+ * A Character's sheet. Members only.
+ */
+export const getCharacter = <ThrowOnError extends boolean = false>(options: Options<GetCharacterData, ThrowOnError>): RequestResult<GetCharacterResponses, GetCharacterErrors, ThrowOnError> => (options.client ?? client).get<GetCharacterResponses, GetCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}',
+    ...options
+});
+
+/**
+ * Edit a character
+ *
+ * Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
+ */
+export const updateCharacter = <ThrowOnError extends boolean = false>(options: Options<UpdateCharacterData, ThrowOnError>): RequestResult<UpdateCharacterResponses, UpdateCharacterErrors, ThrowOnError> => (options.client ?? client).patch<UpdateCharacterResponses, UpdateCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUpdateCharacterBody,
+        path: zUpdateCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUpdateCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

@@ -20,6 +20,44 @@ type CampaignCampaign struct {
 	UpdatedAt   time.Time
 }
 
+type CampaignCharacter struct {
+	ID             uuid.UUID
+	CampaignID     uuid.UUID
+	OwnerMemberID  uuid.UUID
+	Name           string
+	Ruleset        string
+	SpeciesSlug    string
+	ClassSlug      string
+	BackgroundSlug string
+	Level          int32
+	AbilityMethod  string
+	HpMax          int32
+	HpCurrent      int32
+	ArmorSlug      pgtype.Text
+	Shield         bool
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+type CampaignCharacterAbility struct {
+	CharacterID uuid.UUID
+	Ability     string
+	Base        int32
+	Bonus       int32
+}
+
+type CampaignCharacterSkill struct {
+	CharacterID uuid.UUID
+	Skill       string
+	Source      string
+}
+
+type CampaignCharacterWeapon struct {
+	CharacterID uuid.UUID
+	WeaponSlug  string
+	Ordering    int32
+}
+
 type CampaignInvite struct {
 	ID         uuid.UUID
 	CampaignID uuid.UUID

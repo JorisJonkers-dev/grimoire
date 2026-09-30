@@ -34,6 +34,7 @@ type Campaigns interface {
 
 // campaignProblem maps a use-case error to a problem; anything unexpected is logged and hidden.
 func (h *Handler) campaignProblem(ctx context.Context, op string, err error) *oas.ProblemStatusCodeWithHeaders {
+	var rule *app.RuleError
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		return problem(http.StatusNotFound, "Not found", "No such campaign, member or invite.")
@@ -41,8 +42,12 @@ func (h *Handler) campaignProblem(ctx context.Context, op string, err error) *oa
 		return problem(http.StatusForbidden, "Forbidden", "Only the DM can do that.")
 	case errors.Is(err, domain.ErrConflict):
 		return problem(http.StatusConflict, "Conflict", "A campaign needs at least one DM.")
+	case errors.As(err, &rule):
+		return problem(http.StatusUnprocessableEntity, "Not allowed by the rules", rule.Reason)
 	case errors.Is(err, domain.ErrInvalid):
 		return problem(http.StatusUnprocessableEntity, "Invalid", "Check the values and try again.")
+	case errors.Is(err, domain.ErrLocked):
+		return problem(http.StatusConflict, "In combat", "Characters cannot be edited during combat.")
 	default:
 		h.Log.ErrorContext(ctx, op, "error", err)
 		return unavailable()
