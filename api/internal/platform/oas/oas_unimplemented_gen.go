@@ -67,6 +67,15 @@ func (UnimplementedHandler) CreateNpc(ctx context.Context, req *NpcInput, params
 	return r, ht.ErrNotImplemented
 }
 
+// CreateRoll implements createRoll operation.
+//
+// Opens a Roll Request for the caller, or, from a DM, for another Member.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls
+func (UnimplementedHandler) CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (r CreateRollRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteCharacter implements deleteCharacter operation.
 //
 // Removes a Character. The owner or a DM, never during Combat.
@@ -91,6 +100,15 @@ func (UnimplementedHandler) DeleteNpc(ctx context.Context, params DeleteNpcParam
 //
 // GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (r DiffNpcRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetActionLog implements getActionLog operation.
+//
+// The Campaign's recent Actions with their seeds. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/log
+func (UnimplementedHandler) GetActionLog(ctx context.Context, params GetActionLogParams) (r GetActionLogRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -185,6 +203,15 @@ func (UnimplementedHandler) GetReadiness(ctx context.Context) (r GetReadinessRes
 	return r, ht.ErrNotImplemented
 }
 
+// GetRoll implements getRoll operation.
+//
+// One Roll Request with every die. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
+func (UnimplementedHandler) GetRoll(ctx context.Context, params GetRollParams) (r GetRollRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -276,6 +303,15 @@ func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams)
 	return r, ht.ErrNotImplemented
 }
 
+// ListRolls implements listRolls operation.
+//
+// Recent Roll Requests in the Campaign. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/rolls
+func (UnimplementedHandler) ListRolls(ctx context.Context, params ListRollsParams) (r ListRollsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListSources implements listSources operation.
 //
 // The documents the compendium draws from, with the attribution each license requires.
@@ -337,6 +373,25 @@ func (UnimplementedHandler) RestoreNpcRevision(ctx context.Context, params Resto
 //
 // DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInviteParams) (r RevokeInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RollRest implements rollRest operation.
+//
+// The server rolls every die still empty. The roller or a DM.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
+func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams) (r RollRestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetDie implements setDie operation.
+//
+// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
+// or a DM; the last die resolves the request.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
+func (UnimplementedHandler) SetDie(ctx context.Context, req *DieFill, params SetDieParams) (r SetDieRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -74,6 +74,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: task coverage
 
+      - name: Mutation testing (rules engine)
+        if: ${{ !cancelled() }}
+        run: task mutation
+
       - name: Web unit tests and coverage
         if: ${{ !cancelled() }}
         run: task test:web

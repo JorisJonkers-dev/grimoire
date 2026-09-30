@@ -81,10 +81,17 @@ tasks:
     cmd: pnpm --filter @grimoire/web test
 
   coverage:
-    desc: Enforce Go coverage thresholds (95% total, 100% rules); web thresholds live in vite.config.ts
+    desc: Enforce Go coverage thresholds (98% total, 100% rules); web thresholds live in vite.config.ts
     dir: api
     deps: [test:go]
     cmd: go-test-coverage --config .testcoverage.yml
+
+  mutation:
+    desc: Mutation testing (gremlins) on the rules engine; every mutant must be killed
+    dir: api
+    cmds:
+      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules
+      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/dice
 
   build:
     desc: Build the API binary and the web app

@@ -13,6 +13,7 @@ import (
 
 type Querier interface {
 	AbilityIDBySlug(ctx context.Context, slug string) (int64, error)
+	ActionLog(ctx context.Context, arg ActionLogParams) ([]ActionLogRow, error)
 	AddBackgroundBenefit(ctx context.Context, arg AddBackgroundBenefitParams) error
 	AddCharacterSkill(ctx context.Context, arg AddCharacterSkillParams) error
 	AddCharacterWeapon(ctx context.Context, arg AddCharacterWeaponParams) error
@@ -76,13 +77,20 @@ type Querier interface {
 	GetMonsterDetail(ctx context.Context, id int64) (GetMonsterDetailRow, error)
 	GetNPC(ctx context.Context, arg GetNPCParams) (GetNPCRow, error)
 	GetNPCRevision(ctx context.Context, arg GetNPCRevisionParams) (GetNPCRevisionRow, error)
+	GetRoll(ctx context.Context, arg GetRollParams) (PlayRollRequest, error)
 	GetSpeciesDetail(ctx context.Context, id int64) (GetSpeciesDetailRow, error)
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
+	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
+	InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error)
+	InsertRollDie(ctx context.Context, arg InsertRollDieParams) error
+	InsertRollEvent(ctx context.Context, arg InsertRollEventParams) error
+	InsertRollLabel(ctx context.Context, arg InsertRollLabelParams) error
+	InsertRollModifier(ctx context.Context, arg InsertRollModifierParams) error
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
@@ -91,23 +99,32 @@ type Querier interface {
 	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
 	ListNPCs(ctx context.Context, campaignID uuid.UUID) ([]ListNPCsRow, error)
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
+	ListRolls(ctx context.Context, arg ListRollsParams) ([]uuid.UUID, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
+	LockCampaignLog(ctx context.Context, lockKey string) error
 	LockEntity(ctx context.Context, lockKey string) error
+	LockRoll(ctx context.Context, arg LockRollParams) (string, error)
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
 	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
+	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
+	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
+	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
+	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
+	RollModifiers(ctx context.Context, rollID uuid.UUID) ([]RollModifiersRow, error)
 	RulesetYear(ctx context.Context, key string) (int32, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
+	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)

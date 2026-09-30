@@ -2,19 +2,20 @@
 package domain
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 )
 
 // Errors every campaign use case reports; adapters map each to one transport status.
 var (
-	ErrNotFound  = errors.New("not found")
-	ErrForbidden = errors.New("forbidden")
-	ErrConflict  = errors.New("conflict")
-	ErrInvalid   = errors.New("invalid")
-	ErrLocked    = errors.New("locked")
+	ErrNotFound  = apperr.ErrNotFound
+	ErrForbidden = apperr.ErrForbidden
+	ErrConflict  = apperr.ErrConflict
+	ErrInvalid   = apperr.ErrInvalid
+	ErrLocked    = apperr.ErrLocked
 )
 
 type (

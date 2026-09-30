@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, createNpc, deleteCharacter, deleteNpc, diffNpcRevisions, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getNpc, getPortrait, getReadiness, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEntries, listInvites, listNpcRevisions, listNpcs, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, restoreNpcRevision, revokeInvite, setPortrait, setTokenIcon, updateCampaign, updateCharacter, updateMember, updateNpc } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse } from '../types.gen';
+import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, createNpc, createRoll, deleteCharacter, deleteNpc, diffNpcRevisions, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getNpc, getPortrait, getReadiness, getRoll, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEntries, listInvites, listNpcRevisions, listNpcs, listRolls, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, restoreNpcRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, updateCampaign, updateCharacter, updateMember, updateNpc } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -866,6 +866,123 @@ export const restoreNpcRevisionMutation = (options?: Partial<Options<RestoreNpcR
     };
     return mutationOptions;
 };
+
+export const listRollsQueryKey = (options: Options<ListRollsData>) => createQueryKey('listRolls', options);
+
+/**
+ * List roll requests
+ *
+ * Recent Roll Requests in the Campaign. Members only.
+ */
+export const listRollsOptions = (options: Options<ListRollsData>) => queryOptions<ListRollsResponse, ListRollsError, ListRollsResponse, ReturnType<typeof listRollsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listRolls({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listRollsQueryKey(options)
+});
+
+/**
+ * Request a roll
+ *
+ * Opens a Roll Request for the caller, or, from a DM, for another Member.
+ */
+export const createRollMutation = (options?: Partial<Options<CreateRollData>>): UseMutationOptions<CreateRollResponse, CreateRollError, Options<CreateRollData>> => {
+    const mutationOptions: UseMutationOptions<CreateRollResponse, CreateRollError, Options<CreateRollData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createRoll({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getRollQueryKey = (options: Options<GetRollData>) => createQueryKey('getRoll', options);
+
+/**
+ * Get a roll request
+ *
+ * One Roll Request with every die. Members only.
+ */
+export const getRollOptions = (options: Options<GetRollData>) => queryOptions<GetRollResponse, GetRollError, GetRollResponse, ReturnType<typeof getRollQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getRoll({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getRollQueryKey(options)
+});
+
+/**
+ * Roll or enter one die
+ *
+ * The server rolls the die from a logged seed, or takes the face read off a physical die. The roller or a DM; the last die resolves the request.
+ */
+export const setDieMutation = (options?: Partial<Options<SetDieData>>): UseMutationOptions<SetDieResponse, SetDieError, Options<SetDieData>> => {
+    const mutationOptions: UseMutationOptions<SetDieResponse, SetDieError, Options<SetDieData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setDie({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Roll the rest
+ *
+ * The server rolls every die still empty. The roller or a DM.
+ */
+export const rollRestMutation = (options?: Partial<Options<RollRestData>>): UseMutationOptions<RollRestResponse, RollRestError, Options<RollRestData>> => {
+    const mutationOptions: UseMutationOptions<RollRestResponse, RollRestError, Options<RollRestData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rollRest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getActionLogQueryKey = (options: Options<GetActionLogData>) => createQueryKey('getActionLog', options);
+
+/**
+ * Read the Action Log
+ *
+ * The Campaign's recent Actions with their seeds. DM only.
+ */
+export const getActionLogOptions = (options: Options<GetActionLogData>) => queryOptions<GetActionLogResponse, GetActionLogError, GetActionLogResponse, ReturnType<typeof getActionLogQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getActionLog({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getActionLogQueryKey(options)
+});
 
 /**
  * Preview an invite

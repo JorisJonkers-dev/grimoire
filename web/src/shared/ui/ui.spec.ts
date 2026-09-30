@@ -123,7 +123,7 @@ describe('ReactionTimer', () => {
 
 describe('DieFace', () => {
   it('draws each die with its face and state', async () => {
-    for (const sides of [4, 6, 8, 20] as const) {
+    for (const sides of [4, 6, 8, 10, 12, 20, 100] as const) {
       const w = mount(DieFace, { ...attach, props: { sides, value: 3 } })
       expect(w.attributes('aria-label')).toBe(`d${String(sides)} showing 3`)
       expect(w.get('text').text()).toBe('3')

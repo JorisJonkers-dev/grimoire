@@ -17,7 +17,11 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
+	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
+	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -25,8 +29,11 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	t.Helper()
 	var cs httpapi.CharacterService
 	var ns httpapi.NPCService
+	var rs httpapi.RollService
 	for _, e := range extra {
 		switch v := e.(type) {
+		case httpapi.RollService:
+			rs = v
 		case httpapi.CharacterService:
 			cs = v
 		case httpapi.NPCService:
@@ -34,7 +41,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
@@ -53,7 +60,10 @@ func realCampaigns(t *testing.T) http.Handler {
 	repo := campaignpg.New(store.Pool())
 	return campaignServer(t, app.NewService(repo), &app.Characters{
 		Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
-	}, &app.NPCs{Repo: repo, Now: time.Now})
+	}, &app.NPCs{Repo: repo, Now: time.Now}, httpapi.RollService(&playapp.Rolls{
+		Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo},
+		Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,
+	}))
 }
 
 func call(h http.Handler, method, path, subject, body string) *httptest.ResponseRecorder {

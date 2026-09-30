@@ -25,6 +25,10 @@ type CreateNpcRes interface {
 	createNpcRes()
 }
 
+type CreateRollRes interface {
+	createRollRes()
+}
+
 type DeleteCharacterRes interface {
 	deleteCharacterRes()
 }
@@ -35,6 +39,10 @@ type DeleteNpcRes interface {
 
 type DiffNpcRevisionsRes interface {
 	diffNpcRevisionsRes()
+}
+
+type GetActionLogRes interface {
+	getActionLogRes()
 }
 
 type GetAutomationCoverageRes interface {
@@ -77,6 +85,10 @@ type GetReadinessRes interface {
 	getReadinessRes()
 }
 
+type GetRollRes interface {
+	getRollRes()
+}
+
 type GetSpellRes interface {
 	getSpellRes()
 }
@@ -117,6 +129,10 @@ type ListNpcsRes interface {
 	listNpcsRes()
 }
 
+type ListRollsRes interface {
+	listRollsRes()
+}
+
 type ListSourcesRes interface {
 	listSourcesRes()
 }
@@ -143,6 +159,14 @@ type RestoreNpcRevisionRes interface {
 
 type RevokeInviteRes interface {
 	revokeInviteRes()
+}
+
+type RollRestRes interface {
+	rollRestRes()
+}
+
+type SetDieRes interface {
+	setDieRes()
 }
 
 type SetPortraitRes interface {

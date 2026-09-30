@@ -463,6 +463,110 @@ export type FieldChange = {
 };
 
 /**
+ * A named flat bonus or penalty.
+ */
+export type RollModifier = {
+    label: string;
+    value: number;
+};
+
+/**
+ * Why a group of dice is thrown, such as Bless.
+ */
+export type GroupLabel = {
+    group: number;
+    label: string;
+};
+
+/**
+ * What to roll and why.
+ */
+export type RollCreate = {
+    purpose: string;
+    notation: string;
+    labels?: Array<GroupLabel>;
+    modifiers?: Array<RollModifier>;
+    rollerId?: Id;
+};
+
+/**
+ * Roll the die on the server, or enter the face of a physical die.
+ */
+export type DieFill = {
+    mode: 'auto' | 'manual';
+    value?: number;
+};
+
+/**
+ * A group of identical dice and which of them count.
+ */
+export type DiceGroup = {
+    index: number;
+    label?: string;
+    count: number;
+    faces: number;
+    sign: number;
+    keep?: 'highest' | 'lowest';
+    keepCount?: number;
+};
+
+/**
+ * One die of a Roll Request.
+ */
+export type RollDie = {
+    no: number;
+    group: number;
+    faces: number;
+    value?: number;
+    mode?: 'auto' | 'manual';
+    kept: boolean;
+};
+
+/**
+ * A Member by id and name.
+ */
+export type MemberRef = {
+    id: Id;
+    name: DisplayName;
+};
+
+/**
+ * A Roll Request with exactly what to throw and every modifier source.
+ */
+export type RollRequest = {
+    id: Id;
+    purpose: string;
+    notation: string;
+    requestedBy: DisplayName;
+    roller: MemberRef;
+    mine: boolean;
+    canRoll: boolean;
+    status: 'pending' | 'resolved';
+    total?: number;
+    groups: Array<DiceGroup>;
+    dice: Array<RollDie>;
+    modifiers: Array<RollModifier>;
+    createdAt: string;
+    resolvedAt?: string;
+};
+
+/**
+ * One entry of the Action Log.
+ */
+export type ActionEntry = {
+    seq: number;
+    kind: 'roll_requested' | 'die_rolled' | 'die_entered' | 'roll_resolved';
+    actor: DisplayName;
+    origin: 'ui' | 'mcp' | 'generator' | 'system';
+    client?: string;
+    seed?: string;
+    rollId?: Id;
+    dieNo?: number;
+    value: number;
+    createdAt: string;
+};
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export type Slug = string;
@@ -670,6 +774,11 @@ export type MemberId = Id;
  * Character id.
  */
 export type CharacterId = Id;
+
+/**
+ * Roll Request id.
+ */
+export type RollId = Id;
 
 /**
  * NPC id.
@@ -2079,6 +2188,236 @@ export type RestoreNpcRevisionResponses = {
 };
 
 export type RestoreNpcRevisionResponse = RestoreNpcRevisionResponses[keyof RestoreNpcRevisionResponses];
+
+export type ListRollsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: {
+        /**
+         * How many to return, newest first.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/campaigns/{campaignId}/rolls';
+};
+
+export type ListRollsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRollsError = ListRollsErrors[keyof ListRollsErrors];
+
+export type ListRollsResponses = {
+    /**
+     * The rolls.
+     */
+    200: Array<RollRequest>;
+};
+
+export type ListRollsResponse = ListRollsResponses[keyof ListRollsResponses];
+
+export type CreateRollData = {
+    body: RollCreate;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls';
+};
+
+export type CreateRollErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateRollError = CreateRollErrors[keyof CreateRollErrors];
+
+export type CreateRollResponses = {
+    /**
+     * The new request.
+     */
+    201: RollRequest;
+};
+
+export type CreateRollResponse = CreateRollResponses[keyof CreateRollResponses];
+
+export type GetRollData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}';
+};
+
+export type GetRollErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetRollError = GetRollErrors[keyof GetRollErrors];
+
+export type GetRollResponses = {
+    /**
+     * The request.
+     */
+    200: RollRequest;
+};
+
+export type GetRollResponse = GetRollResponses[keyof GetRollResponses];
+
+export type SetDieData = {
+    body: DieFill;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+        /**
+         * Which die, counting from 0.
+         */
+        dieNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}';
+};
+
+export type SetDieErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetDieError = SetDieErrors[keyof SetDieErrors];
+
+export type SetDieResponses = {
+    /**
+     * The request after the die.
+     */
+    200: RollRequest;
+};
+
+export type SetDieResponse = SetDieResponses[keyof SetDieResponses];
+
+export type RollRestData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/rest';
+};
+
+export type RollRestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RollRestError = RollRestErrors[keyof RollRestErrors];
+
+export type RollRestResponses = {
+    /**
+     * The resolved request.
+     */
+    200: RollRequest;
+};
+
+export type RollRestResponse = RollRestResponses[keyof RollRestResponses];
+
+export type GetActionLogData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: {
+        /**
+         * How many to return, newest first.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/campaigns/{campaignId}/log';
+};
+
+export type GetActionLogErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetActionLogError = GetActionLogErrors[keyof GetActionLogErrors];
+
+export type GetActionLogResponses = {
+    /**
+     * The actions.
+     */
+    200: Array<ActionEntry>;
+};
+
+export type GetActionLogResponse = GetActionLogResponses[keyof GetActionLogResponses];
 
 export type PreviewInviteData = {
     body: InviteToken;

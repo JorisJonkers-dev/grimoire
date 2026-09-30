@@ -44,6 +44,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
+	// CreateRoll implements createRoll operation.
+	//
+	// Opens a Roll Request for the caller, or, from a DM, for another Member.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls
+	CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (CreateRollRes, error)
 	// DeleteCharacter implements deleteCharacter operation.
 	//
 	// Removes a Character. The owner or a DM, never during Combat.
@@ -62,6 +68,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// GetActionLog implements getActionLog operation.
+	//
+	// The Campaign's recent Actions with their seeds. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/log
+	GetActionLog(ctx context.Context, params GetActionLogParams) (GetActionLogRes, error)
 	// GetAutomationCoverage implements getAutomationCoverage operation.
 	//
 	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
@@ -123,6 +135,12 @@ type Handler interface {
 	//
 	// GET /readyz
 	GetReadiness(ctx context.Context) (GetReadinessRes, error)
+	// GetRoll implements getRoll operation.
+	//
+	// One Roll Request with every die. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
+	GetRoll(ctx context.Context, params GetRollParams) (GetRollRes, error)
 	// GetSpell implements getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
@@ -184,6 +202,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs
 	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListRolls implements listRolls operation.
+	//
+	// Recent Roll Requests in the Campaign. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rolls
+	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
 	// ListSources implements listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.
@@ -227,6 +251,19 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
+	// RollRest implements rollRest operation.
+	//
+	// The server rolls every die still empty. The roller or a DM.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
+	RollRest(ctx context.Context, params RollRestParams) (RollRestRes, error)
+	// SetDie implements setDie operation.
+	//
+	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
+	// or a DM; the last die resolves the request.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
+	SetDie(ctx context.Context, req *DieFill, params SetDieParams) (SetDieRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.

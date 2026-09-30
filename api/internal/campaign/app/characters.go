@@ -9,6 +9,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -63,16 +64,9 @@ func invalid(err error) error {
 }
 
 // RuleError is a build the rules refuse, with a reason for the player.
-type RuleError struct {
-	Reason string
-}
+type RuleError = apperr.RuleError
 
-func (e *RuleError) Error() string { return e.Reason }
-
-// Unwrap lets callers match RuleError as domain.ErrInvalid.
-func (e *RuleError) Unwrap() error { return domain.ErrInvalid }
-
-func refuse(reason string) error { return &RuleError{Reason: reason} }
+func refuse(reason string) error { return apperr.Refuse(reason) }
 
 func find[T any](list []T, match func(T) bool) (T, bool) {
 	for _, x := range list {
