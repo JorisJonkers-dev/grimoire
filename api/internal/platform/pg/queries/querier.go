@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -41,11 +42,13 @@ type Querier interface {
 	BuilderSpecies(ctx context.Context, key string) ([]BuilderSpeciesRow, error)
 	BuilderWeapons(ctx context.Context, key string) ([]BuilderWeaponsRow, error)
 	BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, error)
+	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
 	CharacterWeapons(ctx context.Context, characterID uuid.UUID) ([]string, error)
 	ClassFeatures(ctx context.Context, classID int64) ([]ClassFeaturesRow, error)
 	ClassSaves(ctx context.Context, classID int64) ([]string, error)
+	ClearAttacks(ctx context.Context, combatID uuid.UUID) error
 	ClearBackgroundBenefits(ctx context.Context, backgroundID int64) error
 	ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error
 	ClearClassChildren(ctx context.Context, classID int64) error
@@ -54,6 +57,7 @@ type Querier interface {
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
 	ClearWeaponProperties(ctx context.Context, weaponID int64) error
+	CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAttack, error)
 	CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]PlayCombatant, error)
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
@@ -92,6 +96,7 @@ type Querier interface {
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
+	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
 	InsertLight(ctx context.Context, arg InsertLightParams) error
 	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
@@ -106,7 +111,9 @@ type Querier interface {
 	InsertSession(ctx context.Context, arg InsertSessionParams) (PlaySession, error)
 	InsertSessionAction(ctx context.Context, arg InsertSessionActionParams) (uuid.UUID, error)
 	InsertToken(ctx context.Context, arg InsertTokenParams) error
+	InsertTokenAttack(ctx context.Context, arg InsertTokenAttackParams) error
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
+	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
@@ -129,7 +136,9 @@ type Querier interface {
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
+	MonsterAttackRows(ctx context.Context, monsterID int64) ([]MonsterAttackRowsRow, error)
 	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
+	MonsterStatblock(ctx context.Context, arg MonsterStatblockParams) (MonsterStatblockRow, error)
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
@@ -146,9 +155,11 @@ type Querier interface {
 	RollModifiers(ctx context.Context, rollID uuid.UUID) ([]RollModifiersRow, error)
 	RulesetYear(ctx context.Context, key string) (int32, error)
 	RunningCombat(ctx context.Context, sessionID uuid.UUID) (PlayCombat, error)
+	SaveAttack(ctx context.Context, arg SaveAttackParams) error
 	SaveCombat(ctx context.Context, arg SaveCombatParams) error
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
+	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
@@ -157,6 +168,7 @@ type Querier interface {
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
+	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)

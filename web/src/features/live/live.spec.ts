@@ -335,6 +335,112 @@ describe('combat', () => {
   })
 })
 
+describe('attacks', () => {
+  const sword = { name: 'Scimitar', toHit: 4, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d6', damageBonus: 2, damageType: 'slashing' }
+  const slam = { name: 'Slam', toHit: 4, reachFt: 0, rangeFt: 20, longRangeFt: 60, damageBonus: 3 }
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id, ac: 16, hp: 12, hpMax: 12, attacks: [sword] }
+  const boss: LiveToken = { ...goblin, ac: 15, hp: 7, hpMax: 7, attacks: [sword, slam] }
+  const fighter = (t: LiveToken, extra: Record<string, unknown> = {}) => ({
+    id: `${t.id.slice(0, -3)}1${t.id.slice(-2)}`, tokenId: t.id, label: t.label, kind: t.kind, controllerId: t.controllerId,
+    rollId: `${t.id.slice(0, -3)}2${t.id.slice(-2)}`, initiative: 10, rank: 1, acting: false, done: false, action: true, bonusAction: true,
+    reaction: true, movementFt: 30, speedFt: 30, ...extra,
+  })
+  const pendingRoll = (id: string) => ({
+    id, purpose: 'Scimitar attack against Aria', notation: '1d20', requestedBy: 'Joris', roller: { id: member.id, name: 'Joris' }, mine: true, canRoll: true,
+    status: 'pending', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }], dice: [{ no: 0, group: 0, faces: 20, kept: false }],
+    modifiers: [{ label: 'Scimitar', value: 4 }], createdAt: '2026-09-30T20:00:00Z',
+  })
+  const characterSummary = { id: '0190c7a8-0000-7000-8000-000000000031', name: 'Mira', ownerName: 'Aria', mine: false, species: 'human', class: 'fighter', level: 1, hpCurrent: 12, hpMax: 12 }
+
+  it('lets the DM aim a creature, preview the odds, attack and undo', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pendingRoll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [characterSummary],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const active = (extra: Record<string, unknown> = {}) => ({ status: 'active', round: 1, combatants: [fighter(boss, { acting: true }), fighter(aria)], ...extra })
+    s.receive(snapshot([aria, boss], 'dm', { combat: active() }))
+    await flushPromises()
+    expect(wrapper.text()).toContain('Aria (12/12 HP)')
+    const bar = wrapper.get('[data-testid="hotbar-Goblin Boss"]')
+    expect(bar.get('[data-testid="attack-0"]').text()).toContain('+4 · 1d6+2 · reach 5 ft')
+    expect(bar.get('[data-testid="attack-1"]').text()).toContain('+4 · 3 · range 20/60 ft')
+    await bar.get('[data-testid="attack-0"]').trigger('click')
+    await bar.get('[data-testid="attack-0"]').trigger('click')
+    expect(wrapper.find('[data-testid="hotbar-Goblin Boss"] [role="status"]').exists()).toBe(false)
+    await bar.get('[data-testid="attack-0"]').trigger('click')
+    expect(bar.text()).toContain('Tap a creature to aim.')
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'preview_attack', tokenId: boss.id, attackNo: 0, targetId: aria.id })
+    const preview = { tokenId: boss.id, targetId: aria.id, attackNo: 0, name: 'Scimitar', hitChance: 45, mode: 'normal', damageMin: 3, damageMax: 8, critMax: 14, reasons: ['Scimitar: +4 to hit'] }
+    s.receive({ kind: 'attack_preview', seq: 1, preview: { ...preview, attackNo: 1 } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="attack-preview"]').exists()).toBe(false)
+    s.receive({ kind: 'attack_preview', seq: 1, preview })
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="attack-preview"]')
+    expect(panel.get('h2').text()).toBe('Scimitar against Aria')
+    expect(panel.get('[data-testid="hit-chance"]').text()).toBe('45% to hit')
+    expect(panel.get('[data-testid="damage-range"]').text()).toBe('3–8 damage')
+    expect(panel.text()).toContain('critical up to 14')
+    await expectAccessible(wrapper.element as Element)
+    await panel.get('[data-testid="cancel-attack"]').trigger('click')
+    expect(wrapper.find('[data-testid="attack-preview"]').exists()).toBe(false)
+    await bar.get('[data-testid="attack-0"]').trigger('click')
+    s.receive({ kind: 'attack_preview', seq: 1, preview: { ...preview, targetId: '0190c7a8-0000-7000-8000-000000000099' } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="attack-preview"] h2').text()).toBe('Scimitar against the target')
+    s.receive({ kind: 'attack_preview', seq: 1, preview })
+    await flushPromises()
+    await wrapper.get('[data-testid="confirm-attack"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'attack', tokenId: boss.id, attackNo: 0, targetId: aria.id })
+    const attack = { attackerId: boss.id, targetId: aria.id, name: 'Scimitar', stage: 'to_hit', rollId: '0190c7a8-0000-7000-8000-000000000041', critical: false }
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat: active({ attack, combatants: [fighter(boss, { acting: true, action: false }), fighter(aria)] }) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="pending-attack"]').text()).toBe('Scimitar: waiting for the attack roll.')
+    expect(wrapper.get('[data-testid="roll-card"]').text()).toContain('Scimitar attack against Aria')
+    expect(wrapper.get('[data-testid="hotbar-blocked"]').text()).toBe('An attack is waiting on its roll.')
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [{ ...aria, hp: 5 }, boss], fog: false, visible: [], remembered: [], combat: active({ attack: { ...attack, stage: 'damage', critical: true }, combatants: [fighter(boss, { acting: true, action: false }), fighter(aria)] }) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="pending-attack"]').text()).toBe('Scimitar (critical): waiting for the damage roll.')
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (5/12 HP)')
+    s.receive({ kind: 'view', seq: 4, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat: active({ combatants: [fighter(boss, { acting: true, action: false }), fighter(aria)] }) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="hotbar-blocked"]').text()).toBe('The action is used this turn.')
+    await wrapper.get('[data-testid="undo-damage"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'undo_damage' })
+    await wrapper.get('[data-testid="token-monster"]').setValue('goblin')
+    await wrapper.get('[data-hex="1,-1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', monsterSlug: 'goblin', label: '' })
+    await wrapper.get('[data-testid="token-character"]').setValue(characterSummary.id)
+    await wrapper.get('[data-hex="-1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', characterId: characterSummary.id })
+    expect(s.sent.at(-1)).not.toHaveProperty('monsterSlug')
+  })
+
+  it('shows a player their hotbar, the roll for their attack and only the health of monsters', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pendingRoll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    const orc: LiveToken = { ...goblin, label: 'Orc', health: 'bloodied' }
+    const attack = { attackerId: aria.id, targetId: orc.id, name: 'Scimitar', stage: 'to_hit', rollId: '0190c7a8-0000-7000-8000-000000000042', critical: false }
+    s.receive(snapshot([aria, orc], 'party', { combat: { status: 'active', round: 1, combatants: [fighter(aria, { acting: true }), fighter(orc)], attack } }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('Orc (bloodied)')
+    expect(wrapper.find('[data-testid="hotbar-Aria"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="roll-card"]').text()).toContain('Scimitar attack')
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, orc], fog: false, visible: [], remembered: [], combat: { status: 'active', round: 1, combatants: [fighter(aria), fighter(orc, { acting: true })], attack: { ...attack, attackerId: orc.id } } } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="roll-card"]').exists()).toBe(false)
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [aria], fog: false, visible: [], remembered: [], combat: { status: 'active', round: 1, combatants: [fighter(aria)], attack: { ...attack, attackerId: orc.id } } } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="roll-card"]').exists()).toBe(false)
+  })
+})
+
 describe('map geometry', () => {
   it('lists the hexes whose centres fall inside the picture', () => {
     const l = layoutOf(localMap)

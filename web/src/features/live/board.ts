@@ -13,6 +13,12 @@ export function hexes(radius: number): Coord[] {
   return out
 }
 
+/** A token as the screen reader and the token list name it, with what its audience knows of its health. */
+export function describe(t: LiveToken): string {
+  const health = t.hp !== undefined && t.hpMax !== undefined ? ` (${String(t.hp)}/${String(t.hpMax)} HP)` : t.health ? ` (${t.health})` : ''
+  return `${t.label}${t.hidden ? ' (hidden)' : ''}${health}`
+}
+
 export function initials(label: string): string {
   return label
     .split(/\s+/)
@@ -31,6 +37,6 @@ export function board(radius: number, tokens: LiveToken[], selected: string | nu
     const t = at.get(k)
     if (!t) return route.has(k) ? { ...c, tone: 'path', label: 'on the path' } : c
     const tone = t.hidden ? 'hidden' : t.kind === 'party' ? 'ally' : t.kind
-    return { ...c, tone: t.id === selected ? 'selected' : tone, label: `${t.label}${t.hidden ? ' (hidden)' : ''}`, mark: initials(t.label) }
+    return { ...c, tone: t.id === selected ? 'selected' : tone, label: describe(t), mark: initials(t.label) }
   })
 }

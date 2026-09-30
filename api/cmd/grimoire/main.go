@@ -175,17 +175,18 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		}
 	}
 
-	hub := &live.Hub{Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger}
+	characters := &campaignapp.Characters{
+		Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
+		Blobs: blobs(cfg, logger),
+	}
+	hub := &live.Hub{Store: playpg.New(store.Pool()), Stats: playpg.Statblocks{Store: playpg.New(store.Pool()), Characters: characters}, Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger}
 	defer hub.Shutdown()
 	handler, err := httpapi.New(httpapi.Options{
 		Handler: &httpapi.Handler{
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
-			Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())),
-			Characters: &campaignapp.Characters{
-				Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
-				Blobs: blobs(cfg, logger),
-			},
-			NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
+			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
+			Characters: characters,
+			NPCs:       &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			Sessions: &playapp.Sessions{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},

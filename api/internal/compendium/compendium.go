@@ -213,6 +213,7 @@ type WeaponOption struct {
 	Simple        bool
 	RangeFeet     int
 	LongRangeFeet int
+	Properties    []string
 }
 
 // BuilderOptions is everything the character builder offers for one ruleset.

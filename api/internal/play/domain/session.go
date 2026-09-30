@@ -51,7 +51,39 @@ type Token struct {
 	DarkvisionFt int
 	// Controller is the member who may walk the token besides the DM.
 	Controller *uuid.UUID
+	// Stats is the statblock a token fights with; nil for markers and objects.
+	Stats *Stats
 }
+
+// Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.
+type Stats struct {
+	Source  string
+	AC      int
+	HP      int
+	HPMax   int
+	Attacks []Attack
+}
+
+// Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.
+type Attack struct {
+	Name        string
+	ToHit       int
+	ReachFt     int
+	RangeFt     int
+	LongRangeFt int
+	Damage      string
+	DamageBonus int
+	DamageType  string
+}
+
+// Attack action kinds in the Action Log.
+const (
+	ActionAttackDeclared = "attack_declared"
+	ActionAttackMissed   = "attack_missed"
+	ActionAttackHit      = "attack_hit"
+	ActionDamageDealt    = "damage_dealt"
+	ActionDamageUndone   = "damage_undone"
+)
 
 // Token action kinds in the Action Log.
 const (

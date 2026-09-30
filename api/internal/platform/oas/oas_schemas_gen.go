@@ -5219,13 +5219,271 @@ func (s *ListSpellsNotModified) SetETag(val OptString) {
 
 func (*ListSpellsNotModified) listSpellsRes() {}
 
+// One attack on a token's hotbar.
+// Ref: #/components/schemas/LiveAttack
+type LiveAttack struct {
+	Name        string    `json:"name"`
+	ToHit       int32     `json:"toHit"`
+	ReachFt     int32     `json:"reachFt"`
+	RangeFt     int32     `json:"rangeFt"`
+	LongRangeFt int32     `json:"longRangeFt"`
+	Damage      OptString `json:"damage"`
+	DamageBonus int32     `json:"damageBonus"`
+	DamageType  OptString `json:"damageType"`
+}
+
+// GetName returns the value of Name.
+func (s *LiveAttack) GetName() string {
+	return s.Name
+}
+
+// GetToHit returns the value of ToHit.
+func (s *LiveAttack) GetToHit() int32 {
+	return s.ToHit
+}
+
+// GetReachFt returns the value of ReachFt.
+func (s *LiveAttack) GetReachFt() int32 {
+	return s.ReachFt
+}
+
+// GetRangeFt returns the value of RangeFt.
+func (s *LiveAttack) GetRangeFt() int32 {
+	return s.RangeFt
+}
+
+// GetLongRangeFt returns the value of LongRangeFt.
+func (s *LiveAttack) GetLongRangeFt() int32 {
+	return s.LongRangeFt
+}
+
+// GetDamage returns the value of Damage.
+func (s *LiveAttack) GetDamage() OptString {
+	return s.Damage
+}
+
+// GetDamageBonus returns the value of DamageBonus.
+func (s *LiveAttack) GetDamageBonus() int32 {
+	return s.DamageBonus
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *LiveAttack) GetDamageType() OptString {
+	return s.DamageType
+}
+
+// SetName sets the value of Name.
+func (s *LiveAttack) SetName(val string) {
+	s.Name = val
+}
+
+// SetToHit sets the value of ToHit.
+func (s *LiveAttack) SetToHit(val int32) {
+	s.ToHit = val
+}
+
+// SetReachFt sets the value of ReachFt.
+func (s *LiveAttack) SetReachFt(val int32) {
+	s.ReachFt = val
+}
+
+// SetRangeFt sets the value of RangeFt.
+func (s *LiveAttack) SetRangeFt(val int32) {
+	s.RangeFt = val
+}
+
+// SetLongRangeFt sets the value of LongRangeFt.
+func (s *LiveAttack) SetLongRangeFt(val int32) {
+	s.LongRangeFt = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *LiveAttack) SetDamage(val OptString) {
+	s.Damage = val
+}
+
+// SetDamageBonus sets the value of DamageBonus.
+func (s *LiveAttack) SetDamageBonus(val int32) {
+	s.DamageBonus = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *LiveAttack) SetDamageType(val OptString) {
+	s.DamageType = val
+}
+
+// What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name
+// every source behind it.
+// Ref: #/components/schemas/LiveAttackPreview
+type LiveAttackPreview struct {
+	TokenId   ID                    `json:"tokenId"`
+	TargetId  ID                    `json:"targetId"`
+	AttackNo  int32                 `json:"attackNo"`
+	Name      string                `json:"name"`
+	HitChance int32                 `json:"hitChance"`
+	Mode      LiveAttackPreviewMode `json:"mode"`
+	DamageMin int32                 `json:"damageMin"`
+	DamageMax int32                 `json:"damageMax"`
+	CritMax   int32                 `json:"critMax"`
+	Reasons   []string              `json:"reasons"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveAttackPreview) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetTargetId returns the value of TargetId.
+func (s *LiveAttackPreview) GetTargetId() ID {
+	return s.TargetId
+}
+
+// GetAttackNo returns the value of AttackNo.
+func (s *LiveAttackPreview) GetAttackNo() int32 {
+	return s.AttackNo
+}
+
+// GetName returns the value of Name.
+func (s *LiveAttackPreview) GetName() string {
+	return s.Name
+}
+
+// GetHitChance returns the value of HitChance.
+func (s *LiveAttackPreview) GetHitChance() int32 {
+	return s.HitChance
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveAttackPreview) GetMode() LiveAttackPreviewMode {
+	return s.Mode
+}
+
+// GetDamageMin returns the value of DamageMin.
+func (s *LiveAttackPreview) GetDamageMin() int32 {
+	return s.DamageMin
+}
+
+// GetDamageMax returns the value of DamageMax.
+func (s *LiveAttackPreview) GetDamageMax() int32 {
+	return s.DamageMax
+}
+
+// GetCritMax returns the value of CritMax.
+func (s *LiveAttackPreview) GetCritMax() int32 {
+	return s.CritMax
+}
+
+// GetReasons returns the value of Reasons.
+func (s *LiveAttackPreview) GetReasons() []string {
+	return s.Reasons
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveAttackPreview) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetTargetId sets the value of TargetId.
+func (s *LiveAttackPreview) SetTargetId(val ID) {
+	s.TargetId = val
+}
+
+// SetAttackNo sets the value of AttackNo.
+func (s *LiveAttackPreview) SetAttackNo(val int32) {
+	s.AttackNo = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveAttackPreview) SetName(val string) {
+	s.Name = val
+}
+
+// SetHitChance sets the value of HitChance.
+func (s *LiveAttackPreview) SetHitChance(val int32) {
+	s.HitChance = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveAttackPreview) SetMode(val LiveAttackPreviewMode) {
+	s.Mode = val
+}
+
+// SetDamageMin sets the value of DamageMin.
+func (s *LiveAttackPreview) SetDamageMin(val int32) {
+	s.DamageMin = val
+}
+
+// SetDamageMax sets the value of DamageMax.
+func (s *LiveAttackPreview) SetDamageMax(val int32) {
+	s.DamageMax = val
+}
+
+// SetCritMax sets the value of CritMax.
+func (s *LiveAttackPreview) SetCritMax(val int32) {
+	s.CritMax = val
+}
+
+// SetReasons sets the value of Reasons.
+func (s *LiveAttackPreview) SetReasons(val []string) {
+	s.Reasons = val
+}
+
+type LiveAttackPreviewMode string
+
+const (
+	LiveAttackPreviewModeNormal       LiveAttackPreviewMode = "normal"
+	LiveAttackPreviewModeAdvantage    LiveAttackPreviewMode = "advantage"
+	LiveAttackPreviewModeDisadvantage LiveAttackPreviewMode = "disadvantage"
+)
+
+// AllValues returns all LiveAttackPreviewMode values.
+func (LiveAttackPreviewMode) AllValues() []LiveAttackPreviewMode {
+	return []LiveAttackPreviewMode{
+		LiveAttackPreviewModeNormal,
+		LiveAttackPreviewModeAdvantage,
+		LiveAttackPreviewModeDisadvantage,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveAttackPreviewMode) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveAttackPreviewModeNormal:
+		return []byte(s), nil
+	case LiveAttackPreviewModeAdvantage:
+		return []byte(s), nil
+	case LiveAttackPreviewModeDisadvantage:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveAttackPreviewMode) UnmarshalText(data []byte) error {
+	switch LiveAttackPreviewMode(data) {
+	case LiveAttackPreviewModeNormal:
+		*s = LiveAttackPreviewModeNormal
+		return nil
+	case LiveAttackPreviewModeAdvantage:
+		*s = LiveAttackPreviewModeAdvantage
+		return nil
+	case LiveAttackPreviewModeDisadvantage:
+		*s = LiveAttackPreviewModeDisadvantage
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share
 // a rank and act at the same time.
 // Ref: #/components/schemas/LiveCombat
 type LiveCombat struct {
-	Status     LiveCombatStatus `json:"status"`
-	Round      int32            `json:"round"`
-	Combatants []LiveCombatant  `json:"combatants"`
+	Status     LiveCombatStatus     `json:"status"`
+	Round      int32                `json:"round"`
+	Combatants []LiveCombatant      `json:"combatants"`
+	Attack     OptLivePendingAttack `json:"attack"`
 }
 
 // GetStatus returns the value of Status.
@@ -5243,6 +5501,11 @@ func (s *LiveCombat) GetCombatants() []LiveCombatant {
 	return s.Combatants
 }
 
+// GetAttack returns the value of Attack.
+func (s *LiveCombat) GetAttack() OptLivePendingAttack {
+	return s.Attack
+}
+
 // SetStatus sets the value of Status.
 func (s *LiveCombat) SetStatus(val LiveCombatStatus) {
 	s.Status = val
@@ -5256,6 +5519,11 @@ func (s *LiveCombat) SetRound(val int32) {
 // SetCombatants sets the value of Combatants.
 func (s *LiveCombat) SetCombatants(val []LiveCombatant) {
 	s.Combatants = val
+}
+
+// SetAttack sets the value of Attack.
+func (s *LiveCombat) SetAttack(val OptLivePendingAttack) {
+	s.Attack = val
 }
 
 type LiveCombatStatus string
@@ -5530,6 +5798,10 @@ type LiveCommand struct {
 	Combatants   []LiveCombatantSetup   `json:"combatants"`
 	CombatantId  OptID                  `json:"combatantId"`
 	Resource     OptLiveCommandResource `json:"resource"`
+	MonsterSlug  OptSlug                `json:"monsterSlug"`
+	CharacterId  OptID                  `json:"characterId"`
+	TargetId     OptID                  `json:"targetId"`
+	AttackNo     OptInt32               `json:"attackNo"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -5632,6 +5904,26 @@ func (s *LiveCommand) GetResource() OptLiveCommandResource {
 	return s.Resource
 }
 
+// GetMonsterSlug returns the value of MonsterSlug.
+func (s *LiveCommand) GetMonsterSlug() OptSlug {
+	return s.MonsterSlug
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveCommand) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetTargetId returns the value of TargetId.
+func (s *LiveCommand) GetTargetId() OptID {
+	return s.TargetId
+}
+
+// GetAttackNo returns the value of AttackNo.
+func (s *LiveCommand) GetAttackNo() OptInt32 {
+	return s.AttackNo
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -5732,6 +6024,26 @@ func (s *LiveCommand) SetResource(val OptLiveCommandResource) {
 	s.Resource = val
 }
 
+// SetMonsterSlug sets the value of MonsterSlug.
+func (s *LiveCommand) SetMonsterSlug(val OptSlug) {
+	s.MonsterSlug = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveCommand) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetTargetId sets the value of TargetId.
+func (s *LiveCommand) SetTargetId(val OptID) {
+	s.TargetId = val
+}
+
+// SetAttackNo sets the value of AttackNo.
+func (s *LiveCommand) SetAttackNo(val OptInt32) {
+	s.AttackNo = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -5752,6 +6064,9 @@ const (
 	LiveCommandKindEndTurn        LiveCommandKind = "end_turn"
 	LiveCommandKindSpend          LiveCommandKind = "spend"
 	LiveCommandKindEndCombat      LiveCommandKind = "end_combat"
+	LiveCommandKindPreviewAttack  LiveCommandKind = "preview_attack"
+	LiveCommandKindAttack         LiveCommandKind = "attack"
+	LiveCommandKindUndoDamage     LiveCommandKind = "undo_damage"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -5774,6 +6089,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindEndTurn,
 		LiveCommandKindSpend,
 		LiveCommandKindEndCombat,
+		LiveCommandKindPreviewAttack,
+		LiveCommandKindAttack,
+		LiveCommandKindUndoDamage,
 	}
 }
 
@@ -5813,6 +6131,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindSpend:
 		return []byte(s), nil
 	case LiveCommandKindEndCombat:
+		return []byte(s), nil
+	case LiveCommandKindPreviewAttack:
+		return []byte(s), nil
+	case LiveCommandKindAttack:
+		return []byte(s), nil
+	case LiveCommandKindUndoDamage:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5872,6 +6196,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindEndCombat:
 		*s = LiveCommandKindEndCombat
+		return nil
+	case LiveCommandKindPreviewAttack:
+		*s = LiveCommandKindPreviewAttack
+		return nil
+	case LiveCommandKindAttack:
+		*s = LiveCommandKindAttack
+		return nil
+	case LiveCommandKindUndoDamage:
+		*s = LiveCommandKindUndoDamage
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -6131,6 +6464,118 @@ func (s *LivePath) SetCostFt(val int32) {
 	s.CostFt = val
 }
 
+// An attack waiting on its attack or damage Roll Card.
+// Ref: #/components/schemas/LivePendingAttack
+type LivePendingAttack struct {
+	AttackerId ID                     `json:"attackerId"`
+	TargetId   ID                     `json:"targetId"`
+	Name       string                 `json:"name"`
+	Stage      LivePendingAttackStage `json:"stage"`
+	RollId     ID                     `json:"rollId"`
+	Critical   bool                   `json:"critical"`
+}
+
+// GetAttackerId returns the value of AttackerId.
+func (s *LivePendingAttack) GetAttackerId() ID {
+	return s.AttackerId
+}
+
+// GetTargetId returns the value of TargetId.
+func (s *LivePendingAttack) GetTargetId() ID {
+	return s.TargetId
+}
+
+// GetName returns the value of Name.
+func (s *LivePendingAttack) GetName() string {
+	return s.Name
+}
+
+// GetStage returns the value of Stage.
+func (s *LivePendingAttack) GetStage() LivePendingAttackStage {
+	return s.Stage
+}
+
+// GetRollId returns the value of RollId.
+func (s *LivePendingAttack) GetRollId() ID {
+	return s.RollId
+}
+
+// GetCritical returns the value of Critical.
+func (s *LivePendingAttack) GetCritical() bool {
+	return s.Critical
+}
+
+// SetAttackerId sets the value of AttackerId.
+func (s *LivePendingAttack) SetAttackerId(val ID) {
+	s.AttackerId = val
+}
+
+// SetTargetId sets the value of TargetId.
+func (s *LivePendingAttack) SetTargetId(val ID) {
+	s.TargetId = val
+}
+
+// SetName sets the value of Name.
+func (s *LivePendingAttack) SetName(val string) {
+	s.Name = val
+}
+
+// SetStage sets the value of Stage.
+func (s *LivePendingAttack) SetStage(val LivePendingAttackStage) {
+	s.Stage = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LivePendingAttack) SetRollId(val ID) {
+	s.RollId = val
+}
+
+// SetCritical sets the value of Critical.
+func (s *LivePendingAttack) SetCritical(val bool) {
+	s.Critical = val
+}
+
+type LivePendingAttackStage string
+
+const (
+	LivePendingAttackStageToHit  LivePendingAttackStage = "to_hit"
+	LivePendingAttackStageDamage LivePendingAttackStage = "damage"
+)
+
+// AllValues returns all LivePendingAttackStage values.
+func (LivePendingAttackStage) AllValues() []LivePendingAttackStage {
+	return []LivePendingAttackStage{
+		LivePendingAttackStageToHit,
+		LivePendingAttackStageDamage,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LivePendingAttackStage) MarshalText() ([]byte, error) {
+	switch s {
+	case LivePendingAttackStageToHit:
+		return []byte(s), nil
+	case LivePendingAttackStageDamage:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LivePendingAttackStage) UnmarshalText(data []byte) error {
+	switch LivePendingAttackStage(data) {
+	case LivePendingAttackStageToHit:
+		*s = LivePendingAttackStageToHit
+		return nil
+	case LivePendingAttackStageDamage:
+		*s = LivePendingAttackStageDamage
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // The Session as a connection sees it.
 // Ref: #/components/schemas/LiveSessionView
 type LiveSessionView struct {
@@ -6239,6 +6684,12 @@ type LiveToken struct {
 	R            int32     `json:"r"`
 	Hidden       bool      `json:"hidden"`
 	ControllerId OptID     `json:"controllerId"`
+	Ac           OptInt32  `json:"ac"`
+	Hp           OptInt32  `json:"hp"`
+	HpMax        OptInt32  `json:"hpMax"`
+	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
+	Health  OptLiveTokenHealth `json:"health"`
+	Attacks []LiveAttack       `json:"attacks"`
 }
 
 // GetID returns the value of ID.
@@ -6281,6 +6732,31 @@ func (s *LiveToken) GetControllerId() OptID {
 	return s.ControllerId
 }
 
+// GetAc returns the value of Ac.
+func (s *LiveToken) GetAc() OptInt32 {
+	return s.Ac
+}
+
+// GetHp returns the value of Hp.
+func (s *LiveToken) GetHp() OptInt32 {
+	return s.Hp
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveToken) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetHealth returns the value of Health.
+func (s *LiveToken) GetHealth() OptLiveTokenHealth {
+	return s.Health
+}
+
+// GetAttacks returns the value of Attacks.
+func (s *LiveToken) GetAttacks() []LiveAttack {
+	return s.Attacks
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -6321,19 +6797,101 @@ func (s *LiveToken) SetControllerId(val OptID) {
 	s.ControllerId = val
 }
 
+// SetAc sets the value of Ac.
+func (s *LiveToken) SetAc(val OptInt32) {
+	s.Ac = val
+}
+
+// SetHp sets the value of Hp.
+func (s *LiveToken) SetHp(val OptInt32) {
+	s.Hp = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveToken) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetHealth sets the value of Health.
+func (s *LiveToken) SetHealth(val OptLiveTokenHealth) {
+	s.Health = val
+}
+
+// SetAttacks sets the value of Attacks.
+func (s *LiveToken) SetAttacks(val []LiveAttack) {
+	s.Attacks = val
+}
+
+// What anyone can tell by looking, for creatures whose hit points the audience may not see.
+type LiveTokenHealth string
+
+const (
+	LiveTokenHealthUnhurt   LiveTokenHealth = "unhurt"
+	LiveTokenHealthHurt     LiveTokenHealth = "hurt"
+	LiveTokenHealthBloodied LiveTokenHealth = "bloodied"
+	LiveTokenHealthDown     LiveTokenHealth = "down"
+)
+
+// AllValues returns all LiveTokenHealth values.
+func (LiveTokenHealth) AllValues() []LiveTokenHealth {
+	return []LiveTokenHealth{
+		LiveTokenHealthUnhurt,
+		LiveTokenHealthHurt,
+		LiveTokenHealthBloodied,
+		LiveTokenHealthDown,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveTokenHealth) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveTokenHealthUnhurt:
+		return []byte(s), nil
+	case LiveTokenHealthHurt:
+		return []byte(s), nil
+	case LiveTokenHealthBloodied:
+		return []byte(s), nil
+	case LiveTokenHealthDown:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveTokenHealth) UnmarshalText(data []byte) error {
+	switch LiveTokenHealth(data) {
+	case LiveTokenHealthUnhurt:
+		*s = LiveTokenHealthUnhurt
+		return nil
+	case LiveTokenHealthHurt:
+		*s = LiveTokenHealthHurt
+		return nil
+	case LiveTokenHealthBloodied:
+		*s = LiveTokenHealthBloodied
+		return nil
+	case LiveTokenHealthDown:
+		*s = LiveTokenHealthDown
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
 // change, and a view whose seq is not the next one means resync. A walk's view carries the views along
 // the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
-	Kind    LiveUpdateKind     `json:"kind"`
-	Seq     int32              `json:"seq"`
-	Nonce   OptString          `json:"nonce"`
-	Reason  OptString          `json:"reason"`
-	Session OptLiveSessionView `json:"session"`
-	View    OptLiveView        `json:"view"`
-	Steps   []LiveView         `json:"steps"`
-	Path    OptLivePath        `json:"path"`
+	Kind    LiveUpdateKind       `json:"kind"`
+	Seq     int32                `json:"seq"`
+	Nonce   OptString            `json:"nonce"`
+	Reason  OptString            `json:"reason"`
+	Session OptLiveSessionView   `json:"session"`
+	View    OptLiveView          `json:"view"`
+	Steps   []LiveView           `json:"steps"`
+	Path    OptLivePath          `json:"path"`
+	Preview OptLiveAttackPreview `json:"preview"`
 }
 
 // GetKind returns the value of Kind.
@@ -6376,6 +6934,11 @@ func (s *LiveUpdate) GetPath() OptLivePath {
 	return s.Path
 }
 
+// GetPreview returns the value of Preview.
+func (s *LiveUpdate) GetPreview() OptLiveAttackPreview {
+	return s.Preview
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -6416,14 +6979,20 @@ func (s *LiveUpdate) SetPath(val OptLivePath) {
 	s.Path = val
 }
 
+// SetPreview sets the value of Preview.
+func (s *LiveUpdate) SetPreview(val OptLiveAttackPreview) {
+	s.Preview = val
+}
+
 type LiveUpdateKind string
 
 const (
-	LiveUpdateKindSnapshot LiveUpdateKind = "snapshot"
-	LiveUpdateKindView     LiveUpdateKind = "view"
-	LiveUpdateKindRejected LiveUpdateKind = "rejected"
-	LiveUpdateKindEnded    LiveUpdateKind = "ended"
-	LiveUpdateKindPath     LiveUpdateKind = "path"
+	LiveUpdateKindSnapshot      LiveUpdateKind = "snapshot"
+	LiveUpdateKindView          LiveUpdateKind = "view"
+	LiveUpdateKindRejected      LiveUpdateKind = "rejected"
+	LiveUpdateKindEnded         LiveUpdateKind = "ended"
+	LiveUpdateKindPath          LiveUpdateKind = "path"
+	LiveUpdateKindAttackPreview LiveUpdateKind = "attack_preview"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -6434,6 +7003,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindRejected,
 		LiveUpdateKindEnded,
 		LiveUpdateKindPath,
+		LiveUpdateKindAttackPreview,
 	}
 }
 
@@ -6449,6 +7019,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindEnded:
 		return []byte(s), nil
 	case LiveUpdateKindPath:
+		return []byte(s), nil
+	case LiveUpdateKindAttackPreview:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6472,6 +7044,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveUpdateKindPath:
 		*s = LiveUpdateKindPath
+		return nil
+	case LiveUpdateKindAttackPreview:
+		*s = LiveUpdateKindAttackPreview
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -7906,6 +8481,52 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptLiveAttackPreview returns new OptLiveAttackPreview with value set to v.
+func NewOptLiveAttackPreview(v LiveAttackPreview) OptLiveAttackPreview {
+	return OptLiveAttackPreview{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveAttackPreview is optional LiveAttackPreview.
+type OptLiveAttackPreview struct {
+	Value LiveAttackPreview
+	Set   bool
+}
+
+// IsSet returns true if OptLiveAttackPreview was set.
+func (o OptLiveAttackPreview) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveAttackPreview) Reset() {
+	var v LiveAttackPreview
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveAttackPreview) SetTo(v LiveAttackPreview) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveAttackPreview) Get() (v LiveAttackPreview, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveAttackPreview) Or(d LiveAttackPreview) LiveAttackPreview {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveCombat returns new OptLiveCombat with value set to v.
 func NewOptLiveCombat(v LiveCombat) OptLiveCombat {
 	return OptLiveCombat{
@@ -8090,6 +8711,52 @@ func (o OptLivePath) Or(d LivePath) LivePath {
 	return d
 }
 
+// NewOptLivePendingAttack returns new OptLivePendingAttack with value set to v.
+func NewOptLivePendingAttack(v LivePendingAttack) OptLivePendingAttack {
+	return OptLivePendingAttack{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLivePendingAttack is optional LivePendingAttack.
+type OptLivePendingAttack struct {
+	Value LivePendingAttack
+	Set   bool
+}
+
+// IsSet returns true if OptLivePendingAttack was set.
+func (o OptLivePendingAttack) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLivePendingAttack) Reset() {
+	var v LivePendingAttack
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLivePendingAttack) SetTo(v LivePendingAttack) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLivePendingAttack) Get() (v LivePendingAttack, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLivePendingAttack) Or(d LivePendingAttack) LivePendingAttack {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveSessionView returns new OptLiveSessionView with value set to v.
 func NewOptLiveSessionView(v LiveSessionView) OptLiveSessionView {
 	return OptLiveSessionView{
@@ -8130,6 +8797,52 @@ func (o OptLiveSessionView) Get() (v LiveSessionView, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveSessionView) Or(d LiveSessionView) LiveSessionView {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveTokenHealth returns new OptLiveTokenHealth with value set to v.
+func NewOptLiveTokenHealth(v LiveTokenHealth) OptLiveTokenHealth {
+	return OptLiveTokenHealth{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveTokenHealth is optional LiveTokenHealth.
+type OptLiveTokenHealth struct {
+	Value LiveTokenHealth
+	Set   bool
+}
+
+// IsSet returns true if OptLiveTokenHealth was set.
+func (o OptLiveTokenHealth) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveTokenHealth) Reset() {
+	var v LiveTokenHealth
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveTokenHealth) SetTo(v LiveTokenHealth) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveTokenHealth) Get() (v LiveTokenHealth, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveTokenHealth) Or(d LiveTokenHealth) LiveTokenHealth {
 	if v, ok := o.Get(); ok {
 		return v
 	}

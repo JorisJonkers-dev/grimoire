@@ -464,6 +464,14 @@ type PlayActionHexEvent struct {
 	R        int32
 }
 
+type PlayActionHpEvent struct {
+	ActionID       uuid.UUID
+	TokenID        uuid.UUID
+	HpBefore       int32
+	HpAfter        int32
+	UndoesActionID pgtype.UUID
+}
+
 type PlayActionRollEvent struct {
 	ActionID uuid.UUID
 	RollID   uuid.UUID
@@ -478,6 +486,19 @@ type PlayActionTokenEvent struct {
 	Q        int32
 	R        int32
 	Hidden   bool
+}
+
+type PlayAttack struct {
+	ID              uuid.UUID
+	CombatID        uuid.UUID
+	AttackerTokenID uuid.UUID
+	TargetTokenID   uuid.UUID
+	AttackNo        int32
+	Mode            string
+	CoverBonus      int32
+	Stage           string
+	Critical        bool
+	RollID          uuid.UUID
 }
 
 type PlayCombat struct {
@@ -564,4 +585,21 @@ type PlayToken struct {
 	Hidden             bool
 	DarkvisionFt       int32
 	ControllerMemberID pgtype.UUID
+	StatSource         pgtype.Text
+	ArmorClass         pgtype.Int4
+	Hp                 pgtype.Int4
+	HpMax              pgtype.Int4
+}
+
+type PlayTokenAttack struct {
+	TokenID     uuid.UUID
+	Ordering    int32
+	Name        string
+	ToHit       int32
+	ReachFt     int32
+	RangeFt     int32
+	LongRangeFt int32
+	DamageDice  string
+	DamageBonus int32
+	DamageType  string
 }

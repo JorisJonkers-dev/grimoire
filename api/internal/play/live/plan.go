@@ -8,17 +8,25 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
 // plan validates a command against the live state and turns it into a Write.
-func (r *runtime) plan(m domain.Member, cmd Command) (Write, string) {
+func (r *runtime) plan(req request) (Write, string) {
+	m, cmd := req.from.Member, req.cmd
 	switch cmd.Kind {
+	case CmdAttack:
+		return r.planAttack(m, cmd)
+	case CmdUndoDamage:
+		return r.planUndo()
 	case CmdWalk:
 		t, path, cost, reason := r.route(m, cmd)
 		return Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: cost}, reason
 	case CmdStartCombat, CmdEndTurn, CmdSpend, CmdEndCombat:
 		return r.planCombat(m, cmd)
-	case CmdPlace, CmdMove, CmdSetHidden, CmdRemove:
+	case CmdPlace:
+		return r.planPlace(req.from.Caller, cmd)
+	case CmdMove, CmdSetHidden, CmdRemove:
 		return r.planToken(cmd)
 	case CmdSetMap:
 		return r.planMap(cmd)
@@ -38,9 +46,6 @@ func (r *runtime) plan(m domain.Member, cmd Command) (Write, string) {
 }
 
 func (r *runtime) planToken(cmd Command) (Write, string) {
-	if cmd.Kind == CmdPlace {
-		return r.planPlace(cmd)
-	}
 	id, err := uuid.Parse(cmd.TokenID)
 	t, ok := r.st.tokens[domain.TokenID(id)]
 	if err != nil || !ok {
@@ -65,8 +70,12 @@ func (r *runtime) planToken(cmd Command) (Write, string) {
 	}
 }
 
-func (r *runtime) planPlace(cmd Command) (Write, string) {
+func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 	at := hex.Coord{Q: cmd.Q, R: cmd.R}
+	stats, reason := r.statblock(c, &cmd)
+	if reason != "" {
+		return Write{}, reason
+	}
 	label := strings.TrimSpace(cmd.Label)
 	switch {
 	case label == "" || len([]rune(label)) > 40:
@@ -78,7 +87,7 @@ func (r *runtime) planPlace(cmd Command) (Write, string) {
 	case !r.st.onBoard(at):
 		return Write{}, "That hex is off the map."
 	}
-	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt}
+	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats}
 	if cmd.ControllerID != "" {
 		id, err := uuid.Parse(cmd.ControllerID)
 		if err != nil {
@@ -90,6 +99,37 @@ func (r *runtime) planPlace(cmd Command) (Write, string) {
 		t.Controller = &id
 	}
 	return Write{Kind: domain.ActionTokenPlaced, Token: t}, ""
+}
+
+// statblock loads the stats a new token fights with and fills in what they imply: a monster's name,
+// or a Character's name, party side and owner as Controller.
+func (r *runtime) statblock(c caller.Caller, cmd *Command) (*domain.Stats, string) {
+	ctx, campaign := context.Background(), r.st.session.CampaignID
+	name := ""
+	var stats domain.Stats
+	switch {
+	case cmd.CharacterID != "":
+		id, err := uuid.Parse(cmd.CharacterID)
+		var owner uuid.UUID
+		if err == nil {
+			name, owner, stats, err = r.stats.Character(ctx, c, campaign, id)
+		}
+		if err != nil {
+			return nil, "No such character."
+		}
+		cmd.TokenKind, cmd.ControllerID = domain.TokenParty, owner.String()
+	case cmd.MonsterSlug != "":
+		var err error
+		if name, stats, err = r.stats.Monster(ctx, campaign, cmd.MonsterSlug); err != nil {
+			return nil, "No such monster."
+		}
+	default:
+		return nil, ""
+	}
+	if strings.TrimSpace(cmd.Label) == "" {
+		cmd.Label = string([]rune(name)[:min(len([]rune(name)), 40)])
+	}
+	return &stats, ""
 }
 
 func (r *runtime) planMap(cmd Command) (Write, string) {

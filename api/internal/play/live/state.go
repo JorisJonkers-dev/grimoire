@@ -103,7 +103,7 @@ func (s *state) project(a Audience) View {
 	}
 	for _, t := range s.tokens {
 		if a == AudienceDM || (!t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])) {
-			v.Tokens = append(v.Tokens, tokenView(t))
+			v.Tokens = append(v.Tokens, tokenView(t, a))
 		}
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })

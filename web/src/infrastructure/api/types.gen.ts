@@ -684,6 +684,56 @@ export type LiveToken = {
     r: number;
     hidden: boolean;
     controllerId?: Id;
+    ac?: number;
+    hp?: number;
+    hpMax?: number;
+    /**
+     * What anyone can tell by looking, for creatures whose hit points the audience may not see.
+     */
+    health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
+    attacks?: Array<LiveAttack>;
+};
+
+/**
+ * One attack on a token's hotbar.
+ */
+export type LiveAttack = {
+    name: string;
+    toHit: number;
+    reachFt: number;
+    rangeFt: number;
+    longRangeFt: number;
+    damage?: string;
+    damageBonus: number;
+    damageType?: string;
+};
+
+/**
+ * What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
+ */
+export type LiveAttackPreview = {
+    tokenId: Id;
+    targetId: Id;
+    attackNo: number;
+    name: string;
+    hitChance: number;
+    mode: 'normal' | 'advantage' | 'disadvantage';
+    damageMin: number;
+    damageMax: number;
+    critMax: number;
+    reasons: Array<string>;
+};
+
+/**
+ * An attack waiting on its attack or damage Roll Card.
+ */
+export type LivePendingAttack = {
+    attackerId: Id;
+    targetId: Id;
+    name: string;
+    stage: 'to_hit' | 'damage';
+    rollId: Id;
+    critical: boolean;
 };
 
 /**
@@ -701,7 +751,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -720,6 +770,10 @@ export type LiveCommand = {
     combatants?: Array<LiveCombatantSetup>;
     combatantId?: Id;
     resource?: 'action' | 'bonus_action' | 'reaction';
+    monsterSlug?: Slug;
+    characterId?: Id;
+    targetId?: Id;
+    attackNo?: number;
 };
 
 /**
@@ -738,6 +792,7 @@ export type LiveCombat = {
     status: 'rolling' | 'active';
     round: number;
     combatants: Array<LiveCombatant>;
+    attack?: LivePendingAttack;
 };
 
 /**
@@ -765,7 +820,7 @@ export type LiveCombatant = {
  * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview';
     seq: number;
     nonce?: string;
     reason?: string;
@@ -773,6 +828,7 @@ export type LiveUpdate = {
     view?: LiveView;
     steps?: Array<LiveView>;
     path?: LivePath;
+    preview?: LiveAttackPreview;
 };
 
 /**

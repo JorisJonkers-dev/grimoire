@@ -21,23 +21,26 @@ const (
 
 // Command kinds.
 const (
-	CmdResync      = "resync"
-	CmdPlace       = "place_token"
-	CmdMove        = "move_token"
-	CmdSetHidden   = "set_token_hidden"
-	CmdRemove      = "remove_token"
-	CmdSetMap      = "set_map"
-	CmdRevealHexes = "reveal_hexes"
-	CmdSetWalls    = "set_walls"
-	CmdPlaceLight  = "place_light"
-	CmdRemoveLight = "remove_light"
-	CmdSetAmbient  = "set_ambient"
-	CmdPlanWalk    = "plan_walk"
-	CmdWalk        = "walk"
-	CmdStartCombat = "start_combat"
-	CmdEndTurn     = "end_turn"
-	CmdSpend       = "spend"
-	CmdEndCombat   = "end_combat"
+	CmdResync        = "resync"
+	CmdPlace         = "place_token"
+	CmdMove          = "move_token"
+	CmdSetHidden     = "set_token_hidden"
+	CmdRemove        = "remove_token"
+	CmdSetMap        = "set_map"
+	CmdRevealHexes   = "reveal_hexes"
+	CmdSetWalls      = "set_walls"
+	CmdPlaceLight    = "place_light"
+	CmdRemoveLight   = "remove_light"
+	CmdSetAmbient    = "set_ambient"
+	CmdPlanWalk      = "plan_walk"
+	CmdWalk          = "walk"
+	CmdStartCombat   = "start_combat"
+	CmdEndTurn       = "end_turn"
+	CmdSpend         = "spend"
+	CmdEndCombat     = "end_combat"
+	CmdPreviewAttack = "preview_attack"
+	CmdAttack        = "attack"
+	CmdUndoDamage    = "undo_damage"
 	// cmdRollResolved comes from the rolls service, never from a client.
 	cmdRollResolved = "roll_resolved"
 )
@@ -84,16 +87,21 @@ type Command struct {
 	Combatants   []CombatantSetup `json:"combatants,omitempty"`
 	CombatantID  string           `json:"combatantId,omitempty"`
 	Resource     string           `json:"resource,omitempty"`
+	MonsterSlug  string           `json:"monsterSlug,omitempty"`
+	CharacterID  string           `json:"characterId,omitempty"`
+	TargetID     string           `json:"targetId,omitempty"`
+	AttackNo     int              `json:"attackNo,omitempty"`
 	rollID       domain.RollID
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
 const (
-	UpdSnapshot = "snapshot"
-	UpdView     = "view"
-	UpdRejected = "rejected"
-	UpdPath     = "path"
-	UpdEnded    = "ended"
+	UpdSnapshot      = "snapshot"
+	UpdView          = "view"
+	UpdRejected      = "rejected"
+	UpdPath          = "path"
+	UpdAttackPreview = "attack_preview"
+	UpdEnded         = "ended"
 )
 
 // SessionView is the Session as a client sees it.
@@ -114,6 +122,49 @@ type TokenView struct {
 	Hidden       bool   `json:"hidden"`
 	DarkvisionFt int    `json:"darkvisionFt"`
 	ControllerID string `json:"controllerId,omitempty"`
+	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
+	AC      *int         `json:"ac,omitempty"`
+	HP      *int         `json:"hp,omitempty"`
+	HPMax   *int         `json:"hpMax,omitempty"`
+	Health  string       `json:"health,omitempty"`
+	Attacks []AttackView `json:"attacks,omitempty"`
+}
+
+// AttackView is one attack on a hotbar.
+type AttackView struct {
+	Name        string `json:"name"`
+	ToHit       int    `json:"toHit"`
+	ReachFt     int    `json:"reachFt"`
+	RangeFt     int    `json:"rangeFt"`
+	LongRangeFt int    `json:"longRangeFt"`
+	Damage      string `json:"damage,omitempty"`
+	DamageBonus int    `json:"damageBonus"`
+	DamageType  string `json:"damageType,omitempty"`
+}
+
+// AttackPreview is what an attack would do, sent only to whoever asked: the chance to hit, the damage
+// range and every reason behind them.
+type AttackPreview struct {
+	TokenID   string   `json:"tokenId"`
+	TargetID  string   `json:"targetId"`
+	AttackNo  int      `json:"attackNo"`
+	Name      string   `json:"name"`
+	HitChance int      `json:"hitChance"`
+	Mode      string   `json:"mode"`
+	DamageMin int      `json:"damageMin"`
+	DamageMax int      `json:"damageMax"`
+	CritMax   int      `json:"critMax"`
+	Reasons   []string `json:"reasons"`
+}
+
+// PendingAttackView is an attack waiting on a Roll Card.
+type PendingAttackView struct {
+	AttackerID string `json:"attackerId"`
+	TargetID   string `json:"targetId"`
+	Name       string `json:"name"`
+	Stage      string `json:"stage"`
+	RollID     string `json:"rollId"`
+	Critical   bool   `json:"critical"`
 }
 
 // PathView is the route a walk would take and what it costs, sent only to whoever asked.
@@ -161,9 +212,10 @@ type View struct {
 
 // CombatView is the running Combat: its round and every Combatant the audience can see, in turn order.
 type CombatView struct {
-	Status     string          `json:"status"`
-	Round      int             `json:"round"`
-	Combatants []CombatantView `json:"combatants"`
+	Status     string             `json:"status"`
+	Round      int                `json:"round"`
+	Combatants []CombatantView    `json:"combatants"`
+	Attack     *PendingAttackView `json:"attack,omitempty"`
 }
 
 // CombatantView is one Combatant in the initiative rail. Tied initiatives share a rank and act together.
@@ -195,16 +247,44 @@ type Update struct {
 	Session *SessionView `json:"session,omitempty"`
 	View    *View        `json:"view,omitempty"`
 	// Steps are the views along a walk before its final View, for clients to play back at walking pace.
-	Steps []View    `json:"steps,omitempty"`
-	Path  *PathView `json:"path,omitempty"`
+	Steps   []View         `json:"steps,omitempty"`
+	Path    *PathView      `json:"path,omitempty"`
+	Preview *AttackPreview `json:"preview,omitempty"`
 }
 
-func tokenView(t domain.Token) TokenView {
+func tokenView(t domain.Token, a Audience) TokenView {
 	v := TokenView{ID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, Q: t.Q, R: t.R, Hidden: t.Hidden, DarkvisionFt: t.DarkvisionFt}
 	if t.Controller != nil {
 		v.ControllerID = t.Controller.String()
 	}
+	s := t.Stats
+	switch {
+	case s == nil:
+	case a == AudienceDM || t.Kind == domain.TokenParty:
+		v.AC, v.HP, v.HPMax, v.Attacks = &s.AC, &s.HP, &s.HPMax, []AttackView{}
+		for _, x := range s.Attacks {
+			v.Attacks = append(v.Attacks, AttackView{
+				Name: x.Name, ToHit: x.ToHit, ReachFt: x.ReachFt, RangeFt: x.RangeFt, LongRangeFt: x.LongRangeFt, Damage: x.Damage,
+				DamageBonus: x.DamageBonus, DamageType: x.DamageType,
+			})
+		}
+	default:
+		v.Health = health(s.HP, s.HPMax)
+	}
 	return v
+}
+
+// health is what anyone can tell by looking: unhurt, hurt, bloodied at half or less, or down.
+func health(hp, most int) string {
+	switch {
+	case hp <= 0:
+		return "down"
+	case hp*2 <= most:
+		return "bloodied"
+	case hp < most:
+		return "hurt"
+	}
+	return "unhurt"
 }
 
 func wireHexes(cs []hex.Coord) []Hex {

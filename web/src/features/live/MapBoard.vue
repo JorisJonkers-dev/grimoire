@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { LiveMap, LiveView } from '@/infrastructure/api/types.gen'
 import { type Coord, corners, toPixel } from '@/shared/hex'
-import { initials } from './board'
+import { describe, initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const props = withDefaults(
@@ -30,7 +30,7 @@ const cells = computed(() =>
     const label = [
       `Hex ${k.replace(',', ', ')}`,
       fog === 'unseen' ? 'never seen' : fog === 'remembered' ? 'remembered' : '',
-      t ? `${t.label}${t.hidden ? ' (hidden)' : ''}` : '',
+      t ? describe(t) : '',
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
       route.value.has(k) ? 'on the path' : '',

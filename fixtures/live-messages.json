@@ -165,6 +165,49 @@
       "q": 0,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n19",
+      "kind": "place_token",
+      "tokenKind": "enemy",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "monsterSlug": "goblin"
+    },
+    {
+      "nonce": "n20",
+      "kind": "place_token",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "characterId": "0190c7a8-0000-7000-8000-000000000012"
+    },
+    {
+      "nonce": "n21",
+      "kind": "preview_attack",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-000000000013",
+      "attackNo": 1
+    },
+    {
+      "nonce": "n22",
+      "kind": "attack",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-000000000013"
+    },
+    {
+      "nonce": "n23",
+      "kind": "undo_damage",
+      "q": 0,
+      "r": 0,
+      "hidden": false
     }
   ],
   "updates": [
@@ -188,6 +231,40 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000013",
+            "label": "Aria",
+            "kind": "party",
+            "q": 0,
+            "r": 0,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "ac": 15,
+            "hp": 4,
+            "hpMax": 7,
+            "attacks": [
+              {
+                "name": "Longsword",
+                "toHit": 5,
+                "reachFt": 5,
+                "rangeFt": 0,
+                "longRangeFt": 0,
+                "damage": "1d8",
+                "damageBonus": 3,
+                "damageType": "slashing"
+              }
+            ]
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000014",
+            "label": "Orc",
+            "kind": "enemy",
+            "q": 0,
+            "r": 0,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "health": "bloodied"
           }
         ],
         "map": {
@@ -234,7 +311,15 @@
               "movementFt": 20,
               "speedFt": 30
             }
-          ]
+          ],
+          "attack": {
+            "attackerId": "0190c7a8-0000-7000-8000-00000000000a",
+            "targetId": "0190c7a8-0000-7000-8000-000000000013",
+            "name": "Scimitar",
+            "stage": "damage",
+            "rollId": "0190c7a8-0000-7000-8000-000000000015",
+            "critical": true
+          }
         }
       }
     },
@@ -253,6 +338,40 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000013",
+            "label": "Aria",
+            "kind": "party",
+            "q": 0,
+            "r": 0,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "ac": 15,
+            "hp": 4,
+            "hpMax": 7,
+            "attacks": [
+              {
+                "name": "Longsword",
+                "toHit": 5,
+                "reachFt": 5,
+                "rangeFt": 0,
+                "longRangeFt": 0,
+                "damage": "1d8",
+                "damageBonus": 3,
+                "damageType": "slashing"
+              }
+            ]
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000014",
+            "label": "Orc",
+            "kind": "enemy",
+            "q": 0,
+            "r": 0,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "health": "bloodied"
           }
         ],
         "map": {
@@ -315,7 +434,15 @@
               "movementFt": 20,
               "speedFt": 30
             }
-          ]
+          ],
+          "attack": {
+            "attackerId": "0190c7a8-0000-7000-8000-00000000000a",
+            "targetId": "0190c7a8-0000-7000-8000-000000000013",
+            "name": "Scimitar",
+            "stage": "damage",
+            "rollId": "0190c7a8-0000-7000-8000-000000000015",
+            "critical": true
+          }
         }
       }
     },
@@ -373,6 +500,40 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000013",
+            "label": "Aria",
+            "kind": "party",
+            "q": 0,
+            "r": 0,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "ac": 15,
+            "hp": 4,
+            "hpMax": 7,
+            "attacks": [
+              {
+                "name": "Longsword",
+                "toHit": 5,
+                "reachFt": 5,
+                "rangeFt": 0,
+                "longRangeFt": 0,
+                "damage": "1d8",
+                "damageBonus": 3,
+                "damageType": "slashing"
+              }
+            ]
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000014",
+            "label": "Orc",
+            "kind": "enemy",
+            "q": 0,
+            "r": 0,
+            "hidden": false,
+            "darkvisionFt": 0,
+            "health": "bloodied"
           }
         ],
         "map": {
@@ -419,7 +580,15 @@
               "movementFt": 20,
               "speedFt": 30
             }
-          ]
+          ],
+          "attack": {
+            "attackerId": "0190c7a8-0000-7000-8000-00000000000a",
+            "targetId": "0190c7a8-0000-7000-8000-000000000013",
+            "name": "Scimitar",
+            "stage": "damage",
+            "rollId": "0190c7a8-0000-7000-8000-000000000015",
+            "critical": true
+          }
         }
       },
       "steps": [
@@ -434,6 +603,40 @@
               "hidden": false,
               "darkvisionFt": 0,
               "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000013",
+              "label": "Aria",
+              "kind": "party",
+              "q": 0,
+              "r": 0,
+              "hidden": false,
+              "darkvisionFt": 0,
+              "ac": 15,
+              "hp": 4,
+              "hpMax": 7,
+              "attacks": [
+                {
+                  "name": "Longsword",
+                  "toHit": 5,
+                  "reachFt": 5,
+                  "rangeFt": 0,
+                  "longRangeFt": 0,
+                  "damage": "1d8",
+                  "damageBonus": 3,
+                  "damageType": "slashing"
+                }
+              ]
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000014",
+              "label": "Orc",
+              "kind": "enemy",
+              "q": 0,
+              "r": 0,
+              "hidden": false,
+              "darkvisionFt": 0,
+              "health": "bloodied"
             }
           ],
           "map": {
@@ -480,10 +683,38 @@
                 "movementFt": 20,
                 "speedFt": 30
               }
-            ]
+            ],
+            "attack": {
+              "attackerId": "0190c7a8-0000-7000-8000-00000000000a",
+              "targetId": "0190c7a8-0000-7000-8000-000000000013",
+              "name": "Scimitar",
+              "stage": "damage",
+              "rollId": "0190c7a8-0000-7000-8000-000000000015",
+              "critical": true
+            }
           }
         }
       ]
+    },
+    {
+      "kind": "attack_preview",
+      "seq": 7,
+      "nonce": "n21",
+      "preview": {
+        "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+        "targetId": "0190c7a8-0000-7000-8000-000000000013",
+        "attackNo": 1,
+        "name": "Shortbow",
+        "hitChance": 30,
+        "mode": "disadvantage",
+        "damageMin": 3,
+        "damageMax": 8,
+        "critMax": 14,
+        "reasons": [
+          "Shortbow: +4 to hit",
+          "Disadvantage: long range"
+        ]
+      }
     },
     {
       "kind": "ended",

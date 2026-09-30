@@ -2746,6 +2746,62 @@ components:
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
         controllerId: { $ref: "#/components/schemas/Id" }
+        ac: { type: integer, format: int32, minimum: 0, maximum: 40 }
+        hp: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        hpMax: { type: integer, format: int32, minimum: 1, maximum: 10000 }
+        health:
+          type: string
+          description: What anyone can tell by looking, for creatures whose hit points the audience may not see.
+          enum: [unhurt, hurt, bloodied, down]
+        attacks:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/LiveAttack" }
+    LiveAttack:
+      type: object
+      description: One attack on a token's hotbar.
+      additionalProperties: false
+      required: [name, toHit, reachFt, rangeFt, longRangeFt, damageBonus]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        toHit: { type: integer, format: int32, minimum: -10, maximum: 30 }
+        reachFt: { type: integer, format: int32, minimum: 0, maximum: 60 }
+        rangeFt: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        longRangeFt: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        damage: { type: string, maxLength: 40 }
+        damageBonus: { type: integer, format: int32, minimum: -10, maximum: 50 }
+        damageType: { type: string, maxLength: 80 }
+    LiveAttackPreview:
+      type: object
+      description: What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
+      additionalProperties: false
+      required: [tokenId, targetId, attackNo, name, hitChance, mode, damageMin, damageMax, critMax, reasons]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        targetId: { $ref: "#/components/schemas/Id" }
+        attackNo: { type: integer, format: int32, minimum: 0, maximum: 50 }
+        name: { type: string, maxLength: 80 }
+        hitChance: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        mode: { type: string, enum: [normal, advantage, disadvantage] }
+        damageMin: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        damageMax: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        critMax: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        reasons:
+          type: array
+          maxItems: 20
+          items: { type: string, maxLength: 200 }
+    LivePendingAttack:
+      type: object
+      description: An attack waiting on its attack or damage Roll Card.
+      additionalProperties: false
+      required: [attackerId, targetId, name, stage, rollId, critical]
+      properties:
+        attackerId: { $ref: "#/components/schemas/Id" }
+        targetId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        stage: { type: string, enum: [to_hit, damage] }
+        rollId: { $ref: "#/components/schemas/Id" }
+        critical: { type: boolean }
     LiveSessionView:
       type: object
       description: The Session as a connection sees it.
@@ -2763,7 +2819,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2788,6 +2844,10 @@ components:
           items: { $ref: "#/components/schemas/LiveCombatantSetup" }
         combatantId: { $ref: "#/components/schemas/Id" }
         resource: { type: string, enum: [action, bonus_action, reaction] }
+        monsterSlug: { $ref: "#/components/schemas/Slug" }
+        characterId: { $ref: "#/components/schemas/Id" }
+        targetId: { $ref: "#/components/schemas/Id" }
+        attackNo: { type: integer, format: int32, minimum: 0, maximum: 50 }
     LiveCombatantSetup:
       type: object
       description: A Token joining a Combat, with its initiative bonus and speed.
@@ -2809,6 +2869,7 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveCombatant" }
+        attack: { $ref: "#/components/schemas/LivePendingAttack" }
     LiveCombatant:
       type: object
       description: One Combatant in the initiative rail, with what is left of its action economy.
@@ -2836,7 +2897,7 @@ components:
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, view, rejected, ended, path] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         reason: { type: string, maxLength: 200 }
@@ -2847,6 +2908,7 @@ components:
           maxItems: 60
           items: { $ref: "#/components/schemas/LiveView" }
         path: { $ref: "#/components/schemas/LivePath" }
+        preview: { $ref: "#/components/schemas/LiveAttackPreview" }
     LivePath:
       type: object
       description: The route a walk would take, start first, and the movement it costs.

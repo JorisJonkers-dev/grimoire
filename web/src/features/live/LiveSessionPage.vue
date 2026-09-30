@@ -2,17 +2,19 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, listCharactersOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
-import type { AmbientLight, LiveCombatant, LiveCombatantSetup, TokenKind } from '@/infrastructure/api/types.gen'
+import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
 import { GButton } from '@/shared/ui'
-import { board } from './board'
+import { board, describe } from './board'
 import { key } from './geometry'
+import AttackPreview from './AttackPreview.vue'
+import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
-import InitiativeRoll from './InitiativeRoll.vue'
+import LiveRoll from './LiveRoll.vue'
 import MapBoard from './MapBoard.vue'
 import StartCombat from './StartCombat.vue'
 import TurnPanel from './TurnPanel.vue'
@@ -26,6 +28,7 @@ const sessionId = String(route.params.sid)
 const campaign = useQuery({ ...getCampaignOptions({ path: { campaignId } }), retry: false })
 const isDM = computed(() => campaign.data.value?.myRole === 'dm')
 const maps = useQuery(computed(() => ({ ...listMapsOptions({ path: { campaignId } }), enabled: isDM.value })))
+const characters = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId } }), enabled: isDM.value })))
 const live = shallowRef<ReturnType<typeof useLiveSession> | null>(null)
 const state = computed(() => live.value?.view)
 const view = computed(() => state.value?.view ?? null)
@@ -48,6 +51,8 @@ const brightFt = ref(20)
 const dimFt = ref(40)
 const mapChoice = ref('')
 const controller = ref('')
+const monster = ref('')
+const character = ref('')
 const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
 const walkPath = computed(() => state.value?.path?.hexes ?? [])
 const cells = computed(() => board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value))
@@ -70,6 +75,35 @@ function startCombat(combatants: LiveCombatantSetup[]) {
 async function rollAll() {
   for (const c of toRoll.value) await rollRest({ path: { campaignId, rollId: c.rollId } }).catch(() => undefined)
 }
+const tokenById = (id: string) => view.value?.tokens.find((t) => t.id === id)
+const pending = computed(() => combat.value?.attack ?? null)
+const aiming = ref<{ tokenId: string; attackNo: number } | null>(null)
+const bars = computed(() =>
+  turns.value.flatMap((c) => {
+    const token = tokenById(c.tokenId)
+    return token?.attacks?.length ? [{ c, token }] : []
+  }),
+)
+const blockedFor = (c: LiveCombatant) => (pending.value ? 'An attack is waiting on its roll.' : c.action ? '' : 'The action is used this turn.')
+function arm(token: LiveToken, attackNo: number) {
+  const same = aiming.value?.tokenId === token.id && aiming.value.attackNo === attackNo
+  aiming.value = same ? null : { tokenId: token.id, attackNo }
+}
+const preview = computed(() => {
+  const p = state.value?.preview
+  return p && p.tokenId === aiming.value?.tokenId && p.attackNo === aiming.value.attackNo ? p : null
+})
+function confirmAttack(p: { tokenId: string; attackNo: number; targetId: string }) {
+  live.value?.send({ kind: 'attack', tokenId: p.tokenId, attackNo: p.attackNo, targetId: p.targetId })
+  aiming.value = null
+}
+// Whoever throws the attacker's dice sees the attack's Roll Card: its Controller, or the DM.
+const attackRoll = computed(() => {
+  const a = pending.value
+  const attacker = a ? tokenById(a.attackerId) : undefined
+  if (!a || !attacker) return null
+  return (isDM.value ? !attacker.controllerId : attacker.controllerId === campaign.data.value?.me.id) ? a.rollId : null
+})
 const tokenAt = (c: Coord) => view.value?.tokens.find((t) => t.q === c.q && t.r === c.r)
 
 // The first tap on a hex previews the walk there; a second tap on the same hex walks it.
@@ -87,10 +121,11 @@ function tokenTool(c: Coord) {
     selected.value = there.id === selected.value ? null : there.id
   } else if (chosen.value) {
     walkTo(c)
-  } else if (label.value.trim()) {
+  } else if (label.value.trim() || monster.value.trim() || character.value) {
     live.value?.send({
       kind: 'place_token', label: label.value.trim(), tokenKind: kind.value, q: c.q, r: c.r, hidden: hidden.value, darkvisionFt: darkvision.value,
       ...(controller.value ? { controllerId: controller.value } : {}),
+      ...(character.value ? { characterId: character.value } : monster.value.trim() ? { monsterSlug: monster.value.trim() } : {}),
     })
     label.value = ''
   }
@@ -102,6 +137,11 @@ function explore(c: Coord) {
 }
 function pick(c: Coord) {
   if (!live.value) return
+  const target = tokenAt(c)
+  if (aiming.value && target) {
+    live.value.send({ kind: 'preview_attack', ...aiming.value, targetId: target.id })
+    return
+  }
   if (!isDM.value) {
     explore(c)
     return
@@ -160,7 +200,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       <p v-if="!isDM && turns.length > 0" role="status" class="banner" data-testid="your-turn">Your turn</p>
       <section v-if="toRoll.length > 0" class="rolls" aria-label="Initiative to roll">
         <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
-        <InitiativeRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
+        <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
       </section>
       <TurnPanel
         v-for="c in turns"
@@ -169,6 +209,25 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @spend="(r) => live?.send({ kind: 'spend', combatantId: c.id, resource: r })"
         @end="live?.send({ kind: 'end_turn', combatantId: c.id })"
       />
+      <Hotbar
+        v-for="b in bars"
+        :key="b.token.id"
+        :token="b.token"
+        :armed="aiming?.tokenId === b.token.id ? aiming.attackNo : null"
+        :blocked="blockedFor(b.c)"
+        @arm="(n) => arm(b.token, n)"
+      />
+      <AttackPreview
+        v-if="preview"
+        :preview="preview"
+        :target="tokenById(preview.targetId)?.label ?? 'the target'"
+        @confirm="confirmAttack(preview)"
+        @cancel="aiming = null"
+      />
+      <p v-if="pending" role="status" class="walk" data-testid="pending-attack">
+        {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for the {{ pending.stage === 'to_hit' ? 'attack' : 'damage' }} roll.
+      </p>
+      <LiveRoll v-if="attackRoll" :key="attackRoll" :campaign-id="campaignId" :roll-id="attackRoll" />
       <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
@@ -222,6 +281,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
               <option v-for="m in players" :key="m.id" :value="m.id">{{ m.displayName }}</option>
             </select>
           </label>
+          <label class="g-field">
+            <span>Monster</span>
+            <input v-model="monster" placeholder="goblin" maxlength="80" data-testid="token-monster" />
+          </label>
+          <label class="g-field">
+            <span>Character</span>
+            <select v-model="character" data-testid="token-character">
+              <option value="">None</option>
+              <option v-for="ch in characters.data.value ?? []" :key="ch.id" :value="ch.id">{{ ch.name }}</option>
+            </select>
+          </label>
           <label class="g-field"><span>Darkvision (ft)</span><input v-model.number="darkvision" type="number" min="0" max="300" data-testid="token-darkvision" /></label>
           <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
         </div>
@@ -231,6 +301,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <GButton variant="danger" data-testid="remove-token" @click="remove()">Remove</GButton>
         </div>
         <div class="row">
+          <GButton data-testid="undo-damage" @click="live?.send({ kind: 'undo_damage' })">Undo last damage</GButton>
           <GButton v-if="combat" variant="danger" data-testid="end-combat" @click="live?.send({ kind: 'end_combat' })">End combat</GButton>
           <GButton v-else-if="!choosing" data-testid="choose-combatants" :disabled="!view?.tokens.length" @click="choosing = true">
             Start combat…
@@ -240,7 +311,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
       </section>
       <ul class="g-list tokens" aria-label="Tokens in view">
-        <li v-for="t in view?.tokens ?? []" :key="t.id">{{ t.label }} · {{ t.kind }}{{ t.hidden ? ' · hidden' : '' }}</li>
+        <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
       </ul>
     </template>
     <p v-else>Opening the session…</p>
