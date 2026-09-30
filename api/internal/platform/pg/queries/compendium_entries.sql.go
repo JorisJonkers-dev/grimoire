@@ -417,19 +417,31 @@ func (q *Queries) ClearWeaponProperties(ctx context.Context, weaponID int64) err
 }
 
 const countEntriesByKind = `-- name: CountEntriesByKind :many
-SELECT kind, count(*)::bigint AS total FROM compendium.entries GROUP BY kind
-UNION ALL
-SELECT 'spell', count(*)::bigint FROM compendium.spells
-ORDER BY kind
+WITH everything AS (
+    SELECT kind, slug FROM compendium.entries
+    UNION ALL
+    SELECT 'spell', slug FROM compendium.spells
+)
+SELECT kind, count(*)::bigint AS total,
+       count(*) FILTER (WHERE slug = ANY($1::text[]))::bigint AS full,
+       count(*) FILTER (WHERE slug = ANY($2::text[]))::bigint AS partial
+FROM everything GROUP BY kind ORDER BY kind
 `
 
-type CountEntriesByKindRow struct {
-	Kind  string
-	Total int64
+type CountEntriesByKindParams struct {
+	FullSlugs    []string
+	PartialSlugs []string
 }
 
-func (q *Queries) CountEntriesByKind(ctx context.Context) ([]CountEntriesByKindRow, error) {
-	rows, err := q.db.Query(ctx, countEntriesByKind)
+type CountEntriesByKindRow struct {
+	Kind    string
+	Total   int64
+	Full    int64
+	Partial int64
+}
+
+func (q *Queries) CountEntriesByKind(ctx context.Context, arg CountEntriesByKindParams) ([]CountEntriesByKindRow, error) {
+	rows, err := q.db.Query(ctx, countEntriesByKind, arg.FullSlugs, arg.PartialSlugs)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +449,12 @@ func (q *Queries) CountEntriesByKind(ctx context.Context) ([]CountEntriesByKindR
 	items := []CountEntriesByKindRow{}
 	for rows.Next() {
 		var i CountEntriesByKindRow
-		if err := rows.Scan(&i.Kind, &i.Total); err != nil {
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Total,
+			&i.Full,
+			&i.Partial,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

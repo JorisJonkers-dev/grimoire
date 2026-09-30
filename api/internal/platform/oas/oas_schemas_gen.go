@@ -5873,6 +5873,15 @@ type LiveCommand struct {
 	Use OptBool `json:"use"`
 	// With place_token, the token can cast Shield.
 	Shield OptBool `json:"shield"`
+	// With apply_effect, the Effect's compendium slug.
+	Effect      OptString  `json:"effect"`
+	EffectName  OptString  `json:"effectName"`
+	SourceId    OptID      `json:"sourceId"`
+	Rounds      OptInt32   `json:"rounds"`
+	SaveAbility OptAbility `json:"saveAbility"`
+	SaveDc      OptInt32   `json:"saveDc"`
+	EffectId    OptID      `json:"effectId"`
+	ManualId    OptID      `json:"manualId"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -6010,6 +6019,46 @@ func (s *LiveCommand) GetShield() OptBool {
 	return s.Shield
 }
 
+// GetEffect returns the value of Effect.
+func (s *LiveCommand) GetEffect() OptString {
+	return s.Effect
+}
+
+// GetEffectName returns the value of EffectName.
+func (s *LiveCommand) GetEffectName() OptString {
+	return s.EffectName
+}
+
+// GetSourceId returns the value of SourceId.
+func (s *LiveCommand) GetSourceId() OptID {
+	return s.SourceId
+}
+
+// GetRounds returns the value of Rounds.
+func (s *LiveCommand) GetRounds() OptInt32 {
+	return s.Rounds
+}
+
+// GetSaveAbility returns the value of SaveAbility.
+func (s *LiveCommand) GetSaveAbility() OptAbility {
+	return s.SaveAbility
+}
+
+// GetSaveDc returns the value of SaveDc.
+func (s *LiveCommand) GetSaveDc() OptInt32 {
+	return s.SaveDc
+}
+
+// GetEffectId returns the value of EffectId.
+func (s *LiveCommand) GetEffectId() OptID {
+	return s.EffectId
+}
+
+// GetManualId returns the value of ManualId.
+func (s *LiveCommand) GetManualId() OptID {
+	return s.ManualId
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6145,6 +6194,46 @@ func (s *LiveCommand) SetShield(val OptBool) {
 	s.Shield = val
 }
 
+// SetEffect sets the value of Effect.
+func (s *LiveCommand) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// SetEffectName sets the value of EffectName.
+func (s *LiveCommand) SetEffectName(val OptString) {
+	s.EffectName = val
+}
+
+// SetSourceId sets the value of SourceId.
+func (s *LiveCommand) SetSourceId(val OptID) {
+	s.SourceId = val
+}
+
+// SetRounds sets the value of Rounds.
+func (s *LiveCommand) SetRounds(val OptInt32) {
+	s.Rounds = val
+}
+
+// SetSaveAbility sets the value of SaveAbility.
+func (s *LiveCommand) SetSaveAbility(val OptAbility) {
+	s.SaveAbility = val
+}
+
+// SetSaveDc sets the value of SaveDc.
+func (s *LiveCommand) SetSaveDc(val OptInt32) {
+	s.SaveDc = val
+}
+
+// SetEffectId sets the value of EffectId.
+func (s *LiveCommand) SetEffectId(val OptID) {
+	s.EffectId = val
+}
+
+// SetManualId sets the value of ManualId.
+func (s *LiveCommand) SetManualId(val OptID) {
+	s.ManualId = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6170,6 +6259,9 @@ const (
 	LiveCommandKindUndoDamage     LiveCommandKind = "undo_damage"
 	LiveCommandKindSetTactics     LiveCommandKind = "set_tactics"
 	LiveCommandKindReact          LiveCommandKind = "react"
+	LiveCommandKindApplyEffect    LiveCommandKind = "apply_effect"
+	LiveCommandKindEndEffect      LiveCommandKind = "end_effect"
+	LiveCommandKindResolveManual  LiveCommandKind = "resolve_manual"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6197,6 +6289,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindUndoDamage,
 		LiveCommandKindSetTactics,
 		LiveCommandKindReact,
+		LiveCommandKindApplyEffect,
+		LiveCommandKindEndEffect,
+		LiveCommandKindResolveManual,
 	}
 }
 
@@ -6246,6 +6341,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindSetTactics:
 		return []byte(s), nil
 	case LiveCommandKindReact:
+		return []byte(s), nil
+	case LiveCommandKindApplyEffect:
+		return []byte(s), nil
+	case LiveCommandKindEndEffect:
+		return []byte(s), nil
+	case LiveCommandKindResolveManual:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6321,6 +6422,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindReact:
 		*s = LiveCommandKindReact
 		return nil
+	case LiveCommandKindApplyEffect:
+		*s = LiveCommandKindApplyEffect
+		return nil
+	case LiveCommandKindEndEffect:
+		*s = LiveCommandKindEndEffect
+		return nil
+	case LiveCommandKindResolveManual:
+		*s = LiveCommandKindResolveManual
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -6375,6 +6485,77 @@ func (s *LiveCommandResource) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// An Effect on a token, which everyone who sees the token sees.
+// Ref: #/components/schemas/LiveEffect
+type LiveEffect struct {
+	ID            ID       `json:"id"`
+	Slug          string   `json:"slug"`
+	Name          string   `json:"name"`
+	SourceId      OptID    `json:"sourceId"`
+	Concentration bool     `json:"concentration"`
+	RoundsLeft    OptInt32 `json:"roundsLeft"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveEffect) GetID() ID {
+	return s.ID
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveEffect) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LiveEffect) GetName() string {
+	return s.Name
+}
+
+// GetSourceId returns the value of SourceId.
+func (s *LiveEffect) GetSourceId() OptID {
+	return s.SourceId
+}
+
+// GetConcentration returns the value of Concentration.
+func (s *LiveEffect) GetConcentration() bool {
+	return s.Concentration
+}
+
+// GetRoundsLeft returns the value of RoundsLeft.
+func (s *LiveEffect) GetRoundsLeft() OptInt32 {
+	return s.RoundsLeft
+}
+
+// SetID sets the value of ID.
+func (s *LiveEffect) SetID(val ID) {
+	s.ID = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveEffect) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveEffect) SetName(val string) {
+	s.Name = val
+}
+
+// SetSourceId sets the value of SourceId.
+func (s *LiveEffect) SetSourceId(val OptID) {
+	s.SourceId = val
+}
+
+// SetConcentration sets the value of Concentration.
+func (s *LiveEffect) SetConcentration(val bool) {
+	s.Concentration = val
+}
+
+// SetRoundsLeft sets the value of RoundsLeft.
+func (s *LiveEffect) SetRoundsLeft(val OptInt32) {
+	s.RoundsLeft = val
 }
 
 // A light on the Map, for the DM.
@@ -6435,6 +6616,33 @@ func (s *LiveLight) SetBrightFt(val int32) {
 // SetDimFt sets the value of DimFt.
 func (s *LiveLight) SetDimFt(val int32) {
 	s.DimFt = val
+}
+
+// Part of an Effect the engine cannot compute, for the DM to resolve by hand.
+// Ref: #/components/schemas/LiveManual
+type LiveManual struct {
+	ID   ID     `json:"id"`
+	Text string `json:"text"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveManual) GetID() ID {
+	return s.ID
+}
+
+// GetText returns the value of Text.
+func (s *LiveManual) GetText() string {
+	return s.Text
+}
+
+// SetID sets the value of ID.
+func (s *LiveManual) SetID(val ID) {
+	s.ID = val
+}
+
+// SetText sets the value of Text.
+func (s *LiveManual) SetText(val string) {
+	s.Text = val
 }
 
 // The active Map's picture and hex calibration.
@@ -6811,6 +7019,55 @@ func (s *LivePromptKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// A saving throw waiting on its Roll Card to end an Effect.
+// Ref: #/components/schemas/LiveSave
+type LiveSave struct {
+	RollId  ID     `json:"rollId"`
+	TokenId ID     `json:"tokenId"`
+	Effect  string `json:"effect"`
+	DC      int32  `json:"dc"`
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveSave) GetRollId() ID {
+	return s.RollId
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveSave) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetEffect returns the value of Effect.
+func (s *LiveSave) GetEffect() string {
+	return s.Effect
+}
+
+// GetDC returns the value of DC.
+func (s *LiveSave) GetDC() int32 {
+	return s.DC
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveSave) SetRollId(val ID) {
+	s.RollId = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveSave) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *LiveSave) SetEffect(val string) {
+	s.Effect = val
+}
+
+// SetDC sets the value of DC.
+func (s *LiveSave) SetDC(val int32) {
+	s.DC = val
+}
+
 // The Session as a connection sees it.
 // Ref: #/components/schemas/LiveSessionView
 type LiveSessionView struct {
@@ -6965,6 +7222,7 @@ type LiveToken struct {
 	Health  OptLiveTokenHealth `json:"health"`
 	Attacks []LiveAttack       `json:"attacks"`
 	Shield  OptBool            `json:"shield"`
+	Effects []LiveEffect       `json:"effects"`
 }
 
 // GetID returns the value of ID.
@@ -7037,6 +7295,11 @@ func (s *LiveToken) GetShield() OptBool {
 	return s.Shield
 }
 
+// GetEffects returns the value of Effects.
+func (s *LiveToken) GetEffects() []LiveEffect {
+	return s.Effects
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -7105,6 +7368,11 @@ func (s *LiveToken) SetAttacks(val []LiveAttack) {
 // SetShield sets the value of Shield.
 func (s *LiveToken) SetShield(val OptBool) {
 	s.Shield = val
+}
+
+// SetEffects sets the value of Effects.
+func (s *LiveToken) SetEffects(val []LiveEffect) {
+	s.Effects = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -7345,15 +7613,19 @@ type LiveUpdateNoContent struct{}
 // because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
 // Ref: #/components/schemas/LiveView
 type LiveView struct {
-	Tokens     []LiveToken     `json:"tokens"`
-	Map        OptLiveMap      `json:"map"`
-	Fog        bool            `json:"fog"`
-	Visible    []HexCoord      `json:"visible"`
-	Remembered []HexCoord      `json:"remembered"`
-	Combat     OptLiveCombat   `json:"combat"`
-	Walls      []HexCoord      `json:"walls"`
-	Lights     []LiveLight     `json:"lights"`
-	Ambient    OptAmbientLight `json:"ambient"`
+	Tokens     []LiveToken   `json:"tokens"`
+	Map        OptLiveMap    `json:"map"`
+	Fog        bool          `json:"fog"`
+	Visible    []HexCoord    `json:"visible"`
+	Remembered []HexCoord    `json:"remembered"`
+	Combat     OptLiveCombat `json:"combat"`
+	Manual     []LiveManual  `json:"manual"`
+	// The DM is resolving part of an Effect by hand.
+	Resolving OptBool         `json:"resolving"`
+	Saves     []LiveSave      `json:"saves"`
+	Walls     []HexCoord      `json:"walls"`
+	Lights    []LiveLight     `json:"lights"`
+	Ambient   OptAmbientLight `json:"ambient"`
 }
 
 // GetTokens returns the value of Tokens.
@@ -7384,6 +7656,21 @@ func (s *LiveView) GetRemembered() []HexCoord {
 // GetCombat returns the value of Combat.
 func (s *LiveView) GetCombat() OptLiveCombat {
 	return s.Combat
+}
+
+// GetManual returns the value of Manual.
+func (s *LiveView) GetManual() []LiveManual {
+	return s.Manual
+}
+
+// GetResolving returns the value of Resolving.
+func (s *LiveView) GetResolving() OptBool {
+	return s.Resolving
+}
+
+// GetSaves returns the value of Saves.
+func (s *LiveView) GetSaves() []LiveSave {
+	return s.Saves
 }
 
 // GetWalls returns the value of Walls.
@@ -7429,6 +7716,21 @@ func (s *LiveView) SetRemembered(val []HexCoord) {
 // SetCombat sets the value of Combat.
 func (s *LiveView) SetCombat(val OptLiveCombat) {
 	s.Combat = val
+}
+
+// SetManual sets the value of Manual.
+func (s *LiveView) SetManual(val []LiveManual) {
+	s.Manual = val
+}
+
+// SetResolving sets the value of Resolving.
+func (s *LiveView) SetResolving(val OptBool) {
+	s.Resolving = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *LiveView) SetSaves(val []LiveSave) {
+	s.Saves = val
 }
 
 // SetWalls sets the value of Walls.
@@ -8212,6 +8514,52 @@ func (s *NpcInput) SetDmNotes(val OptString) {
 // SetDisposition sets the value of Disposition.
 func (s *NpcInput) SetDisposition(val Disposition) {
 	s.Disposition = val
+}
+
+// NewOptAbility returns new OptAbility with value set to v.
+func NewOptAbility(v Ability) OptAbility {
+	return OptAbility{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAbility is optional Ability.
+type OptAbility struct {
+	Value Ability
+	Set   bool
+}
+
+// IsSet returns true if OptAbility was set.
+func (o OptAbility) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAbility) Reset() {
+	var v Ability
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAbility) SetTo(v Ability) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAbility) Get() (v Ability, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAbility) Or(d Ability) Ability {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
 }
 
 // NewOptAmbientLight returns new OptAmbientLight with value set to v.

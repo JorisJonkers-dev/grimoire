@@ -48,7 +48,21 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	}
 	stats := domain.Stats{
 		Source: "monster:" + slug, AC: int(m.ArmorClass), HP: int(m.HitPoints), HPMax: int(m.HitPoints), Attacks: []domain.Attack{},
-		Intelligence: int(m.Intelligence),
+		Intelligence: int(m.Intelligence), Saves: map[string]int{},
+	}
+	scores := map[string]int32{
+		"strength": m.Strength, "dexterity": m.Dexterity, "constitution": m.Constitution, "intelligence": m.Intelligence, "wisdom": m.Wisdom,
+		"charisma": m.Charisma,
+	}
+	for ability, score := range scores {
+		stats.Saves[ability] = rules.Modifier(int(score))
+	}
+	saves, err := s.Store.q.MonsterSaves(ctx, m.ID)
+	if err != nil {
+		return "", domain.Stats{}, err
+	}
+	for _, sv := range saves {
+		stats.Saves[sv.Name] = int(sv.Value)
 	}
 	for _, r := range rows {
 		stats.Attacks = append(stats.Attacks, domain.Attack{
@@ -76,8 +90,11 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	pb := sheet.Derived.ProficiencyBonus
 	stats := domain.Stats{
 		Source: "character:" + id.String(), AC: sheet.Derived.ArmorClass, HP: sheet.HPCurrent, HPMax: sheet.HPMax,
-		Shield:  sheet.Class == "wizard" || sheet.Class == "sorcerer",
+		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{},
 		Attacks: []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning"}},
+	}
+	for _, sv := range sheet.Derived.Saves {
+		stats.Saves[string(sv.Ability)] = sv.Bonus
 	}
 	for _, w := range sheet.Weapons {
 		props := attack.Weapon{

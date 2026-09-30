@@ -143,6 +143,17 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 		}
 		tokens = append(tokens, tok)
 	}
+	saves, err := s.q.SessionTokenSaves(ctx, row.ID)
+	if err != nil {
+		return domain.Session{}, nil, nil, err
+	}
+	for _, sv := range saves {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == sv.TokenID })
+		if tokens[i].Stats.Saves == nil {
+			tokens[i].Stats.Saves = map[string]int{}
+		}
+		tokens[i].Stats.Saves[sv.Ability] = int(sv.Bonus)
+	}
 	attacks, err := s.q.SessionTokenAttacks(ctx, row.ID)
 	if err != nil {
 		return domain.Session{}, nil, nil, err
@@ -178,6 +189,9 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 		if err := tx.saveCombat(ctx, sess, w, actor, c, now); err != nil {
 			return err
 		}
+		if err := tx.saveEffects(ctx, sid, w.Effects); err != nil {
+			return err
+		}
 		if board != nil {
 			if err := tx.addReveals(ctx, board.Map.ID, w.AutoReveal); err != nil {
 				return err
@@ -204,7 +218,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
-		domain.ActionReactionDeclined:
+		domain.ActionReactionDeclined, domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
+		domain.ActionManualResolved:
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
 		return s.writeHP(ctx, sid, w)
@@ -247,6 +262,11 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 			TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
 			LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
 		}); err != nil {
+			return err
+		}
+	}
+	for ability, bonus := range st.Saves {
+		if err := s.q.InsertTokenSave(ctx, queries.InsertTokenSaveParams{TokenID: uuid.UUID(t.ID), Ability: ability, Bonus: int32(bonus)}); err != nil {
 			return err
 		}
 	}
@@ -318,7 +338,8 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 	switch w.Kind {
 	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved,
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
-		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined:
+		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
+		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -455,6 +476,88 @@ func (s *Store) Observations(ctx context.Context, id domain.SessionID) (map[doma
 			out[o] = map[domain.TokenID]int{}
 		}
 		out[o][domain.TokenID(r.AttackerTokenID)] = int(r.RangedDamage)
+	}
+	return out, nil
+}
+
+// saveEffects rewrites a Session's Effects, Manual prompts and pending saves after a change to them.
+//
+//nolint:gosec // rounds, DCs and orderings are bounded by the rules
+func (s *Store) saveEffects(ctx context.Context, sid uuid.UUID, fx *domain.Effects) error {
+	if fx == nil {
+		return nil
+	}
+	for _, clear := range []func(context.Context, uuid.UUID) error{s.q.ClearPendingSaves, s.q.ClearEffects, s.q.ClearManuals} {
+		if err := clear(ctx, sid); err != nil {
+			return err
+		}
+	}
+	for _, e := range fx.Active {
+		if err := s.insertEffect(ctx, sid, e); err != nil {
+			return err
+		}
+	}
+	for i, m := range fx.Manual {
+		if err := s.q.InsertManual(ctx, queries.InsertManualParams{ID: m.ID, SessionID: sid, Ordering: int32(i), Text: m.Text}); err != nil {
+			return err
+		}
+	}
+	for _, p := range fx.Saves {
+		if err := s.q.InsertPendingSave(ctx, queries.InsertPendingSaveParams{RollID: uuid.UUID(p.RollID), EffectID: uuid.UUID(p.Effect), SessionID: sid, Dc: int32(p.DC)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Store) insertEffect(ctx context.Context, sid uuid.UUID, e domain.Effect) error {
+	p := queries.InsertEffectParams{
+		ID: uuid.UUID(e.ID), SessionID: sid, TargetTokenID: uuid.UUID(e.Target), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration,
+	}
+	if e.Source != nil {
+		p.SourceTokenID = pgtype.UUID{Bytes: *e.Source, Valid: true}
+	}
+	if e.RoundsLeft > 0 {
+		p.RoundsLeft = pgInt(e.RoundsLeft)
+	}
+	if e.SaveAbility != "" {
+		p.SaveAbility, p.SaveDc = pgtype.Text{String: e.SaveAbility, Valid: true}, pgInt(e.SaveDC)
+	}
+	return s.q.InsertEffect(ctx, p)
+}
+
+// LoadEffects reads a Session's Effects, Manual prompts and pending saves.
+func (s *Store) LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error) {
+	sid := uuid.UUID(id)
+	var out domain.Effects
+	rows, err := s.q.SessionEffects(ctx, sid)
+	if err != nil {
+		return out, err
+	}
+	for _, r := range rows {
+		e := domain.Effect{
+			ID: domain.EffectID(r.ID), Target: domain.TokenID(r.TargetTokenID), Slug: r.Slug, Name: r.Name, Concentration: r.Concentration,
+			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32),
+		}
+		if r.SourceTokenID.Valid {
+			src := domain.TokenID(r.SourceTokenID.Bytes)
+			e.Source = &src
+		}
+		out.Active = append(out.Active, e)
+	}
+	manuals, err := s.q.SessionManuals(ctx, sid)
+	if err != nil {
+		return out, err
+	}
+	for _, m := range manuals {
+		out.Manual = append(out.Manual, domain.ManualPrompt{ID: m.ID, Text: m.Text})
+	}
+	saves, err := s.q.SessionPendingSaves(ctx, sid)
+	if err != nil {
+		return out, err
+	}
+	for _, p := range saves {
+		out.Saves = append(out.Saves, domain.PendingSave{RollID: domain.RollID(p.RollID), Effect: domain.EffectID(p.EffectID), DC: int(p.Dc)})
 	}
 	return out, nil
 }

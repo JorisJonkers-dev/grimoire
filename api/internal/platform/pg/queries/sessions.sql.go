@@ -76,6 +76,33 @@ func (q *Queries) ClearAttacks(ctx context.Context, combatID uuid.UUID) error {
 	return err
 }
 
+const clearEffects = `-- name: ClearEffects :exec
+DELETE FROM play.active_effects WHERE session_id = $1
+`
+
+func (q *Queries) ClearEffects(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearEffects, sessionID)
+	return err
+}
+
+const clearManuals = `-- name: ClearManuals :exec
+DELETE FROM play.manual_prompts WHERE session_id = $1
+`
+
+func (q *Queries) ClearManuals(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearManuals, sessionID)
+	return err
+}
+
+const clearPendingSaves = `-- name: ClearPendingSaves :exec
+DELETE FROM play.pending_saves WHERE session_id = $1
+`
+
+func (q *Queries) ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearPendingSaves, sessionID)
+	return err
+}
+
 const clearPrompts = `-- name: ClearPrompts :exec
 DELETE FROM play.reaction_prompts WHERE combat_id = $1
 `
@@ -249,6 +276,41 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 	return i, err
 }
 
+const insertEffect = `-- name: InsertEffect :exec
+INSERT INTO play.active_effects (id, session_id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+    $9, $10)
+`
+
+type InsertEffectParams struct {
+	ID            uuid.UUID
+	SessionID     uuid.UUID
+	TargetTokenID uuid.UUID
+	SourceTokenID pgtype.UUID
+	Slug          string
+	Name          string
+	Concentration bool
+	RoundsLeft    pgtype.Int4
+	SaveAbility   pgtype.Text
+	SaveDc        pgtype.Int4
+}
+
+func (q *Queries) InsertEffect(ctx context.Context, arg InsertEffectParams) error {
+	_, err := q.db.Exec(ctx, insertEffect,
+		arg.ID,
+		arg.SessionID,
+		arg.TargetTokenID,
+		arg.SourceTokenID,
+		arg.Slug,
+		arg.Name,
+		arg.Concentration,
+		arg.RoundsLeft,
+		arg.SaveAbility,
+		arg.SaveDc,
+	)
+	return err
+}
+
 const insertHPEvent = `-- name: InsertHPEvent :exec
 INSERT INTO play.action_hp_events (action_id, token_id, hp_before, hp_after, undoes_action_id)
 VALUES ($1, $2, $3, $4, $5)
@@ -269,6 +331,48 @@ func (q *Queries) InsertHPEvent(ctx context.Context, arg InsertHPEventParams) er
 		arg.HpBefore,
 		arg.HpAfter,
 		arg.UndoesActionID,
+	)
+	return err
+}
+
+const insertManual = `-- name: InsertManual :exec
+INSERT INTO play.manual_prompts (id, session_id, ordering, text) VALUES ($1, $2, $3, $4)
+`
+
+type InsertManualParams struct {
+	ID        uuid.UUID
+	SessionID uuid.UUID
+	Ordering  int32
+	Text      string
+}
+
+func (q *Queries) InsertManual(ctx context.Context, arg InsertManualParams) error {
+	_, err := q.db.Exec(ctx, insertManual,
+		arg.ID,
+		arg.SessionID,
+		arg.Ordering,
+		arg.Text,
+	)
+	return err
+}
+
+const insertPendingSave = `-- name: InsertPendingSave :exec
+INSERT INTO play.pending_saves (roll_id, effect_id, session_id, dc) VALUES ($1, $2, $3, $4)
+`
+
+type InsertPendingSaveParams struct {
+	RollID    uuid.UUID
+	EffectID  uuid.UUID
+	SessionID uuid.UUID
+	Dc        int32
+}
+
+func (q *Queries) InsertPendingSave(ctx context.Context, arg InsertPendingSaveParams) error {
+	_, err := q.db.Exec(ctx, insertPendingSave,
+		arg.RollID,
+		arg.EffectID,
+		arg.SessionID,
+		arg.Dc,
 	)
 	return err
 }
@@ -441,6 +545,21 @@ func (q *Queries) InsertTokenEvent(ctx context.Context, arg InsertTokenEventPara
 	return err
 }
 
+const insertTokenSave = `-- name: InsertTokenSave :exec
+INSERT INTO play.token_saves (token_id, ability, bonus) VALUES ($1, $2, $3)
+`
+
+type InsertTokenSaveParams struct {
+	TokenID uuid.UUID
+	Ability string
+	Bonus   int32
+}
+
+func (q *Queries) InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error {
+	_, err := q.db.Exec(ctx, insertTokenSave, arg.TokenID, arg.Ability, arg.Bonus)
+	return err
+}
+
 const lastDamage = `-- name: LastDamage :one
 SELECT a.id, h.token_id, h.hp_before, h.hp_after FROM play.actions a
 JOIN play.action_hp_events h ON h.action_id = a.id
@@ -566,8 +685,38 @@ func (q *Queries) MonsterAttackRows(ctx context.Context, monsterID int64) ([]Mon
 	return items, nil
 }
 
+const monsterSaves = `-- name: MonsterSaves :many
+SELECT name, value FROM compendium.monster_stats WHERE monster_id = $1 AND kind = 'save'
+`
+
+type MonsterSavesRow struct {
+	Name  string
+	Value int32
+}
+
+func (q *Queries) MonsterSaves(ctx context.Context, monsterID int64) ([]MonsterSavesRow, error) {
+	rows, err := q.db.Query(ctx, monsterSaves, monsterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MonsterSavesRow{}
+	for rows.Next() {
+		var i MonsterSavesRow
+		if err := rows.Scan(&i.Name, &i.Value); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const monsterStatblock = `-- name: MonsterStatblock :one
-SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence FROM compendium.monsters m
+SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma
+FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = $1 AND ($2::text IS NULL OR d.key = $2::text)
 ORDER BY d.precedence DESC LIMIT 1
@@ -584,6 +733,11 @@ type MonsterStatblockRow struct {
 	ArmorClass   int32
 	HitPoints    int32
 	Intelligence int32
+	Strength     int32
+	Dexterity    int32
+	Constitution int32
+	Wisdom       int32
+	Charisma     int32
 }
 
 func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockParams) (MonsterStatblockRow, error) {
@@ -595,6 +749,11 @@ func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockPara
 		&i.ArmorClass,
 		&i.HitPoints,
 		&i.Intelligence,
+		&i.Strength,
+		&i.Dexterity,
+		&i.Constitution,
+		&i.Wisdom,
+		&i.Charisma,
 	)
 	return i, err
 }
@@ -851,6 +1010,82 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 	return i, err
 }
 
+const sessionEffects = `-- name: SessionEffects :many
+SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc
+FROM play.active_effects WHERE session_id = $1 ORDER BY id
+`
+
+type SessionEffectsRow struct {
+	ID            uuid.UUID
+	TargetTokenID uuid.UUID
+	SourceTokenID pgtype.UUID
+	Slug          string
+	Name          string
+	Concentration bool
+	RoundsLeft    pgtype.Int4
+	SaveAbility   pgtype.Text
+	SaveDc        pgtype.Int4
+}
+
+func (q *Queries) SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error) {
+	rows, err := q.db.Query(ctx, sessionEffects, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionEffectsRow{}
+	for rows.Next() {
+		var i SessionEffectsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TargetTokenID,
+			&i.SourceTokenID,
+			&i.Slug,
+			&i.Name,
+			&i.Concentration,
+			&i.RoundsLeft,
+			&i.SaveAbility,
+			&i.SaveDc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sessionManuals = `-- name: SessionManuals :many
+SELECT id, text FROM play.manual_prompts WHERE session_id = $1 ORDER BY ordering
+`
+
+type SessionManualsRow struct {
+	ID   uuid.UUID
+	Text string
+}
+
+func (q *Queries) SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error) {
+	rows, err := q.db.Query(ctx, sessionManuals, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionManualsRow{}
+	for rows.Next() {
+		var i SessionManualsRow
+		if err := rows.Scan(&i.ID, &i.Text); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionObservations = `-- name: SessionObservations :many
 SELECT o.observer_token_id, o.attacker_token_id, o.ranged_damage FROM play.observed_damage o
 JOIN play.tokens t ON t.id = o.observer_token_id WHERE t.session_id = $1
@@ -866,6 +1101,36 @@ func (q *Queries) SessionObservations(ctx context.Context, sessionID uuid.UUID) 
 	for rows.Next() {
 		var i PlayObservedDamage
 		if err := rows.Scan(&i.ObserverTokenID, &i.AttackerTokenID, &i.RangedDamage); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sessionPendingSaves = `-- name: SessionPendingSaves :many
+SELECT roll_id, effect_id, dc FROM play.pending_saves WHERE session_id = $1
+`
+
+type SessionPendingSavesRow struct {
+	RollID   uuid.UUID
+	EffectID uuid.UUID
+	Dc       int32
+}
+
+func (q *Queries) SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error) {
+	rows, err := q.db.Query(ctx, sessionPendingSaves, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionPendingSavesRow{}
+	for rows.Next() {
+		var i SessionPendingSavesRow
+		if err := rows.Scan(&i.RollID, &i.EffectID, &i.Dc); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -902,6 +1167,30 @@ func (q *Queries) SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) 
 			&i.DamageBonus,
 			&i.DamageType,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sessionTokenSaves = `-- name: SessionTokenSaves :many
+SELECT s.token_id, s.ability, s.bonus FROM play.token_saves s JOIN play.tokens t ON t.id = s.token_id WHERE t.session_id = $1
+`
+
+func (q *Queries) SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error) {
+	rows, err := q.db.Query(ctx, sessionTokenSaves, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PlayTokenSafe{}
+	for rows.Next() {
+		var i PlayTokenSafe
+		if err := rows.Scan(&i.TokenID, &i.Ability, &i.Bonus); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

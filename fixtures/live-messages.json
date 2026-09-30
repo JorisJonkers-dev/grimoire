@@ -235,6 +235,36 @@
       "r": 0,
       "hidden": false,
       "shield": true
+    },
+    {
+      "nonce": "n27",
+      "kind": "apply_effect",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "effect": "hold-person",
+      "effectName": "Hold Person",
+      "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
+      "rounds": 10,
+      "saveAbility": "wisdom",
+      "saveDc": 13
+    },
+    {
+      "nonce": "n28",
+      "kind": "end_effect",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "effectId": "0190c7a8-0000-7000-8000-000000000017"
+    },
+    {
+      "nonce": "n29",
+      "kind": "resolve_manual",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "manualId": "0190c7a8-0000-7000-8000-000000000018"
     }
   ],
   "updates": [
@@ -257,7 +287,17 @@
             "r": -1,
             "hidden": false,
             "darkvisionFt": 0,
-            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "effects": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000017",
+                "slug": "bless",
+                "name": "Bless",
+                "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
+                "concentration": true,
+                "roundsLeft": 9
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000013",
@@ -362,7 +402,16 @@
             "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
             "secondsLeft": 9
           }
-        }
+        },
+        "resolving": true,
+        "saves": [
+          {
+            "rollId": "0190c7a8-0000-7000-8000-000000000019",
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "effect": "Hold Person",
+            "dc": 13
+          }
+        ]
       }
     },
     {
@@ -379,7 +428,17 @@
             "r": -1,
             "hidden": false,
             "darkvisionFt": 0,
-            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "effects": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000017",
+                "slug": "bless",
+                "name": "Bless",
+                "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
+                "concentration": true,
+                "roundsLeft": 9
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000013",
@@ -500,7 +559,21 @@
             "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
             "secondsLeft": 9
           }
-        }
+        },
+        "manual": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000018",
+            "text": "Goblin: Resolve Hold Person by hand."
+          }
+        ],
+        "saves": [
+          {
+            "rollId": "0190c7a8-0000-7000-8000-000000000019",
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "effect": "Hold Person",
+            "dc": 13
+          }
+        ]
       }
     },
     {
@@ -556,7 +629,17 @@
             "r": -1,
             "hidden": false,
             "darkvisionFt": 0,
-            "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+            "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "effects": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000017",
+                "slug": "bless",
+                "name": "Bless",
+                "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
+                "concentration": true,
+                "roundsLeft": 9
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000013",
@@ -661,7 +744,16 @@
             "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
             "secondsLeft": 9
           }
-        }
+        },
+        "resolving": true,
+        "saves": [
+          {
+            "rollId": "0190c7a8-0000-7000-8000-000000000019",
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+            "effect": "Hold Person",
+            "dc": 13
+          }
+        ]
       },
       "steps": [
         {
@@ -674,7 +766,17 @@
               "r": -1,
               "hidden": false,
               "darkvisionFt": 0,
-              "controllerId": "0190c7a8-0000-7000-8000-00000000000f"
+              "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
+              "effects": [
+                {
+                  "id": "0190c7a8-0000-7000-8000-000000000017",
+                  "slug": "bless",
+                  "name": "Bless",
+                  "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
+                  "concentration": true,
+                  "roundsLeft": 9
+                }
+              ]
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000013",
@@ -779,7 +881,16 @@
               "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
               "secondsLeft": 9
             }
-          }
+          },
+          "resolving": true,
+          "saves": [
+            {
+              "rollId": "0190c7a8-0000-7000-8000-000000000019",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "effect": "Hold Person",
+              "dc": 13
+            }
+          ]
         }
       ]
     },

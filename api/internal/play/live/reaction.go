@@ -11,6 +11,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -37,6 +38,9 @@ func (r *runtime) prompt(kind string, reactor, trigger domain.Token, attackNo in
 // step whose opportunity was already offered.
 func (r *runtime) walkWrite(t domain.Token, path []hex.Coord, resumed bool) Write {
 	costs := pathCosts(r.st.walkGrid(true, t, nil), path)
+	for i := range costs {
+		costs[i] *= effects.MoveMultiplier(r.st.actives(t.ID))
+	}
 	w := Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: costs[len(costs)-1]}
 	first := 0
 	if resumed {

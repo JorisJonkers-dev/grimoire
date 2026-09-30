@@ -116,7 +116,8 @@ ORDER BY a.seq DESC LIMIT 1;
 SELECT ruleset_pref FROM campaign.campaigns WHERE id = $1;
 
 -- name: MonsterStatblock :one
-SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence FROM compendium.monsters m
+SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma
+FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = @slug AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
 ORDER BY d.precedence DESC LIMIT 1;
@@ -161,3 +162,42 @@ DELETE FROM play.reaction_prompts WHERE combat_id = $1;
 
 -- name: CampaignReactionTimeout :one
 SELECT reaction_timeout_s FROM campaign.campaigns WHERE id = $1;
+
+-- name: SessionEffects :many
+SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc
+FROM play.active_effects WHERE session_id = $1 ORDER BY id;
+
+-- name: ClearEffects :exec
+DELETE FROM play.active_effects WHERE session_id = $1;
+
+-- name: InsertEffect :exec
+INSERT INTO play.active_effects (id, session_id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc)
+VALUES (@id, @session_id, @target_token_id, sqlc.narg(source_token_id), @slug, @name, @concentration, sqlc.narg(rounds_left),
+    sqlc.narg(save_ability), sqlc.narg(save_dc));
+
+-- name: SessionManuals :many
+SELECT id, text FROM play.manual_prompts WHERE session_id = $1 ORDER BY ordering;
+
+-- name: ClearManuals :exec
+DELETE FROM play.manual_prompts WHERE session_id = $1;
+
+-- name: InsertManual :exec
+INSERT INTO play.manual_prompts (id, session_id, ordering, text) VALUES (@id, @session_id, @ordering, @text);
+
+-- name: SessionPendingSaves :many
+SELECT roll_id, effect_id, dc FROM play.pending_saves WHERE session_id = $1;
+
+-- name: ClearPendingSaves :exec
+DELETE FROM play.pending_saves WHERE session_id = $1;
+
+-- name: InsertPendingSave :exec
+INSERT INTO play.pending_saves (roll_id, effect_id, session_id, dc) VALUES (@roll_id, @effect_id, @session_id, @dc);
+
+-- name: SessionTokenSaves :many
+SELECT s.token_id, s.ability, s.bonus FROM play.token_saves s JOIN play.tokens t ON t.id = s.token_id WHERE t.session_id = $1;
+
+-- name: InsertTokenSave :exec
+INSERT INTO play.token_saves (token_id, ability, bonus) VALUES (@token_id, @ability, @bonus);
+
+-- name: MonsterSaves :many
+SELECT name, value FROM compendium.monster_stats WHERE monster_id = @monster_id AND kind = 'save';

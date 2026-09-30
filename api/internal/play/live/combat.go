@@ -37,7 +37,8 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 		if !c.Acting(x) {
 			return Write{}, "It is not " + t.Label + "'s turn."
 		}
-		return Write{Kind: domain.ActionTurnEnded, Token: t, Combatant: x.ID}, ""
+		rolls, saves := r.saves(m, t)
+		return Write{Kind: domain.ActionTurnEnded, Token: t, Combatant: x.ID, Rolls: rolls, newSaves: saves}, ""
 	}
 	res, ok := map[string]combat.Resource{ResourceAction: combat.Action, ResourceBonusAction: combat.BonusAction, ResourceReaction: combat.Reaction}[cmd.Resource]
 	switch {
@@ -123,6 +124,10 @@ func (r *runtime) initiativeRoll(dm domain.Member, t domain.Token, bonus int) do
 // rolled takes a resolved Roll Request into the Combat it belongs to: an initiative, or the attack on
 // the table.
 func (r *runtime) rolled(req request) {
+	if i := slices.IndexFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.RollID == req.cmd.rollID }); i >= 0 {
+		r.saveRolled(r.st.fx.Saves[i])
+		return
+	}
 	c := r.st.combat
 	if c == nil {
 		return

@@ -70,6 +70,8 @@ type Stats struct {
 	Intelligence int
 	// Shield is set for statblocks that can cast the Shield spell.
 	Shield bool
+	// Saves are saving throw bonuses by ability.
+	Saves map[string]int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

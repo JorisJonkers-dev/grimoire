@@ -55,21 +55,51 @@ func D20(m Mode) string {
 // HitChance is the percent chance that an attack with this bonus hits the armour class. A natural 20
 // always hits and a natural 1 always misses.
 func HitChance(bonus, ac int, m Mode) int {
+	return int(math.Round(withMode(single(bonus, ac), m) * 100))
+}
+
+// HitChanceDice is HitChance when extra dice such as Bless join the roll; every sum they can make is weighed.
+func HitChanceDice(bonus int, extra dice.Spec, ac int, m Mode) int {
+	sums := map[int]float64{0: 1}
+	for _, g := range extra.Groups {
+		for range g.Count {
+			next := map[int]float64{}
+			for s, w := range sums {
+				for f := 1; f <= g.Faces; f++ {
+					next[s+g.Sign*f] += w / float64(g.Faces)
+				}
+			}
+			sums = next
+		}
+	}
+	p := 0.0
+	for s, w := range sums {
+		p += w * withMode(single(bonus+s, ac), m)
+	}
+	return int(math.Round(p * 100))
+}
+
+// single is the chance one d20 hits.
+func single(bonus, ac int) float64 {
 	hits := 0
 	for face := 1; face <= 20; face++ {
 		if Outcome(face, bonus, ac) != Miss {
 			hits++
 		}
 	}
-	p := float64(hits) / 20
+	return float64(hits) / 20
+}
+
+// withMode turns the chance of one d20 into the chance with advantage or disadvantage.
+func withMode(p float64, m Mode) float64 {
 	switch m {
 	case Advantage:
-		p = 1 - (1-p)*(1-p)
+		return 1 - (1-p)*(1-p)
 	case Disadvantage:
-		p *= p
+		return p * p
 	case Normal:
 	}
-	return int(math.Round(p * 100))
+	return p
 }
 
 // Result is what an attack roll did.

@@ -25,6 +25,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planUndo()
 	case CmdSetTactics:
 		return r.planTactics(cmd)
+	case CmdApplyEffect, CmdEndEffect, CmdResolveManual:
+		return r.planEffect(cmd)
 	case CmdReact:
 		return r.planReact(m, cmd)
 	case CmdWalk:

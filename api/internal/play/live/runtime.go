@@ -38,10 +38,18 @@ type Write struct {
 	board     *domain.MapState
 	frames    []*state
 	prompt    *domain.ReactionPrompt
-	resume    *domain.Resume
-	answered  *domain.ReactionPrompt
-	total     int
-	resource  combat.Resource
+	// Effects is the Session's Effects after the change, for the store to save; nil when unchanged.
+	Effects  *domain.Effects
+	effect   *domain.Effect
+	ended    []domain.EffectID
+	manuals  []domain.ManualPrompt
+	newSaves []domain.PendingSave
+	resolved uuid.UUID
+	saved    domain.RollID
+	resume   *domain.Resume
+	answered *domain.ReactionPrompt
+	total    int
+	resource combat.Resource
 }
 
 // Store is the runtime's persistence port.
@@ -49,6 +57,7 @@ type Store interface {
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
+	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
 	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
@@ -167,7 +176,12 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now}
+	fx, err := h.Store.LoadEffects(ctx, id)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -378,8 +392,33 @@ func (r *runtime) viewUpdate(a Audience, seq int64, w *Write) Update {
 	return u
 }
 
-// apply changes a copy of the state and records the hexes the party now sees for the first time.
+// apply changes a copy of the state, then its Effects: those the write adds or ends, those that count
+// down as turns start, concentration broken by damage, and those of a removed token.
 func apply(s *state, w *Write) {
+	before := s.acting()
+	change(s, w)
+	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
+	applyEffects(s, w)
+	started := map[domain.TokenID]bool{}
+	for id := range s.acting() {
+		started[id] = !before[id]
+	}
+	changed = s.tick(started) || changed
+	if w.Kind == domain.ActionDamageDealt {
+		changed = s.concentrate(*w.HP) || changed
+	}
+	if w.Kind == domain.ActionTokenRemoved {
+		s.forget(w.Token.ID)
+		changed = true
+	}
+	if changed {
+		fx := cloneEffects(s.fx)
+		w.Effects = &fx
+	}
+}
+
+// change applies the write itself and records the hexes the party now sees for the first time.
+func change(s *state, w *Write) {
 	switch w.Kind {
 	case domain.ActionTokenWalked:
 		walk(s, w)
@@ -395,6 +434,8 @@ func apply(s *state, w *Write) {
 		return
 	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined:
 		applyReaction(s, w)
+		return
+	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
 		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)

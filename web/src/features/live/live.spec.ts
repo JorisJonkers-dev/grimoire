@@ -531,6 +531,78 @@ describe('reactions', () => {
   })
 })
 
+describe('effects', () => {
+  const aria: LiveToken = {
+    ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id, hp: 12, hpMax: 12,
+    effects: [{ id: '0190c7a8-0000-7000-8000-000000000061', slug: 'bless', name: 'Bless', sourceId: '0190c7a8-0000-7000-8000-00000000000e', concentration: true, roundsLeft: 9 }],
+  }
+  const saveRoll = (id: string) => ({
+    id, purpose: 'Wisdom save to end Hold Person (DC 13)', notation: '1d20', requestedBy: 'Joris', roller: { id: member.id, name: 'Joris' }, mine: true,
+    canRoll: true, status: 'pending', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }], dice: [{ no: 0, group: 0, faces: 20, kept: false }],
+    modifiers: [], createdAt: '2026-09-30T20:00:00Z',
+  })
+
+  it('lets the DM apply, end and resolve effects', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => saveRoll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const manual = [{ id: '0190c7a8-0000-7000-8000-000000000062', text: 'Goblin Boss: Resolve Hold Person by hand.' }]
+    const saves = [{ rollId: '0190c7a8-0000-7000-8000-000000000063', tokenId: goblin.id, effect: 'Hold Person', dc: 13 }]
+    s.receive(snapshot([aria, goblin], 'dm', { manual, saves }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (12/12 HP) · Bless')
+    expect(wrapper.get('[data-testid="manual"]').text()).toContain('Resolve Hold Person by hand.')
+    expect(wrapper.get('[data-testid="roll-card"]').text()).toContain('Wisdom save to end Hold Person')
+    await wrapper.get(`[data-testid="manual-done-${manual[0]?.id ?? ''}"]`).trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'resolve_manual', manualId: manual[0]?.id })
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    const panel = wrapper.get('[data-testid="effects-panel"]')
+    expect(panel.text()).toContain('Bless · 9 rounds · concentration')
+    await panel.get('[data-testid="end-effect-bless"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'end_effect', effectId: aria.effects?.[0]?.id })
+    const sent = s.sent.length
+    await panel.get('form').trigger('submit')
+    expect(s.sent).toHaveLength(sent)
+    await panel.get('[data-testid="effect-name"]').setValue('hold-person')
+    await panel.get('[data-testid="effect-source"]').setValue(aria.id)
+    await panel.get('[data-testid="effect-rounds"]').setValue(10)
+    await panel.get('[data-testid="effect-save"]').setValue('wisdom')
+    await panel.get('[data-testid="effect-dc"]').setValue(13)
+    await expectAccessible(wrapper.element as Element)
+    await panel.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toEqual({
+      kind: 'apply_effect', targetId: aria.id, effect: 'hold-person', sourceId: aria.id, rounds: 10, saveAbility: 'wisdom', saveDc: 13,
+      q: 0, r: 0, hidden: false, nonce: String(sent + 1),
+    })
+    await panel.get('[data-testid="effect-name"]').setValue('prone')
+    await panel.get('[data-testid="effect-source"]').setValue('')
+    await panel.get('[data-testid="effect-rounds"]').setValue(0)
+    await panel.get('[data-testid="effect-save"]').setValue('')
+    await panel.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toEqual({ kind: 'apply_effect', targetId: aria.id, effect: 'prone', q: 0, r: 0, hidden: false, nonce: String(sent + 2) })
+  })
+
+  it('tells players the DM is resolving and hands them their own saves', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => saveRoll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    const saves = [
+      { rollId: '0190c7a8-0000-7000-8000-000000000064', tokenId: aria.id, effect: 'Hold Person', dc: 13 },
+      { rollId: '0190c7a8-0000-7000-8000-000000000065', tokenId: goblin.id, effect: 'Hold Person', dc: 13 },
+    ]
+    s.receive(snapshot([aria, goblin], 'party', { resolving: true, saves }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="resolving"]').text()).toBe('The DM is resolving an effect.')
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+    expect(wrapper.find('[data-testid="manual"]').exists()).toBe(false)
+  })
+})
+
 describe('map geometry', () => {
   it('lists the hexes whose centres fall inside the picture', () => {
     const l = layoutOf(localMap)

@@ -149,10 +149,15 @@ ORDER BY d.precedence DESC
 LIMIT 1;
 
 -- name: CountEntriesByKind :many
-SELECT kind, count(*)::bigint AS total FROM compendium.entries GROUP BY kind
-UNION ALL
-SELECT 'spell', count(*)::bigint FROM compendium.spells
-ORDER BY kind;
+WITH everything AS (
+    SELECT kind, slug FROM compendium.entries
+    UNION ALL
+    SELECT 'spell', slug FROM compendium.spells
+)
+SELECT kind, count(*)::bigint AS total,
+       count(*) FILTER (WHERE slug = ANY(@full_slugs::text[]))::bigint AS full,
+       count(*) FILTER (WHERE slug = ANY(@partial_slugs::text[]))::bigint AS partial
+FROM everything GROUP BY kind ORDER BY kind;
 
 -- name: GetClassDetail :one
 SELECT description, parent_slug, hit_die, caster_type FROM compendium.classes WHERE id = @id;

@@ -488,31 +488,6 @@ export const zLiveAttack = z.object({
 });
 
 /**
- * A Token as a connection sees it.
- */
-export const zLiveToken = z.object({
-    id: zId,
-    label: z.string().min(1).max(40),
-    kind: zTokenKind,
-    darkvisionFt: z.int().gte(0).lte(300),
-    q: z.int().gte(-500).lte(500),
-    r: z.int().gte(-500).lte(500),
-    hidden: z.boolean(),
-    controllerId: zId.optional(),
-    ac: z.int().gte(0).lte(40).optional(),
-    hp: z.int().gte(0).lte(10000).optional(),
-    hpMax: z.int().gte(1).lte(10000).optional(),
-    health: z.enum([
-        'unhurt',
-        'hurt',
-        'bloodied',
-        'down'
-    ]).optional(),
-    attacks: z.array(zLiveAttack).max(50).optional(),
-    shield: z.boolean().optional()
-});
-
-/**
  * What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
  */
 export const zLiveAttackPreview = z.object({
@@ -560,6 +535,62 @@ export const zLiveSessionView = z.object({
         'party',
         'table'
     ])
+});
+
+/**
+ * An Effect on a token, which everyone who sees the token sees.
+ */
+export const zLiveEffect = z.object({
+    id: zId,
+    slug: z.string().max(80),
+    name: z.string().max(80),
+    sourceId: zId.optional(),
+    concentration: z.boolean(),
+    roundsLeft: z.int().gte(1).lte(100).optional()
+});
+
+/**
+ * A Token as a connection sees it.
+ */
+export const zLiveToken = z.object({
+    id: zId,
+    label: z.string().min(1).max(40),
+    kind: zTokenKind,
+    darkvisionFt: z.int().gte(0).lte(300),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    hidden: z.boolean(),
+    controllerId: zId.optional(),
+    ac: z.int().gte(0).lte(40).optional(),
+    hp: z.int().gte(0).lte(10000).optional(),
+    hpMax: z.int().gte(1).lte(10000).optional(),
+    health: z.enum([
+        'unhurt',
+        'hurt',
+        'bloodied',
+        'down'
+    ]).optional(),
+    attacks: z.array(zLiveAttack).max(50).optional(),
+    shield: z.boolean().optional(),
+    effects: z.array(zLiveEffect).max(50).optional()
+});
+
+/**
+ * Part of an Effect the engine cannot compute, for the DM to resolve by hand.
+ */
+export const zLiveManual = z.object({
+    id: zId,
+    text: z.string().max(300)
+});
+
+/**
+ * A saving throw waiting on its Roll Card to end an Effect.
+ */
+export const zLiveSave = z.object({
+    rollId: zId,
+    tokenId: zId,
+    effect: z.string().max(80),
+    dc: z.int().gte(1).lte(40)
 });
 
 /**
@@ -690,6 +721,9 @@ export const zLiveView = z.object({
     visible: z.array(zHexCoord).max(100000),
     remembered: z.array(zHexCoord).max(100000),
     combat: zLiveCombat.optional(),
+    manual: z.array(zLiveManual).max(100).optional(),
+    resolving: z.boolean().optional(),
+    saves: z.array(zLiveSave).max(100).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -916,7 +950,10 @@ export const zLiveCommand = z.object({
         'attack',
         'undo_damage',
         'set_tactics',
-        'react'
+        'react',
+        'apply_effect',
+        'end_effect',
+        'resolve_manual'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -946,7 +983,15 @@ export const zLiveCommand = z.object({
     attackNo: z.int().gte(0).lte(50).optional(),
     tactics: zTactics.optional(),
     use: z.boolean().optional(),
-    shield: z.boolean().optional()
+    shield: z.boolean().optional(),
+    effect: z.string().min(1).max(80).optional(),
+    effectName: z.string().max(80).optional(),
+    sourceId: zId.optional(),
+    rounds: z.int().gte(0).lte(100).optional(),
+    saveAbility: zAbility.optional(),
+    saveDc: z.int().gte(1).lte(40).optional(),
+    effectId: zId.optional(),
+    manualId: zId.optional()
 });
 
 /**
