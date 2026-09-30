@@ -70,6 +70,8 @@ var operationRolesForwardAuth = map[string][]string{
 	ListSpellsOperation:            []string{},
 	PreviewCharacterOperation:      []string{},
 	PreviewInviteOperation:         []string{},
+	PreviewReachOperation:          []string{},
+	PreviewSightOperation:          []string{},
 	RemoveMemberOperation:          []string{},
 	RestoreNpcRevisionOperation:    []string{},
 	RevokeInviteOperation:          []string{},

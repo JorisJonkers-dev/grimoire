@@ -567,6 +567,92 @@ export type ActionEntry = {
 };
 
 /**
+ * An axial hex coordinate.
+ */
+export type HexCoord = {
+    q: number;
+    r: number;
+};
+
+/**
+ * One hex of a local map.
+ */
+export type HexCell = {
+    q: number;
+    r: number;
+    difficult?: boolean;
+    blocked?: boolean;
+    blocksSight?: boolean;
+    elevationFt?: number;
+    cover?: CoverLevel;
+};
+
+/**
+ * How much of a target is hidden.
+ */
+export type CoverLevel = 'none' | 'half' | 'three_quarters' | 'total';
+
+/**
+ * A creature in a hex, as the mover sees it.
+ */
+export type HexOccupant = {
+    q: number;
+    r: number;
+    side: 'ally' | 'enemy';
+};
+
+/**
+ * A map, a mover and optionally a target hex.
+ */
+export type ReachRequest = {
+    cells: Array<HexCell>;
+    occupants?: Array<HexOccupant>;
+    from: HexCoord;
+    to?: HexCoord;
+    speedFt: number;
+    climbSpeed?: boolean;
+};
+
+/**
+ * A reachable hex with its cost and where it is reached from.
+ */
+export type ReachHex = {
+    q: number;
+    r: number;
+    costFt: number;
+    canEnd: boolean;
+    from: HexCoord;
+};
+
+/**
+ * The reachable hexes, and the path to the target when there is one.
+ */
+export type ReachPreview = {
+    hexes: Array<ReachHex>;
+    path?: Array<HexCoord>;
+    pathCostFt?: number;
+};
+
+/**
+ * A map and two hexes.
+ */
+export type SightRequest = {
+    cells: Array<HexCell>;
+    occupants?: Array<HexOccupant>;
+    from: HexCoord;
+    to: HexCoord;
+};
+
+/**
+ * What one hex sees of another.
+ */
+export type SightPreview = {
+    visible: boolean;
+    cover: CoverLevel;
+    acBonus: number;
+};
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export type Slug = string;
@@ -2476,6 +2562,64 @@ export type AcceptInviteResponses = {
 };
 
 export type AcceptInviteResponse = AcceptInviteResponses[keyof AcceptInviteResponses];
+
+export type PreviewReachData = {
+    body: ReachRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/rules/hex/reach';
+};
+
+export type PreviewReachErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewReachError = PreviewReachErrors[keyof PreviewReachErrors];
+
+export type PreviewReachResponses = {
+    /**
+     * The preview.
+     */
+    200: ReachPreview;
+};
+
+export type PreviewReachResponse = PreviewReachResponses[keyof PreviewReachResponses];
+
+export type PreviewSightData = {
+    body: SightRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/rules/hex/sight';
+};
+
+export type PreviewSightErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSightError = PreviewSightErrors[keyof PreviewSightErrors];
+
+export type PreviewSightResponses = {
+    /**
+     * The preview.
+     */
+    200: SightPreview;
+};
+
+export type PreviewSightResponse = PreviewSightResponses[keyof PreviewSightResponses];
 
 export type GetMeData = {
     body?: never;

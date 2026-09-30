@@ -1,0 +1,104 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { type Coord, corners, type Layout, toPixel } from '@/shared/hex'
+
+export type GridCell = Coord & { tone?: string; label?: string }
+
+const props = withDefaults(defineProps<{ cells: GridCell[]; size?: number; title: string }>(), { size: 24 })
+const emit = defineEmits<{ select: [coord: Coord] }>()
+
+const layout = computed<Layout>(() => ({ size: props.size, origin: { x: 0, y: 0 } }))
+const shapes = computed(() =>
+  props.cells.map((c) => ({
+    ...c,
+    points: corners(layout.value, c)
+      .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+      .join(' '),
+    centre: toPixel(layout.value, c),
+  })),
+)
+const box = computed(() => {
+  const xs = shapes.value.map((s) => s.centre.x)
+  const ys = shapes.value.map((s) => s.centre.y)
+  const pad = props.size
+  const x = Math.min(...xs, 0) - pad
+  const y = Math.min(...ys, 0) - pad
+  return { x, y, w: Math.max(...xs, 0) + pad - x, h: Math.max(...ys, 0) + pad - y }
+})
+</script>
+
+<template>
+  <div class="hex-scroll">
+    <svg
+      class="hex-grid"
+      :viewBox="`${box.x.toFixed(1)} ${box.y.toFixed(1)} ${box.w.toFixed(1)} ${box.h.toFixed(1)}`"
+      :width="Math.round(box.w)"
+      :height="Math.round(box.h)"
+      role="group"
+      :aria-label="title"
+    >
+      <g
+        v-for="s in shapes"
+        :key="`${String(s.q)},${String(s.r)}`"
+        :class="['hex', s.tone ? `hex--${s.tone}` : '']"
+        role="button"
+        tabindex="0"
+        :aria-label="`Hex ${String(s.q)}, ${String(s.r)}${s.label ? `: ${s.label}` : ''}`"
+        :data-hex="`${String(s.q)},${String(s.r)}`"
+        @click="emit('select', { q: s.q, r: s.r })"
+        @keydown.enter.prevent="emit('select', { q: s.q, r: s.r })"
+      >
+        <polygon :points="s.points" />
+      </g>
+    </svg>
+  </div>
+</template>
+
+<style scoped>
+/* Drawn at its natural size so every hex stays a comfortable touch target; wide maps scroll. */
+.hex-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.hex-grid {
+  display: block;
+  touch-action: manipulation;
+}
+.hex polygon {
+  fill: var(--color-felt);
+  stroke: var(--color-line);
+  stroke-width: 1;
+  cursor: pointer;
+}
+.hex:focus-visible polygon {
+  stroke: var(--color-gold-high);
+  stroke-width: 3;
+}
+.hex--reach polygon {
+  fill: #2c4a38;
+}
+.hex--path polygon {
+  fill: var(--color-gold);
+}
+.hex--start polygon {
+  fill: var(--color-party);
+}
+.hex--wall polygon {
+  fill: #3a2e22;
+}
+.hex--mud polygon {
+  fill: #4a3a22;
+}
+.hex--ally polygon {
+  fill: var(--color-party-fill);
+  stroke: var(--color-party);
+}
+.hex--enemy polygon {
+  fill: var(--color-enemy-fill);
+  stroke: var(--color-enemy);
+}
+.hex--seen polygon {
+  stroke: var(--color-gold-high);
+  stroke-width: 2;
+}
+</style>

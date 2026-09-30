@@ -27,6 +27,8 @@ tags:
     description: Rolls and the Action Log.
   - name: Prep
     description: The DM's prepared material and its Revisions.
+  - name: Rules
+    description: Non-mutating rules previews.
   - name: Identity
     description: The signed-in account.
   - name: Operations
@@ -1414,6 +1416,66 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/rules/hex/reach:
+    post:
+      operationId: previewReach
+      summary: Preview movement
+      description: Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
+      tags: [Rules]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReachRequest"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReachPreview"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/rules/hex/sight:
+    post:
+      operationId: previewSight
+      summary: Preview line of sight
+      description: Whether one hex can see another and the cover in between. Changes nothing.
+      tags: [Rules]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SightRequest"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SightPreview"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -2237,6 +2299,109 @@ components:
         dieNo: { type: integer, format: int32, minimum: 0, maximum: 119 }
         value: { type: integer, format: int32, minimum: -10000, maximum: 10000 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+    HexCoord:
+      type: object
+      description: An axial hex coordinate.
+      additionalProperties: false
+      required: [q, r]
+      properties:
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+    HexCell:
+      type: object
+      description: One hex of a local map.
+      additionalProperties: false
+      required: [q, r]
+      properties:
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        difficult: { type: boolean }
+        blocked: { type: boolean }
+        blocksSight: { type: boolean }
+        elevationFt: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        cover: { $ref: "#/components/schemas/CoverLevel" }
+    CoverLevel:
+      type: string
+      description: How much of a target is hidden.
+      enum: [none, half, three_quarters, total]
+    HexOccupant:
+      type: object
+      description: A creature in a hex, as the mover sees it.
+      additionalProperties: false
+      required: [q, r, side]
+      properties:
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        side: { type: string, enum: [ally, enemy] }
+    ReachRequest:
+      type: object
+      description: A map, a mover and optionally a target hex.
+      additionalProperties: false
+      required: [cells, from, speedFt]
+      properties:
+        cells:
+          type: array
+          maxItems: 4000
+          items: { $ref: "#/components/schemas/HexCell" }
+        occupants:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/HexOccupant" }
+        from: { $ref: "#/components/schemas/HexCoord" }
+        to: { $ref: "#/components/schemas/HexCoord" }
+        speedFt: { type: integer, format: int32, minimum: 0, maximum: 500 }
+        climbSpeed: { type: boolean }
+    ReachHex:
+      type: object
+      description: A reachable hex with its cost and where it is reached from.
+      additionalProperties: false
+      required: [q, r, costFt, canEnd, from]
+      properties:
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        costFt: { type: integer, format: int32, minimum: 0, maximum: 500 }
+        canEnd: { type: boolean }
+        from: { $ref: "#/components/schemas/HexCoord" }
+    ReachPreview:
+      type: object
+      description: The reachable hexes, and the path to the target when there is one.
+      additionalProperties: false
+      required: [hexes]
+      properties:
+        hexes:
+          type: array
+          maxItems: 4000
+          items: { $ref: "#/components/schemas/ReachHex" }
+        path:
+          type: array
+          maxItems: 4000
+          items: { $ref: "#/components/schemas/HexCoord" }
+        pathCostFt: { type: integer, format: int32, minimum: 0, maximum: 500 }
+    SightRequest:
+      type: object
+      description: A map and two hexes.
+      additionalProperties: false
+      required: [cells, from, to]
+      properties:
+        cells:
+          type: array
+          maxItems: 4000
+          items: { $ref: "#/components/schemas/HexCell" }
+        occupants:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/HexOccupant" }
+        from: { $ref: "#/components/schemas/HexCoord" }
+        to: { $ref: "#/components/schemas/HexCoord" }
+    SightPreview:
+      type: object
+      description: What one hex sees of another.
+      additionalProperties: false
+      required: [visible, cover, acBonus]
+      properties:
+        visible: { type: boolean }
+        cover: { $ref: "#/components/schemas/CoverLevel" }
+        acBonus: { type: integer, format: int32, minimum: 0, maximum: 5 }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

@@ -43,6 +43,8 @@ const (
 	ListSpellsOperation            OperationName = "ListSpells"
 	PreviewCharacterOperation      OperationName = "PreviewCharacter"
 	PreviewInviteOperation         OperationName = "PreviewInvite"
+	PreviewReachOperation          OperationName = "PreviewReach"
+	PreviewSightOperation          OperationName = "PreviewSight"
 	RemoveMemberOperation          OperationName = "RemoveMember"
 	RestoreNpcRevisionOperation    OperationName = "RestoreNpcRevision"
 	RevokeInviteOperation          OperationName = "RevokeInvite"

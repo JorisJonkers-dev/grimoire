@@ -2442,6 +2442,63 @@ func (s *ConditionRef) SetDescription(val string) {
 	s.Description = val
 }
 
+// How much of a target is hidden.
+// Ref: #/components/schemas/CoverLevel
+type CoverLevel string
+
+const (
+	CoverLevelNone          CoverLevel = "none"
+	CoverLevelHalf          CoverLevel = "half"
+	CoverLevelThreeQuarters CoverLevel = "three_quarters"
+	CoverLevelTotal         CoverLevel = "total"
+)
+
+// AllValues returns all CoverLevel values.
+func (CoverLevel) AllValues() []CoverLevel {
+	return []CoverLevel{
+		CoverLevelNone,
+		CoverLevelHalf,
+		CoverLevelThreeQuarters,
+		CoverLevelTotal,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CoverLevel) MarshalText() ([]byte, error) {
+	switch s {
+	case CoverLevelNone:
+		return []byte(s), nil
+	case CoverLevelHalf:
+		return []byte(s), nil
+	case CoverLevelThreeQuarters:
+		return []byte(s), nil
+	case CoverLevelTotal:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CoverLevel) UnmarshalText(data []byte) error {
+	switch CoverLevel(data) {
+	case CoverLevelNone:
+		*s = CoverLevelNone
+		return nil
+	case CoverLevelHalf:
+		*s = CoverLevelHalf
+		return nil
+	case CoverLevelThreeQuarters:
+		*s = CoverLevelThreeQuarters
+		return nil
+	case CoverLevelTotal:
+		*s = CoverLevelTotal
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // DeleteCharacterNoContent is response for DeleteCharacter operation.
 type DeleteCharacterNoContent struct {
 	RateLimitLimit     OptInt32
@@ -4044,6 +4101,194 @@ func (s *HealthStatus) SetStatus(val string) {
 func (*HealthStatus) getHealthRes()    {}
 func (*HealthStatus) getReadinessRes() {}
 
+// One hex of a local map.
+// Ref: #/components/schemas/HexCell
+type HexCell struct {
+	Q           int32         `json:"q"`
+	R           int32         `json:"r"`
+	Difficult   OptBool       `json:"difficult"`
+	Blocked     OptBool       `json:"blocked"`
+	BlocksSight OptBool       `json:"blocksSight"`
+	ElevationFt OptInt32      `json:"elevationFt"`
+	Cover       OptCoverLevel `json:"cover"`
+}
+
+// GetQ returns the value of Q.
+func (s *HexCell) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *HexCell) GetR() int32 {
+	return s.R
+}
+
+// GetDifficult returns the value of Difficult.
+func (s *HexCell) GetDifficult() OptBool {
+	return s.Difficult
+}
+
+// GetBlocked returns the value of Blocked.
+func (s *HexCell) GetBlocked() OptBool {
+	return s.Blocked
+}
+
+// GetBlocksSight returns the value of BlocksSight.
+func (s *HexCell) GetBlocksSight() OptBool {
+	return s.BlocksSight
+}
+
+// GetElevationFt returns the value of ElevationFt.
+func (s *HexCell) GetElevationFt() OptInt32 {
+	return s.ElevationFt
+}
+
+// GetCover returns the value of Cover.
+func (s *HexCell) GetCover() OptCoverLevel {
+	return s.Cover
+}
+
+// SetQ sets the value of Q.
+func (s *HexCell) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *HexCell) SetR(val int32) {
+	s.R = val
+}
+
+// SetDifficult sets the value of Difficult.
+func (s *HexCell) SetDifficult(val OptBool) {
+	s.Difficult = val
+}
+
+// SetBlocked sets the value of Blocked.
+func (s *HexCell) SetBlocked(val OptBool) {
+	s.Blocked = val
+}
+
+// SetBlocksSight sets the value of BlocksSight.
+func (s *HexCell) SetBlocksSight(val OptBool) {
+	s.BlocksSight = val
+}
+
+// SetElevationFt sets the value of ElevationFt.
+func (s *HexCell) SetElevationFt(val OptInt32) {
+	s.ElevationFt = val
+}
+
+// SetCover sets the value of Cover.
+func (s *HexCell) SetCover(val OptCoverLevel) {
+	s.Cover = val
+}
+
+// An axial hex coordinate.
+// Ref: #/components/schemas/HexCoord
+type HexCoord struct {
+	Q int32 `json:"q"`
+	R int32 `json:"r"`
+}
+
+// GetQ returns the value of Q.
+func (s *HexCoord) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *HexCoord) GetR() int32 {
+	return s.R
+}
+
+// SetQ sets the value of Q.
+func (s *HexCoord) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *HexCoord) SetR(val int32) {
+	s.R = val
+}
+
+// A creature in a hex, as the mover sees it.
+// Ref: #/components/schemas/HexOccupant
+type HexOccupant struct {
+	Q    int32           `json:"q"`
+	R    int32           `json:"r"`
+	Side HexOccupantSide `json:"side"`
+}
+
+// GetQ returns the value of Q.
+func (s *HexOccupant) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *HexOccupant) GetR() int32 {
+	return s.R
+}
+
+// GetSide returns the value of Side.
+func (s *HexOccupant) GetSide() HexOccupantSide {
+	return s.Side
+}
+
+// SetQ sets the value of Q.
+func (s *HexOccupant) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *HexOccupant) SetR(val int32) {
+	s.R = val
+}
+
+// SetSide sets the value of Side.
+func (s *HexOccupant) SetSide(val HexOccupantSide) {
+	s.Side = val
+}
+
+type HexOccupantSide string
+
+const (
+	HexOccupantSideAlly  HexOccupantSide = "ally"
+	HexOccupantSideEnemy HexOccupantSide = "enemy"
+)
+
+// AllValues returns all HexOccupantSide values.
+func (HexOccupantSide) AllValues() []HexOccupantSide {
+	return []HexOccupantSide{
+		HexOccupantSideAlly,
+		HexOccupantSideEnemy,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s HexOccupantSide) MarshalText() ([]byte, error) {
+	switch s {
+	case HexOccupantSideAlly:
+		return []byte(s), nil
+	case HexOccupantSideEnemy:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *HexOccupantSide) UnmarshalText(data []byte) error {
+	switch HexOccupantSide(data) {
+	case HexOccupantSideAlly:
+		*s = HexOccupantSideAlly
+		return nil
+	case HexOccupantSideEnemy:
+		*s = HexOccupantSideEnemy
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 type ID uuid.UUID
 
 // An open invite link.
@@ -5381,6 +5626,52 @@ func (o OptCharacterName) Or(d CharacterName) CharacterName {
 	return d
 }
 
+// NewOptCoverLevel returns new OptCoverLevel with value set to v.
+func NewOptCoverLevel(v CoverLevel) OptCoverLevel {
+	return OptCoverLevel{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCoverLevel is optional CoverLevel.
+type OptCoverLevel struct {
+	Value CoverLevel
+	Set   bool
+}
+
+// IsSet returns true if OptCoverLevel was set.
+func (o OptCoverLevel) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCoverLevel) Reset() {
+	var v CoverLevel
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCoverLevel) SetTo(v CoverLevel) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCoverLevel) Get() (v CoverLevel, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCoverLevel) Or(d CoverLevel) CoverLevel {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptDateTime returns new OptDateTime with value set to v.
 func NewOptDateTime(v time.Time) OptDateTime {
 	return OptDateTime{
@@ -5467,6 +5758,52 @@ func (o OptDiceGroupKeep) Get() (v DiceGroupKeep, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptDiceGroupKeep) Or(d DiceGroupKeep) DiceGroupKeep {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptHexCoord returns new OptHexCoord with value set to v.
+func NewOptHexCoord(v HexCoord) OptHexCoord {
+	return OptHexCoord{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptHexCoord is optional HexCoord.
+type OptHexCoord struct {
+	Value HexCoord
+	Set   bool
+}
+
+// IsSet returns true if OptHexCoord was set.
+func (o OptHexCoord) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptHexCoord) Reset() {
+	var v HexCoord
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptHexCoord) SetTo(v HexCoord) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptHexCoord) Get() (v HexCoord, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptHexCoord) Or(d HexCoord) HexCoord {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -5951,6 +6288,8 @@ func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
+func (*ProblemStatusCodeWithHeaders) previewReachRes()          {}
+func (*ProblemStatusCodeWithHeaders) previewSightRes()          {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()    {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
@@ -5962,6 +6301,225 @@ func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateNpcRes()             {}
+
+// A reachable hex with its cost and where it is reached from.
+// Ref: #/components/schemas/ReachHex
+type ReachHex struct {
+	Q      int32    `json:"q"`
+	R      int32    `json:"r"`
+	CostFt int32    `json:"costFt"`
+	CanEnd bool     `json:"canEnd"`
+	From   HexCoord `json:"from"`
+}
+
+// GetQ returns the value of Q.
+func (s *ReachHex) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *ReachHex) GetR() int32 {
+	return s.R
+}
+
+// GetCostFt returns the value of CostFt.
+func (s *ReachHex) GetCostFt() int32 {
+	return s.CostFt
+}
+
+// GetCanEnd returns the value of CanEnd.
+func (s *ReachHex) GetCanEnd() bool {
+	return s.CanEnd
+}
+
+// GetFrom returns the value of From.
+func (s *ReachHex) GetFrom() HexCoord {
+	return s.From
+}
+
+// SetQ sets the value of Q.
+func (s *ReachHex) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *ReachHex) SetR(val int32) {
+	s.R = val
+}
+
+// SetCostFt sets the value of CostFt.
+func (s *ReachHex) SetCostFt(val int32) {
+	s.CostFt = val
+}
+
+// SetCanEnd sets the value of CanEnd.
+func (s *ReachHex) SetCanEnd(val bool) {
+	s.CanEnd = val
+}
+
+// SetFrom sets the value of From.
+func (s *ReachHex) SetFrom(val HexCoord) {
+	s.From = val
+}
+
+// The reachable hexes, and the path to the target when there is one.
+// Ref: #/components/schemas/ReachPreview
+type ReachPreview struct {
+	Hexes      []ReachHex `json:"hexes"`
+	Path       []HexCoord `json:"path"`
+	PathCostFt OptInt32   `json:"pathCostFt"`
+}
+
+// GetHexes returns the value of Hexes.
+func (s *ReachPreview) GetHexes() []ReachHex {
+	return s.Hexes
+}
+
+// GetPath returns the value of Path.
+func (s *ReachPreview) GetPath() []HexCoord {
+	return s.Path
+}
+
+// GetPathCostFt returns the value of PathCostFt.
+func (s *ReachPreview) GetPathCostFt() OptInt32 {
+	return s.PathCostFt
+}
+
+// SetHexes sets the value of Hexes.
+func (s *ReachPreview) SetHexes(val []ReachHex) {
+	s.Hexes = val
+}
+
+// SetPath sets the value of Path.
+func (s *ReachPreview) SetPath(val []HexCoord) {
+	s.Path = val
+}
+
+// SetPathCostFt sets the value of PathCostFt.
+func (s *ReachPreview) SetPathCostFt(val OptInt32) {
+	s.PathCostFt = val
+}
+
+// ReachPreviewHeaders wraps ReachPreview with response headers.
+type ReachPreviewHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ReachPreview
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ReachPreviewHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ReachPreviewHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ReachPreviewHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ReachPreviewHeaders) GetResponse() ReachPreview {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ReachPreviewHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ReachPreviewHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ReachPreviewHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ReachPreviewHeaders) SetResponse(val ReachPreview) {
+	s.Response = val
+}
+
+func (*ReachPreviewHeaders) previewReachRes() {}
+
+// A map, a mover and optionally a target hex.
+// Ref: #/components/schemas/ReachRequest
+type ReachRequest struct {
+	Cells      []HexCell     `json:"cells"`
+	Occupants  []HexOccupant `json:"occupants"`
+	From       HexCoord      `json:"from"`
+	To         OptHexCoord   `json:"to"`
+	SpeedFt    int32         `json:"speedFt"`
+	ClimbSpeed OptBool       `json:"climbSpeed"`
+}
+
+// GetCells returns the value of Cells.
+func (s *ReachRequest) GetCells() []HexCell {
+	return s.Cells
+}
+
+// GetOccupants returns the value of Occupants.
+func (s *ReachRequest) GetOccupants() []HexOccupant {
+	return s.Occupants
+}
+
+// GetFrom returns the value of From.
+func (s *ReachRequest) GetFrom() HexCoord {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *ReachRequest) GetTo() OptHexCoord {
+	return s.To
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *ReachRequest) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetClimbSpeed returns the value of ClimbSpeed.
+func (s *ReachRequest) GetClimbSpeed() OptBool {
+	return s.ClimbSpeed
+}
+
+// SetCells sets the value of Cells.
+func (s *ReachRequest) SetCells(val []HexCell) {
+	s.Cells = val
+}
+
+// SetOccupants sets the value of Occupants.
+func (s *ReachRequest) SetOccupants(val []HexOccupant) {
+	s.Occupants = val
+}
+
+// SetFrom sets the value of From.
+func (s *ReachRequest) SetFrom(val HexCoord) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *ReachRequest) SetTo(val OptHexCoord) {
+	s.To = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *ReachRequest) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetClimbSpeed sets the value of ClimbSpeed.
+func (s *ReachRequest) SetClimbSpeed(val OptBool) {
+	s.ClimbSpeed = val
+}
 
 // RemoveMemberNoContent is response for RemoveMember operation.
 type RemoveMemberNoContent struct {
@@ -6924,6 +7482,143 @@ func (s SetTokenIconReq) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 	return s.Data.Read(p)
+}
+
+// What one hex sees of another.
+// Ref: #/components/schemas/SightPreview
+type SightPreview struct {
+	Visible bool       `json:"visible"`
+	Cover   CoverLevel `json:"cover"`
+	AcBonus int32      `json:"acBonus"`
+}
+
+// GetVisible returns the value of Visible.
+func (s *SightPreview) GetVisible() bool {
+	return s.Visible
+}
+
+// GetCover returns the value of Cover.
+func (s *SightPreview) GetCover() CoverLevel {
+	return s.Cover
+}
+
+// GetAcBonus returns the value of AcBonus.
+func (s *SightPreview) GetAcBonus() int32 {
+	return s.AcBonus
+}
+
+// SetVisible sets the value of Visible.
+func (s *SightPreview) SetVisible(val bool) {
+	s.Visible = val
+}
+
+// SetCover sets the value of Cover.
+func (s *SightPreview) SetCover(val CoverLevel) {
+	s.Cover = val
+}
+
+// SetAcBonus sets the value of AcBonus.
+func (s *SightPreview) SetAcBonus(val int32) {
+	s.AcBonus = val
+}
+
+// SightPreviewHeaders wraps SightPreview with response headers.
+type SightPreviewHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SightPreview
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SightPreviewHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SightPreviewHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SightPreviewHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SightPreviewHeaders) GetResponse() SightPreview {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SightPreviewHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SightPreviewHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SightPreviewHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SightPreviewHeaders) SetResponse(val SightPreview) {
+	s.Response = val
+}
+
+func (*SightPreviewHeaders) previewSightRes() {}
+
+// A map and two hexes.
+// Ref: #/components/schemas/SightRequest
+type SightRequest struct {
+	Cells     []HexCell     `json:"cells"`
+	Occupants []HexOccupant `json:"occupants"`
+	From      HexCoord      `json:"from"`
+	To        HexCoord      `json:"to"`
+}
+
+// GetCells returns the value of Cells.
+func (s *SightRequest) GetCells() []HexCell {
+	return s.Cells
+}
+
+// GetOccupants returns the value of Occupants.
+func (s *SightRequest) GetOccupants() []HexOccupant {
+	return s.Occupants
+}
+
+// GetFrom returns the value of From.
+func (s *SightRequest) GetFrom() HexCoord {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *SightRequest) GetTo() HexCoord {
+	return s.To
+}
+
+// SetCells sets the value of Cells.
+func (s *SightRequest) SetCells(val []HexCell) {
+	s.Cells = val
+}
+
+// SetOccupants sets the value of Occupants.
+func (s *SightRequest) SetOccupants(val []HexOccupant) {
+	s.Occupants = val
+}
+
+// SetFrom sets the value of From.
+func (s *SightRequest) SetFrom(val HexCoord) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *SightRequest) SetTo(val HexCoord) {
+	s.To = val
 }
 
 // A skill and its ability.

@@ -22,3 +22,15 @@ test('the component gallery is accessible on every device', async ({ page }) => 
   const results = await new AxeBuilder({ page }).analyze()
   expect(results.violations).toEqual([])
 })
+
+test('movement and sight previews come from the server rules', async ({ page }) => {
+  await page.goto('/gallery')
+  const box = page.getByTestId('movement-sandbox')
+  await box.locator('[data-hex="0,2"]').click()
+  await expect(box.getByTestId('reach-summary')).toContainText('hexes reachable')
+  await box.getByRole('radio', { name: 'aim at it' }).check()
+  await box.locator('[data-hex="0,-3"]').click()
+  await expect(box.getByTestId('sight-summary')).toHaveText('Out of sight')
+  await box.locator('[data-hex="3,-1"]').click()
+  await expect(box.getByTestId('reach-summary')).toContainText('path costs')
+})
