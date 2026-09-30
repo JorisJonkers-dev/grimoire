@@ -446,6 +446,96 @@ export const zSightPreview = z.object({
 });
 
 /**
+ * One evening of play.
+ */
+export const zPlaySession = z.object({
+    id: zId,
+    number: z.int().gte(1).lte(100000),
+    status: z.enum(['live', 'ended']),
+    seq: z.int().gte(0).lte(2147483647),
+    gridRadius: z.int().gte(1).lte(60),
+    startedAt: z.iso.datetime().max(40),
+    endedAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * What a Token stands for.
+ */
+export const zTokenKind = z.enum([
+    'party',
+    'enemy',
+    'npc',
+    'object'
+]);
+
+/**
+ * A Token as a connection sees it.
+ */
+export const zLiveToken = z.object({
+    id: zId,
+    label: z.string().min(1).max(40),
+    kind: zTokenKind,
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    hidden: z.boolean()
+});
+
+/**
+ * The Session as a connection sees it.
+ */
+export const zLiveSessionView = z.object({
+    id: zId,
+    number: z.int().gte(1).lte(100000),
+    gridRadius: z.int().gte(1).lte(60),
+    audience: z.enum([
+        'dm',
+        'party',
+        'table'
+    ])
+});
+
+/**
+ * A WebSocket frame from a client to a live Session.
+ */
+export const zLiveCommand = z.object({
+    nonce: z.string().min(1).max(64),
+    kind: z.enum([
+        'resync',
+        'place_token',
+        'move_token',
+        'set_token_hidden',
+        'remove_token'
+    ]),
+    tokenId: zId.optional(),
+    label: z.string().max(40).optional(),
+    tokenKind: zTokenKind.optional(),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    hidden: z.boolean()
+});
+
+/**
+ * A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means resync.
+ */
+export const zLiveUpdate = z.object({
+    kind: z.enum([
+        'snapshot',
+        'token',
+        'token_removed',
+        'tick',
+        'rejected',
+        'ended'
+    ]),
+    seq: z.int().gte(0).lte(2147483647),
+    nonce: z.string().max(64).optional(),
+    reason: z.string().max(200).optional(),
+    session: zLiveSessionView.optional(),
+    tokens: z.array(zLiveToken).max(1000).optional(),
+    token: zLiveToken.optional(),
+    tokenId: zId.optional()
+});
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -922,6 +1012,11 @@ export const zMemberId = zId;
  * Character id.
  */
 export const zCharacterId = zId;
+
+/**
+ * Session id.
+ */
+export const zSessionId = zId;
 
 /**
  * Roll Request id.
@@ -1422,6 +1517,44 @@ export const zGetActionLogQuery = z.object({
  */
 export const zGetActionLogResponse = z.array(zActionEntry).max(100);
 
+export const zListSessionsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The sessions.
+ */
+export const zListSessionsResponse = z.array(zPlaySession).max(50);
+
+export const zStartSessionPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new session.
+ */
+export const zStartSessionResponse = zPlaySession;
+
+export const zGetSessionPath = z.object({
+    campaignId: zId,
+    sessionId: zId
+});
+
+/**
+ * The session.
+ */
+export const zGetSessionResponse = zPlaySession;
+
+export const zEndSessionPath = z.object({
+    campaignId: zId,
+    sessionId: zId
+});
+
+/**
+ * The ended session.
+ */
+export const zEndSessionResponse = zPlaySession;
+
 export const zPreviewInviteBody = zInviteToken;
 
 /**
@@ -1469,3 +1602,15 @@ export const zGetHealthResponse = zHealthStatus;
  * The API is ready.
  */
 export const zGetReadinessResponse = zHealthStatus;
+
+export const zLiveCommandWebhookRequest = z.object({
+    body: zLiveCommand,
+    path: z.never().optional(),
+    query: z.never().optional()
+});
+
+export const zLiveUpdateWebhookRequest = z.object({
+    body: zLiveUpdate,
+    path: z.never().optional(),
+    query: z.never().optional()
+});

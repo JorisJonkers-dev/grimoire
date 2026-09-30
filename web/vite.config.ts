@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 
 const api = process.env.GRIMOIRE_API_ORIGIN ?? 'http://localhost:8080'
-const proxy = { '/api': api, '/healthz': api, '/readyz': api }
+const proxy = { '/api': { target: api, ws: true }, '/healthz': api, '/readyz': api }
 
 export default defineConfig({
   plugins: [vue()],

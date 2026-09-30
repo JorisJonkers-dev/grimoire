@@ -68,6 +68,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// EndSession implements endSession operation.
+	//
+	// Ends a live Session and disconnects everyone. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
+	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
 	// GetActionLog implements getActionLog operation.
 	//
 	// The Campaign's recent Actions with their seeds. DM only.
@@ -141,6 +147,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
 	GetRoll(ctx context.Context, params GetRollParams) (GetRollRes, error)
+	// GetSession implements getSession operation.
+	//
+	// One Session. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}
+	GetSession(ctx context.Context, params GetSessionParams) (GetSessionRes, error)
 	// GetSpell implements getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
@@ -208,6 +220,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/rolls
 	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
+	// ListSessions implements listSessions operation.
+	//
+	// The Campaign's Sessions, newest first. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions
+	ListSessions(ctx context.Context, params ListSessionsParams) (ListSessionsRes, error)
 	// ListSources implements listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.
@@ -288,6 +306,14 @@ type Handler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// StartSession implements startSession operation.
+	//
+	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
+	// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are
+	// LiveCommand and LiveUpdate.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions
+	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
 	// UpdateCampaign implements updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
@@ -331,6 +357,40 @@ func NewServer(h Handler, sec SecurityHandler, opts ...ServerOption) (*Server, e
 	return &Server{
 		h:          h,
 		sec:        sec,
+		baseServer: s,
+	}, nil
+}
+
+// WebhookHandler handles webhooks described by OpenAPI v3 specification.
+type WebhookHandler interface {
+	// LiveCommand implements liveCommand operation.
+	//
+	// Not an HTTP call. The shape of every WebSocket frame a client sends on
+	// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live.
+	//
+	LiveCommand(ctx context.Context, req *LiveCommand) error
+	// LiveUpdate implements liveUpdate operation.
+	//
+	// Not an HTTP call. The shape of every WebSocket frame the server sends on the live Session socket.
+	//
+	LiveUpdate(ctx context.Context, req *LiveUpdate) error
+}
+
+// WebhookServer implements http server based on OpenAPI v3 specification and
+// calls WebhookHandler to handle requests.
+type WebhookServer struct {
+	h WebhookHandler
+	baseServer
+}
+
+// NewWebhookServer creates new WebhookServer.
+func NewWebhookServer(h WebhookHandler, opts ...ServerOption) (*WebhookServer, error) {
+	s, err := newServerConfig(opts...).baseServer()
+	if err != nil {
+		return nil, err
+	}
+	return &WebhookServer{
+		h:          h,
 		baseServer: s,
 	}, nil
 }

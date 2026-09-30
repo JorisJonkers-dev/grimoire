@@ -1,2 +1,4 @@
 # Game values (levels, ranges, years) are small and bounded; 32-bit integers are deliberate.
 excluded_rules = ["prefer-bigint-over-int"]
+# goose runs every migration file in its own transaction.
+assume_in_transaction = true

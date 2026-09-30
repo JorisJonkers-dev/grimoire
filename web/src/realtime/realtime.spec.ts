@@ -1,0 +1,138 @@
+/* eslint-disable vue/one-component-per-file -- each test mounts its own tiny host */
+import { mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h } from 'vue'
+import contract from '../../../fixtures/live-messages.json'
+import { zLiveCommand, zLiveUpdate } from '@/infrastructure/api/zod.gen'
+import { FakeSocket } from '@/test/fakeSocket'
+import { socketUrl, useLiveSession } from './liveSession'
+import { SessionState } from './sessionState'
+
+const token = { id: '0190c7a8-0000-7000-8000-00000000000a', label: 'Goblin', kind: 'enemy', q: 1, r: 0, hidden: false }
+const snapshot = (seq: number, tokens = [token]) => ({
+  kind: 'snapshot', seq, tokens, session: { id: '0190c7a8-0000-7000-8000-00000000000b', number: 2, gridRadius: 5, audience: 'party' },
+})
+
+describe('the wire contract', () => {
+  it('parses every message the server fixture holds', () => {
+    for (const u of contract.updates) expect(zLiveUpdate.safeParse(u).success).toBe(true)
+    for (const c of contract.commands) expect(zLiveCommand.safeParse(c).success).toBe(true)
+  })
+})
+
+describe('SessionState', () => {
+  it('applies updates in order and asks to resync on a gap', () => {
+    const s = new SessionState()
+    expect(s.apply({ kind: 'tick', seq: 1 })).toBe('resync')
+    expect(s.apply(snapshot(3))).toBe('applied')
+    expect(s.tokens.get(token.id)?.label).toBe('Goblin')
+    expect(s.apply({ kind: 'token', seq: 4, token: { ...token, q: 2 } })).toBe('applied')
+    expect(s.tokens.get(token.id)?.q).toBe(2)
+    expect(s.apply({ kind: 'tick', seq: 5 })).toBe('applied')
+    expect(s.apply({ kind: 'token_removed', seq: 7, tokenId: token.id })).toBe('resync')
+    expect(s.tokens.size).toBe(1)
+    expect(s.apply({ kind: 'token_removed', seq: 6, tokenId: token.id })).toBe('applied')
+    expect(s.tokens.size).toBe(0)
+    expect(s.apply({ kind: 'rejected', seq: 6, reason: 'Nope' })).toBe('applied')
+    expect(s.rejection).toBe('Nope')
+    expect(s.apply({ kind: 'rejected', seq: 6 })).toBe('applied')
+    expect(s.rejection).toBe('That was not allowed.')
+    expect(s.apply({ kind: 'weird' })).toBe('ignored')
+    expect(s.apply({ kind: 'snapshot', seq: 8 })).toBe('applied')
+    expect(s.session?.number).toBe(2)
+    expect(s.apply({ kind: 'ended', seq: 8 })).toBe('applied')
+    expect(s.ended).toBe(true)
+  })
+})
+
+describe('useLiveSession', () => {
+  beforeEach(() => {
+    FakeSocket.all = []
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  function harness() {
+    let api!: ReturnType<typeof useLiveSession>
+    const w = mount(
+      defineComponent({
+        setup() {
+          api = useLiveSession('c1', 's1', 'dm', (url) => new FakeSocket(url), () => 100)
+          return () => h('div')
+        },
+      }),
+    )
+    return { w, api: () => api }
+  }
+
+  it('connects, resyncs on gaps, sends commands and reconnects', () => {
+    const { w, api } = harness()
+    const s = FakeSocket.last()
+    expect(s.url).toBe('ws://localhost:3000/api/v1/campaigns/c1/sessions/s1/live?audience=dm'.replace('localhost:3000', window.location.host))
+    expect(api().view.connection).toBe('connecting')
+    s.open()
+    expect(api().view.connection).toBe('open')
+    s.receive(snapshot(1))
+    expect(api().view.tokens).toHaveLength(1)
+    s.receive('not json')
+    s.receive({ kind: 'tick', seq: 5 })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'resync', q: 0, r: 0, hidden: false })
+    api().send({ kind: 'move_token', tokenId: token.id, q: 3, r: 1 })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_token', q: 3, r: 1, nonce: '2' })
+    s.drop()
+    expect(api().view.connection).toBe('reconnecting')
+    vi.advanceTimersByTime(100)
+    const again = FakeSocket.last()
+    expect(again).not.toBe(s)
+    expect(api().view.connection).toBe('reconnecting')
+    again.open()
+    again.receive({ kind: 'ended', seq: 1 })
+    expect(api().view.connection).toBe('ended')
+    again.drop()
+    expect(FakeSocket.all).toHaveLength(2)
+    w.unmount()
+    expect(again.closed).toBe(true)
+  })
+
+  it('stops reconnecting once closed and builds secure URLs', () => {
+    const { w } = harness()
+    const s = FakeSocket.last()
+    w.unmount()
+    s.drop()
+    vi.advanceTimersByTime(1000)
+    expect(FakeSocket.all).toHaveLength(1)
+    expect(socketUrl({ protocol: 'https:', host: 'grimoire.example' }, 'c', 's', 'table')).toBe(
+      'wss://grimoire.example/api/v1/campaigns/c/sessions/s/live?audience=table',
+    )
+  })
+
+  it('backs off with a default delay and default socket', () => {
+    const created: string[] = []
+    vi.stubGlobal(
+      'WebSocket',
+      class extends FakeSocket {
+        constructor(url: string) {
+          super(url)
+          created.push(url)
+        }
+      },
+    )
+    const w = mount(
+      defineComponent({
+        setup() {
+          useLiveSession('c', 's', 'party')
+          return () => h('div')
+        },
+      }),
+    )
+    FakeSocket.last().drop()
+    vi.advanceTimersByTime(499)
+    expect(created).toHaveLength(1)
+    vi.advanceTimersByTime(1)
+    expect(created).toHaveLength(2)
+    w.unmount()
+    vi.unstubAllGlobals()
+  })
+})

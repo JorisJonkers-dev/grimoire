@@ -6,6 +6,8 @@ import {
   createInviteMutation,
   getCampaignOptions,
   listCharactersOptions,
+  listSessionsOptions,
+  startSessionMutation,
   listInvitesOptions,
   removeMemberMutation,
   revokeInviteMutation,
@@ -22,6 +24,15 @@ const path = computed(() => ({ path: { campaignId: id.value } }))
 
 const campaign = useQuery(computed(() => ({ ...getCampaignOptions(path.value), retry: false })))
 const isDM = computed(() => campaign.data.value?.myRole === 'dm')
+const sessions = useQuery(computed(() => ({ ...listSessionsOptions(path.value), enabled: campaign.isSuccess.value })))
+const liveSessions = computed(() => (sessions.data.value ?? []).filter((s) => s.status === 'live'))
+const start = useMutation(startSessionMutation())
+function startSession() {
+  start.mutate(path.value, {
+    onSuccess: (s) => void router.push({ name: 'session', params: { id: id.value, sid: s.id } }),
+    onError: onError('The session could not be started.'),
+  })
+}
 const characters = useQuery(computed(() => ({ ...listCharactersOptions(path.value), enabled: campaign.isSuccess.value })))
 const invites = useQuery(computed(() => ({ ...listInvitesOptions(path.value), enabled: isDM.value })))
 
@@ -98,6 +109,19 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <RouterLink :to="{ name: 'dice', params: { id } }" data-testid="dice-link">Dice</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'npcs', params: { id } }" data-testid="npcs-link">NPCs</RouterLink>
       </nav>
+
+      <section class="g-card" data-testid="sessions">
+        <h2>Sessions</h2>
+        <ul class="g-list">
+          <li v-for="s in liveSessions" :key="s.id" class="member">
+            <span class="who">Session {{ s.number }} is live</span>
+            <RouterLink :to="{ name: 'session', params: { id, sid: s.id } }" data-testid="join-session">Join</RouterLink>
+            <RouterLink :to="{ name: 'table', params: { id, sid: s.id } }">Table display</RouterLink>
+          </li>
+        </ul>
+        <p v-if="liveSessions.length === 0" class="hint">No session is running.</p>
+        <GButton v-if="isDM" variant="primary" data-testid="start-session" @click="startSession()">Start a session</GButton>
+      </section>
 
       <section class="g-card" data-testid="party">
         <h2>Party</h2>

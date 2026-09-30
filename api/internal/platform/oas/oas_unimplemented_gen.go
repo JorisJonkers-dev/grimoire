@@ -103,6 +103,15 @@ func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpc
 	return r, ht.ErrNotImplemented
 }
 
+// EndSession implements endSession operation.
+//
+// Ends a live Session and disconnects everyone. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
+func (UnimplementedHandler) EndSession(ctx context.Context, params EndSessionParams) (r EndSessionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetActionLog implements getActionLog operation.
 //
 // The Campaign's recent Actions with their seeds. DM only.
@@ -212,6 +221,15 @@ func (UnimplementedHandler) GetRoll(ctx context.Context, params GetRollParams) (
 	return r, ht.ErrNotImplemented
 }
 
+// GetSession implements getSession operation.
+//
+// One Session. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}
+func (UnimplementedHandler) GetSession(ctx context.Context, params GetSessionParams) (r GetSessionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -309,6 +327,15 @@ func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams)
 //
 // GET /api/v1/campaigns/{campaignId}/rolls
 func (UnimplementedHandler) ListRolls(ctx context.Context, params ListRollsParams) (r ListRollsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSessions implements listSessions operation.
+//
+// The Campaign's Sessions, newest first. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/sessions
+func (UnimplementedHandler) ListSessions(ctx context.Context, params ListSessionsParams) (r ListSessionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -431,6 +458,17 @@ func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconRe
 	return r, ht.ErrNotImplemented
 }
 
+// StartSession implements startSession operation.
+//
+// Opens the next live Session. DM only. Live play then runs over the WebSocket at
+// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are
+// LiveCommand and LiveUpdate.
+//
+// POST /api/v1/campaigns/{campaignId}/sessions
+func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessionParams) (r StartSessionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UpdateCampaign implements updateCampaign operation.
 //
 // Changes a Campaign's settings. DM only.
@@ -465,4 +503,21 @@ func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate,
 // PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 func (UnimplementedHandler) UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (r UpdateNpcRes, _ error) {
 	return r, ht.ErrNotImplemented
+}
+
+var _ WebhookHandler = UnimplementedHandler{}
+
+// LiveCommand implements liveCommand operation.
+//
+// Not an HTTP call. The shape of every WebSocket frame a client sends on
+// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live.
+func (UnimplementedHandler) LiveCommand(ctx context.Context, req *LiveCommand) error {
+	return ht.ErrNotImplemented
+}
+
+// LiveUpdate implements liveUpdate operation.
+//
+// Not an HTTP call. The shape of every WebSocket frame the server sends on the live Session socket.
+func (UnimplementedHandler) LiveUpdate(ctx context.Context, req *LiveUpdate) error {
+	return ht.ErrNotImplemented
 }

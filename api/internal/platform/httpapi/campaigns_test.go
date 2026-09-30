@@ -3,12 +3,15 @@ package httpapi_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
@@ -20,6 +23,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -30,8 +34,17 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var cs httpapi.CharacterService
 	var ns httpapi.NPCService
 	var rs httpapi.RollService
+	var ss httpapi.SessionService
+	var hub httpapi.LiveHub
+	var lm httpapi.LiveMembers
 	for _, e := range extra {
 		switch v := e.(type) {
+		case httpapi.SessionService:
+			ss = v
+		case httpapi.LiveHub:
+			hub = v
+		case httpapi.LiveMembers:
+			lm = v
 		case httpapi.RollService:
 			rs = v
 		case httpapi.CharacterService:
@@ -41,7 +54,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
@@ -58,12 +71,17 @@ func realCampaigns(t *testing.T) http.Handler {
 	}
 	t.Cleanup(store.Close)
 	repo := campaignpg.New(store.Pool())
-	return campaignServer(t, app.NewService(repo), &app.Characters{
-		Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
-	}, &app.NPCs{Repo: repo, Now: time.Now}, httpapi.RollService(&playapp.Rolls{
-		Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo},
-		Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,
-	}))
+	parts := []any{
+		&app.Characters{
+			Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
+		},
+		&app.NPCs{Repo: repo, Now: time.Now},
+		httpapi.RollService(&playapp.Rolls{
+			Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo},
+			Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,
+		}),
+	}
+	return campaignServer(t, app.NewService(repo), append(parts, liveParts(t, store.Pool(), repo)...)...)
 }
 
 func call(h http.Handler, method, path, subject, body string) *httptest.ResponseRecorder {
@@ -340,3 +358,14 @@ func TestCampaignHandlersNeedAnIdentity(t *testing.T) {
 		}
 	}
 }
+
+func liveParts(t *testing.T, pool *pgxpool.Pool, repo *campaignpg.Store) []any {
+	t.Helper()
+	hub := &live.Hub{Store: playpg.New(pool), Owner: playpg.Owner{Pool: pool}, Now: time.Now, Log: quiet}
+	t.Cleanup(hub.Shutdown)
+	members := playpg.CampaignMembers{Store: repo}
+	sessions := &playapp.Sessions{Repo: playpg.New(pool), Members: members, Live: hub, Now: time.Now}
+	return []any{httpapi.SessionService(sessions), httpapi.LiveHub(hub), httpapi.LiveMembers(members)}
+}
+
+func jsonUnmarshal(data []byte, v any) error { return json.Unmarshal(data, v) }

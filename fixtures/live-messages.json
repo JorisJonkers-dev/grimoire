@@ -1,0 +1,98 @@
+{
+  "commands": [
+    {
+      "nonce": "n1",
+      "kind": "resync",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n2",
+      "kind": "place_token",
+      "label": "Goblin",
+      "tokenKind": "enemy",
+      "q": 2,
+      "r": -1,
+      "hidden": true
+    },
+    {
+      "nonce": "n3",
+      "kind": "move_token",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 3,
+      "r": -1,
+      "hidden": false
+    },
+    {
+      "nonce": "n4",
+      "kind": "set_token_hidden",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n5",
+      "kind": "remove_token",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    }
+  ],
+  "updates": [
+    {
+      "kind": "snapshot",
+      "seq": 4,
+      "session": {
+        "id": "0190c7a8-0000-7000-8000-00000000000b",
+        "number": 3,
+        "gridRadius": 10,
+        "audience": "party"
+      },
+      "tokens": [
+        {
+          "id": "0190c7a8-0000-7000-8000-00000000000a",
+          "label": "Goblin",
+          "kind": "enemy",
+          "q": 2,
+          "r": -1,
+          "hidden": false
+        }
+      ]
+    },
+    {
+      "kind": "token",
+      "seq": 5,
+      "nonce": "n3",
+      "token": {
+        "id": "0190c7a8-0000-7000-8000-00000000000a",
+        "label": "Goblin",
+        "kind": "enemy",
+        "q": 2,
+        "r": -1,
+        "hidden": false
+      }
+    },
+    {
+      "kind": "token_removed",
+      "seq": 6,
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+    },
+    {
+      "kind": "tick",
+      "seq": 7
+    },
+    {
+      "kind": "rejected",
+      "seq": 7,
+      "nonce": "n9",
+      "reason": "Only the DM can change tokens."
+    },
+    {
+      "kind": "ended",
+      "seq": 7
+    }
+  ]
+}

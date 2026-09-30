@@ -260,3 +260,12 @@ func TestEveryPlayDatabaseFaultSurfaces(t *testing.T) {
 		})
 	}
 }
+
+func (tb table) dmMember(t *testing.T) domain.Member {
+	t.Helper()
+	m, err := pgstore.CampaignMembers{Store: campaignpg.New(tb.pool)}.Membership(context.Background(), tb.campaign, dm.Subject)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return m
+}

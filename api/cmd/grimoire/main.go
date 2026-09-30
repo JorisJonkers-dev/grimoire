@@ -30,6 +30,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/webui"
 	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
@@ -174,6 +175,8 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		}
 	}
 
+	hub := &live.Hub{Store: playpg.New(store.Pool()), Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger}
+	defer hub.Shutdown()
 	handler, err := httpapi.New(httpapi.Options{
 		Handler: &httpapi.Handler{
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
@@ -183,6 +186,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Blobs: blobs(cfg, logger),
 			},
 			NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
+			Sessions: &playapp.Sessions{
+				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
+			},
+			Hub: hub, LiveMembers: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
 			Rolls: &playapp.Rolls{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
 				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,

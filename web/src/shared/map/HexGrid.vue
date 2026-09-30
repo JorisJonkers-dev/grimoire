@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { type Coord, corners, type Layout, toPixel } from '@/shared/hex'
+import type { GridCell } from './grid'
 
-export type GridCell = Coord & { tone?: string; label?: string }
 
 const props = withDefaults(defineProps<{ cells: GridCell[]; size?: number; title: string }>(), { size: 24 })
 const emit = defineEmits<{ select: [coord: Coord] }>()
@@ -49,6 +49,7 @@ const box = computed(() => {
         @keydown.enter.prevent="emit('select', { q: s.q, r: s.r })"
       >
         <polygon :points="s.points" />
+        <text v-if="s.mark" :x="s.centre.x" :y="s.centre.y + size * 0.18" text-anchor="middle" class="mark" aria-hidden="true">{{ s.mark }}</text>
       </g>
     </svg>
   </div>
@@ -69,6 +70,31 @@ const box = computed(() => {
   stroke: var(--color-line);
   stroke-width: 1;
   cursor: pointer;
+}
+.mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  fill: var(--color-text);
+  pointer-events: none;
+}
+.hex--hidden polygon {
+  fill: var(--color-enemy-fill);
+  stroke: var(--color-enemy);
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+.hex--npc polygon {
+  fill: #2a2438;
+  stroke: #b39ddb;
+}
+.hex--object polygon {
+  fill: #3a3326;
+  stroke: var(--color-bronze);
+}
+.hex--selected polygon {
+  stroke: var(--color-gold-high);
+  stroke-width: 3;
 }
 .hex:focus-visible polygon {
   stroke: var(--color-gold-high);

@@ -100,6 +100,13 @@ describe('campaign home', () => {
       [`/api/v1/campaigns/${ID}/invites`]: record((req) =>
         req.method === 'POST' ? { ...invite, token } : req.method === 'DELETE' ? new Response(null, { status: 204 }) : [invite],
       ),
+      [`/api/v1/campaigns/${ID}/sessions`]: (_u, req) =>
+        req.method === 'POST'
+          ? { id: '0190c7a8-0000-7000-8000-00000000000b', number: 2, status: 'live', seq: 0, gridRadius: 10, startedAt: '2026-09-30T20:00:00Z' }
+          : [
+              { id: '0190c7a8-0000-7000-8000-00000000000b', number: 1, status: 'live', seq: 0, gridRadius: 10, startedAt: '2026-09-30T20:00:00Z' },
+              { id: '0190c7a8-0000-7000-8000-00000000000c', number: 0 + 1, status: 'ended', seq: 3, gridRadius: 10, startedAt: '2026-09-30T20:00:00Z', endedAt: '2026-09-30T21:00:00Z' },
+            ],
       [`/api/v1/campaigns/${ID}/characters`]: () => [
         { id: '0190c7a8-0000-7000-8000-000000000009', name: 'Kara', ownerName: 'Joris', mine: true, species: 'human', class: 'fighter', level: 1, hpCurrent: 12, hpMax: 12 },
       ],
@@ -111,6 +118,7 @@ describe('campaign home', () => {
     expect(wrapper.get('h1').text()).toBe('Strahd')
     expect(wrapper.get('[data-testid="party"]').text()).toContain('Kara (yours)')
     expect(wrapper.find('[data-testid="npcs-link"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="sessions"]').text()).toContain('Session 1 is live')
     expect(wrapper.get('[data-testid="member-list"]').text()).toContain('Joris (you)')
     expect(wrapper.get('[data-testid="invite-list"]').text()).toContain('By Joris')
     await wrapper.get('[data-testid="create-invite"]').trigger('click')
@@ -209,5 +217,33 @@ describe('join', () => {
     await failing.wrapper.get('[data-testid="join-form"]').trigger('submit')
     await flushPromises()
     expect(failing.wrapper.get('[data-testid="join-form"] [role="alert"]').text()).toContain('could not join')
+  })
+})
+
+describe('sessions on the campaign home', () => {
+  it('starts a session and reports failures', async () => {
+    vi.stubGlobal('WebSocket', class { send() {} close() {} })
+    const started = await mountApp(`/campaigns/${ID}`, {
+      [`/api/v1/campaigns/${ID}/sessions`]: (_u, req) =>
+        req.method === 'POST' ? { id: '0190c7a8-0000-7000-8000-00000000000b', number: 1, status: 'live', seq: 0, gridRadius: 10, startedAt: '2026-09-30T20:00:00Z' } : [],
+      [`/api/v1/campaigns/${ID}/invites`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => home('dm'),
+    })
+    expect(started.wrapper.get('[data-testid="sessions"]').text()).toContain('No session is running')
+    await started.wrapper.get('[data-testid="start-session"]').trigger('click')
+    await vi.waitFor(() => { expect(started.router.currentRoute.value.name).toBe('session') }, { timeout: 5000 })
+    started.wrapper.unmount()
+    document.body.innerHTML = ''
+    const failing = await mountApp(`/campaigns/${ID}`, {
+      [`/api/v1/campaigns/${ID}/sessions`]: (_u, req) => (req.method === 'POST' ? problem(503)() : []),
+      [`/api/v1/campaigns/${ID}/invites`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => home('dm'),
+    })
+    await failing.wrapper.get('[data-testid="start-session"]').trigger('click')
+    await flushPromises()
+    expect(failing.wrapper.get('[data-testid="campaign-error"]').text()).toContain('could not be started')
+    vi.unstubAllGlobals()
   })
 })
