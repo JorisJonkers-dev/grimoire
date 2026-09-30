@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/test/axe'
-import { mountApp } from '@/test/mountApp'
+import { fakeClock, mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { describeGroup, notationFor, signed } from './notation'
 
@@ -116,13 +116,13 @@ describe('dice tray', () => {
 
   it('tumbles until the server answers, and reports failures', async () => {
     reducedMotion(false)
-    vi.useFakeTimers()
     const { wrapper } = await mountApp(`/campaigns/${ID}/dice`, {
       [`${base}/rolls/${ROLL}/dice/0`]: problem(503),
       [`${base}/rolls/${ROLL}/rest`]: () => withDice([5, 6, 1], { status: 'resolved', total: 9 }),
       [`${base}/rolls`]: (_u, req) => (req.method === 'POST' ? roll() : []),
       [base]: () => campaign('player'),
     })
+    fakeClock()
     expect(wrapper.find('[data-testid="action-log"]').exists()).toBe(false)
     await wrapper.get('[data-testid="roll-purpose"]').setValue('Stealth')
     await wrapper.get('[data-testid="roll-form"]').trigger('submit')
@@ -146,7 +146,7 @@ describe('dice tray', () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/dice`, {
       [`${base}/rolls`]: (_u, req) =>
         req.method === 'POST'
-          ? roll({ canRoll: false, mine: false, roller: { id: roller.id, name: 'Ireena' }, requestedBy: 'Joris', modifiers: [] })
+          ? roll({ canRoll: false, mine: false, roller: { id: roller.id, name: 'Tamsin' }, requestedBy: 'Joris', modifiers: [] })
           : [roll({ canRoll: false })],
       [base]: () => campaign('player'),
     })
@@ -155,7 +155,7 @@ describe('dice tray', () => {
     await wrapper.get('[data-testid="roll-form"]').trigger('submit')
     await flushPromises()
     const card = wrapper.get('[data-testid="roll-card"]')
-    expect(card.text()).toContain('Waiting for Ireena')
+    expect(card.text()).toContain('Waiting for Tamsin')
     expect(card.text()).toContain('asked by Joris')
     expect(card.find('[data-testid="auto-0"]').exists()).toBe(false)
     document.body.innerHTML = ''

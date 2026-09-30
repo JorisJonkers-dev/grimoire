@@ -2,11 +2,16 @@ import { defineConfig, devices } from '@playwright/test'
 
 const devSubject = 'e2e-player'
 const apiOrigin = 'http://localhost:18765'
+// Every test without its own identity shares the dev subject, and so one rate-limit bucket.
+const rateLimit = '100000'
 
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
+  // A flaky test is a bug to fix, not to retry.
+  retries: 0,
+  expect: { timeout: process.env.CI ? 10_000 : 5_000 },
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
   projects: [
@@ -28,6 +33,7 @@ export default defineConfig({
         GRIMOIRE_AUTO_IMPORT: 'true',
         GRIMOIRE_DEV_SUBJECT: devSubject,
         GRIMOIRE_ADDR: ':18765',
+        GRIMOIRE_RATE_LIMIT_PER_MINUTE: rateLimit,
       },
     },
     {

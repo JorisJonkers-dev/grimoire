@@ -34,7 +34,7 @@ const label = computed(() => {
     :class="['token', `token--${allegiance}`, { 'token--hidden': hidden, 'token--active': active }]"
     :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${Math.round(size * 0.38)}px` }"
   >
-    <img v-if="iconUrl" :src="iconUrl" alt="" class="icon" />
+    <img v-if="iconUrl" :src="iconUrl" alt="" class="icon" data-testid="token-icon" />
     <span v-else aria-hidden="true">{{ initials }}</span>
   </span>
 </template>

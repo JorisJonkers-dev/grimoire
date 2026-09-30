@@ -22,7 +22,7 @@ func npcs(t *testing.T, repo app.Repository) (*app.NPCs, domain.Detail) {
 }
 
 func morvain() app.NPCInput {
-	return app.NPCInput{Name: " Morvain ", Title: "Count", Description: "A vampire.", DMNotes: "Wants Ireena.", Disposition: "hostile"}
+	return app.NPCInput{Name: " Morvain ", Title: "Count", Description: "A vampire.", DMNotes: "Wants Tamsin.", Disposition: "hostile"}
 }
 
 func TestNPCRevisionsDiffAndRestore(t *testing.T) {
@@ -52,7 +52,7 @@ func TestNPCRevisionsDiffAndRestore(t *testing.T) {
 		revs[1].Origin != "mcp" || revs[1].Client != "claude" || revs[2].Author != "Joris" {
 		t.Fatalf("revisions = %+v %v", revs, err)
 	}
-	if got, _ := n.Get(ctx, dmCaller, d.ID, created.ID); got.DMNotes != "Wants Ireena." {
+	if got, _ := n.Get(ctx, dmCaller, d.ID, created.ID); got.DMNotes != "Wants Tamsin." {
 		t.Fatalf("after restore = %+v", got)
 	}
 }

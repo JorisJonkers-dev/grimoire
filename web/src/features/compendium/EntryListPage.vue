@@ -70,7 +70,7 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
         <p v-if="items.length === 0" data-testid="entry-empty">Nothing matches.</p>
         <ul class="list" data-testid="entry-list">
           <li v-for="entry in items" :key="entry.slug">
-            <RouterLink :to="{ name: 'entry', params: { kind, slug: entry.slug }, query: ruleset ? { ruleset } : {} }" class="row">
+            <RouterLink :to="{ name: 'entry', params: { kind, slug: entry.slug }, query: ruleset ? { ruleset } : {} }" class="row" :data-testid="`entry-${entry.slug}`">
               <span class="name">{{ entry.name }}</span>
               <span class="meta">{{ entry.subtitle }}</span>
               <span class="tag">{{ entry.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>

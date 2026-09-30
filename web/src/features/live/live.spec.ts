@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveTable, LiveToken, LiveWorld } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
-import { mountApp } from '@/test/mountApp'
+import { fakeClock, mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials } from './board'
 import { focus } from './camera'
@@ -57,7 +57,7 @@ describe('board', () => {
   it('lays out hexes and paints tokens', () => {
     expect(hexes(2)).toHaveLength(19)
     expect(initials('Goblin  Boss Prime')).toBe('GB')
-    const cells = board(1, [goblin, { ...lurker, q: 0, r: 0 }, { ...goblin, id: 'p', kind: 'party', q: 0, r: 1, label: 'Ireena' }], goblin.id)
+    const cells = board(1, [goblin, { ...lurker, q: 0, r: 0 }, { ...goblin, id: 'p', kind: 'party', q: 0, r: 1, label: 'Tamsin' }], goblin.id)
     expect(cells.find((c) => c.q === 1 && c.r === 0)).toMatchObject({ tone: 'selected', mark: 'GB' })
     expect(cells.find((c) => c.q === 0 && c.r === 0)).toMatchObject({ tone: 'hidden', label: 'Lurker (hidden)' })
     expect(cells.find((c) => c.q === 0 && c.r === 1)).toMatchObject({ tone: 'ally' })
@@ -80,13 +80,13 @@ describe('live session page', () => {
     await flushPromises()
     expect(wrapper.get('[data-testid="connection"]').text()).toBe('Live')
     expect(wrapper.get('h1').text()).toBe('Session 3')
-    await wrapper.get('[data-testid="token-label"]').setValue('Ireena')
+    await wrapper.get('[data-testid="token-label"]').setValue('Tamsin')
     await wrapper.get('[data-testid="token-kind"]').setValue('party')
     await wrapper.get('[data-testid="token-controller"]').setValue(player.id)
     await wrapper.get('[data-testid="token-hidden"]').setValue(true)
     await wrapper.get('[data-testid="token-darkvision"]').setValue(60)
     await wrapper.get('[data-hex="0,1"]').trigger('click')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', label: 'Ireena', tokenKind: 'party', q: 0, r: 1, hidden: true, darkvisionFt: 60, controllerId: player.id })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', label: 'Tamsin', tokenKind: 'party', q: 0, r: 1, hidden: true, darkvisionFt: 60, controllerId: player.id })
     await wrapper.get('[data-hex="0,-1"]').trigger('click')
     expect(s.sent).toHaveLength(1)
     await wrapper.get('[data-hex="1,0"]').trigger('click')
@@ -157,7 +157,7 @@ describe('live session on a map', () => {
     const light = { id: '0190c7a8-0000-7000-8000-00000000000e', q: 1, r: 1, brightFt: 20, dimFt: 40 }
     s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], map: liveMap, fog: true, visible: [{ q: 0, r: 0 }], remembered: [{ q: 1, r: 0 }], walls: [{ q: 2, r: 0 }], lights: [light], ambient: 'dark' } })
     await flushPromises()
-    expect(wrapper.get('[data-testid="map-board"] image').attributes('href')).toBe(liveMap.imageUrl)
+    expect(wrapper.get('[data-testid="map-image"]').attributes('href')).toBe(liveMap.imageUrl)
     expect(wrapper.get('[data-hex="0,0"]').classes()).toContain('cell--lit')
     expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toBe('Hex 1, 0: remembered: Goblin Boss')
     expect(wrapper.get('[data-hex="2,0"]').classes()).toEqual(expect.arrayContaining(['cell--unseen', 'cell--wall', 'cell--dm']))
@@ -204,7 +204,6 @@ describe('live session on a map', () => {
 
 describe('exploration', () => {
   it('lets a player preview and walk their own tokens, played back hex by hex', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
     const s = FakeSocket.last()
     const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
@@ -230,13 +229,13 @@ describe('exploration', () => {
     await wrapper.get('[data-hex="2,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: brom.id, q: 2, r: 0 })
     const at = (q: number, r: number) => ({ tokens: [aria, { ...brom, q, r }], fog: false, visible: [], remembered: [] })
+    fakeClock()
     s.receive({ kind: 'view', seq: 2, steps: [at(1, 1)], view: at(2, 0) })
     await flushPromises()
     expect(wrapper.get('[data-hex="1,1"]').attributes('aria-label')).toContain('Brom')
     await vi.advanceTimersByTimeAsync(250)
     expect(wrapper.get('[data-hex="2,0"]').attributes('aria-label')).toContain('Brom')
     expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
-    vi.useRealTimers()
   })
 })
 
@@ -499,9 +498,9 @@ describe('reactions', () => {
   })
 
   it('asks the reactor to answer before the countdown runs out', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true })
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
     const s = FakeSocket.last()
+    fakeClock()
     s.receive(snapshot([aria, goblin], 'party', withPrompt(prompt())))
     await flushPromises()
     const card = wrapper.get('[data-testid="reaction-prompt"]')
@@ -513,6 +512,7 @@ describe('reactions', () => {
     expect(wrapper.get('[data-testid="countdown"]').text()).toBe('2 s')
     await vi.advanceTimersByTimeAsync(5000)
     expect(wrapper.get('[data-testid="countdown"]').text()).toBe('0 s')
+    vi.useRealTimers()
     await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="use-reaction"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'react', use: true })
@@ -530,7 +530,6 @@ describe('reactions', () => {
     s.receive({ kind: 'view', seq: 4, view: { tokens: [aria, goblin], fog: false, visible: [], remembered: [] } })
     await flushPromises()
     expect(wrapper.find('[data-testid="reaction-prompt"]').exists()).toBe(false)
-    vi.useRealTimers()
   })
 
   it('lets the DM answer any prompt and place a token that knows Shield', async () => {

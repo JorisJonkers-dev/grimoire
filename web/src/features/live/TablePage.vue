@@ -39,7 +39,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
 <template>
   <main class="table" data-testid="table-display">
     <h1 class="sr-only">Table display</h1>
-    <p v-if="state.connection === 'ended'" class="ended" role="status">The session has ended.</p>
+    <p v-if="state.connection === 'ended'" class="ended" role="status" data-testid="session-ended">The session has ended.</p>
     <p v-else-if="!state.session || !state.view" class="ended" role="status">Waiting for the table…</p>
     <div v-else-if="table?.blackout" class="blackout" role="img" aria-label="The table is dark" data-testid="blackout"></div>
     <section v-else-if="table?.scene === 'title' || table?.scene === 'handout'" :class="['card', table.scene]" :data-testid="`scene-${table.scene}`">

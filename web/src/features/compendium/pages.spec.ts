@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/test/axe'
-import { mountApp } from '@/test/mountApp'
+import { fakeClock, mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 
 const summary = (slug: string, name: string, extra = {}) => ({
@@ -50,10 +50,10 @@ describe('spell list', () => {
   })
 
   it('debounces the name search', async () => {
-    vi.useFakeTimers()
     const { wrapper, calls } = await mountApp('/compendium/spells', {
       '/api/v1/compendium/spells': () => ({ items: [] }),
     })
+    fakeClock()
     expect(wrapper.find('[data-testid="spell-empty"]').exists()).toBe(true)
     await wrapper.get('[data-testid="spell-search"]').setValue('fire')
     await wrapper.get('[data-testid="spell-search"]').setValue('fireb')
