@@ -7,6 +7,7 @@ type OperationName = string
 
 const (
 	AcceptInviteOperation          OperationName = "AcceptInvite"
+	ClearTokenIconOperation        OperationName = "ClearTokenIcon"
 	CreateCampaignOperation        OperationName = "CreateCampaign"
 	CreateCharacterOperation       OperationName = "CreateCharacter"
 	CreateInviteOperation          OperationName = "CreateInvite"
@@ -18,9 +19,11 @@ const (
 	GetEntryOperation              OperationName = "GetEntry"
 	GetHealthOperation             OperationName = "GetHealth"
 	GetMeOperation                 OperationName = "GetMe"
+	GetPortraitOperation           OperationName = "GetPortrait"
 	GetReadinessOperation          OperationName = "GetReadiness"
 	GetSpellOperation              OperationName = "GetSpell"
 	GetStatusOperation             OperationName = "GetStatus"
+	GetTokenIconOperation          OperationName = "GetTokenIcon"
 	ListCampaignsOperation         OperationName = "ListCampaigns"
 	ListCharactersOperation        OperationName = "ListCharacters"
 	ListEntriesOperation           OperationName = "ListEntries"
@@ -31,6 +34,8 @@ const (
 	PreviewInviteOperation         OperationName = "PreviewInvite"
 	RemoveMemberOperation          OperationName = "RemoveMember"
 	RevokeInviteOperation          OperationName = "RevokeInvite"
+	SetPortraitOperation           OperationName = "SetPortrait"
+	SetTokenIconOperation          OperationName = "SetTokenIcon"
 	UpdateCampaignOperation        OperationName = "UpdateCampaign"
 	UpdateCharacterOperation       OperationName = "UpdateCharacter"
 	UpdateMemberOperation          OperationName = "UpdateMember"

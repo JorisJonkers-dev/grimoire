@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { deleteCharacterMutation, getCharacterOptions, updateCharacterMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import { GButton } from '@/shared/ui'
+import { GButton, TokenBadge } from '@/shared/ui'
+import PortraitEditor from './PortraitEditor.vue'
+import TokenEditor from './TokenEditor.vue'
 import { titleCase } from '@/features/compendium/highlight'
 import { abbrev, signed } from './build'
 
@@ -11,6 +13,7 @@ const route = useRoute()
 const router = useRouter()
 const client = useQueryClient()
 const path = computed(() => ({ path: { campaignId: String(route.params.id), characterId: String(route.params.characterId) } }))
+const refresh = () => void client.invalidateQueries()
 const sheet = useQuery(computed(() => ({ ...getCharacterOptions(path.value), retry: false })))
 const s = computed(() => sheet.data.value)
 const update = useMutation(updateCharacterMutation())
@@ -42,11 +45,16 @@ function destroy() {
     <p v-if="sheet.isPending.value">Unrolling the sheet…</p>
     <p v-else-if="sheet.isError.value" role="alert" class="g-alert" data-testid="sheet-missing">That character is not in this campaign.</p>
     <article v-else-if="s" data-testid="character-sheet">
-      <header>
-        <h1>{{ s.name }}</h1>
-        <p class="sub">Level {{ s.level }} {{ s.species.name }} {{ s.class.name }} · {{ s.background.name }} · {{ s.ownerName }}</p>
-        <p v-if="!s.editable" class="g-tag locked" data-testid="sheet-locked">Read only</p>
+      <header class="head">
+        <img v-if="s.portraitUrl" :src="s.portraitUrl" :alt="`Portrait of ${s.name}`" class="portrait" data-testid="portrait" />
+        <TokenBadge :name="s.name" allegiance="party" :icon-url="s.tokenUrl ?? ''" :size="56" />
+        <div>
+          <h1>{{ s.name }}</h1>
+          <p class="sub">Level {{ s.level }} {{ s.species.name }} {{ s.class.name }} · {{ s.background.name }} · {{ s.ownerName }}</p>
+          <p v-if="!s.editable" class="g-tag locked" data-testid="sheet-locked">Read only</p>
+        </div>
       </header>
+      <PortraitEditor v-if="s.editable" :ids="path.path" @changed="refresh" />
 
       <section class="vitals" aria-label="Vitals">
         <div class="hp">
@@ -107,6 +115,14 @@ function destroy() {
         </ul>
       </section>
 
+      <TokenEditor
+        v-if="s.editable"
+        :name="s.name"
+        :ids="path.path"
+        :portrait-url="s.portraitUrl"
+        :token-url="s.tokenUrl"
+        @changed="refresh"
+      />
       <GButton v-if="s.editable" variant="danger" data-testid="delete-character" @click="destroy()">Delete character</GButton>
     </article>
   </main>
@@ -115,6 +131,19 @@ function destroy() {
 <style scoped>
 .back {
   color: var(--color-gold-high);
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.portrait {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-bronze);
 }
 .sub {
   margin: 4px 0 0;

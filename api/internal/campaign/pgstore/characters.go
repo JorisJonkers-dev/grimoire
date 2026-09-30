@@ -74,6 +74,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		ID: domain.CharacterID(r.ID), CampaignID: domain.CampaignID(r.CampaignID),
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), UpdatedAt: r.UpdatedAt,
+		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
 	if err != nil {
@@ -114,7 +115,7 @@ func (s *Store) Characters(ctx context.Context, id domain.CampaignID) ([]domain.
 			Build: domain.Build{Name: r.Name, Species: r.SpeciesSlug, Class: r.ClassSlug},
 			ID:    domain.CharacterID(r.ID), CampaignID: id,
 			Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
-			Ruleset: r.Ruleset, Level: int(r.Level), HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent),
+			Ruleset: r.Ruleset, Level: int(r.Level), HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), Token: image(r.TokenKey, pgtype.Text{}),
 		})
 	}
 	return out, nil
@@ -141,4 +142,23 @@ func (s *Store) UpdateCharacter(ctx context.Context, c domain.Character, now tim
 // DeleteCharacter removes a Character.
 func (s *Store) DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error {
 	return s.q.DeleteCharacter(ctx, queries.DeleteCharacterParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch)})
+}
+
+func image(key, contentType pgtype.Text) *domain.Image {
+	if !key.Valid {
+		return nil
+	}
+	return &domain.Image{Key: key.String, Type: contentType.String}
+}
+
+// SetCharacterImage stores or clears a portrait or token icon reference.
+func (s *Store) SetCharacterImage(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, img *domain.Image, now time.Time) error {
+	key, contentType := pgtype.Text{}, pgtype.Text{}
+	if img != nil {
+		key, contentType = optSlug(img.Key), optSlug(img.Type)
+	}
+	if kind == domain.Portrait {
+		return s.q.SetCharacterPortrait(ctx, queries.SetCharacterPortraitParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Key: key, ContentType: contentType, Now: now})
+	}
+	return s.q.SetCharacterToken(ctx, queries.SetCharacterTokenParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Key: key, ContentType: contentType, Now: now})
 }

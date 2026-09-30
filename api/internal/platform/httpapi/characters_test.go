@@ -109,6 +109,18 @@ func (b brokenCharacters) Delete(context.Context, caller.Caller, domain.Campaign
 	return b.err
 }
 
+func (b brokenCharacters) SetImage(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, domain.ImageKind, []byte) error {
+	return b.err
+}
+
+func (b brokenCharacters) ClearToken(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) error {
+	return b.err
+}
+
+func (b brokenCharacters) Image(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, domain.ImageKind) (domain.Image, []byte, error) {
+	return domain.Image{}, nil, b.err
+}
+
 func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/characters"
@@ -120,6 +132,9 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodGet, one, ""},
 		{http.MethodPatch, one, `{"name":"X"}`},
 		{http.MethodDelete, one, ""},
+		{http.MethodGet, one + "/portrait", ""},
+		{http.MethodGet, one + "/token", ""},
+		{http.MethodDelete, one + "/token", ""},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, brokenCharacters{err: err})
@@ -139,6 +154,11 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.GetCharacter(ctx, oas.GetCharacterParams{}))
 	add(h.UpdateCharacter(ctx, &oas.CharacterEdit{}, oas.UpdateCharacterParams{}))
 	add(h.DeleteCharacter(ctx, oas.DeleteCharacterParams{}))
+	add(h.SetPortrait(ctx, oas.SetPortraitReq{}, oas.SetPortraitParams{}))
+	add(h.SetTokenIcon(ctx, oas.SetTokenIconReq{}, oas.SetTokenIconParams{}))
+	add(h.ClearTokenIcon(ctx, oas.ClearTokenIconParams{}))
+	add(h.GetPortrait(ctx, oas.GetPortraitParams{}))
+	add(h.GetTokenIcon(ctx, oas.GetTokenIconParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

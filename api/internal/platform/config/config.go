@@ -15,7 +15,21 @@ type Config struct {
 	AutoMigrate bool
 	AutoImport  bool
 	RateLimit   int
+	AssetDir    string
+	S3          *S3
 }
+
+// S3 locates the asset bucket; nil keeps assets on local disk under AssetDir.
+type S3 struct {
+	Endpoint  string
+	Region    string
+	Bucket    string
+	AccessKey string
+	SecretKey string
+}
+
+// ErrIncompleteS3 is returned when an S3 endpoint is set without its bucket or keys.
+var ErrIncompleteS3 = errors.New("config: GRIMOIRE_S3_ENDPOINT needs GRIMOIRE_S3_BUCKET, GRIMOIRE_S3_ACCESS_KEY_ID and GRIMOIRE_S3_SECRET_ACCESS_KEY")
 
 // ErrMissingDatabaseURL is returned when GRIMOIRE_DATABASE_URL is unset.
 var ErrMissingDatabaseURL = errors.New("config: GRIMOIRE_DATABASE_URL is required")
@@ -29,6 +43,22 @@ func Load(getenv func(string) string) (Config, error) {
 		AutoMigrate: getenv("GRIMOIRE_AUTO_MIGRATE") == "true",
 		AutoImport:  getenv("GRIMOIRE_AUTO_IMPORT") == "true",
 		RateLimit:   600,
+		AssetDir:    getenv("GRIMOIRE_ASSET_DIR"),
+	}
+	if c.AssetDir == "" {
+		c.AssetDir = "/tmp/grimoire-assets"
+	}
+	if endpoint := getenv("GRIMOIRE_S3_ENDPOINT"); endpoint != "" {
+		c.S3 = &S3{
+			Endpoint: endpoint, Region: getenv("GRIMOIRE_S3_REGION"), Bucket: getenv("GRIMOIRE_S3_BUCKET"),
+			AccessKey: getenv("GRIMOIRE_S3_ACCESS_KEY_ID"), SecretKey: getenv("GRIMOIRE_S3_SECRET_ACCESS_KEY"),
+		}
+		if c.S3.Bucket == "" || c.S3.AccessKey == "" || c.S3.SecretKey == "" {
+			return Config{}, ErrIncompleteS3
+		}
+		if c.S3.Region == "" {
+			c.S3.Region = "garage"
+		}
 	}
 	if c.Addr == "" {
 		c.Addr = ":8080"

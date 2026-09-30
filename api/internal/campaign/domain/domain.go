@@ -116,6 +116,21 @@ type Build struct {
 	Weapons    []string
 }
 
+// Image is a stored picture, addressed by the hash of its content.
+type Image struct {
+	Key  string
+	Type string
+}
+
+// ImageKind names which picture of a Character is meant.
+type ImageKind string
+
+// Image kinds.
+const (
+	Portrait  ImageKind = "portrait"
+	TokenIcon ImageKind = "token"
+)
+
 // Character is a player character in a Campaign.
 type Character struct {
 	Build
@@ -128,6 +143,8 @@ type Character struct {
 	HPMax            int
 	HPCurrent        int
 	UpdatedAt        time.Time
+	Portrait         *Image
+	Token            *Image
 }
 
 // CharacterSummary is a Character as it appears in the party list.
@@ -141,4 +158,5 @@ type CharacterSummary struct {
 	Level     int
 	HPCurrent int
 	HPMax     int
+	TokenKey  string
 }

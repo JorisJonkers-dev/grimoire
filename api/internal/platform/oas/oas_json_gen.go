@@ -936,6 +936,46 @@ func (s *ArmorOptionItem) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes AssetUrl as json.
+func (s AssetUrl) Encode(e *jx.Encoder) {
+	unwrapped := string(s)
+
+	e.Str(unwrapped)
+}
+
+// Decode decodes AssetUrl from json.
+func (s *AssetUrl) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode AssetUrl to nil")
+	}
+	var unwrapped string
+	if err := func() error {
+		v, err := d.Str()
+		unwrapped = string(v)
+		if err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = AssetUrl(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s AssetUrl) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *AssetUrl) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *AutomationCount) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -3125,9 +3165,21 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 		}
 		e.ArrEnd()
 	}
+	{
+		if s.PortraitUrl.Set {
+			e.FieldStart("portraitUrl")
+			s.PortraitUrl.Encode(e)
+		}
+	}
+	{
+		if s.TokenUrl.Set {
+			e.FieldStart("tokenUrl")
+			s.TokenUrl.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCharacterSheet = [30]string{
+var jsonFieldsNameOfCharacterSheet = [32]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -3158,6 +3210,8 @@ var jsonFieldsNameOfCharacterSheet = [30]string{
 	27: "resources",
 	28: "effects",
 	29: "warnings",
+	30: "portraitUrl",
+	31: "tokenUrl",
 }
 
 // Decode decodes CharacterSheet from json.
@@ -3557,6 +3611,26 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"warnings\"")
 			}
+		case "portraitUrl":
+			if err := func() error {
+				s.PortraitUrl.Reset()
+				if err := s.PortraitUrl.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"portraitUrl\"")
+			}
+		case "tokenUrl":
+			if err := func() error {
+				s.TokenUrl.Reset()
+				if err := s.TokenUrl.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tokenUrl\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -3703,9 +3777,15 @@ func (s *CharacterSummary) encodeFields(e *jx.Encoder) {
 		e.FieldStart("hpMax")
 		e.Int32(s.HpMax)
 	}
+	{
+		if s.TokenUrl.Set {
+			e.FieldStart("tokenUrl")
+			s.TokenUrl.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCharacterSummary = [9]string{
+var jsonFieldsNameOfCharacterSummary = [10]string{
 	0: "id",
 	1: "name",
 	2: "ownerName",
@@ -3715,6 +3795,7 @@ var jsonFieldsNameOfCharacterSummary = [9]string{
 	6: "level",
 	7: "hpCurrent",
 	8: "hpMax",
+	9: "tokenUrl",
 }
 
 // Decode decodes CharacterSummary from json.
@@ -3823,6 +3904,16 @@ func (s *CharacterSummary) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"hpMax\"")
+			}
+		case "tokenUrl":
+			if err := func() error {
+				s.TokenUrl.Reset()
+				if err := s.TokenUrl.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tokenUrl\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -6260,6 +6351,39 @@ func (s OptArmorChoice) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptArmorChoice) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes AssetUrl as json.
+func (o OptAssetUrl) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes AssetUrl from json.
+func (o *OptAssetUrl) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptAssetUrl to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptAssetUrl) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptAssetUrl) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

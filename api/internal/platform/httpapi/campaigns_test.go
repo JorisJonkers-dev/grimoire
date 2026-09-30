@@ -17,6 +17,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -44,7 +45,9 @@ func realCampaigns(t *testing.T) http.Handler {
 	}
 	t.Cleanup(store.Close)
 	repo := campaignpg.New(store.Pool())
-	return campaignServer(t, app.NewService(repo), &app.Characters{Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Now: time.Now})
+	return campaignServer(t, app.NewService(repo), &app.Characters{
+		Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
+	})
 }
 
 func call(h http.Handler, method, path, subject, body string) *httptest.ResponseRecorder {

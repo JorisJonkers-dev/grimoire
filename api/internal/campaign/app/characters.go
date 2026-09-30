@@ -33,6 +33,7 @@ type Characters struct {
 	Repo       Repository
 	Compendium Compendium
 	Combat     CombatStatus
+	Blobs      Blobs
 	Now        func() time.Time
 }
 
@@ -260,7 +261,7 @@ func (s *Characters) List(ctx context.Context, c caller.Caller, id domain.Campai
 	for _, ch := range all {
 		out = append(out, domain.CharacterSummary{
 			ID: ch.ID, Name: ch.Name, OwnerName: ch.Owner.DisplayName, Mine: ch.Owner.Subject == c.Subject,
-			Species: ch.Species, Class: ch.Class, Level: ch.Level, HPCurrent: ch.HPCurrent, HPMax: ch.HPMax,
+			Species: ch.Species, Class: ch.Class, Level: ch.Level, HPCurrent: ch.HPCurrent, HPMax: ch.HPMax, TokenKey: tokenKey(ch),
 		})
 	}
 	return out, nil
@@ -367,4 +368,11 @@ func (s *Characters) Delete(ctx context.Context, c caller.Caller, id domain.Camp
 		return err
 	}
 	return s.Repo.DeleteCharacter(ctx, id, ch)
+}
+
+func tokenKey(c domain.Character) string {
+	if c.Token == nil {
+		return ""
+	}
+	return c.Token.Key
 }

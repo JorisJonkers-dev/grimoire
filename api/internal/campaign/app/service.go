@@ -38,6 +38,7 @@ type Repository interface {
 	Characters(ctx context.Context, id domain.CampaignID) ([]domain.Character, error)
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
 	DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error
+	SetCharacterImage(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, img *domain.Image, now time.Time) error
 }
 
 // DefaultInviteTTL is how long an invite link stays valid.

@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses } from './types.gen';
-import { zAcceptInviteBody, zAcceptInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateInvitePath, zCreateInviteResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRevokeInvitePath, zRevokeInviteResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse } from './zod.gen';
+import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses } from './types.gen';
+import { zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateInvitePath, zCreateInviteResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetPortraitPath, zGetPortraitResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRevokeInvitePath, zRevokeInviteResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -421,6 +421,101 @@ export const updateCharacter = <ThrowOnError extends boolean = false>(options: O
     ...options,
     headers: {
         'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get the portrait
+ *
+ * The picture itself, served only to Members of the Campaign.
+ */
+export const getPortrait = <ThrowOnError extends boolean = false>(options: Options<GetPortraitData, ThrowOnError>): RequestResult<GetPortraitResponses, GetPortraitErrors, ThrowOnError> => (options.client ?? client).get<GetPortraitResponses, GetPortraitErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetPortraitPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetPortraitResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/portrait',
+    ...options
+});
+
+/**
+ * Upload the portrait
+ *
+ * A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+ */
+export const setPortrait = <ThrowOnError extends boolean = false>(options: Options<SetPortraitData, ThrowOnError>): RequestResult<SetPortraitResponses, SetPortraitErrors, ThrowOnError> => (options.client ?? client).put<SetPortraitResponses, SetPortraitErrors, ThrowOnError>({
+    bodySerializer: null,
+    requestValidator: async (data) => await z.object({
+        body: zSetPortraitBody,
+        path: zSetPortraitPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetPortraitResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/portrait',
+    ...options,
+    headers: {
+        'Content-Type': 'application/octet-stream',
+        ...options.headers
+    }
+});
+
+/**
+ * Use initials for the token
+ *
+ * Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
+ */
+export const clearTokenIcon = <ThrowOnError extends boolean = false>(options: Options<ClearTokenIconData, ThrowOnError>): RequestResult<ClearTokenIconResponses, ClearTokenIconErrors, ThrowOnError> => (options.client ?? client).delete<ClearTokenIconResponses, ClearTokenIconErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zClearTokenIconPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zClearTokenIconResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/token',
+    ...options
+});
+
+/**
+ * Get the token icon
+ *
+ * The picture itself, served only to Members of the Campaign.
+ */
+export const getTokenIcon = <ThrowOnError extends boolean = false>(options: Options<GetTokenIconData, ThrowOnError>): RequestResult<GetTokenIconResponses, GetTokenIconErrors, ThrowOnError> => (options.client ?? client).get<GetTokenIconResponses, GetTokenIconErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetTokenIconPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetTokenIconResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/token',
+    ...options
+});
+
+/**
+ * Upload the token icon
+ *
+ * A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+ */
+export const setTokenIcon = <ThrowOnError extends boolean = false>(options: Options<SetTokenIconData, ThrowOnError>): RequestResult<SetTokenIconResponses, SetTokenIconErrors, ThrowOnError> => (options.client ?? client).put<SetTokenIconResponses, SetTokenIconErrors, ThrowOnError>({
+    bodySerializer: null,
+    requestValidator: async (data) => await z.object({
+        body: zSetTokenIconBody,
+        path: zSetTokenIconPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetTokenIconResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/token',
+    ...options,
+    headers: {
+        'Content-Type': 'application/octet-stream',
         ...options.headers
     }
 });

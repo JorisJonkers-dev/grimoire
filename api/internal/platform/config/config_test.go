@@ -56,3 +56,28 @@ func TestLoadRejectsBadRateLimit(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadStorage(t *testing.T) {
+	t.Parallel()
+	base := map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x"}
+	c, err := config.Load(env(base))
+	if err != nil || c.AssetDir != "/tmp/grimoire-assets" || c.S3 != nil {
+		t.Fatalf("default storage = %+v %v", c, err)
+	}
+	s3 := map[string]string{
+		"GRIMOIRE_DATABASE_URL": "postgres://x", "GRIMOIRE_ASSET_DIR": "/tmp/a", "GRIMOIRE_S3_ENDPOINT": "http://garage:3900",
+		"GRIMOIRE_S3_BUCKET": "grimoire-assets", "GRIMOIRE_S3_ACCESS_KEY_ID": "k", "GRIMOIRE_S3_SECRET_ACCESS_KEY": "s",
+	}
+	c, err = config.Load(env(s3))
+	if err != nil || c.AssetDir != "/tmp/a" || c.S3.Region != "garage" || c.S3.Bucket != "grimoire-assets" {
+		t.Fatalf("s3 = %+v %v", c.S3, err)
+	}
+	s3["GRIMOIRE_S3_REGION"] = "eu"
+	if c, _ = config.Load(env(s3)); c.S3.Region != "eu" {
+		t.Fatalf("region = %q", c.S3.Region)
+	}
+	delete(s3, "GRIMOIRE_S3_BUCKET")
+	if _, err := config.Load(env(s3)); !errors.Is(err, config.ErrIncompleteS3) {
+		t.Fatalf("incomplete s3 = %v", err)
+	}
+}

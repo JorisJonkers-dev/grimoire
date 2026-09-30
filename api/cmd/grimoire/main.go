@@ -26,6 +26,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/webui"
 )
 
@@ -115,6 +116,15 @@ func crossCheck(ctx context.Context, args []string) error {
 	return os.WriteFile(out, []byte(report.Markdown()), 0o600) //nolint:gosec // developer command writing where the developer points it
 }
 
+func blobs(cfg config.Config, logger *slog.Logger) campaignapp.Blobs {
+	if cfg.S3 != nil {
+		logger.Info("assets in S3", "endpoint", cfg.S3.Endpoint, "bucket", cfg.S3.Bucket)
+		return storage.NewS3(storage.S3Config(*cfg.S3))
+	}
+	logger.Warn("assets on local disk; set GRIMOIRE_S3_ENDPOINT in production", "dir", cfg.AssetDir)
+	return storage.Dir{Path: cfg.AssetDir}
+}
+
 func importCompendium(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	store, err := pg.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -166,6 +176,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: &campaignapp.Characters{
 				Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
+				Blobs: blobs(cfg, logger),
 			},
 		},
 		DevSubject: cfg.DevSubject,

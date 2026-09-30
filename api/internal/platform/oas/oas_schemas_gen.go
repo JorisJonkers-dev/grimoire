@@ -3,6 +3,7 @@
 package oas
 
 import (
+	"io"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -414,6 +415,8 @@ func (s *ArmorOptionItem) SetStrengthRequired(val int32) {
 func (s *ArmorOptionItem) SetStealthDisadvantage(val bool) {
 	s.StealthDisadvantage = val
 }
+
+type AssetUrl string
 
 // Entries of one kind by Automation Level.
 // Ref: #/components/schemas/AutomationCount
@@ -1537,6 +1540,8 @@ type CharacterSheet struct {
 	Resources         []ResourcePool       `json:"resources"`
 	Effects           []ActiveEffect       `json:"effects"`
 	Warnings          []string             `json:"warnings"`
+	PortraitUrl       OptAssetUrl          `json:"portraitUrl"`
+	TokenUrl          OptAssetUrl          `json:"tokenUrl"`
 }
 
 // GetID returns the value of ID.
@@ -1689,6 +1694,16 @@ func (s *CharacterSheet) GetWarnings() []string {
 	return s.Warnings
 }
 
+// GetPortraitUrl returns the value of PortraitUrl.
+func (s *CharacterSheet) GetPortraitUrl() OptAssetUrl {
+	return s.PortraitUrl
+}
+
+// GetTokenUrl returns the value of TokenUrl.
+func (s *CharacterSheet) GetTokenUrl() OptAssetUrl {
+	return s.TokenUrl
+}
+
 // SetID sets the value of ID.
 func (s *CharacterSheet) SetID(val OptID) {
 	s.ID = val
@@ -1839,6 +1854,16 @@ func (s *CharacterSheet) SetWarnings(val []string) {
 	s.Warnings = val
 }
 
+// SetPortraitUrl sets the value of PortraitUrl.
+func (s *CharacterSheet) SetPortraitUrl(val OptAssetUrl) {
+	s.PortraitUrl = val
+}
+
+// SetTokenUrl sets the value of TokenUrl.
+func (s *CharacterSheet) SetTokenUrl(val OptAssetUrl) {
+	s.TokenUrl = val
+}
+
 // CharacterSheetHeaders wraps CharacterSheet with response headers.
 type CharacterSheetHeaders struct {
 	RateLimitLimit     OptInt32
@@ -1952,6 +1977,7 @@ type CharacterSummary struct {
 	Level     int32         `json:"level"`
 	HpCurrent int32         `json:"hpCurrent"`
 	HpMax     int32         `json:"hpMax"`
+	TokenUrl  OptAssetUrl   `json:"tokenUrl"`
 }
 
 // GetID returns the value of ID.
@@ -1999,6 +2025,11 @@ func (s *CharacterSummary) GetHpMax() int32 {
 	return s.HpMax
 }
 
+// GetTokenUrl returns the value of TokenUrl.
+func (s *CharacterSummary) GetTokenUrl() OptAssetUrl {
+	return s.TokenUrl
+}
+
 // SetID sets the value of ID.
 func (s *CharacterSummary) SetID(val ID) {
 	s.ID = val
@@ -2042,6 +2073,11 @@ func (s *CharacterSummary) SetHpCurrent(val int32) {
 // SetHpMax sets the value of HpMax.
 func (s *CharacterSummary) SetHpMax(val int32) {
 	s.HpMax = val
+}
+
+// SetTokenUrl sets the value of TokenUrl.
+func (s *CharacterSummary) SetTokenUrl(val OptAssetUrl) {
+	s.TokenUrl = val
 }
 
 // A class and what it gives at level 1.
@@ -2103,6 +2139,45 @@ func (s *ClassChoice) SetSaves(val []Ability) {
 func (s *ClassChoice) SetSkillChoices(val int32) {
 	s.SkillChoices = val
 }
+
+// ClearTokenIconNoContent is response for ClearTokenIcon operation.
+type ClearTokenIconNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ClearTokenIconNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ClearTokenIconNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ClearTokenIconNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ClearTokenIconNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ClearTokenIconNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ClearTokenIconNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*ClearTokenIconNoContent) clearTokenIconRes() {}
 
 // A condition named in rules text, with its own text for tooltips.
 // Ref: #/components/schemas/ConditionRef
@@ -2775,6 +2850,231 @@ func (s *GetEntryNotModified) SetETag(val OptString) {
 
 func (*GetEntryNotModified) getEntryRes() {}
 
+type GetPortraitOKImageJpeg struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetPortraitOKImageJpeg) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetPortraitOKImageJpegHeaders wraps GetPortraitOKImageJpeg with response headers.
+type GetPortraitOKImageJpegHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetPortraitOKImageJpeg
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetPortraitOKImageJpegHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetPortraitOKImageJpegHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetPortraitOKImageJpegHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetPortraitOKImageJpegHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetPortraitOKImageJpegHeaders) GetResponse() GetPortraitOKImageJpeg {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetPortraitOKImageJpegHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetPortraitOKImageJpegHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetPortraitOKImageJpegHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetPortraitOKImageJpegHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetPortraitOKImageJpegHeaders) SetResponse(val GetPortraitOKImageJpeg) {
+	s.Response = val
+}
+
+func (*GetPortraitOKImageJpegHeaders) getPortraitRes() {}
+
+type GetPortraitOKImagePNG struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetPortraitOKImagePNG) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetPortraitOKImagePNGHeaders wraps GetPortraitOKImagePNG with response headers.
+type GetPortraitOKImagePNGHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetPortraitOKImagePNG
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetPortraitOKImagePNGHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetPortraitOKImagePNGHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetPortraitOKImagePNGHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetPortraitOKImagePNGHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetPortraitOKImagePNGHeaders) GetResponse() GetPortraitOKImagePNG {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetPortraitOKImagePNGHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetPortraitOKImagePNGHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetPortraitOKImagePNGHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetPortraitOKImagePNGHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetPortraitOKImagePNGHeaders) SetResponse(val GetPortraitOKImagePNG) {
+	s.Response = val
+}
+
+func (*GetPortraitOKImagePNGHeaders) getPortraitRes() {}
+
+type GetPortraitOKImageWEBP struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetPortraitOKImageWEBP) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetPortraitOKImageWEBPHeaders wraps GetPortraitOKImageWEBP with response headers.
+type GetPortraitOKImageWEBPHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetPortraitOKImageWEBP
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetPortraitOKImageWEBPHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetPortraitOKImageWEBPHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetPortraitOKImageWEBPHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetPortraitOKImageWEBPHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetPortraitOKImageWEBPHeaders) GetResponse() GetPortraitOKImageWEBP {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetPortraitOKImageWEBPHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetPortraitOKImageWEBPHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetPortraitOKImageWEBPHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetPortraitOKImageWEBPHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetPortraitOKImageWEBPHeaders) SetResponse(val GetPortraitOKImageWEBP) {
+	s.Response = val
+}
+
+func (*GetPortraitOKImageWEBPHeaders) getPortraitRes() {}
+
 // GetSpellNotModified is response for GetSpell operation.
 type GetSpellNotModified struct {
 	ETag OptString
@@ -2791,6 +3091,231 @@ func (s *GetSpellNotModified) SetETag(val OptString) {
 }
 
 func (*GetSpellNotModified) getSpellRes() {}
+
+type GetTokenIconOKImageJpeg struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetTokenIconOKImageJpeg) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetTokenIconOKImageJpegHeaders wraps GetTokenIconOKImageJpeg with response headers.
+type GetTokenIconOKImageJpegHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetTokenIconOKImageJpeg
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetTokenIconOKImageJpegHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetTokenIconOKImageJpegHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetTokenIconOKImageJpegHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetTokenIconOKImageJpegHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetTokenIconOKImageJpegHeaders) GetResponse() GetTokenIconOKImageJpeg {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetTokenIconOKImageJpegHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetTokenIconOKImageJpegHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetTokenIconOKImageJpegHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetTokenIconOKImageJpegHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetTokenIconOKImageJpegHeaders) SetResponse(val GetTokenIconOKImageJpeg) {
+	s.Response = val
+}
+
+func (*GetTokenIconOKImageJpegHeaders) getTokenIconRes() {}
+
+type GetTokenIconOKImagePNG struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetTokenIconOKImagePNG) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetTokenIconOKImagePNGHeaders wraps GetTokenIconOKImagePNG with response headers.
+type GetTokenIconOKImagePNGHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetTokenIconOKImagePNG
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetTokenIconOKImagePNGHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetTokenIconOKImagePNGHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetTokenIconOKImagePNGHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetTokenIconOKImagePNGHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetTokenIconOKImagePNGHeaders) GetResponse() GetTokenIconOKImagePNG {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetTokenIconOKImagePNGHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetTokenIconOKImagePNGHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetTokenIconOKImagePNGHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetTokenIconOKImagePNGHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetTokenIconOKImagePNGHeaders) SetResponse(val GetTokenIconOKImagePNG) {
+	s.Response = val
+}
+
+func (*GetTokenIconOKImagePNGHeaders) getTokenIconRes() {}
+
+type GetTokenIconOKImageWEBP struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetTokenIconOKImageWEBP) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetTokenIconOKImageWEBPHeaders wraps GetTokenIconOKImageWEBP with response headers.
+type GetTokenIconOKImageWEBPHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetTokenIconOKImageWEBP
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetTokenIconOKImageWEBPHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetTokenIconOKImageWEBPHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetTokenIconOKImageWEBPHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetTokenIconOKImageWEBPHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetTokenIconOKImageWEBPHeaders) GetResponse() GetTokenIconOKImageWEBP {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetTokenIconOKImageWEBPHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetTokenIconOKImageWEBPHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetTokenIconOKImageWEBPHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetTokenIconOKImageWEBPHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetTokenIconOKImageWEBPHeaders) SetResponse(val GetTokenIconOKImageWEBP) {
+	s.Response = val
+}
+
+func (*GetTokenIconOKImageWEBPHeaders) getTokenIconRes() {}
 
 // Probe result.
 // Ref: #/components/schemas/HealthStatus
@@ -3542,6 +4067,52 @@ func (o OptArmorChoice) Or(d ArmorChoice) ArmorChoice {
 	return d
 }
 
+// NewOptAssetUrl returns new OptAssetUrl with value set to v.
+func NewOptAssetUrl(v AssetUrl) OptAssetUrl {
+	return OptAssetUrl{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAssetUrl is optional AssetUrl.
+type OptAssetUrl struct {
+	Value AssetUrl
+	Set   bool
+}
+
+// IsSet returns true if OptAssetUrl was set.
+func (o OptAssetUrl) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAssetUrl) Reset() {
+	var v AssetUrl
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAssetUrl) SetTo(v AssetUrl) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAssetUrl) Get() (v AssetUrl, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAssetUrl) Or(d AssetUrl) AssetUrl {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptBool returns new OptBool with value set to v.
 func NewOptBool(v bool) OptBool {
 	return OptBool{
@@ -4076,6 +4647,7 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 }
 
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()        {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()          {}
@@ -4087,9 +4659,11 @@ func (*ProblemStatusCodeWithHeaders) getCharacterRes()          {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
+func (*ProblemStatusCodeWithHeaders) getPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
+func (*ProblemStatusCodeWithHeaders) getTokenIconRes()          {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()         {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()        {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
@@ -4100,6 +4674,8 @@ func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) setPortraitRes()           {}
+func (*ProblemStatusCodeWithHeaders) setTokenIconRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
@@ -4315,6 +4891,112 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// SetPortraitNoContent is response for SetPortrait operation.
+type SetPortraitNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SetPortraitNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SetPortraitNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SetPortraitNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SetPortraitNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SetPortraitNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SetPortraitNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SetPortraitNoContent) setPortraitRes() {}
+
+type SetPortraitReq struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s SetPortraitReq) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// SetTokenIconNoContent is response for SetTokenIcon operation.
+type SetTokenIconNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SetTokenIconNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SetTokenIconNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SetTokenIconNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SetTokenIconNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SetTokenIconNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SetTokenIconNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SetTokenIconNoContent) setTokenIconRes() {}
+
+type SetTokenIconReq struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s SetTokenIconReq) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
 }
 
 // A skill and its ability.

@@ -48,6 +48,7 @@ const problem = (status: number, detail?: string) => () => jsonResponse({ type: 
 
 afterEach(() => {
   document.body.innerHTML = ''
+  vi.restoreAllMocks()
 })
 
 async function next(w: VueWrapper) {
@@ -193,5 +194,92 @@ describe('character sheet', () => {
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign'); })
     await flushPromises()
     expect(wrapper.get('[data-testid="party"]').text()).toContain('No characters yet')
+  })
+})
+
+describe('pictures on the sheet', () => {
+  it('uploads a portrait and saves each token mode', async () => {
+    const writes: string[] = []
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview')
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined)
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn() } as unknown as CanvasRenderingContext2D)
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((cb) => {
+      cb(new Blob(['x'], { type: 'image/png' }))
+    })
+    const base = `/api/v1/campaigns/${ID}/characters/${CH}`
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`${base}/portrait`]: (_u, req) => {
+        writes.push(`${req.method} portrait`)
+        return new Response(null, { status: 204 })
+      },
+      [`${base}/token`]: (_u, req) => {
+        writes.push(`${req.method} token`)
+        return new Response(null, { status: 204 })
+      },
+      [base]: () => sheet({ portraitUrl: `${base}/portrait?v=abc`, tokenUrl: `${base}/token?v=def` }),
+    })
+    expect(wrapper.get('[data-testid="portrait"]').attributes('src')).toContain('/portrait?v=abc')
+    const file = (type: string, size = 3) => new File([new Uint8Array(size)], 'pic', { type })
+    const choose = async (testid: string, f: File) => {
+      const input = wrapper.get(`[data-testid="${testid}"]`)
+      Object.defineProperty(input.element, 'files', { value: [f], configurable: true })
+      await input.trigger('change')
+      await flushPromises()
+    }
+    await choose('portrait-file', file('image/gif'))
+    expect(wrapper.get('[data-testid="portrait-problem"]').text()).toContain('PNG, JPEG or WebP')
+    await choose('portrait-file', file('image/jpeg'))
+    expect(writes).toContain('PUT portrait')
+    expect(wrapper.find('[data-testid="portrait-problem"]').exists()).toBe(false)
+
+    const editor = wrapper.get('[data-testid="token-editor"]')
+    expect(editor.findAll('[data-testid="token-previews"] figure')).toHaveLength(3)
+    await editor.get('input[value="crop"]').setValue(true)
+    await editor.get('img.source').trigger('load')
+    await flushPromises()
+    await editor.get('[data-testid="crop-zoom"]').setValue(2)
+    await flushPromises()
+    await editor.get('[data-testid="save-token"]').trigger('click')
+    await flushPromises()
+    await editor.get('input[value="icon"]').setValue(true)
+    await choose('icon-file', file('image/webp'))
+    await editor.get('[data-testid="save-token"]').trigger('click')
+    await flushPromises()
+    await editor.get('input[value="initials"]').setValue(true)
+    await editor.get('[data-testid="save-token"]').trigger('click')
+    await flushPromises()
+    expect(writes.filter((w) => w.endsWith('token'))).toEqual(['PUT token', 'PUT token', 'DELETE token'])
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('reports failed uploads and bad icons', async () => {
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview')
+    const base = `/api/v1/campaigns/${ID}/characters/${CH}`
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`${base}/portrait`]: problem(503),
+      [`${base}/token`]: problem(503),
+      [base]: () => sheet(),
+    })
+    const choose = async (testid: string, f: File | undefined) => {
+      const input = wrapper.get(`[data-testid="${testid}"]`)
+      Object.defineProperty(input.element, 'files', { value: f ? [f] : [], configurable: true })
+      await input.trigger('change')
+      await flushPromises()
+    }
+    await choose('portrait-file', undefined)
+    await choose('portrait-file', new File(['x'], 'p', { type: 'image/png' }))
+    expect(wrapper.get('[data-testid="portrait-problem"]').text()).toContain('could not be saved')
+    const editor = wrapper.get('[data-testid="token-editor"]')
+    expect(editor.get('input[value="crop"]').attributes('disabled')).toBeDefined()
+    await editor.get('input[value="icon"]').setValue(true)
+    await choose('icon-file', undefined)
+    await choose('icon-file', new File(['x'], 'i', { type: 'image/gif' }))
+    expect(editor.get('[data-testid="token-problem"]').text()).toContain('PNG, JPEG or WebP')
+    expect(editor.get('[data-testid="save-token"]').attributes('disabled')).toBeDefined()
+    await choose('icon-file', new File(['x'], 'i', { type: 'image/png' }))
+    await editor.get('[data-testid="save-token"]').trigger('click')
+    await flushPromises()
+    expect(editor.get('[data-testid="token-problem"]').text()).toContain('could not be saved')
+    wrapper.unmount()
   })
 })

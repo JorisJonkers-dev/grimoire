@@ -11,6 +11,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 )
 
 type fakeOptions struct{ err error }
@@ -69,7 +70,10 @@ func party(t *testing.T, repo app.Repository) (*app.Characters, *fakeCombat, dom
 	s, _ := service(t, repo)
 	d := table(t, s)
 	combat := &fakeCombat{}
-	return &app.Characters{Repo: repo, Compendium: fakeOptions{}, Combat: combat, Now: func() time.Time { return time.Unix(1_800_000_000, 0) }}, combat, d
+	return &app.Characters{
+		Repo: repo, Compendium: fakeOptions{}, Combat: combat, Blobs: storage.Dir{Path: t.TempDir()},
+		Now: func() time.Time { return time.Unix(1_800_000_000, 0) },
+	}, combat, d
 }
 
 func TestCreateDerivesTheSheet(t *testing.T) {
@@ -295,6 +299,9 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 	chars, _, d := party(t, pgstore.New(db.Pool()))
 	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
 	doomed, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); err != nil {
+		t.Fatal(err)
+	}
 	name := "Renamed"
 	ops := map[string]func(c *app.Characters) error{
 		"create":  func(c *app.Characters) error { _, err := c.Create(ctx, playerCaller, d.ID, fighter()); return err },
@@ -306,15 +313,105 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			return err
 		},
 		"delete": func(c *app.Characters) error { return c.Delete(ctx, playerCaller, d.ID, doomed.ID) },
+		"portrait": func(c *app.Characters) error {
+			return c.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png)
+		},
+		"clear": func(c *app.Characters) error { return c.ClearToken(ctx, playerCaller, d.ID, sheet.ID) },
+		"image": func(c *app.Characters) error {
+			_, _, err := c.Image(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait)
+			return err
+		},
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Now: time.Now}
+			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now}
 			err := op(c)
 			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
 				t.Fatalf("%s: %v", name, err)
 			}
 			return err
 		})
+	}
+}
+
+var (
+	png  = append([]byte("\x89PNG\r\n\x1a\n"), make([]byte, 32)...)
+	jpeg = append([]byte{0xFF, 0xD8, 0xFF, 0xE0}, make([]byte, 32)...)
+	webp = append([]byte("RIFF\x00\x00\x00\x00WEBPVP8 "), make([]byte, 32)...)
+)
+
+type brokenBlobs struct{}
+
+func (brokenBlobs) Put(context.Context, string, string, []byte) error {
+	return errors.New("bucket gone")
+}
+
+func (brokenBlobs) Get(context.Context, string) ([]byte, error) {
+	return nil, errors.New("bucket gone")
+}
+
+func TestPortraitsAndTokens(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	chars, _, d := party(t, pgstore.New(open(t).Pool()))
+	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	if _, _, err := chars.Image(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("no portrait yet: %v", err)
+	}
+	for kind, data := range map[domain.ImageKind][]byte{domain.Portrait: jpeg, domain.TokenIcon: webp} {
+		if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, kind, data); err != nil {
+			t.Fatalf("%s: %v", kind, err)
+		}
+	}
+	img, data, err := chars.Image(ctx, dmCaller, d.ID, sheet.ID, domain.TokenIcon)
+	if err != nil || img.Type != "image/webp" || len(data) != len(webp) {
+		t.Fatalf("token = %+v %d %v", img, len(data), err)
+	}
+	got, _ := chars.Get(ctx, playerCaller, d.ID, sheet.ID)
+	if got.Portrait == nil || got.Portrait.Type != "image/jpeg" || got.Token == nil {
+		t.Fatalf("sheet images = %+v %+v", got.Portrait, got.Token)
+	}
+	if list, _ := chars.List(ctx, playerCaller, d.ID); list[0].TokenKey == "" {
+		t.Fatal("party list lacks the token")
+	}
+	if err := chars.ClearToken(ctx, playerCaller, d.ID, sheet.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := chars.Image(ctx, playerCaller, d.ID, sheet.ID, domain.TokenIcon); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("cleared token: %v", err)
+	}
+}
+
+func TestPicturesAreRefused(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	chars, combat, d := party(t, pgstore.New(open(t).Pool()))
+	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	var rule *app.RuleError
+	for name, bad := range map[string][]byte{"empty": nil, "gif": []byte("GIF89a......"), "huge": make([]byte, app.MaxImageBytes+1)} {
+		if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, bad); !errors.As(err, &rule) {
+			t.Errorf("%s accepted: %v", name, err)
+		}
+	}
+	if _, _, err := chars.Image(ctx, stranger, d.ID, sheet.ID, domain.Portrait); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("stranger saw the portrait: %v", err)
+	}
+	if _, _, err := chars.Image(ctx, playerCaller, d.ID, domain.CharacterID{}, domain.Portrait); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("unknown character: %v", err)
+	}
+	combat.in = true
+	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); !errors.Is(err, domain.ErrLocked) {
+		t.Fatalf("portrait in combat: %v", err)
+	}
+	if err := chars.ClearToken(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, domain.ErrLocked) {
+		t.Fatalf("clear in combat: %v", err)
+	}
+	combat.in = false
+	chars.Blobs = brokenBlobs{}
+	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); err == nil {
+		t.Fatal("storage failure on put ignored")
+	}
+	if _, _, err := chars.Image(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait); err == nil {
+		t.Fatal("storage failure on get ignored")
 	}
 }

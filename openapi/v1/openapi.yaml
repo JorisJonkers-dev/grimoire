@@ -745,6 +745,154 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
+    get:
+      operationId: getPortrait
+      summary: Get the portrait
+      description: The picture itself, served only to Members of the Campaign.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The picture.
+          headers:
+            Cache-Control:
+              description: Content-addressed, so private caches may keep it.
+              schema: { type: string, maxLength: 100 }
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            image/png:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+            image/jpeg:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+            image/webp:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: setPortrait
+      summary: Upload the portrait
+      description: A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              maxLength: 10485760
+      responses:
+        "204":
+          description: Stored.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/token:
+    get:
+      operationId: getTokenIcon
+      summary: Get the token icon
+      description: The picture itself, served only to Members of the Campaign.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The picture.
+          headers:
+            Cache-Control:
+              description: Content-addressed, so private caches may keep it.
+              schema: { type: string, maxLength: 100 }
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            image/png:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+            image/jpeg:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+            image/webp:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: setTokenIcon
+      summary: Upload the token icon
+      description: A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              maxLength: 10485760
+      responses:
+        "204":
+          description: Stored.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: clearTokenIcon
+      summary: Use initials for the token
+      description: Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "204":
+          description: Cleared.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
@@ -1314,6 +1462,13 @@ components:
           type: array
           maxItems: 10
           items: { type: string, maxLength: 200 }
+        portraitUrl: { $ref: "#/components/schemas/AssetUrl" }
+        tokenUrl: { $ref: "#/components/schemas/AssetUrl" }
+    AssetUrl:
+      type: string
+      description: Same-origin path of a stored picture; it changes when the picture does.
+      maxLength: 300
+      pattern: "^/api/v1/"
     CharacterSummary:
       type: object
       description: A Character in the party list.
@@ -1329,6 +1484,7 @@ components:
         level: { type: integer, format: int32, minimum: 1, maximum: 20 }
         hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        tokenUrl: { $ref: "#/components/schemas/AssetUrl" }
     ClassChoice:
       type: object
       description: A class and what it gives at level 1.
