@@ -159,13 +159,15 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 	if c, err := store.LoadCombat(ctx, live1.ID); err != nil || c.Turn != 12 || *c.Combatants[0].Initiative != 12 || c.Combatants[0].RollID != running.Rolls[0].ID {
 		t.Fatalf("load combat = %+v %v", c, err)
 	}
-	gone, err := pgxpool.New(ctx, tb.pool.Config().ConnString())
+	unreachable := tb.pool.Config().Copy()
+	unreachable.ConnConfig.Port, unreachable.ConnConfig.Fallbacks = 1, nil
+	gone, err := pgxpool.NewWithConfig(ctx, unreachable)
 	if err != nil {
 		t.Fatal(err)
 	}
-	gone.Close()
+	defer gone.Close()
 	if _, err := (pgstore.Owner{Pool: gone}).Acquire(ctx, live1.ID); err == nil {
-		t.Fatal("acquire on a closed pool")
+		t.Fatal("acquire without a database")
 	}
 	ops := map[string]func(s *app.Sessions, repo *pgstore.Store) error{
 		"start": func(s *app.Sessions, _ *pgstore.Store) error { _, err := s.Start(ctx, dm, tb.campaign); return err },
@@ -217,5 +219,30 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 			}
 			return err
 		})
+	}
+}
+
+func TestRunningSessionsDoNotStarveThePool(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	small := tb.pool.Config().Copy()
+	small.MaxConns = 2
+	pool, err := pgxpool.NewWithConfig(ctx, small)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	for range 5 {
+		release, err := (pgstore.Owner{Pool: pool}).Acquire(ctx, domain.SessionID(uuid.New()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer release()
+	}
+	quick, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := pool.Ping(quick); err != nil {
+		t.Fatalf("five running Sessions left no connection for requests: %v", err)
 	}
 }

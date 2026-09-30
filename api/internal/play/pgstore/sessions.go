@@ -468,9 +468,10 @@ type Owner struct {
 	Pool *pgxpool.Pool
 }
 
-// Acquire takes the lock on a dedicated connection and returns its release.
+// Acquire takes the lock on a connection of its own, outside the pool: a running Session holds it for
+// hours, and pooled connections held that long starve every request once enough Sessions run.
 func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error) {
-	conn, err := o.Pool.Acquire(ctx)
+	conn, err := pgx.ConnectConfig(ctx, o.Pool.Config().ConnConfig.Copy())
 	if err != nil {
 		return nil, err
 	}
@@ -478,7 +479,7 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 	key := "session:" + uuid.UUID(id).String()
 	ok, err := q.LockSessionOwner(ctx, key)
 	if err != nil || !ok {
-		conn.Release()
+		_ = conn.Close(context.Background())
 		if err == nil {
 			err = apperr.ErrConflict
 		}
@@ -486,6 +487,6 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 	}
 	return func() {
 		_, _ = q.UnlockSessionOwner(context.Background(), key)
-		conn.Release()
+		_ = conn.Close(context.Background())
 	}, nil
 }
