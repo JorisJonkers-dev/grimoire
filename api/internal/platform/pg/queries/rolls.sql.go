@@ -136,13 +136,15 @@ func (q *Queries) InsertAction(ctx context.Context, arg InsertActionParams) (uui
 }
 
 const insertRoll = `-- name: InsertRoll :one
-INSERT INTO play.roll_requests (campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name,
-    status, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8)
+INSERT INTO play.roll_requests (id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject,
+    roller_name, status, created_at)
+VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5,
+    $6, $7, $8, 'pending', $9)
 RETURNING id
 `
 
 type InsertRollParams struct {
+	ID              pgtype.UUID
 	CampaignID      uuid.UUID
 	Purpose         string
 	Notation        string
@@ -155,6 +157,7 @@ type InsertRollParams struct {
 
 func (q *Queries) InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, insertRoll,
+		arg.ID,
 		arg.CampaignID,
 		arg.Purpose,
 		arg.Notation,

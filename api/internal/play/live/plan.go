@@ -14,8 +14,10 @@ import (
 func (r *runtime) plan(m domain.Member, cmd Command) (Write, string) {
 	switch cmd.Kind {
 	case CmdWalk:
-		t, path, _, reason := r.route(m, cmd)
-		return Write{Kind: domain.ActionTokenWalked, Token: t, Path: path}, reason
+		t, path, cost, reason := r.route(m, cmd)
+		return Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: cost}, reason
+	case CmdStartCombat, CmdEndTurn, CmdSpend, CmdEndCombat:
+		return r.planCombat(m, cmd)
 	case CmdPlace, CmdMove, CmdSetHidden, CmdRemove:
 		return r.planToken(cmd)
 	case CmdSetMap:

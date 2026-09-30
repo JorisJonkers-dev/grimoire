@@ -2,6 +2,7 @@ package live
 
 import (
 	"maps"
+	"slices"
 	"sort"
 	"strconv"
 
@@ -19,10 +20,16 @@ type state struct {
 	tokens  map[domain.TokenID]domain.Token
 	board   *domain.MapState
 	cells   map[hex.Coord]bool
+	combat  *domain.Combat
 }
 
 func (s *state) clone() *state {
 	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells}
+	if s.combat != nil {
+		c := *s.combat
+		c.Combatants = slices.Clone(c.Combatants)
+		next.combat = &c
+	}
 	if s.board != nil {
 		b := *s.board
 		b.Walls, b.Reveals = maps.Clone(b.Walls), maps.Clone(b.Reveals)
@@ -100,6 +107,7 @@ func (s *state) project(a Audience) View {
 		}
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
+	s.projectCombat(&v, a, seen)
 	return v
 }
 

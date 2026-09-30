@@ -127,6 +127,44 @@
       "q": 3,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n15",
+      "kind": "start_combat",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "combatants": [
+        {
+          "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+          "initiativeBonus": 2,
+          "speedFt": 30
+        }
+      ]
+    },
+    {
+      "nonce": "n16",
+      "kind": "spend",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "combatantId": "0190c7a8-0000-7000-8000-000000000010",
+      "resource": "bonus_action"
+    },
+    {
+      "nonce": "n17",
+      "kind": "end_turn",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "combatantId": "0190c7a8-0000-7000-8000-000000000010"
+    },
+    {
+      "nonce": "n18",
+      "kind": "end_combat",
+      "q": 0,
+      "r": 0,
+      "hidden": false
     }
   ],
   "updates": [
@@ -175,7 +213,29 @@
             "q": 1,
             "r": 0
           }
-        ]
+        ],
+        "combat": {
+          "status": "active",
+          "round": 2,
+          "combatants": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000010",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "label": "Goblin",
+              "kind": "enemy",
+              "rollId": "0190c7a8-0000-7000-8000-000000000011",
+              "initiative": 17,
+              "rank": 1,
+              "acting": true,
+              "done": false,
+              "action": true,
+              "bonusAction": false,
+              "reaction": true,
+              "movementFt": 20,
+              "speedFt": 30
+            }
+          ]
+        }
       }
     },
     {
@@ -234,7 +294,29 @@
             "dimFt": 40
           }
         ],
-        "ambient": "dark"
+        "ambient": "dark",
+        "combat": {
+          "status": "active",
+          "round": 2,
+          "combatants": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000010",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "label": "Goblin",
+              "kind": "enemy",
+              "rollId": "0190c7a8-0000-7000-8000-000000000011",
+              "initiative": 17,
+              "rank": 1,
+              "acting": true,
+              "done": false,
+              "action": true,
+              "bonusAction": false,
+              "reaction": true,
+              "movementFt": 20,
+              "speedFt": 30
+            }
+          ]
+        }
       }
     },
     {
@@ -316,7 +398,29 @@
             "q": 1,
             "r": 0
           }
-        ]
+        ],
+        "combat": {
+          "status": "active",
+          "round": 2,
+          "combatants": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000010",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "label": "Goblin",
+              "kind": "enemy",
+              "rollId": "0190c7a8-0000-7000-8000-000000000011",
+              "initiative": 17,
+              "rank": 1,
+              "acting": true,
+              "done": false,
+              "action": true,
+              "bonusAction": false,
+              "reaction": true,
+              "movementFt": 20,
+              "speedFt": 30
+            }
+          ]
+        }
       },
       "steps": [
         {
@@ -355,7 +459,29 @@
               "q": 1,
               "r": 0
             }
-          ]
+          ],
+          "combat": {
+            "status": "active",
+            "round": 2,
+            "combatants": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000010",
+                "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+                "label": "Goblin",
+                "kind": "enemy",
+                "rollId": "0190c7a8-0000-7000-8000-000000000011",
+                "initiative": 17,
+                "rank": 1,
+                "acting": true,
+                "done": false,
+                "action": true,
+                "bonusAction": false,
+                "reaction": true,
+                "movementFt": 20,
+                "speedFt": 30
+              }
+            ]
+          }
         }
       ]
     },

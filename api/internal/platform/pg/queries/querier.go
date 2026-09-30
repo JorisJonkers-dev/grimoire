@@ -54,6 +54,7 @@ type Querier interface {
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
 	ClearWeaponProperties(ctx context.Context, weaponID int64) error
+	CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]PlayCombatant, error)
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
@@ -144,6 +145,9 @@ type Querier interface {
 	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
 	RollModifiers(ctx context.Context, rollID uuid.UUID) ([]RollModifiersRow, error)
 	RulesetYear(ctx context.Context, key string) (int32, error)
+	RunningCombat(ctx context.Context, sessionID uuid.UUID) (PlayCombat, error)
+	SaveCombat(ctx context.Context, arg SaveCombatParams) error
+	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error

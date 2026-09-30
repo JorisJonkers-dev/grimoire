@@ -53,6 +53,8 @@ type Rolls struct {
 	Seed    func() uint64
 	Source  func(seed uint64) dice.Source
 	Now     func() time.Time
+	// Resolved hears about every Roll Request the moment its last die is set; it may be nil.
+	Resolved func(campaign uuid.UUID, id domain.RollID)
 }
 
 // RollInput is a new Roll Request.
@@ -257,7 +259,11 @@ func (s *Rolls) fill(ctx context.Context, c caller.Caller, campaign uuid.UUID, i
 	if err != nil {
 		return domain.Roll{}, err
 	}
-	return s.Get(ctx, c, campaign, id)
+	out, err := s.Get(ctx, c, campaign, id)
+	if err == nil && out.Status == domain.StatusResolved && s.Resolved != nil {
+		s.Resolved(campaign, id)
+	}
+	return out, err
 }
 
 func (s *Rolls) apply(ctx context.Context, tx Repository, c caller.Caller, me domain.Member, r domain.Roll, fills map[int]Fill) error {

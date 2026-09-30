@@ -2,9 +2,11 @@ package pgstore
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -12,6 +14,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -152,6 +155,9 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 		if err := tx.write(ctx, sid, board, w, now); err != nil {
 			return err
 		}
+		if err := tx.saveCombat(ctx, sess, w, actor, c, now); err != nil {
+			return err
+		}
 		if board != nil {
 			if err := tx.addReveals(ctx, board.Map.ID, w.AutoReveal); err != nil {
 				return err
@@ -182,6 +188,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
 	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
+	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded:
+		return nil
 	case domain.ActionMapSet:
 		p := queries.SetSessionMapParams{ID: sid}
 		if w.MapID != nil {
@@ -241,7 +249,8 @@ func (s *Store) addReveals(ctx context.Context, id domain.MapID, hs []hex.Coord)
 //nolint:gosec // coordinates are bounded by the map
 func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) error {
 	switch w.Kind {
-	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved:
+	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved,
+		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -257,6 +266,77 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		}
 	}
 	return nil
+}
+
+// saveCombat opens the Roll Requests a Combat starts with, then writes the Combat and its Combatants.
+//
+//nolint:gosec // rounds, counts and feet are bounded by the rules
+func (s *Store) saveCombat(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
+	if w.Combat == nil {
+		return nil
+	}
+	for _, r := range w.Rolls {
+		if _, err := s.InsertRoll(ctx, r, now); err != nil {
+			return err
+		}
+		if err := s.Append(ctx, sess.CampaignID, app.LogEntry{Kind: domain.ActionRollRequested, Actor: actor, Caller: c, RollID: r.ID, At: now}); err != nil {
+			return err
+		}
+	}
+	f := w.Combat
+	p := queries.SaveCombatParams{ID: uuid.UUID(f.ID), SessionID: uuid.UUID(sess.ID), Status: f.Status, Round: int32(f.Round), StartedAt: f.StartedAt}
+	if f.Status == domain.CombatActive {
+		p.TurnCount = pgtype.Int4{Int32: int32(f.Turn), Valid: true}
+	}
+	if !f.EndedAt.IsZero() {
+		p.EndedAt = pgtypeTime(f.EndedAt)
+	}
+	if err := s.q.SaveCombat(ctx, p); err != nil {
+		return err
+	}
+	for _, x := range f.Combatants {
+		cp := queries.SaveCombatantParams{
+			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
+			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
+			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt),
+		}
+		if x.Initiative != nil {
+			cp.Initiative = pgtype.Int4{Int32: int32(*x.Initiative), Valid: true}
+		}
+		if err := s.q.SaveCombatant(ctx, cp); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// LoadCombat reads a Session's running Combat, or nil when there is none.
+func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error) {
+	row, err := s.q.RunningCombat(ctx, uuid.UUID(id))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil //nolint:nilnil // no running Combat is not an error
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := &domain.Combat{ID: domain.CombatID(row.ID), Status: row.Status, Round: int(row.Round), Turn: int(row.TurnCount.Int32), StartedAt: row.StartedAt}
+	rows, err := s.q.CombatCombatants(ctx, row.ID)
+	if err != nil {
+		return nil, err
+	}
+	for _, x := range rows {
+		c := domain.Combatant{
+			ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
+			SpeedFt: int(x.SpeedFt), Done: x.Done,
+			Economy: combat.Economy{Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt)},
+		}
+		if x.Initiative.Valid {
+			n := int(x.Initiative.Int32)
+			c.Initiative = &n
+		}
+		out.Combatants = append(out.Combatants, c)
+	}
+	return out, nil
 }
 
 // LoadMap reads a Map with its walls, lights and remembered hexes.

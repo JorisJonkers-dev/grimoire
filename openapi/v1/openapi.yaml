@@ -2763,7 +2763,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2782,6 +2782,54 @@ components:
         dimFt: { type: integer, format: int32, minimum: 0, maximum: 600 }
         ambient: { $ref: "#/components/schemas/AmbientLight" }
         controllerId: { $ref: "#/components/schemas/Id" }
+        combatants:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/LiveCombatantSetup" }
+        combatantId: { $ref: "#/components/schemas/Id" }
+        resource: { type: string, enum: [action, bonus_action, reaction] }
+    LiveCombatantSetup:
+      type: object
+      description: A Token joining a Combat, with its initiative bonus and speed.
+      additionalProperties: false
+      required: [tokenId, initiativeBonus, speedFt]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        initiativeBonus: { type: integer, format: int32, minimum: -10, maximum: 20 }
+        speedFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
+    LiveCombat:
+      type: object
+      description: The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share a rank and act at the same time.
+      additionalProperties: false
+      required: [status, round, combatants]
+      properties:
+        status: { type: string, enum: [rolling, active] }
+        round: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        combatants:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/LiveCombatant" }
+    LiveCombatant:
+      type: object
+      description: One Combatant in the initiative rail, with what is left of its action economy.
+      additionalProperties: false
+      required: [id, tokenId, label, kind, rollId, acting, done, action, bonusAction, reaction, movementFt, speedFt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, minLength: 1, maxLength: 40 }
+        kind: { $ref: "#/components/schemas/TokenKind" }
+        controllerId: { $ref: "#/components/schemas/Id" }
+        rollId: { $ref: "#/components/schemas/Id" }
+        initiative: { type: integer, format: int32, minimum: -20, maximum: 60 }
+        rank: { type: integer, format: int32, minimum: 1, maximum: 50 }
+        acting: { type: boolean }
+        done: { type: boolean }
+        action: { type: boolean }
+        bonusAction: { type: boolean }
+        reaction: { type: boolean }
+        movementFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
+        speedFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
     LiveUpdate:
       type: object
       description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
@@ -2861,6 +2909,7 @@ components:
           type: array
           maxItems: 100000
           items: { $ref: "#/components/schemas/HexCoord" }
+        combat: { $ref: "#/components/schemas/LiveCombat" }
         walls:
           type: array
           maxItems: 100000

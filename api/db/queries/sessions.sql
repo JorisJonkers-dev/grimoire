@@ -48,3 +48,24 @@ SELECT pg_try_advisory_lock(hashtextextended(@lock_key::text, 0));
 
 -- name: UnlockSessionOwner :one
 SELECT pg_advisory_unlock(hashtextextended(@lock_key::text, 0));
+
+-- name: RunningCombat :one
+SELECT id, session_id, status, round, turn_count, started_at, ended_at FROM play.combats WHERE session_id = $1 AND status <> 'ended';
+
+-- name: CombatCombatants :many
+SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft
+FROM play.combatants WHERE combat_id = $1 ORDER BY id;
+
+-- name: SaveCombat :exec
+INSERT INTO play.combats (id, session_id, status, round, turn_count, started_at, ended_at)
+VALUES (@id, @session_id, @status, @round, sqlc.narg(turn_count), @started_at, sqlc.narg(ended_at))
+ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round, turn_count = excluded.turn_count,
+    ended_at = excluded.ended_at;
+
+-- name: SaveCombatant :exec
+INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
+    has_bonus_action, has_reaction, movement_ft)
+VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
+    @has_bonus_action, @has_reaction, @movement_ft)
+ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
+    has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft;

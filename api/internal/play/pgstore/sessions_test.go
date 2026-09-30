@@ -135,6 +135,30 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 	if sess, _, loaded, err := store.Load(ctx, live1.ID); err != nil || loaded == nil || *sess.MapID != mid {
 		t.Fatalf("load with map = %+v %v", loaded, err)
 	}
+	fight := func(status string) live.Write {
+		me := tb.dmMember(t)
+		roll := domain.Roll{
+			ID: domain.RollID(uuid.New()), CampaignID: tb.campaign, Purpose: "Initiative for A", Notation: "1d20", RequestedBy: me.Name,
+			Roller: me, Status: domain.StatusPending, Dice: []domain.Die{{No: 0, Group: 0, Faces: 20}},
+		}
+		twelve := 12
+		c := &domain.Combat{
+			ID: domain.CombatID(uuid.New()), Status: status, Round: 1, Turn: 12, StartedAt: time.Now(),
+			Combatants: []domain.Combatant{{ID: domain.CombatantID(uuid.New()), TokenID: tok.ID, RollID: roll.ID, SpeedFt: 30, Initiative: &twelve}},
+		}
+		kind := domain.ActionCombatStarted
+		if status == domain.CombatEnded {
+			c.EndedAt, kind = time.Now(), domain.ActionCombatEnded
+		}
+		return live.Write{Kind: kind, Combat: c, Rolls: []domain.Roll{roll}}
+	}
+	running := fight(domain.CombatActive)
+	if _, err := store.Commit(ctx, live1, nil, running, tb.dmMember(t), dm, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if c, err := store.LoadCombat(ctx, live1.ID); err != nil || c.Turn != 12 || *c.Combatants[0].Initiative != 12 || c.Combatants[0].RollID != running.Rolls[0].ID {
+		t.Fatalf("load combat = %+v %v", c, err)
+	}
 	gone, err := pgxpool.New(ctx, tb.pool.Config().ConnString())
 	if err != nil {
 		t.Fatal(err)
@@ -169,6 +193,14 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 		},
 		"token": func(_ *app.Sessions, repo *pgstore.Store) error {
 			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionTokenMoved, Token: tok}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"combat": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.Commit(ctx, live1, nil, fight(domain.CombatEnded), tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"loadcombat": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.LoadCombat(ctx, live1.ID)
 			return err
 		},
 		"loadmap": func(_ *app.Sessions, repo *pgstore.Store) error {

@@ -13,9 +13,10 @@ RETURNING id;
 INSERT INTO play.action_roll_events (action_id, roll_id, die_no, value) VALUES (@action_id, @roll_id, sqlc.narg(die_no), @value);
 
 -- name: InsertRoll :one
-INSERT INTO play.roll_requests (campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name,
-    status, created_at)
-VALUES (@campaign_id, @purpose, @notation, @requested_by_name, @roller_member_id, @roller_subject, @roller_name, 'pending', @now)
+INSERT INTO play.roll_requests (id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject,
+    roller_name, status, created_at)
+VALUES (COALESCE(sqlc.narg(id)::uuid, gen_random_uuid()), @campaign_id, @purpose, @notation, @requested_by_name,
+    @roller_member_id, @roller_subject, @roller_name, 'pending', @now)
 RETURNING id;
 
 -- name: InsertRollLabel :exec

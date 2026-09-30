@@ -497,6 +497,45 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * A Token joining a Combat, with its initiative bonus and speed.
+ */
+export const zLiveCombatantSetup = z.object({
+    tokenId: zId,
+    initiativeBonus: z.int().gte(-10).lte(20),
+    speedFt: z.int().gte(0).lte(120)
+});
+
+/**
+ * One Combatant in the initiative rail, with what is left of its action economy.
+ */
+export const zLiveCombatant = z.object({
+    id: zId,
+    tokenId: zId,
+    label: z.string().min(1).max(40),
+    kind: zTokenKind,
+    controllerId: zId.optional(),
+    rollId: zId,
+    initiative: z.int().gte(-20).lte(60).optional(),
+    rank: z.int().gte(1).lte(50).optional(),
+    acting: z.boolean(),
+    done: z.boolean(),
+    action: z.boolean(),
+    bonusAction: z.boolean(),
+    reaction: z.boolean(),
+    movementFt: z.int().gte(0).lte(120),
+    speedFt: z.int().gte(0).lte(120)
+});
+
+/**
+ * The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share a rank and act at the same time.
+ */
+export const zLiveCombat = z.object({
+    status: z.enum(['rolling', 'active']),
+    round: z.int().gte(0).lte(100000),
+    combatants: z.array(zLiveCombatant).max(50)
+});
+
+/**
  * The route a walk would take, start first, and the movement it costs.
  */
 export const zLivePath = z.object({
@@ -532,7 +571,11 @@ export const zLiveCommand = z.object({
         'remove_light',
         'set_ambient',
         'plan_walk',
-        'walk'
+        'walk',
+        'start_combat',
+        'end_turn',
+        'spend',
+        'end_combat'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -548,7 +591,14 @@ export const zLiveCommand = z.object({
     brightFt: z.int().gte(0).lte(600).optional(),
     dimFt: z.int().gte(0).lte(600).optional(),
     ambient: zAmbientLight.optional(),
-    controllerId: zId.optional()
+    controllerId: zId.optional(),
+    combatants: z.array(zLiveCombatantSetup).max(50).optional(),
+    combatantId: zId.optional(),
+    resource: z.enum([
+        'action',
+        'bonus_action',
+        'reaction'
+    ]).optional()
 });
 
 /**
@@ -586,6 +636,7 @@ export const zLiveView = z.object({
     fog: z.boolean(),
     visible: z.array(zHexCoord).max(100000),
     remembered: z.array(zHexCoord).max(100000),
+    combat: zLiveCombat.optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
