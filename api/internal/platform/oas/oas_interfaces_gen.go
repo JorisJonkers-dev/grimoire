@@ -5,6 +5,10 @@ type AcceptInviteRes interface {
 	acceptInviteRes()
 }
 
+type ClearTokenIconRes interface {
+	clearTokenIconRes()
+}
+
 type CreateCampaignRes interface {
 	createCampaignRes()
 }
@@ -49,6 +53,10 @@ type GetMeRes interface {
 	getMeRes()
 }
 
+type GetPortraitRes interface {
+	getPortraitRes()
+}
+
 type GetReadinessRes interface {
 	getReadinessRes()
 }
@@ -59,6 +67,10 @@ type GetSpellRes interface {
 
 type GetStatusRes interface {
 	getStatusRes()
+}
+
+type GetTokenIconRes interface {
+	getTokenIconRes()
 }
 
 type ListCampaignsRes interface {
@@ -99,6 +111,14 @@ type RemoveMemberRes interface {
 
 type RevokeInviteRes interface {
 	revokeInviteRes()
+}
+
+type SetPortraitRes interface {
+	setPortraitRes()
+}
+
+type SetTokenIconRes interface {
+	setTokenIconRes()
 }
 
 type UpdateCampaignRes interface {

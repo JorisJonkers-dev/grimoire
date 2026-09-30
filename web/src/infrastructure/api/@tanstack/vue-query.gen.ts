@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, createCampaign, createCharacter, createInvite, deleteCharacter, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getReadiness, getSpell, getStatus, listCampaigns, listCharacters, listEntries, listInvites, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, revokeInvite, updateCampaign, updateCharacter, updateMember } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse } from '../types.gen';
+import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, deleteCharacter, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getPortrait, getReadiness, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listEntries, listInvites, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, revokeInvite, setPortrait, setTokenIcon, updateCampaign, updateCharacter, updateMember } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -584,6 +584,103 @@ export const updateCharacterMutation = (options?: Partial<Options<UpdateCharacte
     const mutationOptions: UseMutationOptions<UpdateCharacterResponse, UpdateCharacterError, Options<UpdateCharacterData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateCharacter({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getPortraitQueryKey = (options: Options<GetPortraitData>) => createQueryKey('getPortrait', options);
+
+/**
+ * Get the portrait
+ *
+ * The picture itself, served only to Members of the Campaign.
+ */
+export const getPortraitOptions = (options: Options<GetPortraitData>) => queryOptions<GetPortraitResponse, GetPortraitError, GetPortraitResponse, ReturnType<typeof getPortraitQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getPortrait({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getPortraitQueryKey(options)
+});
+
+/**
+ * Upload the portrait
+ *
+ * A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+ */
+export const setPortraitMutation = (options?: Partial<Options<SetPortraitData>>): UseMutationOptions<SetPortraitResponse, SetPortraitError, Options<SetPortraitData>> => {
+    const mutationOptions: UseMutationOptions<SetPortraitResponse, SetPortraitError, Options<SetPortraitData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setPortrait({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Use initials for the token
+ *
+ * Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
+ */
+export const clearTokenIconMutation = (options?: Partial<Options<ClearTokenIconData>>): UseMutationOptions<ClearTokenIconResponse, ClearTokenIconError, Options<ClearTokenIconData>> => {
+    const mutationOptions: UseMutationOptions<ClearTokenIconResponse, ClearTokenIconError, Options<ClearTokenIconData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await clearTokenIcon({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTokenIconQueryKey = (options: Options<GetTokenIconData>) => createQueryKey('getTokenIcon', options);
+
+/**
+ * Get the token icon
+ *
+ * The picture itself, served only to Members of the Campaign.
+ */
+export const getTokenIconOptions = (options: Options<GetTokenIconData>) => queryOptions<GetTokenIconResponse, GetTokenIconError, GetTokenIconResponse, ReturnType<typeof getTokenIconQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTokenIcon({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTokenIconQueryKey(options)
+});
+
+/**
+ * Upload the token icon
+ *
+ * A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+ */
+export const setTokenIconMutation = (options?: Partial<Options<SetTokenIconData>>): UseMutationOptions<SetTokenIconResponse, SetTokenIconError, Options<SetTokenIconData>> => {
+    const mutationOptions: UseMutationOptions<SetTokenIconResponse, SetTokenIconError, Options<SetTokenIconData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setTokenIcon({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

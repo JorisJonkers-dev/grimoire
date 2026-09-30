@@ -162,6 +162,11 @@ export const zActiveEffect = z.object({
 });
 
 /**
+ * Same-origin path of a stored picture; it changes when the picture does.
+ */
+export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -250,7 +255,8 @@ export const zCharacterSummary = z.object({
     class: zSlug,
     level: z.int().gte(1).lte(20),
     hpCurrent: z.int().gte(0).lte(1000),
-    hpMax: z.int().gte(1).lte(1000)
+    hpMax: z.int().gte(1).lte(1000),
+    tokenUrl: zAssetUrl.optional()
 });
 
 /**
@@ -399,7 +405,9 @@ export const zCharacterSheet = z.object({
     weapons: z.array(zWeaponLine).max(4),
     resources: z.array(zResourcePool).max(20),
     effects: z.array(zActiveEffect).max(50),
-    warnings: z.array(z.string().max(200)).max(10)
+    warnings: z.array(z.string().max(200)).max(10),
+    portraitUrl: zAssetUrl.optional(),
+    tokenUrl: zAssetUrl.optional()
 });
 
 /**
@@ -898,6 +906,60 @@ export const zUpdateCharacterPath = z.object({
  * The updated sheet.
  */
 export const zUpdateCharacterResponse = zCharacterSheet;
+
+export const zGetPortraitPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The picture.
+ */
+export const zGetPortraitResponse = z.string().max(10485760);
+
+export const zSetPortraitBody = z.string().max(10485760);
+
+export const zSetPortraitPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * Stored.
+ */
+export const zSetPortraitResponse = z.void();
+
+export const zClearTokenIconPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * Cleared.
+ */
+export const zClearTokenIconResponse = z.void();
+
+export const zGetTokenIconPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The picture.
+ */
+export const zGetTokenIconResponse = z.string().max(10485760);
+
+export const zSetTokenIconBody = z.string().max(10485760);
+
+export const zSetTokenIconPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * Stored.
+ */
+export const zSetTokenIconResponse = z.void();
 
 export const zPreviewInviteBody = zInviteToken;
 

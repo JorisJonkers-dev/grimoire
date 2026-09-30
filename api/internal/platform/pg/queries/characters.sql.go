@@ -152,7 +152,7 @@ func (q *Queries) DeleteCharacter(ctx context.Context, arg DeleteCharacterParams
 const getCharacter = `-- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1 AND c.id = $2
 `
@@ -181,6 +181,10 @@ type GetCharacterRow struct {
 	Shield         bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	PortraitKey    pgtype.Text
+	PortraitType   pgtype.Text
+	TokenKey       pgtype.Text
+	TokenType      pgtype.Text
 }
 
 func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error) {
@@ -205,6 +209,10 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 		&i.Shield,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PortraitKey,
+		&i.PortraitType,
+		&i.TokenKey,
+		&i.TokenType,
 	)
 	return i, err
 }
@@ -254,7 +262,7 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 
 const listCharacters = `-- name: ListCharacters :many
 SELECT c.id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name, c.ruleset,
-       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current
+       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1
 ORDER BY c.name, c.id
@@ -272,6 +280,7 @@ type ListCharactersRow struct {
 	Level         int32
 	HpMax         int32
 	HpCurrent     int32
+	TokenKey      pgtype.Text
 }
 
 func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error) {
@@ -295,6 +304,7 @@ func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]L
 			&i.Level,
 			&i.HpMax,
 			&i.HpCurrent,
+			&i.TokenKey,
 		); err != nil {
 			return nil, err
 		}
@@ -323,6 +333,54 @@ func (q *Queries) SetCharacterAbility(ctx context.Context, arg SetCharacterAbili
 		arg.Ability,
 		arg.Base,
 		arg.Bonus,
+	)
+	return err
+}
+
+const setCharacterPortrait = `-- name: SetCharacterPortrait :exec
+UPDATE campaign.characters SET portrait_key = $1, portrait_type = $2, updated_at = $3
+WHERE campaign_id = $4 AND id = $5
+`
+
+type SetCharacterPortraitParams struct {
+	Key         pgtype.Text
+	ContentType pgtype.Text
+	Now         time.Time
+	CampaignID  uuid.UUID
+	ID          uuid.UUID
+}
+
+func (q *Queries) SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error {
+	_, err := q.db.Exec(ctx, setCharacterPortrait,
+		arg.Key,
+		arg.ContentType,
+		arg.Now,
+		arg.CampaignID,
+		arg.ID,
+	)
+	return err
+}
+
+const setCharacterToken = `-- name: SetCharacterToken :exec
+UPDATE campaign.characters SET token_key = $1, token_type = $2, updated_at = $3
+WHERE campaign_id = $4 AND id = $5
+`
+
+type SetCharacterTokenParams struct {
+	Key         pgtype.Text
+	ContentType pgtype.Text
+	Now         time.Time
+	CampaignID  uuid.UUID
+	ID          uuid.UUID
+}
+
+func (q *Queries) SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error {
+	_, err := q.db.Exec(ctx, setCharacterToken,
+		arg.Key,
+		arg.ContentType,
+		arg.Now,
+		arg.CampaignID,
+		arg.ID,
 	)
 	return err
 }

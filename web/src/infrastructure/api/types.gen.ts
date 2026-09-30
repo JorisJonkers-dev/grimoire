@@ -309,7 +309,14 @@ export type CharacterSheet = {
     resources: Array<ResourcePool>;
     effects: Array<ActiveEffect>;
     warnings: Array<string>;
+    portraitUrl?: AssetUrl;
+    tokenUrl?: AssetUrl;
 };
+
+/**
+ * Same-origin path of a stored picture; it changes when the picture does.
+ */
+export type AssetUrl = string;
 
 /**
  * A Character in the party list.
@@ -324,6 +331,7 @@ export type CharacterSummary = {
     level: number;
     hpCurrent: number;
     hpMax: number;
+    tokenUrl?: AssetUrl;
 };
 
 /**
@@ -1468,6 +1476,196 @@ export type UpdateCharacterResponses = {
 };
 
 export type UpdateCharacterResponse = UpdateCharacterResponses[keyof UpdateCharacterResponses];
+
+export type GetPortraitData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/portrait';
+};
+
+export type GetPortraitErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetPortraitError = GetPortraitErrors[keyof GetPortraitErrors];
+
+export type GetPortraitResponses = {
+    /**
+     * The picture.
+     */
+    200: Blob | File;
+};
+
+export type GetPortraitResponse = GetPortraitResponses[keyof GetPortraitResponses];
+
+export type SetPortraitData = {
+    body: Blob | File;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/portrait';
+};
+
+export type SetPortraitErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetPortraitError = SetPortraitErrors[keyof SetPortraitErrors];
+
+export type SetPortraitResponses = {
+    /**
+     * Stored.
+     */
+    204: void;
+};
+
+export type SetPortraitResponse = SetPortraitResponses[keyof SetPortraitResponses];
+
+export type ClearTokenIconData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/token';
+};
+
+export type ClearTokenIconErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ClearTokenIconError = ClearTokenIconErrors[keyof ClearTokenIconErrors];
+
+export type ClearTokenIconResponses = {
+    /**
+     * Cleared.
+     */
+    204: void;
+};
+
+export type ClearTokenIconResponse = ClearTokenIconResponses[keyof ClearTokenIconResponses];
+
+export type GetTokenIconData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/token';
+};
+
+export type GetTokenIconErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetTokenIconError = GetTokenIconErrors[keyof GetTokenIconErrors];
+
+export type GetTokenIconResponses = {
+    /**
+     * The picture.
+     */
+    200: Blob | File;
+};
+
+export type GetTokenIconResponse = GetTokenIconResponses[keyof GetTokenIconResponses];
+
+export type SetTokenIconData = {
+    body: Blob | File;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/token';
+};
+
+export type SetTokenIconErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetTokenIconError = SetTokenIconErrors[keyof SetTokenIconErrors];
+
+export type SetTokenIconResponses = {
+    /**
+     * Stored.
+     */
+    204: void;
+};
+
+export type SetTokenIconResponse = SetTokenIconResponses[keyof SetTokenIconResponses];
 
 export type PreviewInviteData = {
     body: InviteToken;

@@ -12,7 +12,7 @@ import {
   updateMemberMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { Member, Role } from '@/infrastructure/api/types.gen'
-import { GButton } from '@/shared/ui'
+import { GButton, TokenBadge } from '@/shared/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,6 +101,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <ul class="g-list">
           <li v-for="ch in characters.data.value ?? []" :key="ch.id">
             <RouterLink :to="{ name: 'character', params: { id, characterId: ch.id } }" class="character">
+              <TokenBadge :name="ch.name" allegiance="party" :icon-url="ch.tokenUrl ?? ''" :size="40" />
               <span class="who">{{ ch.name }}<template v-if="ch.mine"> (yours)</template></span>
               <span class="hint">Level {{ ch.level }} {{ ch.species }} {{ ch.class }} · {{ ch.ownerName }}</span>
               <span class="g-tag">{{ ch.hpCurrent }}/{{ ch.hpMax }} HP</span>

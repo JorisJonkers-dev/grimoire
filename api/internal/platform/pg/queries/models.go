@@ -37,6 +37,10 @@ type CampaignCharacter struct {
 	Shield         bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	PortraitKey    pgtype.Text
+	PortraitType   pgtype.Text
+	TokenKey       pgtype.Text
+	TokenType      pgtype.Text
 }
 
 type CampaignCharacterAbility struct {

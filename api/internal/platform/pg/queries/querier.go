@@ -94,6 +94,8 @@ type Querier interface {
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RulesetYear(ctx context.Context, key string) (int32, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
+	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
+	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)

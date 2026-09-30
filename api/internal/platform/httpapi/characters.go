@@ -19,6 +19,9 @@ type CharacterService interface {
 	Get(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (app.Sheet, error)
 	Update(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, e app.Edit) (app.Sheet, error)
 	Delete(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) error
+	SetImage(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, data []byte) error
+	ClearToken(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) error
+	Image(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind) (domain.Image, []byte, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -78,6 +81,12 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 	}
 	if s.ID != (domain.CharacterID{}) {
 		out.ID = oas.NewOptID(oas.ID(s.ID))
+		if s.Portrait != nil {
+			out.PortraitUrl = oas.NewOptAssetUrl(assetURL(s.CampaignID, s.ID, domain.Portrait, s.Portrait.Key))
+		}
+		if s.Token != nil {
+			out.TokenUrl = oas.NewOptAssetUrl(assetURL(s.CampaignID, s.ID, domain.TokenIcon, s.Token.Key))
+		}
 	}
 	out.Bonus = bonusOut(s.Bonus)
 	for _, sv := range s.Derived.Saves {
@@ -206,8 +215,13 @@ func (h *Handler) ListCharacters(ctx context.Context, p oas.ListCharactersParams
 	}
 	out := make([]oas.CharacterSummary, 0, len(list))
 	for _, ch := range list {
+		var token oas.OptAssetUrl
+		if ch.TokenKey != "" {
+			token = oas.NewOptAssetUrl(assetURL(domain.CampaignID(p.CampaignId), ch.ID, domain.TokenIcon, ch.TokenKey))
+		}
 		out = append(out, oas.CharacterSummary{
-			ID: oas.ID(ch.ID), Name: oas.CharacterName(ch.Name), OwnerName: oas.DisplayName(ch.OwnerName), Mine: ch.Mine,
+			TokenUrl: token,
+			ID:       oas.ID(ch.ID), Name: oas.CharacterName(ch.Name), OwnerName: oas.DisplayName(ch.OwnerName), Mine: ch.Mine,
 			Species: oas.Slug(ch.Species), Class: oas.Slug(ch.Class), Level: int32(ch.Level), //nolint:gosec // 1..20
 			HpCurrent: int32(ch.HPCurrent), HpMax: int32(ch.HPMax), //nolint:gosec // hit points are small
 		})

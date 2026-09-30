@@ -22,6 +22,15 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 	return r, ht.ErrNotImplemented
 }
 
+// ClearTokenIcon implements clearTokenIcon operation.
+//
+// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
+//
+// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (r ClearTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateCampaign implements createCampaign operation.
 //
 // Starts a Campaign with the caller as its first DM.
@@ -122,6 +131,15 @@ func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
+// GetPortrait implements getPortrait operation.
+//
+// The picture itself, served only to Members of the Campaign.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
+func (UnimplementedHandler) GetPortrait(ctx context.Context, params GetPortraitParams) (r GetPortraitRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetReadiness implements getReadiness operation.
 //
 // Returns ok once the API can serve traffic.
@@ -146,6 +164,15 @@ func (UnimplementedHandler) GetSpell(ctx context.Context, params GetSpellParams)
 //
 // GET /api/v1/status
 func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetTokenIcon implements getTokenIcon operation.
+//
+// The picture itself, served only to Members of the Campaign.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIconParams) (r GetTokenIconRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -237,6 +264,24 @@ func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMembe
 //
 // DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInviteParams) (r RevokeInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetPortrait implements setPortrait operation.
+//
+// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+//
+// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
+func (UnimplementedHandler) SetPortrait(ctx context.Context, req SetPortraitReq, params SetPortraitParams) (r SetPortraitRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetTokenIcon implements setTokenIcon operation.
+//
+// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+//
+// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (r SetTokenIconRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -14,6 +14,12 @@ type Handler interface {
 	//
 	// POST /api/v1/invites/accept
 	AcceptInvite(ctx context.Context, req *InviteAccept) (AcceptInviteRes, error)
+	// ClearTokenIcon implements clearTokenIcon operation.
+	//
+	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
 	// CreateCampaign implements createCampaign operation.
 	//
 	// Starts a Campaign with the caller as its first DM.
@@ -81,6 +87,12 @@ type Handler interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetPortrait implements getPortrait operation.
+	//
+	// The picture itself, served only to Members of the Campaign.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
+	GetPortrait(ctx context.Context, params GetPortraitParams) (GetPortraitRes, error)
 	// GetReadiness implements getReadiness operation.
 	//
 	// Returns ok once the API can serve traffic.
@@ -99,6 +111,12 @@ type Handler interface {
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// GetTokenIcon implements getTokenIcon operation.
+	//
+	// The picture itself, served only to Members of the Campaign.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
 	// ListCampaigns implements listCampaigns operation.
 	//
 	// The Campaigns the caller is a Member of, newest first.
@@ -160,6 +178,18 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
+	// SetPortrait implements setPortrait operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
+	SetPortrait(ctx context.Context, req SetPortraitReq, params SetPortraitParams) (SetPortraitRes, error)
+	// SetTokenIcon implements setTokenIcon operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
 	// UpdateCampaign implements updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
