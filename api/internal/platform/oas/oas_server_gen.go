@@ -232,6 +232,18 @@ type Handler interface {
 	//
 	// POST /api/v1/invites/preview
 	PreviewInvite(ctx context.Context, req *InviteToken) (PreviewInviteRes, error)
+	// PreviewReach implements previewReach operation.
+	//
+	// Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
+	//
+	// POST /api/v1/rules/hex/reach
+	PreviewReach(ctx context.Context, req *ReachRequest) (PreviewReachRes, error)
+	// PreviewSight implements previewSight operation.
+	//
+	// Whether one hex can see another and the cover in between. Changes nothing.
+	//
+	// POST /api/v1/rules/hex/sight
+	PreviewSight(ctx context.Context, req *SightRequest) (PreviewSightRes, error)
 	// RemoveMember implements removeMember operation.
 	//
 	// A DM removes a Member, or a Member leaves. The last DM cannot leave.

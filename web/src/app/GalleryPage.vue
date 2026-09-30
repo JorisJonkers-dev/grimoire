@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MovementSandbox from '@/shared/map/MovementSandbox.vue'
 import { ConditionChip, DieFace, EconomyPips, GButton, HitChance, HotbarSlot, ReactionTimer, TokenBadge } from '@/shared/ui'
 </script>
 
@@ -51,6 +52,10 @@ import { ConditionChip, DieFace, EconomyPips, GButton, HitChance, HotbarSlot, Re
         <DieFace :sides="6" :value="5" />
         <DieFace :sides="8" :value="3" />
       </div>
+    </section>
+    <section aria-labelledby="g-hex">
+      <h2 id="g-hex">Movement and sight</h2>
+      <MovementSandbox />
     </section>
   </main>
 </template>

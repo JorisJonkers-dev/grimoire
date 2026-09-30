@@ -355,6 +355,97 @@ export const zActionEntry = z.object({
 });
 
 /**
+ * An axial hex coordinate.
+ */
+export const zHexCoord = z.object({
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500)
+});
+
+/**
+ * How much of a target is hidden.
+ */
+export const zCoverLevel = z.enum([
+    'none',
+    'half',
+    'three_quarters',
+    'total'
+]);
+
+/**
+ * One hex of a local map.
+ */
+export const zHexCell = z.object({
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    difficult: z.boolean().optional(),
+    blocked: z.boolean().optional(),
+    blocksSight: z.boolean().optional(),
+    elevationFt: z.int().gte(-1000).lte(1000).optional(),
+    cover: zCoverLevel.optional()
+});
+
+/**
+ * A creature in a hex, as the mover sees it.
+ */
+export const zHexOccupant = z.object({
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    side: z.enum(['ally', 'enemy'])
+});
+
+/**
+ * A map, a mover and optionally a target hex.
+ */
+export const zReachRequest = z.object({
+    cells: z.array(zHexCell).max(4000),
+    occupants: z.array(zHexOccupant).max(200).optional(),
+    from: zHexCoord,
+    to: zHexCoord.optional(),
+    speedFt: z.int().gte(0).lte(500),
+    climbSpeed: z.boolean().optional()
+});
+
+/**
+ * A reachable hex with its cost and where it is reached from.
+ */
+export const zReachHex = z.object({
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    costFt: z.int().gte(0).lte(500),
+    canEnd: z.boolean(),
+    from: zHexCoord
+});
+
+/**
+ * The reachable hexes, and the path to the target when there is one.
+ */
+export const zReachPreview = z.object({
+    hexes: z.array(zReachHex).max(4000),
+    path: z.array(zHexCoord).max(4000).optional(),
+    pathCostFt: z.int().gte(0).lte(500).optional()
+});
+
+/**
+ * A map and two hexes.
+ */
+export const zSightRequest = z.object({
+    cells: z.array(zHexCell).max(4000),
+    occupants: z.array(zHexOccupant).max(200).optional(),
+    from: zHexCoord,
+    to: zHexCoord
+});
+
+/**
+ * What one hex sees of another.
+ */
+export const zSightPreview = z.object({
+    visible: z.boolean(),
+    cover: zCoverLevel,
+    acBonus: z.int().gte(0).lte(5)
+});
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -1344,6 +1435,20 @@ export const zAcceptInviteBody = zInviteAccept;
  * The campaign joined.
  */
 export const zAcceptInviteResponse = zCampaignRef;
+
+export const zPreviewReachBody = zReachRequest;
+
+/**
+ * The preview.
+ */
+export const zPreviewReachResponse = zReachPreview;
+
+export const zPreviewSightBody = zSightRequest;
+
+/**
+ * The preview.
+ */
+export const zPreviewSightResponse = zSightPreview;
 
 /**
  * The signed-in account.

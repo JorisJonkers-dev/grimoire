@@ -9,6 +9,7 @@ COPY openapi/package.json openapi/package.json
 COPY web/package.json web/package.json
 RUN pnpm install --frozen-lockfile --filter @grimoire/web...
 COPY openapi openapi
+COPY fixtures fixtures
 COPY web web
 RUN pnpm --filter @grimoire/web build
 

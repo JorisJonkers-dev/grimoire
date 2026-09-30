@@ -44,13 +44,13 @@ var (
 		"GET":  "X-User-Id",
 		"POST": "X-User-Id",
 	}
-	rn52AllowedHeaders = map[string]string{
+	rn55AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
 	}
 	rn17AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn47AllowedHeaders = map[string]string{
+	rn50AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
 		"PATCH":  "Content-Type,X-User-Id",
 	}
@@ -72,7 +72,7 @@ var (
 	rn16AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn50AllowedHeaders = map[string]string{
+	rn53AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
 	}
 	rn13AllowedHeaders = map[string]string{
@@ -82,10 +82,10 @@ var (
 	rn33AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn56AllowedHeaders = map[string]string{
+	rn59AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn53AllowedHeaders = map[string]string{
+	rn56AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
 	}
 	rn19AllowedHeaders = map[string]string{
@@ -117,6 +117,12 @@ var (
 	}
 	rn28AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
+	}
+	rn46AllowedHeaders = map[string]string{
+		"POST": "Content-Type,X-User-Id",
+	}
+	rn48AllowedHeaders = map[string]string{
+		"POST": "Content-Type,X-User-Id",
 	}
 	rn36AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
@@ -531,7 +537,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "DELETE",
-													allowedHeaders: rn52AllowedHeaders,
+													allowedHeaders: rn55AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -602,7 +608,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "DELETE,PATCH",
-												allowedHeaders: rn47AllowedHeaders,
+												allowedHeaders: rn50AllowedHeaders,
 												acceptPost:     "",
 												acceptPatch:    "application/json",
 											})
@@ -822,7 +828,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 														default:
 															s.notAllowed(w, r, notAllowedParams{
 																allowedMethods: "POST",
-																allowedHeaders: rn50AllowedHeaders,
+																allowedHeaders: rn53AllowedHeaders,
 																acceptPost:     "",
 																acceptPatch:    "",
 															})
@@ -946,7 +952,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "POST",
-															allowedHeaders: rn56AllowedHeaders,
+															allowedHeaders: rn59AllowedHeaders,
 															acceptPost:     "application/json",
 															acceptPatch:    "",
 														})
@@ -974,7 +980,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "POST",
-															allowedHeaders: rn53AllowedHeaders,
+															allowedHeaders: rn56AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -1335,6 +1341,70 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						}
 
 						return
+					}
+
+				case 'r': // Prefix: "rules/hex/"
+
+					if l := len("rules/hex/"); len(elem) >= l && elem[0:l] == "rules/hex/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'r': // Prefix: "reach"
+
+						if l := len("reach"); len(elem) >= l && elem[0:l] == "reach" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "POST":
+								s.handlePreviewReachRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, notAllowedParams{
+									allowedMethods: "POST",
+									allowedHeaders: rn46AllowedHeaders,
+									acceptPost:     "application/json",
+									acceptPatch:    "",
+								})
+							}
+
+							return
+						}
+
+					case 's': // Prefix: "sight"
+
+						if l := len("sight"); len(elem) >= l && elem[0:l] == "sight" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "POST":
+								s.handlePreviewSightRequest([0]string{}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, notAllowedParams{
+									allowedMethods: "POST",
+									allowedHeaders: rn48AllowedHeaders,
+									acceptPost:     "application/json",
+									acceptPatch:    "",
+								})
+							}
+
+							return
+						}
+
 					}
 
 				case 's': // Prefix: "status"
@@ -2680,6 +2750,70 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						default:
 							return
 						}
+					}
+
+				case 'r': // Prefix: "rules/hex/"
+
+					if l := len("rules/hex/"); len(elem) >= l && elem[0:l] == "rules/hex/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'r': // Prefix: "reach"
+
+						if l := len("reach"); len(elem) >= l && elem[0:l] == "reach" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "POST":
+								r.name = PreviewReachOperation
+								r.summary = "Preview movement"
+								r.operationID = "previewReach"
+								r.operationGroup = ""
+								r.pathPattern = "/api/v1/rules/hex/reach"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
+					case 's': // Prefix: "sight"
+
+						if l := len("sight"); len(elem) >= l && elem[0:l] == "sight" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "POST":
+								r.name = PreviewSightOperation
+								r.summary = "Preview line of sight"
+								r.operationID = "previewSight"
+								r.operationGroup = ""
+								r.pathPattern = "/api/v1/rules/hex/sight"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
+
 					}
 
 				case 's': // Prefix: "status"

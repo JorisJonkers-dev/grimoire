@@ -348,6 +348,24 @@ func (UnimplementedHandler) PreviewInvite(ctx context.Context, req *InviteToken)
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewReach implements previewReach operation.
+//
+// Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
+//
+// POST /api/v1/rules/hex/reach
+func (UnimplementedHandler) PreviewReach(ctx context.Context, req *ReachRequest) (r PreviewReachRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewSight implements previewSight operation.
+//
+// Whether one hex can see another and the cover in between. Changes nothing.
+//
+// POST /api/v1/rules/hex/sight
+func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest) (r PreviewSightRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RemoveMember implements removeMember operation.
 //
 // A DM removes a Member, or a Member leaves. The last DM cannot leave.

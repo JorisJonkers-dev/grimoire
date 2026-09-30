@@ -149,6 +149,14 @@ type PreviewInviteRes interface {
 	previewInviteRes()
 }
 
+type PreviewReachRes interface {
+	previewReachRes()
+}
+
+type PreviewSightRes interface {
+	previewSightRes()
+}
+
 type RemoveMemberRes interface {
 	removeMemberRes()
 }
