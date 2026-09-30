@@ -221,6 +221,50 @@ describe('join', () => {
   })
 })
 
+describe('table settings', () => {
+  it('lets the DM choose how long reactions wait', async () => {
+    const sent: unknown[] = []
+    const { wrapper } = await mountApp(`/campaigns/${ID}`, {
+      [`/api/v1/campaigns/${ID}/sessions`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}/invites`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: async (_u, req) => {
+        if (req.method === 'PATCH') {
+          sent.push(await req.json())
+          return { ...summary(ID, 'Strahd', { myRole: 'dm' }), reactionTimeoutS: 5 }
+        }
+        return { ...home('dm'), reactionTimeoutS: 20 }
+      },
+    })
+    const input = wrapper.get('[data-testid="reaction-timeout"]')
+    expect((input.element as HTMLInputElement).value).toBe('20')
+    await input.setValue(5)
+    await wrapper.get('[data-testid="settings"]').trigger('submit')
+    await flushPromises()
+    expect(sent).toEqual([{ reactionTimeoutS: 5 }])
+    expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
+  })
+
+  it('falls back to ten seconds and hides settings from players', async () => {
+    const dmView = await mountApp(`/campaigns/${ID}`, {
+      [`/api/v1/campaigns/${ID}/sessions`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}/invites`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: (_u, req) => (req.method === 'PATCH' ? problem(422)() : home('dm')),
+    })
+    expect((dmView.wrapper.get('[data-testid="reaction-timeout"]').element as HTMLInputElement).value).toBe('10')
+    await dmView.wrapper.get('[data-testid="settings"]').trigger('submit')
+    await flushPromises()
+    expect(dmView.wrapper.text()).toContain('The settings could not be saved.')
+    const playerView = await mountApp(`/campaigns/${ID}`, {
+      [`/api/v1/campaigns/${ID}/sessions`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => home('player'),
+    })
+    expect(playerView.wrapper.find('[data-testid="settings"]').exists()).toBe(false)
+  })
+})
+
 describe('sessions on the campaign home', () => {
   it('starts a session and reports failures', async () => {
     vi.stubGlobal('WebSocket', class { send() {} close() {} })

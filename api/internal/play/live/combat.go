@@ -26,7 +26,7 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 	}
 	if cmd.Kind == CmdEndCombat {
 		ended := *c
-		ended.Status, ended.EndedAt, ended.Attack = domain.CombatEnded, r.now(), nil
+		ended.Status, ended.EndedAt, ended.Attack, ended.Prompt, ended.Resume = domain.CombatEnded, r.now(), nil, nil, nil
 		return Write{Kind: domain.ActionCombatEnded, Combat: &ended}, ""
 	}
 	x, t, reason := r.combatant(m, cmd.CombatantID)
@@ -198,6 +198,9 @@ func settle(c *domain.Combat) {
 			return
 		}
 		c.Status, c.Round, c.Turn = domain.CombatActive, 1, combat.Counts(totals)[0]
+		for i := range c.Combatants {
+			c.Combatants[i].Economy.Reaction = true
+		}
 		startTurn(c)
 		return
 	}
@@ -220,7 +223,7 @@ func settle(c *domain.Combat) {
 func startTurn(c *domain.Combat) {
 	for i, x := range c.Combatants {
 		if c.Acting(x) {
-			c.Combatants[i].Economy = combat.Fresh(x.SpeedFt)
+			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(x.SpeedFt), false
 		}
 	}
 }
@@ -233,6 +236,12 @@ func dropCombatant(s *state, w *Write) {
 	s.combat.Combatants = slices.DeleteFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.TokenID == w.Token.ID })
 	if a := s.combat.Attack; a != nil && (a.Attacker == w.Token.ID || a.Target == w.Token.ID) {
 		s.combat.Attack = nil
+	}
+	if p := s.combat.Prompt; p != nil && (p.Reactor == w.Token.ID || p.Trigger == w.Token.ID) {
+		s.combat.Prompt = nil
+	}
+	if r := s.combat.Resume; r != nil && r.Token == w.Token.ID {
+		s.combat.Resume = nil
 	}
 	settle(s.combat)
 	w.Combat = s.combat
@@ -254,7 +263,7 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 		cv := s.combatantView(x, t, totals, a)
 		v.Combat.Combatants = append(v.Combat.Combatants, cv)
 	}
-	v.Combat.Attack = s.pendingView(a, seen)
+	v.Combat.Attack, v.Combat.Prompt = s.pendingView(a, seen), s.promptView(a, seen, s.now())
 	sort.SliceStable(v.Combat.Combatants, func(i, j int) bool {
 		a, b := v.Combat.Combatants[i], v.Combat.Combatants[j]
 		if (a.Rank == 0) != (b.Rank == 0) {

@@ -23,13 +23,13 @@ UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE campaign_id = @
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence)
+    hp, hp_max, intelligence, can_shield)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
-    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence));
+    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -52,25 +52,28 @@ SELECT pg_try_advisory_lock(hashtextextended(@lock_key::text, 0));
 SELECT pg_advisory_unlock(hashtextextended(@lock_key::text, 0));
 
 -- name: RunningCombat :one
-SELECT id, session_id, status, round, turn_count, started_at, ended_at FROM play.combats WHERE session_id = $1 AND status <> 'ended';
+SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_token_id, resume_cost_ft FROM play.combats WHERE session_id = $1 AND status <> 'ended';
 
 -- name: CombatCombatants :many
-SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft
+SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
+       shielded
 FROM play.combatants WHERE combat_id = $1 ORDER BY id;
 
 -- name: SaveCombat :exec
-INSERT INTO play.combats (id, session_id, status, round, turn_count, started_at, ended_at)
-VALUES (@id, @session_id, @status, @round, sqlc.narg(turn_count), @started_at, sqlc.narg(ended_at))
+INSERT INTO play.combats (id, session_id, status, round, turn_count, started_at, ended_at, resume_token_id, resume_cost_ft)
+VALUES (@id, @session_id, @status, @round, sqlc.narg(turn_count), @started_at, sqlc.narg(ended_at), sqlc.narg(resume_token_id),
+    sqlc.narg(resume_cost_ft))
 ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round, turn_count = excluded.turn_count,
-    ended_at = excluded.ended_at;
+    ended_at = excluded.ended_at, resume_token_id = excluded.resume_token_id, resume_cost_ft = excluded.resume_cost_ft;
 
 -- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft)
+    has_bonus_action, has_reaction, movement_ft, shielded)
 VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
-    @has_bonus_action, @has_reaction, @movement_ft)
+    @has_bonus_action, @has_reaction, @movement_ft, @shielded)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
-    has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft;
+    has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
+    shielded = excluded.shielded;
 
 -- name: SetTokenHP :exec
 UPDATE play.tokens SET hp = @hp WHERE session_id = @session_id AND id = @id;
@@ -84,13 +87,16 @@ INSERT INTO play.token_attacks (token_id, ordering, name, to_hit, reach_ft, rang
 VALUES (@token_id, @ordering, @name, @to_hit, @reach_ft, @range_ft, @long_range_ft, @damage_dice, @damage_bonus, @damage_type);
 
 -- name: CombatAttack :one
-SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged
+SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged, total,
+       opportunity
 FROM play.attacks WHERE combat_id = $1;
 
 -- name: SaveAttack :exec
-INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged)
-VALUES (@id, @combat_id, @attacker_token_id, @target_token_id, @attack_no, @mode, @cover_bonus, @stage, @critical, @roll_id, @ranged)
-ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id;
+INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged,
+    total, opportunity)
+VALUES (@id, @combat_id, @attacker_token_id, @target_token_id, @attack_no, @mode, @cover_bonus, @stage, @critical, @roll_id, @ranged,
+    sqlc.narg(total), @opportunity)
+ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id, total = excluded.total;
 
 -- name: ClearAttacks :exec
 DELETE FROM play.attacks WHERE combat_id = $1;
@@ -132,3 +138,26 @@ JOIN play.tokens t ON t.id = o.observer_token_id WHERE t.session_id = $1;
 -- name: ObserveDamage :exec
 INSERT INTO play.observed_damage (observer_token_id, attacker_token_id, ranged_damage) VALUES (@observer, @attacker, @amount)
 ON CONFLICT (observer_token_id, attacker_token_id) DO UPDATE SET ranged_damage = play.observed_damage.ranged_damage + excluded.ranged_damage;
+
+-- name: ClearResumePath :exec
+DELETE FROM play.combat_resume_path WHERE combat_id = $1;
+
+-- name: AddResumeHex :exec
+INSERT INTO play.combat_resume_path (combat_id, ordering, q, r) VALUES (@combat_id, @ordering, @q, @r);
+
+-- name: ResumePath :many
+SELECT q, r FROM play.combat_resume_path WHERE combat_id = $1 ORDER BY ordering;
+
+-- name: CombatPrompt :one
+SELECT id, kind, reactor_token_id, trigger_token_id, attack_no, effect, deadline FROM play.reaction_prompts WHERE combat_id = $1;
+
+-- name: SavePrompt :exec
+INSERT INTO play.reaction_prompts (id, combat_id, kind, reactor_token_id, trigger_token_id, attack_no, effect, deadline)
+VALUES (@id, @combat_id, @kind, @reactor_token_id, @trigger_token_id, @attack_no, @effect, @deadline)
+ON CONFLICT (id) DO NOTHING;
+
+-- name: ClearPrompts :exec
+DELETE FROM play.reaction_prompts WHERE combat_id = $1;
+
+-- name: CampaignReactionTimeout :one
+SELECT reaction_timeout_s FROM campaign.campaigns WHERE id = $1;

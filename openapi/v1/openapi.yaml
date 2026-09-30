@@ -2002,6 +2002,7 @@ components:
         myRole: { $ref: "#/components/schemas/Role" }
         memberCount: { type: integer, format: int32, minimum: 1, maximum: 1000 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+        reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
     CampaignPage:
       type: object
       description: One page of campaigns.
@@ -2039,6 +2040,7 @@ components:
         myRole: { $ref: "#/components/schemas/Role" }
         memberCount: { type: integer, format: int32, minimum: 1, maximum: 1000 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+        reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         me: { $ref: "#/components/schemas/Member" }
         members:
           type: array
@@ -2060,6 +2062,13 @@ components:
       properties:
         name: { $ref: "#/components/schemas/CampaignName" }
         ruleset: { $ref: "#/components/schemas/Ruleset" }
+        reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
+    ReactionTimeout:
+      type: integer
+      format: int32
+      description: Seconds a Reaction Prompt waits before it counts as declined.
+      minimum: 3
+      maximum: 120
     CampaignRef:
       type: object
       description: A reference to a Campaign.
@@ -2757,6 +2766,7 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveAttack" }
+        shield: { type: boolean }
     LiveAttack:
       type: object
       description: One attack on a token's hotbar.
@@ -2799,7 +2809,7 @@ components:
         attackerId: { $ref: "#/components/schemas/Id" }
         targetId: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
-        stage: { type: string, enum: [to_hit, damage] }
+        stage: { type: string, enum: [to_hit, reaction, damage] }
         rollId: { $ref: "#/components/schemas/Id" }
         critical: { type: boolean }
     LiveSessionView:
@@ -2819,7 +2829,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2849,6 +2859,8 @@ components:
         targetId: { $ref: "#/components/schemas/Id" }
         attackNo: { type: integer, format: int32, minimum: 0, maximum: 50 }
         tactics: { $ref: "#/components/schemas/Tactics" }
+        use: { type: boolean, description: "With react, whether the reaction is used or declined." }
+        shield: { type: boolean, description: "With place_token, the token can cast Shield." }
     Tactics:
       type: string
       description: How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
@@ -2884,6 +2896,19 @@ components:
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveCombatant" }
         attack: { $ref: "#/components/schemas/LivePendingAttack" }
+        prompt: { $ref: "#/components/schemas/LivePrompt" }
+    LivePrompt:
+      type: object
+      description: A Reaction Prompt the fight waits on. The reactor's Controller, or the DM, answers; no answer by the countdown declines.
+      additionalProperties: false
+      required: [id, kind, reactorId, triggerId, effect, secondsLeft]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { type: string, enum: [opportunity_attack, shield] }
+        reactorId: { $ref: "#/components/schemas/Id" }
+        triggerId: { $ref: "#/components/schemas/Id" }
+        effect: { type: string, maxLength: 300 }
+        secondsLeft: { type: integer, format: int32, minimum: 0, maximum: 120 }
     LiveCombatant:
       type: object
       description: One Combatant in the initiative rail, with what is left of its action economy.

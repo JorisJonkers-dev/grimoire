@@ -37,6 +37,9 @@ type Write struct {
 	attack    *domain.PendingAttack
 	board     *domain.MapState
 	frames    []*state
+	prompt    *domain.ReactionPrompt
+	resume    *domain.Resume
+	answered  *domain.ReactionPrompt
 	total     int
 	resource  combat.Resource
 }
@@ -49,6 +52,8 @@ type Store interface {
 	// Observations is how much damage each creature has seen each other creature deal from range.
 	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
+	// ReactionTimeout is how many seconds the Campaign's Reaction Prompts wait.
+	ReactionTimeout(ctx context.Context, campaign uuid.UUID) (int, error)
 	// LastDamage is the Session's latest damage not undone yet; its Undoes names that damage's Action.
 	LastDamage(ctx context.Context, id domain.SessionID) (HPChange, bool, error)
 	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error)
@@ -93,6 +98,7 @@ type request struct {
 
 type runtime struct {
 	store   Store
+	armed   uuid.UUID
 	members Members
 	stats   Statblocks
 	now     func() time.Time
@@ -161,7 +167,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -242,6 +248,7 @@ func (r *runtime) run() {
 	defer close(r.done)
 	defer r.release()
 	r.catchUp()
+	r.arm()
 	for {
 		select {
 		case sub := <-r.join:
@@ -295,6 +302,9 @@ func (r *runtime) reject(req request, reason string) {
 
 func (r *runtime) handle(req request) {
 	switch {
+	case req.from == nil && req.cmd.Kind == cmdPromptTimeout:
+		r.timedOut(req.cmd.promptID)
+		return
 	case req.from == nil:
 		r.rolled(req)
 		return
@@ -322,7 +332,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact:
 		return true
 	}
 	return false
@@ -352,6 +362,8 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 		}
 		r.send(sub, u)
 	}
+	r.arm()
+	r.follow(w, actor, c)
 }
 
 // viewUpdate projects a change for one audience, with a view per step when a token walked.
@@ -381,6 +393,9 @@ func apply(s *state, w *Write) {
 	case domain.ActionTacticsSet:
 		s.tokens[w.Token.ID] = w.Token
 		return
+	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined:
+		applyReaction(s, w)
+		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)
 		dropCombatant(s, w)
@@ -401,9 +416,9 @@ func walk(s *state, w *Write) {
 		for i, x := range s.combat.Combatants {
 			if x.TokenID == w.Token.ID {
 				s.combat.Combatants[i].Economy, _ = x.Economy.Move(w.CostFt)
-				w.Combat = s.combat
 			}
 		}
+		s.combat.Prompt, s.combat.Resume, w.Combat = w.prompt, w.resume, s.combat
 	}
 	for _, c := range w.Path[1:] {
 		w.Token.Q, w.Token.R = c.Q, c.R

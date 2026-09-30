@@ -76,6 +76,7 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	pb := sheet.Derived.ProficiencyBonus
 	stats := domain.Stats{
 		Source: "character:" + id.String(), AC: sheet.Derived.ArmorClass, HP: sheet.HPCurrent, HPMax: sheet.HPMax,
+		Shield:  sheet.Class == "wizard" || sheet.Class == "sorcerer",
 		Attacks: []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning"}},
 	}
 	for _, w := range sheet.Weapons {

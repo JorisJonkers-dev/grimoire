@@ -158,6 +158,24 @@ func TestUpdateChangesSettings(t *testing.T) {
 	if _, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{Name: &blank}); !errors.Is(err, domain.ErrInvalid) {
 		t.Fatalf("blank name: %v", err)
 	}
+	if got.ReactionTimeoutS != 10 {
+		t.Fatalf("reactions wait 10 seconds by default: %d", got.ReactionTimeoutS)
+	}
+	quick, slow, never := 3, 120, 2
+	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{ReactionTimeoutS: &quick}); err != nil || got.ReactionTimeoutS != 3 {
+		t.Fatalf("quick reactions = %+v %v", got, err)
+	}
+	if got, err := s.Get(ctx, dmCaller, d.ID); err != nil || got.ReactionTimeoutS != 3 {
+		t.Fatalf("read back = %+v %v", got, err)
+	}
+	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{ReactionTimeoutS: &slow}); err != nil || got.ReactionTimeoutS != 120 {
+		t.Fatalf("slow reactions = %+v %v", got, err)
+	}
+	for _, n := range []int{never, 121} {
+		if _, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{ReactionTimeoutS: &n}); err == nil {
+			t.Fatalf("%d seconds accepted", n)
+		}
+	}
 }
 
 func TestRolesKeepAtLeastOneDM(t *testing.T) {

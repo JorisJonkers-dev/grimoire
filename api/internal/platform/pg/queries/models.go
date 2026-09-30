@@ -12,12 +12,13 @@ import (
 )
 
 type CampaignCampaign struct {
-	ID          uuid.UUID
-	Name        string
-	RulesetPref string
-	CreatedBy   string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID               uuid.UUID
+	Name             string
+	RulesetPref      string
+	CreatedBy        string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	ReactionTimeoutS int32
 }
 
 type CampaignCharacter struct {
@@ -500,16 +501,27 @@ type PlayAttack struct {
 	Critical        bool
 	RollID          uuid.UUID
 	Ranged          bool
+	Total           pgtype.Int4
+	Opportunity     bool
 }
 
 type PlayCombat struct {
-	ID        uuid.UUID
-	SessionID uuid.UUID
-	Status    string
-	Round     int32
-	TurnCount pgtype.Int4
-	StartedAt time.Time
-	EndedAt   pgtype.Timestamptz
+	ID            uuid.UUID
+	SessionID     uuid.UUID
+	Status        string
+	Round         int32
+	TurnCount     pgtype.Int4
+	StartedAt     time.Time
+	EndedAt       pgtype.Timestamptz
+	ResumeTokenID pgtype.UUID
+	ResumeCostFt  pgtype.Int4
+}
+
+type PlayCombatResumePath struct {
+	CombatID uuid.UUID
+	Ordering int32
+	Q        int32
+	R        int32
 }
 
 type PlayCombatant struct {
@@ -525,12 +537,24 @@ type PlayCombatant struct {
 	HasBonusAction  bool
 	HasReaction     bool
 	MovementFt      int32
+	Shielded        bool
 }
 
 type PlayObservedDamage struct {
 	ObserverTokenID uuid.UUID
 	AttackerTokenID uuid.UUID
 	RangedDamage    int32
+}
+
+type PlayReactionPrompt struct {
+	ID             uuid.UUID
+	CombatID       uuid.UUID
+	Kind           string
+	ReactorTokenID uuid.UUID
+	TriggerTokenID uuid.UUID
+	AttackNo       int32
+	Effect         string
+	Deadline       time.Time
 }
 
 type PlayRollDice struct {
@@ -598,6 +622,7 @@ type PlayToken struct {
 	HpMax              pgtype.Int4
 	Intelligence       pgtype.Int4
 	Tactics            string
+	CanShield          bool
 }
 
 type PlayTokenAttack struct {

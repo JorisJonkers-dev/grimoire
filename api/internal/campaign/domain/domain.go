@@ -55,6 +55,8 @@ type Campaign struct {
 	Name      string
 	Ruleset   string
 	CreatedAt time.Time
+	// ReactionTimeoutS is how long a Reaction Prompt waits before it declines.
+	ReactionTimeoutS int
 }
 
 // Member is an account's participation in a Campaign.

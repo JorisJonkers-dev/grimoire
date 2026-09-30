@@ -461,6 +461,76 @@ describe('attacks', () => {
   })
 })
 
+describe('reactions', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id, shield: true }
+  const fighter = (t: LiveToken) => ({
+    id: `${t.id.slice(0, -3)}1${t.id.slice(-2)}`, tokenId: t.id, label: t.label, kind: t.kind, controllerId: t.controllerId,
+    rollId: `${t.id.slice(0, -3)}2${t.id.slice(-2)}`, initiative: 10, rank: 1, acting: false, done: false, action: true, bonusAction: true,
+    reaction: true, movementFt: 30, speedFt: 30,
+  })
+  const prompt = (extra: Record<string, unknown> = {}) => ({
+    id: '0190c7a8-0000-7000-8000-000000000051', kind: 'shield', reactorId: aria.id, triggerId: goblin.id,
+    effect: 'Shield: AC 16 → 21, so the attack (19) would miss.', secondsLeft: 3, ...extra,
+  })
+  const withPrompt = (p: unknown, stage = 'reaction') => ({
+    combat: {
+      status: 'active', round: 1, combatants: [fighter(aria), fighter(goblin)], prompt: p,
+      attack: { attackerId: goblin.id, targetId: aria.id, name: 'Scimitar', stage, rollId: '0190c7a8-0000-7000-8000-000000000052', critical: false },
+    },
+  })
+
+  it('asks the reactor to answer before the countdown runs out', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria, goblin], 'party', withPrompt(prompt())))
+    await flushPromises()
+    const card = wrapper.get('[data-testid="reaction-prompt"]')
+    expect(card.get('h2').text()).toBe('Shield: Aria')
+    expect(card.get('[data-testid="reaction-effect"]').text()).toContain('would miss')
+    expect(wrapper.get('[data-testid="pending-attack"]').text()).toBe('Scimitar: waiting for a reaction.')
+    expect(card.get('[data-testid="countdown"]').text()).toBe('3 s')
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(wrapper.get('[data-testid="countdown"]').text()).toBe('2 s')
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(wrapper.get('[data-testid="countdown"]').text()).toBe('0 s')
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="use-reaction"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'react', use: true })
+    await wrapper.get('[data-testid="decline-reaction"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'react', use: false })
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, goblin], fog: false, visible: [], remembered: [], ...withPrompt(prompt({ id: '0190c7a8-0000-7000-8000-000000000053', kind: 'opportunity_attack', reactorId: goblin.id, secondsLeft: 9 })) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="reaction-prompt"] h2').text()).toBe('Opportunity attack: Goblin Boss')
+    expect(wrapper.get('[data-testid="countdown"]').text()).toBe('9 s')
+    expect(wrapper.find('[data-testid="use-reaction"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="reaction-prompt"]').text()).toContain("Waiting for Goblin Boss's reaction.")
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [aria], fog: false, visible: [], remembered: [], ...withPrompt(prompt({ reactorId: goblin.id }), 'to_hit') } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="reaction-prompt"] h2').text()).toBe('Shield: A creature')
+    s.receive({ kind: 'view', seq: 4, view: { tokens: [aria, goblin], fog: false, visible: [], remembered: [] } })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="reaction-prompt"]').exists()).toBe(false)
+    vi.useRealTimers()
+  })
+
+  it('lets the DM answer any prompt and place a token that knows Shield', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria, goblin], 'dm', withPrompt(prompt())))
+    await flushPromises()
+    await wrapper.get('[data-testid="use-reaction"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'react', use: true })
+    await wrapper.get('[data-testid="token-label"]').setValue('Mage')
+    await wrapper.get('[data-testid="token-shield"]').setValue(true)
+    await wrapper.get('[data-hex="-1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_token', label: 'Mage', shield: true })
+  })
+})
+
 describe('map geometry', () => {
   it('lists the hexes whose centres fall inside the picture', () => {
     const l = layoutOf(localMap)

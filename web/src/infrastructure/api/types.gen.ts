@@ -36,6 +36,7 @@ export type CampaignSummary = {
     myRole: Role;
     memberCount: number;
     createdAt: string;
+    reactionTimeoutS?: ReactionTimeout;
 };
 
 /**
@@ -67,6 +68,7 @@ export type Campaign = {
     myRole: Role;
     memberCount: number;
     createdAt: string;
+    reactionTimeoutS?: ReactionTimeout;
     me: Member;
     members: Array<Member>;
 };
@@ -86,7 +88,13 @@ export type CampaignCreate = {
 export type CampaignUpdate = {
     name?: CampaignName;
     ruleset?: Ruleset;
+    reactionTimeoutS?: ReactionTimeout;
 };
+
+/**
+ * Seconds a Reaction Prompt waits before it counts as declined.
+ */
+export type ReactionTimeout = number;
 
 /**
  * A reference to a Campaign.
@@ -692,6 +700,7 @@ export type LiveToken = {
      */
     health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
     attacks?: Array<LiveAttack>;
+    shield?: boolean;
 };
 
 /**
@@ -731,7 +740,7 @@ export type LivePendingAttack = {
     attackerId: Id;
     targetId: Id;
     name: string;
-    stage: 'to_hit' | 'damage';
+    stage: 'to_hit' | 'reaction' | 'damage';
     rollId: Id;
     critical: boolean;
 };
@@ -751,7 +760,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -775,6 +784,14 @@ export type LiveCommand = {
     targetId?: Id;
     attackNo?: number;
     tactics?: Tactics;
+    /**
+     * With react, whether the reaction is used or declined.
+     */
+    use?: boolean;
+    /**
+     * With place_token, the token can cast Shield.
+     */
+    shield?: boolean;
 };
 
 /**
@@ -808,6 +825,19 @@ export type LiveCombat = {
     round: number;
     combatants: Array<LiveCombatant>;
     attack?: LivePendingAttack;
+    prompt?: LivePrompt;
+};
+
+/**
+ * A Reaction Prompt the fight waits on. The reactor's Controller, or the DM, answers; no answer by the countdown declines.
+ */
+export type LivePrompt = {
+    id: Id;
+    kind: 'opportunity_attack' | 'shield';
+    reactorId: Id;
+    triggerId: Id;
+    effect: string;
+    secondsLeft: number;
 };
 
 /**

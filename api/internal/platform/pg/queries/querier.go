@@ -28,6 +28,7 @@ type Querier interface {
 	AddMonsterRelation(ctx context.Context, arg AddMonsterRelationParams) error
 	AddMonsterStat(ctx context.Context, arg AddMonsterStatParams) error
 	AddMonsterTrait(ctx context.Context, arg AddMonsterTraitParams) error
+	AddResumeHex(ctx context.Context, arg AddResumeHexParams) error
 	AddReveal(ctx context.Context, arg AddRevealParams) error
 	AddSpeciesTrait(ctx context.Context, arg AddSpeciesTraitParams) error
 	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
@@ -42,6 +43,7 @@ type Querier interface {
 	BuilderSpecies(ctx context.Context, key string) ([]BuilderSpeciesRow, error)
 	BuilderWeapons(ctx context.Context, key string) ([]BuilderWeaponsRow, error)
 	BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, error)
+	CampaignReactionTimeout(ctx context.Context, id uuid.UUID) (int32, error)
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
@@ -54,11 +56,14 @@ type Querier interface {
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
 	ClearMonsterChildren(ctx context.Context, monsterID int64) error
+	ClearPrompts(ctx context.Context, combatID uuid.UUID) error
+	ClearResumePath(ctx context.Context, combatID uuid.UUID) error
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
 	ClearWeaponProperties(ctx context.Context, weaponID int64) error
 	CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAttack, error)
 	CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]PlayCombatant, error)
+	CombatPrompt(ctx context.Context, combatID uuid.UUID) (CombatPromptRow, error)
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
@@ -150,6 +155,7 @@ type Querier interface {
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
 	RemoveWall(ctx context.Context, arg RemoveWallParams) error
 	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
+	ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error)
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
 	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
@@ -159,6 +165,7 @@ type Querier interface {
 	SaveAttack(ctx context.Context, arg SaveAttackParams) error
 	SaveCombat(ctx context.Context, arg SaveCombatParams) error
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
+	SavePrompt(ctx context.Context, arg SavePromptParams) error
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)

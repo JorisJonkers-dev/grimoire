@@ -106,6 +106,9 @@ func (s *state) shape(p aim) (aim, string) {
 	if p.cover = sight.Cover.ACBonus(); p.cover > 0 {
 		p.reasons = append(p.reasons, fmt.Sprintf("Cover: +%d to the target's AC", p.cover))
 	}
+	if s.armor(p.target) > p.target.Stats.AC {
+		p.reasons = append(p.reasons, "Shield: +5 to the target's AC")
+	}
 	disadvantages := 0
 	if band == attack.LongRange {
 		disadvantages++
@@ -146,7 +149,7 @@ func (r *runtime) previewAttack(req request) {
 	_, critMost := attack.DamageRange(attack.CriticalDice(spec), p.with.DamageBonus)
 	r.send(req.from, Update{Kind: UpdAttackPreview, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Preview: &AttackPreview{
 		TokenID: req.cmd.TokenID, TargetID: req.cmd.TargetID, AttackNo: p.no, Name: p.with.Name,
-		HitChance: attack.HitChance(p.with.ToHit, p.target.Stats.AC+p.cover, p.mode), Mode: p.mode.String(),
+		HitChance: attack.HitChance(p.with.ToHit, r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
 		DamageMin: least, DamageMax: most, CritMax: critMost, Reasons: p.reasons,
 	}})
 }
@@ -195,37 +198,41 @@ func (r *runtime) request(dm domain.Member, t domain.Token, purpose, notation st
 // attackRolled moves the attack on once its roll resolves: a miss ends it, a hit opens the damage
 // roll (every die doubled on a critical), and the damage roll takes hit points off the target.
 func (r *runtime) attackRolled(roll domain.Roll) {
-	p := r.st.combat.Attack
+	p := *r.st.combat.Attack
 	a, t := r.st.tokens[p.Attacker], r.st.tokens[p.Target]
-	with := a.Stats.Attacks[p.AttackNo]
-	sys := caller.Caller{Subject: roll.Roller.Subject, Origin: caller.OriginSystem}
-	next := *p
-	w := Write{Token: a, attack: &next}
+	sys := caller.Caller{Subject: roll.Roller.Subject, Origin: caller.OriginSystem, Client: ""}
 	if p.Stage == domain.StageDamage {
-		r.commit(request{}, r.hurt(t, roll.Total, w), roll.Roller, sys)
+		r.commit(request{}, r.hurt(t, roll.Total, Write{Token: a, attack: &p}), roll.Roller, sys)
 		return
 	}
-	result := attack.Outcome(natural(roll), with.ToHit, t.Stats.AC+p.CoverBonus)
-	spec, _ := dice.Parse(with.Damage)
-	switch {
-	case result == attack.Miss:
-		w.Kind, w.attack = domain.ActionAttackMissed, nil
-	case len(spec.Groups) == 0:
-		w = r.hurt(t, with.DamageBonus, w)
-	default:
-		if result == attack.Critical {
-			spec, next.Critical = attack.CriticalDice(spec), true
-		}
-		purpose := with.Name + " damage to " + t.Label
-		if next.Critical {
-			purpose += " (critical)"
-		}
-		dmg := r.request(roll.Roller, a, purpose, spec.String(), domain.Modifier{Label: with.Name, Value: with.DamageBonus})
-		dmg.Roller, dmg.RequestedBy = roll.Roller, roll.RequestedBy
-		next.Stage, next.RollID = domain.StageDamage, dmg.ID
-		w.Kind, w.Rolls = domain.ActionAttackHit, []domain.Roll{dmg}
+	result := attack.Outcome(natural(roll), a.Stats.Attacks[p.AttackNo].ToHit, r.st.armor(t)+p.CoverBonus)
+	if result == attack.Miss {
+		r.commit(request{}, Write{Kind: domain.ActionAttackMissed, Token: a}, roll.Roller, sys)
+		return
 	}
-	r.commit(request{}, w, roll.Roller, sys)
+	if pr := r.shieldPrompt(a, t, p, roll.Total); pr != nil && result == attack.Hit {
+		p.Stage, p.Total = domain.StageReaction, roll.Total
+		r.commit(request{}, Write{Kind: domain.ActionReactionOffered, Token: t, attack: &p, prompt: pr}, roll.Roller, sys)
+		return
+	}
+	r.commit(request{}, r.hit(a, t, p, result == attack.Critical, roll), roll.Roller, sys)
+}
+
+// hit opens the damage roll of an attack that hit, every die doubled on a critical; flat damage lands at once.
+func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, roll domain.Roll) Write {
+	with := a.Stats.Attacks[p.AttackNo]
+	spec, _ := dice.Parse(with.Damage)
+	if len(spec.Groups) == 0 {
+		return r.hurt(t, with.DamageBonus, Write{Token: a, attack: &p})
+	}
+	purpose := with.Name + " damage to " + t.Label
+	if critical {
+		spec, purpose = attack.CriticalDice(spec), purpose+" (critical)"
+	}
+	dmg := r.request(roll.Roller, a, purpose, spec.String(), domain.Modifier{Label: with.Name, Value: with.DamageBonus})
+	dmg.Roller, dmg.RequestedBy = roll.Roller, roll.RequestedBy
+	p.Stage, p.RollID, p.Critical = domain.StageDamage, dmg.ID, critical
+	return Write{Kind: domain.ActionAttackHit, Token: a, attack: &p, Rolls: []domain.Roll{dmg}}
 }
 
 // hurt takes damage off a target's hit points and ends the attack. Creatures that see a ranged attacker
