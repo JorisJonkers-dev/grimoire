@@ -15,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 )
 
@@ -73,7 +74,7 @@ func checkSessionRefusals(t *testing.T, s *app.Sessions, tb table, one, two doma
 	_, missing["stranger get"] = s.Get(ctx, stranger, tb.campaign, one)
 	_, missing["stranger list"] = s.List(ctx, stranger, tb.campaign)
 	_, missing["unknown"] = s.Get(ctx, dm, tb.campaign, domain.SessionID(uuid.New()))
-	_, _, missing["load"] = pgstore.New(tb.pool).Load(ctx, domain.SessionID(uuid.New()))
+	_, _, _, missing["load"] = pgstore.New(tb.pool).Load(ctx, domain.SessionID(uuid.New()))
 	for name, err := range missing {
 		if !errors.Is(err, apperr.ErrNotFound) {
 			t.Errorf("%s: %v", name, err)
@@ -88,9 +89,51 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 	base := sessions(tb, pgstore.New(tb.pool), &closed{})
 	live1, _ := base.Start(ctx, dm, tb.campaign)
 	store := pgstore.New(tb.pool)
-	seq, tok, err := store.Apply(ctx, live1, live.Change{Kind: domain.ActionTokenPlaced, Token: domain.Token{Label: "A", Kind: domain.TokenEnemy}}, tb.dmMember(t), dm, time.Now())
+	tok := domain.Token{ID: domain.TokenID(uuid.New()), Label: "A", Kind: domain.TokenEnemy}
+	seq, err := store.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionTokenPlaced, Token: tok}, tb.dmMember(t), dm, time.Now())
 	if err != nil || seq != 1 {
-		t.Fatalf("apply = %d %v", seq, err)
+		t.Fatalf("commit = %d %v", seq, err)
+	}
+	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Crypt", ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	board, err := store.LoadMap(ctx, tb.campaign, m.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mid := m.ID
+	if _, err := store.Commit(ctx, live1, board, live.Write{Kind: domain.ActionMapSet, MapID: &mid}, tb.dmMember(t), dm, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	light := domain.MapLight{ID: domain.LightID(uuid.New()), At: hex.Coord{Q: 1, R: 0}, BrightFt: 5, DimFt: 10}
+	writes := []live.Write{
+		{Kind: domain.ActionHexesRevealed, Hexes: []hex.Coord{{Q: 0, R: 0}}, AutoReveal: []hex.Coord{{Q: 1, R: 0}}},
+		{Kind: domain.ActionHexesConcealed, Hexes: []hex.Coord{{Q: 0, R: 0}}},
+		{Kind: domain.ActionWallsSet, Hexes: []hex.Coord{{Q: 2, R: 0}}},
+		{Kind: domain.ActionWallsCleared, Hexes: []hex.Coord{{Q: 2, R: 0}}},
+		{Kind: domain.ActionLightPlaced, Light: light},
+		{Kind: domain.ActionLightRemoved, Light: light},
+		{Kind: domain.ActionAmbientSet, Ambient: domain.AmbientDark},
+		{Kind: domain.ActionLightPlaced, Light: domain.MapLight{ID: domain.LightID(uuid.New()), At: hex.Coord{Q: 3, R: 0}, DimFt: 10}},
+		{Kind: domain.ActionWallsSet, Hexes: []hex.Coord{{Q: 4, R: 0}}},
+		{Kind: domain.ActionMapSet},
+	}
+	for _, w := range writes {
+		if _, err := store.Commit(ctx, live1, board, w, tb.dmMember(t), dm, time.Now()); err != nil {
+			t.Fatalf("%s: %v", w.Kind, err)
+		}
+	}
+	reloaded, _ := store.LoadMap(ctx, tb.campaign, m.ID)
+	if !reloaded.Reveals[hex.Coord{Q: 1, R: 0}] || reloaded.Reveals[hex.Coord{Q: 0, R: 0}] || len(reloaded.Lights) != 1 ||
+		!reloaded.Walls[hex.Coord{Q: 4, R: 0}] || reloaded.Walls[hex.Coord{Q: 2, R: 0}] || reloaded.Map.Ambient != domain.AmbientDark {
+		t.Fatalf("map state = %+v", reloaded)
+	}
+	if _, err := store.Commit(ctx, live1, board, live.Write{Kind: domain.ActionMapSet, MapID: &mid}, tb.dmMember(t), dm, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if sess, _, loaded, err := store.Load(ctx, live1.ID); err != nil || loaded == nil || *sess.MapID != mid {
+		t.Fatalf("load with map = %+v %v", loaded, err)
 	}
 	gone, err := pgxpool.New(ctx, tb.pool.Config().ConnString())
 	if err != nil {
@@ -111,9 +154,25 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 			_, err = s.End(ctx, dm, tb.campaign, fresh.ID)
 			return err
 		},
-		"load": func(_ *app.Sessions, repo *pgstore.Store) error { _, _, err := repo.Load(ctx, live1.ID); return err },
-		"apply": func(_ *app.Sessions, repo *pgstore.Store) error {
-			_, _, err := repo.Apply(ctx, live1, live.Change{Kind: domain.ActionTokenMoved, Token: tok}, tb.dmMember(t), dm, time.Now())
+		"load": func(_ *app.Sessions, repo *pgstore.Store) error { _, _, _, err := repo.Load(ctx, live1.ID); return err },
+		"commit": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.Commit(ctx, live1, board, live.Write{Kind: domain.ActionHexesRevealed, Hexes: []hex.Coord{{Q: 0, R: 1}}, AutoReveal: []hex.Coord{{Q: 1, R: 1}}}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"conceal": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.Commit(ctx, live1, board, live.Write{Kind: domain.ActionHexesConcealed, Hexes: []hex.Coord{{Q: 0, R: 1}}}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"walls": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.Commit(ctx, live1, board, live.Write{Kind: domain.ActionWallsSet, Hexes: []hex.Coord{{Q: 0, R: 1}}}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"token": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.Commit(ctx, live1, nil, live.Write{Kind: domain.ActionTokenMoved, Token: tok}, tb.dmMember(t), dm, time.Now())
+			return err
+		},
+		"loadmap": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.LoadMap(ctx, tb.campaign, m.ID)
 			return err
 		},
 	}

@@ -27,10 +27,12 @@ type Querier interface {
 	AddMonsterRelation(ctx context.Context, arg AddMonsterRelationParams) error
 	AddMonsterStat(ctx context.Context, arg AddMonsterStatParams) error
 	AddMonsterTrait(ctx context.Context, arg AddMonsterTraitParams) error
+	AddReveal(ctx context.Context, arg AddRevealParams) error
 	AddSpeciesTrait(ctx context.Context, arg AddSpeciesTraitParams) error
 	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
 	AddSpellDamageType(ctx context.Context, arg AddSpellDamageTypeParams) error
 	AddSpellScaling(ctx context.Context, arg AddSpellScalingParams) error
+	AddWall(ctx context.Context, arg AddWallParams) error
 	AddWeaponProperty(ctx context.Context, arg AddWeaponPropertyParams) error
 	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
 	BuilderArmor(ctx context.Context, key string) ([]BuilderArmorRow, error)
@@ -59,6 +61,7 @@ type Querier interface {
 	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
 	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
+	DeleteLight(ctx context.Context, arg DeleteLightParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
@@ -75,6 +78,7 @@ type Querier interface {
 	GetFeatDetail(ctx context.Context, id int64) (GetFeatDetailRow, error)
 	GetInstanceCreatedAt(ctx context.Context) (time.Time, error)
 	GetItemDetail(ctx context.Context, id int64) (GetItemDetailRow, error)
+	GetMap(ctx context.Context, arg GetMapParams) (CampaignMap, error)
 	GetMember(ctx context.Context, arg GetMemberParams) (CampaignMember, error)
 	GetMembership(ctx context.Context, arg GetMembershipParams) (CampaignMember, error)
 	GetMonsterDetail(ctx context.Context, id int64) (GetMonsterDetailRow, error)
@@ -87,6 +91,9 @@ type Querier interface {
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
+	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
+	InsertLight(ctx context.Context, arg InsertLightParams) error
+	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
@@ -97,13 +104,14 @@ type Querier interface {
 	InsertRollModifier(ctx context.Context, arg InsertRollModifierParams) error
 	InsertSession(ctx context.Context, arg InsertSessionParams) (PlaySession, error)
 	InsertSessionAction(ctx context.Context, arg InsertSessionActionParams) (uuid.UUID, error)
-	InsertToken(ctx context.Context, arg InsertTokenParams) (uuid.UUID, error)
+	InsertToken(ctx context.Context, arg InsertTokenParams) error
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
+	ListMaps(ctx context.Context, campaignID uuid.UUID) ([]CampaignMap, error)
 	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
 	ListNPCs(ctx context.Context, campaignID uuid.UUID) ([]ListNPCsRow, error)
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
@@ -116,6 +124,9 @@ type Querier interface {
 	LockEntity(ctx context.Context, lockKey string) error
 	LockRoll(ctx context.Context, arg LockRollParams) (string, error)
 	LockSessionOwner(ctx context.Context, lockKey string) (bool, error)
+	MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRow, error)
+	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
+	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
 	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
@@ -125,6 +136,8 @@ type Querier interface {
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
+	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
+	RemoveWall(ctx context.Context, arg RemoveWallParams) error
 	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
@@ -136,8 +149,10 @@ type Querier interface {
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
+	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
+	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
@@ -145,6 +160,7 @@ type Querier interface {
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error
+	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)
 	UpdateNPC(ctx context.Context, arg UpdateNPCParams) (int64, error)
 	UpdateToken(ctx context.Context, arg UpdateTokenParams) error
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error

@@ -21,25 +21,41 @@ type contract struct {
 
 // samples covers every command and update kind; the web client parses each with its generated schemas.
 func samples() contract {
-	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false}
+	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0}
+	id := "0190c7a8-0000-7000-8000-00000000000c"
+	view := &live.View{
+		Tokens: []live.TokenView{token}, Fog: true, Visible: []live.Hex{{Q: 0, R: 0}}, Remembered: []live.Hex{{Q: 1, R: 0}},
+		Map: &live.MapView{
+			ID: id, Name: "Crypt", ImageURL: "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/" + id + "/image?v=2",
+			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2,
+		},
+	}
+	dmView := *view
+	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
+	dmView.Lights = []live.LightView{{ID: "0190c7a8-0000-7000-8000-00000000000e", Q: 4, R: 0, BrightFt: 20, DimFt: 40}}
 	return contract{
 		Commands: []live.Command{
 			{Nonce: "n1", Kind: live.CmdResync},
-			{Nonce: "n2", Kind: live.CmdPlace, Label: "Goblin", TokenKind: "enemy", Q: 2, R: -1, Hidden: true},
+			{Nonce: "n2", Kind: live.CmdPlace, Label: "Goblin", TokenKind: "enemy", Q: 2, R: -1, Hidden: true, DarkvisionFt: 60},
 			{Nonce: "n3", Kind: live.CmdMove, TokenID: token.ID, Q: 3, R: -1},
 			{Nonce: "n4", Kind: live.CmdSetHidden, TokenID: token.ID, Hidden: false},
 			{Nonce: "n5", Kind: live.CmdRemove, TokenID: token.ID},
+			{Nonce: "n6", Kind: live.CmdSetMap, MapID: id},
+			{Nonce: "n7", Kind: live.CmdRevealHexes, Hexes: []live.Hex{{Q: 1, R: 1}}, On: true},
+			{Nonce: "n8", Kind: live.CmdSetWalls, Hexes: []live.Hex{{Q: 2, R: 0}}, On: true},
+			{Nonce: "n9", Kind: live.CmdPlaceLight, Q: 4, R: 0, BrightFt: 20, DimFt: 40},
+			{Nonce: "n10", Kind: live.CmdRemoveLight, LightID: "0190c7a8-0000-7000-8000-00000000000e"},
+			{Nonce: "n11", Kind: live.CmdSetAmbient, Ambient: "dark"},
 		},
 		Updates: []live.Update{
 			{
-				Kind: live.UpdSnapshot, Seq: 4, Tokens: []live.TokenView{token},
+				Kind: live.UpdSnapshot, Seq: 4, View: view,
 				Session: &live.SessionView{ID: "0190c7a8-0000-7000-8000-00000000000b", Number: 3, GridRadius: 10, Audience: live.AudienceParty},
 			},
-			{Kind: live.UpdToken, Seq: 5, Nonce: "n3", Token: &token},
-			{Kind: live.UpdTokenRemoved, Seq: 6, TokenID: token.ID},
-			{Kind: live.UpdTick, Seq: 7},
-			{Kind: live.UpdRejected, Seq: 7, Nonce: "n9", Reason: "Only the DM can change tokens."},
-			{Kind: live.UpdEnded, Seq: 7},
+			{Kind: live.UpdView, Seq: 5, Nonce: "n3", View: &dmView},
+			{Kind: live.UpdView, Seq: 6, View: &live.View{Tokens: []live.TokenView{}, Visible: []live.Hex{}, Remembered: []live.Hex{}}},
+			{Kind: live.UpdRejected, Seq: 6, Nonce: "n9", Reason: "Only the DM can change the table."},
+			{Kind: live.UpdEnded, Seq: 6},
 		},
 	}
 }

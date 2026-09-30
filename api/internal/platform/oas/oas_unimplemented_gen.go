@@ -176,6 +176,25 @@ func (UnimplementedHandler) GetHealth(ctx context.Context) (r GetHealthRes, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// GetMap implements getMap operation.
+//
+// One Map with its calibration. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/maps/{mapId}
+func (UnimplementedHandler) GetMap(ctx context.Context, params GetMapParams) (r GetMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetMapImage implements getMapImage operation.
+//
+// The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted
+// black on the server.
+//
+// GET /api/v1/campaigns/{campaignId}/maps/{mapId}/image
+func (UnimplementedHandler) GetMapImage(ctx context.Context, params GetMapImageParams) (r GetMapImageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetMe implements getMe operation.
 //
 // Returns the identity the platform authenticated for this request.
@@ -300,6 +319,15 @@ func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesP
 //
 // GET /api/v1/campaigns/{campaignId}/invites
 func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesParams) (r ListInvitesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListMaps implements listMaps operation.
+//
+// The Campaign's local Maps. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/maps
+func (UnimplementedHandler) ListMaps(ctx context.Context, params ListMapsParams) (r ListMapsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -487,6 +515,15 @@ func (UnimplementedHandler) UpdateCharacter(ctx context.Context, req *CharacterE
 	return r, ht.ErrNotImplemented
 }
 
+// UpdateMap implements updateMap operation.
+//
+// Renames a Map and sets its hex size, grid origin and ambient light. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/maps/{mapId}
+func (UnimplementedHandler) UpdateMap(ctx context.Context, req *MapEdit, params UpdateMapParams) (r UpdateMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UpdateMember implements updateMember operation.
 //
 // Makes a Member a DM or a Player. DM only; the last DM cannot step down.
@@ -502,6 +539,16 @@ func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate,
 //
 // PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 func (UnimplementedHandler) UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (r UpdateNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UploadMap implements uploadMap operation.
+//
+// A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/maps
+func (UnimplementedHandler) UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (r UploadMapRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

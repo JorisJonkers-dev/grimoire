@@ -535,6 +535,56 @@ func (s *ActiveEffect) SetDetail(val string) {
 	s.Detail = val
 }
 
+// The light that fills a Map everywhere.
+// Ref: #/components/schemas/AmbientLight
+type AmbientLight string
+
+const (
+	AmbientLightBright AmbientLight = "bright"
+	AmbientLightDim    AmbientLight = "dim"
+	AmbientLightDark   AmbientLight = "dark"
+)
+
+// AllValues returns all AmbientLight values.
+func (AmbientLight) AllValues() []AmbientLight {
+	return []AmbientLight{
+		AmbientLightBright,
+		AmbientLightDim,
+		AmbientLightDark,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AmbientLight) MarshalText() ([]byte, error) {
+	switch s {
+	case AmbientLightBright:
+		return []byte(s), nil
+	case AmbientLightDim:
+		return []byte(s), nil
+	case AmbientLightDark:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AmbientLight) UnmarshalText(data []byte) error {
+	switch AmbientLight(data) {
+	case AmbientLightBright:
+		*s = AmbientLightBright
+		return nil
+	case AmbientLightDim:
+		*s = AmbientLightDim
+		return nil
+	case AmbientLightDark:
+		*s = AmbientLightDark
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 type ArmorChoice string
 
 // A suit of armour or a shield.
@@ -3588,6 +3638,231 @@ func (s *GetEntryNotModified) SetETag(val OptString) {
 
 func (*GetEntryNotModified) getEntryRes() {}
 
+type GetMapImageOKImageJpeg struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetMapImageOKImageJpeg) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetMapImageOKImageJpegHeaders wraps GetMapImageOKImageJpeg with response headers.
+type GetMapImageOKImageJpegHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetMapImageOKImageJpeg
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetMapImageOKImageJpegHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetMapImageOKImageJpegHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetMapImageOKImageJpegHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetMapImageOKImageJpegHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetMapImageOKImageJpegHeaders) GetResponse() GetMapImageOKImageJpeg {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetMapImageOKImageJpegHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetMapImageOKImageJpegHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetMapImageOKImageJpegHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetMapImageOKImageJpegHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetMapImageOKImageJpegHeaders) SetResponse(val GetMapImageOKImageJpeg) {
+	s.Response = val
+}
+
+func (*GetMapImageOKImageJpegHeaders) getMapImageRes() {}
+
+type GetMapImageOKImagePNG struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetMapImageOKImagePNG) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetMapImageOKImagePNGHeaders wraps GetMapImageOKImagePNG with response headers.
+type GetMapImageOKImagePNGHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetMapImageOKImagePNG
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetMapImageOKImagePNGHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetMapImageOKImagePNGHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetMapImageOKImagePNGHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetMapImageOKImagePNGHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetMapImageOKImagePNGHeaders) GetResponse() GetMapImageOKImagePNG {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetMapImageOKImagePNGHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetMapImageOKImagePNGHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetMapImageOKImagePNGHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetMapImageOKImagePNGHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetMapImageOKImagePNGHeaders) SetResponse(val GetMapImageOKImagePNG) {
+	s.Response = val
+}
+
+func (*GetMapImageOKImagePNGHeaders) getMapImageRes() {}
+
+type GetMapImageOKImageWEBP struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetMapImageOKImageWEBP) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetMapImageOKImageWEBPHeaders wraps GetMapImageOKImageWEBP with response headers.
+type GetMapImageOKImageWEBPHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetMapImageOKImageWEBP
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetMapImageOKImageWEBPHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetMapImageOKImageWEBPHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetMapImageOKImageWEBPHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetMapImageOKImageWEBPHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetMapImageOKImageWEBPHeaders) GetResponse() GetMapImageOKImageWEBP {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetMapImageOKImageWEBPHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetMapImageOKImageWEBPHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetMapImageOKImageWEBPHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetMapImageOKImageWEBPHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetMapImageOKImageWEBPHeaders) SetResponse(val GetMapImageOKImageWEBP) {
+	s.Response = val
+}
+
+func (*GetMapImageOKImageWEBPHeaders) getMapImageRes() {}
+
 type GetPortraitOKImageJpeg struct {
 	Data io.Reader
 }
@@ -4627,6 +4902,56 @@ func (s *ListInvitesOKHeaders) SetResponse(val []Invite) {
 
 func (*ListInvitesOKHeaders) listInvitesRes() {}
 
+// ListMapsOKHeaders wraps []LocalMap with response headers.
+type ListMapsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LocalMap
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListMapsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListMapsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListMapsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListMapsOKHeaders) GetResponse() []LocalMap {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListMapsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListMapsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListMapsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListMapsOKHeaders) SetResponse(val []LocalMap) {
+	s.Response = val
+}
+
+func (*ListMapsOKHeaders) listMapsRes() {}
+
 // ListNpcRevisionsOKHeaders wraps []Revision with response headers.
 type ListNpcRevisionsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -4897,14 +5222,22 @@ func (*ListSpellsNotModified) listSpellsRes() {}
 // A WebSocket frame from a client to a live Session.
 // Ref: #/components/schemas/LiveCommand
 type LiveCommand struct {
-	Nonce     string          `json:"nonce"`
-	Kind      LiveCommandKind `json:"kind"`
-	TokenId   OptID           `json:"tokenId"`
-	Label     OptString       `json:"label"`
-	TokenKind OptTokenKind    `json:"tokenKind"`
-	Q         int32           `json:"q"`
-	R         int32           `json:"r"`
-	Hidden    bool            `json:"hidden"`
+	Nonce        string          `json:"nonce"`
+	Kind         LiveCommandKind `json:"kind"`
+	TokenId      OptID           `json:"tokenId"`
+	Label        OptString       `json:"label"`
+	TokenKind    OptTokenKind    `json:"tokenKind"`
+	Q            int32           `json:"q"`
+	R            int32           `json:"r"`
+	Hidden       bool            `json:"hidden"`
+	DarkvisionFt OptInt32        `json:"darkvisionFt"`
+	MapId        OptID           `json:"mapId"`
+	Hexes        []HexCoord      `json:"hexes"`
+	On           OptBool         `json:"on"`
+	LightId      OptID           `json:"lightId"`
+	BrightFt     OptInt32        `json:"brightFt"`
+	DimFt        OptInt32        `json:"dimFt"`
+	Ambient      OptAmbientLight `json:"ambient"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -4947,6 +5280,46 @@ func (s *LiveCommand) GetHidden() bool {
 	return s.Hidden
 }
 
+// GetDarkvisionFt returns the value of DarkvisionFt.
+func (s *LiveCommand) GetDarkvisionFt() OptInt32 {
+	return s.DarkvisionFt
+}
+
+// GetMapId returns the value of MapId.
+func (s *LiveCommand) GetMapId() OptID {
+	return s.MapId
+}
+
+// GetHexes returns the value of Hexes.
+func (s *LiveCommand) GetHexes() []HexCoord {
+	return s.Hexes
+}
+
+// GetOn returns the value of On.
+func (s *LiveCommand) GetOn() OptBool {
+	return s.On
+}
+
+// GetLightId returns the value of LightId.
+func (s *LiveCommand) GetLightId() OptID {
+	return s.LightId
+}
+
+// GetBrightFt returns the value of BrightFt.
+func (s *LiveCommand) GetBrightFt() OptInt32 {
+	return s.BrightFt
+}
+
+// GetDimFt returns the value of DimFt.
+func (s *LiveCommand) GetDimFt() OptInt32 {
+	return s.DimFt
+}
+
+// GetAmbient returns the value of Ambient.
+func (s *LiveCommand) GetAmbient() OptAmbientLight {
+	return s.Ambient
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -4987,6 +5360,46 @@ func (s *LiveCommand) SetHidden(val bool) {
 	s.Hidden = val
 }
 
+// SetDarkvisionFt sets the value of DarkvisionFt.
+func (s *LiveCommand) SetDarkvisionFt(val OptInt32) {
+	s.DarkvisionFt = val
+}
+
+// SetMapId sets the value of MapId.
+func (s *LiveCommand) SetMapId(val OptID) {
+	s.MapId = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LiveCommand) SetHexes(val []HexCoord) {
+	s.Hexes = val
+}
+
+// SetOn sets the value of On.
+func (s *LiveCommand) SetOn(val OptBool) {
+	s.On = val
+}
+
+// SetLightId sets the value of LightId.
+func (s *LiveCommand) SetLightId(val OptID) {
+	s.LightId = val
+}
+
+// SetBrightFt sets the value of BrightFt.
+func (s *LiveCommand) SetBrightFt(val OptInt32) {
+	s.BrightFt = val
+}
+
+// SetDimFt sets the value of DimFt.
+func (s *LiveCommand) SetDimFt(val OptInt32) {
+	s.DimFt = val
+}
+
+// SetAmbient sets the value of Ambient.
+func (s *LiveCommand) SetAmbient(val OptAmbientLight) {
+	s.Ambient = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -4995,6 +5408,12 @@ const (
 	LiveCommandKindMoveToken      LiveCommandKind = "move_token"
 	LiveCommandKindSetTokenHidden LiveCommandKind = "set_token_hidden"
 	LiveCommandKindRemoveToken    LiveCommandKind = "remove_token"
+	LiveCommandKindSetMap         LiveCommandKind = "set_map"
+	LiveCommandKindRevealHexes    LiveCommandKind = "reveal_hexes"
+	LiveCommandKindSetWalls       LiveCommandKind = "set_walls"
+	LiveCommandKindPlaceLight     LiveCommandKind = "place_light"
+	LiveCommandKindRemoveLight    LiveCommandKind = "remove_light"
+	LiveCommandKindSetAmbient     LiveCommandKind = "set_ambient"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -5005,6 +5424,12 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindMoveToken,
 		LiveCommandKindSetTokenHidden,
 		LiveCommandKindRemoveToken,
+		LiveCommandKindSetMap,
+		LiveCommandKindRevealHexes,
+		LiveCommandKindSetWalls,
+		LiveCommandKindPlaceLight,
+		LiveCommandKindRemoveLight,
+		LiveCommandKindSetAmbient,
 	}
 }
 
@@ -5020,6 +5445,18 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindSetTokenHidden:
 		return []byte(s), nil
 	case LiveCommandKindRemoveToken:
+		return []byte(s), nil
+	case LiveCommandKindSetMap:
+		return []byte(s), nil
+	case LiveCommandKindRevealHexes:
+		return []byte(s), nil
+	case LiveCommandKindSetWalls:
+		return []byte(s), nil
+	case LiveCommandKindPlaceLight:
+		return []byte(s), nil
+	case LiveCommandKindRemoveLight:
+		return []byte(s), nil
+	case LiveCommandKindSetAmbient:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5044,6 +5481,24 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindRemoveToken:
 		*s = LiveCommandKindRemoveToken
 		return nil
+	case LiveCommandKindSetMap:
+		*s = LiveCommandKindSetMap
+		return nil
+	case LiveCommandKindRevealHexes:
+		*s = LiveCommandKindRevealHexes
+		return nil
+	case LiveCommandKindSetWalls:
+		*s = LiveCommandKindSetWalls
+		return nil
+	case LiveCommandKindPlaceLight:
+		*s = LiveCommandKindPlaceLight
+		return nil
+	case LiveCommandKindRemoveLight:
+		*s = LiveCommandKindRemoveLight
+		return nil
+	case LiveCommandKindSetAmbient:
+		*s = LiveCommandKindSetAmbient
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -5051,6 +5506,170 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 
 // LiveCommandNoContent is response for LiveCommand operation.
 type LiveCommandNoContent struct{}
+
+// A light on the Map, for the DM.
+// Ref: #/components/schemas/LiveLight
+type LiveLight struct {
+	ID       ID    `json:"id"`
+	Q        int32 `json:"q"`
+	R        int32 `json:"r"`
+	BrightFt int32 `json:"brightFt"`
+	DimFt    int32 `json:"dimFt"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveLight) GetID() ID {
+	return s.ID
+}
+
+// GetQ returns the value of Q.
+func (s *LiveLight) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveLight) GetR() int32 {
+	return s.R
+}
+
+// GetBrightFt returns the value of BrightFt.
+func (s *LiveLight) GetBrightFt() int32 {
+	return s.BrightFt
+}
+
+// GetDimFt returns the value of DimFt.
+func (s *LiveLight) GetDimFt() int32 {
+	return s.DimFt
+}
+
+// SetID sets the value of ID.
+func (s *LiveLight) SetID(val ID) {
+	s.ID = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveLight) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveLight) SetR(val int32) {
+	s.R = val
+}
+
+// SetBrightFt sets the value of BrightFt.
+func (s *LiveLight) SetBrightFt(val int32) {
+	s.BrightFt = val
+}
+
+// SetDimFt sets the value of DimFt.
+func (s *LiveLight) SetDimFt(val int32) {
+	s.DimFt = val
+}
+
+// The active Map's picture and hex calibration.
+// Ref: #/components/schemas/LiveMap
+type LiveMap struct {
+	ID           ID       `json:"id"`
+	Name         string   `json:"name"`
+	ImageUrl     AssetUrl `json:"imageUrl"`
+	Width        int32    `json:"width"`
+	Height       int32    `json:"height"`
+	HexSizePx    float64  `json:"hexSizePx"`
+	OriginX      float64  `json:"originX"`
+	OriginY      float64  `json:"originY"`
+	ImageVersion int32    `json:"imageVersion"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveMap) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LiveMap) GetName() string {
+	return s.Name
+}
+
+// GetImageUrl returns the value of ImageUrl.
+func (s *LiveMap) GetImageUrl() AssetUrl {
+	return s.ImageUrl
+}
+
+// GetWidth returns the value of Width.
+func (s *LiveMap) GetWidth() int32 {
+	return s.Width
+}
+
+// GetHeight returns the value of Height.
+func (s *LiveMap) GetHeight() int32 {
+	return s.Height
+}
+
+// GetHexSizePx returns the value of HexSizePx.
+func (s *LiveMap) GetHexSizePx() float64 {
+	return s.HexSizePx
+}
+
+// GetOriginX returns the value of OriginX.
+func (s *LiveMap) GetOriginX() float64 {
+	return s.OriginX
+}
+
+// GetOriginY returns the value of OriginY.
+func (s *LiveMap) GetOriginY() float64 {
+	return s.OriginY
+}
+
+// GetImageVersion returns the value of ImageVersion.
+func (s *LiveMap) GetImageVersion() int32 {
+	return s.ImageVersion
+}
+
+// SetID sets the value of ID.
+func (s *LiveMap) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveMap) SetName(val string) {
+	s.Name = val
+}
+
+// SetImageUrl sets the value of ImageUrl.
+func (s *LiveMap) SetImageUrl(val AssetUrl) {
+	s.ImageUrl = val
+}
+
+// SetWidth sets the value of Width.
+func (s *LiveMap) SetWidth(val int32) {
+	s.Width = val
+}
+
+// SetHeight sets the value of Height.
+func (s *LiveMap) SetHeight(val int32) {
+	s.Height = val
+}
+
+// SetHexSizePx sets the value of HexSizePx.
+func (s *LiveMap) SetHexSizePx(val float64) {
+	s.HexSizePx = val
+}
+
+// SetOriginX sets the value of OriginX.
+func (s *LiveMap) SetOriginX(val float64) {
+	s.OriginX = val
+}
+
+// SetOriginY sets the value of OriginY.
+func (s *LiveMap) SetOriginY(val float64) {
+	s.OriginY = val
+}
+
+// SetImageVersion sets the value of ImageVersion.
+func (s *LiveMap) SetImageVersion(val int32) {
+	s.ImageVersion = val
+}
 
 // The Session as a connection sees it.
 // Ref: #/components/schemas/LiveSessionView
@@ -5152,12 +5771,13 @@ func (s *LiveSessionViewAudience) UnmarshalText(data []byte) error {
 // A Token as a connection sees it.
 // Ref: #/components/schemas/LiveToken
 type LiveToken struct {
-	ID     ID        `json:"id"`
-	Label  string    `json:"label"`
-	Kind   TokenKind `json:"kind"`
-	Q      int32     `json:"q"`
-	R      int32     `json:"r"`
-	Hidden bool      `json:"hidden"`
+	ID           ID        `json:"id"`
+	Label        string    `json:"label"`
+	Kind         TokenKind `json:"kind"`
+	DarkvisionFt int32     `json:"darkvisionFt"`
+	Q            int32     `json:"q"`
+	R            int32     `json:"r"`
+	Hidden       bool      `json:"hidden"`
 }
 
 // GetID returns the value of ID.
@@ -5173,6 +5793,11 @@ func (s *LiveToken) GetLabel() string {
 // GetKind returns the value of Kind.
 func (s *LiveToken) GetKind() TokenKind {
 	return s.Kind
+}
+
+// GetDarkvisionFt returns the value of DarkvisionFt.
+func (s *LiveToken) GetDarkvisionFt() int32 {
+	return s.DarkvisionFt
 }
 
 // GetQ returns the value of Q.
@@ -5205,6 +5830,11 @@ func (s *LiveToken) SetKind(val TokenKind) {
 	s.Kind = val
 }
 
+// SetDarkvisionFt sets the value of DarkvisionFt.
+func (s *LiveToken) SetDarkvisionFt(val int32) {
+	s.DarkvisionFt = val
+}
+
 // SetQ sets the value of Q.
 func (s *LiveToken) SetQ(val int32) {
 	s.Q = val
@@ -5220,8 +5850,8 @@ func (s *LiveToken) SetHidden(val bool) {
 	s.Hidden = val
 }
 
-// A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means
-// resync.
+// A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
+// change, and a view whose seq is not the next one means resync.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
 	Kind    LiveUpdateKind     `json:"kind"`
@@ -5229,9 +5859,7 @@ type LiveUpdate struct {
 	Nonce   OptString          `json:"nonce"`
 	Reason  OptString          `json:"reason"`
 	Session OptLiveSessionView `json:"session"`
-	Tokens  []LiveToken        `json:"tokens"`
-	Token   OptLiveToken       `json:"token"`
-	TokenId OptID              `json:"tokenId"`
+	View    OptLiveView        `json:"view"`
 }
 
 // GetKind returns the value of Kind.
@@ -5259,19 +5887,9 @@ func (s *LiveUpdate) GetSession() OptLiveSessionView {
 	return s.Session
 }
 
-// GetTokens returns the value of Tokens.
-func (s *LiveUpdate) GetTokens() []LiveToken {
-	return s.Tokens
-}
-
-// GetToken returns the value of Token.
-func (s *LiveUpdate) GetToken() OptLiveToken {
-	return s.Token
-}
-
-// GetTokenId returns the value of TokenId.
-func (s *LiveUpdate) GetTokenId() OptID {
-	return s.TokenId
+// GetView returns the value of View.
+func (s *LiveUpdate) GetView() OptLiveView {
+	return s.View
 }
 
 // SetKind sets the value of Kind.
@@ -5299,39 +5917,25 @@ func (s *LiveUpdate) SetSession(val OptLiveSessionView) {
 	s.Session = val
 }
 
-// SetTokens sets the value of Tokens.
-func (s *LiveUpdate) SetTokens(val []LiveToken) {
-	s.Tokens = val
-}
-
-// SetToken sets the value of Token.
-func (s *LiveUpdate) SetToken(val OptLiveToken) {
-	s.Token = val
-}
-
-// SetTokenId sets the value of TokenId.
-func (s *LiveUpdate) SetTokenId(val OptID) {
-	s.TokenId = val
+// SetView sets the value of View.
+func (s *LiveUpdate) SetView(val OptLiveView) {
+	s.View = val
 }
 
 type LiveUpdateKind string
 
 const (
-	LiveUpdateKindSnapshot     LiveUpdateKind = "snapshot"
-	LiveUpdateKindToken        LiveUpdateKind = "token"
-	LiveUpdateKindTokenRemoved LiveUpdateKind = "token_removed"
-	LiveUpdateKindTick         LiveUpdateKind = "tick"
-	LiveUpdateKindRejected     LiveUpdateKind = "rejected"
-	LiveUpdateKindEnded        LiveUpdateKind = "ended"
+	LiveUpdateKindSnapshot LiveUpdateKind = "snapshot"
+	LiveUpdateKindView     LiveUpdateKind = "view"
+	LiveUpdateKindRejected LiveUpdateKind = "rejected"
+	LiveUpdateKindEnded    LiveUpdateKind = "ended"
 )
 
 // AllValues returns all LiveUpdateKind values.
 func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 	return []LiveUpdateKind{
 		LiveUpdateKindSnapshot,
-		LiveUpdateKindToken,
-		LiveUpdateKindTokenRemoved,
-		LiveUpdateKindTick,
+		LiveUpdateKindView,
 		LiveUpdateKindRejected,
 		LiveUpdateKindEnded,
 	}
@@ -5342,11 +5946,7 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	switch s {
 	case LiveUpdateKindSnapshot:
 		return []byte(s), nil
-	case LiveUpdateKindToken:
-		return []byte(s), nil
-	case LiveUpdateKindTokenRemoved:
-		return []byte(s), nil
-	case LiveUpdateKindTick:
+	case LiveUpdateKindView:
 		return []byte(s), nil
 	case LiveUpdateKindRejected:
 		return []byte(s), nil
@@ -5363,14 +5963,8 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 	case LiveUpdateKindSnapshot:
 		*s = LiveUpdateKindSnapshot
 		return nil
-	case LiveUpdateKindToken:
-		*s = LiveUpdateKindToken
-		return nil
-	case LiveUpdateKindTokenRemoved:
-		*s = LiveUpdateKindTokenRemoved
-		return nil
-	case LiveUpdateKindTick:
-		*s = LiveUpdateKindTick
+	case LiveUpdateKindView:
+		*s = LiveUpdateKindView
 		return nil
 	case LiveUpdateKindRejected:
 		*s = LiveUpdateKindRejected
@@ -5385,6 +5979,316 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 
 // LiveUpdateNoContent is response for LiveUpdate operation.
 type LiveUpdateNoContent struct{}
+
+// What one audience may see now. With fog, a hex is visible now, remembered, or in neither list
+// because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
+// Ref: #/components/schemas/LiveView
+type LiveView struct {
+	Tokens     []LiveToken     `json:"tokens"`
+	Map        OptLiveMap      `json:"map"`
+	Fog        bool            `json:"fog"`
+	Visible    []HexCoord      `json:"visible"`
+	Remembered []HexCoord      `json:"remembered"`
+	Walls      []HexCoord      `json:"walls"`
+	Lights     []LiveLight     `json:"lights"`
+	Ambient    OptAmbientLight `json:"ambient"`
+}
+
+// GetTokens returns the value of Tokens.
+func (s *LiveView) GetTokens() []LiveToken {
+	return s.Tokens
+}
+
+// GetMap returns the value of Map.
+func (s *LiveView) GetMap() OptLiveMap {
+	return s.Map
+}
+
+// GetFog returns the value of Fog.
+func (s *LiveView) GetFog() bool {
+	return s.Fog
+}
+
+// GetVisible returns the value of Visible.
+func (s *LiveView) GetVisible() []HexCoord {
+	return s.Visible
+}
+
+// GetRemembered returns the value of Remembered.
+func (s *LiveView) GetRemembered() []HexCoord {
+	return s.Remembered
+}
+
+// GetWalls returns the value of Walls.
+func (s *LiveView) GetWalls() []HexCoord {
+	return s.Walls
+}
+
+// GetLights returns the value of Lights.
+func (s *LiveView) GetLights() []LiveLight {
+	return s.Lights
+}
+
+// GetAmbient returns the value of Ambient.
+func (s *LiveView) GetAmbient() OptAmbientLight {
+	return s.Ambient
+}
+
+// SetTokens sets the value of Tokens.
+func (s *LiveView) SetTokens(val []LiveToken) {
+	s.Tokens = val
+}
+
+// SetMap sets the value of Map.
+func (s *LiveView) SetMap(val OptLiveMap) {
+	s.Map = val
+}
+
+// SetFog sets the value of Fog.
+func (s *LiveView) SetFog(val bool) {
+	s.Fog = val
+}
+
+// SetVisible sets the value of Visible.
+func (s *LiveView) SetVisible(val []HexCoord) {
+	s.Visible = val
+}
+
+// SetRemembered sets the value of Remembered.
+func (s *LiveView) SetRemembered(val []HexCoord) {
+	s.Remembered = val
+}
+
+// SetWalls sets the value of Walls.
+func (s *LiveView) SetWalls(val []HexCoord) {
+	s.Walls = val
+}
+
+// SetLights sets the value of Lights.
+func (s *LiveView) SetLights(val []LiveLight) {
+	s.Lights = val
+}
+
+// SetAmbient sets the value of Ambient.
+func (s *LiveView) SetAmbient(val OptAmbientLight) {
+	s.Ambient = val
+}
+
+// An uploaded Map and its hex calibration.
+// Ref: #/components/schemas/LocalMap
+type LocalMap struct {
+	ID        ID           `json:"id"`
+	Name      string       `json:"name"`
+	Width     int32        `json:"width"`
+	Height    int32        `json:"height"`
+	HexSizePx float64      `json:"hexSizePx"`
+	OriginX   float64      `json:"originX"`
+	OriginY   float64      `json:"originY"`
+	Ambient   AmbientLight `json:"ambient"`
+	ImageUrl  AssetUrl     `json:"imageUrl"`
+}
+
+// GetID returns the value of ID.
+func (s *LocalMap) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LocalMap) GetName() string {
+	return s.Name
+}
+
+// GetWidth returns the value of Width.
+func (s *LocalMap) GetWidth() int32 {
+	return s.Width
+}
+
+// GetHeight returns the value of Height.
+func (s *LocalMap) GetHeight() int32 {
+	return s.Height
+}
+
+// GetHexSizePx returns the value of HexSizePx.
+func (s *LocalMap) GetHexSizePx() float64 {
+	return s.HexSizePx
+}
+
+// GetOriginX returns the value of OriginX.
+func (s *LocalMap) GetOriginX() float64 {
+	return s.OriginX
+}
+
+// GetOriginY returns the value of OriginY.
+func (s *LocalMap) GetOriginY() float64 {
+	return s.OriginY
+}
+
+// GetAmbient returns the value of Ambient.
+func (s *LocalMap) GetAmbient() AmbientLight {
+	return s.Ambient
+}
+
+// GetImageUrl returns the value of ImageUrl.
+func (s *LocalMap) GetImageUrl() AssetUrl {
+	return s.ImageUrl
+}
+
+// SetID sets the value of ID.
+func (s *LocalMap) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LocalMap) SetName(val string) {
+	s.Name = val
+}
+
+// SetWidth sets the value of Width.
+func (s *LocalMap) SetWidth(val int32) {
+	s.Width = val
+}
+
+// SetHeight sets the value of Height.
+func (s *LocalMap) SetHeight(val int32) {
+	s.Height = val
+}
+
+// SetHexSizePx sets the value of HexSizePx.
+func (s *LocalMap) SetHexSizePx(val float64) {
+	s.HexSizePx = val
+}
+
+// SetOriginX sets the value of OriginX.
+func (s *LocalMap) SetOriginX(val float64) {
+	s.OriginX = val
+}
+
+// SetOriginY sets the value of OriginY.
+func (s *LocalMap) SetOriginY(val float64) {
+	s.OriginY = val
+}
+
+// SetAmbient sets the value of Ambient.
+func (s *LocalMap) SetAmbient(val AmbientLight) {
+	s.Ambient = val
+}
+
+// SetImageUrl sets the value of ImageUrl.
+func (s *LocalMap) SetImageUrl(val AssetUrl) {
+	s.ImageUrl = val
+}
+
+// LocalMapHeaders wraps LocalMap with response headers.
+type LocalMapHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LocalMap
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LocalMapHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LocalMapHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LocalMapHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LocalMapHeaders) GetResponse() LocalMap {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LocalMapHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LocalMapHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LocalMapHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LocalMapHeaders) SetResponse(val LocalMap) {
+	s.Response = val
+}
+
+func (*LocalMapHeaders) getMapRes()    {}
+func (*LocalMapHeaders) updateMapRes() {}
+func (*LocalMapHeaders) uploadMapRes() {}
+
+// A Map's name, calibration and ambient light.
+// Ref: #/components/schemas/MapEdit
+type MapEdit struct {
+	Name      string       `json:"name"`
+	HexSizePx float64      `json:"hexSizePx"`
+	OriginX   float64      `json:"originX"`
+	OriginY   float64      `json:"originY"`
+	Ambient   AmbientLight `json:"ambient"`
+}
+
+// GetName returns the value of Name.
+func (s *MapEdit) GetName() string {
+	return s.Name
+}
+
+// GetHexSizePx returns the value of HexSizePx.
+func (s *MapEdit) GetHexSizePx() float64 {
+	return s.HexSizePx
+}
+
+// GetOriginX returns the value of OriginX.
+func (s *MapEdit) GetOriginX() float64 {
+	return s.OriginX
+}
+
+// GetOriginY returns the value of OriginY.
+func (s *MapEdit) GetOriginY() float64 {
+	return s.OriginY
+}
+
+// GetAmbient returns the value of Ambient.
+func (s *MapEdit) GetAmbient() AmbientLight {
+	return s.Ambient
+}
+
+// SetName sets the value of Name.
+func (s *MapEdit) SetName(val string) {
+	s.Name = val
+}
+
+// SetHexSizePx sets the value of HexSizePx.
+func (s *MapEdit) SetHexSizePx(val float64) {
+	s.HexSizePx = val
+}
+
+// SetOriginX sets the value of OriginX.
+func (s *MapEdit) SetOriginX(val float64) {
+	s.OriginX = val
+}
+
+// SetOriginY sets the value of OriginY.
+func (s *MapEdit) SetOriginY(val float64) {
+	s.OriginY = val
+}
+
+// SetAmbient sets the value of Ambient.
+func (s *MapEdit) SetAmbient(val AmbientLight) {
+	s.Ambient = val
+}
 
 // The authenticated account.
 // Ref: #/components/schemas/Me
@@ -5938,6 +6842,52 @@ func (s *NpcInput) SetDisposition(val Disposition) {
 	s.Disposition = val
 }
 
+// NewOptAmbientLight returns new OptAmbientLight with value set to v.
+func NewOptAmbientLight(v AmbientLight) OptAmbientLight {
+	return OptAmbientLight{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAmbientLight is optional AmbientLight.
+type OptAmbientLight struct {
+	Value AmbientLight
+	Set   bool
+}
+
+// IsSet returns true if OptAmbientLight was set.
+func (o OptAmbientLight) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAmbientLight) Reset() {
+	var v AmbientLight
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAmbientLight) SetTo(v AmbientLight) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAmbientLight) Get() (v AmbientLight, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAmbientLight) Or(d AmbientLight) AmbientLight {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptArmorChoice returns new OptArmorChoice with value set to v.
 func NewOptArmorChoice(v ArmorChoice) OptArmorChoice {
 	return OptArmorChoice{
@@ -6444,6 +7394,52 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptLiveMap returns new OptLiveMap with value set to v.
+func NewOptLiveMap(v LiveMap) OptLiveMap {
+	return OptLiveMap{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveMap is optional LiveMap.
+type OptLiveMap struct {
+	Value LiveMap
+	Set   bool
+}
+
+// IsSet returns true if OptLiveMap was set.
+func (o OptLiveMap) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveMap) Reset() {
+	var v LiveMap
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveMap) SetTo(v LiveMap) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveMap) Get() (v LiveMap, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveMap) Or(d LiveMap) LiveMap {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveSessionView returns new OptLiveSessionView with value set to v.
 func NewOptLiveSessionView(v LiveSessionView) OptLiveSessionView {
 	return OptLiveSessionView{
@@ -6490,38 +7486,38 @@ func (o OptLiveSessionView) Or(d LiveSessionView) LiveSessionView {
 	return d
 }
 
-// NewOptLiveToken returns new OptLiveToken with value set to v.
-func NewOptLiveToken(v LiveToken) OptLiveToken {
-	return OptLiveToken{
+// NewOptLiveView returns new OptLiveView with value set to v.
+func NewOptLiveView(v LiveView) OptLiveView {
+	return OptLiveView{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptLiveToken is optional LiveToken.
-type OptLiveToken struct {
-	Value LiveToken
+// OptLiveView is optional LiveView.
+type OptLiveView struct {
+	Value LiveView
 	Set   bool
 }
 
-// IsSet returns true if OptLiveToken was set.
-func (o OptLiveToken) IsSet() bool { return o.Set }
+// IsSet returns true if OptLiveView was set.
+func (o OptLiveView) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptLiveToken) Reset() {
-	var v LiveToken
+func (o *OptLiveView) Reset() {
+	var v LiveView
 	o.Value = v
 	o.Set = false
 }
 
 // SetTo sets value to v.
-func (o *OptLiveToken) SetTo(v LiveToken) {
+func (o *OptLiveView) SetTo(v LiveView) {
 	o.Set = true
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptLiveToken) Get() (v LiveToken, ok bool) {
+func (o OptLiveView) Get() (v LiveView, ok bool) {
 	if !o.Set {
 		return v, false
 	}
@@ -6529,7 +7525,7 @@ func (o OptLiveToken) Get() (v LiveToken, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptLiveToken) Or(d LiveToken) LiveToken {
+func (o OptLiveView) Or(d LiveView) LiveView {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -7124,6 +8120,8 @@ func (*ProblemStatusCodeWithHeaders) getCampaignRes()           {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()          {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
+func (*ProblemStatusCodeWithHeaders) getMapImageRes()           {}
+func (*ProblemStatusCodeWithHeaders) getMapRes()                {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()           {}
@@ -7138,6 +8136,7 @@ func (*ProblemStatusCodeWithHeaders) listCharactersRes()        {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
+func (*ProblemStatusCodeWithHeaders) listMapsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()      {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()             {}
@@ -7158,8 +8157,10 @@ func (*ProblemStatusCodeWithHeaders) setTokenIconRes()          {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
+func (*ProblemStatusCodeWithHeaders) updateMapRes()             {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateNpcRes()             {}
+func (*ProblemStatusCodeWithHeaders) uploadMapRes()             {}
 
 // A reachable hex with its cost and where it is reached from.
 // Ref: #/components/schemas/ReachHex
@@ -9436,6 +10437,20 @@ func (s *TokenKind) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+type UploadMapReq struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s UploadMapReq) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
 }
 
 // A carried weapon.

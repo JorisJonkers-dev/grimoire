@@ -475,6 +475,7 @@ export const zLiveToken = z.object({
     id: zId,
     label: z.string().min(1).max(40),
     kind: zTokenKind,
+    darkvisionFt: z.int().gte(0).lte(300),
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
     hidden: z.boolean()
@@ -495,6 +496,15 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * The light that fills a Map everywhere.
+ */
+export const zAmbientLight = z.enum([
+    'bright',
+    'dim',
+    'dark'
+]);
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -504,25 +514,77 @@ export const zLiveCommand = z.object({
         'place_token',
         'move_token',
         'set_token_hidden',
-        'remove_token'
+        'remove_token',
+        'set_map',
+        'reveal_hexes',
+        'set_walls',
+        'place_light',
+        'remove_light',
+        'set_ambient'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
     tokenKind: zTokenKind.optional(),
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
-    hidden: z.boolean()
+    hidden: z.boolean(),
+    darkvisionFt: z.int().gte(0).lte(300).optional(),
+    mapId: zId.optional(),
+    hexes: z.array(zHexCoord).max(2000).optional(),
+    on: z.boolean().optional(),
+    lightId: zId.optional(),
+    brightFt: z.int().gte(0).lte(600).optional(),
+    dimFt: z.int().gte(0).lte(600).optional(),
+    ambient: zAmbientLight.optional()
 });
 
 /**
- * A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means resync.
+ * The active Map's picture and hex calibration.
+ */
+export const zLiveMap = z.object({
+    id: zId,
+    name: z.string().max(80),
+    imageUrl: zAssetUrl,
+    width: z.int().gte(1).lte(36000000),
+    height: z.int().gte(1).lte(36000000),
+    hexSizePx: z.number().gte(8).lte(400),
+    originX: z.number().gte(-100000).lte(100000),
+    originY: z.number().gte(-100000).lte(100000),
+    imageVersion: z.int().gte(0).lte(1000000)
+});
+
+/**
+ * A light on the Map, for the DM.
+ */
+export const zLiveLight = z.object({
+    id: zId,
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    brightFt: z.int().gte(0).lte(600),
+    dimFt: z.int().gte(0).lte(600)
+});
+
+/**
+ * What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
+ */
+export const zLiveView = z.object({
+    tokens: z.array(zLiveToken).max(1000),
+    map: zLiveMap.optional(),
+    fog: z.boolean(),
+    visible: z.array(zHexCoord).max(100000),
+    remembered: z.array(zHexCoord).max(100000),
+    walls: z.array(zHexCoord).max(100000).optional(),
+    lights: z.array(zLiveLight).max(500).optional(),
+    ambient: zAmbientLight.optional()
+});
+
+/**
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync.
  */
 export const zLiveUpdate = z.object({
     kind: z.enum([
         'snapshot',
-        'token',
-        'token_removed',
-        'tick',
+        'view',
         'rejected',
         'ended'
     ]),
@@ -530,9 +592,33 @@ export const zLiveUpdate = z.object({
     nonce: z.string().max(64).optional(),
     reason: z.string().max(200).optional(),
     session: zLiveSessionView.optional(),
-    tokens: z.array(zLiveToken).max(1000).optional(),
-    token: zLiveToken.optional(),
-    tokenId: zId.optional()
+    view: zLiveView.optional()
+});
+
+/**
+ * An uploaded Map and its hex calibration.
+ */
+export const zLocalMap = z.object({
+    id: zId,
+    name: z.string().max(80),
+    width: z.int().gte(1).lte(36000000),
+    height: z.int().gte(1).lte(36000000),
+    hexSizePx: z.number().gte(8).lte(400),
+    originX: z.number().gte(-100000).lte(100000),
+    originY: z.number().gte(-100000).lte(100000),
+    ambient: zAmbientLight,
+    imageUrl: zAssetUrl
+});
+
+/**
+ * A Map's name, calibration and ambient light.
+ */
+export const zMapEdit = z.object({
+    name: z.string().min(1).max(80),
+    hexSizePx: z.number().gte(8).lte(400),
+    originX: z.number().gte(-100000).lte(100000),
+    originY: z.number().gte(-100000).lte(100000),
+    ambient: zAmbientLight
 });
 
 /**
@@ -1022,6 +1108,11 @@ export const zSessionId = zId;
  * Roll Request id.
  */
 export const zRollId = zId;
+
+/**
+ * Map id.
+ */
+export const zMapId = zId;
 
 /**
  * NPC id.
@@ -1554,6 +1645,66 @@ export const zEndSessionPath = z.object({
  * The ended session.
  */
 export const zEndSessionResponse = zPlaySession;
+
+export const zListMapsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The maps.
+ */
+export const zListMapsResponse = z.array(zLocalMap).max(500);
+
+export const zUploadMapBody = z.string().max(26214400);
+
+export const zUploadMapPath = z.object({
+    campaignId: zId
+});
+
+export const zUploadMapQuery = z.object({
+    name: z.string().min(1).max(80)
+});
+
+/**
+ * The new map.
+ */
+export const zUploadMapResponse = zLocalMap;
+
+export const zGetMapPath = z.object({
+    campaignId: zId,
+    mapId: zId
+});
+
+/**
+ * The map.
+ */
+export const zGetMapResponse = zLocalMap;
+
+export const zUpdateMapBody = zMapEdit;
+
+export const zUpdateMapPath = z.object({
+    campaignId: zId,
+    mapId: zId
+});
+
+/**
+ * The calibrated map.
+ */
+export const zUpdateMapResponse = zLocalMap;
+
+export const zGetMapImagePath = z.object({
+    campaignId: zId,
+    mapId: zId
+});
+
+export const zGetMapImageQuery = z.object({
+    v: z.int().gte(0).lte(1000000).optional()
+});
+
+/**
+ * The picture.
+ */
+export const zGetMapImageResponse = z.string().max(104857600);
 
 export const zPreviewInviteBody = zInviteToken;
 

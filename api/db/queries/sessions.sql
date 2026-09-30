@@ -3,17 +3,17 @@ SELECT coalesce(max(number), 0)::int + 1 FROM play.sessions WHERE campaign_id = 
 
 -- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES (@campaign_id, @number, 'live', @now)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at;
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id;
 
 -- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
 FROM play.sessions WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at FROM play.sessions WHERE id = $1;
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id FROM play.sessions WHERE id = $1;
 
 -- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50;
 
 -- name: EndSession :execrows
@@ -23,10 +23,10 @@ UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE campaign_id = @
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+SELECT id, label, kind, q, r, hidden, darkvision_ft FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
--- name: InsertToken :one
-INSERT INTO play.tokens (session_id, label, kind, q, r, hidden) VALUES (@session_id, @label, @kind, @q, @r, @hidden) RETURNING id;
+-- name: InsertToken :exec
+INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft) VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;

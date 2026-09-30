@@ -25,6 +25,7 @@ type Session struct {
 	GridRadius int
 	StartedAt  time.Time
 	EndedAt    time.Time
+	MapID      *MapID
 }
 
 // TokenID identifies a Token.
@@ -46,6 +47,8 @@ type Token struct {
 	Q      int
 	R      int
 	Hidden bool
+	// DarkvisionFt lets a party token see in darkness.
+	DarkvisionFt int
 }
 
 // Token action kinds in the Action Log.

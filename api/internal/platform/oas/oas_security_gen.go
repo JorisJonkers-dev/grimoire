@@ -52,6 +52,8 @@ var operationRolesForwardAuth = map[string][]string{
 	GetCampaignOperation:           []string{},
 	GetCharacterOperation:          []string{},
 	GetEntryOperation:              []string{},
+	GetMapOperation:                []string{},
+	GetMapImageOperation:           []string{},
 	GetMeOperation:                 []string{},
 	GetNpcOperation:                []string{},
 	GetPortraitOperation:           []string{},
@@ -65,6 +67,7 @@ var operationRolesForwardAuth = map[string][]string{
 	ListDeletedNpcsOperation:       []string{},
 	ListEntriesOperation:           []string{},
 	ListInvitesOperation:           []string{},
+	ListMapsOperation:              []string{},
 	ListNpcRevisionsOperation:      []string{},
 	ListNpcsOperation:              []string{},
 	ListRollsOperation:             []string{},
@@ -85,8 +88,10 @@ var operationRolesForwardAuth = map[string][]string{
 	StartSessionOperation:          []string{},
 	UpdateCampaignOperation:        []string{},
 	UpdateCharacterOperation:       []string{},
+	UpdateMapOperation:             []string{},
 	UpdateMemberOperation:          []string{},
 	UpdateNpcOperation:             []string{},
+	UploadMapOperation:             []string{},
 }
 
 // GetRolesForForwardAuth returns the required roles for the given operation.

@@ -679,6 +679,7 @@ export type LiveToken = {
     id: Id;
     label: string;
     kind: TokenKind;
+    darkvisionFt: number;
     q: number;
     r: number;
     hidden: boolean;
@@ -699,27 +700,104 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
     q: number;
     r: number;
     hidden: boolean;
+    darkvisionFt?: number;
+    mapId?: Id;
+    hexes?: Array<HexCoord>;
+    on?: boolean;
+    lightId?: Id;
+    brightFt?: number;
+    dimFt?: number;
+    ambient?: AmbientLight;
 };
 
 /**
- * A WebSocket frame from a live Session. Every Update carries the Session sequence; a gap means resync.
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'token' | 'token_removed' | 'tick' | 'rejected' | 'ended';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended';
     seq: number;
     nonce?: string;
     reason?: string;
     session?: LiveSessionView;
-    tokens?: Array<LiveToken>;
-    token?: LiveToken;
-    tokenId?: Id;
+    view?: LiveView;
+};
+
+/**
+ * The light that fills a Map everywhere.
+ */
+export type AmbientLight = 'bright' | 'dim' | 'dark';
+
+/**
+ * The active Map's picture and hex calibration.
+ */
+export type LiveMap = {
+    id: Id;
+    name: string;
+    imageUrl: AssetUrl;
+    width: number;
+    height: number;
+    hexSizePx: number;
+    originX: number;
+    originY: number;
+    imageVersion: number;
+};
+
+/**
+ * A light on the Map, for the DM.
+ */
+export type LiveLight = {
+    id: Id;
+    q: number;
+    r: number;
+    brightFt: number;
+    dimFt: number;
+};
+
+/**
+ * What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
+ */
+export type LiveView = {
+    tokens: Array<LiveToken>;
+    map?: LiveMap;
+    fog: boolean;
+    visible: Array<HexCoord>;
+    remembered: Array<HexCoord>;
+    walls?: Array<HexCoord>;
+    lights?: Array<LiveLight>;
+    ambient?: AmbientLight;
+};
+
+/**
+ * An uploaded Map and its hex calibration.
+ */
+export type LocalMap = {
+    id: Id;
+    name: string;
+    width: number;
+    height: number;
+    hexSizePx: number;
+    originX: number;
+    originY: number;
+    ambient: AmbientLight;
+    imageUrl: AssetUrl;
+};
+
+/**
+ * A Map's name, calibration and ambient light.
+ */
+export type MapEdit = {
+    name: string;
+    hexSizePx: number;
+    originX: number;
+    originY: number;
+    ambient: AmbientLight;
 };
 
 /**
@@ -940,6 +1018,11 @@ export type SessionId = Id;
  * Roll Request id.
  */
 export type RollId = Id;
+
+/**
+ * Map id.
+ */
+export type MapId = Id;
 
 /**
  * NPC id.
@@ -2723,6 +2806,198 @@ export type EndSessionResponses = {
 };
 
 export type EndSessionResponse = EndSessionResponses[keyof EndSessionResponses];
+
+export type ListMapsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/maps';
+};
+
+export type ListMapsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMapsError = ListMapsErrors[keyof ListMapsErrors];
+
+export type ListMapsResponses = {
+    /**
+     * The maps.
+     */
+    200: Array<LocalMap>;
+};
+
+export type ListMapsResponse = ListMapsResponses[keyof ListMapsResponses];
+
+export type UploadMapData = {
+    body: Blob | File;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query: {
+        /**
+         * The map's name.
+         */
+        name: string;
+    };
+    url: '/api/v1/campaigns/{campaignId}/maps';
+};
+
+export type UploadMapErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UploadMapError = UploadMapErrors[keyof UploadMapErrors];
+
+export type UploadMapResponses = {
+    /**
+     * The new map.
+     */
+    201: LocalMap;
+};
+
+export type UploadMapResponse = UploadMapResponses[keyof UploadMapResponses];
+
+export type GetMapData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Map id.
+         */
+        mapId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/maps/{mapId}';
+};
+
+export type GetMapErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMapError = GetMapErrors[keyof GetMapErrors];
+
+export type GetMapResponses = {
+    /**
+     * The map.
+     */
+    200: LocalMap;
+};
+
+export type GetMapResponse = GetMapResponses[keyof GetMapResponses];
+
+export type UpdateMapData = {
+    body: MapEdit;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Map id.
+         */
+        mapId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/maps/{mapId}';
+};
+
+export type UpdateMapErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateMapError = UpdateMapErrors[keyof UpdateMapErrors];
+
+export type UpdateMapResponses = {
+    /**
+     * The calibrated map.
+     */
+    200: LocalMap;
+};
+
+export type UpdateMapResponse = UpdateMapResponses[keyof UpdateMapResponses];
+
+export type GetMapImageData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Map id.
+         */
+        mapId: Id;
+    };
+    query?: {
+        /**
+         * Cache-busting version; the picture changes as the party explores.
+         */
+        v?: number;
+    };
+    url: '/api/v1/campaigns/{campaignId}/maps/{mapId}/image';
+};
+
+export type GetMapImageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMapImageError = GetMapImageErrors[keyof GetMapImageErrors];
+
+export type GetMapImageResponses = {
+    /**
+     * The picture.
+     */
+    200: Blob | File;
+};
+
+export type GetMapImageResponse = GetMapImageResponses[keyof GetMapImageResponses];
 
 export type PreviewInviteData = {
     body: InviteToken;
