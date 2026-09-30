@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses } from './types.gen';
-import { zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse } from './zod.gen';
+import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMeData, GetMeErrors, GetMeResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses } from './types.gen';
+import { zAcceptInviteBody, zAcceptInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateInvitePath, zCreateInviteResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetCampaignPath, zGetCampaignResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMeResponse, zGetReadinessResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zListCampaignsQuery, zListCampaignsResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewInviteBody, zPreviewInviteResponse, zRemoveMemberPath, zRemoveMemberResponse, zRevokeInvitePath, zRevokeInviteResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -126,6 +126,213 @@ export const listSources = <ThrowOnError extends boolean = false>(options?: Opti
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/compendium/sources',
     ...options
+});
+
+/**
+ * List my campaigns
+ *
+ * The Campaigns the caller is a Member of, newest first.
+ */
+export const listCampaigns = <ThrowOnError extends boolean = false>(options?: Options<ListCampaignsData, ThrowOnError>): RequestResult<ListCampaignsResponses, ListCampaignsErrors, ThrowOnError> => (options?.client ?? client).get<ListCampaignsResponses, ListCampaignsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: zListCampaignsQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListCampaignsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns',
+    ...options
+});
+
+/**
+ * Create a campaign
+ *
+ * Starts a Campaign with the caller as its first DM.
+ */
+export const createCampaign = <ThrowOnError extends boolean = false>(options: Options<CreateCampaignData, ThrowOnError>): RequestResult<CreateCampaignResponses, CreateCampaignErrors, ThrowOnError> => (options.client ?? client).post<CreateCampaignResponses, CreateCampaignErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateCampaignBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateCampaignResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get a campaign
+ *
+ * A Campaign's home with its settings, the caller's role and every Member. Members only.
+ */
+export const getCampaign = <ThrowOnError extends boolean = false>(options: Options<GetCampaignData, ThrowOnError>): RequestResult<GetCampaignResponses, GetCampaignErrors, ThrowOnError> => (options.client ?? client).get<GetCampaignResponses, GetCampaignErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetCampaignPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetCampaignResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}',
+    ...options
+});
+
+/**
+ * Update a campaign
+ *
+ * Changes a Campaign's settings. DM only.
+ */
+export const updateCampaign = <ThrowOnError extends boolean = false>(options: Options<UpdateCampaignData, ThrowOnError>): RequestResult<UpdateCampaignResponses, UpdateCampaignErrors, ThrowOnError> => (options.client ?? client).patch<UpdateCampaignResponses, UpdateCampaignErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUpdateCampaignBody,
+        path: zUpdateCampaignPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUpdateCampaignResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove a member
+ *
+ * A DM removes a Member, or a Member leaves. The last DM cannot leave.
+ */
+export const removeMember = <ThrowOnError extends boolean = false>(options: Options<RemoveMemberData, ThrowOnError>): RequestResult<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError> => (options.client ?? client).delete<RemoveMemberResponses, RemoveMemberErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zRemoveMemberPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zRemoveMemberResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/members/{memberId}',
+    ...options
+});
+
+/**
+ * Change a member role
+ *
+ * Makes a Member a DM or a Player. DM only; the last DM cannot step down.
+ */
+export const updateMember = <ThrowOnError extends boolean = false>(options: Options<UpdateMemberData, ThrowOnError>): RequestResult<UpdateMemberResponses, UpdateMemberErrors, ThrowOnError> => (options.client ?? client).patch<UpdateMemberResponses, UpdateMemberErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUpdateMemberBody,
+        path: zUpdateMemberPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUpdateMemberResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/members/{memberId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List open invites
+ *
+ * Invite links that still work. DM only.
+ */
+export const listInvites = <ThrowOnError extends boolean = false>(options: Options<ListInvitesData, ThrowOnError>): RequestResult<ListInvitesResponses, ListInvitesErrors, ThrowOnError> => (options.client ?? client).get<ListInvitesResponses, ListInvitesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zListInvitesPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListInvitesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/invites',
+    ...options
+});
+
+/**
+ * Create an invite link
+ *
+ * Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
+ */
+export const createInvite = <ThrowOnError extends boolean = false>(options: Options<CreateInviteData, ThrowOnError>): RequestResult<CreateInviteResponses, CreateInviteErrors, ThrowOnError> => (options.client ?? client).post<CreateInviteResponses, CreateInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zCreateInvitePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateInviteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/invites',
+    ...options
+});
+
+/**
+ * Revoke an invite link
+ *
+ * Closes an invite link. DM only.
+ */
+export const revokeInvite = <ThrowOnError extends boolean = false>(options: Options<RevokeInviteData, ThrowOnError>): RequestResult<RevokeInviteResponses, RevokeInviteErrors, ThrowOnError> => (options.client ?? client).delete<RevokeInviteResponses, RevokeInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zRevokeInvitePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zRevokeInviteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/invites/{inviteId}',
+    ...options
+});
+
+/**
+ * Preview an invite
+ *
+ * Which Campaign an invite link leads to, before joining.
+ */
+export const previewInvite = <ThrowOnError extends boolean = false>(options: Options<PreviewInviteData, ThrowOnError>): RequestResult<PreviewInviteResponses, PreviewInviteErrors, ThrowOnError> => (options.client ?? client).post<PreviewInviteResponses, PreviewInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zPreviewInviteBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zPreviewInviteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/invites/preview',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Accept an invite
+ *
+ * Joins the caller to the Campaign as a Player. A Member keeps their role.
+ */
+export const acceptInvite = <ThrowOnError extends boolean = false>(options: Options<AcceptInviteData, ThrowOnError>): RequestResult<AcceptInviteResponses, AcceptInviteErrors, ThrowOnError> => (options.client ?? client).post<AcceptInviteResponses, AcceptInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zAcceptInviteBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zAcceptInviteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/invites/accept',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

@@ -8,6 +8,9 @@ const AttributionPage = () => import('@/features/compendium/AttributionPage.vue'
 const EntryListPage = () => import('@/features/compendium/EntryListPage.vue')
 const EntryDetailPage = () => import('@/features/compendium/EntryDetailPage.vue')
 const AutomationPage = () => import('@/features/compendium/AutomationPage.vue')
+const CampaignListPage = () => import('@/features/campaigns/CampaignListPage.vue')
+const CampaignHomePage = () => import('@/features/campaigns/CampaignHomePage.vue')
+const JoinPage = () => import('@/features/campaigns/JoinPage.vue')
 
 export function createAppRouter(history: RouterHistory = createWebHistory()) {
   return createRouter({
@@ -21,6 +24,9 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/compendium/:kind', name: 'entries', component: EntryListPage },
       { path: '/compendium/:kind/:slug', name: 'entry', component: EntryDetailPage },
       { path: '/about/automation', name: 'automation', component: AutomationPage },
+      { path: '/campaigns', name: 'campaigns', component: CampaignListPage },
+      { path: '/campaigns/:id', name: 'campaign', component: CampaignHomePage },
+      { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
     ],
   })

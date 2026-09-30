@@ -3,6 +3,100 @@
 import * as z from 'zod';
 
 /**
+ * Random identifier.
+ */
+export const zId = z.uuid().max(36);
+
+/**
+ * What a Member may do in a Campaign.
+ */
+export const zRole = z.enum(['dm', 'player']);
+
+/**
+ * How a Member appears to the rest of the table.
+ */
+export const zDisplayName = z.string().min(1).max(60);
+
+/**
+ * A Campaign's name.
+ */
+export const zCampaignName = z.string().min(1).max(80);
+
+/**
+ * An account's participation in a Campaign.
+ */
+export const zMember = z.object({
+    id: zId,
+    displayName: zDisplayName,
+    role: zRole,
+    joinedAt: z.iso.datetime().max(40),
+    isMe: z.boolean()
+});
+
+/**
+ * A reference to a Campaign.
+ */
+export const zCampaignRef = z.object({
+    id: zId
+});
+
+/**
+ * A Member's new role.
+ */
+export const zMemberUpdate = z.object({
+    role: zRole
+});
+
+/**
+ * An open invite link.
+ */
+export const zInvite = z.object({
+    id: zId,
+    createdAt: z.iso.datetime().max(40),
+    expiresAt: z.iso.datetime().max(40),
+    createdBy: zDisplayName
+});
+
+/**
+ * Where an invite link leads.
+ */
+export const zInvitePreview = z.object({
+    campaignName: zCampaignName,
+    invitedBy: zDisplayName
+});
+
+/**
+ * An invite token, as it appears in the invite link.
+ */
+export const zToken = z.string().length(43).regex(/^[A-Za-z0-9_-]+$/);
+
+/**
+ * A new invite and the token for its link, shown once.
+ */
+export const zNewInvite = z.object({
+    id: zId,
+    createdAt: z.iso.datetime().max(40),
+    expiresAt: z.iso.datetime().max(40),
+    createdBy: zDisplayName,
+    token: zToken
+});
+
+/**
+ * An invite token.
+ */
+export const zInviteToken = z.object({
+    token: zToken
+});
+
+/**
+ * The invite token and how the new Member wants to appear.
+ */
+export const zInviteAccept = z.object({
+    token: zToken,
+    displayName: zDisplayName
+});
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -11,6 +105,57 @@ export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)
  * Rules document key.
  */
 export const zRuleset = z.enum(['srd-2024', 'srd-2014']);
+
+/**
+ * A Campaign as it appears in the caller's list.
+ */
+export const zCampaignSummary = z.object({
+    id: zId,
+    name: zCampaignName,
+    ruleset: zRuleset,
+    myRole: zRole,
+    memberCount: z.int().gte(1).lte(1000),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * One page of campaigns.
+ */
+export const zCampaignPage = z.object({
+    items: z.array(zCampaignSummary).max(100),
+    nextCursor: z.string().max(200).regex(/^[A-Za-z0-9_-]+$/).optional()
+});
+
+/**
+ * A Campaign's home.
+ */
+export const zCampaign = z.object({
+    id: zId,
+    name: zCampaignName,
+    ruleset: zRuleset,
+    myRole: zRole,
+    memberCount: z.int().gte(1).lte(1000),
+    createdAt: z.iso.datetime().max(40),
+    me: zMember,
+    members: z.array(zMember).max(1000)
+});
+
+/**
+ * A new Campaign.
+ */
+export const zCampaignCreate = z.object({
+    name: zCampaignName,
+    ruleset: zRuleset.optional(),
+    displayName: zDisplayName
+});
+
+/**
+ * Settings to change; omitted fields stay as they are.
+ */
+export const zCampaignUpdate = z.object({
+    name: zCampaignName.optional(),
+    ruleset: zRuleset.optional()
+});
 
 /**
  * A spell as it appears in a list.
@@ -217,6 +362,21 @@ export const zProblem = z.object({
 });
 
 /**
+ * Campaign id.
+ */
+export const zCampaignId = zId;
+
+/**
+ * Member id.
+ */
+export const zMemberId = zId;
+
+/**
+ * Invite id.
+ */
+export const zInviteId = zId;
+
+/**
  * ETag from an earlier response; the server answers 304 when nothing changed.
  */
 export const zIfNoneMatch = z.string().max(100);
@@ -310,6 +470,107 @@ export const zGetAutomationCoverageResponse = z.array(zAutomationCount).max(40);
  * Every source document.
  */
 export const zListSourcesResponse = z.array(zSource).max(100);
+
+export const zListCampaignsQuery = z.object({
+    cursor: z.string().min(1).max(200).regex(/^[A-Za-z0-9_-]+$/).optional(),
+    limit: z.int().gte(1).lte(100).optional().default(50)
+});
+
+/**
+ * One page of campaigns.
+ */
+export const zListCampaignsResponse = zCampaignPage;
+
+export const zCreateCampaignBody = zCampaignCreate;
+
+/**
+ * The new campaign.
+ */
+export const zCreateCampaignResponse = zCampaign;
+
+export const zGetCampaignPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The campaign.
+ */
+export const zGetCampaignResponse = zCampaign;
+
+export const zUpdateCampaignBody = zCampaignUpdate;
+
+export const zUpdateCampaignPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The updated campaign.
+ */
+export const zUpdateCampaignResponse = zCampaignSummary;
+
+export const zRemoveMemberPath = z.object({
+    campaignId: zId,
+    memberId: zId
+});
+
+/**
+ * Removed.
+ */
+export const zRemoveMemberResponse = z.void();
+
+export const zUpdateMemberBody = zMemberUpdate;
+
+export const zUpdateMemberPath = z.object({
+    campaignId: zId,
+    memberId: zId
+});
+
+/**
+ * The updated member.
+ */
+export const zUpdateMemberResponse = zMember;
+
+export const zListInvitesPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * Open invites.
+ */
+export const zListInvitesResponse = z.array(zInvite).max(200);
+
+export const zCreateInvitePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The invite and its token.
+ */
+export const zCreateInviteResponse = zNewInvite;
+
+export const zRevokeInvitePath = z.object({
+    campaignId: zId,
+    inviteId: zId
+});
+
+/**
+ * Revoked.
+ */
+export const zRevokeInviteResponse = z.void();
+
+export const zPreviewInviteBody = zInviteToken;
+
+/**
+ * The invite.
+ */
+export const zPreviewInviteResponse = zInvitePreview;
+
+export const zAcceptInviteBody = zInviteAccept;
+
+/**
+ * The campaign joined.
+ */
+export const zAcceptInviteResponse = zCampaignRef;
 
 /**
  * The signed-in account.

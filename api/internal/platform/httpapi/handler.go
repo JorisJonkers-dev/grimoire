@@ -22,6 +22,7 @@ type Handler struct {
 	Version    string
 	Store      StatusSource
 	Compendium CompendiumReader
+	Campaigns  Campaigns
 	Log        *slog.Logger
 }
 

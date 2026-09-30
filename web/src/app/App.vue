@@ -3,6 +3,7 @@
     <header class="bar">
       <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
       <nav aria-label="Main">
+        <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
       </nav>
     </header>
@@ -36,6 +37,10 @@
   letter-spacing: 0.2em;
   color: var(--color-gold);
   text-decoration: none;
+}
+nav {
+  display: flex;
+  gap: 16px;
 }
 nav a {
   display: inline-flex;

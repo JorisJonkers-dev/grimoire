@@ -7,6 +7,8 @@ package queries
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -16,6 +18,7 @@ type Querier interface {
 	AddClassFeatureLevel(ctx context.Context, arg AddClassFeatureLevelParams) error
 	AddClassSave(ctx context.Context, arg AddClassSaveParams) error
 	AddFeatBenefit(ctx context.Context, arg AddFeatBenefitParams) error
+	AddMember(ctx context.Context, arg AddMemberParams) (CampaignMember, error)
 	AddMonsterAction(ctx context.Context, arg AddMonsterActionParams) (int64, error)
 	AddMonsterAttack(ctx context.Context, arg AddMonsterAttackParams) error
 	AddMonsterRelation(ctx context.Context, arg AddMonsterRelationParams) error
@@ -38,33 +41,48 @@ type Querier interface {
 	ClearWeaponProperties(ctx context.Context, weaponID int64) error
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
+	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	CountEntriesByKind(ctx context.Context) ([]CountEntriesByKindRow, error)
+	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
+	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
 	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)
+	FindInvite(ctx context.Context, arg FindInviteParams) (FindInviteRow, error)
 	GetArmorDetail(ctx context.Context, id int64) (GetArmorDetailRow, error)
 	GetBackgroundDetail(ctx context.Context, id int64) (string, error)
+	GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow, error)
 	GetClassDetail(ctx context.Context, id int64) (GetClassDetailRow, error)
 	GetConditionDetail(ctx context.Context, id int64) (string, error)
 	GetFeatDetail(ctx context.Context, id int64) (GetFeatDetailRow, error)
 	GetInstanceCreatedAt(ctx context.Context) (time.Time, error)
 	GetItemDetail(ctx context.Context, id int64) (GetItemDetailRow, error)
+	GetMember(ctx context.Context, arg GetMemberParams) (CampaignMember, error)
+	GetMembership(ctx context.Context, arg GetMembershipParams) (CampaignMember, error)
 	GetMonsterDetail(ctx context.Context, id int64) (GetMonsterDetailRow, error)
 	GetSpeciesDetail(ctx context.Context, id int64) (GetSpeciesDetailRow, error)
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
+	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
+	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
+	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
+	LockCampaign(ctx context.Context, id uuid.UUID) error
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
 	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
+	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
+	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
+	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
+	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error
 	UpsertBackground(ctx context.Context, arg UpsertBackgroundParams) (int64, error)
 	UpsertClass(ctx context.Context, arg UpsertClassParams) (int64, error)

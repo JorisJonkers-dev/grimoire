@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/google/uuid"
 )
 
 // Entries of one kind by Automation Level.
@@ -172,6 +173,481 @@ func (s *AutomationCountKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// A Campaign's home.
+// Ref: #/components/schemas/Campaign
+type Campaign struct {
+	ID          ID           `json:"id"`
+	Name        CampaignName `json:"name"`
+	Ruleset     Ruleset      `json:"ruleset"`
+	MyRole      Role         `json:"myRole"`
+	MemberCount int32        `json:"memberCount"`
+	CreatedAt   time.Time    `json:"createdAt"`
+	Me          Member       `json:"me"`
+	Members     []Member     `json:"members"`
+}
+
+// GetID returns the value of ID.
+func (s *Campaign) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Campaign) GetName() CampaignName {
+	return s.Name
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *Campaign) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetMyRole returns the value of MyRole.
+func (s *Campaign) GetMyRole() Role {
+	return s.MyRole
+}
+
+// GetMemberCount returns the value of MemberCount.
+func (s *Campaign) GetMemberCount() int32 {
+	return s.MemberCount
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Campaign) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetMe returns the value of Me.
+func (s *Campaign) GetMe() Member {
+	return s.Me
+}
+
+// GetMembers returns the value of Members.
+func (s *Campaign) GetMembers() []Member {
+	return s.Members
+}
+
+// SetID sets the value of ID.
+func (s *Campaign) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Campaign) SetName(val CampaignName) {
+	s.Name = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *Campaign) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetMyRole sets the value of MyRole.
+func (s *Campaign) SetMyRole(val Role) {
+	s.MyRole = val
+}
+
+// SetMemberCount sets the value of MemberCount.
+func (s *Campaign) SetMemberCount(val int32) {
+	s.MemberCount = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Campaign) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetMe sets the value of Me.
+func (s *Campaign) SetMe(val Member) {
+	s.Me = val
+}
+
+// SetMembers sets the value of Members.
+func (s *Campaign) SetMembers(val []Member) {
+	s.Members = val
+}
+
+// A new Campaign.
+// Ref: #/components/schemas/CampaignCreate
+type CampaignCreate struct {
+	Name        CampaignName `json:"name"`
+	Ruleset     OptRuleset   `json:"ruleset"`
+	DisplayName DisplayName  `json:"displayName"`
+}
+
+// GetName returns the value of Name.
+func (s *CampaignCreate) GetName() CampaignName {
+	return s.Name
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *CampaignCreate) GetRuleset() OptRuleset {
+	return s.Ruleset
+}
+
+// GetDisplayName returns the value of DisplayName.
+func (s *CampaignCreate) GetDisplayName() DisplayName {
+	return s.DisplayName
+}
+
+// SetName sets the value of Name.
+func (s *CampaignCreate) SetName(val CampaignName) {
+	s.Name = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *CampaignCreate) SetRuleset(val OptRuleset) {
+	s.Ruleset = val
+}
+
+// SetDisplayName sets the value of DisplayName.
+func (s *CampaignCreate) SetDisplayName(val DisplayName) {
+	s.DisplayName = val
+}
+
+// CampaignHeaders wraps Campaign with response headers.
+type CampaignHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Campaign
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CampaignHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CampaignHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CampaignHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CampaignHeaders) GetResponse() Campaign {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CampaignHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CampaignHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CampaignHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CampaignHeaders) SetResponse(val Campaign) {
+	s.Response = val
+}
+
+func (*CampaignHeaders) createCampaignRes() {}
+func (*CampaignHeaders) getCampaignRes()    {}
+
+type CampaignName string
+
+// One page of campaigns.
+// Ref: #/components/schemas/CampaignPage
+type CampaignPage struct {
+	Items      []CampaignSummary `json:"items"`
+	NextCursor OptString         `json:"nextCursor"`
+}
+
+// GetItems returns the value of Items.
+func (s *CampaignPage) GetItems() []CampaignSummary {
+	return s.Items
+}
+
+// GetNextCursor returns the value of NextCursor.
+func (s *CampaignPage) GetNextCursor() OptString {
+	return s.NextCursor
+}
+
+// SetItems sets the value of Items.
+func (s *CampaignPage) SetItems(val []CampaignSummary) {
+	s.Items = val
+}
+
+// SetNextCursor sets the value of NextCursor.
+func (s *CampaignPage) SetNextCursor(val OptString) {
+	s.NextCursor = val
+}
+
+// CampaignPageHeaders wraps CampaignPage with response headers.
+type CampaignPageHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CampaignPage
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CampaignPageHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CampaignPageHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CampaignPageHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CampaignPageHeaders) GetResponse() CampaignPage {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CampaignPageHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CampaignPageHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CampaignPageHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CampaignPageHeaders) SetResponse(val CampaignPage) {
+	s.Response = val
+}
+
+func (*CampaignPageHeaders) listCampaignsRes() {}
+
+// A reference to a Campaign.
+// Ref: #/components/schemas/CampaignRef
+type CampaignRef struct {
+	ID ID `json:"id"`
+}
+
+// GetID returns the value of ID.
+func (s *CampaignRef) GetID() ID {
+	return s.ID
+}
+
+// SetID sets the value of ID.
+func (s *CampaignRef) SetID(val ID) {
+	s.ID = val
+}
+
+// CampaignRefHeaders wraps CampaignRef with response headers.
+type CampaignRefHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CampaignRef
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CampaignRefHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CampaignRefHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CampaignRefHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CampaignRefHeaders) GetResponse() CampaignRef {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CampaignRefHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CampaignRefHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CampaignRefHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CampaignRefHeaders) SetResponse(val CampaignRef) {
+	s.Response = val
+}
+
+func (*CampaignRefHeaders) acceptInviteRes() {}
+
+// A Campaign as it appears in the caller's list.
+// Ref: #/components/schemas/CampaignSummary
+type CampaignSummary struct {
+	ID          ID           `json:"id"`
+	Name        CampaignName `json:"name"`
+	Ruleset     Ruleset      `json:"ruleset"`
+	MyRole      Role         `json:"myRole"`
+	MemberCount int32        `json:"memberCount"`
+	CreatedAt   time.Time    `json:"createdAt"`
+}
+
+// GetID returns the value of ID.
+func (s *CampaignSummary) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *CampaignSummary) GetName() CampaignName {
+	return s.Name
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *CampaignSummary) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetMyRole returns the value of MyRole.
+func (s *CampaignSummary) GetMyRole() Role {
+	return s.MyRole
+}
+
+// GetMemberCount returns the value of MemberCount.
+func (s *CampaignSummary) GetMemberCount() int32 {
+	return s.MemberCount
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CampaignSummary) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *CampaignSummary) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *CampaignSummary) SetName(val CampaignName) {
+	s.Name = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *CampaignSummary) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetMyRole sets the value of MyRole.
+func (s *CampaignSummary) SetMyRole(val Role) {
+	s.MyRole = val
+}
+
+// SetMemberCount sets the value of MemberCount.
+func (s *CampaignSummary) SetMemberCount(val int32) {
+	s.MemberCount = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CampaignSummary) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// CampaignSummaryHeaders wraps CampaignSummary with response headers.
+type CampaignSummaryHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CampaignSummary
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CampaignSummaryHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CampaignSummaryHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CampaignSummaryHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CampaignSummaryHeaders) GetResponse() CampaignSummary {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CampaignSummaryHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CampaignSummaryHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CampaignSummaryHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CampaignSummaryHeaders) SetResponse(val CampaignSummary) {
+	s.Response = val
+}
+
+func (*CampaignSummaryHeaders) updateCampaignRes() {}
+
+// Settings to change; omitted fields stay as they are.
+// Ref: #/components/schemas/CampaignUpdate
+type CampaignUpdate struct {
+	Name    OptCampaignName `json:"name"`
+	Ruleset OptRuleset      `json:"ruleset"`
+}
+
+// GetName returns the value of Name.
+func (s *CampaignUpdate) GetName() OptCampaignName {
+	return s.Name
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *CampaignUpdate) GetRuleset() OptRuleset {
+	return s.Ruleset
+}
+
+// SetName sets the value of Name.
+func (s *CampaignUpdate) SetName(val OptCampaignName) {
+	s.Name = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *CampaignUpdate) SetRuleset(val OptRuleset) {
+	s.Ruleset = val
+}
+
 // A condition named in rules text, with its own text for tooltips.
 // Ref: #/components/schemas/ConditionRef
 type ConditionRef struct {
@@ -209,6 +685,8 @@ func (s *ConditionRef) SetName(val string) {
 func (s *ConditionRef) SetDescription(val string) {
 	s.Description = val
 }
+
+type DisplayName string
 
 // An entry rendered for reading.
 // Ref: #/components/schemas/Entry
@@ -821,6 +1299,177 @@ func (s *HealthStatus) SetStatus(val string) {
 func (*HealthStatus) getHealthRes()    {}
 func (*HealthStatus) getReadinessRes() {}
 
+type ID uuid.UUID
+
+// An open invite link.
+// Ref: #/components/schemas/Invite
+type Invite struct {
+	ID        ID          `json:"id"`
+	CreatedAt time.Time   `json:"createdAt"`
+	ExpiresAt time.Time   `json:"expiresAt"`
+	CreatedBy DisplayName `json:"createdBy"`
+}
+
+// GetID returns the value of ID.
+func (s *Invite) GetID() ID {
+	return s.ID
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Invite) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *Invite) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// GetCreatedBy returns the value of CreatedBy.
+func (s *Invite) GetCreatedBy() DisplayName {
+	return s.CreatedBy
+}
+
+// SetID sets the value of ID.
+func (s *Invite) SetID(val ID) {
+	s.ID = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Invite) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *Invite) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+// SetCreatedBy sets the value of CreatedBy.
+func (s *Invite) SetCreatedBy(val DisplayName) {
+	s.CreatedBy = val
+}
+
+// The invite token and how the new Member wants to appear.
+// Ref: #/components/schemas/InviteAccept
+type InviteAccept struct {
+	Token       Token       `json:"token"`
+	DisplayName DisplayName `json:"displayName"`
+}
+
+// GetToken returns the value of Token.
+func (s *InviteAccept) GetToken() Token {
+	return s.Token
+}
+
+// GetDisplayName returns the value of DisplayName.
+func (s *InviteAccept) GetDisplayName() DisplayName {
+	return s.DisplayName
+}
+
+// SetToken sets the value of Token.
+func (s *InviteAccept) SetToken(val Token) {
+	s.Token = val
+}
+
+// SetDisplayName sets the value of DisplayName.
+func (s *InviteAccept) SetDisplayName(val DisplayName) {
+	s.DisplayName = val
+}
+
+// Where an invite link leads.
+// Ref: #/components/schemas/InvitePreview
+type InvitePreview struct {
+	CampaignName CampaignName `json:"campaignName"`
+	InvitedBy    DisplayName  `json:"invitedBy"`
+}
+
+// GetCampaignName returns the value of CampaignName.
+func (s *InvitePreview) GetCampaignName() CampaignName {
+	return s.CampaignName
+}
+
+// GetInvitedBy returns the value of InvitedBy.
+func (s *InvitePreview) GetInvitedBy() DisplayName {
+	return s.InvitedBy
+}
+
+// SetCampaignName sets the value of CampaignName.
+func (s *InvitePreview) SetCampaignName(val CampaignName) {
+	s.CampaignName = val
+}
+
+// SetInvitedBy sets the value of InvitedBy.
+func (s *InvitePreview) SetInvitedBy(val DisplayName) {
+	s.InvitedBy = val
+}
+
+// InvitePreviewHeaders wraps InvitePreview with response headers.
+type InvitePreviewHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           InvitePreview
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *InvitePreviewHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *InvitePreviewHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *InvitePreviewHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *InvitePreviewHeaders) GetResponse() InvitePreview {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *InvitePreviewHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *InvitePreviewHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *InvitePreviewHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *InvitePreviewHeaders) SetResponse(val InvitePreview) {
+	s.Response = val
+}
+
+func (*InvitePreviewHeaders) previewInviteRes() {}
+
+// An invite token.
+// Ref: #/components/schemas/InviteToken
+type InviteToken struct {
+	Token Token `json:"token"`
+}
+
+// GetToken returns the value of Token.
+func (s *InviteToken) GetToken() Token {
+	return s.Token
+}
+
+// SetToken sets the value of Token.
+func (s *InviteToken) SetToken(val Token) {
+	s.Token = val
+}
+
 // ListEntriesNotModified is response for ListEntries operation.
 type ListEntriesNotModified struct {
 	ETag OptString
@@ -837,6 +1486,56 @@ func (s *ListEntriesNotModified) SetETag(val OptString) {
 }
 
 func (*ListEntriesNotModified) listEntriesRes() {}
+
+// ListInvitesOKHeaders wraps []Invite with response headers.
+type ListInvitesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Invite
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListInvitesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListInvitesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListInvitesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListInvitesOKHeaders) GetResponse() []Invite {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListInvitesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListInvitesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListInvitesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListInvitesOKHeaders) SetResponse(val []Invite) {
+	s.Response = val
+}
+
+func (*ListInvitesOKHeaders) listInvitesRes() {}
 
 // ListSourcesOKHeaders wraps []Source with response headers.
 type ListSourcesOKHeaders struct {
@@ -971,6 +1670,288 @@ func (s *MeHeaders) SetResponse(val Me) {
 }
 
 func (*MeHeaders) getMeRes() {}
+
+// An account's participation in a Campaign.
+// Ref: #/components/schemas/Member
+type Member struct {
+	ID          ID          `json:"id"`
+	DisplayName DisplayName `json:"displayName"`
+	Role        Role        `json:"role"`
+	JoinedAt    time.Time   `json:"joinedAt"`
+	IsMe        bool        `json:"isMe"`
+}
+
+// GetID returns the value of ID.
+func (s *Member) GetID() ID {
+	return s.ID
+}
+
+// GetDisplayName returns the value of DisplayName.
+func (s *Member) GetDisplayName() DisplayName {
+	return s.DisplayName
+}
+
+// GetRole returns the value of Role.
+func (s *Member) GetRole() Role {
+	return s.Role
+}
+
+// GetJoinedAt returns the value of JoinedAt.
+func (s *Member) GetJoinedAt() time.Time {
+	return s.JoinedAt
+}
+
+// GetIsMe returns the value of IsMe.
+func (s *Member) GetIsMe() bool {
+	return s.IsMe
+}
+
+// SetID sets the value of ID.
+func (s *Member) SetID(val ID) {
+	s.ID = val
+}
+
+// SetDisplayName sets the value of DisplayName.
+func (s *Member) SetDisplayName(val DisplayName) {
+	s.DisplayName = val
+}
+
+// SetRole sets the value of Role.
+func (s *Member) SetRole(val Role) {
+	s.Role = val
+}
+
+// SetJoinedAt sets the value of JoinedAt.
+func (s *Member) SetJoinedAt(val time.Time) {
+	s.JoinedAt = val
+}
+
+// SetIsMe sets the value of IsMe.
+func (s *Member) SetIsMe(val bool) {
+	s.IsMe = val
+}
+
+// MemberHeaders wraps Member with response headers.
+type MemberHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Member
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MemberHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MemberHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MemberHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MemberHeaders) GetResponse() Member {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MemberHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MemberHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MemberHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MemberHeaders) SetResponse(val Member) {
+	s.Response = val
+}
+
+func (*MemberHeaders) updateMemberRes() {}
+
+// A Member's new role.
+// Ref: #/components/schemas/MemberUpdate
+type MemberUpdate struct {
+	Role Role `json:"role"`
+}
+
+// GetRole returns the value of Role.
+func (s *MemberUpdate) GetRole() Role {
+	return s.Role
+}
+
+// SetRole sets the value of Role.
+func (s *MemberUpdate) SetRole(val Role) {
+	s.Role = val
+}
+
+// A new invite and the token for its link, shown once.
+// Ref: #/components/schemas/NewInvite
+type NewInvite struct {
+	ID        ID          `json:"id"`
+	CreatedAt time.Time   `json:"createdAt"`
+	ExpiresAt time.Time   `json:"expiresAt"`
+	CreatedBy DisplayName `json:"createdBy"`
+	Token     Token       `json:"token"`
+}
+
+// GetID returns the value of ID.
+func (s *NewInvite) GetID() ID {
+	return s.ID
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *NewInvite) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *NewInvite) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// GetCreatedBy returns the value of CreatedBy.
+func (s *NewInvite) GetCreatedBy() DisplayName {
+	return s.CreatedBy
+}
+
+// GetToken returns the value of Token.
+func (s *NewInvite) GetToken() Token {
+	return s.Token
+}
+
+// SetID sets the value of ID.
+func (s *NewInvite) SetID(val ID) {
+	s.ID = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *NewInvite) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *NewInvite) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+// SetCreatedBy sets the value of CreatedBy.
+func (s *NewInvite) SetCreatedBy(val DisplayName) {
+	s.CreatedBy = val
+}
+
+// SetToken sets the value of Token.
+func (s *NewInvite) SetToken(val Token) {
+	s.Token = val
+}
+
+// NewInviteHeaders wraps NewInvite with response headers.
+type NewInviteHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           NewInvite
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *NewInviteHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *NewInviteHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *NewInviteHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *NewInviteHeaders) GetResponse() NewInvite {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *NewInviteHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *NewInviteHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *NewInviteHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *NewInviteHeaders) SetResponse(val NewInvite) {
+	s.Response = val
+}
+
+func (*NewInviteHeaders) createInviteRes() {}
+
+// NewOptCampaignName returns new OptCampaignName with value set to v.
+func NewOptCampaignName(v CampaignName) OptCampaignName {
+	return OptCampaignName{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCampaignName is optional CampaignName.
+type OptCampaignName struct {
+	Value CampaignName
+	Set   bool
+}
+
+// IsSet returns true if OptCampaignName was set.
+func (o OptCampaignName) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCampaignName) Reset() {
+	var v CampaignName
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCampaignName) SetTo(v CampaignName) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCampaignName) Get() (v CampaignName, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCampaignName) Or(d CampaignName) CampaignName {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
 
 // NewOptInt32 returns new OptInt32 with value set to v.
 func NewOptInt32(v int32) OptInt32 {
@@ -1275,16 +2256,148 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 	s.Response = val
 }
 
+func (*ProblemStatusCodeWithHeaders) acceptInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) createCampaignRes()        {}
+func (*ProblemStatusCodeWithHeaders) createInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
+func (*ProblemStatusCodeWithHeaders) getCampaignRes()           {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
+func (*ProblemStatusCodeWithHeaders) listCampaignsRes()         {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
+func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
+func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
+func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
+func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
+func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
+
+// RemoveMemberNoContent is response for RemoveMember operation.
+type RemoveMemberNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RemoveMemberNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RemoveMemberNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RemoveMemberNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RemoveMemberNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RemoveMemberNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RemoveMemberNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*RemoveMemberNoContent) removeMemberRes() {}
+
+// RevokeInviteNoContent is response for RevokeInvite operation.
+type RevokeInviteNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RevokeInviteNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RevokeInviteNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RevokeInviteNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RevokeInviteNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RevokeInviteNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RevokeInviteNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*RevokeInviteNoContent) revokeInviteRes() {}
+
+// What a Member may do in a Campaign.
+// Ref: #/components/schemas/Role
+type Role string
+
+const (
+	RoleDm     Role = "dm"
+	RolePlayer Role = "player"
+)
+
+// AllValues returns all Role values.
+func (Role) AllValues() []Role {
+	return []Role{
+		RoleDm,
+		RolePlayer,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Role) MarshalText() ([]byte, error) {
+	switch s {
+	case RoleDm:
+		return []byte(s), nil
+	case RolePlayer:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Role) UnmarshalText(data []byte) error {
+	switch Role(data) {
+	case RoleDm:
+		*s = RoleDm
+		return nil
+	case RolePlayer:
+		*s = RolePlayer
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // Rules document key.
 // Ref: #/components/schemas/Ruleset
@@ -2113,3 +3226,5 @@ func (s *StatusHeaders) SetResponse(val Status) {
 }
 
 func (*StatusHeaders) getStatusRes() {}
+
+type Token string

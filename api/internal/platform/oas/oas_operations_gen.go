@@ -6,14 +6,25 @@ package oas
 type OperationName = string
 
 const (
+	AcceptInviteOperation          OperationName = "AcceptInvite"
+	CreateCampaignOperation        OperationName = "CreateCampaign"
+	CreateInviteOperation          OperationName = "CreateInvite"
 	GetAutomationCoverageOperation OperationName = "GetAutomationCoverage"
+	GetCampaignOperation           OperationName = "GetCampaign"
 	GetEntryOperation              OperationName = "GetEntry"
 	GetHealthOperation             OperationName = "GetHealth"
 	GetMeOperation                 OperationName = "GetMe"
 	GetReadinessOperation          OperationName = "GetReadiness"
 	GetSpellOperation              OperationName = "GetSpell"
 	GetStatusOperation             OperationName = "GetStatus"
+	ListCampaignsOperation         OperationName = "ListCampaigns"
 	ListEntriesOperation           OperationName = "ListEntries"
+	ListInvitesOperation           OperationName = "ListInvites"
 	ListSourcesOperation           OperationName = "ListSources"
 	ListSpellsOperation            OperationName = "ListSpells"
+	PreviewInviteOperation         OperationName = "PreviewInvite"
+	RemoveMemberOperation          OperationName = "RemoveMember"
+	RevokeInviteOperation          OperationName = "RevokeInvite"
+	UpdateCampaignOperation        OperationName = "UpdateCampaign"
+	UpdateMemberOperation          OperationName = "UpdateMember"
 )

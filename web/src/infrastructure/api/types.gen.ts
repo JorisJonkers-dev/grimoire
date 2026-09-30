@@ -5,6 +5,151 @@ export type ClientOptions = {
 };
 
 /**
+ * Random identifier.
+ */
+export type Id = string;
+
+/**
+ * What a Member may do in a Campaign.
+ */
+export type Role = 'dm' | 'player';
+
+/**
+ * How a Member appears to the rest of the table.
+ */
+export type DisplayName = string;
+
+/**
+ * A Campaign's name.
+ */
+export type CampaignName = string;
+
+/**
+ * A Campaign as it appears in the caller's list.
+ */
+export type CampaignSummary = {
+    id: Id;
+    name: CampaignName;
+    ruleset: Ruleset;
+    myRole: Role;
+    memberCount: number;
+    createdAt: string;
+};
+
+/**
+ * One page of campaigns.
+ */
+export type CampaignPage = {
+    items: Array<CampaignSummary>;
+    nextCursor?: string;
+};
+
+/**
+ * An account's participation in a Campaign.
+ */
+export type Member = {
+    id: Id;
+    displayName: DisplayName;
+    role: Role;
+    joinedAt: string;
+    isMe: boolean;
+};
+
+/**
+ * A Campaign's home.
+ */
+export type Campaign = {
+    id: Id;
+    name: CampaignName;
+    ruleset: Ruleset;
+    myRole: Role;
+    memberCount: number;
+    createdAt: string;
+    me: Member;
+    members: Array<Member>;
+};
+
+/**
+ * A new Campaign.
+ */
+export type CampaignCreate = {
+    name: CampaignName;
+    ruleset?: Ruleset;
+    displayName: DisplayName;
+};
+
+/**
+ * Settings to change; omitted fields stay as they are.
+ */
+export type CampaignUpdate = {
+    name?: CampaignName;
+    ruleset?: Ruleset;
+};
+
+/**
+ * A reference to a Campaign.
+ */
+export type CampaignRef = {
+    id: Id;
+};
+
+/**
+ * A Member's new role.
+ */
+export type MemberUpdate = {
+    role: Role;
+};
+
+/**
+ * An open invite link.
+ */
+export type Invite = {
+    id: Id;
+    createdAt: string;
+    expiresAt: string;
+    createdBy: DisplayName;
+};
+
+/**
+ * A new invite and the token for its link, shown once.
+ */
+export type NewInvite = {
+    id: Id;
+    createdAt: string;
+    expiresAt: string;
+    createdBy: DisplayName;
+    token: Token;
+};
+
+/**
+ * Where an invite link leads.
+ */
+export type InvitePreview = {
+    campaignName: CampaignName;
+    invitedBy: DisplayName;
+};
+
+/**
+ * An invite token, as it appears in the invite link.
+ */
+export type Token = string;
+
+/**
+ * An invite token.
+ */
+export type InviteToken = {
+    token: Token;
+};
+
+/**
+ * The invite token and how the new Member wants to appear.
+ */
+export type InviteAccept = {
+    token: Token;
+    displayName: DisplayName;
+};
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export type Slug = string;
@@ -197,6 +342,21 @@ export type Problem = {
     detail?: string;
     instance?: string;
 };
+
+/**
+ * Campaign id.
+ */
+export type CampaignId = Id;
+
+/**
+ * Member id.
+ */
+export type MemberId = Id;
+
+/**
+ * Invite id.
+ */
+export type InviteId = Id;
 
 /**
  * ETag from an earlier response; the server answers 304 when nothing changed.
@@ -485,6 +645,381 @@ export type ListSourcesResponses = {
 };
 
 export type ListSourcesResponse = ListSourcesResponses[keyof ListSourcesResponses];
+
+export type ListCampaignsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Opaque cursor from the previous page.
+         */
+        cursor?: string;
+        /**
+         * Page size.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/campaigns';
+};
+
+export type ListCampaignsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCampaignsError = ListCampaignsErrors[keyof ListCampaignsErrors];
+
+export type ListCampaignsResponses = {
+    /**
+     * One page of campaigns.
+     */
+    200: CampaignPage;
+};
+
+export type ListCampaignsResponse = ListCampaignsResponses[keyof ListCampaignsResponses];
+
+export type CreateCampaignData = {
+    body: CampaignCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/campaigns';
+};
+
+export type CreateCampaignErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateCampaignError = CreateCampaignErrors[keyof CreateCampaignErrors];
+
+export type CreateCampaignResponses = {
+    /**
+     * The new campaign.
+     */
+    201: Campaign;
+};
+
+export type CreateCampaignResponse = CreateCampaignResponses[keyof CreateCampaignResponses];
+
+export type GetCampaignData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}';
+};
+
+export type GetCampaignErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetCampaignError = GetCampaignErrors[keyof GetCampaignErrors];
+
+export type GetCampaignResponses = {
+    /**
+     * The campaign.
+     */
+    200: Campaign;
+};
+
+export type GetCampaignResponse = GetCampaignResponses[keyof GetCampaignResponses];
+
+export type UpdateCampaignData = {
+    body: CampaignUpdate;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}';
+};
+
+export type UpdateCampaignErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateCampaignError = UpdateCampaignErrors[keyof UpdateCampaignErrors];
+
+export type UpdateCampaignResponses = {
+    /**
+     * The updated campaign.
+     */
+    200: CampaignSummary;
+};
+
+export type UpdateCampaignResponse = UpdateCampaignResponses[keyof UpdateCampaignResponses];
+
+export type RemoveMemberData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Member id.
+         */
+        memberId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/members/{memberId}';
+};
+
+export type RemoveMemberErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RemoveMemberError = RemoveMemberErrors[keyof RemoveMemberErrors];
+
+export type RemoveMemberResponses = {
+    /**
+     * Removed.
+     */
+    204: void;
+};
+
+export type RemoveMemberResponse = RemoveMemberResponses[keyof RemoveMemberResponses];
+
+export type UpdateMemberData = {
+    body: MemberUpdate;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Member id.
+         */
+        memberId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/members/{memberId}';
+};
+
+export type UpdateMemberErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateMemberError = UpdateMemberErrors[keyof UpdateMemberErrors];
+
+export type UpdateMemberResponses = {
+    /**
+     * The updated member.
+     */
+    200: Member;
+};
+
+export type UpdateMemberResponse = UpdateMemberResponses[keyof UpdateMemberResponses];
+
+export type ListInvitesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/invites';
+};
+
+export type ListInvitesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListInvitesError = ListInvitesErrors[keyof ListInvitesErrors];
+
+export type ListInvitesResponses = {
+    /**
+     * Open invites.
+     */
+    200: Array<Invite>;
+};
+
+export type ListInvitesResponse = ListInvitesResponses[keyof ListInvitesResponses];
+
+export type CreateInviteData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/invites';
+};
+
+export type CreateInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateInviteError = CreateInviteErrors[keyof CreateInviteErrors];
+
+export type CreateInviteResponses = {
+    /**
+     * The invite and its token.
+     */
+    201: NewInvite;
+};
+
+export type CreateInviteResponse = CreateInviteResponses[keyof CreateInviteResponses];
+
+export type RevokeInviteData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Invite id.
+         */
+        inviteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/invites/{inviteId}';
+};
+
+export type RevokeInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RevokeInviteError = RevokeInviteErrors[keyof RevokeInviteErrors];
+
+export type RevokeInviteResponses = {
+    /**
+     * Revoked.
+     */
+    204: void;
+};
+
+export type RevokeInviteResponse = RevokeInviteResponses[keyof RevokeInviteResponses];
+
+export type PreviewInviteData = {
+    body: InviteToken;
+    path?: never;
+    query?: never;
+    url: '/api/v1/invites/preview';
+};
+
+export type PreviewInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewInviteError = PreviewInviteErrors[keyof PreviewInviteErrors];
+
+export type PreviewInviteResponses = {
+    /**
+     * The invite.
+     */
+    200: InvitePreview;
+};
+
+export type PreviewInviteResponse = PreviewInviteResponses[keyof PreviewInviteResponses];
+
+export type AcceptInviteData = {
+    body: InviteAccept;
+    path?: never;
+    query?: never;
+    url: '/api/v1/invites/accept';
+};
+
+export type AcceptInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type AcceptInviteError = AcceptInviteErrors[keyof AcceptInviteErrors];
+
+export type AcceptInviteResponses = {
+    /**
+     * The campaign joined.
+     */
+    200: CampaignRef;
+};
+
+export type AcceptInviteResponse = AcceptInviteResponses[keyof AcceptInviteResponses];
 
 export type GetMeData = {
     body?: never;

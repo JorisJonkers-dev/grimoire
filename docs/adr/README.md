@@ -10,3 +10,4 @@ Numbered sequentially; one short file each.
 | [0003](0003-single-replica-live-runtime.md) | Live Sessions run in one goroutine on a single API replica |
 | [0004](0004-server-only-rules.md) | Rules run only on the server; the client keeps hex geometry alone |
 | [0005](0005-goose-and-squawk-for-migrations.md) | goose and squawk for migrations, not Atlas |
+| [0006](0006-uuid-identifiers-and-tokens-in-bodies.md) | UUIDs for API identifiers; tokens only in request bodies |
