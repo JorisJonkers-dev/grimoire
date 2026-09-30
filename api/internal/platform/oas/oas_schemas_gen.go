@@ -1074,14 +1074,15 @@ func (*BuilderOptionsHeaders) getBuilderOptionsRes() {}
 // A Campaign's home.
 // Ref: #/components/schemas/Campaign
 type Campaign struct {
-	ID          ID           `json:"id"`
-	Name        CampaignName `json:"name"`
-	Ruleset     Ruleset      `json:"ruleset"`
-	MyRole      Role         `json:"myRole"`
-	MemberCount int32        `json:"memberCount"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	Me          Member       `json:"me"`
-	Members     []Member     `json:"members"`
+	ID               ID                 `json:"id"`
+	Name             CampaignName       `json:"name"`
+	Ruleset          Ruleset            `json:"ruleset"`
+	MyRole           Role               `json:"myRole"`
+	MemberCount      int32              `json:"memberCount"`
+	CreatedAt        time.Time          `json:"createdAt"`
+	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
+	Me               Member             `json:"me"`
+	Members          []Member           `json:"members"`
 }
 
 // GetID returns the value of ID.
@@ -1112,6 +1113,11 @@ func (s *Campaign) GetMemberCount() int32 {
 // GetCreatedAt returns the value of CreatedAt.
 func (s *Campaign) GetCreatedAt() time.Time {
 	return s.CreatedAt
+}
+
+// GetReactionTimeoutS returns the value of ReactionTimeoutS.
+func (s *Campaign) GetReactionTimeoutS() OptReactionTimeout {
+	return s.ReactionTimeoutS
 }
 
 // GetMe returns the value of Me.
@@ -1152,6 +1158,11 @@ func (s *Campaign) SetMemberCount(val int32) {
 // SetCreatedAt sets the value of CreatedAt.
 func (s *Campaign) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
+}
+
+// SetReactionTimeoutS sets the value of ReactionTimeoutS.
+func (s *Campaign) SetReactionTimeoutS(val OptReactionTimeout) {
+	s.ReactionTimeoutS = val
 }
 
 // SetMe sets the value of Me.
@@ -1401,12 +1412,13 @@ func (*CampaignRefHeaders) acceptInviteRes() {}
 // A Campaign as it appears in the caller's list.
 // Ref: #/components/schemas/CampaignSummary
 type CampaignSummary struct {
-	ID          ID           `json:"id"`
-	Name        CampaignName `json:"name"`
-	Ruleset     Ruleset      `json:"ruleset"`
-	MyRole      Role         `json:"myRole"`
-	MemberCount int32        `json:"memberCount"`
-	CreatedAt   time.Time    `json:"createdAt"`
+	ID               ID                 `json:"id"`
+	Name             CampaignName       `json:"name"`
+	Ruleset          Ruleset            `json:"ruleset"`
+	MyRole           Role               `json:"myRole"`
+	MemberCount      int32              `json:"memberCount"`
+	CreatedAt        time.Time          `json:"createdAt"`
+	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 }
 
 // GetID returns the value of ID.
@@ -1439,6 +1451,11 @@ func (s *CampaignSummary) GetCreatedAt() time.Time {
 	return s.CreatedAt
 }
 
+// GetReactionTimeoutS returns the value of ReactionTimeoutS.
+func (s *CampaignSummary) GetReactionTimeoutS() OptReactionTimeout {
+	return s.ReactionTimeoutS
+}
+
 // SetID sets the value of ID.
 func (s *CampaignSummary) SetID(val ID) {
 	s.ID = val
@@ -1467,6 +1484,11 @@ func (s *CampaignSummary) SetMemberCount(val int32) {
 // SetCreatedAt sets the value of CreatedAt.
 func (s *CampaignSummary) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
+}
+
+// SetReactionTimeoutS sets the value of ReactionTimeoutS.
+func (s *CampaignSummary) SetReactionTimeoutS(val OptReactionTimeout) {
+	s.ReactionTimeoutS = val
 }
 
 // CampaignSummaryHeaders wraps CampaignSummary with response headers.
@@ -1522,8 +1544,9 @@ func (*CampaignSummaryHeaders) updateCampaignRes() {}
 // Settings to change; omitted fields stay as they are.
 // Ref: #/components/schemas/CampaignUpdate
 type CampaignUpdate struct {
-	Name    OptCampaignName `json:"name"`
-	Ruleset OptRuleset      `json:"ruleset"`
+	Name             OptCampaignName    `json:"name"`
+	Ruleset          OptRuleset         `json:"ruleset"`
+	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 }
 
 // GetName returns the value of Name.
@@ -1536,6 +1559,11 @@ func (s *CampaignUpdate) GetRuleset() OptRuleset {
 	return s.Ruleset
 }
 
+// GetReactionTimeoutS returns the value of ReactionTimeoutS.
+func (s *CampaignUpdate) GetReactionTimeoutS() OptReactionTimeout {
+	return s.ReactionTimeoutS
+}
+
 // SetName sets the value of Name.
 func (s *CampaignUpdate) SetName(val OptCampaignName) {
 	s.Name = val
@@ -1544,6 +1572,11 @@ func (s *CampaignUpdate) SetName(val OptCampaignName) {
 // SetRuleset sets the value of Ruleset.
 func (s *CampaignUpdate) SetRuleset(val OptRuleset) {
 	s.Ruleset = val
+}
+
+// SetReactionTimeoutS sets the value of ReactionTimeoutS.
+func (s *CampaignUpdate) SetReactionTimeoutS(val OptReactionTimeout) {
+	s.ReactionTimeoutS = val
 }
 
 // The choices for a first-level Character.
@@ -5484,6 +5517,7 @@ type LiveCombat struct {
 	Round      int32                `json:"round"`
 	Combatants []LiveCombatant      `json:"combatants"`
 	Attack     OptLivePendingAttack `json:"attack"`
+	Prompt     OptLivePrompt        `json:"prompt"`
 }
 
 // GetStatus returns the value of Status.
@@ -5506,6 +5540,11 @@ func (s *LiveCombat) GetAttack() OptLivePendingAttack {
 	return s.Attack
 }
 
+// GetPrompt returns the value of Prompt.
+func (s *LiveCombat) GetPrompt() OptLivePrompt {
+	return s.Prompt
+}
+
 // SetStatus sets the value of Status.
 func (s *LiveCombat) SetStatus(val LiveCombatStatus) {
 	s.Status = val
@@ -5524,6 +5563,11 @@ func (s *LiveCombat) SetCombatants(val []LiveCombatant) {
 // SetAttack sets the value of Attack.
 func (s *LiveCombat) SetAttack(val OptLivePendingAttack) {
 	s.Attack = val
+}
+
+// SetPrompt sets the value of Prompt.
+func (s *LiveCombat) SetPrompt(val OptLivePrompt) {
+	s.Prompt = val
 }
 
 type LiveCombatStatus string
@@ -5825,6 +5869,10 @@ type LiveCommand struct {
 	TargetId     OptID                  `json:"targetId"`
 	AttackNo     OptInt32               `json:"attackNo"`
 	Tactics      OptTactics             `json:"tactics"`
+	// With react, whether the reaction is used or declined.
+	Use OptBool `json:"use"`
+	// With place_token, the token can cast Shield.
+	Shield OptBool `json:"shield"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -5952,6 +6000,16 @@ func (s *LiveCommand) GetTactics() OptTactics {
 	return s.Tactics
 }
 
+// GetUse returns the value of Use.
+func (s *LiveCommand) GetUse() OptBool {
+	return s.Use
+}
+
+// GetShield returns the value of Shield.
+func (s *LiveCommand) GetShield() OptBool {
+	return s.Shield
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6077,6 +6135,16 @@ func (s *LiveCommand) SetTactics(val OptTactics) {
 	s.Tactics = val
 }
 
+// SetUse sets the value of Use.
+func (s *LiveCommand) SetUse(val OptBool) {
+	s.Use = val
+}
+
+// SetShield sets the value of Shield.
+func (s *LiveCommand) SetShield(val OptBool) {
+	s.Shield = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6101,6 +6169,7 @@ const (
 	LiveCommandKindAttack         LiveCommandKind = "attack"
 	LiveCommandKindUndoDamage     LiveCommandKind = "undo_damage"
 	LiveCommandKindSetTactics     LiveCommandKind = "set_tactics"
+	LiveCommandKindReact          LiveCommandKind = "react"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6127,6 +6196,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindAttack,
 		LiveCommandKindUndoDamage,
 		LiveCommandKindSetTactics,
+		LiveCommandKindReact,
 	}
 }
 
@@ -6174,6 +6244,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindUndoDamage:
 		return []byte(s), nil
 	case LiveCommandKindSetTactics:
+		return []byte(s), nil
+	case LiveCommandKindReact:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6245,6 +6317,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindSetTactics:
 		*s = LiveCommandKindSetTactics
+		return nil
+	case LiveCommandKindReact:
+		*s = LiveCommandKindReact
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -6578,14 +6653,16 @@ func (s *LivePendingAttack) SetCritical(val bool) {
 type LivePendingAttackStage string
 
 const (
-	LivePendingAttackStageToHit  LivePendingAttackStage = "to_hit"
-	LivePendingAttackStageDamage LivePendingAttackStage = "damage"
+	LivePendingAttackStageToHit    LivePendingAttackStage = "to_hit"
+	LivePendingAttackStageReaction LivePendingAttackStage = "reaction"
+	LivePendingAttackStageDamage   LivePendingAttackStage = "damage"
 )
 
 // AllValues returns all LivePendingAttackStage values.
 func (LivePendingAttackStage) AllValues() []LivePendingAttackStage {
 	return []LivePendingAttackStage{
 		LivePendingAttackStageToHit,
+		LivePendingAttackStageReaction,
 		LivePendingAttackStageDamage,
 	}
 }
@@ -6594,6 +6671,8 @@ func (LivePendingAttackStage) AllValues() []LivePendingAttackStage {
 func (s LivePendingAttackStage) MarshalText() ([]byte, error) {
 	switch s {
 	case LivePendingAttackStageToHit:
+		return []byte(s), nil
+	case LivePendingAttackStageReaction:
 		return []byte(s), nil
 	case LivePendingAttackStageDamage:
 		return []byte(s), nil
@@ -6608,8 +6687,124 @@ func (s *LivePendingAttackStage) UnmarshalText(data []byte) error {
 	case LivePendingAttackStageToHit:
 		*s = LivePendingAttackStageToHit
 		return nil
+	case LivePendingAttackStageReaction:
+		*s = LivePendingAttackStageReaction
+		return nil
 	case LivePendingAttackStageDamage:
 		*s = LivePendingAttackStageDamage
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Reaction Prompt the fight waits on. The reactor's Controller, or the DM, answers; no answer by the
+// countdown declines.
+// Ref: #/components/schemas/LivePrompt
+type LivePrompt struct {
+	ID          ID             `json:"id"`
+	Kind        LivePromptKind `json:"kind"`
+	ReactorId   ID             `json:"reactorId"`
+	TriggerId   ID             `json:"triggerId"`
+	Effect      string         `json:"effect"`
+	SecondsLeft int32          `json:"secondsLeft"`
+}
+
+// GetID returns the value of ID.
+func (s *LivePrompt) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *LivePrompt) GetKind() LivePromptKind {
+	return s.Kind
+}
+
+// GetReactorId returns the value of ReactorId.
+func (s *LivePrompt) GetReactorId() ID {
+	return s.ReactorId
+}
+
+// GetTriggerId returns the value of TriggerId.
+func (s *LivePrompt) GetTriggerId() ID {
+	return s.TriggerId
+}
+
+// GetEffect returns the value of Effect.
+func (s *LivePrompt) GetEffect() string {
+	return s.Effect
+}
+
+// GetSecondsLeft returns the value of SecondsLeft.
+func (s *LivePrompt) GetSecondsLeft() int32 {
+	return s.SecondsLeft
+}
+
+// SetID sets the value of ID.
+func (s *LivePrompt) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LivePrompt) SetKind(val LivePromptKind) {
+	s.Kind = val
+}
+
+// SetReactorId sets the value of ReactorId.
+func (s *LivePrompt) SetReactorId(val ID) {
+	s.ReactorId = val
+}
+
+// SetTriggerId sets the value of TriggerId.
+func (s *LivePrompt) SetTriggerId(val ID) {
+	s.TriggerId = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *LivePrompt) SetEffect(val string) {
+	s.Effect = val
+}
+
+// SetSecondsLeft sets the value of SecondsLeft.
+func (s *LivePrompt) SetSecondsLeft(val int32) {
+	s.SecondsLeft = val
+}
+
+type LivePromptKind string
+
+const (
+	LivePromptKindOpportunityAttack LivePromptKind = "opportunity_attack"
+	LivePromptKindShield            LivePromptKind = "shield"
+)
+
+// AllValues returns all LivePromptKind values.
+func (LivePromptKind) AllValues() []LivePromptKind {
+	return []LivePromptKind{
+		LivePromptKindOpportunityAttack,
+		LivePromptKindShield,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LivePromptKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LivePromptKindOpportunityAttack:
+		return []byte(s), nil
+	case LivePromptKindShield:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LivePromptKind) UnmarshalText(data []byte) error {
+	switch LivePromptKind(data) {
+	case LivePromptKindOpportunityAttack:
+		*s = LivePromptKindOpportunityAttack
+		return nil
+	case LivePromptKindShield:
+		*s = LivePromptKindShield
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -6769,6 +6964,7 @@ type LiveToken struct {
 	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
 	Health  OptLiveTokenHealth `json:"health"`
 	Attacks []LiveAttack       `json:"attacks"`
+	Shield  OptBool            `json:"shield"`
 }
 
 // GetID returns the value of ID.
@@ -6836,6 +7032,11 @@ func (s *LiveToken) GetAttacks() []LiveAttack {
 	return s.Attacks
 }
 
+// GetShield returns the value of Shield.
+func (s *LiveToken) GetShield() OptBool {
+	return s.Shield
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -6899,6 +7100,11 @@ func (s *LiveToken) SetHealth(val OptLiveTokenHealth) {
 // SetAttacks sets the value of Attacks.
 func (s *LiveToken) SetAttacks(val []LiveAttack) {
 	s.Attacks = val
+}
+
+// SetShield sets the value of Shield.
+func (s *LiveToken) SetShield(val OptBool) {
+	s.Shield = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -8836,6 +9042,52 @@ func (o OptLivePendingAttack) Or(d LivePendingAttack) LivePendingAttack {
 	return d
 }
 
+// NewOptLivePrompt returns new OptLivePrompt with value set to v.
+func NewOptLivePrompt(v LivePrompt) OptLivePrompt {
+	return OptLivePrompt{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLivePrompt is optional LivePrompt.
+type OptLivePrompt struct {
+	Value LivePrompt
+	Set   bool
+}
+
+// IsSet returns true if OptLivePrompt was set.
+func (o OptLivePrompt) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLivePrompt) Reset() {
+	var v LivePrompt
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLivePrompt) SetTo(v LivePrompt) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLivePrompt) Get() (v LivePrompt, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLivePrompt) Or(d LivePrompt) LivePrompt {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveSessionView returns new OptLiveSessionView with value set to v.
 func NewOptLiveSessionView(v LiveSessionView) OptLiveSessionView {
 	return OptLiveSessionView{
@@ -9060,6 +9312,52 @@ func (o OptNamedRef) Get() (v NamedRef, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptNamedRef) Or(d NamedRef) NamedRef {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptReactionTimeout returns new OptReactionTimeout with value set to v.
+func NewOptReactionTimeout(v ReactionTimeout) OptReactionTimeout {
+	return OptReactionTimeout{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptReactionTimeout is optional ReactionTimeout.
+type OptReactionTimeout struct {
+	Value ReactionTimeout
+	Set   bool
+}
+
+// IsSet returns true if OptReactionTimeout was set.
+func (o OptReactionTimeout) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptReactionTimeout) Reset() {
+	var v ReactionTimeout
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptReactionTimeout) SetTo(v ReactionTimeout) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptReactionTimeout) Get() (v ReactionTimeout, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptReactionTimeout) Or(d ReactionTimeout) ReactionTimeout {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -9914,6 +10212,8 @@ func (s *ReachRequest) SetSpeedFt(val int32) {
 func (s *ReachRequest) SetClimbSpeed(val OptBool) {
 	s.ClimbSpeed = val
 }
+
+type ReactionTimeout int32
 
 // RemoveMemberNoContent is response for RemoveMember operation.
 type RemoveMemberNoContent struct {

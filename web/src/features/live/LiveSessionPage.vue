@@ -16,6 +16,7 @@ import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
 import MapBoard from './MapBoard.vue'
+import ReactionPrompt from './ReactionPrompt.vue'
 import StartCombat from './StartCombat.vue'
 import TurnPanel from './TurnPanel.vue'
 
@@ -52,6 +53,7 @@ const dimFt = ref(40)
 const mapChoice = ref('')
 const controller = ref('')
 const monster = ref('')
+const knowsShield = ref(false)
 const character = ref('')
 const players = computed(() => campaign.data.value?.members.filter((m) => m.role === 'player') ?? [])
 const walkPath = computed(() => state.value?.path?.hexes ?? [])
@@ -100,6 +102,11 @@ function confirmAttack(p: { tokenId: string; attackNo: number; targetId: string 
 function useSuggestion(tokenId: string, s?: LiveSuggestion) {
   if (s?.attackNo !== undefined) live.value?.send({ kind: 'attack', tokenId, attackNo: s.attackNo, targetId: s.targetId })
 }
+const prompt = computed(() => combat.value?.prompt ?? null)
+const answerable = computed(() => {
+  const reactor = prompt.value ? tokenById(prompt.value.reactorId) : undefined
+  return isDM.value || (reactor?.controllerId !== undefined && reactor.controllerId === campaign.data.value?.me.id)
+})
 // Whoever throws the attacker's dice sees the attack's Roll Card: its Controller, or the DM.
 const attackRoll = computed(() => {
   const a = pending.value
@@ -129,6 +136,7 @@ function tokenTool(c: Coord) {
       kind: 'place_token', label: label.value.trim(), tokenKind: kind.value, q: c.q, r: c.r, hidden: hidden.value, darkvisionFt: darkvision.value,
       ...(controller.value ? { controllerId: controller.value } : {}),
       ...(character.value ? { characterId: character.value } : monster.value.trim() ? { monsterSlug: monster.value.trim() } : {}),
+      ...(knowsShield.value ? { shield: true } : {}),
     })
     label.value = ''
   }
@@ -232,8 +240,15 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @confirm="confirmAttack(preview)"
         @cancel="aiming = null"
       />
+      <ReactionPrompt
+        v-if="prompt"
+        :prompt="prompt"
+        :reactor="tokenById(prompt.reactorId)?.label ?? 'A creature'"
+        :answerable="answerable"
+        @answer="(use) => live?.send({ kind: 'react', use })"
+      />
       <p v-if="pending" role="status" class="walk" data-testid="pending-attack">
-        {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for the {{ pending.stage === 'to_hit' ? 'attack' : 'damage' }} roll.
+        {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for {{ { to_hit: 'the attack roll', reaction: 'a reaction', damage: 'the damage roll' }[pending.stage] }}.
       </p>
       <LiveRoll v-if="attackRoll" :key="attackRoll" :campaign-id="campaignId" :roll-id="attackRoll" />
       <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :title="view.map.name" @select="pick" />
@@ -302,6 +317,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </label>
           <label class="g-field"><span>Darkvision (ft)</span><input v-model.number="darkvision" type="number" min="0" max="300" data-testid="token-darkvision" /></label>
           <label class="check"><input v-model="hidden" type="checkbox" data-testid="token-hidden" /><span>Hidden</span></label>
+          <label class="check"><input v-model="knowsShield" type="checkbox" data-testid="token-shield" /><span>Knows Shield</span></label>
         </div>
         <div v-if="chosen" class="row" data-testid="selected-token">
           <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>

@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -23,10 +24,11 @@ type state struct {
 	combat  *domain.Combat
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
+	now      func() time.Time
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, observed: map[domain.TokenID]map[domain.TokenID]int{}}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}

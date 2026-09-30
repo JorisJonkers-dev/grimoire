@@ -33,7 +33,7 @@ func samples() contract {
 	ac, hp, most := 15, 4, 7
 	view.Tokens = append(view.Tokens, live.TokenView{
 		ID: "0190c7a8-0000-7000-8000-000000000013", Label: "Aria", Kind: "party", AC: &ac, HP: &hp, HPMax: &most,
-		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"}},
+		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"}}, Shield: true,
 	}, live.TokenView{ID: "0190c7a8-0000-7000-8000-000000000014", Label: "Orc", Kind: "enemy", Health: "bloodied"})
 	seventeen, zero := 17, 0
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
@@ -43,6 +43,9 @@ func samples() contract {
 	}}, Attack: &live.PendingAttackView{
 		AttackerID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", Name: "Scimitar", Stage: "damage",
 		RollID: "0190c7a8-0000-7000-8000-000000000015", Critical: true,
+	}, Prompt: &live.PromptView{
+		ID: "0190c7a8-0000-7000-8000-000000000016", Kind: "shield", ReactorID: "0190c7a8-0000-7000-8000-000000000013", TriggerID: token.ID,
+		Effect: "Shield: AC 15 → 20, so the attack (18) would miss.", SecondsLeft: 9,
 	}}
 	dmView := *view
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
@@ -73,6 +76,8 @@ func samples() contract {
 			{Nonce: "n22", Kind: live.CmdAttack, TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013"},
 			{Nonce: "n23", Kind: live.CmdUndoDamage},
 			{Nonce: "n24", Kind: live.CmdSetTactics, TokenID: token.ID, Tactics: "cunning"},
+			{Nonce: "n25", Kind: live.CmdReact, Use: true},
+			{Nonce: "n26", Kind: live.CmdPlace, Label: "Mage", TokenKind: "party", Shield: true},
 		},
 		Updates: []live.Update{
 			{

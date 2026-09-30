@@ -55,6 +55,8 @@ type Token struct {
 	Stats *Stats
 	// Tactics is the DM's override of how the creature picks Suggested Actions; "auto" follows Intelligence.
 	Tactics string
+	// CanShield offers the Shield reaction when the token is hit.
+	CanShield bool
 }
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.
@@ -66,6 +68,8 @@ type Stats struct {
 	Attacks []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int
+	// Shield is set for statblocks that can cast the Shield spell.
+	Shield bool
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

@@ -15,6 +15,9 @@ import (
 // plan validates a command against the live state and turns it into a Write.
 func (r *runtime) plan(req request) (Write, string) {
 	m, cmd := req.from.Member, req.cmd
+	if r.waiting(cmd.Kind) {
+		return Write{}, "The fight waits for a reaction."
+	}
 	switch cmd.Kind {
 	case CmdAttack:
 		return r.planAttack(m, cmd)
@@ -22,9 +25,14 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planUndo()
 	case CmdSetTactics:
 		return r.planTactics(cmd)
+	case CmdReact:
+		return r.planReact(m, cmd)
 	case CmdWalk:
-		t, path, cost, reason := r.route(m, cmd)
-		return Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: cost}, reason
+		t, path, _, reason := r.route(m, cmd)
+		if reason != "" {
+			return Write{}, reason
+		}
+		return r.walkWrite(t, path, false), ""
 	case CmdStartCombat, CmdEndTurn, CmdSpend, CmdEndCombat:
 		return r.planCombat(m, cmd)
 	case CmdPlace:
@@ -91,6 +99,7 @@ func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 		return Write{}, "That hex is off the map."
 	}
 	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats, Tactics: tactics.FromIntelligence}
+	t.CanShield = cmd.Shield || (stats != nil && stats.Shield)
 	if cmd.ControllerID != "" {
 		id, err := uuid.Parse(cmd.ControllerID)
 		if err != nil {
@@ -207,4 +216,13 @@ func (r *runtime) planLight(cmd Command) (Write, string) {
 		}
 		return Write{Kind: domain.ActionAmbientSet, Ambient: cmd.Ambient}, ""
 	}
+}
+
+// waiting holds back what would move the fight on while a Reaction Prompt is open.
+func (r *runtime) waiting(kind string) bool {
+	switch kind {
+	case CmdWalk, CmdAttack, CmdEndTurn, CmdSpend:
+		return r.st.combat != nil && r.st.combat.Prompt != nil
+	}
+	return false
 }

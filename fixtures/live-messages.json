@@ -217,6 +217,24 @@
       "r": 0,
       "hidden": false,
       "tactics": "cunning"
+    },
+    {
+      "nonce": "n25",
+      "kind": "react",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "use": true
+    },
+    {
+      "nonce": "n26",
+      "kind": "place_token",
+      "label": "Mage",
+      "tokenKind": "party",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "shield": true
     }
   ],
   "updates": [
@@ -263,7 +281,8 @@
                 "damageBonus": 3,
                 "damageType": "slashing"
               }
-            ]
+            ],
+            "shield": true
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -334,6 +353,14 @@
             "stage": "damage",
             "rollId": "0190c7a8-0000-7000-8000-000000000015",
             "critical": true
+          },
+          "prompt": {
+            "id": "0190c7a8-0000-7000-8000-000000000016",
+            "kind": "shield",
+            "reactorId": "0190c7a8-0000-7000-8000-000000000013",
+            "triggerId": "0190c7a8-0000-7000-8000-00000000000a",
+            "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
+            "secondsLeft": 9
           }
         }
       }
@@ -376,7 +403,8 @@
                 "damageBonus": 3,
                 "damageType": "slashing"
               }
-            ]
+            ],
+            "shield": true
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -463,6 +491,14 @@
             "stage": "damage",
             "rollId": "0190c7a8-0000-7000-8000-000000000015",
             "critical": true
+          },
+          "prompt": {
+            "id": "0190c7a8-0000-7000-8000-000000000016",
+            "kind": "shield",
+            "reactorId": "0190c7a8-0000-7000-8000-000000000013",
+            "triggerId": "0190c7a8-0000-7000-8000-00000000000a",
+            "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
+            "secondsLeft": 9
           }
         }
       }
@@ -544,7 +580,8 @@
                 "damageBonus": 3,
                 "damageType": "slashing"
               }
-            ]
+            ],
+            "shield": true
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -615,6 +652,14 @@
             "stage": "damage",
             "rollId": "0190c7a8-0000-7000-8000-000000000015",
             "critical": true
+          },
+          "prompt": {
+            "id": "0190c7a8-0000-7000-8000-000000000016",
+            "kind": "shield",
+            "reactorId": "0190c7a8-0000-7000-8000-000000000013",
+            "triggerId": "0190c7a8-0000-7000-8000-00000000000a",
+            "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
+            "secondsLeft": 9
           }
         }
       },
@@ -653,7 +698,8 @@
                   "damageBonus": 3,
                   "damageType": "slashing"
                 }
-              ]
+              ],
+              "shield": true
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -724,6 +770,14 @@
               "stage": "damage",
               "rollId": "0190c7a8-0000-7000-8000-000000000015",
               "critical": true
+            },
+            "prompt": {
+              "id": "0190c7a8-0000-7000-8000-000000000016",
+              "kind": "shield",
+              "reactorId": "0190c7a8-0000-7000-8000-000000000013",
+              "triggerId": "0190c7a8-0000-7000-8000-00000000000a",
+              "effect": "Shield: AC 15 → 20, so the attack (18) would miss.",
+              "secondsLeft": 9
             }
           }
         }

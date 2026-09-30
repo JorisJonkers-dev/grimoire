@@ -42,6 +42,9 @@ const (
 	CmdAttack        = "attack"
 	CmdUndoDamage    = "undo_damage"
 	CmdSetTactics    = "set_tactics"
+	CmdReact         = "react"
+	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
+	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
 	cmdRollResolved = "roll_resolved"
 )
@@ -93,6 +96,9 @@ type Command struct {
 	TargetID     string           `json:"targetId,omitempty"`
 	AttackNo     int              `json:"attackNo,omitempty"`
 	Tactics      string           `json:"tactics,omitempty"`
+	Use          bool             `json:"use,omitempty"`
+	Shield       bool             `json:"shield,omitempty"`
+	promptID     uuid.UUID
 	rollID       domain.RollID
 }
 
@@ -130,6 +136,7 @@ type TokenView struct {
 	HPMax   *int         `json:"hpMax,omitempty"`
 	Health  string       `json:"health,omitempty"`
 	Attacks []AttackView `json:"attacks,omitempty"`
+	Shield  bool         `json:"shield,omitempty"`
 }
 
 // AttackView is one attack on a hotbar.
@@ -218,6 +225,17 @@ type CombatView struct {
 	Round      int                `json:"round"`
 	Combatants []CombatantView    `json:"combatants"`
 	Attack     *PendingAttackView `json:"attack,omitempty"`
+	Prompt     *PromptView        `json:"prompt,omitempty"`
+}
+
+// PromptView is a Reaction Prompt: who may react, to what, what it would do, and how long is left.
+type PromptView struct {
+	ID          string `json:"id"`
+	Kind        string `json:"kind"`
+	ReactorID   string `json:"reactorId"`
+	TriggerID   string `json:"triggerId"`
+	Effect      string `json:"effect"`
+	SecondsLeft int    `json:"secondsLeft"`
 }
 
 // CombatantView is one Combatant in the initiative rail. Tied initiatives share a rank and act together.
@@ -273,7 +291,7 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	switch {
 	case s == nil:
 	case a == AudienceDM || t.Kind == domain.TokenParty:
-		v.AC, v.HP, v.HPMax, v.Attacks = &s.AC, &s.HP, &s.HPMax, []AttackView{}
+		v.AC, v.HP, v.HPMax, v.Attacks, v.Shield = &s.AC, &s.HP, &s.HPMax, []AttackView{}, t.CanShield
 		for _, x := range s.Attacks {
 			v.Attacks = append(v.Attacks, AttackView{
 				Name: x.Name, ToHit: x.ToHit, ReachFt: x.ReachFt, RangeFt: x.RangeFt, LongRangeFt: x.LongRangeFt, Damage: x.Damage,

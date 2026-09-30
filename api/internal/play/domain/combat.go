@@ -7,6 +7,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
 // CombatID identifies a Combat.
@@ -31,7 +32,11 @@ type Combat struct {
 	Turn       int
 	Combatants []Combatant
 	// Attack is the attack waiting on a roll, if any.
-	Attack    *PendingAttack
+	Attack *PendingAttack
+	// Prompt is the Reaction Prompt the fight waits on, if any.
+	Prompt *ReactionPrompt
+	// Resume is the rest of a walk an opportunity attack interrupted.
+	Resume    *Resume
 	StartedAt time.Time
 	EndedAt   time.Time
 }
@@ -48,7 +53,42 @@ type Combatant struct {
 	// Done is set once the Combatant ends its turn this round.
 	Done    bool
 	Economy combat.Economy
+	// Shielded adds 5 to AC until the Combatant's next turn starts.
+	Shielded bool
 }
+
+// Reaction kinds and the stage an attack waits in while its target decides.
+const (
+	PromptOpportunity = "opportunity_attack"
+	PromptShield      = "shield"
+	StageReaction     = "reaction"
+)
+
+// ReactionPrompt asks a Controller, or the DM, whether a creature uses its reaction before the
+// triggering action goes on. No answer by the Deadline declines.
+type ReactionPrompt struct {
+	ID       uuid.UUID
+	Kind     string
+	Reactor  TokenID
+	Trigger  TokenID
+	AttackNo int
+	Effect   string
+	Deadline time.Time
+}
+
+// Resume is the rest of a walk, start first, and the movement it costs.
+type Resume struct {
+	Token  TokenID
+	Path   []hex.Coord
+	CostFt int
+}
+
+// Reaction action kinds in the Action Log.
+const (
+	ActionReactionOffered  = "reaction_offered"
+	ActionReactionUsed     = "reaction_used"
+	ActionReactionDeclined = "reaction_declined"
+)
 
 // Attack stages: the attack roll, then damage on a hit.
 const (
@@ -69,6 +109,10 @@ type PendingAttack struct {
 	RollID     RollID
 	// Ranged is set for attacks made from beyond reach; creatures that see them remember the damage.
 	Ranged bool
+	// Total is the attack roll while the target decides on a reaction.
+	Total int
+	// Opportunity marks an opportunity attack; the interrupted walk resumes after it.
+	Opportunity bool
 }
 
 // Totals lists every rolled initiative.

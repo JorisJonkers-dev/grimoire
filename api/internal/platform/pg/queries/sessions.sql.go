@@ -13,6 +13,27 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addResumeHex = `-- name: AddResumeHex :exec
+INSERT INTO play.combat_resume_path (combat_id, ordering, q, r) VALUES ($1, $2, $3, $4)
+`
+
+type AddResumeHexParams struct {
+	CombatID uuid.UUID
+	Ordering int32
+	Q        int32
+	R        int32
+}
+
+func (q *Queries) AddResumeHex(ctx context.Context, arg AddResumeHexParams) error {
+	_, err := q.db.Exec(ctx, addResumeHex,
+		arg.CombatID,
+		arg.Ordering,
+		arg.Q,
+		arg.R,
+	)
+	return err
+}
+
 const bumpSessionSeq = `-- name: BumpSessionSeq :one
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq
 `
@@ -22,6 +43,17 @@ func (q *Queries) BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, erro
 	var seq int64
 	err := row.Scan(&seq)
 	return seq, err
+}
+
+const campaignReactionTimeout = `-- name: CampaignReactionTimeout :one
+SELECT reaction_timeout_s FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignReactionTimeout(ctx context.Context, id uuid.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, campaignReactionTimeout, id)
+	var reaction_timeout_s int32
+	err := row.Scan(&reaction_timeout_s)
+	return reaction_timeout_s, err
 }
 
 const campaignRuleset = `-- name: CampaignRuleset :one
@@ -44,8 +76,27 @@ func (q *Queries) ClearAttacks(ctx context.Context, combatID uuid.UUID) error {
 	return err
 }
 
+const clearPrompts = `-- name: ClearPrompts :exec
+DELETE FROM play.reaction_prompts WHERE combat_id = $1
+`
+
+func (q *Queries) ClearPrompts(ctx context.Context, combatID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearPrompts, combatID)
+	return err
+}
+
+const clearResumePath = `-- name: ClearResumePath :exec
+DELETE FROM play.combat_resume_path WHERE combat_id = $1
+`
+
+func (q *Queries) ClearResumePath(ctx context.Context, combatID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearResumePath, combatID)
+	return err
+}
+
 const combatAttack = `-- name: CombatAttack :one
-SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged
+SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged, total,
+       opportunity
 FROM play.attacks WHERE combat_id = $1
 `
 
@@ -64,12 +115,15 @@ func (q *Queries) CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAtt
 		&i.Critical,
 		&i.RollID,
 		&i.Ranged,
+		&i.Total,
+		&i.Opportunity,
 	)
 	return i, err
 }
 
 const combatCombatants = `-- name: CombatCombatants :many
-SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft
+SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
+       shielded
 FROM play.combatants WHERE combat_id = $1 ORDER BY id
 `
 
@@ -95,6 +149,7 @@ func (q *Queries) CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]P
 			&i.HasBonusAction,
 			&i.HasReaction,
 			&i.MovementFt,
+			&i.Shielded,
 		); err != nil {
 			return nil, err
 		}
@@ -104,6 +159,35 @@ func (q *Queries) CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]P
 		return nil, err
 	}
 	return items, nil
+}
+
+const combatPrompt = `-- name: CombatPrompt :one
+SELECT id, kind, reactor_token_id, trigger_token_id, attack_no, effect, deadline FROM play.reaction_prompts WHERE combat_id = $1
+`
+
+type CombatPromptRow struct {
+	ID             uuid.UUID
+	Kind           string
+	ReactorTokenID uuid.UUID
+	TriggerTokenID uuid.UUID
+	AttackNo       int32
+	Effect         string
+	Deadline       time.Time
+}
+
+func (q *Queries) CombatPrompt(ctx context.Context, combatID uuid.UUID) (CombatPromptRow, error) {
+	row := q.db.QueryRow(ctx, combatPrompt, combatID)
+	var i CombatPromptRow
+	err := row.Scan(
+		&i.ID,
+		&i.Kind,
+		&i.ReactorTokenID,
+		&i.TriggerTokenID,
+		&i.AttackNo,
+		&i.Effect,
+		&i.Deadline,
+	)
+	return i, err
 }
 
 const deleteToken = `-- name: DeleteToken :exec
@@ -254,9 +338,9 @@ func (q *Queries) InsertSessionAction(ctx context.Context, arg InsertSessionActi
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence)
+    hp, hp_max, intelligence, can_shield)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-    $11, $12, $13, $14)
+    $11, $12, $13, $14, $15)
 `
 
 type InsertTokenParams struct {
@@ -274,6 +358,7 @@ type InsertTokenParams struct {
 	Hp                 pgtype.Int4
 	HpMax              pgtype.Int4
 	Intelligence       pgtype.Int4
+	CanShield          bool
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -292,6 +377,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.Hp,
 		arg.HpMax,
 		arg.Intelligence,
+		arg.CanShield,
 	)
 	return err
 }
@@ -540,8 +626,37 @@ func (q *Queries) ObserveDamage(ctx context.Context, arg ObserveDamageParams) er
 	return err
 }
 
+const resumePath = `-- name: ResumePath :many
+SELECT q, r FROM play.combat_resume_path WHERE combat_id = $1 ORDER BY ordering
+`
+
+type ResumePathRow struct {
+	Q int32
+	R int32
+}
+
+func (q *Queries) ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error) {
+	rows, err := q.db.Query(ctx, resumePath, combatID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ResumePathRow{}
+	for rows.Next() {
+		var i ResumePathRow
+		if err := rows.Scan(&i.Q, &i.R); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const runningCombat = `-- name: RunningCombat :one
-SELECT id, session_id, status, round, turn_count, started_at, ended_at FROM play.combats WHERE session_id = $1 AND status <> 'ended'
+SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_token_id, resume_cost_ft FROM play.combats WHERE session_id = $1 AND status <> 'ended'
 `
 
 func (q *Queries) RunningCombat(ctx context.Context, sessionID uuid.UUID) (PlayCombat, error) {
@@ -555,14 +670,18 @@ func (q *Queries) RunningCombat(ctx context.Context, sessionID uuid.UUID) (PlayC
 		&i.TurnCount,
 		&i.StartedAt,
 		&i.EndedAt,
+		&i.ResumeTokenID,
+		&i.ResumeCostFt,
 	)
 	return i, err
 }
 
 const saveAttack = `-- name: SaveAttack :exec
-INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id
+INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged,
+    total, opportunity)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+    $12, $13)
+ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id, total = excluded.total
 `
 
 type SaveAttackParams struct {
@@ -577,6 +696,8 @@ type SaveAttackParams struct {
 	Critical        bool
 	RollID          uuid.UUID
 	Ranged          bool
+	Total           pgtype.Int4
+	Opportunity     bool
 }
 
 func (q *Queries) SaveAttack(ctx context.Context, arg SaveAttackParams) error {
@@ -592,25 +713,30 @@ func (q *Queries) SaveAttack(ctx context.Context, arg SaveAttackParams) error {
 		arg.Critical,
 		arg.RollID,
 		arg.Ranged,
+		arg.Total,
+		arg.Opportunity,
 	)
 	return err
 }
 
 const saveCombat = `-- name: SaveCombat :exec
-INSERT INTO play.combats (id, session_id, status, round, turn_count, started_at, ended_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO play.combats (id, session_id, status, round, turn_count, started_at, ended_at, resume_token_id, resume_cost_ft)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+    $9)
 ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round, turn_count = excluded.turn_count,
-    ended_at = excluded.ended_at
+    ended_at = excluded.ended_at, resume_token_id = excluded.resume_token_id, resume_cost_ft = excluded.resume_cost_ft
 `
 
 type SaveCombatParams struct {
-	ID        uuid.UUID
-	SessionID uuid.UUID
-	Status    string
-	Round     int32
-	TurnCount pgtype.Int4
-	StartedAt time.Time
-	EndedAt   pgtype.Timestamptz
+	ID            uuid.UUID
+	SessionID     uuid.UUID
+	Status        string
+	Round         int32
+	TurnCount     pgtype.Int4
+	StartedAt     time.Time
+	EndedAt       pgtype.Timestamptz
+	ResumeTokenID pgtype.UUID
+	ResumeCostFt  pgtype.Int4
 }
 
 func (q *Queries) SaveCombat(ctx context.Context, arg SaveCombatParams) error {
@@ -622,17 +748,20 @@ func (q *Queries) SaveCombat(ctx context.Context, arg SaveCombatParams) error {
 		arg.TurnCount,
 		arg.StartedAt,
 		arg.EndedAt,
+		arg.ResumeTokenID,
+		arg.ResumeCostFt,
 	)
 	return err
 }
 
 const saveCombatant = `-- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft)
+    has_bonus_action, has_reaction, movement_ft, shielded)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
-    $10, $11, $12)
+    $10, $11, $12, $13)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
-    has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft
+    has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
+    shielded = excluded.shielded
 `
 
 type SaveCombatantParams struct {
@@ -648,6 +777,7 @@ type SaveCombatantParams struct {
 	HasBonusAction  bool
 	HasReaction     bool
 	MovementFt      int32
+	Shielded        bool
 }
 
 func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) error {
@@ -664,6 +794,38 @@ func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) er
 		arg.HasBonusAction,
 		arg.HasReaction,
 		arg.MovementFt,
+		arg.Shielded,
+	)
+	return err
+}
+
+const savePrompt = `-- name: SavePrompt :exec
+INSERT INTO play.reaction_prompts (id, combat_id, kind, reactor_token_id, trigger_token_id, attack_no, effect, deadline)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+ON CONFLICT (id) DO NOTHING
+`
+
+type SavePromptParams struct {
+	ID             uuid.UUID
+	CombatID       uuid.UUID
+	Kind           string
+	ReactorTokenID uuid.UUID
+	TriggerTokenID uuid.UUID
+	AttackNo       int32
+	Effect         string
+	Deadline       time.Time
+}
+
+func (q *Queries) SavePrompt(ctx context.Context, arg SavePromptParams) error {
+	_, err := q.db.Exec(ctx, savePrompt,
+		arg.ID,
+		arg.CombatID,
+		arg.Kind,
+		arg.ReactorTokenID,
+		arg.TriggerTokenID,
+		arg.AttackNo,
+		arg.Effect,
+		arg.Deadline,
 	)
 	return err
 }
@@ -751,7 +913,7 @@ func (q *Queries) SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) 
 }
 
 const sessionTokens = `-- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -769,6 +931,7 @@ type SessionTokensRow struct {
 	HpMax              pgtype.Int4
 	Intelligence       pgtype.Int4
 	Tactics            string
+	CanShield          bool
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -795,6 +958,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.HpMax,
 			&i.Intelligence,
 			&i.Tactics,
+			&i.CanShield,
 		); err != nil {
 			return nil, err
 		}

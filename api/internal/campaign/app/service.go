@@ -20,7 +20,7 @@ import (
 type Repository interface {
 	InTx(ctx context.Context, fn func(Repository) error) error
 	CreateCampaign(ctx context.Context, name, ruleset, subject string, now time.Time) (domain.Campaign, error)
-	UpdateCampaign(ctx context.Context, id domain.CampaignID, name, ruleset *string, now time.Time) (domain.Campaign, error)
+	UpdateCampaign(ctx context.Context, id domain.CampaignID, name, ruleset *string, reactionTimeoutS *int, now time.Time) (domain.Campaign, error)
 	GetCampaign(ctx context.Context, id domain.CampaignID) (domain.Campaign, error)
 	ListCampaigns(ctx context.Context, subject string, after *domain.ListCursor, pageSize int) ([]domain.Summary, error)
 	LockCampaign(ctx context.Context, id domain.CampaignID) error
@@ -164,6 +164,8 @@ func (s *Service) Get(ctx context.Context, c caller.Caller, id domain.CampaignID
 type UpdateInput struct {
 	Name    *string
 	Ruleset *string
+	// ReactionTimeoutS is how long Reaction Prompts wait, from 3 to 120 seconds.
+	ReactionTimeoutS *int
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -178,7 +180,10 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 		}
 		in.Name = &name
 	}
-	return s.Repo.UpdateCampaign(ctx, id, in.Name, in.Ruleset, s.Now())
+	if t := in.ReactionTimeoutS; t != nil && (*t < 3 || *t > 120) {
+		return domain.Campaign{}, refuse("reactions wait between 3 and 120 seconds")
+	}
+	return s.Repo.UpdateCampaign(ctx, id, in.Name, in.Ruleset, in.ReactionTimeoutS, s.Now())
 }
 
 // SetRole makes a Member a DM or a Player. DM only; the last DM cannot step down.

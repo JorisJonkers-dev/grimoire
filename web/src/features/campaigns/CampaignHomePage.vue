@@ -11,6 +11,7 @@ import {
   listInvitesOptions,
   removeMemberMutation,
   revokeInviteMutation,
+  updateCampaignMutation,
   updateMemberMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { Member, Role } from '@/infrastructure/api/types.gen'
@@ -37,6 +38,16 @@ const characters = useQuery(computed(() => ({ ...listCharactersOptions(path.valu
 const invites = useQuery(computed(() => ({ ...listInvitesOptions(path.value), enabled: isDM.value })))
 
 const refresh = () => void client.invalidateQueries()
+const reactionTimeout = ref<number | null>(null)
+const timeout = computed({
+  get: () => reactionTimeout.value ?? campaign.data.value?.reactionTimeoutS ?? 10,
+  set: (v: number) => (reactionTimeout.value = v),
+})
+const settings = useMutation(updateCampaignMutation())
+function saveSettings() {
+  failed.value = ''
+  settings.mutate({ ...path.value, body: { reactionTimeoutS: timeout.value } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
+}
 const failed = ref('')
 const onError = (what: string) => () => (failed.value = what)
 
@@ -176,6 +187,15 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
           </li>
         </ul>
       </section>
+      <form v-if="isDM" class="g-card settings" data-testid="settings" @submit.prevent="saveSettings()">
+        <h2>Table settings</h2>
+        <label class="g-field">
+          <span>Seconds to answer a reaction</span>
+          <input v-model.number="timeout" type="number" min="3" max="120" data-testid="reaction-timeout" />
+        </label>
+        <GButton type="submit">Save settings</GButton>
+        <p v-if="settings.isSuccess.value" role="status" data-testid="settings-saved">Saved.</p>
+      </form>
     </template>
   </main>
 </template>

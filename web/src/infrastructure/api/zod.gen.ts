@@ -34,6 +34,11 @@ export const zMember = z.object({
 });
 
 /**
+ * Seconds a Reaction Prompt waits before it counts as declined.
+ */
+export const zReactionTimeout = z.int().gte(3).lte(120);
+
+/**
  * A reference to a Campaign.
  */
 export const zCampaignRef = z.object({
@@ -503,7 +508,8 @@ export const zLiveToken = z.object({
         'bloodied',
         'down'
     ]).optional(),
-    attacks: z.array(zLiveAttack).max(50).optional()
+    attacks: z.array(zLiveAttack).max(50).optional(),
+    shield: z.boolean().optional()
 });
 
 /**
@@ -533,7 +539,11 @@ export const zLivePendingAttack = z.object({
     attackerId: zId,
     targetId: zId,
     name: z.string().max(80),
-    stage: z.enum(['to_hit', 'damage']),
+    stage: z.enum([
+        'to_hit',
+        'reaction',
+        'damage'
+    ]),
     rollId: zId,
     critical: z.boolean()
 });
@@ -581,6 +591,18 @@ export const zLiveCombatantSetup = z.object({
 });
 
 /**
+ * A Reaction Prompt the fight waits on. The reactor's Controller, or the DM, answers; no answer by the countdown declines.
+ */
+export const zLivePrompt = z.object({
+    id: zId,
+    kind: z.enum(['opportunity_attack', 'shield']),
+    reactorId: zId,
+    triggerId: zId,
+    effect: z.string().max(300),
+    secondsLeft: z.int().gte(0).lte(120)
+});
+
+/**
  * One Combatant in the initiative rail, with what is left of its action economy.
  */
 export const zLiveCombatant = z.object({
@@ -610,7 +632,8 @@ export const zLiveCombat = z.object({
     status: z.enum(['rolling', 'active']),
     round: z.int().gte(0).lte(100000),
     combatants: z.array(zLiveCombatant).max(50),
-    attack: zLivePendingAttack.optional()
+    attack: zLivePendingAttack.optional(),
+    prompt: zLivePrompt.optional()
 });
 
 /**
@@ -892,7 +915,8 @@ export const zLiveCommand = z.object({
         'preview_attack',
         'attack',
         'undo_damage',
-        'set_tactics'
+        'set_tactics',
+        'react'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -920,7 +944,9 @@ export const zLiveCommand = z.object({
     characterId: zId.optional(),
     targetId: zId.optional(),
     attackNo: z.int().gte(0).lte(50).optional(),
-    tactics: zTactics.optional()
+    tactics: zTactics.optional(),
+    use: z.boolean().optional(),
+    shield: z.boolean().optional()
 });
 
 /**
@@ -937,7 +963,8 @@ export const zCampaignSummary = z.object({
     ruleset: zRuleset,
     myRole: zRole,
     memberCount: z.int().gte(1).lte(1000),
-    createdAt: z.iso.datetime().max(40)
+    createdAt: z.iso.datetime().max(40),
+    reactionTimeoutS: zReactionTimeout.optional()
 });
 
 /**
@@ -958,6 +985,7 @@ export const zCampaign = z.object({
     myRole: zRole,
     memberCount: z.int().gte(1).lte(1000),
     createdAt: z.iso.datetime().max(40),
+    reactionTimeoutS: zReactionTimeout.optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
 });
@@ -976,7 +1004,8 @@ export const zCampaignCreate = z.object({
  */
 export const zCampaignUpdate = z.object({
     name: zCampaignName.optional(),
-    ruleset: zRuleset.optional()
+    ruleset: zRuleset.optional(),
+    reactionTimeoutS: zReactionTimeout.optional()
 });
 
 /**

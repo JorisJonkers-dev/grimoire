@@ -129,7 +129,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	for _, t := range rows {
 		tok := domain.Token{
 			ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
-			Tactics: t.Tactics,
+			Tactics: t.Tactics, CanShield: t.CanShield,
 		}
 		if t.ControllerMemberID.Valid {
 			id := uuid.UUID(t.ControllerMemberID.Bytes)
@@ -203,7 +203,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
-		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed:
+		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
+		domain.ActionReactionDeclined:
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
 		return s.writeHP(ctx, sid, w)
@@ -224,6 +225,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) error {
 	p := queries.InsertTokenParams{
 		ID: uuid.UUID(t.ID), SessionID: sid, Label: t.Label, Kind: t.Kind, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden, DarkvisionFt: int32(t.DarkvisionFt),
+		CanShield: t.CanShield,
 	}
 	if t.Controller != nil {
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
@@ -316,7 +318,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 	switch w.Kind {
 	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved,
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
-		domain.ActionAttackMissed, domain.ActionTacticsSet:
+		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -364,22 +366,63 @@ func (s *Store) saveCombat(ctx context.Context, sess domain.Session, w live.Writ
 	if !f.EndedAt.IsZero() {
 		p.EndedAt = pgtypeTime(f.EndedAt)
 	}
+	if f.Resume != nil {
+		p.ResumeTokenID, p.ResumeCostFt = pgtype.UUID{Bytes: f.Resume.Token, Valid: true}, pgInt(f.Resume.CostFt)
+	}
 	if err := s.q.SaveCombat(ctx, p); err != nil {
+		return err
+	}
+	if err := s.saveReactions(ctx, f); err != nil {
 		return err
 	}
 	if err := s.saveAttack(ctx, f); err != nil {
 		return err
 	}
+	return s.saveCombatants(ctx, f)
+}
+
+//nolint:gosec // rounds, counts and feet are bounded by the rules
+func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 	for _, x := range f.Combatants {
 		cp := queries.SaveCombatantParams{
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
 			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
-			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt),
+			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt), Shielded: x.Shielded,
 		}
 		if x.Initiative != nil {
 			cp.Initiative = pgtype.Int4{Int32: int32(*x.Initiative), Valid: true}
 		}
 		if err := s.q.SaveCombatant(ctx, cp); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// saveReactions writes the open Reaction Prompt and the rest of an interrupted walk, or clears them.
+//
+//nolint:gosec // coordinates and attack numbers are bounded by the rules
+func (s *Store) saveReactions(ctx context.Context, f *domain.Combat) error {
+	id := uuid.UUID(f.ID)
+	if err := s.q.ClearPrompts(ctx, id); err != nil {
+		return err
+	}
+	if p := f.Prompt; p != nil {
+		if err := s.q.SavePrompt(ctx, queries.SavePromptParams{
+			ID: p.ID, CombatID: id, Kind: p.Kind, ReactorTokenID: uuid.UUID(p.Reactor), TriggerTokenID: uuid.UUID(p.Trigger),
+			AttackNo: int32(p.AttackNo), Effect: p.Effect, Deadline: p.Deadline,
+		}); err != nil {
+			return err
+		}
+	}
+	if err := s.q.ClearResumePath(ctx, id); err != nil {
+		return err
+	}
+	if f.Resume == nil {
+		return nil
+	}
+	for i, c := range f.Resume.Path {
+		if err := s.q.AddResumeHex(ctx, queries.AddResumeHexParams{CombatID: id, Ordering: int32(i), Q: int32(c.Q), R: int32(c.R)}); err != nil {
 			return err
 		}
 	}
@@ -395,6 +438,7 @@ func (s *Store) saveAttack(ctx context.Context, f *domain.Combat) error {
 	return s.q.SaveAttack(ctx, queries.SaveAttackParams{
 		ID: a.ID, CombatID: uuid.UUID(f.ID), AttackerTokenID: uuid.UUID(a.Attacker), TargetTokenID: uuid.UUID(a.Target), AttackNo: int32(a.AttackNo),
 		Mode: a.Mode.String(), CoverBonus: int32(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: uuid.UUID(a.RollID), Ranged: a.Ranged,
+		Total: pgtype.Int4{Int32: int32(a.Total), Valid: a.Stage == domain.StageReaction}, Opportunity: a.Opportunity,
 	})
 }
 
@@ -429,6 +473,38 @@ func (s *Store) LastDamage(ctx context.Context, id domain.SessionID) (live.HPCha
 
 func pgInt(n int) pgtype.Int4 { return pgtype.Int4{Int32: int32(n), Valid: true} } //nolint:gosec // bounded by the rules
 
+// loadReactions reads a Combat's open Reaction Prompt and interrupted walk.
+func (s *Store) loadReactions(ctx context.Context, row queries.PlayCombat, out *domain.Combat) error {
+	if row.ResumeTokenID.Valid {
+		hexes, err := s.q.ResumePath(ctx, row.ID)
+		if err != nil {
+			return err
+		}
+		out.Resume = &domain.Resume{Token: domain.TokenID(row.ResumeTokenID.Bytes), CostFt: int(row.ResumeCostFt.Int32)}
+		for _, h := range hexes {
+			out.Resume.Path = append(out.Resume.Path, hex.Coord{Q: int(h.Q), R: int(h.R)})
+		}
+	}
+	p, err := s.q.CombatPrompt(ctx, row.ID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	out.Prompt = &domain.ReactionPrompt{
+		ID: p.ID, Kind: p.Kind, Reactor: domain.TokenID(p.ReactorTokenID), Trigger: domain.TokenID(p.TriggerTokenID), AttackNo: int(p.AttackNo),
+		Effect: p.Effect, Deadline: p.Deadline,
+	}
+	return nil
+}
+
+// ReactionTimeout reads how many seconds a Campaign's Reaction Prompts wait.
+func (s *Store) ReactionTimeout(ctx context.Context, campaign uuid.UUID) (int, error) {
+	n, err := s.q.CampaignReactionTimeout(ctx, campaign)
+	return int(n), err
+}
+
 // LoadCombat reads a Session's running Combat, or nil when there is none.
 func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error) {
 	row, err := s.q.RunningCombat(ctx, uuid.UUID(id))
@@ -446,7 +522,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	for _, x := range rows {
 		c := domain.Combatant{
 			ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
-			SpeedFt: int(x.SpeedFt), Done: x.Done,
+			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded,
 			Economy: combat.Economy{Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt)},
 		}
 		if x.Initiative.Valid {
@@ -454,6 +530,9 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 			c.Initiative = &n
 		}
 		out.Combatants = append(out.Combatants, c)
+	}
+	if err := s.loadReactions(ctx, row, out); err != nil {
+		return nil, err
 	}
 	a, err := s.q.CombatAttack(ctx, row.ID)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -466,7 +545,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	out.Attack = &domain.PendingAttack{
 		ID: a.ID, Attacker: domain.TokenID(a.AttackerTokenID), Target: domain.TokenID(a.TargetTokenID), AttackNo: int(a.AttackNo),
 		Mode: attack.Mode(mode), CoverBonus: int(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: domain.RollID(a.RollID),
-		Ranged: a.Ranged,
+		Ranged: a.Ranged, Total: int(a.Total.Int32), Opportunity: a.Opportunity,
 	}
 	return out, nil
 }

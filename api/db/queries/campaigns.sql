@@ -1,21 +1,22 @@
 -- name: CreateCampaign :one
 INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
 VALUES (@name, @ruleset_pref, @created_by, @now, @now)
-RETURNING id, name, ruleset_pref, created_at;
+RETURNING id, name, ruleset_pref, reaction_timeout_s, created_at;
 
 -- name: UpdateCampaign :one
 UPDATE campaign.campaigns
 SET name = coalesce(sqlc.narg(name)::text, name),
     ruleset_pref = coalesce(sqlc.narg(ruleset_pref)::text, ruleset_pref),
+    reaction_timeout_s = coalesce(sqlc.narg(reaction_timeout_s)::integer, reaction_timeout_s),
     updated_at = @now
 WHERE id = @id
-RETURNING id, name, ruleset_pref, created_at;
+RETURNING id, name, ruleset_pref, reaction_timeout_s, created_at;
 
 -- name: GetCampaign :one
-SELECT id, name, ruleset_pref, created_at FROM campaign.campaigns WHERE id = $1;
+SELECT id, name, ruleset_pref, reaction_timeout_s, created_at FROM campaign.campaigns WHERE id = $1;
 
 -- name: ListCampaignsForSubject :many
-SELECT c.id, c.name, c.ruleset_pref, c.created_at, m.role,
+SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.created_at, m.role,
        (SELECT count(*) FROM campaign.members x WHERE x.campaign_id = c.id)::int AS member_count
 FROM campaign.campaigns c
 JOIN campaign.members m ON m.campaign_id = c.id AND m.auth_subject = @subject
