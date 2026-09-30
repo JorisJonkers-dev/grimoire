@@ -202,6 +202,21 @@ describe('live session on a map', () => {
   })
 })
 
+describe('leaving the session', () => {
+  it('closes the socket and never reconnects once the page is gone', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'party'))
+    await flushPromises()
+    fakeClock()
+    wrapper.unmount()
+    expect(s.closed).toBe(true)
+    s.drop()
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(FakeSocket.all).toHaveLength(1)
+  })
+})
+
 describe('exploration', () => {
   it('lets a player preview and walk their own tokens, played back hex by hex', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })

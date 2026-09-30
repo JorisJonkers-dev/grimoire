@@ -1,4 +1,4 @@
-import { onBeforeUnmount, reactive } from 'vue'
+import { getCurrentInstance, onBeforeUnmount, reactive } from 'vue'
 import type { LiveAreaPreview, LiveAttackPreview, LiveCommand, LivePath, LiveSessionView, LiveView } from '@/infrastructure/api/types.gen'
 import { SessionState } from './sessionState'
 
@@ -108,6 +108,7 @@ export function useLiveSession(
     socket?.close()
   }
   connect()
-  onBeforeUnmount(close)
+  // Only a component's setup can tie the socket to its lifetime; anyone else must call close.
+  if (getCurrentInstance()) onBeforeUnmount(close)
   return { view, send, close }
 }
