@@ -9,6 +9,13 @@ import { jsonResponse } from './mountWithQuery'
 
 export type Route = (url: URL, request: Request) => unknown
 
+const mounted: { unmount: () => void }[] = []
+
+/** Unmounts every app a test mounted, so nothing it left running reaches the next test. */
+export function unmountAll() {
+  for (const w of mounted.splice(0)) w.unmount()
+}
+
 /** Mounts the whole app at a path, answering API calls with the first matching route. */
 export async function mountApp(path: string, routes: Record<string, Route>) {
   const calls: URL[] = []
@@ -29,6 +36,7 @@ export async function mountApp(path: string, routes: Record<string, Route>) {
     attachTo: document.body,
     global: { plugins: [router, [VueQueryPlugin, { queryClient: new QueryClient({ defaultOptions: { queries: { retry: false } } }) }]] },
   })
+  mounted.push(wrapper)
   await flushPromises()
   return { wrapper, router, calls }
 }
