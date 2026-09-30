@@ -406,6 +406,41 @@
       "hidden": false,
       "routeId": "0190c7a8-0000-7000-8000-000000000024",
       "pace": "fast"
+    },
+    {
+      "nonce": "n45",
+      "kind": "add_zone",
+      "label": "Ambush",
+      "q": 3,
+      "r": 0,
+      "hidden": false,
+      "radiusHexes": 2,
+      "dmOnly": true
+    },
+    {
+      "nonce": "n46",
+      "kind": "hold_zone",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "on": true,
+      "zoneId": "0190c7a8-0000-7000-8000-000000000025"
+    },
+    {
+      "nonce": "n47",
+      "kind": "spring_zone",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "zoneId": "0190c7a8-0000-7000-8000-000000000025"
+    },
+    {
+      "nonce": "n48",
+      "kind": "remove_zone",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "zoneId": "0190c7a8-0000-7000-8000-000000000025"
     }
   ],
   "updates": [
@@ -519,6 +554,7 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "surprised": true,
               "tactics": "auto",
               "suggestion": {
                 "attackNo": 0,
@@ -672,7 +708,13 @@
               "days": 1
             }
           ]
-        }
+        },
+        "perception": [
+          {
+            "rollId": "0190c7a8-0000-7000-8000-000000000026",
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+          }
+        ]
       }
     },
     {
@@ -796,6 +838,7 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "surprised": true,
               "tactics": "auto",
               "suggestion": {
                 "attackNo": 0,
@@ -954,7 +997,36 @@
               "days": 1
             }
           ]
-        }
+        },
+        "zones": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000025",
+            "name": "Ambush",
+            "q": 3,
+            "r": 0,
+            "radiusHexes": 2,
+            "dmOnly": false,
+            "held": false,
+            "status": "spotting",
+            "dc": 16,
+            "creatures": 2,
+            "checks": [
+              {
+                "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+              },
+              {
+                "tokenId": "0190c7a8-0000-7000-8000-000000000013",
+                "noticed": true
+              }
+            ]
+          }
+        ],
+        "perception": [
+          {
+            "rollId": "0190c7a8-0000-7000-8000-000000000026",
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+          }
+        ]
       }
     },
     {
@@ -1101,6 +1173,7 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "surprised": true,
               "tactics": "auto",
               "suggestion": {
                 "attackNo": 0,
@@ -1254,7 +1327,13 @@
               "days": 1
             }
           ]
-        }
+        },
+        "perception": [
+          {
+            "rollId": "0190c7a8-0000-7000-8000-000000000026",
+            "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+          }
+        ]
       },
       "steps": [
         {
@@ -1358,6 +1437,7 @@
                 "reaction": true,
                 "movementFt": 20,
                 "speedFt": 30,
+                "surprised": true,
                 "tactics": "auto",
                 "suggestion": {
                   "attackNo": 0,
@@ -1511,7 +1591,13 @@
                 "days": 1
               }
             ]
-          }
+          },
+          "perception": [
+            {
+              "rollId": "0190c7a8-0000-7000-8000-000000000026",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+            }
+          ]
         }
       ]
     },

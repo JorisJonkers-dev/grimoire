@@ -1,11 +1,11 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveTable, LiveToken, LiveWorld } from '@/infrastructure/api/types.gen'
+import type { LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { fakeClock, mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
-import { board, hexes, initials } from './board'
+import { board, hexes, initials, zoneHexes } from './board'
 import { focus } from './camera'
 import { cellsFor, key, layoutOf } from './geometry'
 import { duration, journey } from './travel'
@@ -1044,5 +1044,98 @@ describe('world map', () => {
     await flushPromises()
     expect(wrapper.find('[data-testid="party-marker"]').exists()).toBe(false)
     expect(wrapper.get('[data-hex="2,0"]').classes()).toContain('cell--lit')
+  })
+})
+
+describe('encounter zones', () => {
+  const ZID = '0190c7a8-0000-7000-8000-000000000025'
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
+  const brom: LiveToken = { ...aria, id: '0190c7a8-0000-7000-8000-00000000000f', label: 'Brom', q: 0, r: 1, controllerId: undefined }
+  const zone = (extra: Partial<LiveZone> = {}): LiveZone => ({
+    id: ZID, name: 'Ambush', q: 1, r: 0, radiusHexes: 1, dmOnly: false, held: false, status: 'armed', creatures: 2, checks: [], ...extra,
+  })
+  const perceptionRoll = (id: string) => ({
+    id, purpose: 'Perception for Brom', notation: '1d20', requestedBy: 'Joris', roller: { id: member.id, name: 'Joris' }, mine: true, canRoll: true,
+    status: 'pending', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }], dice: [{ no: 0, group: 0, faces: 20, kept: false }],
+    modifiers: [], createdAt: '2026-09-30T20:00:00Z',
+  })
+
+  it('finds the hexes each zone reaches', () => {
+    expect(zoneHexes([{ q: 0, r: 0, radiusHexes: 1 }], hexes(2))).toHaveLength(7)
+    expect(zoneHexes([], hexes(2))).toEqual([])
+  })
+
+  it('lets the DM draw, hold, spring and remove zones, and roll Perception for their creatures', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => perceptionRoll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria, brom], 'dm', { zones: [zone()] }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="1,0"]').classes()).toContain('hex--zone')
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in an encounter zone')
+    const panel = wrapper.get('[data-testid="zone-Ambush"]')
+    expect(panel.text()).toContain('Ambush · 1 hex · 2 hidden · Armed')
+    await panel.get('[aria-label="Spring Ambush now"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spring_zone', zoneId: ZID })
+    await panel.get('[aria-label="Hold off Ambush"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'hold_zone', zoneId: ZID, on: true })
+    await wrapper.get('[data-testid="tool-zone"]').setValue(true)
+    const before = s.sent.length
+    await wrapper.get('[data-hex="-1,0"]').trigger('click')
+    expect(s.sent.length).toBe(before)
+    await wrapper.get('[data-testid="zone-name"]').setValue(' Den ')
+    await wrapper.get('[data-testid="zone-radius"]').setValue(4)
+    await wrapper.get('[data-testid="zone-dm-only"]').setValue(true)
+    await wrapper.get('[data-hex="-1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'add_zone', label: 'Den', q: -1, r: 0, radiusHexes: 4, dmOnly: true })
+    const statuses = [
+      [zone({ held: true }), 'Held off', 'Let Ambush'],
+      [zone({ dmOnly: true, radiusHexes: 2 }), 'Springs when you say', 'Hold off Ambush'],
+    ] as const
+    let seq = 2
+    for (const [z, text, hold] of statuses) {
+      s.receive({ kind: 'view', seq: seq++, view: { tokens: [aria, brom], fog: false, visible: [], remembered: [], zones: [z] } })
+      await flushPromises()
+      expect(wrapper.get('[data-testid="zone-Ambush"]').text()).toContain(text)
+      await wrapper.get(`[aria-label="${hold}"]`).trigger('click')
+    }
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'hold_zone', on: true })
+    const rolling = zone({ status: 'spotting', dc: 16, checks: [{ tokenId: aria.id, noticed: true }, { tokenId: brom.id }, { tokenId: goblin.id, noticed: false }] })
+    s.receive({ kind: 'view', seq: seq++, view: { tokens: [aria, brom], fog: false, visible: [], remembered: [], zones: [rolling], perception: [{ rollId: '0190c7a8-0000-7000-8000-000000000061', tokenId: brom.id }, { rollId: '0190c7a8-0000-7000-8000-000000000062', tokenId: aria.id }] } })
+    await flushPromises()
+    const spotting = wrapper.get('[data-testid="zone-Ambush"]')
+    expect(spotting.text()).toContain('Waiting for Perception · Stealth DC 16')
+    expect(spotting.text()).toContain('Aria: noticed')
+    expect(spotting.text()).toContain('Brom: rolling Perception')
+    expect(spotting.text()).toContain('Someone: unaware')
+    expect(spotting.find('[aria-label="Spring Ambush now"]').exists()).toBe(false)
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+    await spotting.get('[aria-label="Remove Ambush"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'remove_zone', zoneId: ZID })
+    s.receive({ kind: 'view', seq: seq++, view: { tokens: [aria, brom], fog: false, visible: [], remembered: [], zones: [zone({ status: 'sprung' })] } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="zone-Ambush"]').text()).toContain('Sprung')
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('shows players their Perception card and who was surprised, never the zone', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => ({ ...perceptionRoll(u.pathname.split('/')[6] ?? ''), purpose: 'Perception for Aria' }),
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria, brom], 'party', { perception: [{ rollId: '0190c7a8-0000-7000-8000-000000000061', tokenId: brom.id }, { rollId: '0190c7a8-0000-7000-8000-000000000062', tokenId: aria.id }] }))
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+    expect(wrapper.get('[data-testid="roll-card"]').text()).toContain('Perception for Aria')
+    expect(wrapper.find('[data-testid="zones"]').exists()).toBe(false)
+    const combatant = { id: '0190c7a8-0000-7000-8000-000000000070', tokenId: aria.id, label: 'Aria', kind: 'party' as const, rollId: '0190c7a8-0000-7000-8000-000000000071', acting: false, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30 }
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, brom], fog: false, visible: [], remembered: [], combat: { status: 'rolling', round: 0, combatants: [{ ...combatant, surprised: true }, { ...combatant, id: '0190c7a8-0000-7000-8000-000000000072', tokenId: brom.id, label: 'Brom' }] } } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rail-Aria"] [data-testid="surprised"]').text()).toBe('Surprised')
+    expect(wrapper.find('[data-testid="rail-Brom"] [data-testid="surprised"]').exists()).toBe(false)
   })
 })

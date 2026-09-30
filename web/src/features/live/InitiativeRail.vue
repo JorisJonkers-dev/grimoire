@@ -27,6 +27,7 @@ const tied = computed(() => {
           <template v-if="c.initiative !== undefined">{{ c.initiative }}<template v-if="tied(c.rank)"> · tied</template></template>
           <template v-else>rolling…</template>
         </span>
+        <span v-if="c.surprised" class="surprised" data-testid="surprised">Surprised</span>
         <span v-if="c.acting" class="sr-only">acting now</span>
       </li>
     </ol>
@@ -34,6 +35,10 @@ const tied = computed(() => {
 </template>
 
 <style scoped>
+.surprised {
+  font-size: 12px;
+  color: var(--color-enemy-soft);
+}
 .rail {
   display: flex;
   flex-direction: column;

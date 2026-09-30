@@ -602,6 +602,20 @@ type PlayCombatant struct {
 	HasReaction     bool
 	MovementFt      int32
 	Shielded        bool
+	Surprised       bool
+}
+
+type PlayEncounterZone struct {
+	ID          uuid.UUID
+	SessionID   uuid.UUID
+	Name        string
+	Q           int32
+	R           int32
+	RadiusHexes int32
+	DmOnly      bool
+	Held        bool
+	Status      string
+	Dc          int32
 }
 
 type PlayManualPrompt struct {
@@ -724,6 +738,10 @@ type PlayToken struct {
 	Tactics            string
 	CanShield          bool
 	SpellDc            pgtype.Int4
+	Stealth            int32
+	Perception         int32
+	Initiative         int32
+	SpeedFt            int32
 }
 
 type PlayTokenAttack struct {
@@ -755,4 +773,16 @@ type PlayTravelLeg struct {
 	DistanceMi int32
 	Minutes    int32
 	Days       int32
+}
+
+type PlayZoneCheck struct {
+	ZoneID  uuid.UUID
+	TokenID uuid.UUID
+	RollID  pgtype.UUID
+	Noticed pgtype.Bool
+}
+
+type PlayZoneCreature struct {
+	ZoneID  uuid.UUID
+	TokenID uuid.UUID
 }

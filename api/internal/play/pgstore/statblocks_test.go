@@ -14,6 +14,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
@@ -68,6 +69,7 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 			monster("srd-2014", "old-ogre", 12),
 		},
 	}
+	snap.Monsters[0].Skills = map[string]int{"stealth": 3, "perception": 2}
 	if _, err := comppg.New(tb.pool).Import(ctx, snap, "statblocks"); err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +90,10 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 			t.Errorf("attack %d = %+v, want %+v", i, ogre.Attacks[i], a)
 		}
 	}
-	if _, old, err := s.Monster(ctx, tb.campaign, "old-ogre"); err != nil || old.AC != 12 || old.Source != "monster:old-ogre" {
+	if ogre.Stealth != 3 || ogre.Perception != 2 || ogre.Initiative != -1 || ogre.SpeedFt != 40 {
+		t.Fatalf("ogre ambush stats = %+v", ogre)
+	}
+	if _, old, err := s.Monster(ctx, tb.campaign, "old-ogre"); err != nil || old.AC != 12 || old.Source != "monster:old-ogre" || old.Stealth != -1 || old.Perception != -2 {
 		t.Fatalf("a monster only in the other ruleset = %+v %v", old, err)
 	}
 	if _, _, err := s.Monster(ctx, tb.campaign, "dragon"); !errors.Is(err, apperr.ErrNotFound) {
@@ -123,6 +128,9 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 			t.Errorf("mira's attack %d = %+v, want %+v", i, mira.Attacks[i], a)
 		}
 	}
+	if mira.Stealth != 3 || mira.Perception != 3 || mira.Initiative != 3 || mira.SpeedFt != 30 {
+		t.Fatalf("mira ambush stats = %+v", mira)
+	}
 	if mira.SpellDC != 0 || mira.Shield || mira.Saves["strength"] != 2 {
 		t.Fatalf("a fighter casts nothing = %+v", mira)
 	}
@@ -141,4 +149,11 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 	if _, _, _, err := s.Character(ctx, dm, tb.campaign, uuid.New()); !errors.Is(err, apperr.ErrNotFound) {
 		t.Fatalf("unknown character = %v", err)
 	}
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		_, _, err := pgstore.Statblocks{Store: pgstore.NewFaulty(tb.pool, f), Characters: chars}.Monster(ctx, tb.campaign, "ogre")
+		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+			t.Fatalf("monster: %v", err)
+		}
+		return err
+	})
 }

@@ -116,6 +116,10 @@ const box = computed(() => gridBox(props.cells, props.size))
   fill: var(--color-enemy-fill);
   stroke: var(--color-enemy);
 }
+.hex--zone polygon {
+  stroke: var(--color-enemy);
+  stroke-dasharray: 4 3;
+}
 .hex--area polygon {
   fill: rgb(212 120 40 / 45%);
   stroke: var(--color-gold-high);

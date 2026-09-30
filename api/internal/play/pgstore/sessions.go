@@ -142,7 +142,8 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 		if t.StatSource.Valid {
 			tok.Stats = &domain.Stats{
 				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
-				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32),
+				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
+				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt),
 			}
 		}
 		tokens = append(tokens, tok)
@@ -193,6 +194,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
 			func() error { return tx.saveTerrain(ctx, sid, board, w) },
 			func() error { return tx.saveTable(ctx, sid, w.Table) },
+			func() error { return tx.saveZone(ctx, sess, w, actor, c, now) },
 			func() error {
 				if board == nil {
 					return nil
@@ -237,7 +239,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
 		domain.ActionReactionDeclined, domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
-		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet:
+		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet,
+		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled:
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
 		return s.writeHP(ctx, sid, w)
@@ -267,11 +270,13 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
 	}
 	if t.Stats == nil {
+		p.SpeedFt = 30
 		return s.q.InsertToken(ctx, p)
 	}
 	st := t.Stats
 	p.StatSource = pgtype.Text{String: st.Source, Valid: true}
 	p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
+	p.Stealth, p.Perception, p.Initiative, p.SpeedFt = int32(st.Stealth), int32(st.Perception), int32(st.Initiative), int32(st.SpeedFt)
 	if st.SpellDC > 0 {
 		p.SpellDc = pgInt(st.SpellDC)
 	}
@@ -434,6 +439,7 @@ func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
 			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
 			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt), Shielded: x.Shielded,
+			Surprised: x.Surprised,
 		}
 		if x.Initiative != nil {
 			cp.Initiative = pgtype.Int4{Int32: int32(*x.Initiative), Valid: true}
@@ -650,7 +656,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	for _, x := range rows {
 		c := domain.Combatant{
 			ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
-			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded,
+			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised,
 			Economy: combat.Economy{Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt)},
 		}
 		if x.Initiative.Valid {

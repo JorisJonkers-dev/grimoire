@@ -37,7 +37,7 @@ func (bestiary) Monster(_ context.Context, _ uuid.UUID, slug string) (string, do
 	default:
 		return "", domain.Stats{}, errors.New("no such monster")
 	}
-	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Attacks: []domain.Attack{
+	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Stealth: 6, Perception: -1, Initiative: 2, SpeedFt: 30, Attacks: []domain.Attack{
 		{Name: "Scimitar", ToHit: 4, ReachFt: 5, Damage: "1d6", DamageBonus: 2, DamageType: "slashing"},
 		{Name: "Shortbow", ToHit: 4, RangeFt: 80, LongRangeFt: 320, Damage: "1d6", DamageBonus: 2, DamageType: "piercing"},
 		{Name: "Slam", ToHit: 4, ReachFt: 5, DamageBonus: 3, DamageType: "bludgeoning"},
@@ -49,7 +49,7 @@ func (b bestiary) Character(_ context.Context, _ caller.Caller, _, id uuid.UUID)
 	if id == uuid.Nil {
 		return "", uuid.UUID{}, domain.Stats{}, errors.New("no such character")
 	}
-	return "Aria", b.owner, domain.Stats{Source: "character:" + id.String(), AC: 16, HP: 12, HPMax: 12, SpellDC: 14, Saves: map[string]int{"constitution": 2}, Attacks: []domain.Attack{
+	return "Aria", b.owner, domain.Stats{Source: "character:" + id.String(), AC: 16, HP: 12, HPMax: 12, SpellDC: 14, Perception: 3, Initiative: 2, SpeedFt: 30, Saves: map[string]int{"constitution": 2}, Attacks: []domain.Attack{
 		{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"},
 		{Name: "Longbow", ToHit: 4, RangeFt: 150, LongRangeFt: 600, Damage: "1d8", DamageBonus: 2, DamageType: "piercing"},
 	}}, nil

@@ -31,6 +31,7 @@ type state struct {
 	// world is the world map the party travels; worldCells are its hexes.
 	world      *domain.World
 	worldCells map[hex.Coord]bool
+	zones      []domain.Zone
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -50,6 +51,9 @@ func (s *state) clone() *state {
 	next.surfaces, next.table, next.tableMap = maps.Clone(s.surfaces), s.table, s.tableMap
 	if s.world != nil {
 		next.world = s.world.Clone()
+	}
+	for _, z := range s.zones {
+		next.zones = append(next.zones, cloneZone(z))
 	}
 	if s.cast != nil {
 		c := *s.cast
@@ -144,7 +148,10 @@ func (s *state) project(a Audience) View {
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
-	v.Table, v.World = s.tableView(), s.worldView(a)
+	v.Table, v.World, v.Perception = s.tableView(), s.worldView(a), s.perceptionViews()
+	if a == AudienceDM {
+		v.Zones = s.zoneViews()
+	}
 	return v
 }
 

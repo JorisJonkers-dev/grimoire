@@ -60,6 +60,9 @@ type Write struct {
 	// WorldReveal lists the world hexes the party sees for the first time on arriving somewhere.
 	WorldReveal []hex.Coord
 	world       *domain.World
+	// Zone is the Encounter Zone after the change; Revealed the hidden creatures it showed everyone.
+	Zone     *domain.Zone
+	Revealed []domain.Token
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -89,6 +92,7 @@ type Store interface {
 	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
 	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
 	LoadWorld(ctx context.Context, campaign uuid.UUID, sid domain.SessionID, id domain.MapID) (*domain.World, error)
+	LoadZones(ctx context.Context, id domain.SessionID) ([]domain.Zone, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -149,12 +153,14 @@ type runtime struct {
 	log      *slog.Logger
 	release  func()
 	st       *state
-	subs     map[*Subscriber]struct{}
-	join     chan *Subscriber
-	leave    chan *Subscriber
-	cmds     chan request
-	stop     chan struct{}
-	done     chan struct{}
+	// dm is the DM last seen on this Session; an ambush opens its creatures' rolls for them.
+	dm    *domain.Member
+	subs  map[*Subscriber]struct{}
+	join  chan *Subscriber
+	leave chan *Subscriber
+	cmds  chan request
+	stop  chan struct{}
+	done  chan struct{}
 }
 
 // Hub starts, finds and stops Session runtimes.
@@ -231,7 +237,12 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap}
+	zones, err := h.Store.LoadZones(ctx, id)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap, zones: zones}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -340,6 +351,7 @@ func (r *runtime) run() {
 		case sub := <-r.join:
 			r.subs[sub] = struct{}{}
 			r.send(sub, r.snapshot(sub.Audience))
+			r.seeDM(sub)
 		case sub := <-r.leave:
 			r.drop(sub)
 		case req := <-r.cmds:
@@ -351,6 +363,19 @@ func (r *runtime) run() {
 			}
 			return
 		}
+	}
+}
+
+// seeDM remembers a DM who joined; a zone that settled while no DM was here starts its fight now.
+func (r *runtime) seeDM(sub *Subscriber) {
+	if !sub.Member.DM {
+		return
+	}
+	first := r.dm == nil
+	m := sub.Member
+	r.dm = &m
+	if first && r.st.combat == nil {
+		r.ambush(sub.Caller)
 	}
 }
 
@@ -479,6 +504,7 @@ func apply(s *state, w *Write) {
 		round = s.combat.Round
 	}
 	change(s, w)
+	applyZones(s, w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
 	started := map[domain.TokenID]bool{}
@@ -493,6 +519,7 @@ func apply(s *state, w *Write) {
 	}
 	if w.Kind == domain.ActionTokenRemoved {
 		s.forget(w.Token.ID)
+		s.forgetChecks(w.Token.ID)
 		changed = true
 	}
 	if changed {
@@ -547,6 +574,8 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionTableSet:
 		s.table, s.tableMap = *w.Table, w.tableMap
+		return
+	case domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled:
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:

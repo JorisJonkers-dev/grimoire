@@ -5846,23 +5846,25 @@ func (s *LiveCombatStatus) UnmarshalText(data []byte) error {
 // One Combatant in the initiative rail, with what is left of its action economy.
 // Ref: #/components/schemas/LiveCombatant
 type LiveCombatant struct {
-	ID           ID                `json:"id"`
-	TokenId      ID                `json:"tokenId"`
-	Label        string            `json:"label"`
-	Kind         TokenKind         `json:"kind"`
-	ControllerId OptID             `json:"controllerId"`
-	RollId       ID                `json:"rollId"`
-	Initiative   OptInt32          `json:"initiative"`
-	Rank         OptInt32          `json:"rank"`
-	Acting       bool              `json:"acting"`
-	Done         bool              `json:"done"`
-	Action       bool              `json:"action"`
-	BonusAction  bool              `json:"bonusAction"`
-	Reaction     bool              `json:"reaction"`
-	MovementFt   int32             `json:"movementFt"`
-	SpeedFt      int32             `json:"speedFt"`
-	Tactics      OptTactics        `json:"tactics"`
-	Suggestion   OptLiveSuggestion `json:"suggestion"`
+	ID           ID        `json:"id"`
+	TokenId      ID        `json:"tokenId"`
+	Label        string    `json:"label"`
+	Kind         TokenKind `json:"kind"`
+	ControllerId OptID     `json:"controllerId"`
+	RollId       ID        `json:"rollId"`
+	Initiative   OptInt32  `json:"initiative"`
+	Rank         OptInt32  `json:"rank"`
+	Acting       bool      `json:"acting"`
+	Done         bool      `json:"done"`
+	Action       bool      `json:"action"`
+	BonusAction  bool      `json:"bonusAction"`
+	Reaction     bool      `json:"reaction"`
+	MovementFt   int32     `json:"movementFt"`
+	SpeedFt      int32     `json:"speedFt"`
+	// Did not notice the ambush and rolled initiative at disadvantage.
+	Surprised  OptBool           `json:"surprised"`
+	Tactics    OptTactics        `json:"tactics"`
+	Suggestion OptLiveSuggestion `json:"suggestion"`
 }
 
 // GetID returns the value of ID.
@@ -5938,6 +5940,11 @@ func (s *LiveCombatant) GetMovementFt() int32 {
 // GetSpeedFt returns the value of SpeedFt.
 func (s *LiveCombatant) GetSpeedFt() int32 {
 	return s.SpeedFt
+}
+
+// GetSurprised returns the value of Surprised.
+func (s *LiveCombatant) GetSurprised() OptBool {
+	return s.Surprised
 }
 
 // GetTactics returns the value of Tactics.
@@ -6023,6 +6030,11 @@ func (s *LiveCombatant) SetMovementFt(val int32) {
 // SetSpeedFt sets the value of SpeedFt.
 func (s *LiveCombatant) SetSpeedFt(val int32) {
 	s.SpeedFt = val
+}
+
+// SetSurprised sets the value of Surprised.
+func (s *LiveCombatant) SetSurprised(val OptBool) {
+	s.Surprised = val
 }
 
 // SetTactics sets the value of Tactics.
@@ -6127,6 +6139,10 @@ type LiveCommand struct {
 	RouteId     OptID                 `json:"routeId"`
 	DistanceMi  OptInt32              `json:"distanceMi"`
 	Pace        OptTravelPace         `json:"pace"`
+	ZoneId      OptID                 `json:"zoneId"`
+	RadiusHexes OptInt32              `json:"radiusHexes"`
+	// With add_zone, the zone springs only when the DM springs it.
+	DmOnly OptBool `json:"dmOnly"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -6364,6 +6380,21 @@ func (s *LiveCommand) GetPace() OptTravelPace {
 	return s.Pace
 }
 
+// GetZoneId returns the value of ZoneId.
+func (s *LiveCommand) GetZoneId() OptID {
+	return s.ZoneId
+}
+
+// GetRadiusHexes returns the value of RadiusHexes.
+func (s *LiveCommand) GetRadiusHexes() OptInt32 {
+	return s.RadiusHexes
+}
+
+// GetDmOnly returns the value of DmOnly.
+func (s *LiveCommand) GetDmOnly() OptBool {
+	return s.DmOnly
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6599,6 +6630,21 @@ func (s *LiveCommand) SetPace(val OptTravelPace) {
 	s.Pace = val
 }
 
+// SetZoneId sets the value of ZoneId.
+func (s *LiveCommand) SetZoneId(val OptID) {
+	s.ZoneId = val
+}
+
+// SetRadiusHexes sets the value of RadiusHexes.
+func (s *LiveCommand) SetRadiusHexes(val OptInt32) {
+	s.RadiusHexes = val
+}
+
+// SetDmOnly sets the value of DmOnly.
+func (s *LiveCommand) SetDmOnly(val OptBool) {
+	s.DmOnly = val
+}
+
 type LiveCommandKind string
 
 const (
@@ -6642,6 +6688,10 @@ const (
 	LiveCommandKindRemoveRoute    LiveCommandKind = "remove_route"
 	LiveCommandKindPlaceParty     LiveCommandKind = "place_party"
 	LiveCommandKindTravel         LiveCommandKind = "travel"
+	LiveCommandKindAddZone        LiveCommandKind = "add_zone"
+	LiveCommandKindRemoveZone     LiveCommandKind = "remove_zone"
+	LiveCommandKindHoldZone       LiveCommandKind = "hold_zone"
+	LiveCommandKindSpringZone     LiveCommandKind = "spring_zone"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6687,6 +6737,10 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindRemoveRoute,
 		LiveCommandKindPlaceParty,
 		LiveCommandKindTravel,
+		LiveCommandKindAddZone,
+		LiveCommandKindRemoveZone,
+		LiveCommandKindHoldZone,
+		LiveCommandKindSpringZone,
 	}
 }
 
@@ -6772,6 +6826,14 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindPlaceParty:
 		return []byte(s), nil
 	case LiveCommandKindTravel:
+		return []byte(s), nil
+	case LiveCommandKindAddZone:
+		return []byte(s), nil
+	case LiveCommandKindRemoveZone:
+		return []byte(s), nil
+	case LiveCommandKindHoldZone:
+		return []byte(s), nil
+	case LiveCommandKindSpringZone:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6900,6 +6962,18 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindTravel:
 		*s = LiveCommandKindTravel
+		return nil
+	case LiveCommandKindAddZone:
+		*s = LiveCommandKindAddZone
+		return nil
+	case LiveCommandKindRemoveZone:
+		*s = LiveCommandKindRemoveZone
+		return nil
+	case LiveCommandKindHoldZone:
+		*s = LiveCommandKindHoldZone
+		return nil
+	case LiveCommandKindSpringZone:
+		*s = LiveCommandKindSpringZone
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -7482,6 +7556,33 @@ func (s *LivePendingAttackStage) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A party member's Perception Roll Card after a zone springs. The DC is never sent.
+// Ref: #/components/schemas/LivePerception
+type LivePerception struct {
+	RollId  ID `json:"rollId"`
+	TokenId ID `json:"tokenId"`
+}
+
+// GetRollId returns the value of RollId.
+func (s *LivePerception) GetRollId() ID {
+	return s.RollId
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LivePerception) GetTokenId() ID {
+	return s.TokenId
+}
+
+// SetRollId sets the value of RollId.
+func (s *LivePerception) SetRollId(val ID) {
+	s.RollId = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LivePerception) SetTokenId(val ID) {
+	s.TokenId = val
 }
 
 // A Reaction Prompt the fight waits on. The reactor's Controller, or the DM, answers; no answer by the
@@ -8567,16 +8668,18 @@ type LiveView struct {
 	Combat     OptLiveCombat `json:"combat"`
 	Manual     []LiveManual  `json:"manual"`
 	// The DM is resolving part of an Effect by hand.
-	Resolving OptBool         `json:"resolving"`
-	Saves     []LiveSave      `json:"saves"`
-	Surfaces  []LiveSurface   `json:"surfaces"`
-	Elevation []LiveElevation `json:"elevation"`
-	Area      OptLiveArea     `json:"area"`
-	Table     OptLiveTable    `json:"table"`
-	World     OptLiveWorld    `json:"world"`
-	Walls     []HexCoord      `json:"walls"`
-	Lights    []LiveLight     `json:"lights"`
-	Ambient   OptAmbientLight `json:"ambient"`
+	Resolving  OptBool          `json:"resolving"`
+	Saves      []LiveSave       `json:"saves"`
+	Surfaces   []LiveSurface    `json:"surfaces"`
+	Elevation  []LiveElevation  `json:"elevation"`
+	Area       OptLiveArea      `json:"area"`
+	Table      OptLiveTable     `json:"table"`
+	World      OptLiveWorld     `json:"world"`
+	Zones      []LiveZone       `json:"zones"`
+	Perception []LivePerception `json:"perception"`
+	Walls      []HexCoord       `json:"walls"`
+	Lights     []LiveLight      `json:"lights"`
+	Ambient    OptAmbientLight  `json:"ambient"`
 }
 
 // GetTokens returns the value of Tokens.
@@ -8647,6 +8750,16 @@ func (s *LiveView) GetTable() OptLiveTable {
 // GetWorld returns the value of World.
 func (s *LiveView) GetWorld() OptLiveWorld {
 	return s.World
+}
+
+// GetZones returns the value of Zones.
+func (s *LiveView) GetZones() []LiveZone {
+	return s.Zones
+}
+
+// GetPerception returns the value of Perception.
+func (s *LiveView) GetPerception() []LivePerception {
+	return s.Perception
 }
 
 // GetWalls returns the value of Walls.
@@ -8732,6 +8845,16 @@ func (s *LiveView) SetTable(val OptLiveTable) {
 // SetWorld sets the value of World.
 func (s *LiveView) SetWorld(val OptLiveWorld) {
 	s.World = val
+}
+
+// SetZones sets the value of Zones.
+func (s *LiveView) SetZones(val []LiveZone) {
+	s.Zones = val
+}
+
+// SetPerception sets the value of Perception.
+func (s *LiveView) SetPerception(val []LivePerception) {
+	s.Perception = val
 }
 
 // SetWalls sets the value of Walls.
@@ -8928,6 +9051,208 @@ func (s *LiveWorldRoute) SetDistanceMi(val int32) {
 // SetPlans sets the value of Plans.
 func (s *LiveWorldRoute) SetPlans(val []LiveTravelPlan) {
 	s.Plans = val
+}
+
+// An Encounter Zone, for the DM only. creatures counts the hidden creatures in it, or those it held
+// once sprung; dc is their Stealth DC once it springs.
+// Ref: #/components/schemas/LiveZone
+type LiveZone struct {
+	ID          ID              `json:"id"`
+	Name        string          `json:"name"`
+	Q           int32           `json:"q"`
+	R           int32           `json:"r"`
+	RadiusHexes int32           `json:"radiusHexes"`
+	DmOnly      bool            `json:"dmOnly"`
+	Held        bool            `json:"held"`
+	Status      LiveZoneStatus  `json:"status"`
+	DC          OptInt32        `json:"dc"`
+	Creatures   int32           `json:"creatures"`
+	Checks      []LiveZoneCheck `json:"checks"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveZone) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LiveZone) GetName() string {
+	return s.Name
+}
+
+// GetQ returns the value of Q.
+func (s *LiveZone) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveZone) GetR() int32 {
+	return s.R
+}
+
+// GetRadiusHexes returns the value of RadiusHexes.
+func (s *LiveZone) GetRadiusHexes() int32 {
+	return s.RadiusHexes
+}
+
+// GetDmOnly returns the value of DmOnly.
+func (s *LiveZone) GetDmOnly() bool {
+	return s.DmOnly
+}
+
+// GetHeld returns the value of Held.
+func (s *LiveZone) GetHeld() bool {
+	return s.Held
+}
+
+// GetStatus returns the value of Status.
+func (s *LiveZone) GetStatus() LiveZoneStatus {
+	return s.Status
+}
+
+// GetDC returns the value of DC.
+func (s *LiveZone) GetDC() OptInt32 {
+	return s.DC
+}
+
+// GetCreatures returns the value of Creatures.
+func (s *LiveZone) GetCreatures() int32 {
+	return s.Creatures
+}
+
+// GetChecks returns the value of Checks.
+func (s *LiveZone) GetChecks() []LiveZoneCheck {
+	return s.Checks
+}
+
+// SetID sets the value of ID.
+func (s *LiveZone) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveZone) SetName(val string) {
+	s.Name = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveZone) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveZone) SetR(val int32) {
+	s.R = val
+}
+
+// SetRadiusHexes sets the value of RadiusHexes.
+func (s *LiveZone) SetRadiusHexes(val int32) {
+	s.RadiusHexes = val
+}
+
+// SetDmOnly sets the value of DmOnly.
+func (s *LiveZone) SetDmOnly(val bool) {
+	s.DmOnly = val
+}
+
+// SetHeld sets the value of Held.
+func (s *LiveZone) SetHeld(val bool) {
+	s.Held = val
+}
+
+// SetStatus sets the value of Status.
+func (s *LiveZone) SetStatus(val LiveZoneStatus) {
+	s.Status = val
+}
+
+// SetDC sets the value of DC.
+func (s *LiveZone) SetDC(val OptInt32) {
+	s.DC = val
+}
+
+// SetCreatures sets the value of Creatures.
+func (s *LiveZone) SetCreatures(val int32) {
+	s.Creatures = val
+}
+
+// SetChecks sets the value of Checks.
+func (s *LiveZone) SetChecks(val []LiveZoneCheck) {
+	s.Checks = val
+}
+
+// Whether one party member noticed a sprung zone; noticed is absent while they roll.
+// Ref: #/components/schemas/LiveZoneCheck
+type LiveZoneCheck struct {
+	TokenId ID      `json:"tokenId"`
+	Noticed OptBool `json:"noticed"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveZoneCheck) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetNoticed returns the value of Noticed.
+func (s *LiveZoneCheck) GetNoticed() OptBool {
+	return s.Noticed
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveZoneCheck) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetNoticed sets the value of Noticed.
+func (s *LiveZoneCheck) SetNoticed(val OptBool) {
+	s.Noticed = val
+}
+
+type LiveZoneStatus string
+
+const (
+	LiveZoneStatusArmed    LiveZoneStatus = "armed"
+	LiveZoneStatusSpotting LiveZoneStatus = "spotting"
+	LiveZoneStatusSprung   LiveZoneStatus = "sprung"
+)
+
+// AllValues returns all LiveZoneStatus values.
+func (LiveZoneStatus) AllValues() []LiveZoneStatus {
+	return []LiveZoneStatus{
+		LiveZoneStatusArmed,
+		LiveZoneStatusSpotting,
+		LiveZoneStatusSprung,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveZoneStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveZoneStatusArmed:
+		return []byte(s), nil
+	case LiveZoneStatusSpotting:
+		return []byte(s), nil
+	case LiveZoneStatusSprung:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveZoneStatus) UnmarshalText(data []byte) error {
+	switch LiveZoneStatus(data) {
+	case LiveZoneStatusArmed:
+		*s = LiveZoneStatusArmed
+		return nil
+	case LiveZoneStatusSpotting:
+		*s = LiveZoneStatusSpotting
+		return nil
+	case LiveZoneStatusSprung:
+		*s = LiveZoneStatusSprung
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // An uploaded Map and its hex calibration.

@@ -206,8 +206,12 @@ func applyReaction(s *state, w *Write) {
 // follow carries the fight on after a write that leaves something to do: a declined or spent reaction
 // lets the interrupted attack or walk go on, and a finished opportunity attack lets the walk resume.
 func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
+	if actor.DM {
+		r.dm = &actor
+	}
 	f := r.st.combat
 	if f == nil {
+		r.ambush(c)
 		return
 	}
 	switch {

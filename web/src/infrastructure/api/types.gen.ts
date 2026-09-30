@@ -773,7 +773,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -831,6 +831,45 @@ export type LiveCommand = {
     routeId?: Id;
     distanceMi?: number;
     pace?: TravelPace;
+    zoneId?: Id;
+    radiusHexes?: number;
+    /**
+     * With add_zone, the zone springs only when the DM springs it.
+     */
+    dmOnly?: boolean;
+};
+
+/**
+ * An Encounter Zone, for the DM only. creatures counts the hidden creatures in it, or those it held once sprung; dc is their Stealth DC once it springs.
+ */
+export type LiveZone = {
+    id: Id;
+    name: string;
+    q: number;
+    r: number;
+    radiusHexes: number;
+    dmOnly: boolean;
+    held: boolean;
+    status: 'armed' | 'spotting' | 'sprung';
+    dc?: number;
+    creatures: number;
+    checks: Array<LiveZoneCheck>;
+};
+
+/**
+ * Whether one party member noticed a sprung zone; noticed is absent while they roll.
+ */
+export type LiveZoneCheck = {
+    tokenId: Id;
+    noticed?: boolean;
+};
+
+/**
+ * A party member's Perception Roll Card after a zone springs. The DC is never sent.
+ */
+export type LivePerception = {
+    rollId: Id;
+    tokenId: Id;
 };
 
 /**
@@ -1071,6 +1110,10 @@ export type LiveCombatant = {
     reaction: boolean;
     movementFt: number;
     speedFt: number;
+    /**
+     * Did not notice the ambush and rolled initiative at disadvantage.
+     */
+    surprised?: boolean;
     tactics?: Tactics;
     suggestion?: LiveSuggestion;
 };
@@ -1158,6 +1201,8 @@ export type LiveView = {
     area?: LiveArea;
     table?: LiveTable;
     world?: LiveWorld;
+    zones?: Array<LiveZone>;
+    perception?: Array<LivePerception>;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;
