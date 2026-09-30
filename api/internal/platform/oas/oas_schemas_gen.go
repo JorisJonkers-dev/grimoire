@@ -9,6 +9,412 @@ import (
 	"github.com/google/uuid"
 )
 
+// One of the six abilities.
+// Ref: #/components/schemas/Ability
+type Ability string
+
+const (
+	AbilityStrength     Ability = "strength"
+	AbilityDexterity    Ability = "dexterity"
+	AbilityConstitution Ability = "constitution"
+	AbilityIntelligence Ability = "intelligence"
+	AbilityWisdom       Ability = "wisdom"
+	AbilityCharisma     Ability = "charisma"
+)
+
+// AllValues returns all Ability values.
+func (Ability) AllValues() []Ability {
+	return []Ability{
+		AbilityStrength,
+		AbilityDexterity,
+		AbilityConstitution,
+		AbilityIntelligence,
+		AbilityWisdom,
+		AbilityCharisma,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Ability) MarshalText() ([]byte, error) {
+	switch s {
+	case AbilityStrength:
+		return []byte(s), nil
+	case AbilityDexterity:
+		return []byte(s), nil
+	case AbilityConstitution:
+		return []byte(s), nil
+	case AbilityIntelligence:
+		return []byte(s), nil
+	case AbilityWisdom:
+		return []byte(s), nil
+	case AbilityCharisma:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Ability) UnmarshalText(data []byte) error {
+	switch Ability(data) {
+	case AbilityStrength:
+		*s = AbilityStrength
+		return nil
+	case AbilityDexterity:
+		*s = AbilityDexterity
+		return nil
+	case AbilityConstitution:
+		*s = AbilityConstitution
+		return nil
+	case AbilityIntelligence:
+		*s = AbilityIntelligence
+		return nil
+	case AbilityWisdom:
+		*s = AbilityWisdom
+		return nil
+	case AbilityCharisma:
+		*s = AbilityCharisma
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Base ability scores before origin increases.
+// Ref: #/components/schemas/AbilityBase
+type AbilityBase struct {
+	Strength     int32 `json:"strength"`
+	Dexterity    int32 `json:"dexterity"`
+	Constitution int32 `json:"constitution"`
+	Intelligence int32 `json:"intelligence"`
+	Wisdom       int32 `json:"wisdom"`
+	Charisma     int32 `json:"charisma"`
+}
+
+// GetStrength returns the value of Strength.
+func (s *AbilityBase) GetStrength() int32 {
+	return s.Strength
+}
+
+// GetDexterity returns the value of Dexterity.
+func (s *AbilityBase) GetDexterity() int32 {
+	return s.Dexterity
+}
+
+// GetConstitution returns the value of Constitution.
+func (s *AbilityBase) GetConstitution() int32 {
+	return s.Constitution
+}
+
+// GetIntelligence returns the value of Intelligence.
+func (s *AbilityBase) GetIntelligence() int32 {
+	return s.Intelligence
+}
+
+// GetWisdom returns the value of Wisdom.
+func (s *AbilityBase) GetWisdom() int32 {
+	return s.Wisdom
+}
+
+// GetCharisma returns the value of Charisma.
+func (s *AbilityBase) GetCharisma() int32 {
+	return s.Charisma
+}
+
+// SetStrength sets the value of Strength.
+func (s *AbilityBase) SetStrength(val int32) {
+	s.Strength = val
+}
+
+// SetDexterity sets the value of Dexterity.
+func (s *AbilityBase) SetDexterity(val int32) {
+	s.Dexterity = val
+}
+
+// SetConstitution sets the value of Constitution.
+func (s *AbilityBase) SetConstitution(val int32) {
+	s.Constitution = val
+}
+
+// SetIntelligence sets the value of Intelligence.
+func (s *AbilityBase) SetIntelligence(val int32) {
+	s.Intelligence = val
+}
+
+// SetWisdom sets the value of Wisdom.
+func (s *AbilityBase) SetWisdom(val int32) {
+	s.Wisdom = val
+}
+
+// SetCharisma sets the value of Charisma.
+func (s *AbilityBase) SetCharisma(val int32) {
+	s.Charisma = val
+}
+
+// Origin ability increases, +2 and +1 or +1 to three abilities.
+// Ref: #/components/schemas/AbilityBonus
+type AbilityBonus struct {
+	Strength     OptInt32 `json:"strength"`
+	Dexterity    OptInt32 `json:"dexterity"`
+	Constitution OptInt32 `json:"constitution"`
+	Intelligence OptInt32 `json:"intelligence"`
+	Wisdom       OptInt32 `json:"wisdom"`
+	Charisma     OptInt32 `json:"charisma"`
+}
+
+// GetStrength returns the value of Strength.
+func (s *AbilityBonus) GetStrength() OptInt32 {
+	return s.Strength
+}
+
+// GetDexterity returns the value of Dexterity.
+func (s *AbilityBonus) GetDexterity() OptInt32 {
+	return s.Dexterity
+}
+
+// GetConstitution returns the value of Constitution.
+func (s *AbilityBonus) GetConstitution() OptInt32 {
+	return s.Constitution
+}
+
+// GetIntelligence returns the value of Intelligence.
+func (s *AbilityBonus) GetIntelligence() OptInt32 {
+	return s.Intelligence
+}
+
+// GetWisdom returns the value of Wisdom.
+func (s *AbilityBonus) GetWisdom() OptInt32 {
+	return s.Wisdom
+}
+
+// GetCharisma returns the value of Charisma.
+func (s *AbilityBonus) GetCharisma() OptInt32 {
+	return s.Charisma
+}
+
+// SetStrength sets the value of Strength.
+func (s *AbilityBonus) SetStrength(val OptInt32) {
+	s.Strength = val
+}
+
+// SetDexterity sets the value of Dexterity.
+func (s *AbilityBonus) SetDexterity(val OptInt32) {
+	s.Dexterity = val
+}
+
+// SetConstitution sets the value of Constitution.
+func (s *AbilityBonus) SetConstitution(val OptInt32) {
+	s.Constitution = val
+}
+
+// SetIntelligence sets the value of Intelligence.
+func (s *AbilityBonus) SetIntelligence(val OptInt32) {
+	s.Intelligence = val
+}
+
+// SetWisdom sets the value of Wisdom.
+func (s *AbilityBonus) SetWisdom(val OptInt32) {
+	s.Wisdom = val
+}
+
+// SetCharisma sets the value of Charisma.
+func (s *AbilityBonus) SetCharisma(val OptInt32) {
+	s.Charisma = val
+}
+
+// One ability on the sheet with its saving throw.
+// Ref: #/components/schemas/AbilityLine
+type AbilityLine struct {
+	Ability        Ability `json:"ability"`
+	Score          int32   `json:"score"`
+	Modifier       int32   `json:"modifier"`
+	Save           int32   `json:"save"`
+	SaveProficient bool    `json:"saveProficient"`
+}
+
+// GetAbility returns the value of Ability.
+func (s *AbilityLine) GetAbility() Ability {
+	return s.Ability
+}
+
+// GetScore returns the value of Score.
+func (s *AbilityLine) GetScore() int32 {
+	return s.Score
+}
+
+// GetModifier returns the value of Modifier.
+func (s *AbilityLine) GetModifier() int32 {
+	return s.Modifier
+}
+
+// GetSave returns the value of Save.
+func (s *AbilityLine) GetSave() int32 {
+	return s.Save
+}
+
+// GetSaveProficient returns the value of SaveProficient.
+func (s *AbilityLine) GetSaveProficient() bool {
+	return s.SaveProficient
+}
+
+// SetAbility sets the value of Ability.
+func (s *AbilityLine) SetAbility(val Ability) {
+	s.Ability = val
+}
+
+// SetScore sets the value of Score.
+func (s *AbilityLine) SetScore(val int32) {
+	s.Score = val
+}
+
+// SetModifier sets the value of Modifier.
+func (s *AbilityLine) SetModifier(val int32) {
+	s.Modifier = val
+}
+
+// SetSave sets the value of Save.
+func (s *AbilityLine) SetSave(val int32) {
+	s.Save = val
+}
+
+// SetSaveProficient sets the value of SaveProficient.
+func (s *AbilityLine) SetSaveProficient(val bool) {
+	s.SaveProficient = val
+}
+
+// An Effect currently on the Character.
+// Ref: #/components/schemas/ActiveEffect
+type ActiveEffect struct {
+	Name   string `json:"name"`
+	Detail string `json:"detail"`
+}
+
+// GetName returns the value of Name.
+func (s *ActiveEffect) GetName() string {
+	return s.Name
+}
+
+// GetDetail returns the value of Detail.
+func (s *ActiveEffect) GetDetail() string {
+	return s.Detail
+}
+
+// SetName sets the value of Name.
+func (s *ActiveEffect) SetName(val string) {
+	s.Name = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *ActiveEffect) SetDetail(val string) {
+	s.Detail = val
+}
+
+type ArmorChoice string
+
+// A suit of armour or a shield.
+// Ref: #/components/schemas/ArmorOptionItem
+type ArmorOptionItem struct {
+	Slug                Slug     `json:"slug"`
+	Name                string   `json:"name"`
+	Category            string   `json:"category"`
+	Shield              bool     `json:"shield"`
+	AcBase              int32    `json:"acBase"`
+	AddDex              bool     `json:"addDex"`
+	DexCap              OptInt32 `json:"dexCap"`
+	StrengthRequired    int32    `json:"strengthRequired"`
+	StealthDisadvantage bool     `json:"stealthDisadvantage"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *ArmorOptionItem) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ArmorOptionItem) GetName() string {
+	return s.Name
+}
+
+// GetCategory returns the value of Category.
+func (s *ArmorOptionItem) GetCategory() string {
+	return s.Category
+}
+
+// GetShield returns the value of Shield.
+func (s *ArmorOptionItem) GetShield() bool {
+	return s.Shield
+}
+
+// GetAcBase returns the value of AcBase.
+func (s *ArmorOptionItem) GetAcBase() int32 {
+	return s.AcBase
+}
+
+// GetAddDex returns the value of AddDex.
+func (s *ArmorOptionItem) GetAddDex() bool {
+	return s.AddDex
+}
+
+// GetDexCap returns the value of DexCap.
+func (s *ArmorOptionItem) GetDexCap() OptInt32 {
+	return s.DexCap
+}
+
+// GetStrengthRequired returns the value of StrengthRequired.
+func (s *ArmorOptionItem) GetStrengthRequired() int32 {
+	return s.StrengthRequired
+}
+
+// GetStealthDisadvantage returns the value of StealthDisadvantage.
+func (s *ArmorOptionItem) GetStealthDisadvantage() bool {
+	return s.StealthDisadvantage
+}
+
+// SetSlug sets the value of Slug.
+func (s *ArmorOptionItem) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ArmorOptionItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetCategory sets the value of Category.
+func (s *ArmorOptionItem) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetShield sets the value of Shield.
+func (s *ArmorOptionItem) SetShield(val bool) {
+	s.Shield = val
+}
+
+// SetAcBase sets the value of AcBase.
+func (s *ArmorOptionItem) SetAcBase(val int32) {
+	s.AcBase = val
+}
+
+// SetAddDex sets the value of AddDex.
+func (s *ArmorOptionItem) SetAddDex(val bool) {
+	s.AddDex = val
+}
+
+// SetDexCap sets the value of DexCap.
+func (s *ArmorOptionItem) SetDexCap(val OptInt32) {
+	s.DexCap = val
+}
+
+// SetStrengthRequired sets the value of StrengthRequired.
+func (s *ArmorOptionItem) SetStrengthRequired(val int32) {
+	s.StrengthRequired = val
+}
+
+// SetStealthDisadvantage sets the value of StealthDisadvantage.
+func (s *ArmorOptionItem) SetStealthDisadvantage(val bool) {
+	s.StealthDisadvantage = val
+}
+
 // Entries of one kind by Automation Level.
 // Ref: #/components/schemas/AutomationCount
 type AutomationCount struct {
@@ -172,6 +578,220 @@ func (s *AutomationCountKind) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// A background and what it grants; empty abilities means a free choice.
+// Ref: #/components/schemas/BackgroundChoice
+type BackgroundChoice struct {
+	Slug      Slug      `json:"slug"`
+	Name      string    `json:"name"`
+	Abilities []Ability `json:"abilities"`
+	Skills    []Slug    `json:"skills"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *BackgroundChoice) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *BackgroundChoice) GetName() string {
+	return s.Name
+}
+
+// GetAbilities returns the value of Abilities.
+func (s *BackgroundChoice) GetAbilities() []Ability {
+	return s.Abilities
+}
+
+// GetSkills returns the value of Skills.
+func (s *BackgroundChoice) GetSkills() []Slug {
+	return s.Skills
+}
+
+// SetSlug sets the value of Slug.
+func (s *BackgroundChoice) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *BackgroundChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetAbilities sets the value of Abilities.
+func (s *BackgroundChoice) SetAbilities(val []Ability) {
+	s.Abilities = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *BackgroundChoice) SetSkills(val []Slug) {
+	s.Skills = val
+}
+
+// What a first-level character can choose in one ruleset.
+// Ref: #/components/schemas/BuilderOptions
+type BuilderOptions struct {
+	Ruleset        Ruleset            `json:"ruleset"`
+	RulesetYear    int32              `json:"rulesetYear"`
+	PointBuyBudget int32              `json:"pointBuyBudget"`
+	Classes        []ClassChoice      `json:"classes"`
+	Species        []SpeciesChoice    `json:"species"`
+	Backgrounds    []BackgroundChoice `json:"backgrounds"`
+	Armor          []ArmorOptionItem  `json:"armor"`
+	Weapons        []WeaponLine       `json:"weapons"`
+	Skills         []SkillChoice      `json:"skills"`
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *BuilderOptions) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetRulesetYear returns the value of RulesetYear.
+func (s *BuilderOptions) GetRulesetYear() int32 {
+	return s.RulesetYear
+}
+
+// GetPointBuyBudget returns the value of PointBuyBudget.
+func (s *BuilderOptions) GetPointBuyBudget() int32 {
+	return s.PointBuyBudget
+}
+
+// GetClasses returns the value of Classes.
+func (s *BuilderOptions) GetClasses() []ClassChoice {
+	return s.Classes
+}
+
+// GetSpecies returns the value of Species.
+func (s *BuilderOptions) GetSpecies() []SpeciesChoice {
+	return s.Species
+}
+
+// GetBackgrounds returns the value of Backgrounds.
+func (s *BuilderOptions) GetBackgrounds() []BackgroundChoice {
+	return s.Backgrounds
+}
+
+// GetArmor returns the value of Armor.
+func (s *BuilderOptions) GetArmor() []ArmorOptionItem {
+	return s.Armor
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *BuilderOptions) GetWeapons() []WeaponLine {
+	return s.Weapons
+}
+
+// GetSkills returns the value of Skills.
+func (s *BuilderOptions) GetSkills() []SkillChoice {
+	return s.Skills
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *BuilderOptions) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetRulesetYear sets the value of RulesetYear.
+func (s *BuilderOptions) SetRulesetYear(val int32) {
+	s.RulesetYear = val
+}
+
+// SetPointBuyBudget sets the value of PointBuyBudget.
+func (s *BuilderOptions) SetPointBuyBudget(val int32) {
+	s.PointBuyBudget = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *BuilderOptions) SetClasses(val []ClassChoice) {
+	s.Classes = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *BuilderOptions) SetSpecies(val []SpeciesChoice) {
+	s.Species = val
+}
+
+// SetBackgrounds sets the value of Backgrounds.
+func (s *BuilderOptions) SetBackgrounds(val []BackgroundChoice) {
+	s.Backgrounds = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *BuilderOptions) SetArmor(val []ArmorOptionItem) {
+	s.Armor = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *BuilderOptions) SetWeapons(val []WeaponLine) {
+	s.Weapons = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *BuilderOptions) SetSkills(val []SkillChoice) {
+	s.Skills = val
+}
+
+// BuilderOptionsHeaders wraps BuilderOptions with response headers.
+type BuilderOptionsHeaders struct {
+	ETag               OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           BuilderOptions
+}
+
+// GetETag returns the value of ETag.
+func (s *BuilderOptionsHeaders) GetETag() OptString {
+	return s.ETag
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *BuilderOptionsHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *BuilderOptionsHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *BuilderOptionsHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *BuilderOptionsHeaders) GetResponse() BuilderOptions {
+	return s.Response
+}
+
+// SetETag sets the value of ETag.
+func (s *BuilderOptionsHeaders) SetETag(val OptString) {
+	s.ETag = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *BuilderOptionsHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *BuilderOptionsHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *BuilderOptionsHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *BuilderOptionsHeaders) SetResponse(val BuilderOptions) {
+	s.Response = val
+}
+
+func (*BuilderOptionsHeaders) getBuilderOptionsRes() {}
 
 // A Campaign's home.
 // Ref: #/components/schemas/Campaign
@@ -648,6 +1268,842 @@ func (s *CampaignUpdate) SetRuleset(val OptRuleset) {
 	s.Ruleset = val
 }
 
+// The choices for a first-level Character.
+// Ref: #/components/schemas/CharacterBuild
+type CharacterBuild struct {
+	Name       CharacterName        `json:"name"`
+	Species    Slug                 `json:"species"`
+	Class      Slug                 `json:"class"`
+	Background Slug                 `json:"background"`
+	Method     CharacterBuildMethod `json:"method"`
+	Base       AbilityBase          `json:"base"`
+	Bonus      AbilityBonus         `json:"bonus"`
+	Skills     []Slug               `json:"skills"`
+	Armor      OptArmorChoice       `json:"armor"`
+	Shield     bool                 `json:"shield"`
+	Weapons    []Slug               `json:"weapons"`
+}
+
+// GetName returns the value of Name.
+func (s *CharacterBuild) GetName() CharacterName {
+	return s.Name
+}
+
+// GetSpecies returns the value of Species.
+func (s *CharacterBuild) GetSpecies() Slug {
+	return s.Species
+}
+
+// GetClass returns the value of Class.
+func (s *CharacterBuild) GetClass() Slug {
+	return s.Class
+}
+
+// GetBackground returns the value of Background.
+func (s *CharacterBuild) GetBackground() Slug {
+	return s.Background
+}
+
+// GetMethod returns the value of Method.
+func (s *CharacterBuild) GetMethod() CharacterBuildMethod {
+	return s.Method
+}
+
+// GetBase returns the value of Base.
+func (s *CharacterBuild) GetBase() AbilityBase {
+	return s.Base
+}
+
+// GetBonus returns the value of Bonus.
+func (s *CharacterBuild) GetBonus() AbilityBonus {
+	return s.Bonus
+}
+
+// GetSkills returns the value of Skills.
+func (s *CharacterBuild) GetSkills() []Slug {
+	return s.Skills
+}
+
+// GetArmor returns the value of Armor.
+func (s *CharacterBuild) GetArmor() OptArmorChoice {
+	return s.Armor
+}
+
+// GetShield returns the value of Shield.
+func (s *CharacterBuild) GetShield() bool {
+	return s.Shield
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *CharacterBuild) GetWeapons() []Slug {
+	return s.Weapons
+}
+
+// SetName sets the value of Name.
+func (s *CharacterBuild) SetName(val CharacterName) {
+	s.Name = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *CharacterBuild) SetSpecies(val Slug) {
+	s.Species = val
+}
+
+// SetClass sets the value of Class.
+func (s *CharacterBuild) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetBackground sets the value of Background.
+func (s *CharacterBuild) SetBackground(val Slug) {
+	s.Background = val
+}
+
+// SetMethod sets the value of Method.
+func (s *CharacterBuild) SetMethod(val CharacterBuildMethod) {
+	s.Method = val
+}
+
+// SetBase sets the value of Base.
+func (s *CharacterBuild) SetBase(val AbilityBase) {
+	s.Base = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *CharacterBuild) SetBonus(val AbilityBonus) {
+	s.Bonus = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *CharacterBuild) SetSkills(val []Slug) {
+	s.Skills = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *CharacterBuild) SetArmor(val OptArmorChoice) {
+	s.Armor = val
+}
+
+// SetShield sets the value of Shield.
+func (s *CharacterBuild) SetShield(val bool) {
+	s.Shield = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *CharacterBuild) SetWeapons(val []Slug) {
+	s.Weapons = val
+}
+
+type CharacterBuildMethod string
+
+const (
+	CharacterBuildMethodStandardArray CharacterBuildMethod = "standard-array"
+	CharacterBuildMethodPointBuy      CharacterBuildMethod = "point-buy"
+	CharacterBuildMethodRolled        CharacterBuildMethod = "rolled"
+)
+
+// AllValues returns all CharacterBuildMethod values.
+func (CharacterBuildMethod) AllValues() []CharacterBuildMethod {
+	return []CharacterBuildMethod{
+		CharacterBuildMethodStandardArray,
+		CharacterBuildMethodPointBuy,
+		CharacterBuildMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CharacterBuildMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case CharacterBuildMethodStandardArray:
+		return []byte(s), nil
+	case CharacterBuildMethodPointBuy:
+		return []byte(s), nil
+	case CharacterBuildMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CharacterBuildMethod) UnmarshalText(data []byte) error {
+	switch CharacterBuildMethod(data) {
+	case CharacterBuildMethodStandardArray:
+		*s = CharacterBuildMethodStandardArray
+		return nil
+	case CharacterBuildMethodPointBuy:
+		*s = CharacterBuildMethodPointBuy
+		return nil
+	case CharacterBuildMethodRolled:
+		*s = CharacterBuildMethodRolled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Out-of-combat changes; omitted fields stay as they are.
+// Ref: #/components/schemas/CharacterEdit
+type CharacterEdit struct {
+	Name      OptCharacterName `json:"name"`
+	HpCurrent OptInt32         `json:"hpCurrent"`
+	Armor     OptArmorChoice   `json:"armor"`
+	Shield    OptBool          `json:"shield"`
+	Weapons   []Slug           `json:"weapons"`
+}
+
+// GetName returns the value of Name.
+func (s *CharacterEdit) GetName() OptCharacterName {
+	return s.Name
+}
+
+// GetHpCurrent returns the value of HpCurrent.
+func (s *CharacterEdit) GetHpCurrent() OptInt32 {
+	return s.HpCurrent
+}
+
+// GetArmor returns the value of Armor.
+func (s *CharacterEdit) GetArmor() OptArmorChoice {
+	return s.Armor
+}
+
+// GetShield returns the value of Shield.
+func (s *CharacterEdit) GetShield() OptBool {
+	return s.Shield
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *CharacterEdit) GetWeapons() []Slug {
+	return s.Weapons
+}
+
+// SetName sets the value of Name.
+func (s *CharacterEdit) SetName(val OptCharacterName) {
+	s.Name = val
+}
+
+// SetHpCurrent sets the value of HpCurrent.
+func (s *CharacterEdit) SetHpCurrent(val OptInt32) {
+	s.HpCurrent = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *CharacterEdit) SetArmor(val OptArmorChoice) {
+	s.Armor = val
+}
+
+// SetShield sets the value of Shield.
+func (s *CharacterEdit) SetShield(val OptBool) {
+	s.Shield = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *CharacterEdit) SetWeapons(val []Slug) {
+	s.Weapons = val
+}
+
+type CharacterName string
+
+// A Character's sheet with every value derived by the rules.
+// Ref: #/components/schemas/CharacterSheet
+type CharacterSheet struct {
+	ID                OptID                `json:"id"`
+	Name              CharacterName        `json:"name"`
+	Ruleset           Ruleset              `json:"ruleset"`
+	Level             int32                `json:"level"`
+	OwnerName         DisplayName          `json:"ownerName"`
+	Mine              bool                 `json:"mine"`
+	Editable          bool                 `json:"editable"`
+	Species           NamedRef             `json:"species"`
+	Class             NamedRef             `json:"class"`
+	Background        NamedRef             `json:"background"`
+	Method            CharacterSheetMethod `json:"method"`
+	Base              AbilityBase          `json:"base"`
+	Bonus             AbilityBonus         `json:"bonus"`
+	Abilities         []AbilityLine        `json:"abilities"`
+	Skills            []SkillLine          `json:"skills"`
+	ClassSkills       []Slug               `json:"classSkills"`
+	BackgroundSkills  []Slug               `json:"backgroundSkills"`
+	HpCurrent         int32                `json:"hpCurrent"`
+	HpMax             int32                `json:"hpMax"`
+	ArmorClass        int32                `json:"armorClass"`
+	Initiative        int32                `json:"initiative"`
+	SpeedFeet         int32                `json:"speedFeet"`
+	ProficiencyBonus  int32                `json:"proficiencyBonus"`
+	PassivePerception int32                `json:"passivePerception"`
+	Armor             OptNamedRef          `json:"armor"`
+	Shield            bool                 `json:"shield"`
+	Weapons           []WeaponLine         `json:"weapons"`
+	Resources         []ResourcePool       `json:"resources"`
+	Effects           []ActiveEffect       `json:"effects"`
+	Warnings          []string             `json:"warnings"`
+}
+
+// GetID returns the value of ID.
+func (s *CharacterSheet) GetID() OptID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *CharacterSheet) GetName() CharacterName {
+	return s.Name
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *CharacterSheet) GetRuleset() Ruleset {
+	return s.Ruleset
+}
+
+// GetLevel returns the value of Level.
+func (s *CharacterSheet) GetLevel() int32 {
+	return s.Level
+}
+
+// GetOwnerName returns the value of OwnerName.
+func (s *CharacterSheet) GetOwnerName() DisplayName {
+	return s.OwnerName
+}
+
+// GetMine returns the value of Mine.
+func (s *CharacterSheet) GetMine() bool {
+	return s.Mine
+}
+
+// GetEditable returns the value of Editable.
+func (s *CharacterSheet) GetEditable() bool {
+	return s.Editable
+}
+
+// GetSpecies returns the value of Species.
+func (s *CharacterSheet) GetSpecies() NamedRef {
+	return s.Species
+}
+
+// GetClass returns the value of Class.
+func (s *CharacterSheet) GetClass() NamedRef {
+	return s.Class
+}
+
+// GetBackground returns the value of Background.
+func (s *CharacterSheet) GetBackground() NamedRef {
+	return s.Background
+}
+
+// GetMethod returns the value of Method.
+func (s *CharacterSheet) GetMethod() CharacterSheetMethod {
+	return s.Method
+}
+
+// GetBase returns the value of Base.
+func (s *CharacterSheet) GetBase() AbilityBase {
+	return s.Base
+}
+
+// GetBonus returns the value of Bonus.
+func (s *CharacterSheet) GetBonus() AbilityBonus {
+	return s.Bonus
+}
+
+// GetAbilities returns the value of Abilities.
+func (s *CharacterSheet) GetAbilities() []AbilityLine {
+	return s.Abilities
+}
+
+// GetSkills returns the value of Skills.
+func (s *CharacterSheet) GetSkills() []SkillLine {
+	return s.Skills
+}
+
+// GetClassSkills returns the value of ClassSkills.
+func (s *CharacterSheet) GetClassSkills() []Slug {
+	return s.ClassSkills
+}
+
+// GetBackgroundSkills returns the value of BackgroundSkills.
+func (s *CharacterSheet) GetBackgroundSkills() []Slug {
+	return s.BackgroundSkills
+}
+
+// GetHpCurrent returns the value of HpCurrent.
+func (s *CharacterSheet) GetHpCurrent() int32 {
+	return s.HpCurrent
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *CharacterSheet) GetHpMax() int32 {
+	return s.HpMax
+}
+
+// GetArmorClass returns the value of ArmorClass.
+func (s *CharacterSheet) GetArmorClass() int32 {
+	return s.ArmorClass
+}
+
+// GetInitiative returns the value of Initiative.
+func (s *CharacterSheet) GetInitiative() int32 {
+	return s.Initiative
+}
+
+// GetSpeedFeet returns the value of SpeedFeet.
+func (s *CharacterSheet) GetSpeedFeet() int32 {
+	return s.SpeedFeet
+}
+
+// GetProficiencyBonus returns the value of ProficiencyBonus.
+func (s *CharacterSheet) GetProficiencyBonus() int32 {
+	return s.ProficiencyBonus
+}
+
+// GetPassivePerception returns the value of PassivePerception.
+func (s *CharacterSheet) GetPassivePerception() int32 {
+	return s.PassivePerception
+}
+
+// GetArmor returns the value of Armor.
+func (s *CharacterSheet) GetArmor() OptNamedRef {
+	return s.Armor
+}
+
+// GetShield returns the value of Shield.
+func (s *CharacterSheet) GetShield() bool {
+	return s.Shield
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *CharacterSheet) GetWeapons() []WeaponLine {
+	return s.Weapons
+}
+
+// GetResources returns the value of Resources.
+func (s *CharacterSheet) GetResources() []ResourcePool {
+	return s.Resources
+}
+
+// GetEffects returns the value of Effects.
+func (s *CharacterSheet) GetEffects() []ActiveEffect {
+	return s.Effects
+}
+
+// GetWarnings returns the value of Warnings.
+func (s *CharacterSheet) GetWarnings() []string {
+	return s.Warnings
+}
+
+// SetID sets the value of ID.
+func (s *CharacterSheet) SetID(val OptID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *CharacterSheet) SetName(val CharacterName) {
+	s.Name = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *CharacterSheet) SetRuleset(val Ruleset) {
+	s.Ruleset = val
+}
+
+// SetLevel sets the value of Level.
+func (s *CharacterSheet) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetOwnerName sets the value of OwnerName.
+func (s *CharacterSheet) SetOwnerName(val DisplayName) {
+	s.OwnerName = val
+}
+
+// SetMine sets the value of Mine.
+func (s *CharacterSheet) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetEditable sets the value of Editable.
+func (s *CharacterSheet) SetEditable(val bool) {
+	s.Editable = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *CharacterSheet) SetSpecies(val NamedRef) {
+	s.Species = val
+}
+
+// SetClass sets the value of Class.
+func (s *CharacterSheet) SetClass(val NamedRef) {
+	s.Class = val
+}
+
+// SetBackground sets the value of Background.
+func (s *CharacterSheet) SetBackground(val NamedRef) {
+	s.Background = val
+}
+
+// SetMethod sets the value of Method.
+func (s *CharacterSheet) SetMethod(val CharacterSheetMethod) {
+	s.Method = val
+}
+
+// SetBase sets the value of Base.
+func (s *CharacterSheet) SetBase(val AbilityBase) {
+	s.Base = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *CharacterSheet) SetBonus(val AbilityBonus) {
+	s.Bonus = val
+}
+
+// SetAbilities sets the value of Abilities.
+func (s *CharacterSheet) SetAbilities(val []AbilityLine) {
+	s.Abilities = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *CharacterSheet) SetSkills(val []SkillLine) {
+	s.Skills = val
+}
+
+// SetClassSkills sets the value of ClassSkills.
+func (s *CharacterSheet) SetClassSkills(val []Slug) {
+	s.ClassSkills = val
+}
+
+// SetBackgroundSkills sets the value of BackgroundSkills.
+func (s *CharacterSheet) SetBackgroundSkills(val []Slug) {
+	s.BackgroundSkills = val
+}
+
+// SetHpCurrent sets the value of HpCurrent.
+func (s *CharacterSheet) SetHpCurrent(val int32) {
+	s.HpCurrent = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *CharacterSheet) SetHpMax(val int32) {
+	s.HpMax = val
+}
+
+// SetArmorClass sets the value of ArmorClass.
+func (s *CharacterSheet) SetArmorClass(val int32) {
+	s.ArmorClass = val
+}
+
+// SetInitiative sets the value of Initiative.
+func (s *CharacterSheet) SetInitiative(val int32) {
+	s.Initiative = val
+}
+
+// SetSpeedFeet sets the value of SpeedFeet.
+func (s *CharacterSheet) SetSpeedFeet(val int32) {
+	s.SpeedFeet = val
+}
+
+// SetProficiencyBonus sets the value of ProficiencyBonus.
+func (s *CharacterSheet) SetProficiencyBonus(val int32) {
+	s.ProficiencyBonus = val
+}
+
+// SetPassivePerception sets the value of PassivePerception.
+func (s *CharacterSheet) SetPassivePerception(val int32) {
+	s.PassivePerception = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *CharacterSheet) SetArmor(val OptNamedRef) {
+	s.Armor = val
+}
+
+// SetShield sets the value of Shield.
+func (s *CharacterSheet) SetShield(val bool) {
+	s.Shield = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *CharacterSheet) SetWeapons(val []WeaponLine) {
+	s.Weapons = val
+}
+
+// SetResources sets the value of Resources.
+func (s *CharacterSheet) SetResources(val []ResourcePool) {
+	s.Resources = val
+}
+
+// SetEffects sets the value of Effects.
+func (s *CharacterSheet) SetEffects(val []ActiveEffect) {
+	s.Effects = val
+}
+
+// SetWarnings sets the value of Warnings.
+func (s *CharacterSheet) SetWarnings(val []string) {
+	s.Warnings = val
+}
+
+// CharacterSheetHeaders wraps CharacterSheet with response headers.
+type CharacterSheetHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CharacterSheet
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CharacterSheetHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CharacterSheetHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CharacterSheetHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CharacterSheetHeaders) GetResponse() CharacterSheet {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CharacterSheetHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CharacterSheetHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CharacterSheetHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CharacterSheetHeaders) SetResponse(val CharacterSheet) {
+	s.Response = val
+}
+
+func (*CharacterSheetHeaders) createCharacterRes()  {}
+func (*CharacterSheetHeaders) getCharacterRes()     {}
+func (*CharacterSheetHeaders) previewCharacterRes() {}
+func (*CharacterSheetHeaders) updateCharacterRes()  {}
+
+type CharacterSheetMethod string
+
+const (
+	CharacterSheetMethodStandardArray CharacterSheetMethod = "standard-array"
+	CharacterSheetMethodPointBuy      CharacterSheetMethod = "point-buy"
+	CharacterSheetMethodRolled        CharacterSheetMethod = "rolled"
+)
+
+// AllValues returns all CharacterSheetMethod values.
+func (CharacterSheetMethod) AllValues() []CharacterSheetMethod {
+	return []CharacterSheetMethod{
+		CharacterSheetMethodStandardArray,
+		CharacterSheetMethodPointBuy,
+		CharacterSheetMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CharacterSheetMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case CharacterSheetMethodStandardArray:
+		return []byte(s), nil
+	case CharacterSheetMethodPointBuy:
+		return []byte(s), nil
+	case CharacterSheetMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CharacterSheetMethod) UnmarshalText(data []byte) error {
+	switch CharacterSheetMethod(data) {
+	case CharacterSheetMethodStandardArray:
+		*s = CharacterSheetMethodStandardArray
+		return nil
+	case CharacterSheetMethodPointBuy:
+		*s = CharacterSheetMethodPointBuy
+		return nil
+	case CharacterSheetMethodRolled:
+		*s = CharacterSheetMethodRolled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Character in the party list.
+// Ref: #/components/schemas/CharacterSummary
+type CharacterSummary struct {
+	ID        ID            `json:"id"`
+	Name      CharacterName `json:"name"`
+	OwnerName DisplayName   `json:"ownerName"`
+	Mine      bool          `json:"mine"`
+	Species   Slug          `json:"species"`
+	Class     Slug          `json:"class"`
+	Level     int32         `json:"level"`
+	HpCurrent int32         `json:"hpCurrent"`
+	HpMax     int32         `json:"hpMax"`
+}
+
+// GetID returns the value of ID.
+func (s *CharacterSummary) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *CharacterSummary) GetName() CharacterName {
+	return s.Name
+}
+
+// GetOwnerName returns the value of OwnerName.
+func (s *CharacterSummary) GetOwnerName() DisplayName {
+	return s.OwnerName
+}
+
+// GetMine returns the value of Mine.
+func (s *CharacterSummary) GetMine() bool {
+	return s.Mine
+}
+
+// GetSpecies returns the value of Species.
+func (s *CharacterSummary) GetSpecies() Slug {
+	return s.Species
+}
+
+// GetClass returns the value of Class.
+func (s *CharacterSummary) GetClass() Slug {
+	return s.Class
+}
+
+// GetLevel returns the value of Level.
+func (s *CharacterSummary) GetLevel() int32 {
+	return s.Level
+}
+
+// GetHpCurrent returns the value of HpCurrent.
+func (s *CharacterSummary) GetHpCurrent() int32 {
+	return s.HpCurrent
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *CharacterSummary) GetHpMax() int32 {
+	return s.HpMax
+}
+
+// SetID sets the value of ID.
+func (s *CharacterSummary) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *CharacterSummary) SetName(val CharacterName) {
+	s.Name = val
+}
+
+// SetOwnerName sets the value of OwnerName.
+func (s *CharacterSummary) SetOwnerName(val DisplayName) {
+	s.OwnerName = val
+}
+
+// SetMine sets the value of Mine.
+func (s *CharacterSummary) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *CharacterSummary) SetSpecies(val Slug) {
+	s.Species = val
+}
+
+// SetClass sets the value of Class.
+func (s *CharacterSummary) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetLevel sets the value of Level.
+func (s *CharacterSummary) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetHpCurrent sets the value of HpCurrent.
+func (s *CharacterSummary) SetHpCurrent(val int32) {
+	s.HpCurrent = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *CharacterSummary) SetHpMax(val int32) {
+	s.HpMax = val
+}
+
+// A class and what it gives at level 1.
+// Ref: #/components/schemas/ClassChoice
+type ClassChoice struct {
+	Slug         Slug      `json:"slug"`
+	Name         string    `json:"name"`
+	HitDie       int32     `json:"hitDie"`
+	Saves        []Ability `json:"saves"`
+	SkillChoices int32     `json:"skillChoices"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *ClassChoice) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ClassChoice) GetName() string {
+	return s.Name
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *ClassChoice) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetSaves returns the value of Saves.
+func (s *ClassChoice) GetSaves() []Ability {
+	return s.Saves
+}
+
+// GetSkillChoices returns the value of SkillChoices.
+func (s *ClassChoice) GetSkillChoices() int32 {
+	return s.SkillChoices
+}
+
+// SetSlug sets the value of Slug.
+func (s *ClassChoice) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *ClassChoice) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *ClassChoice) SetSaves(val []Ability) {
+	s.Saves = val
+}
+
+// SetSkillChoices sets the value of SkillChoices.
+func (s *ClassChoice) SetSkillChoices(val int32) {
+	s.SkillChoices = val
+}
+
 // A condition named in rules text, with its own text for tooltips.
 // Ref: #/components/schemas/ConditionRef
 type ConditionRef struct {
@@ -685,6 +2141,45 @@ func (s *ConditionRef) SetName(val string) {
 func (s *ConditionRef) SetDescription(val string) {
 	s.Description = val
 }
+
+// DeleteCharacterNoContent is response for DeleteCharacter operation.
+type DeleteCharacterNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteCharacterNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteCharacterNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteCharacterNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteCharacterNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteCharacterNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteCharacterNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteCharacterNoContent) deleteCharacterRes() {}
 
 type DisplayName string
 
@@ -1246,6 +2741,23 @@ func (s *GetAutomationCoverageOKHeaders) SetResponse(val []AutomationCount) {
 
 func (*GetAutomationCoverageOKHeaders) getAutomationCoverageRes() {}
 
+// GetBuilderOptionsNotModified is response for GetBuilderOptions operation.
+type GetBuilderOptionsNotModified struct {
+	ETag OptString
+}
+
+// GetETag returns the value of ETag.
+func (s *GetBuilderOptionsNotModified) GetETag() OptString {
+	return s.ETag
+}
+
+// SetETag sets the value of ETag.
+func (s *GetBuilderOptionsNotModified) SetETag(val OptString) {
+	s.ETag = val
+}
+
+func (*GetBuilderOptionsNotModified) getBuilderOptionsRes() {}
+
 // GetEntryNotModified is response for GetEntry operation.
 type GetEntryNotModified struct {
 	ETag OptString
@@ -1469,6 +2981,56 @@ func (s *InviteToken) GetToken() Token {
 func (s *InviteToken) SetToken(val Token) {
 	s.Token = val
 }
+
+// ListCharactersOKHeaders wraps []CharacterSummary with response headers.
+type ListCharactersOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []CharacterSummary
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListCharactersOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListCharactersOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListCharactersOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListCharactersOKHeaders) GetResponse() []CharacterSummary {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListCharactersOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListCharactersOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListCharactersOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListCharactersOKHeaders) SetResponse(val []CharacterSummary) {
+	s.Response = val
+}
+
+func (*ListCharactersOKHeaders) listCharactersRes() {}
 
 // ListEntriesNotModified is response for ListEntries operation.
 type ListEntriesNotModified struct {
@@ -1797,6 +3359,33 @@ func (s *MemberUpdate) SetRole(val Role) {
 	s.Role = val
 }
 
+// A compendium entry by slug and name.
+// Ref: #/components/schemas/NamedRef
+type NamedRef struct {
+	Slug Slug   `json:"slug"`
+	Name string `json:"name"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *NamedRef) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *NamedRef) GetName() string {
+	return s.Name
+}
+
+// SetSlug sets the value of Slug.
+func (s *NamedRef) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *NamedRef) SetName(val string) {
+	s.Name = val
+}
+
 // A new invite and the token for its link, shown once.
 // Ref: #/components/schemas/NewInvite
 type NewInvite struct {
@@ -1907,6 +3496,98 @@ func (s *NewInviteHeaders) SetResponse(val NewInvite) {
 
 func (*NewInviteHeaders) createInviteRes() {}
 
+// NewOptArmorChoice returns new OptArmorChoice with value set to v.
+func NewOptArmorChoice(v ArmorChoice) OptArmorChoice {
+	return OptArmorChoice{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptArmorChoice is optional ArmorChoice.
+type OptArmorChoice struct {
+	Value ArmorChoice
+	Set   bool
+}
+
+// IsSet returns true if OptArmorChoice was set.
+func (o OptArmorChoice) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptArmorChoice) Reset() {
+	var v ArmorChoice
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptArmorChoice) SetTo(v ArmorChoice) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptArmorChoice) Get() (v ArmorChoice, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptArmorChoice) Or(d ArmorChoice) ArmorChoice {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptBool returns new OptBool with value set to v.
+func NewOptBool(v bool) OptBool {
+	return OptBool{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptBool is optional bool.
+type OptBool struct {
+	Value bool
+	Set   bool
+}
+
+// IsSet returns true if OptBool was set.
+func (o OptBool) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptBool) Reset() {
+	var v bool
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptBool) SetTo(v bool) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptBool) Get() (v bool, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptBool) Or(d bool) bool {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptCampaignName returns new OptCampaignName with value set to v.
 func NewOptCampaignName(v CampaignName) OptCampaignName {
 	return OptCampaignName{
@@ -1953,6 +3634,98 @@ func (o OptCampaignName) Or(d CampaignName) CampaignName {
 	return d
 }
 
+// NewOptCharacterName returns new OptCharacterName with value set to v.
+func NewOptCharacterName(v CharacterName) OptCharacterName {
+	return OptCharacterName{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCharacterName is optional CharacterName.
+type OptCharacterName struct {
+	Value CharacterName
+	Set   bool
+}
+
+// IsSet returns true if OptCharacterName was set.
+func (o OptCharacterName) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCharacterName) Reset() {
+	var v CharacterName
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCharacterName) SetTo(v CharacterName) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCharacterName) Get() (v CharacterName, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCharacterName) Or(d CharacterName) CharacterName {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptID returns new OptID with value set to v.
+func NewOptID(v ID) OptID {
+	return OptID{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptID is optional ID.
+type OptID struct {
+	Value ID
+	Set   bool
+}
+
+// IsSet returns true if OptID was set.
+func (o OptID) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptID) Reset() {
+	var v ID
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptID) SetTo(v ID) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptID) Get() (v ID, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptID) Or(d ID) ID {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt32 returns new OptInt32 with value set to v.
 func NewOptInt32(v int32) OptInt32 {
 	return OptInt32{
@@ -1993,6 +3766,52 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNamedRef returns new OptNamedRef with value set to v.
+func NewOptNamedRef(v NamedRef) OptNamedRef {
+	return OptNamedRef{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNamedRef is optional NamedRef.
+type OptNamedRef struct {
+	Value NamedRef
+	Set   bool
+}
+
+// IsSet returns true if OptNamedRef was set.
+func (o OptNamedRef) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNamedRef) Reset() {
+	var v NamedRef
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptNamedRef) SetTo(v NamedRef) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNamedRef) Get() (v NamedRef, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNamedRef) Or(d NamedRef) NamedRef {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -2258,9 +4077,13 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()        {}
+func (*ProblemStatusCodeWithHeaders) createCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
+func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()     {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()           {}
+func (*ProblemStatusCodeWithHeaders) getCharacterRes()          {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
@@ -2268,14 +4091,17 @@ func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()         {}
+func (*ProblemStatusCodeWithHeaders) listCharactersRes()        {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
+func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
+func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
 
 // RemoveMemberNoContent is response for RemoveMember operation.
@@ -2316,6 +4142,55 @@ func (s *RemoveMemberNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*RemoveMemberNoContent) removeMemberRes() {}
+
+// A spendable pool such as hit dice or spell slots.
+// Ref: #/components/schemas/ResourcePool
+type ResourcePool struct {
+	Key     Slug   `json:"key"`
+	Label   string `json:"label"`
+	Current int32  `json:"current"`
+	Max     int32  `json:"max"`
+}
+
+// GetKey returns the value of Key.
+func (s *ResourcePool) GetKey() Slug {
+	return s.Key
+}
+
+// GetLabel returns the value of Label.
+func (s *ResourcePool) GetLabel() string {
+	return s.Label
+}
+
+// GetCurrent returns the value of Current.
+func (s *ResourcePool) GetCurrent() int32 {
+	return s.Current
+}
+
+// GetMax returns the value of Max.
+func (s *ResourcePool) GetMax() int32 {
+	return s.Max
+}
+
+// SetKey sets the value of Key.
+func (s *ResourcePool) SetKey(val Slug) {
+	s.Key = val
+}
+
+// SetLabel sets the value of Label.
+func (s *ResourcePool) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetCurrent sets the value of Current.
+func (s *ResourcePool) SetCurrent(val int32) {
+	s.Current = val
+}
+
+// SetMax sets the value of Max.
+func (s *ResourcePool) SetMax(val int32) {
+	s.Max = val
+}
 
 // RevokeInviteNoContent is response for RevokeInvite operation.
 type RevokeInviteNoContent struct {
@@ -2442,6 +4317,82 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 	}
 }
 
+// A skill and its ability.
+// Ref: #/components/schemas/SkillChoice
+type SkillChoice struct {
+	Skill   Slug    `json:"skill"`
+	Ability Ability `json:"ability"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *SkillChoice) GetSkill() Slug {
+	return s.Skill
+}
+
+// GetAbility returns the value of Ability.
+func (s *SkillChoice) GetAbility() Ability {
+	return s.Ability
+}
+
+// SetSkill sets the value of Skill.
+func (s *SkillChoice) SetSkill(val Slug) {
+	s.Skill = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *SkillChoice) SetAbility(val Ability) {
+	s.Ability = val
+}
+
+// One skill on the sheet.
+// Ref: #/components/schemas/SkillLine
+type SkillLine struct {
+	Skill      Slug    `json:"skill"`
+	Ability    Ability `json:"ability"`
+	Bonus      int32   `json:"bonus"`
+	Proficient bool    `json:"proficient"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *SkillLine) GetSkill() Slug {
+	return s.Skill
+}
+
+// GetAbility returns the value of Ability.
+func (s *SkillLine) GetAbility() Ability {
+	return s.Ability
+}
+
+// GetBonus returns the value of Bonus.
+func (s *SkillLine) GetBonus() int32 {
+	return s.Bonus
+}
+
+// GetProficient returns the value of Proficient.
+func (s *SkillLine) GetProficient() bool {
+	return s.Proficient
+}
+
+// SetSkill sets the value of Skill.
+func (s *SkillLine) SetSkill(val Slug) {
+	s.Skill = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *SkillLine) SetAbility(val Ability) {
+	s.Ability = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *SkillLine) SetBonus(val int32) {
+	s.Bonus = val
+}
+
+// SetProficient sets the value of Proficient.
+func (s *SkillLine) SetProficient(val bool) {
+	s.Proficient = val
+}
+
 type Slug string
 
 // A source document and its required attribution.
@@ -2513,6 +4464,44 @@ func (s *Source) SetAttribution(val string) {
 // SetURL sets the value of URL.
 func (s *Source) SetURL(val string) {
 	s.URL = val
+}
+
+// A playable species.
+// Ref: #/components/schemas/SpeciesChoice
+type SpeciesChoice struct {
+	Slug      Slug   `json:"slug"`
+	Name      string `json:"name"`
+	SpeedFeet int32  `json:"speedFeet"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *SpeciesChoice) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *SpeciesChoice) GetName() string {
+	return s.Name
+}
+
+// GetSpeedFeet returns the value of SpeedFeet.
+func (s *SpeciesChoice) GetSpeedFeet() int32 {
+	return s.SpeedFeet
+}
+
+// SetSlug sets the value of Slug.
+func (s *SpeciesChoice) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *SpeciesChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetSpeedFeet sets the value of SpeedFeet.
+func (s *SpeciesChoice) SetSpeedFeet(val int32) {
+	s.SpeedFeet = val
 }
 
 // A spell with its full rules text.
@@ -3228,3 +5217,74 @@ func (s *StatusHeaders) SetResponse(val Status) {
 func (*StatusHeaders) getStatusRes() {}
 
 type Token string
+
+// A carried weapon.
+// Ref: #/components/schemas/WeaponLine
+type WeaponLine struct {
+	Slug          Slug   `json:"slug"`
+	Name          string `json:"name"`
+	DamageDice    string `json:"damageDice"`
+	DamageType    string `json:"damageType"`
+	RangeFeet     int32  `json:"rangeFeet"`
+	LongRangeFeet int32  `json:"longRangeFeet"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *WeaponLine) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *WeaponLine) GetName() string {
+	return s.Name
+}
+
+// GetDamageDice returns the value of DamageDice.
+func (s *WeaponLine) GetDamageDice() string {
+	return s.DamageDice
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *WeaponLine) GetDamageType() string {
+	return s.DamageType
+}
+
+// GetRangeFeet returns the value of RangeFeet.
+func (s *WeaponLine) GetRangeFeet() int32 {
+	return s.RangeFeet
+}
+
+// GetLongRangeFeet returns the value of LongRangeFeet.
+func (s *WeaponLine) GetLongRangeFeet() int32 {
+	return s.LongRangeFeet
+}
+
+// SetSlug sets the value of Slug.
+func (s *WeaponLine) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *WeaponLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetDamageDice sets the value of DamageDice.
+func (s *WeaponLine) SetDamageDice(val string) {
+	s.DamageDice = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *WeaponLine) SetDamageType(val string) {
+	s.DamageType = val
+}
+
+// SetRangeFeet sets the value of RangeFeet.
+func (s *WeaponLine) SetRangeFeet(val int32) {
+	s.RangeFeet = val
+}
+
+// SetLongRangeFeet sets the value of LongRangeFeet.
+func (s *WeaponLine) SetLongRangeFeet(val int32) {
+	s.LongRangeFeet = val
+}

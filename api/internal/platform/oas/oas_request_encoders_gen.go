@@ -38,6 +38,34 @@ func encodeCreateCampaignRequest(
 	return nil
 }
 
+func encodeCreateCharacterRequest(
+	req *CharacterBuild,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePreviewCharacterRequest(
+	req *CharacterBuild,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewInviteRequest(
 	req *InviteToken,
 	r *http.Request,
@@ -54,6 +82,20 @@ func encodePreviewInviteRequest(
 
 func encodeUpdateCampaignRequest(
 	req *CampaignUpdate,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateCharacterRequest(
+	req *CharacterEdit,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

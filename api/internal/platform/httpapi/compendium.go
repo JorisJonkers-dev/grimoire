@@ -19,6 +19,7 @@ type CompendiumReader interface {
 	ListEntries(ctx context.Context, f compendium.EntryFilter) ([]compendium.EntrySummary, error)
 	GetEntry(ctx context.Context, kind, slug, ruleset string) (compendium.EntryDetail, error)
 	AutomationCoverage(ctx context.Context) ([]compendium.AutomationCount, error)
+	BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error)
 }
 
 const defaultPageSize = 50

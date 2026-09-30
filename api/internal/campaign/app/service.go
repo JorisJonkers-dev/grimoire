@@ -33,6 +33,11 @@ type Repository interface {
 	Invites(ctx context.Context, id domain.CampaignID, now time.Time) ([]domain.Invite, error)
 	RevokeInvite(ctx context.Context, id domain.CampaignID, invite domain.InviteID, now time.Time) (bool, error)
 	FindInvite(ctx context.Context, hash []byte, now time.Time) (domain.InvitePreview, error)
+	InsertCharacter(ctx context.Context, c domain.Character, now time.Time) (domain.CharacterID, error)
+	Character(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) (domain.Character, error)
+	Characters(ctx context.Context, id domain.CampaignID) ([]domain.Character, error)
+	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
+	DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error
 }
 
 // DefaultInviteTTL is how long an invite link stays valid.

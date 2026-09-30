@@ -14,6 +14,7 @@ var (
 	ErrForbidden = errors.New("forbidden")
 	ErrConflict  = errors.New("conflict")
 	ErrInvalid   = errors.New("invalid")
+	ErrLocked    = errors.New("locked")
 )
 
 type (
@@ -23,6 +24,8 @@ type (
 	MemberID uuid.UUID
 	// InviteID identifies an invite.
 	InviteID uuid.UUID
+	// CharacterID identifies a Character.
+	CharacterID uuid.UUID
 )
 
 // ListCursor is where the next page of a caller's Campaigns starts.
@@ -96,4 +99,46 @@ type InvitePreview struct {
 	CampaignID   CampaignID
 	CampaignName string
 	InvitedBy    string
+}
+
+// Build is what a player chooses for a first-level Character.
+type Build struct {
+	Name       string
+	Species    string
+	Class      string
+	Background string
+	Method     string
+	Base       map[string]int
+	Bonus      map[string]int
+	Skills     []string
+	Armor      string
+	Shield     bool
+	Weapons    []string
+}
+
+// Character is a player character in a Campaign.
+type Character struct {
+	Build
+	ID               CharacterID
+	CampaignID       CampaignID
+	Owner            Member
+	Ruleset          string
+	Level            int
+	BackgroundSkills []string
+	HPMax            int
+	HPCurrent        int
+	UpdatedAt        time.Time
+}
+
+// CharacterSummary is a Character as it appears in the party list.
+type CharacterSummary struct {
+	ID        CharacterID
+	Name      string
+	OwnerName string
+	Mine      bool
+	Species   string
+	Class     string
+	Level     int
+	HPCurrent int
+	HPMax     int
 }

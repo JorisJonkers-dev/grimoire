@@ -19,6 +19,7 @@ type fakeCompendium struct {
 	sourcesErr error
 	entryErr   error
 	autoErr    error
+	builderErr error
 	spells     []compendium.SpellSummary
 	entries    []compendium.EntrySummary
 	lastFilter *compendium.SpellFilter
@@ -40,6 +41,20 @@ func (f *fakeCompendium) GetEntry(_ context.Context, kind, slug, _ string) (comp
 		Sections:     []compendium.Section{{Title: "Scimitar", Text: "Slash, prone."}},
 		Mentions:     []compendium.Condition{{Slug: "prone", Name: "Prone", Description: "Down."}},
 	}, f.entryErr
+}
+
+func (f *fakeCompendium) BuilderOptions(_ context.Context, ruleset string) (compendium.BuilderOptions, error) {
+	return compendium.BuilderOptions{
+		Ruleset: ruleset, RulesetYear: 2024,
+		Classes:     []compendium.ClassOption{{Slug: "fighter", Name: "Fighter", HitDie: 10, Saves: []string{"strength", "constitution"}}},
+		Species:     []compendium.SpeciesOption{{Slug: "human", Name: "Human", SpeedFeet: 30}},
+		Backgrounds: []compendium.BackgroundOption{{Slug: "soldier", Name: "Soldier", Abilities: []string{"strength", "dexterity", "constitution"}, Skills: []string{"athletics", "intimidation"}}},
+		Armor: []compendium.ArmorOption{
+			{Slug: "half-plate", Name: "Half Plate", Category: "medium", ACBase: 15, AddDex: true, DexCap: 2},
+			{Slug: "shield", Name: "Shield", Category: "shield", Shield: true, ACBase: 2, DexCap: -1},
+		},
+		Weapons: []compendium.WeaponOption{{Slug: "longsword", Name: "Longsword", DamageDice: "1d8", DamageType: "slashing"}},
+	}, f.builderErr
 }
 
 func (f *fakeCompendium) AutomationCoverage(context.Context) ([]compendium.AutomationCount, error) {

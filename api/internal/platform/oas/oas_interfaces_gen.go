@@ -9,16 +9,32 @@ type CreateCampaignRes interface {
 	createCampaignRes()
 }
 
+type CreateCharacterRes interface {
+	createCharacterRes()
+}
+
 type CreateInviteRes interface {
 	createInviteRes()
+}
+
+type DeleteCharacterRes interface {
+	deleteCharacterRes()
 }
 
 type GetAutomationCoverageRes interface {
 	getAutomationCoverageRes()
 }
 
+type GetBuilderOptionsRes interface {
+	getBuilderOptionsRes()
+}
+
 type GetCampaignRes interface {
 	getCampaignRes()
+}
+
+type GetCharacterRes interface {
+	getCharacterRes()
 }
 
 type GetEntryRes interface {
@@ -49,6 +65,10 @@ type ListCampaignsRes interface {
 	listCampaignsRes()
 }
 
+type ListCharactersRes interface {
+	listCharactersRes()
+}
+
 type ListEntriesRes interface {
 	listEntriesRes()
 }
@@ -65,6 +85,10 @@ type ListSpellsRes interface {
 	listSpellsRes()
 }
 
+type PreviewCharacterRes interface {
+	previewCharacterRes()
+}
+
 type PreviewInviteRes interface {
 	previewInviteRes()
 }
@@ -79,6 +103,10 @@ type RevokeInviteRes interface {
 
 type UpdateCampaignRes interface {
 	updateCampaignRes()
+}
+
+type UpdateCharacterRes interface {
+	updateCharacterRes()
 }
 
 type UpdateMemberRes interface {

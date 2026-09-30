@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   createInviteMutation,
   getCampaignOptions,
+  listCharactersOptions,
   listInvitesOptions,
   removeMemberMutation,
   revokeInviteMutation,
@@ -21,6 +22,7 @@ const path = computed(() => ({ path: { campaignId: id.value } }))
 
 const campaign = useQuery(computed(() => ({ ...getCampaignOptions(path.value), retry: false })))
 const isDM = computed(() => campaign.data.value?.myRole === 'dm')
+const characters = useQuery(computed(() => ({ ...listCharactersOptions(path.value), enabled: campaign.isSuccess.value })))
 const invites = useQuery(computed(() => ({ ...listInvitesOptions(path.value), enabled: isDM.value })))
 
 const refresh = () => void client.invalidateQueries()
@@ -92,6 +94,21 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         </p>
       </header>
       <p v-if="failed" role="alert" class="g-alert" data-testid="campaign-error">{{ failed }}</p>
+
+      <section class="g-card" data-testid="party">
+        <h2>Party</h2>
+        <p v-if="(characters.data.value ?? []).length === 0" class="hint">No characters yet.</p>
+        <ul class="g-list">
+          <li v-for="ch in characters.data.value ?? []" :key="ch.id">
+            <RouterLink :to="{ name: 'character', params: { id, characterId: ch.id } }" class="character">
+              <span class="who">{{ ch.name }}<template v-if="ch.mine"> (yours)</template></span>
+              <span class="hint">Level {{ ch.level }} {{ ch.species }} {{ ch.class }} · {{ ch.ownerName }}</span>
+              <span class="g-tag">{{ ch.hpCurrent }}/{{ ch.hpMax }} HP</span>
+            </RouterLink>
+          </li>
+        </ul>
+        <RouterLink :to="{ name: 'character-new', params: { id } }" class="build" data-testid="build-character">Build a character</RouterLink>
+      </section>
 
       <section class="g-card">
         <h2>Members</h2>
@@ -174,6 +191,30 @@ section {
   flex-wrap: wrap;
   align-items: end;
   gap: 8px;
+}
+.character {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 44px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.hint {
+  color: var(--color-text-2);
+  font-size: 14px;
+}
+.build {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  color: var(--color-gold-high);
+  text-decoration: none;
 }
 .link .g-field {
   flex: 1 1 240px;

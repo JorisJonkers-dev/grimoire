@@ -97,9 +97,214 @@ export const zInviteAccept = z.object({
 });
 
 /**
+ * One of the six abilities.
+ */
+export const zAbility = z.enum([
+    'strength',
+    'dexterity',
+    'constitution',
+    'intelligence',
+    'wisdom',
+    'charisma'
+]);
+
+/**
+ * Base ability scores before origin increases.
+ */
+export const zAbilityBase = z.object({
+    strength: z.int().gte(3).lte(18),
+    dexterity: z.int().gte(3).lte(18),
+    constitution: z.int().gte(3).lte(18),
+    intelligence: z.int().gte(3).lte(18),
+    wisdom: z.int().gte(3).lte(18),
+    charisma: z.int().gte(3).lte(18)
+});
+
+/**
+ * Origin ability increases, +2 and +1 or +1 to three abilities.
+ */
+export const zAbilityBonus = z.object({
+    strength: z.int().gte(1).lte(2).optional(),
+    dexterity: z.int().gte(1).lte(2).optional(),
+    constitution: z.int().gte(1).lte(2).optional(),
+    intelligence: z.int().gte(1).lte(2).optional(),
+    wisdom: z.int().gte(1).lte(2).optional(),
+    charisma: z.int().gte(1).lte(2).optional()
+});
+
+/**
+ * A Character's name.
+ */
+export const zCharacterName = z.string().min(1).max(60);
+
+/**
+ * Body armour slug, or empty for none.
+ */
+export const zArmorChoice = z.string().max(80).regex(/^([a-z0-9]+(-[a-z0-9]+)*)?$/);
+
+/**
+ * One ability on the sheet with its saving throw.
+ */
+export const zAbilityLine = z.object({
+    ability: zAbility,
+    score: z.int().gte(1).lte(30),
+    modifier: z.int().gte(-5).lte(10),
+    save: z.int().gte(-5).lte(30),
+    saveProficient: z.boolean()
+});
+
+/**
+ * An Effect currently on the Character.
+ */
+export const zActiveEffect = z.object({
+    name: z.string().max(120),
+    detail: z.string().max(500)
+});
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+
+/**
+ * The choices for a first-level Character.
+ */
+export const zCharacterBuild = z.object({
+    name: zCharacterName,
+    species: zSlug,
+    class: zSlug,
+    background: zSlug,
+    method: z.enum([
+        'standard-array',
+        'point-buy',
+        'rolled'
+    ]),
+    base: zAbilityBase,
+    bonus: zAbilityBonus,
+    skills: z.array(zSlug).max(4),
+    armor: zArmorChoice.optional(),
+    shield: z.boolean(),
+    weapons: z.array(zSlug).max(4)
+});
+
+/**
+ * Out-of-combat changes; omitted fields stay as they are.
+ */
+export const zCharacterEdit = z.object({
+    name: zCharacterName.optional(),
+    hpCurrent: z.int().gte(0).lte(1000).optional(),
+    armor: zArmorChoice.optional(),
+    shield: z.boolean().optional(),
+    weapons: z.array(zSlug).max(4).optional()
+});
+
+/**
+ * A compendium entry by slug and name.
+ */
+export const zNamedRef = z.object({
+    slug: zSlug,
+    name: z.string().max(120)
+});
+
+/**
+ * One skill on the sheet.
+ */
+export const zSkillLine = z.object({
+    skill: zSlug,
+    ability: zAbility,
+    bonus: z.int().gte(-5).lte(30),
+    proficient: z.boolean()
+});
+
+/**
+ * A spendable pool such as hit dice or spell slots.
+ */
+export const zResourcePool = z.object({
+    key: zSlug,
+    label: z.string().max(80),
+    current: z.int().gte(0).lte(100),
+    max: z.int().gte(0).lte(100)
+});
+
+/**
+ * A carried weapon.
+ */
+export const zWeaponLine = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    damageDice: z.string().max(20),
+    damageType: z.string().max(40),
+    rangeFeet: z.int().gte(0).lte(10000),
+    longRangeFeet: z.int().gte(0).lte(10000)
+});
+
+/**
+ * A Character in the party list.
+ */
+export const zCharacterSummary = z.object({
+    id: zId,
+    name: zCharacterName,
+    ownerName: zDisplayName,
+    mine: z.boolean(),
+    species: zSlug,
+    class: zSlug,
+    level: z.int().gte(1).lte(20),
+    hpCurrent: z.int().gte(0).lte(1000),
+    hpMax: z.int().gte(1).lte(1000)
+});
+
+/**
+ * A class and what it gives at level 1.
+ */
+export const zClassChoice = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    hitDie: z.int().gte(0).lte(12),
+    saves: z.array(zAbility).max(6),
+    skillChoices: z.int().gte(0).lte(6)
+});
+
+/**
+ * A playable species.
+ */
+export const zSpeciesChoice = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    speedFeet: z.int().gte(0).lte(200)
+});
+
+/**
+ * A background and what it grants; empty abilities means a free choice.
+ */
+export const zBackgroundChoice = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    abilities: z.array(zAbility).max(6),
+    skills: z.array(zSlug).max(6)
+});
+
+/**
+ * A suit of armour or a shield.
+ */
+export const zArmorOptionItem = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    category: z.string().max(40),
+    shield: z.boolean(),
+    acBase: z.int().gte(0).lte(30),
+    addDex: z.boolean(),
+    dexCap: z.int().gte(0).lte(10).optional(),
+    strengthRequired: z.int().gte(0).lte(30),
+    stealthDisadvantage: z.boolean()
+});
+
+/**
+ * A skill and its ability.
+ */
+export const zSkillChoice = z.object({
+    skill: zSlug,
+    ability: zAbility
+});
 
 /**
  * Rules document key.
@@ -155,6 +360,61 @@ export const zCampaignCreate = z.object({
 export const zCampaignUpdate = z.object({
     name: zCampaignName.optional(),
     ruleset: zRuleset.optional()
+});
+
+/**
+ * A Character's sheet with every value derived by the rules.
+ */
+export const zCharacterSheet = z.object({
+    id: zId.optional(),
+    name: zCharacterName,
+    ruleset: zRuleset,
+    level: z.int().gte(1).lte(20),
+    ownerName: zDisplayName,
+    mine: z.boolean(),
+    editable: z.boolean(),
+    species: zNamedRef,
+    class: zNamedRef,
+    background: zNamedRef,
+    method: z.enum([
+        'standard-array',
+        'point-buy',
+        'rolled'
+    ]),
+    base: zAbilityBase,
+    bonus: zAbilityBonus,
+    abilities: z.array(zAbilityLine).max(6),
+    skills: z.array(zSkillLine).max(18),
+    classSkills: z.array(zSlug).max(4),
+    backgroundSkills: z.array(zSlug).max(4),
+    hpCurrent: z.int().gte(0).lte(1000),
+    hpMax: z.int().gte(1).lte(1000),
+    armorClass: z.int().gte(0).lte(50),
+    initiative: z.int().gte(-5).lte(30),
+    speedFeet: z.int().gte(0).lte(200),
+    proficiencyBonus: z.int().gte(2).lte(6),
+    passivePerception: z.int().gte(0).lte(50),
+    armor: zNamedRef.optional(),
+    shield: z.boolean(),
+    weapons: z.array(zWeaponLine).max(4),
+    resources: z.array(zResourcePool).max(20),
+    effects: z.array(zActiveEffect).max(50),
+    warnings: z.array(z.string().max(200)).max(10)
+});
+
+/**
+ * What a first-level character can choose in one ruleset.
+ */
+export const zBuilderOptions = z.object({
+    ruleset: zRuleset,
+    rulesetYear: z.int().gte(2000).lte(2100),
+    pointBuyBudget: z.int().gte(0).lte(100),
+    classes: z.array(zClassChoice).max(100),
+    species: z.array(zSpeciesChoice).max(100),
+    backgrounds: z.array(zBackgroundChoice).max(100),
+    armor: z.array(zArmorOptionItem).max(100),
+    weapons: z.array(zWeaponLine).max(200),
+    skills: z.array(zSkillChoice).max(18)
 });
 
 /**
@@ -372,6 +632,11 @@ export const zCampaignId = zId;
 export const zMemberId = zId;
 
 /**
+ * Character id.
+ */
+export const zCharacterId = zId;
+
+/**
  * Invite id.
  */
 export const zInviteId = zId;
@@ -466,6 +731,19 @@ export const zGetAutomationCoverageHeaders = z.object({
  */
 export const zGetAutomationCoverageResponse = z.array(zAutomationCount).max(40);
 
+export const zGetBuilderOptionsHeaders = z.object({
+    'If-None-Match': z.string().max(100).optional()
+});
+
+export const zGetBuilderOptionsQuery = z.object({
+    ruleset: zRuleset
+});
+
+/**
+ * The options.
+ */
+export const zGetBuilderOptionsResponse = zBuilderOptions;
+
 /**
  * Every source document.
  */
@@ -557,6 +835,69 @@ export const zRevokeInvitePath = z.object({
  * Revoked.
  */
 export const zRevokeInviteResponse = z.void();
+
+export const zListCharactersPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The characters.
+ */
+export const zListCharactersResponse = z.array(zCharacterSummary).max(200);
+
+export const zCreateCharacterBody = zCharacterBuild;
+
+export const zCreateCharacterPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new character.
+ */
+export const zCreateCharacterResponse = zCharacterSheet;
+
+export const zPreviewCharacterBody = zCharacterBuild;
+
+export const zPreviewCharacterPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The sheet.
+ */
+export const zPreviewCharacterResponse = zCharacterSheet;
+
+export const zDeleteCharacterPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteCharacterResponse = z.void();
+
+export const zGetCharacterPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The sheet.
+ */
+export const zGetCharacterResponse = zCharacterSheet;
+
+export const zUpdateCharacterBody = zCharacterEdit;
+
+export const zUpdateCharacterPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The updated sheet.
+ */
+export const zUpdateCharacterResponse = zCharacterSheet;
 
 export const zPreviewInviteBody = zInviteToken;
 

@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, createCampaign, createInvite, getAutomationCoverage, getCampaign, getEntry, getHealth, getMe, getReadiness, getSpell, getStatus, listCampaigns, listEntries, listInvites, listSources, listSpells, type Options, previewInvite, removeMember, revokeInvite, updateCampaign, updateMember } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse } from '../types.gen';
+import { acceptInvite, createCampaign, createCharacter, createInvite, deleteCharacter, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMe, getReadiness, getSpell, getStatus, listCampaigns, listCharacters, listEntries, listInvites, listSources, listSpells, type Options, previewCharacter, previewInvite, removeMember, revokeInvite, updateCampaign, updateCharacter, updateMember } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMeData, GetMeError, GetMeResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -232,6 +232,26 @@ export const getAutomationCoverageOptions = (options?: Options<GetAutomationCove
     queryKey: getAutomationCoverageQueryKey(options)
 });
 
+export const getBuilderOptionsQueryKey = (options: Options<GetBuilderOptionsData>) => createQueryKey('getBuilderOptions', options);
+
+/**
+ * Get character builder options
+ *
+ * Every class, species, background, armour and weapon a first-level character can choose in one ruleset.
+ */
+export const getBuilderOptionsOptions = (options: Options<GetBuilderOptionsData>) => queryOptions<GetBuilderOptionsResponse, GetBuilderOptionsError, GetBuilderOptionsResponse, ReturnType<typeof getBuilderOptionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getBuilderOptions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getBuilderOptionsQueryKey(options)
+});
+
 export const listSourcesQueryKey = (options?: Options<ListSourcesData>) => createQueryKey('listSources', options);
 
 /**
@@ -448,6 +468,122 @@ export const revokeInviteMutation = (options?: Partial<Options<RevokeInviteData>
     const mutationOptions: UseMutationOptions<RevokeInviteResponse, RevokeInviteError, Options<RevokeInviteData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await revokeInvite({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listCharactersQueryKey = (options: Options<ListCharactersData>) => createQueryKey('listCharacters', options);
+
+/**
+ * List characters
+ *
+ * The party's Characters. Members only.
+ */
+export const listCharactersOptions = (options: Options<ListCharactersData>) => queryOptions<ListCharactersResponse, ListCharactersError, ListCharactersResponse, ReturnType<typeof listCharactersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listCharacters({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listCharactersQueryKey(options)
+});
+
+/**
+ * Create a character
+ *
+ * Builds a first-level Character owned by the caller, validated against the campaign ruleset.
+ */
+export const createCharacterMutation = (options?: Partial<Options<CreateCharacterData>>): UseMutationOptions<CreateCharacterResponse, CreateCharacterError, Options<CreateCharacterData>> => {
+    const mutationOptions: UseMutationOptions<CreateCharacterResponse, CreateCharacterError, Options<CreateCharacterData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createCharacter({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Preview a character
+ *
+ * Validates a build and returns the sheet it would make, without saving it.
+ */
+export const previewCharacterMutation = (options?: Partial<Options<PreviewCharacterData>>): UseMutationOptions<PreviewCharacterResponse, PreviewCharacterError, Options<PreviewCharacterData>> => {
+    const mutationOptions: UseMutationOptions<PreviewCharacterResponse, PreviewCharacterError, Options<PreviewCharacterData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewCharacter({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete a character
+ *
+ * Removes a Character. The owner or a DM, never during Combat.
+ */
+export const deleteCharacterMutation = (options?: Partial<Options<DeleteCharacterData>>): UseMutationOptions<DeleteCharacterResponse, DeleteCharacterError, Options<DeleteCharacterData>> => {
+    const mutationOptions: UseMutationOptions<DeleteCharacterResponse, DeleteCharacterError, Options<DeleteCharacterData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteCharacter({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getCharacterQueryKey = (options: Options<GetCharacterData>) => createQueryKey('getCharacter', options);
+
+/**
+ * Get a character sheet
+ *
+ * A Character's sheet. Members only.
+ */
+export const getCharacterOptions = (options: Options<GetCharacterData>) => queryOptions<GetCharacterResponse, GetCharacterError, GetCharacterResponse, ReturnType<typeof getCharacterQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCharacter({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCharacterQueryKey(options)
+});
+
+/**
+ * Edit a character
+ *
+ * Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
+ */
+export const updateCharacterMutation = (options?: Partial<Options<UpdateCharacterData>>): UseMutationOptions<UpdateCharacterResponse, UpdateCharacterError, Options<UpdateCharacterData>> => {
+    const mutationOptions: UseMutationOptions<UpdateCharacterResponse, UpdateCharacterError, Options<UpdateCharacterData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateCharacter({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
