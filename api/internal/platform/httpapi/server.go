@@ -35,6 +35,7 @@ func New(o Options) (http.Handler, error) {
 		Window: time.Minute,
 		Now:    o.Now,
 		Exempt: map[string]bool{"/healthz": true, "/readyz": true},
+		Log:    o.Handler.Log,
 	}
 	api := http.Handler(limiter.Wrap(srv))
 	if o.DevSubject != "" {

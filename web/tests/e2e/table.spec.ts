@@ -37,7 +37,7 @@ test('the DM steers the table display: camera, ping, title card and blackout', a
 
   await page.getByTestId('blackout-toggle').click()
   await expect(table.getByTestId('blackout')).toBeVisible()
-  await expect(table.getByText('Chapter One')).toHaveCount(0)
+  await expect(table.getByTestId('scene-title')).toHaveCount(0)
   await page.getByTestId('blackout-toggle').click()
   await expect(table.getByTestId('scene-title')).toBeVisible()
 

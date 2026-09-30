@@ -94,7 +94,7 @@ func TestCreateDerivesTheSheet(t *testing.T) {
 		t.Fatalf("stored sheet = %+v %v", got, err)
 	}
 	list, err := chars.List(ctx, playerCaller, d.ID)
-	if err != nil || len(list) != 1 || !list[0].Mine || list[0].OwnerName != "Ireena" || list[0].Class != "fighter" {
+	if err != nil || len(list) != 1 || !list[0].Mine || list[0].OwnerName != "Tamsin" || list[0].Class != "fighter" {
 		t.Fatalf("list = %+v %v", list, err)
 	}
 	preview, err := chars.Preview(ctx, dmCaller, d.ID, fighter())

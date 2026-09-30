@@ -32,3 +32,8 @@ export async function mountApp(path: string, routes: Record<string, Route>) {
   await flushPromises()
   return { wrapper, router, calls }
 }
+
+/** Fakes only the clocks a component schedules with; flushPromises and fetch keep running on their own. */
+export function fakeClock() {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
+}

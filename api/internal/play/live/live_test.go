@@ -51,7 +51,7 @@ func setup(t *testing.T) world {
 	camp := campaignapp.NewService(campaignpg.New(store.Pool()))
 	d, _ := camp.Create(ctx, dmCaller, campaignapp.CreateInput{Name: "Live", DisplayName: "Joris"})
 	inv, _ := camp.CreateInvite(ctx, dmCaller, d.ID)
-	if _, err := camp.AcceptInvite(ctx, playerCaller, inv.Token, "Ireena"); err != nil {
+	if _, err := camp.AcceptInvite(ctx, playerCaller, inv.Token, "Tamsin"); err != nil {
 		t.Fatal(err)
 	}
 	members := pgstore.CampaignMembers{Store: campaignpg.New(store.Pool())}
@@ -204,8 +204,8 @@ func TestRevealHideMoveAndRemove(t *testing.T) {
 			t.Fatalf("step %d: dm %+v player %+v", i, d, p)
 		}
 	}
-	w.hub.Submit(dm, live.Command{Kind: live.CmdPlace, Label: "Ireena", TokenKind: domain.TokenParty, Q: 0, R: 1, DarkvisionFt: 60})
-	if u := next(t, player); token(u.View, "Ireena") == nil || token(u.View, "Ireena").DarkvisionFt != 60 {
+	w.hub.Submit(dm, live.Command{Kind: live.CmdPlace, Label: "Tamsin", TokenKind: domain.TokenParty, Q: 0, R: 1, DarkvisionFt: 60})
+	if u := next(t, player); token(u.View, "Tamsin") == nil || token(u.View, "Tamsin").DarkvisionFt != 60 {
 		t.Fatalf("visible placement = %+v", u)
 	}
 	next(t, dm)

@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { expectAccessible } from '@/test/axe'
-import { mountApp } from '@/test/mountApp'
+import { fakeClock, mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { isEntryKind, kindLabel } from './kinds'
 
@@ -55,10 +55,10 @@ describe('entry list', () => {
   })
 
   it('debounces the search and resets it when the kind changes', async () => {
-    vi.useFakeTimers()
     const { wrapper, calls, router } = await mountApp('/compendium/feat', {
       '/api/v1/compendium/entries': () => ({ items: [] }),
     })
+    fakeClock()
     expect(wrapper.find('[data-testid="entry-empty"]').exists()).toBe(true)
     await wrapper.get('[data-testid="entry-search"]').setValue('gr')
     await wrapper.get('[data-testid="entry-search"]').setValue('grap')

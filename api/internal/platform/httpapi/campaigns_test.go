@@ -114,7 +114,7 @@ func campaignWithPlayer(t *testing.T, h http.Handler) (string, map[string]any) {
 	}
 	invite := decode(t, rec)
 	token, _ := invite["token"].(string)
-	rec = call(h, http.MethodPost, "/api/v1/invites/accept", "player", `{"token":"`+token+`","displayName":"Ireena"}`)
+	rec = call(h, http.MethodPost, "/api/v1/invites/accept", "player", `{"token":"`+token+`","displayName":"Tamsin"}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("accept: %d %s", rec.Code, rec.Body.String())
 	}

@@ -32,8 +32,8 @@ test('a player uploads a portrait and crops a token icon from it', async ({ page
   await editor.getByRole('radio', { name: 'Crop from the portrait' }).check()
   await expect(editor.getByTestId('save-token')).toBeEnabled()
   await editor.getByTestId('save-token').click()
-  await expect(page.locator('header img.icon')).toHaveAttribute('src', /\/token\?v=/)
+  await expect(page.getByTestId('sheet-token').getByTestId('token-icon')).toHaveAttribute('src', /\/token\?v=/)
 
   await page.getByRole('link', { name: '← Campaign' }).click()
-  await expect(page.getByTestId('party').locator('img.icon')).toHaveAttribute('src', /\/token\?v=/)
+  await expect(page.getByTestId('party').getByTestId('token-icon')).toHaveAttribute('src', /\/token\?v=/)
 })

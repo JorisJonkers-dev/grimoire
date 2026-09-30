@@ -10,7 +10,7 @@ const summary = (id: string, name: string, extra = {}) => ({
   id, name, ruleset: 'srd-2024', myRole: 'dm', memberCount: 2, createdAt: '2026-09-30T20:00:00Z', ...extra,
 })
 const dm = { id: '0190c7a8-0000-7000-8000-000000000004', displayName: 'Joris', role: 'dm', joinedAt: '2026-09-30T20:00:00Z', isMe: true }
-const player = { id: '0190c7a8-0000-7000-8000-000000000005', displayName: 'Ireena', role: 'player', joinedAt: '2026-09-30T20:00:00Z', isMe: false }
+const player = { id: '0190c7a8-0000-7000-8000-000000000005', displayName: 'Tamsin', role: 'player', joinedAt: '2026-09-30T20:00:00Z', isMe: false }
 const home = (myRole: 'dm' | 'player') => ({
   ...summary(ID, 'Morvain', { myRole }),
   me: myRole === 'dm' ? dm : { ...player, isMe: true },
@@ -195,10 +195,10 @@ describe('join', () => {
     })
     expect(wrapper.get('[data-testid="join-form"]').text()).toContain('Joris invites you to Morvain')
     await expectAccessible(wrapper.element as Element)
-    await wrapper.get('[data-testid="join-display-name"]').setValue(' Ireena ')
+    await wrapper.get('[data-testid="join-display-name"]').setValue(' Tamsin ')
     await wrapper.get('[data-testid="join-form"]').trigger('submit')
     await flushPromises()
-    expect(seen.map((s) => s.body)).toEqual([{ token }, { token, displayName: 'Ireena' }])
+    expect(seen.map((s) => s.body)).toEqual([{ token }, { token, displayName: 'Tamsin' }])
     expect(router.currentRoute.value.name).toBe('campaign')
   })
 
@@ -214,7 +214,7 @@ describe('join', () => {
       '/api/v1/invites/preview': () => ({ campaignName: 'Morvain', invitedBy: 'Joris' }),
       '/api/v1/invites/accept': problem(404),
     })
-    await failing.wrapper.get('[data-testid="join-display-name"]').setValue('Ireena')
+    await failing.wrapper.get('[data-testid="join-display-name"]').setValue('Tamsin')
     await failing.wrapper.get('[data-testid="join-form"]').trigger('submit')
     await flushPromises()
     expect(failing.wrapper.get('[data-testid="join-form"] [role="alert"]').text()).toContain('could not join')

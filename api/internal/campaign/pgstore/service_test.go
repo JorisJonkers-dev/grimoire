@@ -58,7 +58,7 @@ func table(t *testing.T, s *app.Service) domain.Detail {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.AcceptInvite(ctx, playerCaller, inv.Token, "Ireena"); err != nil {
+	if _, err := s.AcceptInvite(ctx, playerCaller, inv.Token, "Tamsin"); err != nil {
 		t.Fatal(err)
 	}
 	return d
@@ -344,7 +344,7 @@ func TestEveryDatabaseFaultSurfaces(t *testing.T) {
 		"invites": func(s *app.Service) error { _, err := s.Invites(ctx, dmCaller, d.ID); return err },
 		"preview": func(s *app.Service) error { _, err := s.PreviewInvite(ctx, inv.Token); return err },
 		"accept": func(s *app.Service) error {
-			_, err := s.AcceptInvite(ctx, playerCaller, inv.Token, "Ireena")
+			_, err := s.AcceptInvite(ctx, playerCaller, inv.Token, "Tamsin")
 			return err
 		},
 		"revoke": func(s *app.Service) error { return s.RevokeInvite(ctx, dmCaller, d.ID, doomed.ID) },

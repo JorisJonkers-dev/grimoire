@@ -1,10 +1,13 @@
 package httpx_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -104,5 +107,23 @@ func TestRateLimiterExemptsProbes(t *testing.T) {
 		if r := do(h, "/healthz", "", "1.1.1.1:1"); r.Code != 200 || r.Header().Get("RateLimit-Limit") != "" {
 			t.Fatalf("probe limited: %d", r.Code)
 		}
+	}
+}
+
+func TestRateLimiterLogsTheFirstRefusalOfEachWindow(t *testing.T) {
+	t.Parallel()
+	var out bytes.Buffer
+	l := &httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now, Log: slog.New(slog.NewTextHandler(&out, nil))}
+	h := l.Wrap(ok)
+	for range 3 {
+		do(h, "/api/x", "alice", "1.1.1.1:1")
+	}
+	if n := strings.Count(out.String(), "rate limit reached"); n != 1 || !strings.Contains(out.String(), "key=id:alice") {
+		t.Fatalf("log = %q", out.String())
+	}
+	quiet := (&httpx.RateLimiter{Limit: 1, Window: time.Minute, Now: time.Now}).Wrap(ok)
+	do(quiet, "/api/x", "bob", "1.1.1.1:1")
+	if r := do(quiet, "/api/x", "bob", "1.1.1.1:1"); r.Code != http.StatusTooManyRequests {
+		t.Fatalf("without a logger = %d", r.Code)
 	}
 }

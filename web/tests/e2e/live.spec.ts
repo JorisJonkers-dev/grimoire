@@ -43,8 +43,8 @@ test('tokens move live on every screen and hidden ones never leave the DM', asyn
     ws.on('framereceived', (f) => tableFrames.push(String(f.payload)))
   })
   await table.goto(`${sessionUrl}/table`)
-  await expect(table.getByTestId('table-display').locator('polygon').first()).toBeVisible()
-  await expect(table.locator('header')).toHaveCount(0)
+  await expect(table.getByTestId('table-display').getByRole('group', { name: 'The table' })).toBeVisible()
+  await expect(table.getByRole('banner')).toHaveCount(0)
 
   await page.getByTestId('token-label').fill('Goblin')
   await page.locator('[data-hex="1,0"]').click()
@@ -76,5 +76,5 @@ test('tokens move live on every screen and hidden ones never leave the DM', asyn
     await expect(p.locator('[data-hex="-1,0"]')).toHaveAttribute('aria-label', /Lurker/)
   }
   await page.getByTestId('end-session').click()
-  await expect(table.getByText('The session has ended')).toBeVisible()
+  await expect(table.getByTestId('session-ended')).toBeVisible()
 })

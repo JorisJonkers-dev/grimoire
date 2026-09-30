@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 test('find a spell, read it and open a condition it mentions', async ({ page }) => {
   await page.goto('/compendium/spells')
   await page.getByTestId('spell-search').fill('hold person')
-  await page.getByRole('link', { name: /Hold Person/ }).first().click()
+  await page.getByTestId('spell-hold-person').click()
   await expect(page.getByRole('heading', { level: 1, name: 'Hold Person' })).toBeVisible()
   await page.getByRole('button', { name: /paralyzed/i }).first().click()
   await expect(page.getByTestId('condition-popover')).toBeVisible()
@@ -28,7 +28,7 @@ test('attribution names the author and the SRD', async ({ page }) => {
 test('browse monsters, read a statblock and see the automation report', async ({ page }) => {
   await page.goto('/compendium/monster')
   await page.getByTestId('entry-search').fill('goblin')
-  await page.getByRole('link', { name: /Goblin/ }).first().click()
+  await page.getByTestId('entry-goblin').click()
   await expect(page.getByTestId('entry-facts')).toContainText('Armor Class')
   await expect(page.getByTestId('entry-facts')).toContainText('Challenge')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
@@ -42,6 +42,6 @@ test('every compendium tab lists entries', async ({ page }) => {
   for (const tab of ['Classes', 'Species', 'Backgrounds', 'Feats', 'Weapons', 'Armor', 'Equipment', 'Magic items', 'Conditions']) {
     await page.getByRole('navigation', { name: 'Compendium' }).getByRole('link', { name: tab, exact: true }).click()
     await expect(page.getByRole('heading', { level: 1, name: tab })).toBeVisible()
-    await expect(page.getByTestId('entry-list').getByRole('link').first()).toBeVisible()
+    await expect(page.getByTestId('entry-list').getByRole('link')).not.toHaveCount(0)
   }
 })

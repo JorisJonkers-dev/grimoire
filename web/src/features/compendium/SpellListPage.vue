@@ -83,7 +83,7 @@ const items = computed(() => spells.data.value?.pages.flatMap((p) => p.items) ??
       <p v-if="items.length === 0" data-testid="spell-empty">No spells match.</p>
       <ul class="list" data-testid="spell-list">
         <li v-for="spell in items" :key="spell.slug">
-          <RouterLink :to="{ name: 'spell', params: { slug: spell.slug }, query: ruleset ? { ruleset } : {} }" class="row">
+          <RouterLink :to="{ name: 'spell', params: { slug: spell.slug }, query: ruleset ? { ruleset } : {} }" class="row" :data-testid="`spell-${spell.slug}`">
             <span class="name">{{ spell.name }}</span>
             <span class="meta">{{ levelLabel(spell.level) }} · {{ titleCase(spell.school) }}</span>
             <span class="tags">

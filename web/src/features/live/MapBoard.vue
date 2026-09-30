@@ -58,7 +58,7 @@ const cells = computed(() =>
       :aria-label="title"
       data-testid="map-board"
     >
-      <image :href="map.imageUrl" x="0" y="0" :width="map.width" :height="map.height" preserveAspectRatio="none" />
+      <image :href="map.imageUrl" x="0" y="0" :width="map.width" :height="map.height" preserveAspectRatio="none" data-testid="map-image" />
       <g
         v-for="c in cells"
         :key="c.k"

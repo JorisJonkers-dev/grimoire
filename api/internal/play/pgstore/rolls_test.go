@@ -50,7 +50,7 @@ func setup(t *testing.T) table {
 		t.Fatal(err)
 	}
 	inv, _ := camp.CreateInvite(ctx, dm, d.ID)
-	if _, err := camp.AcceptInvite(ctx, player, inv.Token, "Ireena"); err != nil {
+	if _, err := camp.AcceptInvite(ctx, player, inv.Token, "Tamsin"); err != nil {
 		t.Fatal(err)
 	}
 	home, _ := camp.Get(ctx, dm, d.ID)
@@ -81,7 +81,7 @@ func TestManualAndAutoDiceResolve(t *testing.T) {
 	r := rolls(tb, pgstore.New(tb.pool))
 	roll, err := r.Create(ctx, player, tb.campaign, attack())
 	if err != nil || roll.Purpose != "Longsword attack" || roll.Notation != "2d20kh1+1d4" || len(roll.Dice) != 3 ||
-		roll.Status != domain.StatusPending || roll.Roller.Name != "Ireena" || roll.Labels[1] != "Bless" {
+		roll.Status != domain.StatusPending || roll.Roller.Name != "Tamsin" || roll.Labels[1] != "Bless" {
 		t.Fatalf("created = %+v %v", roll, err)
 	}
 	roll, err = r.SetDie(ctx, player, tb.campaign, roll.ID, 0, app.Fill{Value: 7})
@@ -101,7 +101,7 @@ func TestManualAndAutoDiceResolve(t *testing.T) {
 	log, err := r.Log(ctx, dm, tb.campaign, 10)
 	if err != nil || len(log) != 5 || log[0].Kind != domain.ActionRollResolved || log[0].Value != roll.Total ||
 		log[1].Kind != domain.ActionDieRolled || *log[1].Seed != 1 || *log[1].DieNo != 2 || log[4].Kind != domain.ActionRollRequested ||
-		log[4].Seq != 1 || log[0].Actor != "Ireena" || *log[0].RollID != roll.ID {
+		log[4].Seq != 1 || log[0].Actor != "Tamsin" || *log[0].RollID != roll.ID {
 		t.Fatalf("log = %+v %v", log, err)
 	}
 	if _, err := r.SetDie(ctx, player, tb.campaign, roll.ID, 0, app.Fill{Auto: true}); !errors.Is(err, apperr.ErrConflict) {
@@ -171,7 +171,7 @@ func TestRollersAndFaces(t *testing.T) {
 	ask := attack()
 	ask.Roller = &tb.playerID
 	roll, err := r.Create(ctx, dm, tb.campaign, ask)
-	if err != nil || roll.Roller.Name != "Ireena" || roll.RequestedBy != "Joris" {
+	if err != nil || roll.Roller.Name != "Tamsin" || roll.RequestedBy != "Joris" {
 		t.Fatalf("DM asks the player = %+v %v", roll, err)
 	}
 	missing := uuid.New()

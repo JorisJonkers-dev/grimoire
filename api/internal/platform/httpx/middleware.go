@@ -2,6 +2,7 @@
 package httpx
 
 import (
+	"log/slog"
 	"net"
 	"net/http"
 	"strconv"
@@ -28,14 +29,17 @@ type RateLimiter struct {
 	Window time.Duration
 	Now    func() time.Time
 	Exempt map[string]bool
+	// Log, when set, records the first request each key has refused in a window.
+	Log *slog.Logger
 
 	mu      sync.Mutex
 	windows map[string]*window
 }
 
 type window struct {
-	start time.Time
-	count int
+	start  time.Time
+	count  int
+	warned bool
 }
 
 // Wrap applies the limiter to next, answering 429 once a key exceeds its budget.
@@ -45,17 +49,31 @@ func (l *RateLimiter) Wrap(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		remaining, reset, ok := l.take(key(r))
+		k := key(r)
+		remaining, reset, ok := l.take(k)
 		h := w.Header()
 		h.Set("RateLimit-Limit", strconv.Itoa(l.Limit))
 		h.Set("RateLimit-Remaining", strconv.Itoa(remaining))
 		h.Set("RateLimit-Reset", strconv.Itoa(reset))
 		if !ok {
+			l.warn(k, r.URL.Path)
 			WriteProblem(w, http.StatusTooManyRequests, "Too many requests", "Slow down and try again shortly.")
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// warn logs a key's first refusal in its window, so a flood of 429s leaves one line, not none.
+func (l *RateLimiter) warn(k, path string) {
+	l.mu.Lock()
+	win := l.windows[k]
+	first := !win.warned
+	win.warned = true
+	l.mu.Unlock()
+	if first && l.Log != nil {
+		l.Log.Warn("rate limit reached", "key", k, "path", path, "limit", l.Limit)
+	}
 }
 
 func (l *RateLimiter) take(k string) (remaining, resetSeconds int, ok bool) {

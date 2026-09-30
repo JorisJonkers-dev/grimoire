@@ -58,7 +58,7 @@ func TestCharacterLifecycleOverHTTP(t *testing.T) {
 		t.Fatalf("bonus = %v", bonus)
 	}
 	rec = call(h, http.MethodGet, base, "dm", "")
-	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"ownerName":"Ireena"`) {
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"ownerName":"Tamsin"`) {
 		t.Fatalf("list: %d %s", rec.Code, rec.Body.String())
 	}
 	rec = call(h, http.MethodGet, base+"/"+chID, "dm", "")

@@ -10,13 +10,13 @@ test('a DM edits an NPC, compares two revisions and restores the first', async (
   await page.getByTestId('npc-name').fill('Morvain')
   await page.getByRole('button', { name: 'Add NPC' }).click()
 
-  await page.getByTestId('npc-notes').fill('Wants Ireena.')
+  await page.getByTestId('npc-notes').fill('Wants Tamsin.')
   await page.getByRole('button', { name: 'Save' }).click()
   const history = page.getByTestId('npc-history')
   await expect(history).toContainText('#2 update')
   await history.getByRole('checkbox', { name: 'Compare revision 1' }).check()
   await history.getByRole('checkbox', { name: 'Compare revision 2' }).check()
-  await expect(page.getByTestId('npc-diff')).toContainText('Wants Ireena.')
+  await expect(page.getByTestId('npc-diff')).toContainText('Wants Tamsin.')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 
   await page.getByTestId('restore-1').click()

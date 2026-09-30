@@ -47,7 +47,7 @@ function destroy() {
     <article v-else-if="s" data-testid="character-sheet">
       <header class="head">
         <img v-if="s.portraitUrl" :src="s.portraitUrl" :alt="`Portrait of ${s.name}`" class="portrait" data-testid="portrait" />
-        <TokenBadge :name="s.name" allegiance="party" :icon-url="s.tokenUrl ?? ''" :size="56" />
+        <TokenBadge :name="s.name" allegiance="party" :icon-url="s.tokenUrl ?? ''" :size="56" data-testid="sheet-token" />
         <div>
           <h1>{{ s.name }}</h1>
           <p class="sub">Level {{ s.level }} {{ s.species.name }} {{ s.class.name }} · {{ s.background.name }} · {{ s.ownerName }}</p>

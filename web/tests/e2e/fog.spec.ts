@@ -80,7 +80,7 @@ test('the party sees only what light and darkvision show, and walking pushes the
   expect(seen).not.toContain('"walls"')
   expect((await new AxeBuilder({ page: player }).analyze()).violations).toEqual([])
 
-  const image = await player.locator('[data-testid="map-board"] image').getAttribute('href')
+  const image = await player.getByTestId('map-image').getAttribute('href')
   const masked = await player.request.get(String(image), { headers: { 'X-User-Id': `e2e-fog-${stamp}` } })
   expect(masked.headers()['content-type']).toBe('image/png')
   expect(Buffer.compare(await masked.body(), crypt)).not.toBe(0)
