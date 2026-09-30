@@ -2842,7 +2842,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2894,6 +2894,45 @@ components:
         routeId: { $ref: "#/components/schemas/Id" }
         distanceMi: { type: integer, format: int32, minimum: 1, maximum: 2000 }
         pace: { $ref: "#/components/schemas/TravelPace" }
+        zoneId: { $ref: "#/components/schemas/Id" }
+        radiusHexes: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        dmOnly: { type: boolean, description: "With add_zone, the zone springs only when the DM springs it." }
+    LiveZone:
+      type: object
+      description: An Encounter Zone, for the DM only. creatures counts the hidden creatures in it, or those it held once sprung; dc is their Stealth DC once it springs.
+      additionalProperties: false
+      required: [id, name, q, r, radiusHexes, dmOnly, held, status, creatures, checks]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 40 }
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        radiusHexes: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        dmOnly: { type: boolean }
+        held: { type: boolean }
+        status: { type: string, enum: [armed, spotting, sprung] }
+        dc: { type: integer, format: int32, minimum: 0, maximum: 50 }
+        creatures: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        checks:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LiveZoneCheck" }
+    LiveZoneCheck:
+      type: object
+      description: Whether one party member noticed a sprung zone; noticed is absent while they roll.
+      additionalProperties: false
+      required: [tokenId]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        noticed: { type: boolean }
+    LivePerception:
+      type: object
+      description: A party member's Perception Roll Card after a zone springs. The DC is never sent.
+      additionalProperties: false
+      required: [rollId, tokenId]
+      properties:
+        rollId: { $ref: "#/components/schemas/Id" }
+        tokenId: { $ref: "#/components/schemas/Id" }
     TravelPace:
       type: string
       description: How fast the party travels overland; slow, normal and fast cover 2, 3 and 4 miles an hour for 8 hours a day.
@@ -3160,6 +3199,7 @@ components:
         reaction: { type: boolean }
         movementFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
         speedFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
+        surprised: { type: boolean, description: "Did not notice the ambush and rolled initiative at disadvantage." }
         tactics: { $ref: "#/components/schemas/Tactics" }
         suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:
@@ -3269,6 +3309,14 @@ components:
         area: { $ref: "#/components/schemas/LiveArea" }
         table: { $ref: "#/components/schemas/LiveTable" }
         world: { $ref: "#/components/schemas/LiveWorld" }
+        zones:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LiveZone" }
+        perception:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LivePerception" }
         walls:
           type: array
           maxItems: 100000

@@ -38,7 +38,7 @@ func samples() contract {
 	seventeen, zero := 17, 0
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
 		ID: "0190c7a8-0000-7000-8000-000000000010", TokenID: token.ID, Label: "Goblin", Kind: "enemy", RollID: "0190c7a8-0000-7000-8000-000000000011",
-		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30,
+		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30, Surprised: true,
 		Tactics: "auto", Suggestion: &live.SuggestionView{AttackNo: &zero, TargetID: "0190c7a8-0000-7000-8000-000000000013", Reason: "Simple: Aria is the nearest enemy, 5 ft away."},
 	}}, Attack: &live.PendingAttackView{
 		AttackerID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", Name: "Scimitar", Stage: "damage",
@@ -67,7 +67,13 @@ func samples() contract {
 		PartyNodeID: "0190c7a8-0000-7000-8000-000000000022",
 		Legs:        []live.LegView{{From: "Mill", To: "Oakford", Pace: "normal", DistanceMi: 12, Minutes: 240, Days: 1}},
 	}
+	view.Perception = []live.PerceptionView{{RollID: "0190c7a8-0000-7000-8000-000000000026", TokenID: token.ID}}
 	dmView := *view
+	noticed, target := true, "0190c7a8-0000-7000-8000-000000000013"
+	dmView.Zones = []live.ZoneView{{
+		ID: "0190c7a8-0000-7000-8000-000000000025", Name: "Ambush", Q: 3, R: 0, RadiusHexes: 2, Status: "spotting", DC: 16, Creatures: 2,
+		Checks: []live.ZoneCheckView{{TokenID: token.ID}, {TokenID: target, Noticed: &noticed}},
+	}}
 	dmView.Walls, dmView.Ambient = []live.Hex{{Q: 2, R: 0}}, "dark"
 	dmView.Resolving, dmView.Manual = false, []live.ManualView{{ID: "0190c7a8-0000-7000-8000-000000000018", Text: "Goblin: Resolve Hold Person by hand."}}
 	dmView.Lights = []live.LightView{{ID: "0190c7a8-0000-7000-8000-00000000000e", Q: 4, R: 0, BrightFt: 20, DimFt: 40}}
@@ -117,6 +123,10 @@ func samples() contract {
 			{Nonce: "n42", Kind: live.CmdRemoveRoute, RouteID: "0190c7a8-0000-7000-8000-000000000024"},
 			{Nonce: "n43", Kind: live.CmdPlaceParty, NodeID: "0190c7a8-0000-7000-8000-000000000022"},
 			{Nonce: "n44", Kind: live.CmdTravel, RouteID: "0190c7a8-0000-7000-8000-000000000024", Pace: "fast"},
+			{Nonce: "n45", Kind: live.CmdAddZone, Label: "Ambush", Q: 3, R: 0, RadiusHexes: 2, DMOnly: true},
+			{Nonce: "n46", Kind: live.CmdHoldZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025", On: true},
+			{Nonce: "n47", Kind: live.CmdSpringZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025"},
+			{Nonce: "n48", Kind: live.CmdRemoveZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025"},
 		},
 		Updates: []live.Update{
 			{

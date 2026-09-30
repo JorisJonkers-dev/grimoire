@@ -55,6 +55,8 @@ type Combatant struct {
 	Economy combat.Economy
 	// Shielded adds 5 to AC until the Combatant's next turn starts.
 	Shielded bool
+	// Surprised Combatants did not notice the ambush and rolled initiative at disadvantage.
+	Surprised bool
 }
 
 // Reaction kinds and the stage an attack waits in while its target decides.

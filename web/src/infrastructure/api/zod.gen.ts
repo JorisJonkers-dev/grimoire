@@ -538,6 +538,43 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * Whether one party member noticed a sprung zone; noticed is absent while they roll.
+ */
+export const zLiveZoneCheck = z.object({
+    tokenId: zId,
+    noticed: z.boolean().optional()
+});
+
+/**
+ * An Encounter Zone, for the DM only. creatures counts the hidden creatures in it, or those it held once sprung; dc is their Stealth DC once it springs.
+ */
+export const zLiveZone = z.object({
+    id: zId,
+    name: z.string().max(40),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    radiusHexes: z.int().gte(1).lte(20),
+    dmOnly: z.boolean(),
+    held: z.boolean(),
+    status: z.enum([
+        'armed',
+        'spotting',
+        'sprung'
+    ]),
+    dc: z.int().gte(0).lte(50).optional(),
+    creatures: z.int().gte(0).lte(1000),
+    checks: z.array(zLiveZoneCheck).max(1000)
+});
+
+/**
+ * A party member's Perception Roll Card after a zone springs. The DC is never sent.
+ */
+export const zLivePerception = z.object({
+    rollId: zId,
+    tokenId: zId
+});
+
+/**
  * How fast the party travels overland; slow, normal and fast cover 2, 3 and 4 miles an hour for 8 hours a day.
  */
 export const zTravelPace = z.enum([
@@ -788,6 +825,7 @@ export const zLiveCombatant = z.object({
     reaction: z.boolean(),
     movementFt: z.int().gte(0).lte(120),
     speedFt: z.int().gte(0).lte(120),
+    surprised: z.boolean().optional(),
     tactics: zTactics.optional(),
     suggestion: zLiveSuggestion.optional()
 });
@@ -897,6 +935,8 @@ export const zLiveView = z.object({
     area: zLiveArea.optional(),
     table: zLiveTable.optional(),
     world: zLiveWorld.optional(),
+    zones: z.array(zLiveZone).max(200).optional(),
+    perception: z.array(zLivePerception).max(1000).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -1146,7 +1186,11 @@ export const zLiveCommand = z.object({
         'remove_node',
         'remove_route',
         'place_party',
-        'travel'
+        'travel',
+        'add_zone',
+        'remove_zone',
+        'hold_zone',
+        'spring_zone'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1203,7 +1247,10 @@ export const zLiveCommand = z.object({
     toNodeId: zId.optional(),
     routeId: zId.optional(),
     distanceMi: z.int().gte(1).lte(2000).optional(),
-    pace: zTravelPace.optional()
+    pace: zTravelPace.optional(),
+    zoneId: zId.optional(),
+    radiusHexes: z.int().gte(1).lte(20).optional(),
+    dmOnly: z.boolean().optional()
 });
 
 /**

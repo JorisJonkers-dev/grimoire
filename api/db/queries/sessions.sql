@@ -23,13 +23,15 @@ UPDATE play.sessions SET status = 'ended', ended_at = @now WHERE campaign_id = @
 UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
-SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
+    stealth, perception, initiative, speed_ft FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
-    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc));
+    sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc), @stealth,
+    @perception, @initiative, @speed_ft);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -56,7 +58,7 @@ SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_t
 
 -- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
-       shielded
+       shielded, surprised
 FROM play.combatants WHERE combat_id = $1 ORDER BY id;
 
 -- name: SaveCombat :exec
@@ -68,9 +70,9 @@ ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round,
 
 -- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft, shielded)
+    has_bonus_action, has_reaction, movement_ft, shielded, surprised)
 VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
-    @has_bonus_action, @has_reaction, @movement_ft, @shielded)
+    @has_bonus_action, @has_reaction, @movement_ft, @shielded, @surprised)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
     shielded = excluded.shielded;
@@ -254,3 +256,35 @@ INSERT INTO play.table_displays (session_id, camera, q, r, zoom_pct, scene, titl
 VALUES (@session_id, @camera, @q, @r, @zoom_pct, @scene, @title, @body, sqlc.narg(map_id), @blackout)
 ON CONFLICT (session_id) DO UPDATE SET camera = excluded.camera, q = excluded.q, r = excluded.r, zoom_pct = excluded.zoom_pct,
     scene = excluded.scene, title = excluded.title, body = excluded.body, map_id = excluded.map_id, blackout = excluded.blackout;
+
+-- name: MonsterAmbushStats :many
+SELECT kind, name, value FROM compendium.monster_stats
+WHERE monster_id = @monster_id AND ((kind = 'skill' AND name IN ('stealth', 'perception')) OR (kind = 'speed' AND name = 'walk'));
+
+-- name: SessionZones :many
+SELECT id, name, q, r, radius_hexes, dm_only, held, status, dc FROM play.encounter_zones WHERE session_id = $1 ORDER BY name, id;
+
+-- name: SaveZone :exec
+INSERT INTO play.encounter_zones (id, session_id, name, q, r, radius_hexes, dm_only, held, status, dc)
+VALUES (@id, @session_id, @name, @q, @r, @radius_hexes, @dm_only, @held, @status, @dc)
+ON CONFLICT (id) DO UPDATE SET held = excluded.held, status = excluded.status, dc = excluded.dc;
+
+-- name: DeleteZone :exec
+DELETE FROM play.encounter_zones WHERE session_id = @session_id AND id = @id;
+
+-- name: SessionZoneChecks :many
+SELECT c.zone_id, c.token_id, c.roll_id, c.noticed
+FROM play.zone_checks c JOIN play.encounter_zones z ON z.id = c.zone_id
+WHERE z.session_id = $1 ORDER BY c.zone_id, c.token_id;
+
+-- name: SaveZoneCheck :exec
+INSERT INTO play.zone_checks (zone_id, token_id, roll_id, noticed) VALUES (@zone_id, @token_id, sqlc.narg(roll_id), sqlc.narg(noticed))
+ON CONFLICT (zone_id, token_id) DO UPDATE SET roll_id = excluded.roll_id, noticed = excluded.noticed;
+
+-- name: SessionZoneCreatures :many
+SELECT c.zone_id, c.token_id
+FROM play.zone_creatures c JOIN play.encounter_zones z ON z.id = c.zone_id
+WHERE z.session_id = $1 ORDER BY c.zone_id, c.token_id;
+
+-- name: AddZoneCreature :exec
+INSERT INTO play.zone_creatures (zone_id, token_id) VALUES (@zone_id, @token_id) ON CONFLICT DO NOTHING;

@@ -61,6 +61,10 @@ const (
 	CmdRemoveRoute   = "remove_route"
 	CmdPlaceParty    = "place_party"
 	CmdTravel        = "travel"
+	CmdAddZone       = "add_zone"
+	CmdRemoveZone    = "remove_zone"
+	CmdHoldZone      = "hold_zone"
+	CmdSpringZone    = "spring_zone"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -136,6 +140,9 @@ type Command struct {
 	RouteID      string           `json:"routeId,omitempty"`
 	DistanceMi   int              `json:"distanceMi,omitempty"`
 	Pace         string           `json:"pace,omitempty"`
+	ZoneID       string           `json:"zoneId,omitempty"`
+	RadiusHexes  int              `json:"radiusHexes,omitempty"`
+	DMOnly       bool             `json:"dmOnly,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -283,6 +290,36 @@ type View struct {
 	Area      *AreaView       `json:"area,omitempty"`
 	Table     *TableView      `json:"table,omitempty"`
 	World     *WorldView      `json:"world,omitempty"`
+	// Zones go to the DM only; Perception lists the party's Perception Roll Cards, never the DC.
+	Zones      []ZoneView       `json:"zones,omitempty"`
+	Perception []PerceptionView `json:"perception,omitempty"`
+}
+
+// ZoneView is an Encounter Zone as the DM sees it.
+type ZoneView struct {
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Q           int             `json:"q"`
+	R           int             `json:"r"`
+	RadiusHexes int             `json:"radiusHexes"`
+	DMOnly      bool            `json:"dmOnly"`
+	Held        bool            `json:"held"`
+	Status      string          `json:"status"`
+	DC          int             `json:"dc,omitempty"`
+	Creatures   int             `json:"creatures"`
+	Checks      []ZoneCheckView `json:"checks"`
+}
+
+// ZoneCheckView is whether one party member noticed a sprung zone; Noticed is absent while they roll.
+type ZoneCheckView struct {
+	TokenID string `json:"tokenId"`
+	Noticed *bool  `json:"noticed,omitempty"`
+}
+
+// PerceptionView is a party member's Perception Roll Card after a zone springs.
+type PerceptionView struct {
+	RollID  string `json:"rollId"`
+	TokenID string `json:"tokenId"`
 }
 
 // WorldView is the world map the party travels: the DM sees it all, everyone else only the locations
@@ -375,6 +412,7 @@ type CombatantView struct {
 	MovementFt   int    `json:"movementFt"`
 	SpeedFt      int    `json:"speedFt"`
 	// Tactics and Suggestion go to the DM only.
+	Surprised  bool            `json:"surprised,omitempty"`
 	Tactics    string          `json:"tactics,omitempty"`
 	Suggestion *SuggestionView `json:"suggestion,omitempty"`
 }

@@ -76,6 +76,11 @@ type Stats struct {
 	Saves map[string]int
 	// SpellDC is the save DC of the token's spells; 0 when it casts none.
 	SpellDC int
+	// Stealth and Perception are skill bonuses; Initiative the initiative bonus; SpeedFt the walking speed.
+	Stealth    int
+	Perception int
+	Initiative int
+	SpeedFt    int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

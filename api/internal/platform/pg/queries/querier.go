@@ -36,6 +36,7 @@ type Querier interface {
 	AddSpellScaling(ctx context.Context, arg AddSpellScalingParams) error
 	AddWall(ctx context.Context, arg AddWallParams) error
 	AddWeaponProperty(ctx context.Context, arg AddWeaponPropertyParams) error
+	AddZoneCreature(ctx context.Context, arg AddZoneCreatureParams) error
 	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
 	BuilderArmor(ctx context.Context, key string) ([]BuilderArmorRow, error)
 	BuilderBackgrounds(ctx context.Context, key string) ([]BuilderBackgroundsRow, error)
@@ -85,6 +86,7 @@ type Querier interface {
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
+	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
@@ -167,6 +169,7 @@ type Querier interface {
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
+	MonsterAmbushStats(ctx context.Context, monsterID int64) ([]MonsterAmbushStatsRow, error)
 	MonsterAttackRows(ctx context.Context, monsterID int64) ([]MonsterAttackRowsRow, error)
 	MonsterRelations(ctx context.Context, monsterID int64) ([]MonsterRelationsRow, error)
 	MonsterSaves(ctx context.Context, monsterID int64) ([]MonsterSavesRow, error)
@@ -194,6 +197,8 @@ type Querier interface {
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SavePrompt(ctx context.Context, arg SavePromptParams) error
 	SaveTable(ctx context.Context, arg SaveTableParams) error
+	SaveZone(ctx context.Context, arg SaveZoneParams) error
+	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
 	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
@@ -206,6 +211,9 @@ type Querier interface {
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error)
+	SessionZoneChecks(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCheck, error)
+	SessionZoneCreatures(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCreature, error)
+	SessionZones(ctx context.Context, sessionID uuid.UUID) ([]SessionZonesRow, error)
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error

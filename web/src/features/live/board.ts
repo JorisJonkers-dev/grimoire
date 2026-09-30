@@ -29,12 +29,17 @@ export function initials(label: string): string {
     .join('')
 }
 
-export type Ground = { surfaces?: LiveSurface[]; area?: Coord[] }
+export type Ground = { surfaces?: LiveSurface[]; area?: Coord[]; zone?: Coord[] }
 
-/** What lies on a hex besides a token: a Surface, and whether an area spell covers it. */
-export function groundNotes(k: string, surfaces: Map<string, LiveSurface>, area: Set<string>): string[] {
+/** What lies on a hex besides a token: a Surface, whether an area spell covers it, and whether an Encounter Zone does. */
+export function groundNotes(k: string, surfaces: Map<string, LiveSurface>, area: Set<string>, zone: Set<string> = new Set()): string[] {
   const s = surfaces.get(k)
-  return [s ? s.kind : '', area.has(k) ? 'in the area' : ''].filter(Boolean)
+  return [s ? s.kind : '', area.has(k) ? 'in the area' : '', zone.has(k) ? 'in an encounter zone' : ''].filter(Boolean)
+}
+
+/** Every hex of the Encounter Zones around their centres. */
+export function zoneHexes(zones: { q: number; r: number; radiusHexes: number }[], cells: Coord[]): Coord[] {
+  return cells.filter((c) => zones.some((z) => distance(z, c) <= z.radiusHexes))
 }
 
 /** Paints tokens, a walk preview, Surfaces and an area onto the grid; hidden tokens only ever arrive for the DM. */
@@ -44,12 +49,13 @@ export function board(radius: number, tokens: LiveToken[], selected: string | nu
   const route = new Set(path.map(key))
   const surfaces = new Map((ground.surfaces ?? []).map((s) => [key(s), s]))
   const area = new Set((ground.area ?? []).map(key))
+  const zone = new Set((ground.zone ?? []).map(key))
   return hexes(radius).map((c) => {
     const k = key(c)
     const t = at.get(k)
-    const notes = groundNotes(k, surfaces, area)
+    const notes = groundNotes(k, surfaces, area, zone)
     if (!t) {
-      const tone = route.has(k) ? 'path' : area.has(k) ? 'area' : surfaces.has(k) ? `surface-${surfaces.get(k)?.kind ?? ''}` : undefined
+      const tone = route.has(k) ? 'path' : area.has(k) ? 'area' : surfaces.has(k) ? `surface-${surfaces.get(k)?.kind ?? ''}` : zone.has(k) ? 'zone' : undefined
       const label = [route.has(k) ? 'on the path' : '', ...notes].filter(Boolean).join(', ')
       return tone ? { ...c, tone, label } : c
     }

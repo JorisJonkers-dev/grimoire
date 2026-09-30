@@ -64,6 +64,9 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	for _, sv := range saves {
 		stats.Saves[sv.Name] = int(sv.Value)
 	}
+	if err := s.ambush(ctx, m, &stats); err != nil {
+		return "", domain.Stats{}, err
+	}
 	for _, r := range rows {
 		stats.Attacks = append(stats.Attacks, domain.Attack{
 			Name: r.Name, ToHit: int(r.ToHit), ReachFt: int(r.ReachFeet), RangeFt: int(r.RangeFeet), LongRangeFt: max(int(r.LongRangeFeet), int(r.RangeFeet)),
@@ -95,6 +98,15 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	}
 	for _, sv := range sheet.Derived.Saves {
 		stats.Saves[string(sv.Ability)] = sv.Bonus
+	}
+	stats.Initiative, stats.SpeedFt = sheet.Derived.Initiative, sheet.Derived.SpeedFeet
+	for _, sk := range sheet.Derived.Skills {
+		switch sk.Skill {
+		case "stealth":
+			stats.Stealth = sk.Bonus
+		case "perception":
+			stats.Perception = sk.Bonus
+		}
 	}
 	if ability, casts := spellcasting()[sheet.Class]; casts {
 		stats.SpellDC = 8 + pb + rules.Modifier(sheet.Scores[ability])
@@ -133,4 +145,26 @@ func spellcasting() map[string]rules.Ability {
 		"bard": rules.Charisma, "cleric": rules.Wisdom, "druid": rules.Wisdom, "paladin": rules.Charisma, "ranger": rules.Wisdom,
 		"sorcerer": rules.Charisma, "warlock": rules.Charisma, "wizard": rules.Intelligence,
 	}
+}
+
+// ambush fills in what an ambush needs from a monster: Stealth and Perception (the ability modifier
+// without the skill), initiative from Dexterity and walking speed.
+func (s Statblocks) ambush(ctx context.Context, m queries.MonsterStatblockRow, stats *domain.Stats) error {
+	stats.Stealth, stats.Perception = rules.Modifier(int(m.Dexterity)), rules.Modifier(int(m.Wisdom))
+	stats.Initiative, stats.SpeedFt = stats.Stealth, 30
+	rows, err := s.Store.q.MonsterAmbushStats(ctx, m.ID)
+	if err != nil {
+		return err
+	}
+	for _, r := range rows {
+		switch r.Name {
+		case "stealth":
+			stats.Stealth = int(r.Value)
+		case "perception":
+			stats.Perception = int(r.Value)
+		default:
+			stats.SpeedFt = int(r.Value)
+		}
+	}
+	return nil
 }

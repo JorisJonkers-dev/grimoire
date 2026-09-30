@@ -162,6 +162,10 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.areaRolled()
 		return true
 	}
+	if z, ok := r.st.zoneRoll(id); ok {
+		r.perceived(z, id)
+		return true
+	}
 	return false
 }
 
@@ -169,6 +173,13 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 func (r *runtime) catchUp() {
 	if r.st.cast != nil {
 		r.areaRolled()
+	}
+	for _, z := range r.st.zones {
+		for _, c := range z.Checks {
+			if c.RollID != nil && c.Noticed == nil {
+				r.rolled(request{cmd: Command{rollID: *c.RollID}})
+			}
+		}
 	}
 	if r.st.combat == nil {
 		return
@@ -301,7 +312,7 @@ func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, 
 	cv := CombatantView{
 		ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
 		Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
-		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt,
+		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised,
 	}
 	if x.Initiative != nil {
 		cv.Rank = combat.Rank(totals, *x.Initiative)

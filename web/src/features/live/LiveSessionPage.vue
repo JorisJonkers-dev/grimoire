@@ -9,8 +9,8 @@ import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
 import { GButton } from '@/shared/ui'
-import { board, describe } from './board'
-import { key } from './geometry'
+import { board, describe, hexes, zoneHexes } from './board'
+import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
@@ -23,8 +23,9 @@ import StartCombat from './StartCombat.vue'
 import TableRemote from './TableRemote.vue'
 import TurnPanel from './TurnPanel.vue'
 import WorldPanel from './WorldPanel.vue'
+import ZonesPanel from './ZonesPanel.vue'
 
-type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'camera' | 'ping'
+type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'zone' | 'camera' | 'ping'
 
 const route = useRoute()
 const router = useRouter()
@@ -73,6 +74,7 @@ const cells = computed(() =>
   board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value, {
     surfaces: view.value?.surfaces,
     area: areaHexes.value,
+    zone: zoneCells.value,
   }),
 )
 const chosen = computed(() => view.value?.tokens.find((t) => t.id === selected.value) ?? null)
@@ -136,6 +138,20 @@ const areaPreview = computed(() => {
   return p && p.tokenId === areaAiming.value?.tokenId && p.effect === areaAiming.value.effect ? p : null
 })
 const areaHexes = computed(() => areaPreview.value?.hexes ?? view.value?.area?.hexes ?? [])
+const zoneName = ref('')
+const zoneRadius = ref(3)
+const zoneDMOnly = ref(false)
+const zoneCells = computed(() => {
+  const m = view.value?.map
+  const all = m ? cellsFor(layoutOf(m), m.width, m.height) : hexes(state.value?.session?.gridRadius ?? 0)
+  return zoneHexes(view.value?.zones ?? [], all)
+})
+const myChecks = computed(() =>
+  (view.value?.perception ?? []).filter((p) => {
+    const owner = tokenById(p.tokenId)?.controllerId
+    return isDM.value ? !owner : owner === campaign.data.value?.me.id
+  }),
+)
 const names = computed(() => Object.fromEntries((view.value?.tokens ?? []).map((t) => [t.id, t.label])))
 function castArea() {
   const a = areaAiming.value
@@ -238,6 +254,9 @@ function pick(c: Coord) {
     case 'ping':
       live.value.send({ kind: 'ping', q: c.q, r: c.r })
       return
+    case 'zone':
+      if (zoneName.value.trim()) live.value.send({ kind: 'add_zone', label: zoneName.value.trim(), q: c.q, r: c.r, radiusHexes: zoneRadius.value, dmOnly: zoneDMOnly.value })
+      return
     default: {
       const lit = view.value?.lights?.find((l) => key(l) === key(c))
       if (lit) live.value.send({ kind: 'remove_light', lightId: lit.id })
@@ -325,6 +344,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       </p>
       <LiveRoll v-if="attackRoll" :key="attackRoll" :campaign-id="campaignId" :roll-id="attackRoll" />
       <LiveRoll v-for="s in mySaves" :key="s.rollId" :campaign-id="campaignId" :roll-id="s.rollId" />
+      <LiveRoll v-for="p in myChecks" :key="p.rollId" :campaign-id="campaignId" :roll-id="p.rollId" />
       <p v-if="view?.resolving" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
       <section v-if="view?.manual?.length" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
         <h2>Resolve by hand</h2>
@@ -343,7 +363,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </label>
       </fieldset>
       <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
-      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :title="view.map.name" @select="pick" />
+      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :zone="zoneCells" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
         Walk {{ state.path.costFt }} ft. Tap the same hex again to go.
@@ -363,9 +383,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <fieldset class="tools">
           <legend>Tap the map to</legend>
-          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'camera', 'ping'] as const)" :key="t" class="tool">
+          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'camera', 'ping'] as const)" :key="t" class="tool">
             <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
+            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
           </label>
         </fieldset>
         <div v-if="view?.map" class="row">
@@ -384,6 +404,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </label>
           <label class="g-field"><span>Rounds</span><input v-model.number="surfaceRounds" type="number" min="0" max="100" data-testid="surface-rounds" /></label>
         </div>
+        <div v-if="tool === 'zone'" class="row">
+          <label class="g-field grow"><span>Zone name</span><input v-model="zoneName" maxlength="40" data-testid="zone-name" /></label>
+          <label class="g-field"><span>Reach (hexes)</span><input v-model.number="zoneRadius" type="number" min="1" max="20" data-testid="zone-radius" /></label>
+          <label class="check"><input v-model="zoneDMOnly" type="checkbox" data-testid="zone-dm-only" /><span>Only when I spring it</span></label>
+        </div>
+        <ZonesPanel v-if="view?.zones?.length" :zones="view.zones" :names="names" @send="(cmd) => live?.send(cmd)" />
         <div v-if="tool === 'elevation'" class="row">
           <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>
         </div>
