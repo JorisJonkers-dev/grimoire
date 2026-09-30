@@ -499,6 +499,7 @@ type PlayAttack struct {
 	Stage           string
 	Critical        bool
 	RollID          uuid.UUID
+	Ranged          bool
 }
 
 type PlayCombat struct {
@@ -524,6 +525,12 @@ type PlayCombatant struct {
 	HasBonusAction  bool
 	HasReaction     bool
 	MovementFt      int32
+}
+
+type PlayObservedDamage struct {
+	ObserverTokenID uuid.UUID
+	AttackerTokenID uuid.UUID
+	RangedDamage    int32
 }
 
 type PlayRollDice struct {
@@ -589,6 +596,8 @@ type PlayToken struct {
 	ArmorClass         pgtype.Int4
 	Hp                 pgtype.Int4
 	HpMax              pgtype.Int4
+	Intelligence       pgtype.Int4
+	Tactics            string
 }
 
 type PlayTokenAttack struct {

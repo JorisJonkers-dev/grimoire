@@ -23,10 +23,21 @@ import (
 type bestiary struct{ owner uuid.UUID }
 
 func (bestiary) Monster(_ context.Context, _ uuid.UUID, slug string) (string, domain.Stats, error) {
-	if slug != "goblin" {
+	switch slug {
+	case "hobgoblin":
+		return "Hobgoblin", domain.Stats{Source: "monster:hobgoblin", AC: 15, HP: 11, HPMax: 11, Intelligence: 12, Attacks: []domain.Attack{
+			{Name: "Longsword", ToHit: 3, ReachFt: 5, Damage: "1d8", DamageBonus: 1, DamageType: "slashing"},
+			{Name: "Longbow", ToHit: 3, RangeFt: 150, LongRangeFt: 600, Damage: "1d8", DamageBonus: 1, DamageType: "piercing"},
+		}}, nil
+	case "wolf":
+		return "Wolf", domain.Stats{Source: "monster:wolf", AC: 13, HP: 11, HPMax: 11, Intelligence: 3, Attacks: []domain.Attack{
+			{Name: "Bite", ToHit: 4, ReachFt: 5, Damage: "2d4", DamageBonus: 2, DamageType: "piercing"},
+		}}, nil
+	case "goblin":
+	default:
 		return "", domain.Stats{}, errors.New("no such monster")
 	}
-	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Attacks: []domain.Attack{
+	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Attacks: []domain.Attack{
 		{Name: "Scimitar", ToHit: 4, ReachFt: 5, Damage: "1d6", DamageBonus: 2, DamageType: "slashing"},
 		{Name: "Shortbow", ToHit: 4, RangeFt: 80, LongRangeFt: 320, Damage: "1d6", DamageBonus: 2, DamageType: "piercing"},
 		{Name: "Slam", ToHit: 4, ReachFt: 5, DamageBonus: 3, DamageType: "bludgeoning"},

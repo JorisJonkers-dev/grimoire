@@ -8188,9 +8188,21 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 		e.FieldStart("speedFt")
 		e.Int32(s.SpeedFt)
 	}
+	{
+		if s.Tactics.Set {
+			e.FieldStart("tactics")
+			s.Tactics.Encode(e)
+		}
+	}
+	{
+		if s.Suggestion.Set {
+			e.FieldStart("suggestion")
+			s.Suggestion.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveCombatant = [15]string{
+var jsonFieldsNameOfLiveCombatant = [17]string{
 	0:  "id",
 	1:  "tokenId",
 	2:  "label",
@@ -8206,6 +8218,8 @@ var jsonFieldsNameOfLiveCombatant = [15]string{
 	12: "reaction",
 	13: "movementFt",
 	14: "speedFt",
+	15: "tactics",
+	16: "suggestion",
 }
 
 // Decode decodes LiveCombatant from json.
@@ -8213,7 +8227,7 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveCombatant to nil")
 	}
-	var requiredBitSet [2]uint8
+	var requiredBitSet [3]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -8383,6 +8397,26 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"speedFt\"")
 			}
+		case "tactics":
+			if err := func() error {
+				s.Tactics.Reset()
+				if err := s.Tactics.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tactics\"")
+			}
+		case "suggestion":
+			if err := func() error {
+				s.Suggestion.Reset()
+				if err := s.Suggestion.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"suggestion\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -8392,9 +8426,10 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [2]uint8{
+	for i, mask := range [3]uint8{
 		0b00101111,
 		0b01111111,
+		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -8719,9 +8754,15 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 			s.AttackNo.Encode(e)
 		}
 	}
+	{
+		if s.Tactics.Set {
+			e.FieldStart("tactics")
+			s.Tactics.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveCommand = [24]string{
+var jsonFieldsNameOfLiveCommand = [25]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -8746,6 +8787,7 @@ var jsonFieldsNameOfLiveCommand = [24]string{
 	21: "characterId",
 	22: "targetId",
 	23: "attackNo",
+	24: "tactics",
 }
 
 // Decode decodes LiveCommand from json.
@@ -8753,7 +8795,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveCommand to nil")
 	}
-	var requiredBitSet [3]uint8
+	var requiredBitSet [4]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -9019,6 +9061,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"attackNo\"")
 			}
+		case "tactics":
+			if err := func() error {
+				s.Tactics.Reset()
+				if err := s.Tactics.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tactics\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -9028,8 +9080,9 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [3]uint8{
+	for i, mask := range [4]uint8{
 		0b11100011,
+		0b00000000,
 		0b00000000,
 		0b00000000,
 	} {
@@ -9133,6 +9186,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindAttack
 	case LiveCommandKindUndoDamage:
 		*s = LiveCommandKindUndoDamage
+	case LiveCommandKindSetTactics:
+		*s = LiveCommandKindSetTactics
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -10118,6 +10173,134 @@ func (s LiveSessionViewAudience) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveSessionViewAudience) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveSuggestion) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveSuggestion) encodeFields(e *jx.Encoder) {
+	{
+		if s.AttackNo.Set {
+			e.FieldStart("attackNo")
+			s.AttackNo.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("targetId")
+		s.TargetId.Encode(e)
+	}
+	{
+		e.FieldStart("reason")
+		e.Str(s.Reason)
+	}
+}
+
+var jsonFieldsNameOfLiveSuggestion = [3]string{
+	0: "attackNo",
+	1: "targetId",
+	2: "reason",
+}
+
+// Decode decodes LiveSuggestion from json.
+func (s *LiveSuggestion) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveSuggestion to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "attackNo":
+			if err := func() error {
+				s.AttackNo.Reset()
+				if err := s.AttackNo.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"attackNo\"")
+			}
+		case "targetId":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.TargetId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"targetId\"")
+			}
+		case "reason":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Str()
+				s.Reason = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"reason\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveSuggestion")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000110,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveSuggestion) {
+					name = jsonFieldsNameOfLiveSuggestion[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveSuggestion) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveSuggestion) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -13153,6 +13336,39 @@ func (s *OptLiveSessionView) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes LiveSuggestion as json.
+func (o OptLiveSuggestion) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveSuggestion from json.
+func (o *OptLiveSuggestion) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveSuggestion to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveSuggestion) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveSuggestion) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes LiveTokenHealth as json.
 func (o OptLiveTokenHealth) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -13382,6 +13598,39 @@ func (s OptString) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptString) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes Tactics as json.
+func (o OptTactics) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes Tactics from json.
+func (o *OptTactics) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptTactics to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptTactics) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptTactics) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -17813,6 +18062,50 @@ func (s StatusDatabase) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *StatusDatabase) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes Tactics as json.
+func (s Tactics) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes Tactics from json.
+func (s *Tactics) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Tactics to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch Tactics(v) {
+	case TacticsAuto:
+		*s = TacticsAuto
+	case TacticsSimple:
+		*s = TacticsSimple
+	case TacticsCunning:
+		*s = TacticsCunning
+	case TacticsFalse:
+		*s = TacticsFalse
+	default:
+		*s = Tactics(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s Tactics) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Tactics) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

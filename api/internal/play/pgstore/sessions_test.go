@@ -201,6 +201,10 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 			_, err := repo.Commit(ctx, live1, nil, fight(domain.CombatEnded), tb.dmMember(t), dm, time.Now())
 			return err
 		},
+		"observations": func(_ *app.Sessions, repo *pgstore.Store) error {
+			_, err := repo.Observations(ctx, live1.ID)
+			return err
+		},
 		"loadcombat": func(_ *app.Sessions, repo *pgstore.Store) error {
 			_, err := repo.LoadCombat(ctx, live1.ID)
 			return err

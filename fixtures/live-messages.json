@@ -208,6 +208,15 @@
       "q": 0,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n24",
+      "kind": "set_tactics",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "tactics": "cunning"
     }
   ],
   "updates": [
@@ -309,7 +318,13 @@
               "bonusAction": false,
               "reaction": true,
               "movementFt": 20,
-              "speedFt": 30
+              "speedFt": 30,
+              "tactics": "auto",
+              "suggestion": {
+                "attackNo": 0,
+                "targetId": "0190c7a8-0000-7000-8000-000000000013",
+                "reason": "Simple: Aria is the nearest enemy, 5 ft away."
+              }
             }
           ],
           "attack": {
@@ -432,7 +447,13 @@
               "bonusAction": false,
               "reaction": true,
               "movementFt": 20,
-              "speedFt": 30
+              "speedFt": 30,
+              "tactics": "auto",
+              "suggestion": {
+                "attackNo": 0,
+                "targetId": "0190c7a8-0000-7000-8000-000000000013",
+                "reason": "Simple: Aria is the nearest enemy, 5 ft away."
+              }
             }
           ],
           "attack": {
@@ -578,7 +599,13 @@
               "bonusAction": false,
               "reaction": true,
               "movementFt": 20,
-              "speedFt": 30
+              "speedFt": 30,
+              "tactics": "auto",
+              "suggestion": {
+                "attackNo": 0,
+                "targetId": "0190c7a8-0000-7000-8000-000000000013",
+                "reason": "Simple: Aria is the nearest enemy, 5 ft away."
+              }
             }
           ],
           "attack": {
@@ -681,7 +708,13 @@
                 "bonusAction": false,
                 "reaction": true,
                 "movementFt": 20,
-                "speedFt": 30
+                "speedFt": 30,
+                "tactics": "auto",
+                "suggestion": {
+                  "attackNo": 0,
+                  "targetId": "0190c7a8-0000-7000-8000-000000000013",
+                  "reason": "Simple: Aria is the nearest enemy, 5 ft away."
+                }
               }
             ],
             "attack": {

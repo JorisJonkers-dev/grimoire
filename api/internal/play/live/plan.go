@@ -8,6 +8,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/tactics"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -19,6 +20,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planAttack(m, cmd)
 	case CmdUndoDamage:
 		return r.planUndo()
+	case CmdSetTactics:
+		return r.planTactics(cmd)
 	case CmdWalk:
 		t, path, cost, reason := r.route(m, cmd)
 		return Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: cost}, reason
@@ -87,7 +90,7 @@ func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 	case !r.st.onBoard(at):
 		return Write{}, "That hex is off the map."
 	}
-	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats}
+	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats, Tactics: tactics.FromIntelligence}
 	if cmd.ControllerID != "" {
 		id, err := uuid.Parse(cmd.ControllerID)
 		if err != nil {

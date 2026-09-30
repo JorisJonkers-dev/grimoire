@@ -67,6 +67,8 @@ type PendingAttack struct {
 	Stage      string
 	Critical   bool
 	RollID     RollID
+	// Ranged is set for attacks made from beyond reach; creatures that see them remember the damage.
+	Ranged bool
 }
 
 // Totals lists every rolled initiative.

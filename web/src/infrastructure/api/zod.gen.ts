@@ -553,6 +553,25 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
+ */
+export const zTactics = z.enum([
+    'auto',
+    'simple',
+    'cunning',
+    'off'
+]);
+
+/**
+ * A creature's Suggested Action for the DM. Without attackNo nothing reaches yet and it should close in on the target.
+ */
+export const zLiveSuggestion = z.object({
+    attackNo: z.int().gte(0).lte(50).optional(),
+    targetId: zId,
+    reason: z.string().max(200)
+});
+
+/**
  * A Token joining a Combat, with its initiative bonus and speed.
  */
 export const zLiveCombatantSetup = z.object({
@@ -579,7 +598,9 @@ export const zLiveCombatant = z.object({
     bonusAction: z.boolean(),
     reaction: z.boolean(),
     movementFt: z.int().gte(0).lte(120),
-    speedFt: z.int().gte(0).lte(120)
+    speedFt: z.int().gte(0).lte(120),
+    tactics: zTactics.optional(),
+    suggestion: zLiveSuggestion.optional()
 });
 
 /**
@@ -870,7 +891,8 @@ export const zLiveCommand = z.object({
         'end_combat',
         'preview_attack',
         'attack',
-        'undo_damage'
+        'undo_damage',
+        'set_tactics'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -897,7 +919,8 @@ export const zLiveCommand = z.object({
     monsterSlug: zSlug.optional(),
     characterId: zId.optional(),
     targetId: zId.optional(),
-    attackNo: z.int().gte(0).lte(50).optional()
+    attackNo: z.int().gte(0).lte(50).optional(),
+    tactics: zTactics.optional()
 });
 
 /**

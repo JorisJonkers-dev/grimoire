@@ -751,7 +751,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -774,6 +774,21 @@ export type LiveCommand = {
     characterId?: Id;
     targetId?: Id;
     attackNo?: number;
+    tactics?: Tactics;
+};
+
+/**
+ * How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
+ */
+export type Tactics = 'auto' | 'simple' | 'cunning' | 'off';
+
+/**
+ * A creature's Suggested Action for the DM. Without attackNo nothing reaches yet and it should close in on the target.
+ */
+export type LiveSuggestion = {
+    attackNo?: number;
+    targetId: Id;
+    reason: string;
 };
 
 /**
@@ -814,6 +829,8 @@ export type LiveCombatant = {
     reaction: boolean;
     movementFt: number;
     speedFt: number;
+    tactics?: Tactics;
+    suggestion?: LiveSuggestion;
 };
 
 /**

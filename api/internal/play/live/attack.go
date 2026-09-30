@@ -29,6 +29,7 @@ type aim struct {
 	with             domain.Attack
 	mode             attack.Mode
 	cover            int
+	ranged           bool
 	reasons          []string
 }
 
@@ -86,6 +87,7 @@ func (s *state) shape(p aim) (aim, string) {
 	if band == attack.OutOfRange {
 		return aim{}, "The target is out of range."
 	}
+	p.ranged = band != attack.InReach
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
 	for _, c := range s.ground() {
 		wall := s.board != nil && s.board.Walls[c]
@@ -159,7 +161,7 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
-		Stage: domain.StageToHit, RollID: roll.ID,
+		Stage: domain.StageToHit, RollID: roll.ID, Ranged: p.ranged,
 	}
 	return Write{Kind: domain.ActionAttackDeclared, Token: p.attacker, Combatant: x.ID, Rolls: []domain.Roll{roll}, attack: pending}, ""
 }
@@ -226,12 +228,40 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 	r.commit(request{}, w, roll.Roller, sys)
 }
 
-// hurt takes damage off a target's hit points and ends the attack.
+// hurt takes damage off a target's hit points and ends the attack. Creatures that see a ranged attacker
+// deal damage remember it.
 func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
 	before := t.Stats.HP
+	ranged := w.attack.Ranged
 	w.Kind, w.attack = domain.ActionDamageDealt, nil
 	w.HP = &HPChange{Token: t.ID, Before: before, After: max(before-max(amount, 0), 0)}
+	if ranged && w.HP.After < before {
+		w.Observers = r.st.witnesses(w.Token)
+	}
 	return w
+}
+
+// witnesses are the standing creatures on the other side from a token that have a clear line to it.
+func (s *state) witnesses(t domain.Token) []domain.TokenID {
+	g := s.sightGrid()
+	var out []domain.TokenID
+	for _, o := range s.tokens {
+		if standing(o) && (o.Kind == domain.TokenParty) != (t.Kind == domain.TokenParty) &&
+			hex.LineOfSight(g, hex.Coord{Q: o.Q, R: o.R}, hex.Coord{Q: t.Q, R: t.R}).Visible {
+			out = append(out, o.ID)
+		}
+	}
+	return out
+}
+
+// sightGrid is the board with its walls, for creatures looking at each other.
+func (s *state) sightGrid() hex.Grid {
+	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: nil}
+	for _, c := range s.ground() {
+		wall := s.board != nil && s.board.Walls[c]
+		g.Cells[c] = hex.Cell{Blocked: wall, BlocksSight: wall}
+	}
+	return g
 }
 
 // natural is the d20 face that counts: the higher with advantage, the lower with disadvantage.

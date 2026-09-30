@@ -21,10 +21,15 @@ type state struct {
 	board   *domain.MapState
 	cells   map[hex.Coord]bool
 	combat  *domain.Combat
+	// observed is the ranged damage each creature has seen each other creature deal.
+	observed map[domain.TokenID]map[domain.TokenID]int
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, observed: map[domain.TokenID]map[domain.TokenID]int{}}
+	for k, v := range s.observed {
+		next.observed[k] = maps.Clone(v)
+	}
 	if s.combat != nil {
 		c := *s.combat
 		c.Combatants = slices.Clone(c.Combatants)

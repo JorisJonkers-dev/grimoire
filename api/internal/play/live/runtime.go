@@ -32,6 +32,8 @@ type Write struct {
 	Rolls     []domain.Roll
 	Combatant domain.CombatantID
 	HP        *HPChange
+	// Observers saw a ranged attack's damage; each remembers it against the attacker.
+	Observers []domain.TokenID
 	attack    *domain.PendingAttack
 	board     *domain.MapState
 	frames    []*state
@@ -44,6 +46,8 @@ type Store interface {
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
+	// Observations is how much damage each creature has seen each other creature deal from range.
+	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
 	// LastDamage is the Session's latest damage not undone yet; its Undoes names that damage's Action.
 	LastDamage(ctx context.Context, id domain.SessionID) (HPChange, bool, error)
@@ -152,7 +156,12 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight}
+	seen, err := h.Store.Observations(ctx, id)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -368,6 +377,9 @@ func apply(s *state, w *Write) {
 		return
 	case domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionDamageDealt, domain.ActionDamageUndone:
 		applyAttack(s, w)
+		return
+	case domain.ActionTacticsSet:
+		s.tokens[w.Token.ID] = w.Token
 		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)

@@ -129,13 +129,17 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	for _, t := range rows {
 		tok := domain.Token{
 			ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
+			Tactics: t.Tactics,
 		}
 		if t.ControllerMemberID.Valid {
 			id := uuid.UUID(t.ControllerMemberID.Bytes)
 			tok.Controller = &id
 		}
 		if t.StatSource.Valid {
-			tok.Stats = &domain.Stats{Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{}}
+			tok.Stats = &domain.Stats{
+				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
+				Intelligence: int(t.Intelligence.Int32),
+			}
 		}
 		tokens = append(tokens, tok)
 	}
@@ -193,30 +197,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	t := w.Token
 	switch w.Kind {
 	case domain.ActionTokenPlaced:
-		p := queries.InsertTokenParams{
-			ID: uuid.UUID(t.ID), SessionID: sid, Label: t.Label, Kind: t.Kind, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden, DarkvisionFt: int32(t.DarkvisionFt),
-		}
-		if t.Controller != nil {
-			p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
-		}
-		if t.Stats == nil {
-			return s.q.InsertToken(ctx, p)
-		}
-		st := t.Stats
-		p.StatSource = pgtype.Text{String: st.Source, Valid: true}
-		p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
-		if err := s.q.InsertToken(ctx, p); err != nil {
-			return err
-		}
-		for i, a := range st.Attacks {
-			if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
-				TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
-				LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
+		return s.insertToken(ctx, sid, t)
 	case domain.ActionTokenRemoved:
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
 	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
@@ -225,7 +206,9 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed:
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
-		return s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)})
+		return s.writeHP(ctx, sid, w)
+	case domain.ActionTacticsSet:
+		return s.q.SetTokenTactics(ctx, queries.SetTokenTacticsParams{SessionID: sid, ID: uuid.UUID(w.Token.ID), Tactics: w.Token.Tactics})
 	case domain.ActionMapSet:
 		p := queries.SetSessionMapParams{ID: sid}
 		if w.MapID != nil {
@@ -235,6 +218,52 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	default:
 		return s.writeBoard(ctx, board, w, now)
 	}
+}
+
+//nolint:gosec // coordinates and stats are bounded by the rules
+func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) error {
+	p := queries.InsertTokenParams{
+		ID: uuid.UUID(t.ID), SessionID: sid, Label: t.Label, Kind: t.Kind, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden, DarkvisionFt: int32(t.DarkvisionFt),
+	}
+	if t.Controller != nil {
+		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
+	}
+	if t.Stats == nil {
+		return s.q.InsertToken(ctx, p)
+	}
+	st := t.Stats
+	p.StatSource = pgtype.Text{String: st.Source, Valid: true}
+	p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
+	if st.Intelligence > 0 {
+		p.Intelligence = pgInt(st.Intelligence)
+	}
+	if err := s.q.InsertToken(ctx, p); err != nil {
+		return err
+	}
+	for i, a := range st.Attacks {
+		if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
+			TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
+			LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// writeHP sets a token's hit points and records who watched a ranged attacker deal the damage.
+//
+//nolint:gosec // hit points are bounded by the rules
+func (s *Store) writeHP(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if err := s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)}); err != nil {
+		return err
+	}
+	for _, o := range w.Observers {
+		if err := s.q.ObserveDamage(ctx, queries.ObserveDamageParams{Observer: uuid.UUID(o), Attacker: uuid.UUID(w.Token.ID), Amount: int32(w.HP.Before - w.HP.After)}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 //nolint:gosec // coordinates and ranges are bounded by the map
@@ -287,7 +316,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 	switch w.Kind {
 	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTokenRemoved,
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
-		domain.ActionAttackMissed:
+		domain.ActionAttackMissed, domain.ActionTacticsSet:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -365,8 +394,25 @@ func (s *Store) saveAttack(ctx context.Context, f *domain.Combat) error {
 	}
 	return s.q.SaveAttack(ctx, queries.SaveAttackParams{
 		ID: a.ID, CombatID: uuid.UUID(f.ID), AttackerTokenID: uuid.UUID(a.Attacker), TargetTokenID: uuid.UUID(a.Target), AttackNo: int32(a.AttackNo),
-		Mode: a.Mode.String(), CoverBonus: int32(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: uuid.UUID(a.RollID),
+		Mode: a.Mode.String(), CoverBonus: int32(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: uuid.UUID(a.RollID), Ranged: a.Ranged,
 	})
+}
+
+// Observations reads the ranged damage each creature of a Session has seen each other creature deal.
+func (s *Store) Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error) {
+	rows, err := s.q.SessionObservations(ctx, uuid.UUID(id))
+	if err != nil {
+		return nil, err
+	}
+	out := map[domain.TokenID]map[domain.TokenID]int{}
+	for _, r := range rows {
+		o := domain.TokenID(r.ObserverTokenID)
+		if out[o] == nil {
+			out[o] = map[domain.TokenID]int{}
+		}
+		out[o][domain.TokenID(r.AttackerTokenID)] = int(r.RangedDamage)
+	}
+	return out, nil
 }
 
 // LastDamage finds the Session's latest damage that no undo has reverted.
@@ -420,6 +466,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	out.Attack = &domain.PendingAttack{
 		ID: a.ID, Attacker: domain.TokenID(a.AttackerTokenID), Target: domain.TokenID(a.TargetTokenID), AttackNo: int(a.AttackNo),
 		Mode: attack.Mode(mode), CoverBonus: int(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: domain.RollID(a.RollID),
+		Ranged: a.Ranged,
 	}
 	return out, nil
 }

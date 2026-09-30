@@ -419,6 +419,26 @@ describe('attacks', () => {
     expect(s.sent.at(-1)).not.toHaveProperty('monsterSlug')
   })
 
+  it('offers the DM the suggested action of a creature and its tactics', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign() })
+    const s = FakeSocket.last()
+    const suggestion = { attackNo: 1, targetId: aria.id, reason: 'Cunning: it saw Aria deal 8 damage from range.' }
+    const fight = (extra: Record<string, unknown>) => ({ status: 'active', round: 1, combatants: [fighter(boss, { acting: true, tactics: 'auto', ...extra }), fighter(aria)] })
+    s.receive(snapshot([aria, boss], 'dm', { combat: fight({ suggestion }) }))
+    await flushPromises()
+    const hint = wrapper.get('[data-testid="suggestion"]')
+    expect(hint.text()).toContain('Suggested: Slam against Aria. Cunning: it saw Aria deal 8 damage from range.')
+    await hint.get('[data-testid="use-suggestion"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'attack', tokenId: boss.id, attackNo: 1, targetId: aria.id })
+    await wrapper.get('[data-testid="tactics"]').setValue('off')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'set_tactics', tokenId: boss.id, tactics: 'off' })
+    await expectAccessible(wrapper.element as Element)
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat: fight({ suggestion: { targetId: '0190c7a8-0000-7000-8000-000000000098', reason: 'Simple: nothing reaches yet; close in on someone, 40 ft away.' } }) } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="suggestion"]').text()).toContain('close in on someone')
+    expect(wrapper.find('[data-testid="use-suggestion"]').exists()).toBe(false)
+  })
+
   it('shows a player their hotbar, the roll for their attack and only the health of monsters', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pendingRoll(u.pathname.split('/')[6] ?? ''),

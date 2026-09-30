@@ -2819,7 +2819,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -2848,6 +2848,20 @@ components:
         characterId: { $ref: "#/components/schemas/Id" }
         targetId: { $ref: "#/components/schemas/Id" }
         attackNo: { type: integer, format: int32, minimum: 0, maximum: 50 }
+        tactics: { $ref: "#/components/schemas/Tactics" }
+    Tactics:
+      type: string
+      description: How a creature picks Suggested Actions; auto follows its Intelligence (Cunning from 12).
+      enum: [auto, simple, cunning, off]
+    LiveSuggestion:
+      type: object
+      description: A creature's Suggested Action for the DM. Without attackNo nothing reaches yet and it should close in on the target.
+      additionalProperties: false
+      required: [targetId, reason]
+      properties:
+        attackNo: { type: integer, format: int32, minimum: 0, maximum: 50 }
+        targetId: { $ref: "#/components/schemas/Id" }
+        reason: { type: string, maxLength: 200 }
     LiveCombatantSetup:
       type: object
       description: A Token joining a Combat, with its initiative bonus and speed.
@@ -2891,6 +2905,8 @@ components:
         reaction: { type: boolean }
         movementFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
         speedFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
+        tactics: { $ref: "#/components/schemas/Tactics" }
+        suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:
       type: object
       description: A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.

@@ -46,7 +46,10 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	if err != nil {
 		return "", domain.Stats{}, err
 	}
-	stats := domain.Stats{Source: "monster:" + slug, AC: int(m.ArmorClass), HP: int(m.HitPoints), HPMax: int(m.HitPoints), Attacks: []domain.Attack{}}
+	stats := domain.Stats{
+		Source: "monster:" + slug, AC: int(m.ArmorClass), HP: int(m.HitPoints), HPMax: int(m.HitPoints), Attacks: []domain.Attack{},
+		Intelligence: int(m.Intelligence),
+	}
 	for _, r := range rows {
 		stats.Attacks = append(stats.Attacks, domain.Attack{
 			Name: r.Name, ToHit: int(r.ToHit), ReachFt: int(r.ReachFeet), RangeFt: int(r.RangeFeet), LongRangeFt: max(int(r.LongRangeFeet), int(r.RangeFeet)),
