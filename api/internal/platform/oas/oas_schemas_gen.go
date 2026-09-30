@@ -2256,7 +2256,184 @@ func (s *DeleteCharacterNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteCharacterNoContent) deleteCharacterRes() {}
 
+// DeleteNpcNoContent is response for DeleteNpc operation.
+type DeleteNpcNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteNpcNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteNpcNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteNpcNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteNpcNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteNpcNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteNpcNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteNpcNoContent) deleteNpcRes() {}
+
+// An NPC that only its Revisions remember.
+// Ref: #/components/schemas/DeletedNpc
+type DeletedNpc struct {
+	ID        ID        `json:"id"`
+	Name      string    `json:"name"`
+	DeletedAt time.Time `json:"deletedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *DeletedNpc) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *DeletedNpc) GetName() string {
+	return s.Name
+}
+
+// GetDeletedAt returns the value of DeletedAt.
+func (s *DeletedNpc) GetDeletedAt() time.Time {
+	return s.DeletedAt
+}
+
+// SetID sets the value of ID.
+func (s *DeletedNpc) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *DeletedNpc) SetName(val string) {
+	s.Name = val
+}
+
+// SetDeletedAt sets the value of DeletedAt.
+func (s *DeletedNpc) SetDeletedAt(val time.Time) {
+	s.DeletedAt = val
+}
+
+// DiffNpcRevisionsOKHeaders wraps []FieldChange with response headers.
+type DiffNpcRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []FieldChange
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DiffNpcRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DiffNpcRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DiffNpcRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *DiffNpcRevisionsOKHeaders) GetResponse() []FieldChange {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DiffNpcRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DiffNpcRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DiffNpcRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *DiffNpcRevisionsOKHeaders) SetResponse(val []FieldChange) {
+	s.Response = val
+}
+
+func (*DiffNpcRevisionsOKHeaders) diffNpcRevisionsRes() {}
+
 type DisplayName string
+
+// How an NPC feels about the party.
+// Ref: #/components/schemas/Disposition
+type Disposition string
+
+const (
+	DispositionFriendly Disposition = "friendly"
+	DispositionNeutral  Disposition = "neutral"
+	DispositionHostile  Disposition = "hostile"
+)
+
+// AllValues returns all Disposition values.
+func (Disposition) AllValues() []Disposition {
+	return []Disposition{
+		DispositionFriendly,
+		DispositionNeutral,
+		DispositionHostile,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Disposition) MarshalText() ([]byte, error) {
+	switch s {
+	case DispositionFriendly:
+		return []byte(s), nil
+	case DispositionNeutral:
+		return []byte(s), nil
+	case DispositionHostile:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Disposition) UnmarshalText(data []byte) error {
+	switch Disposition(data) {
+	case DispositionFriendly:
+		*s = DispositionFriendly
+		return nil
+	case DispositionNeutral:
+		*s = DispositionNeutral
+		return nil
+	case DispositionHostile:
+		*s = DispositionHostile
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // An entry rendered for reading.
 // Ref: #/components/schemas/Entry
@@ -2711,6 +2888,44 @@ func (s *EntrySummary) SetSubtitle(val string) {
 // SetRuleset sets the value of Ruleset.
 func (s *EntrySummary) SetRuleset(val Ruleset) {
 	s.Ruleset = val
+}
+
+// A field whose value differs between two Revisions.
+// Ref: #/components/schemas/FieldChange
+type FieldChange struct {
+	Field  string `json:"field"`
+	Before string `json:"before"`
+	After  string `json:"after"`
+}
+
+// GetField returns the value of Field.
+func (s *FieldChange) GetField() string {
+	return s.Field
+}
+
+// GetBefore returns the value of Before.
+func (s *FieldChange) GetBefore() string {
+	return s.Before
+}
+
+// GetAfter returns the value of After.
+func (s *FieldChange) GetAfter() string {
+	return s.After
+}
+
+// SetField sets the value of Field.
+func (s *FieldChange) SetField(val string) {
+	s.Field = val
+}
+
+// SetBefore sets the value of Before.
+func (s *FieldChange) SetBefore(val string) {
+	s.Before = val
+}
+
+// SetAfter sets the value of After.
+func (s *FieldChange) SetAfter(val string) {
+	s.After = val
 }
 
 type ForwardAuth struct {
@@ -3557,6 +3772,56 @@ func (s *ListCharactersOKHeaders) SetResponse(val []CharacterSummary) {
 
 func (*ListCharactersOKHeaders) listCharactersRes() {}
 
+// ListDeletedNpcsOKHeaders wraps []DeletedNpc with response headers.
+type ListDeletedNpcsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []DeletedNpc
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListDeletedNpcsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListDeletedNpcsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListDeletedNpcsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListDeletedNpcsOKHeaders) GetResponse() []DeletedNpc {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListDeletedNpcsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListDeletedNpcsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListDeletedNpcsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListDeletedNpcsOKHeaders) SetResponse(val []DeletedNpc) {
+	s.Response = val
+}
+
+func (*ListDeletedNpcsOKHeaders) listDeletedNpcsRes() {}
+
 // ListEntriesNotModified is response for ListEntries operation.
 type ListEntriesNotModified struct {
 	ETag OptString
@@ -3623,6 +3888,106 @@ func (s *ListInvitesOKHeaders) SetResponse(val []Invite) {
 }
 
 func (*ListInvitesOKHeaders) listInvitesRes() {}
+
+// ListNpcRevisionsOKHeaders wraps []Revision with response headers.
+type ListNpcRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Revision
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListNpcRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListNpcRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListNpcRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListNpcRevisionsOKHeaders) GetResponse() []Revision {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListNpcRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListNpcRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListNpcRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListNpcRevisionsOKHeaders) SetResponse(val []Revision) {
+	s.Response = val
+}
+
+func (*ListNpcRevisionsOKHeaders) listNpcRevisionsRes() {}
+
+// ListNpcsOKHeaders wraps []Npc with response headers.
+type ListNpcsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Npc
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListNpcsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListNpcsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListNpcsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListNpcsOKHeaders) GetResponse() []Npc {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListNpcsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListNpcsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListNpcsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListNpcsOKHeaders) SetResponse(val []Npc) {
+	s.Response = val
+}
+
+func (*ListNpcsOKHeaders) listNpcsRes() {}
 
 // ListSourcesOKHeaders wraps []Source with response headers.
 type ListSourcesOKHeaders struct {
@@ -4020,6 +4385,201 @@ func (s *NewInviteHeaders) SetResponse(val NewInvite) {
 }
 
 func (*NewInviteHeaders) createInviteRes() {}
+
+// A non-player character in the DM's prep.
+// Ref: #/components/schemas/Npc
+type Npc struct {
+	ID          ID          `json:"id"`
+	Name        string      `json:"name"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	DmNotes     string      `json:"dmNotes"`
+	Disposition Disposition `json:"disposition"`
+	UpdatedAt   time.Time   `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Npc) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Npc) GetName() string {
+	return s.Name
+}
+
+// GetTitle returns the value of Title.
+func (s *Npc) GetTitle() string {
+	return s.Title
+}
+
+// GetDescription returns the value of Description.
+func (s *Npc) GetDescription() string {
+	return s.Description
+}
+
+// GetDmNotes returns the value of DmNotes.
+func (s *Npc) GetDmNotes() string {
+	return s.DmNotes
+}
+
+// GetDisposition returns the value of Disposition.
+func (s *Npc) GetDisposition() Disposition {
+	return s.Disposition
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Npc) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Npc) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Npc) SetName(val string) {
+	s.Name = val
+}
+
+// SetTitle sets the value of Title.
+func (s *Npc) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetDescription sets the value of Description.
+func (s *Npc) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetDmNotes sets the value of DmNotes.
+func (s *Npc) SetDmNotes(val string) {
+	s.DmNotes = val
+}
+
+// SetDisposition sets the value of Disposition.
+func (s *Npc) SetDisposition(val Disposition) {
+	s.Disposition = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Npc) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// NpcHeaders wraps Npc with response headers.
+type NpcHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Npc
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *NpcHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *NpcHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *NpcHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *NpcHeaders) GetResponse() Npc {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *NpcHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *NpcHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *NpcHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *NpcHeaders) SetResponse(val Npc) {
+	s.Response = val
+}
+
+func (*NpcHeaders) createNpcRes()          {}
+func (*NpcHeaders) getNpcRes()             {}
+func (*NpcHeaders) restoreNpcRevisionRes() {}
+func (*NpcHeaders) updateNpcRes()          {}
+
+// The editable fields of an NPC.
+// Ref: #/components/schemas/NpcInput
+type NpcInput struct {
+	Name        string      `json:"name"`
+	Title       OptString   `json:"title"`
+	Description OptString   `json:"description"`
+	DmNotes     OptString   `json:"dmNotes"`
+	Disposition Disposition `json:"disposition"`
+}
+
+// GetName returns the value of Name.
+func (s *NpcInput) GetName() string {
+	return s.Name
+}
+
+// GetTitle returns the value of Title.
+func (s *NpcInput) GetTitle() OptString {
+	return s.Title
+}
+
+// GetDescription returns the value of Description.
+func (s *NpcInput) GetDescription() OptString {
+	return s.Description
+}
+
+// GetDmNotes returns the value of DmNotes.
+func (s *NpcInput) GetDmNotes() OptString {
+	return s.DmNotes
+}
+
+// GetDisposition returns the value of Disposition.
+func (s *NpcInput) GetDisposition() Disposition {
+	return s.Disposition
+}
+
+// SetName sets the value of Name.
+func (s *NpcInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetTitle sets the value of Title.
+func (s *NpcInput) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetDescription sets the value of Description.
+func (s *NpcInput) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetDmNotes sets the value of DmNotes.
+func (s *NpcInput) SetDmNotes(val OptString) {
+	s.DmNotes = val
+}
+
+// SetDisposition sets the value of Disposition.
+func (s *NpcInput) SetDisposition(val Disposition) {
+	s.Disposition = val
+}
 
 // NewOptArmorChoice returns new OptArmorChoice with value set to v.
 func NewOptArmorChoice(v ArmorChoice) OptArmorChoice {
@@ -4651,7 +5211,10 @@ func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()        {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) createNpcRes()             {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()       {}
+func (*ProblemStatusCodeWithHeaders) deleteNpcRes()             {}
+func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()      {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()     {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()           {}
@@ -4659,6 +5222,7 @@ func (*ProblemStatusCodeWithHeaders) getCharacterRes()          {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
+func (*ProblemStatusCodeWithHeaders) getNpcRes()                {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
@@ -4666,19 +5230,24 @@ func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()          {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()         {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()        {}
+func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
+func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()      {}
+func (*ProblemStatusCodeWithHeaders) listNpcsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
+func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()    {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()           {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateNpcRes()             {}
 
 // RemoveMemberNoContent is response for RemoveMember operation.
 type RemoveMemberNoContent struct {
@@ -4766,6 +5335,198 @@ func (s *ResourcePool) SetCurrent(val int32) {
 // SetMax sets the value of Max.
 func (s *ResourcePool) SetMax(val int32) {
 	s.Max = val
+}
+
+// One recorded version of a piece of prep data.
+// Ref: #/components/schemas/Revision
+type Revision struct {
+	No           int32          `json:"no"`
+	Action       RevisionAction `json:"action"`
+	Author       DisplayName    `json:"author"`
+	Origin       RevisionOrigin `json:"origin"`
+	Client       OptString      `json:"client"`
+	RestoredFrom OptInt32       `json:"restoredFrom"`
+	CreatedAt    time.Time      `json:"createdAt"`
+}
+
+// GetNo returns the value of No.
+func (s *Revision) GetNo() int32 {
+	return s.No
+}
+
+// GetAction returns the value of Action.
+func (s *Revision) GetAction() RevisionAction {
+	return s.Action
+}
+
+// GetAuthor returns the value of Author.
+func (s *Revision) GetAuthor() DisplayName {
+	return s.Author
+}
+
+// GetOrigin returns the value of Origin.
+func (s *Revision) GetOrigin() RevisionOrigin {
+	return s.Origin
+}
+
+// GetClient returns the value of Client.
+func (s *Revision) GetClient() OptString {
+	return s.Client
+}
+
+// GetRestoredFrom returns the value of RestoredFrom.
+func (s *Revision) GetRestoredFrom() OptInt32 {
+	return s.RestoredFrom
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Revision) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetNo sets the value of No.
+func (s *Revision) SetNo(val int32) {
+	s.No = val
+}
+
+// SetAction sets the value of Action.
+func (s *Revision) SetAction(val RevisionAction) {
+	s.Action = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *Revision) SetAuthor(val DisplayName) {
+	s.Author = val
+}
+
+// SetOrigin sets the value of Origin.
+func (s *Revision) SetOrigin(val RevisionOrigin) {
+	s.Origin = val
+}
+
+// SetClient sets the value of Client.
+func (s *Revision) SetClient(val OptString) {
+	s.Client = val
+}
+
+// SetRestoredFrom sets the value of RestoredFrom.
+func (s *Revision) SetRestoredFrom(val OptInt32) {
+	s.RestoredFrom = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Revision) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+type RevisionAction string
+
+const (
+	RevisionActionCreate  RevisionAction = "create"
+	RevisionActionUpdate  RevisionAction = "update"
+	RevisionActionDelete  RevisionAction = "delete"
+	RevisionActionRestore RevisionAction = "restore"
+)
+
+// AllValues returns all RevisionAction values.
+func (RevisionAction) AllValues() []RevisionAction {
+	return []RevisionAction{
+		RevisionActionCreate,
+		RevisionActionUpdate,
+		RevisionActionDelete,
+		RevisionActionRestore,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s RevisionAction) MarshalText() ([]byte, error) {
+	switch s {
+	case RevisionActionCreate:
+		return []byte(s), nil
+	case RevisionActionUpdate:
+		return []byte(s), nil
+	case RevisionActionDelete:
+		return []byte(s), nil
+	case RevisionActionRestore:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *RevisionAction) UnmarshalText(data []byte) error {
+	switch RevisionAction(data) {
+	case RevisionActionCreate:
+		*s = RevisionActionCreate
+		return nil
+	case RevisionActionUpdate:
+		*s = RevisionActionUpdate
+		return nil
+	case RevisionActionDelete:
+		*s = RevisionActionDelete
+		return nil
+	case RevisionActionRestore:
+		*s = RevisionActionRestore
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type RevisionOrigin string
+
+const (
+	RevisionOriginUI        RevisionOrigin = "ui"
+	RevisionOriginMcp       RevisionOrigin = "mcp"
+	RevisionOriginGenerator RevisionOrigin = "generator"
+	RevisionOriginSystem    RevisionOrigin = "system"
+)
+
+// AllValues returns all RevisionOrigin values.
+func (RevisionOrigin) AllValues() []RevisionOrigin {
+	return []RevisionOrigin{
+		RevisionOriginUI,
+		RevisionOriginMcp,
+		RevisionOriginGenerator,
+		RevisionOriginSystem,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s RevisionOrigin) MarshalText() ([]byte, error) {
+	switch s {
+	case RevisionOriginUI:
+		return []byte(s), nil
+	case RevisionOriginMcp:
+		return []byte(s), nil
+	case RevisionOriginGenerator:
+		return []byte(s), nil
+	case RevisionOriginSystem:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *RevisionOrigin) UnmarshalText(data []byte) error {
+	switch RevisionOrigin(data) {
+	case RevisionOriginUI:
+		*s = RevisionOriginUI
+		return nil
+	case RevisionOriginMcp:
+		*s = RevisionOriginMcp
+		return nil
+	case RevisionOriginGenerator:
+		*s = RevisionOriginGenerator
+		return nil
+	case RevisionOriginSystem:
+		*s = RevisionOriginSystem
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // RevokeInviteNoContent is response for RevokeInvite operation.

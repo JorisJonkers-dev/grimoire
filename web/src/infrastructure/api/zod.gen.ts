@@ -167,6 +167,80 @@ export const zActiveEffect = z.object({
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
 
 /**
+ * How an NPC feels about the party.
+ */
+export const zDisposition = z.enum([
+    'friendly',
+    'neutral',
+    'hostile'
+]);
+
+/**
+ * The editable fields of an NPC.
+ */
+export const zNpcInput = z.object({
+    name: z.string().min(1).max(80),
+    title: z.string().max(80).optional(),
+    description: z.string().max(8000).optional(),
+    dmNotes: z.string().max(8000).optional(),
+    disposition: zDisposition
+});
+
+/**
+ * A non-player character in the DM's prep.
+ */
+export const zNpc = z.object({
+    id: zId,
+    name: z.string().min(1).max(80),
+    title: z.string().max(80),
+    description: z.string().max(8000),
+    dmNotes: z.string().max(8000),
+    disposition: zDisposition,
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * An NPC that only its Revisions remember.
+ */
+export const zDeletedNpc = z.object({
+    id: zId,
+    name: z.string().max(80),
+    deletedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * One recorded version of a piece of prep data.
+ */
+export const zRevision = z.object({
+    no: z.int().gte(1).lte(100000),
+    action: z.enum([
+        'create',
+        'update',
+        'delete',
+        'restore'
+    ]),
+    author: zDisplayName,
+    origin: z.enum([
+        'ui',
+        'mcp',
+        'generator',
+        'system'
+    ]),
+    client: z.string().max(80).optional(),
+    restoredFrom: z.int().gte(1).lte(100000).optional(),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A field whose value differs between two Revisions.
+ */
+export const zFieldChange = z.object({
+    field: z.string().max(60),
+    before: z.string().max(8000),
+    after: z.string().max(8000)
+});
+
+/**
  * Lower-case, hyphenated identifier.
  */
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
@@ -645,6 +719,16 @@ export const zMemberId = zId;
 export const zCharacterId = zId;
 
 /**
+ * NPC id.
+ */
+export const zNpcId = zId;
+
+/**
+ * Revision number.
+ */
+export const zRevisionNo = z.int().gte(1).lte(100000);
+
+/**
  * Invite id.
  */
 export const zInviteId = zId;
@@ -960,6 +1044,103 @@ export const zSetTokenIconPath = z.object({
  * Stored.
  */
 export const zSetTokenIconResponse = z.void();
+
+export const zListNpcsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The NPCs.
+ */
+export const zListNpcsResponse = z.array(zNpc).max(1000);
+
+export const zCreateNpcBody = zNpcInput;
+
+export const zCreateNpcPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new NPC.
+ */
+export const zCreateNpcResponse = zNpc;
+
+export const zListDeletedNpcsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The deleted NPCs.
+ */
+export const zListDeletedNpcsResponse = z.array(zDeletedNpc).max(1000);
+
+export const zDeleteNpcPath = z.object({
+    campaignId: zId,
+    npcId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteNpcResponse = z.void();
+
+export const zGetNpcPath = z.object({
+    campaignId: zId,
+    npcId: zId
+});
+
+/**
+ * The NPC.
+ */
+export const zGetNpcResponse = zNpc;
+
+export const zUpdateNpcBody = zNpcInput;
+
+export const zUpdateNpcPath = z.object({
+    campaignId: zId,
+    npcId: zId
+});
+
+/**
+ * The updated NPC.
+ */
+export const zUpdateNpcResponse = zNpc;
+
+export const zListNpcRevisionsPath = z.object({
+    campaignId: zId,
+    npcId: zId
+});
+
+/**
+ * The revisions.
+ */
+export const zListNpcRevisionsResponse = z.array(zRevision).max(1000);
+
+export const zDiffNpcRevisionsPath = z.object({
+    campaignId: zId,
+    npcId: zId
+});
+
+export const zDiffNpcRevisionsQuery = z.object({
+    from: z.int().gte(1).lte(100000),
+    to: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The changed fields.
+ */
+export const zDiffNpcRevisionsResponse = z.array(zFieldChange).max(1000);
+
+export const zRestoreNpcRevisionPath = z.object({
+    campaignId: zId,
+    npcId: zId,
+    revisionNo: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The restored NPC.
+ */
+export const zRestoreNpcRevisionResponse = zNpc;
 
 export const zPreviewInviteBody = zInviteToken;
 

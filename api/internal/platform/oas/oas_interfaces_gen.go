@@ -21,8 +21,20 @@ type CreateInviteRes interface {
 	createInviteRes()
 }
 
+type CreateNpcRes interface {
+	createNpcRes()
+}
+
 type DeleteCharacterRes interface {
 	deleteCharacterRes()
+}
+
+type DeleteNpcRes interface {
+	deleteNpcRes()
+}
+
+type DiffNpcRevisionsRes interface {
+	diffNpcRevisionsRes()
 }
 
 type GetAutomationCoverageRes interface {
@@ -53,6 +65,10 @@ type GetMeRes interface {
 	getMeRes()
 }
 
+type GetNpcRes interface {
+	getNpcRes()
+}
+
 type GetPortraitRes interface {
 	getPortraitRes()
 }
@@ -81,12 +97,24 @@ type ListCharactersRes interface {
 	listCharactersRes()
 }
 
+type ListDeletedNpcsRes interface {
+	listDeletedNpcsRes()
+}
+
 type ListEntriesRes interface {
 	listEntriesRes()
 }
 
 type ListInvitesRes interface {
 	listInvitesRes()
+}
+
+type ListNpcRevisionsRes interface {
+	listNpcRevisionsRes()
+}
+
+type ListNpcsRes interface {
+	listNpcsRes()
 }
 
 type ListSourcesRes interface {
@@ -107,6 +135,10 @@ type PreviewInviteRes interface {
 
 type RemoveMemberRes interface {
 	removeMemberRes()
+}
+
+type RestoreNpcRevisionRes interface {
+	restoreNpcRevisionRes()
 }
 
 type RevokeInviteRes interface {
@@ -131,4 +163,8 @@ type UpdateCharacterRes interface {
 
 type UpdateMemberRes interface {
 	updateMemberRes()
+}
+
+type UpdateNpcRes interface {
+	updateNpcRes()
 }

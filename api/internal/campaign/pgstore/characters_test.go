@@ -387,6 +387,9 @@ func TestPicturesAreRefused(t *testing.T) {
 	ctx := context.Background()
 	chars, combat, d := party(t, pgstore.New(open(t).Pool()))
 	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); err != nil {
+		t.Fatal(err)
+	}
 	var rule *app.RuleError
 	for name, bad := range map[string][]byte{"empty": nil, "gif": []byte("GIF89a......"), "huge": make([]byte, app.MaxImageBytes+1)} {
 		if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, bad); !errors.As(err, &rule) {

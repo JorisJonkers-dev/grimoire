@@ -24,6 +24,7 @@ type Handler struct {
 	Compendium CompendiumReader
 	Campaigns  Campaigns
 	Characters CharacterService
+	NPCs       NPCService
 	Log        *slog.Logger
 }
 

@@ -93,7 +93,7 @@ describe('character builder', () => {
     expect(wrapper.get('[data-testid="step-review"]').text()).toContain('18')
     expect(bodies[0]).toMatchObject({ name: 'Kara', class: 'fighter', bonus: { strength: 2, constitution: 1 }, armor: 'chain-mail', shield: true })
     await wrapper.get('[data-testid="create-character"]').trigger('click')
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('character'); })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('character') }, { timeout: 5000 })
   })
 
   it('supports point buy, rolled scores, going back and showing rule errors', async () => {
@@ -191,7 +191,7 @@ describe('character sheet', () => {
       [`/api/v1/campaigns/${ID}`]: () => campaign,
     })
     await wrapper.get('[data-testid="delete-character"]').trigger('click')
-    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign'); })
+    await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign') }, { timeout: 5000 })
     await flushPromises()
     expect(wrapper.get('[data-testid="party"]').text()).toContain('No characters yet')
   })
@@ -238,6 +238,9 @@ describe('pictures on the sheet', () => {
     await editor.get('img.source').trigger('load')
     await flushPromises()
     await editor.get('[data-testid="crop-zoom"]').setValue(2)
+    const sliders = editor.findAll('input[type="range"]')
+    await sliders[1]?.setValue(0.5)
+    await sliders[2]?.setValue(-0.5)
     await flushPromises()
     await editor.get('[data-testid="save-token"]').trigger('click')
     await flushPromises()

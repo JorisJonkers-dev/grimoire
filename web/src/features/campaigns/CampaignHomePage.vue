@@ -94,6 +94,9 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         </p>
       </header>
       <p v-if="failed" role="alert" class="g-alert" data-testid="campaign-error">{{ failed }}</p>
+      <nav v-if="isDM" class="prep" aria-label="Prep">
+        <RouterLink :to="{ name: 'npcs', params: { id } }" data-testid="npcs-link">NPCs</RouterLink>
+      </nav>
 
       <section class="g-card" data-testid="party">
         <h2>Party</h2>
@@ -192,6 +195,12 @@ section {
   flex-wrap: wrap;
   align-items: end;
   gap: 8px;
+}
+.prep a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-gold-high);
 }
 .character {
   display: flex;

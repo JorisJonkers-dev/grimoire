@@ -13,6 +13,8 @@ const CampaignHomePage = () => import('@/features/campaigns/CampaignHomePage.vue
 const JoinPage = () => import('@/features/campaigns/JoinPage.vue')
 const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilderPage.vue')
 const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
+const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
+const NpcPage = () => import('@/features/npcs/NpcPage.vue')
 
 export function createAppRouter(history: RouterHistory = createWebHistory()) {
   return createRouter({
@@ -30,6 +32,8 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id', name: 'campaign', component: CampaignHomePage },
       { path: '/campaigns/:id/characters/new', name: 'character-new', component: CharacterBuilderPage },
       { path: '/campaigns/:id/characters/:characterId', name: 'character', component: CharacterSheetPage },
+      { path: '/campaigns/:id/npcs', name: 'npcs', component: NpcListPage },
+      { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
     ],
