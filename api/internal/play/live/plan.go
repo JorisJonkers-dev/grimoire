@@ -33,6 +33,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planTerrain(cmd)
 	case CmdTableCamera, CmdTableScene, CmdTableBlackout:
 		return r.planTable(cmd)
+	case CmdSetWorld, CmdAddNode, CmdAddRoute, CmdRemoveNode, CmdRemoveRoute, CmdPlaceParty, CmdTravel:
+		return r.planWorld(cmd)
 	case CmdReact:
 		return r.planReact(m, cmd)
 	case CmdWalk:
@@ -161,7 +163,7 @@ func (r *runtime) planMap(cmd Command) (Write, string) {
 		return Write{}, "No such map."
 	}
 	board, err := r.store.LoadMap(context.Background(), r.st.session.CampaignID, domain.MapID(id))
-	if err != nil {
+	if err != nil || board.Map.Kind != domain.MapLocal {
 		return Write{}, "No such map."
 	}
 	mid := domain.MapID(id)

@@ -15,7 +15,7 @@ import (
 
 // MapService is what the Map operations need.
 type MapService interface {
-	Upload(ctx context.Context, c caller.Caller, campaign uuid.UUID, name string, data []byte) (playdomain.Map, error)
+	Upload(ctx context.Context, c caller.Caller, campaign uuid.UUID, name, kind string, data []byte) (playdomain.Map, error)
 	List(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]playdomain.Map, error)
 	Get(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.MapID) (playdomain.Map, error)
 	Update(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.MapID, e playapp.MapEdit) (playdomain.Map, error)
@@ -24,7 +24,7 @@ type MapService interface {
 
 func mapOut(m playdomain.Map) oas.LocalMap {
 	return oas.LocalMap{
-		ID: oas.ID(m.ID), Name: m.Name, Width: int32(m.Width), Height: int32(m.Height), HexSizePx: m.HexSize, //nolint:gosec // capped pixels
+		ID: oas.ID(m.ID), Name: m.Name, Kind: oas.MapKind(m.Kind), Width: int32(m.Width), Height: int32(m.Height), HexSizePx: m.HexSize, //nolint:gosec // capped pixels
 		OriginX: m.OriginX, OriginY: m.OriginY, Ambient: oas.AmbientLight(m.Ambient),
 		ImageUrl: oas.AssetUrl("/api/v1/campaigns/" + m.CampaignID.String() + "/maps/" + uuid.UUID(m.ID).String() + "/image"),
 	}
@@ -54,7 +54,7 @@ func (h *Handler) UploadMap(ctx context.Context, req oas.UploadMapReq, p oas.Upl
 		return unauthorized(), nil
 	}
 	data, _ := io.ReadAll(io.LimitReader(req.Data, playapp.MaxMapBytes+1)) // a truncated body fails as an unreadable picture
-	m, err := h.Maps.Upload(ctx, c, uuid.UUID(p.CampaignId), p.Name, data)
+	m, err := h.Maps.Upload(ctx, c, uuid.UUID(p.CampaignId), p.Name, string(p.Kind.Or(oas.MapKindLocal)), data)
 	if err != nil {
 		return h.campaignProblem(ctx, "upload map", err), nil
 	}

@@ -324,7 +324,7 @@ func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesP
 
 // ListMaps implements listMaps operation.
 //
-// The Campaign's local Maps. DM only.
+// The Campaign's local and world Maps. DM only.
 //
 // GET /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) ListMaps(ctx context.Context, params ListMapsParams) (r ListMapsRes, _ error) {

@@ -17,7 +17,7 @@ var _ app.MapRepository = (*Store)(nil)
 // InsertMap stores a new Map.
 func (s *Store) InsertMap(ctx context.Context, m domain.Map, now time.Time) (domain.Map, error) {
 	row, err := s.q.InsertMap(ctx, queries.InsertMapParams{
-		CampaignID: m.CampaignID, Name: m.Name, ImageKey: m.ImageKey, ImageType: m.ImageType, WidthPx: int32(m.Width), HeightPx: int32(m.Height), //nolint:gosec // capped pixels
+		CampaignID: m.CampaignID, Name: m.Name, Kind: m.Kind, ImageKey: m.ImageKey, ImageType: m.ImageType, WidthPx: int32(m.Width), HeightPx: int32(m.Height), //nolint:gosec // capped pixels
 		HexSizePx: m.HexSize, OriginX: m.OriginX, OriginY: m.OriginY, Now: now,
 	})
 	if err != nil {

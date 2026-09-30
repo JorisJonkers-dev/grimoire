@@ -773,7 +773,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -826,6 +826,70 @@ export type LiveCommand = {
     scene?: TableScene;
     title?: string;
     body?: string;
+    nodeId?: Id;
+    toNodeId?: Id;
+    routeId?: Id;
+    distanceMi?: number;
+    pace?: TravelPace;
+};
+
+/**
+ * How fast the party travels overland; slow, normal and fast cover 2, 3 and 4 miles an hour for 8 hours a day.
+ */
+export type TravelPace = 'slow' | 'normal' | 'fast';
+
+/**
+ * The world map the party travels. The DM gets every location and route; players and the Table get the locations the party has seen or can reach from where it stands, and the routes between them.
+ */
+export type LiveWorld = {
+    map: LiveMap;
+    revealed: Array<HexCoord>;
+    nodes: Array<LiveWorldNode>;
+    routes: Array<LiveWorldRoute>;
+    partyNodeId?: Id;
+    legs: Array<LiveTravelLeg>;
+};
+
+/**
+ * A named location on the world map.
+ */
+export type LiveWorldNode = {
+    id: Id;
+    name: string;
+    q: number;
+    r: number;
+};
+
+/**
+ * A route between two locations, travelled either way, with how long it takes at each pace.
+ */
+export type LiveWorldRoute = {
+    id: Id;
+    fromNodeId: Id;
+    toNodeId: Id;
+    distanceMi: number;
+    plans: Array<LiveTravelPlan>;
+};
+
+/**
+ * How long a route takes at one pace, in minutes on the road and the travel days they span.
+ */
+export type LiveTravelPlan = {
+    pace: TravelPace;
+    minutes: number;
+    days: number;
+};
+
+/**
+ * One Travel Leg the party made this Session.
+ */
+export type LiveTravelLeg = {
+    from: string;
+    to: string;
+    pace: TravelPace;
+    distanceMi: number;
+    minutes: number;
+    days: number;
 };
 
 /**
@@ -1038,6 +1102,11 @@ export type LivePath = {
 };
 
 /**
+ * A local tactical map, or a world map of locations and routes.
+ */
+export type MapKind = 'local' | 'world';
+
+/**
  * The light that fills a Map everywhere.
  */
 export type AmbientLight = 'bright' | 'dim' | 'dark';
@@ -1088,6 +1157,7 @@ export type LiveView = {
     elevation?: Array<LiveElevation>;
     area?: LiveArea;
     table?: LiveTable;
+    world?: LiveWorld;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;
@@ -1099,6 +1169,7 @@ export type LiveView = {
 export type LocalMap = {
     id: Id;
     name: string;
+    kind: MapKind;
     width: number;
     height: number;
     hexSizePx: number;
@@ -3173,6 +3244,10 @@ export type UploadMapData = {
          * The map's name.
          */
         name: string;
+        /**
+         * Whether this is a local or a world map; local when left out.
+         */
+        kind?: MapKind;
     };
     url: '/api/v1/campaigns/{campaignId}/maps';
 };

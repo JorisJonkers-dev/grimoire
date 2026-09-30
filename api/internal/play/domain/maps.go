@@ -8,7 +8,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
-// MapID identifies a local Map.
+// MapID identifies a Map.
 type MapID uuid.UUID
 
 // Ambient light levels of a Map.
@@ -23,6 +23,7 @@ type Map struct {
 	ID         MapID
 	CampaignID uuid.UUID
 	Name       string
+	Kind       string
 	ImageKey   string
 	ImageType  string
 	Width      int

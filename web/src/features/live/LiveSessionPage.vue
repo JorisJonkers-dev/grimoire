@@ -22,6 +22,7 @@ import ReactionPrompt from './ReactionPrompt.vue'
 import StartCombat from './StartCombat.vue'
 import TableRemote from './TableRemote.vue'
 import TurnPanel from './TurnPanel.vue'
+import WorldPanel from './WorldPanel.vue'
 
 type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'camera' | 'ping'
 
@@ -32,6 +33,9 @@ const sessionId = String(route.params.sid)
 const campaign = useQuery({ ...getCampaignOptions({ path: { campaignId } }), retry: false })
 const isDM = computed(() => campaign.data.value?.myRole === 'dm')
 const maps = useQuery(computed(() => ({ ...listMapsOptions({ path: { campaignId } }), enabled: isDM.value })))
+const localMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'local') ?? [])
+const worldMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'world') ?? [])
+const scope = ref<'local' | 'world'>('local')
 const characters = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId } }), enabled: isDM.value })))
 const live = shallowRef<ReturnType<typeof useLiveSession> | null>(null)
 const state = computed(() => live.value?.view)
@@ -329,19 +333,27 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </li>
         </ul>
       </section>
-      <MapBoard v-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :title="view.map.name" @select="pick" />
+      <fieldset class="scope" data-testid="scope">
+        <legend class="sr-only">Which map</legend>
+        <label v-for="s in (['local', 'world'] as const)" :key="s" :class="['scope-option', { on: scope === s }]">
+          <input v-model="scope" type="radio" :value="s" :data-testid="`scope-${s}`" />
+          <span>{{ s === 'local' ? 'Local' : 'World' }}</span>
+        </label>
+      </fieldset>
+      <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
+      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
         Walk {{ state.path.costFt }} ft. Tap the same hex again to go.
       </p>
       <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
-      <section v-if="isDM" class="g-card controls" data-testid="dm-controls">
+      <section v-if="isDM" v-show="scope === 'local'" class="g-card controls" data-testid="dm-controls">
         <div class="row">
           <label class="g-field grow">
             <span>Map</span>
             <select v-model="mapChoice" data-testid="map-choice">
               <option value="">No map (open grid)</option>
-              <option v-for="m in maps.data.value ?? []" :key="m.id" :value="m.id">{{ m.name }}</option>
+              <option v-for="m in localMaps" :key="m.id" :value="m.id">{{ m.name }}</option>
             </select>
           </label>
           <GButton data-testid="use-map" @click="useMap()">Use map</GButton>
@@ -431,9 +443,11 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </GButton>
         </div>
         <StartCombat v-if="choosing && !combat" :tokens="view?.tokens ?? []" @start="startCombat" />
+      </section>
+      <section v-if="isDM" class="g-card controls">
         <TableRemote
           :table="view?.table"
-          :maps="maps.data.value ?? []"
+          :maps="worldMaps"
           @camera="(camera, zoomPct) => live?.send({ kind: 'table_camera', camera, zoomPct, q: view?.table?.q ?? 0, r: view?.table?.r ?? 0 })"
           @scene="(s) => live?.send({ kind: 'table_scene', ...s })"
           @blackout="(on) => live?.send({ kind: 'table_blackout', on })"
@@ -508,6 +522,40 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   align-items: center;
   gap: 6px;
   min-height: 44px;
+}
+.scope {
+  display: inline-flex;
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+}
+.scope-option {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.scope-option input {
+  position: absolute;
+  opacity: 0;
+}
+.scope-option.on {
+  background: var(--color-raised);
+  color: var(--color-gold-high);
+}
+.scope-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-gold-high);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 .banner {
   margin: 0;

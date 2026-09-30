@@ -217,7 +217,7 @@ type Handler interface {
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
 	// ListMaps implements listMaps operation.
 	//
-	// The Campaign's local Maps. DM only.
+	// The Campaign's local and world Maps. DM only.
 	//
 	// GET /api/v1/campaigns/{campaignId}/maps
 	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)

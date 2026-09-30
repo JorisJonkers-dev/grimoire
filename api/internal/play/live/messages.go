@@ -54,6 +54,13 @@ const (
 	CmdTableScene    = "table_scene"
 	CmdTableBlackout = "table_blackout"
 	CmdPing          = "ping"
+	CmdSetWorld      = "set_world"
+	CmdAddNode       = "add_node"
+	CmdAddRoute      = "add_route"
+	CmdRemoveNode    = "remove_node"
+	CmdRemoveRoute   = "remove_route"
+	CmdPlaceParty    = "place_party"
+	CmdTravel        = "travel"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -124,6 +131,11 @@ type Command struct {
 	Scene        string           `json:"scene,omitempty"`
 	Title        string           `json:"title,omitempty"`
 	Body         string           `json:"body,omitempty"`
+	NodeID       string           `json:"nodeId,omitempty"`
+	ToNodeID     string           `json:"toNodeId,omitempty"`
+	RouteID      string           `json:"routeId,omitempty"`
+	DistanceMi   int              `json:"distanceMi,omitempty"`
+	Pace         string           `json:"pace,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -270,6 +282,52 @@ type View struct {
 	Elevation []ElevationView `json:"elevation,omitempty"`
 	Area      *AreaView       `json:"area,omitempty"`
 	Table     *TableView      `json:"table,omitempty"`
+	World     *WorldView      `json:"world,omitempty"`
+}
+
+// WorldView is the world map the party travels: the DM sees it all, everyone else only the locations
+// the party has seen or can reach from where it stands, and the routes between them.
+type WorldView struct {
+	Map         MapView     `json:"map"`
+	Revealed    []Hex       `json:"revealed"`
+	Nodes       []NodeView  `json:"nodes"`
+	Routes      []RouteView `json:"routes"`
+	PartyNodeID string      `json:"partyNodeId,omitempty"`
+	Legs        []LegView   `json:"legs"`
+}
+
+// NodeView is a location on the world map.
+type NodeView struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Q    int    `json:"q"`
+	R    int    `json:"r"`
+}
+
+// RouteView is a route with how long it takes at each pace.
+type RouteView struct {
+	ID         string     `json:"id"`
+	FromNodeID string     `json:"fromNodeId"`
+	ToNodeID   string     `json:"toNodeId"`
+	DistanceMi int        `json:"distanceMi"`
+	Plans      []PlanView `json:"plans"`
+}
+
+// PlanView is how long a route takes at one pace.
+type PlanView struct {
+	Pace    string `json:"pace"`
+	Minutes int    `json:"minutes"`
+	Days    int    `json:"days"`
+}
+
+// LegView is one Travel Leg the party made this Session.
+type LegView struct {
+	From       string `json:"from"`
+	To         string `json:"to"`
+	Pace       string `json:"pace"`
+	DistanceMi int    `json:"distanceMi"`
+	Minutes    int    `json:"minutes"`
+	Days       int    `json:"days"`
 }
 
 // SaveView is a saving throw waiting on its Roll Card to end an Effect.

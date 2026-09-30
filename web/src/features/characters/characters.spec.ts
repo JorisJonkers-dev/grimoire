@@ -8,7 +8,7 @@ const ID = '0190c7a8-0000-7000-8000-000000000001'
 const CH = '0190c7a8-0000-7000-8000-000000000009'
 const member = { id: '0190c7a8-0000-7000-8000-000000000004', displayName: 'Joris', role: 'dm', joinedAt: '2026-09-30T20:00:00Z', isMe: true }
 const campaign = {
-  id: ID, name: 'Strahd', ruleset: 'srd-2024', myRole: 'dm', memberCount: 1, createdAt: '2026-09-30T20:00:00Z', me: member, members: [member],
+  id: ID, name: 'Morvain', ruleset: 'srd-2024', myRole: 'dm', memberCount: 1, createdAt: '2026-09-30T20:00:00Z', me: member, members: [member],
 }
 const options = {
   ruleset: 'srd-2024', rulesetYear: 2024, pointBuyBudget: 27,

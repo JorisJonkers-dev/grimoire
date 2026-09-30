@@ -1067,7 +1067,7 @@ export const listMapsQueryKey = (options: Options<ListMapsData>) => createQueryK
 /**
  * List maps
  *
- * The Campaign's local Maps. DM only.
+ * The Campaign's local and world Maps. DM only.
  */
 export const listMapsOptions = (options: Options<ListMapsData>) => queryOptions<ListMapsResponse, ListMapsError, ListMapsResponse, ReturnType<typeof listMapsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

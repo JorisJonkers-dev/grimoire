@@ -49,8 +49,17 @@ type Write struct {
 	Cast         *domain.AreaCast
 	SaveCast     bool
 	// Table is the Table Display after a table_set.
-	Table *domain.TableDisplay
-	world *domain.Map
+	Table    *domain.TableDisplay
+	tableMap *domain.Map
+	// WorldMapID is the world map a world_set chooses; WorldMap the map every other world change touches.
+	WorldMapID *domain.MapID
+	WorldMap   domain.MapID
+	Node       domain.WorldNode
+	Route      domain.WorldRoute
+	Leg        *domain.TravelLeg
+	// WorldReveal lists the world hexes the party sees for the first time on arriving somewhere.
+	WorldReveal []hex.Coord
+	world       *domain.World
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -78,6 +87,8 @@ type Store interface {
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
 	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
+	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
+	LoadWorld(ctx context.Context, campaign uuid.UUID, sid domain.SessionID, id domain.MapID) (*domain.World, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -210,16 +221,22 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	table, world, err := h.loadTable(ctx, s)
+	table, tableMap, err := h.loadTable(ctx, s)
 	if err != nil {
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, world: world}
+	world, err := h.loadWorld(ctx, s)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
 	st.setBoard(board)
+	st.setWorld(world)
 	rt := &runtime{
 		store: h.Store, campaign: s.CampaignID, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
@@ -243,6 +260,14 @@ func (h *Hub) loadTable(ctx context.Context, s domain.Session) (domain.TableDisp
 		return t, nil, err
 	}
 	return t, &board.Map, nil
+}
+
+// loadWorld reads the world map the Session travels, if any.
+func (h *Hub) loadWorld(ctx context.Context, s domain.Session) (*domain.World, error) {
+	if s.WorldMapID == nil {
+		return nil, nil //nolint:nilnil // a Session without a world map is not an error
+	}
+	return h.Store.LoadWorld(ctx, s.CampaignID, s.ID, *s.WorldMapID)
 }
 
 // RollResolved tells the Campaign's running Sessions that a Roll Request resolved, so an initiative
@@ -521,7 +546,11 @@ func change(s *state, w *Write) {
 		applyTerrain(s, w)
 		return
 	case domain.ActionTableSet:
-		s.table, s.world = *w.Table, w.world
+		s.table, s.tableMap = *w.Table, w.tableMap
+		return
+	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
+		domain.ActionPartyPlaced, domain.ActionTravelLeg:
+		applyWorld(s, w)
 		return
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)

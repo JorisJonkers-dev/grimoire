@@ -65,10 +65,13 @@ func mapName(name string) (string, error) {
 	return name, nil
 }
 
-// Upload stores a map picture and starts it with a default calibration. DM only.
-func (s *Maps) Upload(ctx context.Context, c caller.Caller, campaign uuid.UUID, name string, data []byte) (domain.Map, error) {
+// Upload stores a local or world map picture and starts it with a default calibration. DM only.
+func (s *Maps) Upload(ctx context.Context, c caller.Caller, campaign uuid.UUID, name, kind string, data []byte) (domain.Map, error) {
 	if err := s.dm(ctx, c, campaign); err != nil {
 		return domain.Map{}, err
+	}
+	if kind != domain.MapLocal && kind != domain.MapWorld {
+		return domain.Map{}, apperr.Refuse("a map is local or world")
 	}
 	name, err := mapName(name)
 	if err != nil {
@@ -87,7 +90,7 @@ func (s *Maps) Upload(ctx context.Context, c caller.Caller, campaign uuid.UUID, 
 		return domain.Map{}, err
 	}
 	return s.Repo.InsertMap(ctx, domain.Map{
-		CampaignID: campaign, Name: name, ImageKey: key, ImageType: info.ContentType, Width: info.Width, Height: info.Height,
+		CampaignID: campaign, Name: name, Kind: kind, ImageKey: key, ImageType: info.ContentType, Width: info.Width, Height: info.Height,
 		HexSize: DefaultHexSize, OriginX: DefaultHexSize * math.Sqrt(3) / 2, OriginY: DefaultHexSize, Ambient: domain.AmbientBright,
 	}, s.Now())
 }

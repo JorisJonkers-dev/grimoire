@@ -352,7 +352,7 @@ func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (int64, 
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
 FROM play.sessions WHERE campaign_id = $1 AND id = $2
 `
 
@@ -374,6 +374,7 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 		&i.StartedAt,
 		&i.EndedAt,
 		&i.MapID,
+		&i.WorldMapID,
 	)
 	return i, err
 }
@@ -537,7 +538,7 @@ func (q *Queries) InsertPendingSave(ctx context.Context, arg InsertPendingSavePa
 
 const insertSession = `-- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES ($1, $2, 'live', $3)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
 `
 
 type InsertSessionParams struct {
@@ -559,6 +560,7 @@ func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) (P
 		&i.StartedAt,
 		&i.EndedAt,
 		&i.MapID,
+		&i.WorldMapID,
 	)
 	return i, err
 }
@@ -771,7 +773,7 @@ func (q *Queries) LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDa
 }
 
 const listSessions = `-- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50
 `
 
@@ -794,6 +796,7 @@ func (q *Queries) ListSessions(ctx context.Context, campaignID uuid.UUID) ([]Pla
 			&i.StartedAt,
 			&i.EndedAt,
 			&i.MapID,
+			&i.WorldMapID,
 		); err != nil {
 			return nil, err
 		}
@@ -1239,7 +1242,7 @@ func (q *Queries) SaveTable(ctx context.Context, arg SaveTableParams) error {
 }
 
 const sessionByID = `-- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id FROM play.sessions WHERE id = $1
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id FROM play.sessions WHERE id = $1
 `
 
 func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error) {
@@ -1255,6 +1258,7 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 		&i.StartedAt,
 		&i.EndedAt,
 		&i.MapID,
+		&i.WorldMapID,
 	)
 	return i, err
 }

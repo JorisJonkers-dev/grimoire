@@ -43,6 +43,20 @@ func (q *Queries) AddWall(ctx context.Context, arg AddWallParams) error {
 	return err
 }
 
+const deleteEdge = `-- name: DeleteEdge :exec
+DELETE FROM campaign.map_edges WHERE map_id = $1 AND id = $2
+`
+
+type DeleteEdgeParams struct {
+	MapID uuid.UUID
+	ID    uuid.UUID
+}
+
+func (q *Queries) DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error {
+	_, err := q.db.Exec(ctx, deleteEdge, arg.MapID, arg.ID)
+	return err
+}
+
 const deleteLight = `-- name: DeleteLight :exec
 DELETE FROM campaign.map_lights WHERE map_id = $1 AND id = $2
 `
@@ -57,8 +71,22 @@ func (q *Queries) DeleteLight(ctx context.Context, arg DeleteLightParams) error 
 	return err
 }
 
+const deleteNode = `-- name: DeleteNode :exec
+DELETE FROM campaign.map_nodes WHERE map_id = $1 AND id = $2
+`
+
+type DeleteNodeParams struct {
+	MapID uuid.UUID
+	ID    uuid.UUID
+}
+
+func (q *Queries) DeleteNode(ctx context.Context, arg DeleteNodeParams) error {
+	_, err := q.db.Exec(ctx, deleteNode, arg.MapID, arg.ID)
+	return err
+}
+
 const getMap = `-- name: GetMap :one
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
 FROM campaign.maps WHERE campaign_id = $1 AND id = $2
 `
 
@@ -84,8 +112,32 @@ func (q *Queries) GetMap(ctx context.Context, arg GetMapParams) (CampaignMap, er
 		&i.Ambient,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Kind,
 	)
 	return i, err
+}
+
+const insertEdge = `-- name: InsertEdge :exec
+INSERT INTO campaign.map_edges (id, map_id, from_node_id, to_node_id, distance_mi) VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertEdgeParams struct {
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	FromNodeID uuid.UUID
+	ToNodeID   uuid.UUID
+	DistanceMi int32
+}
+
+func (q *Queries) InsertEdge(ctx context.Context, arg InsertEdgeParams) error {
+	_, err := q.db.Exec(ctx, insertEdge,
+		arg.ID,
+		arg.MapID,
+		arg.FromNodeID,
+		arg.ToNodeID,
+		arg.DistanceMi,
+	)
+	return err
 }
 
 const insertHexEvent = `-- name: InsertHexEvent :exec
@@ -129,14 +181,15 @@ func (q *Queries) InsertLight(ctx context.Context, arg InsertLightParams) error 
 }
 
 const insertMap = `-- name: InsertMap :one
-INSERT INTO campaign.maps (campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
-RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at
+INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
+RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
 `
 
 type InsertMapParams struct {
 	CampaignID uuid.UUID
 	Name       string
+	Kind       string
 	ImageKey   string
 	ImageType  string
 	WidthPx    int32
@@ -151,6 +204,7 @@ func (q *Queries) InsertMap(ctx context.Context, arg InsertMapParams) (CampaignM
 	row := q.db.QueryRow(ctx, insertMap,
 		arg.CampaignID,
 		arg.Name,
+		arg.Kind,
 		arg.ImageKey,
 		arg.ImageType,
 		arg.WidthPx,
@@ -175,12 +229,68 @@ func (q *Queries) InsertMap(ctx context.Context, arg InsertMapParams) (CampaignM
 		&i.Ambient,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Kind,
 	)
 	return i, err
 }
 
+const insertNode = `-- name: InsertNode :exec
+INSERT INTO campaign.map_nodes (id, map_id, name, q, r) VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertNodeParams struct {
+	ID    uuid.UUID
+	MapID uuid.UUID
+	Name  string
+	Q     int32
+	R     int32
+}
+
+func (q *Queries) InsertNode(ctx context.Context, arg InsertNodeParams) error {
+	_, err := q.db.Exec(ctx, insertNode,
+		arg.ID,
+		arg.MapID,
+		arg.Name,
+		arg.Q,
+		arg.R,
+	)
+	return err
+}
+
+const insertTravelLeg = `-- name: InsertTravelLeg :exec
+INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+`
+
+type InsertTravelLegParams struct {
+	ActionID   uuid.UUID
+	SessionID  uuid.UUID
+	MapID      uuid.UUID
+	FromName   string
+	ToName     string
+	Pace       string
+	DistanceMi int32
+	Minutes    int32
+	Days       int32
+}
+
+func (q *Queries) InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error {
+	_, err := q.db.Exec(ctx, insertTravelLeg,
+		arg.ActionID,
+		arg.SessionID,
+		arg.MapID,
+		arg.FromName,
+		arg.ToName,
+		arg.Pace,
+		arg.DistanceMi,
+		arg.Minutes,
+		arg.Days,
+	)
+	return err
+}
+
 const listMaps = `-- name: ListMaps :many
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
 FROM campaign.maps WHERE campaign_id = $1 ORDER BY name, id
 `
 
@@ -207,6 +317,43 @@ func (q *Queries) ListMaps(ctx context.Context, campaignID uuid.UUID) ([]Campaig
 			&i.Ambient,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Kind,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const mapEdges = `-- name: MapEdges :many
+SELECT id, from_node_id, to_node_id, distance_mi FROM campaign.map_edges WHERE map_id = $1 ORDER BY id
+`
+
+type MapEdgesRow struct {
+	ID         uuid.UUID
+	FromNodeID uuid.UUID
+	ToNodeID   uuid.UUID
+	DistanceMi int32
+}
+
+func (q *Queries) MapEdges(ctx context.Context, mapID uuid.UUID) ([]MapEdgesRow, error) {
+	rows, err := q.db.Query(ctx, mapEdges, mapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MapEdgesRow{}
+	for rows.Next() {
+		var i MapEdgesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FromNodeID,
+			&i.ToNodeID,
+			&i.DistanceMi,
 		); err != nil {
 			return nil, err
 		}
@@ -249,6 +396,66 @@ func (q *Queries) MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRo
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const mapNodes = `-- name: MapNodes :many
+SELECT id, name, q, r FROM campaign.map_nodes WHERE map_id = $1 ORDER BY name, id
+`
+
+type MapNodesRow struct {
+	ID   uuid.UUID
+	Name string
+	Q    int32
+	R    int32
+}
+
+func (q *Queries) MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow, error) {
+	rows, err := q.db.Query(ctx, mapNodes, mapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MapNodesRow{}
+	for rows.Next() {
+		var i MapNodesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Q,
+			&i.R,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const mapParty = `-- name: MapParty :many
+SELECT node_id FROM campaign.map_parties WHERE map_id = $1
+`
+
+func (q *Queries) MapParty(ctx context.Context, mapID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, mapParty, mapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var node_id uuid.UUID
+		if err := rows.Scan(&node_id); err != nil {
+			return nil, err
+		}
+		items = append(items, node_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -344,6 +551,53 @@ func (q *Queries) RemoveWall(ctx context.Context, arg RemoveWallParams) error {
 	return err
 }
 
+const sessionTravelLegs = `-- name: SessionTravelLegs :many
+SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days
+FROM play.travel_legs l JOIN play.actions a ON a.id = l.action_id
+WHERE l.session_id = $1 AND l.map_id = $2 ORDER BY a.seq
+`
+
+type SessionTravelLegsParams struct {
+	SessionID uuid.UUID
+	MapID     uuid.UUID
+}
+
+type SessionTravelLegsRow struct {
+	FromName   string
+	ToName     string
+	Pace       string
+	DistanceMi int32
+	Minutes    int32
+	Days       int32
+}
+
+func (q *Queries) SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error) {
+	rows, err := q.db.Query(ctx, sessionTravelLegs, arg.SessionID, arg.MapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionTravelLegsRow{}
+	for rows.Next() {
+		var i SessionTravelLegsRow
+		if err := rows.Scan(
+			&i.FromName,
+			&i.ToName,
+			&i.Pace,
+			&i.DistanceMi,
+			&i.Minutes,
+			&i.Days,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const setMapAmbient = `-- name: SetMapAmbient :exec
 UPDATE campaign.maps SET ambient = $1, updated_at = $2 WHERE id = $3
 `
@@ -359,6 +613,21 @@ func (q *Queries) SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) er
 	return err
 }
 
+const setMapParty = `-- name: SetMapParty :exec
+INSERT INTO campaign.map_parties (map_id, node_id) VALUES ($1, $2)
+ON CONFLICT (map_id) DO UPDATE SET node_id = excluded.node_id
+`
+
+type SetMapPartyParams struct {
+	MapID  uuid.UUID
+	NodeID uuid.UUID
+}
+
+func (q *Queries) SetMapParty(ctx context.Context, arg SetMapPartyParams) error {
+	_, err := q.db.Exec(ctx, setMapParty, arg.MapID, arg.NodeID)
+	return err
+}
+
 const setSessionMap = `-- name: SetSessionMap :exec
 UPDATE play.sessions SET map_id = $1 WHERE id = $2
 `
@@ -370,6 +639,20 @@ type SetSessionMapParams struct {
 
 func (q *Queries) SetSessionMap(ctx context.Context, arg SetSessionMapParams) error {
 	_, err := q.db.Exec(ctx, setSessionMap, arg.MapID, arg.ID)
+	return err
+}
+
+const setSessionWorld = `-- name: SetSessionWorld :exec
+UPDATE play.sessions SET world_map_id = $1 WHERE id = $2
+`
+
+type SetSessionWorldParams struct {
+	MapID pgtype.UUID
+	ID    uuid.UUID
+}
+
+func (q *Queries) SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error {
+	_, err := q.db.Exec(ctx, setSessionWorld, arg.MapID, arg.ID)
 	return err
 }
 

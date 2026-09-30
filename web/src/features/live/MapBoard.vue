@@ -77,6 +77,7 @@ const cells = computed(() =>
           <text :x="c.centre.x" :y="c.centre.y + layout.size * 0.2" text-anchor="middle" class="mark" aria-hidden="true">{{ initials(c.token.label) }}</text>
         </template>
       </g>
+      <slot :layout="layout" />
     </svg>
   </div>
 </template>

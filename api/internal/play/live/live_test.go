@@ -70,8 +70,19 @@ func setup(t *testing.T) world {
 // dungeon stores a dark 400 × 300 px map with 40 px hexes; its hexes include row r=0 from q=0 to q=5.
 func (w world) dungeon(t *testing.T) domain.Map {
 	t.Helper()
+	return w.picture(t, "Crypt", domain.MapLocal)
+}
+
+// realm is a world map of the same size.
+func (w world) realm(t *testing.T) domain.Map {
+	t.Helper()
+	return w.picture(t, "Realm", domain.MapWorld)
+}
+
+func (w world) picture(t *testing.T, name, kind string) domain.Map {
+	t.Helper()
 	m, err := pgstore.New(w.pool).InsertMap(context.Background(), domain.Map{
-		CampaignID: w.session.CampaignID, Name: "Crypt", ImageKey: "sha256/x.png", ImageType: "image/png", Width: 400, Height: 300,
+		CampaignID: w.session.CampaignID, Name: name, Kind: kind, ImageKey: "sha256/x.png", ImageType: "image/png", Width: 400, Height: 300,
 		HexSize: 40, OriginX: 34.64, OriginY: 40,
 	}, time.Now())
 	if err != nil {

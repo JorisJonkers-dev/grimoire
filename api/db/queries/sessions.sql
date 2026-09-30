@@ -3,17 +3,17 @@ SELECT coalesce(max(number), 0)::int + 1 FROM play.sessions WHERE campaign_id = 
 
 -- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES (@campaign_id, @number, 'live', @now)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id;
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id;
 
 -- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
 FROM play.sessions WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id FROM play.sessions WHERE id = $1;
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id FROM play.sessions WHERE id = $1;
 
 -- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50;
 
 -- name: EndSession :execrows

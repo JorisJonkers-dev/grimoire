@@ -13,7 +13,7 @@ import (
 // planTable changes what the Table Display shows: its camera, its scene or its blackout.
 func (r *runtime) planTable(cmd Command) (Write, string) {
 	next := r.st.table
-	world := r.st.world
+	shown := r.st.tableMap
 	switch cmd.Kind {
 	case CmdTableCamera:
 		switch {
@@ -31,19 +31,19 @@ func (r *runtime) planTable(cmd Command) (Write, string) {
 		case utf8.RuneCountInString(title) > 80 || utf8.RuneCountInString(body) > 1000:
 			return Write{}, "Titles run to 80 characters and handouts to 1000."
 		}
-		next.Scene, next.Title, next.Body, next.MapID, world = cmd.Scene, title, body, nil, nil
+		next.Scene, next.Title, next.Body, next.MapID, shown = cmd.Scene, title, body, nil, nil
 		if cmd.Scene == domain.SceneWorld {
 			id, _ := uuid.Parse(cmd.MapID)
 			board, err := r.store.LoadMap(context.Background(), r.st.session.CampaignID, domain.MapID(id))
-			if err != nil {
-				return Write{}, "Choose a map for the world scene."
+			if err != nil || board.Map.Kind != domain.MapWorld {
+				return Write{}, "Choose a world map for the world scene."
 			}
-			next.MapID, world = &board.Map.ID, &board.Map
+			next.MapID, shown = &board.Map.ID, &board.Map
 		}
 	default:
 		next.Blackout = cmd.On
 	}
-	return Write{Kind: domain.ActionTableSet, Table: &next, world: world}, ""
+	return Write{Kind: domain.ActionTableSet, Table: &next, tableMap: shown}, ""
 }
 
 // ping flashes a hex on every screen; it changes nothing, so it is neither saved nor sequenced.
@@ -58,7 +58,7 @@ func (r *runtime) ping(req request) {
 func (s *state) tableView() *TableView {
 	t := s.table
 	v := &TableView{Camera: t.Camera, Q: t.Q, R: t.R, ZoomPct: t.ZoomPct, Scene: t.Scene, Title: t.Title, Body: t.Body, Blackout: t.Blackout}
-	if w := s.world; w != nil && t.Scene == domain.SceneWorld {
+	if w := s.tableMap; w != nil && t.Scene == domain.SceneWorld {
 		v.WorldMap = &MapView{
 			ID: uuid.UUID(w.ID).String(), Name: w.Name, Width: w.Width, Height: w.Height, HexSizePx: w.HexSize, OriginX: w.OriginX, OriginY: w.OriginY,
 			ImageURL: "/api/v1/campaigns/" + w.CampaignID.String() + "/maps/" + uuid.UUID(w.ID).String() + "/image",

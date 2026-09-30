@@ -1,0 +1,160 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import type { LiveWorld, LocalMap, TravelPace } from '@/infrastructure/api/types.gen'
+import type { Outgoing } from '@/realtime/liveSession'
+import type { Coord } from '@/shared/hex'
+import { GButton } from '@/shared/ui'
+import MapBoard from './MapBoard.vue'
+import { duration, journey } from './travel'
+import WorldOverlay from './WorldOverlay.vue'
+
+type Tool = 'node' | 'route' | 'party' | 'remove'
+
+const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[] }>()
+const emit = defineEmits<{ send: [cmd: Outgoing] }>()
+const choice = ref('')
+const tool = ref<Tool>('node')
+const name = ref('')
+const from = ref<string | null>(null)
+const distance = ref(12)
+const pace = ref<TravelPace>('normal')
+
+const nodes = computed(() => new Map((props.world?.nodes ?? []).map((n) => [n.id, n])))
+const here = computed(() => (props.world?.partyNodeId ? nodes.value.get(props.world.partyNodeId) : undefined))
+const nameOf = (id: string) => nodes.value.get(id)?.name ?? 'somewhere unseen'
+const roads = computed(() =>
+  (props.world?.routes ?? [])
+    .filter((r) => here.value && (r.fromNodeId === here.value.id || r.toNodeId === here.value.id))
+    .map((r) => {
+      const plan = r.plans.find((p) => p.pace === pace.value)
+      return { route: r, to: nameOf(r.fromNodeId === here.value?.id ? r.toNodeId : r.fromNodeId), time: plan ? duration(plan.minutes, plan.days) : '' }
+    }),
+)
+const board = computed(() => ({ tokens: [], fog: true, visible: props.world?.revealed ?? [], remembered: [] }))
+const tools: { value: Tool; label: string }[] = [
+  { value: 'node', label: 'Add a location' },
+  { value: 'route', label: 'Join two locations' },
+  { value: 'party', label: 'Put the party there' },
+  { value: 'remove', label: 'Remove a location' },
+]
+
+function tap(c: Coord) {
+  if (!props.dm) return
+  const n = props.world?.nodes.find((x) => x.q === c.q && x.r === c.r)
+  if (tool.value === 'node') {
+    if (!n && name.value.trim()) emit('send', { kind: 'add_node', label: name.value.trim(), q: c.q, r: c.r })
+    return
+  }
+  if (!n) return
+  if (tool.value === 'party') emit('send', { kind: 'place_party', nodeId: n.id })
+  else if (tool.value === 'remove') emit('send', { kind: 'remove_node', nodeId: n.id })
+  else if (!from.value || from.value === n.id) from.value = n.id
+  else {
+    emit('send', { kind: 'add_route', nodeId: from.value, toNodeId: n.id, distanceMi: distance.value })
+    from.value = null
+  }
+}
+</script>
+
+<template>
+  <section class="world" aria-label="World map" data-testid="world">
+    <div v-if="dm" class="row">
+      <label class="g-field grow">
+        <span>World map</span>
+        <select v-model="choice" data-testid="world-choice">
+          <option value="">None</option>
+          <option v-for="m in maps" :key="m.id" :value="m.id">{{ m.name }}</option>
+        </select>
+      </label>
+      <GButton data-testid="use-world" @click="emit('send', choice ? { kind: 'set_world', mapId: choice } : { kind: 'set_world' })">Use world map</GButton>
+    </div>
+    <p v-if="!world" class="hint" data-testid="no-world">{{ dm ? 'Choose a world map for the party to travel.' : 'The DM has not opened a world map yet.' }}</p>
+    <template v-else>
+      <MapBoard :map="world.map" :view="board" :dm="dm" :title="world.map.name" @select="tap">
+        <template #default="{ layout }">
+          <WorldOverlay :world="world" :layout="layout" :from="from" />
+        </template>
+      </MapBoard>
+      <p role="status" data-testid="party-at">{{ here ? `The party is at ${here.name}.` : 'The party is not on this map yet.' }}</p>
+      <section v-if="roads.length > 0" class="g-card" aria-label="Routes from here" data-testid="roads">
+        <h2>Routes from here</h2>
+        <label v-if="dm" class="g-field">
+          <span>Pace</span>
+          <select v-model="pace" data-testid="pace">
+            <option value="slow">Slow (2 mph)</option>
+            <option value="normal">Normal (3 mph)</option>
+            <option value="fast">Fast (4 mph)</option>
+          </select>
+        </label>
+        <ul class="g-list">
+          <li v-for="r in roads" :key="r.route.id" class="row">
+            <span>{{ r.to }} · {{ r.route.distanceMi }} mi · {{ r.time }}</span>
+            <GButton v-if="dm" :aria-label="`Travel to ${r.to}`" @click="emit('send', { kind: 'travel', routeId: r.route.id, pace })">Travel</GButton>
+          </li>
+        </ul>
+      </section>
+      <section v-if="world.legs.length > 0" class="g-card" aria-label="Journey this session" data-testid="legs">
+        <h2>Journey this session</h2>
+        <ol class="g-list">
+          <li v-for="(l, i) in world.legs" :key="i">{{ l.from }} → {{ l.to }} · {{ l.distanceMi }} mi at a {{ l.pace }} pace · {{ duration(l.minutes, l.days) }}</li>
+        </ol>
+        <p data-testid="journey">In all: {{ journey(world.legs) }}</p>
+      </section>
+      <section v-if="dm" class="g-card" aria-label="World map tools">
+        <fieldset class="row tools">
+          <legend>Tap the world map to</legend>
+          <label v-for="t in tools" :key="t.value" class="check">
+            <input v-model="tool" type="radio" :value="t.value" :data-testid="`world-tool-${t.value}`" @change="from = null" />
+            <span>{{ t.label }}</span>
+          </label>
+        </fieldset>
+        <label v-if="tool === 'node'" class="g-field"><span>Location name</span><input v-model="name" maxlength="40" data-testid="world-node-name" /></label>
+        <template v-if="tool === 'route'">
+          <label class="g-field"><span>Distance (miles)</span><input v-model.number="distance" type="number" min="1" max="2000" data-testid="world-distance" /></label>
+          <p class="hint" role="status">{{ from ? `From ${nameOf(from)}: now tap where the route goes.` : 'Tap the location the route starts from.' }}</p>
+        </template>
+        <ul class="g-list" aria-label="Routes">
+          <li v-for="r in world.routes" :key="r.id" class="row">
+            <span>{{ nameOf(r.fromNodeId) }} – {{ nameOf(r.toNodeId) }} · {{ r.distanceMi }} mi</span>
+            <GButton variant="danger" :data-testid="`remove-route-${r.id}`" @click="emit('send', { kind: 'remove_route', routeId: r.id })">Remove</GButton>
+          </li>
+        </ul>
+      </section>
+    </template>
+  </section>
+</template>
+
+<style scoped>
+.world {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+.tools {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.grow {
+  flex: 1 1 200px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+.hint {
+  color: var(--color-text-2);
+}
+h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+</style>

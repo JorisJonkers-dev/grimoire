@@ -95,7 +95,7 @@ func TestEverySessionDatabaseFaultSurfaces(t *testing.T) {
 	if err != nil || seq != 1 {
 		t.Fatalf("commit = %d %v", seq, err)
 	}
-	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Crypt", ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
+	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Crypt", Kind: domain.MapLocal, ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}

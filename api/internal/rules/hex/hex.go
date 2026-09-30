@@ -44,6 +44,17 @@ func Distance(a, b Coord) int {
 	return (abs(dq) + abs(dr) + abs(dq+dr)) / 2
 }
 
+// Disk lists every hex at most radius hexes from centre, centre included.
+func Disk(centre Coord, radius int) []Coord {
+	var out []Coord
+	for q := -radius; q <= radius; q++ {
+		for r := max(-radius, -q-radius); r <= min(radius, radius-q); r++ {
+			out = append(out, centre.Add(Coord{Q: q, R: r}))
+		}
+	}
+	return out
+}
+
 // Point is a position in pixels.
 type Point struct {
 	X float64
