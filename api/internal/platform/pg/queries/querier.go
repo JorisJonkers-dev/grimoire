@@ -33,6 +33,8 @@ type Querier interface {
 	AddMonsterRelation(ctx context.Context, arg AddMonsterRelationParams) error
 	AddMonsterStat(ctx context.Context, arg AddMonsterStatParams) error
 	AddMonsterTrait(ctx context.Context, arg AddMonsterTraitParams) error
+	AddRestAgreement(ctx context.Context, arg AddRestAgreementParams) error
+	AddRestRester(ctx context.Context, arg AddRestResterParams) error
 	AddResumeHex(ctx context.Context, arg AddResumeHexParams) error
 	AddReveal(ctx context.Context, arg AddRevealParams) error
 	AddSpeciesTrait(ctx context.Context, arg AddSpeciesTraitParams) error
@@ -61,6 +63,7 @@ type Querier interface {
 	CampaignNpc(ctx context.Context, arg CampaignNpcParams) (string, error)
 	CampaignPoolMembers(ctx context.Context, campaignID uuid.UUID) ([]PrepPoolMember, error)
 	CampaignReactionTimeout(ctx context.Context, id uuid.UUID) (int32, error)
+	CampaignRestSupplies(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignShopStock(ctx context.Context, campaignID uuid.UUID) ([]PrepShopStock, error)
 	CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]PrepShop, error)
@@ -90,6 +93,8 @@ type Querier interface {
 	ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error
 	ClearPoolMembers(ctx context.Context, poolID uuid.UUID) error
 	ClearPrompts(ctx context.Context, combatID uuid.UUID) error
+	ClearRest(ctx context.Context, sessionID uuid.UUID) error
+	ClearRestMembers(ctx context.Context, sessionID uuid.UUID) error
 	ClearResumePath(ctx context.Context, combatID uuid.UUID) error
 	ClearSessionHaggles(ctx context.Context, sessionID uuid.UUID) error
 	ClearSessionShop(ctx context.Context, sessionID uuid.UUID) error
@@ -151,6 +156,7 @@ type Querier interface {
 	GetNPC(ctx context.Context, arg GetNPCParams) (GetNPCRow, error)
 	GetNPCRevision(ctx context.Context, arg GetNPCRevisionParams) (GetNPCRevisionRow, error)
 	GetPoolRevision(ctx context.Context, arg GetPoolRevisionParams) (GetPoolRevisionRow, error)
+	GetRest(ctx context.Context, sessionID uuid.UUID) (GetRestRow, error)
 	GetRoll(ctx context.Context, arg GetRollParams) (PlayRollRequest, error)
 	GetSession(ctx context.Context, arg GetSessionParams) (PlaySession, error)
 	GetSettlementRevision(ctx context.Context, arg GetSettlementRevisionParams) (GetSettlementRevisionRow, error)
@@ -251,6 +257,8 @@ type Querier interface {
 	ListResourceMaxima(ctx context.Context) ([]CompendiumResourceMaxima, error)
 	ListResourceRecharges(ctx context.Context) ([]CompendiumResourceRecharge, error)
 	ListResources(ctx context.Context) ([]CompendiumResource, error)
+	ListRestAgreements(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
+	ListRestResters(ctx context.Context, sessionID uuid.UUID) ([]ListRestRestersRow, error)
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
 	ListRolls(ctx context.Context, arg ListRollsParams) ([]uuid.UUID, error)
 	ListScaleSteps(ctx context.Context) ([]CompendiumScaleStep, error)
@@ -297,6 +305,9 @@ type Querier interface {
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
 	RemoveWall(ctx context.Context, arg RemoveWallParams) error
 	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
+	RestAbilities(ctx context.Context, ids []uuid.UUID) ([]RestAbilitiesRow, error)
+	RestCharacters(ctx context.Context, arg RestCharactersParams) ([]RestCharactersRow, error)
+	RestResourcesUsed(ctx context.Context, ids []uuid.UUID) ([]CampaignCharacterResource, error)
 	ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error)
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
@@ -313,6 +324,8 @@ type Querier interface {
 	SaveLootTable(ctx context.Context, arg SaveLootTableParams) error
 	SavePool(ctx context.Context, arg SavePoolParams) error
 	SavePrompt(ctx context.Context, arg SavePromptParams) error
+	SaveRest(ctx context.Context, arg SaveRestParams) error
+	SaveRestResult(ctx context.Context, arg SaveRestResultParams) error
 	SaveSettlement(ctx context.Context, arg SaveSettlementParams) error
 	SaveShop(ctx context.Context, arg SaveShopParams) error
 	SaveTable(ctx context.Context, arg SaveTableParams) error
@@ -348,6 +361,7 @@ type Querier interface {
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
+	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error
@@ -362,6 +376,7 @@ type Querier interface {
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
+	SpendHitDie(ctx context.Context, id uuid.UUID) error
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)

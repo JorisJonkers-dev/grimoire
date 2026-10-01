@@ -58,17 +58,20 @@ func (r *runtime) planEncounter(m domain.Member, cmd Command) (Write, string) {
 	return r.check(m, p, t, prep.TriggerDM, cmd.Mode, cmd.Entry), ""
 }
 
-// rest takes a short or long rest; a long one moves the Campaign on a day.
+// rest is the DM taking a short or long rest at once, with its benefits, without waiting on agreement.
 func (r *runtime) rest(kind string) (Write, string) {
-	if kind != RestShort && kind != RestLong {
+	switch {
+	case kind != RestShort && kind != RestLong:
 		return Write{}, "A rest is short or long."
+	case r.st.rest != nil:
+		return Write{}, "Finish or interrupt the rest under way first."
 	}
-	w := Write{Kind: domain.ActionRestTaken, Rest: kind}
-	if kind == RestLong {
-		day := r.st.day + 1
-		w.Day = &day
+	resters, err := r.resters()
+	if err != nil {
+		r.log.Error("live: rest info", "error", err)
+		return Write{}, "The party could not be read."
 	}
-	return w, ""
+	return r.finishRest(&domain.Rest{Kind: kind, Status: domain.RestResting, Resters: resters})
 }
 
 // check runs an Encounter Check. A normal check on an open table opens a percentile Roll Request the

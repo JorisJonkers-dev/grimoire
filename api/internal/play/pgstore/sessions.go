@@ -205,6 +205,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveCheck(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
 			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
+			func() error { return tx.saveRest(ctx, sess, w, actor, c, now) },
 			func() error {
 				if board == nil {
 					return nil
@@ -265,7 +266,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
 		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
-		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled:
+		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
+		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted:
 		return nil
 	case domain.ActionEncounterSpawned:
 		for _, t := range w.Spawned {
@@ -274,7 +276,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 			}
 		}
 		return nil
-	case domain.ActionDamageDealt, domain.ActionDamageUndone, domain.ActionHPAdjusted:
+	case domain.ActionDamageDealt, domain.ActionDamageUndone, domain.ActionHPAdjusted, domain.ActionHitDieHealed:
 		return s.writeHP(ctx, sid, w)
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:

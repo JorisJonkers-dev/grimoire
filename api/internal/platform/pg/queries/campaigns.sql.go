@@ -62,7 +62,7 @@ func (q *Queries) CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, er
 const createCampaign = `-- name: CreateCampaign :one
 INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $4)
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, created_at
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, created_at
 `
 
 type CreateCampaignParams struct {
@@ -78,6 +78,7 @@ type CreateCampaignRow struct {
 	RulesetPref      string
 	ReactionTimeoutS int32
 	HighGround       bool
+	RestSupplies     bool
 	CreatedAt        time.Time
 }
 
@@ -95,6 +96,7 @@ func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) 
 		&i.RulesetPref,
 		&i.ReactionTimeoutS,
 		&i.HighGround,
+		&i.RestSupplies,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -166,7 +168,7 @@ func (q *Queries) FindInvite(ctx context.Context, arg FindInviteParams) (FindInv
 }
 
 const getCampaign = `-- name: GetCampaign :one
-SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, created_at FROM campaign.campaigns WHERE id = $1
+SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, created_at FROM campaign.campaigns WHERE id = $1
 `
 
 type GetCampaignRow struct {
@@ -175,6 +177,7 @@ type GetCampaignRow struct {
 	RulesetPref      string
 	ReactionTimeoutS int32
 	HighGround       bool
+	RestSupplies     bool
 	CreatedAt        time.Time
 }
 
@@ -187,6 +190,7 @@ func (q *Queries) GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow
 		&i.RulesetPref,
 		&i.ReactionTimeoutS,
 		&i.HighGround,
+		&i.RestSupplies,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -241,7 +245,7 @@ func (q *Queries) GetMembership(ctx context.Context, arg GetMembershipParams) (C
 }
 
 const listCampaignsForSubject = `-- name: ListCampaignsForSubject :many
-SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.created_at, m.role,
+SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.created_at, m.role,
        (SELECT count(*) FROM campaign.members x WHERE x.campaign_id = c.id)::int AS member_count
 FROM campaign.campaigns c
 JOIN campaign.members m ON m.campaign_id = c.id AND m.auth_subject = $1
@@ -264,6 +268,7 @@ type ListCampaignsForSubjectRow struct {
 	RulesetPref      string
 	ReactionTimeoutS int32
 	HighGround       bool
+	RestSupplies     bool
 	CreatedAt        time.Time
 	Role             string
 	MemberCount      int32
@@ -289,6 +294,7 @@ func (q *Queries) ListCampaignsForSubject(ctx context.Context, arg ListCampaigns
 			&i.RulesetPref,
 			&i.ReactionTimeoutS,
 			&i.HighGround,
+			&i.RestSupplies,
 			&i.CreatedAt,
 			&i.Role,
 			&i.MemberCount,
@@ -442,9 +448,10 @@ SET name = coalesce($1::text, name),
     ruleset_pref = coalesce($2::text, ruleset_pref),
     reaction_timeout_s = coalesce($3::integer, reaction_timeout_s),
     high_ground = coalesce($4::boolean, high_ground),
-    updated_at = $5
-WHERE id = $6
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, created_at
+    rest_supplies = coalesce($5::boolean, rest_supplies),
+    updated_at = $6
+WHERE id = $7
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, created_at
 `
 
 type UpdateCampaignParams struct {
@@ -452,6 +459,7 @@ type UpdateCampaignParams struct {
 	RulesetPref      pgtype.Text
 	ReactionTimeoutS pgtype.Int4
 	HighGround       pgtype.Bool
+	RestSupplies     pgtype.Bool
 	Now              time.Time
 	ID               uuid.UUID
 }
@@ -462,6 +470,7 @@ type UpdateCampaignRow struct {
 	RulesetPref      string
 	ReactionTimeoutS int32
 	HighGround       bool
+	RestSupplies     bool
 	CreatedAt        time.Time
 }
 
@@ -471,6 +480,7 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		arg.RulesetPref,
 		arg.ReactionTimeoutS,
 		arg.HighGround,
+		arg.RestSupplies,
 		arg.Now,
 		arg.ID,
 	)
@@ -481,6 +491,7 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		&i.RulesetPref,
 		&i.ReactionTimeoutS,
 		&i.HighGround,
+		&i.RestSupplies,
 		&i.CreatedAt,
 	)
 	return i, err

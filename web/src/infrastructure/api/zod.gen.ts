@@ -737,6 +737,36 @@ export const zSessionAction = z.object({
 });
 
 /**
+ * A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+ */
+export const zLiveRester = z.object({
+    characterId: zId,
+    tokenId: zId,
+    name: z.string().max(80),
+    hitDie: z.enum([
+        'd6',
+        'd8',
+        'd10',
+        'd12'
+    ]),
+    hitDiceLeft: z.int().gte(0).lte(20),
+    rollId: zId.optional()
+});
+
+/**
+ * The rest the party proposed or is taking. It starts once the DM and every Player resting a Character agree; a Short Rest spends Hit Dice.
+ */
+export const zLiveRest = z.object({
+    kind: z.enum(['short', 'long']),
+    status: z.enum(['proposed', 'resting']),
+    proposedBy: zId,
+    agreed: z.array(zId).max(50),
+    waiting: z.array(zId).max(50),
+    waitingOnDm: z.boolean(),
+    resters: z.array(zLiveRester).max(50)
+});
+
+/**
  * How many coins of one kind a container holds.
  */
 export const zLiveCoins = z.object({
@@ -1555,7 +1585,12 @@ export const zLiveCommand = z.object({
         'haggle',
         'spawn_encounter',
         'adjust_hp',
-        'undo'
+        'undo',
+        'propose_rest',
+        'agree_rest',
+        'spend_hit_die',
+        'finish_rest',
+        'interrupt_rest'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1769,6 +1804,7 @@ export const zLiveView = z.object({
     checks: z.array(zLiveCheck).max(10).optional(),
     inventory: z.array(zLiveContainer).max(1000).optional(),
     shop: zLiveShop.optional(),
+    rest: zLiveRest.optional(),
     gameDay: z.int().gte(0).lte(1000000).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
@@ -1818,7 +1854,8 @@ export const zCampaignSummary = z.object({
     memberCount: z.int().gte(1).lte(1000),
     createdAt: z.iso.datetime().max(40),
     reactionTimeoutS: zReactionTimeout.optional(),
-    highGround: z.boolean().optional()
+    highGround: z.boolean().optional(),
+    restSupplies: z.boolean().optional()
 });
 
 /**
@@ -1841,6 +1878,7 @@ export const zCampaign = z.object({
     createdAt: z.iso.datetime().max(40),
     reactionTimeoutS: zReactionTimeout.optional(),
     highGround: z.boolean().optional(),
+    restSupplies: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
 });
@@ -1923,7 +1961,8 @@ export const zCampaignUpdate = z.object({
     name: zCampaignName.optional(),
     ruleset: zCampaignRuleset.optional(),
     reactionTimeoutS: zReactionTimeout.optional(),
-    highGround: z.boolean().optional()
+    highGround: z.boolean().optional(),
+    restSupplies: z.boolean().optional()
 });
 
 /**

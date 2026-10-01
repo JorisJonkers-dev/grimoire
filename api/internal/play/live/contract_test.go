@@ -78,6 +78,13 @@ func samples() contract {
 		{ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false},
 		{ID: "0190c7a8-0000-7000-8000-000000000035", Kind: "bag", Label: "Backpack", ParentID: "0190c7a8-0000-7000-8000-000000000030", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}},
 	}
+	view.Rest = &live.RestView{
+		Kind: live.RestShort, Status: "resting", ProposedBy: "0190c7a8-0000-7000-8000-00000000000f", Agreed: []string{"0190c7a8-0000-7000-8000-00000000000f"},
+		Waiting: []string{}, WaitingOnDM: false, Resters: []live.ResterView{{
+			CharacterID: "0190c7a8-0000-7000-8000-000000000012", TokenID: token.ID, Name: "Aria", HitDie: "d10", HitDiceLeft: 2,
+			RollID: "0190c7a8-0000-7000-8000-000000000036",
+		}},
+	}
 	view.Checks = []live.CheckView{{ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12}}
 	off := -10
 	view.Shop = &live.ShopView{
@@ -168,6 +175,11 @@ func samples() contract {
 			{Nonce: "n61", Kind: live.CmdSpawnEncounter, Q: 2, R: 0, Hidden: true, Monsters: []live.SpawnMonster{{Slug: "goblin", Count: 3}}},
 			{Nonce: "n62", Kind: live.CmdAdjustHP, TokenID: token.ID, HPDelta: -4},
 			{Nonce: "n63", Kind: live.CmdUndo, Seq: 42},
+			{Nonce: "n64", Kind: live.CmdProposeRest, Rest: live.RestLong},
+			{Nonce: "n65", Kind: live.CmdAgreeRest},
+			{Nonce: "n66", Kind: live.CmdSpendHitDie, TokenID: token.ID},
+			{Nonce: "n67", Kind: live.CmdFinishRest},
+			{Nonce: "n68", Kind: live.CmdInterruptRest},
 		},
 		Updates: []live.Update{
 			{

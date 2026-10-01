@@ -79,6 +79,11 @@ const (
 	CmdBuy            = "buy"
 	CmdSell           = "sell"
 	CmdHaggle         = "haggle"
+	CmdProposeRest    = "propose_rest"
+	CmdAgreeRest      = "agree_rest"
+	CmdSpendHitDie    = "spend_hit_die"
+	CmdFinishRest     = "finish_rest"
+	CmdInterruptRest  = "interrupt_rest"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -327,7 +332,30 @@ type View struct {
 	Checks     []CheckView      `json:"checks,omitempty"`
 	Inventory  []ContainerView  `json:"inventory,omitempty"`
 	Shop       *ShopView        `json:"shop,omitempty"`
+	Rest       *RestView        `json:"rest,omitempty"`
 	GameDay    int              `json:"gameDay"`
+}
+
+// RestView is the rest the party proposed or is taking: who agreed, who the rest still waits on, and
+// each resting Character's Hit Dice.
+type RestView struct {
+	Kind        string       `json:"kind"`
+	Status      string       `json:"status"`
+	ProposedBy  string       `json:"proposedBy"`
+	Agreed      []string     `json:"agreed"`
+	Waiting     []string     `json:"waiting"`
+	WaitingOnDM bool         `json:"waitingOnDm"`
+	Resters     []ResterView `json:"resters"`
+}
+
+// ResterView is a resting Character: their Hit Die, how many are left, and the roll of one being spent.
+type ResterView struct {
+	CharacterID string `json:"characterId"`
+	TokenID     string `json:"tokenId"`
+	Name        string `json:"name"`
+	HitDie      string `json:"hitDie"`
+	HitDiceLeft int    `json:"hitDiceLeft"`
+	RollID      string `json:"rollId,omitempty"`
 }
 
 // ContainerView is a Character's Inventory, the Party Stash or a drop of loot, with what it weighs.

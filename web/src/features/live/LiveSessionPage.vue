@@ -19,6 +19,7 @@ import EffectsPanel from './EffectsPanel.vue'
 import ActionLog from './ActionLog.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
+import RestPanel from './RestPanel.vue'
 import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
@@ -523,6 +524,15 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :me="campaign.data.value?.me.id ?? ''"
         :campaign-id="campaignId"
         :game-day="view?.gameDay ?? 0"
+        @send="(cmd) => live?.send(cmd)"
+      />
+      <RestPanel
+        v-if="view"
+        :rest="view.rest"
+        :dm="isDM"
+        :me="campaign.data.value?.me.id ?? ''"
+        :tokens="view.tokens"
+        :in-combat="Boolean(view.combat)"
         @send="(cmd) => live?.send(cmd)"
       />
       <EncounterChecks

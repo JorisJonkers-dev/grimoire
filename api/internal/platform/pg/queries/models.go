@@ -21,6 +21,7 @@ type CampaignCampaign struct {
 	ReactionTimeoutS int32
 	HighGround       bool
 	GameDay          int32
+	RestSupplies     bool
 }
 
 type CampaignCharacter struct {
@@ -44,6 +45,8 @@ type CampaignCharacter struct {
 	PortraitType   pgtype.Text
 	TokenKey       pgtype.Text
 	TokenType      pgtype.Text
+	HitDiceSpent   int32
+	LevelUpReady   bool
 }
 
 type CampaignCharacterAbility struct {
@@ -51,6 +54,12 @@ type CampaignCharacterAbility struct {
 	Ability     string
 	Base        int32
 	Bonus       int32
+}
+
+type CampaignCharacterResource struct {
+	CharacterID  uuid.UUID
+	ResourceSlug string
+	Used         int32
 }
 
 type CampaignCharacterSkill struct {
@@ -878,6 +887,26 @@ type PlayReactionPrompt struct {
 	AttackNo       int32
 	Effect         string
 	Deadline       time.Time
+}
+
+type PlayRest struct {
+	SessionID  uuid.UUID
+	Kind       string
+	Status     string
+	ProposedBy uuid.UUID
+	DmAgreed   bool
+}
+
+type PlayRestAgreement struct {
+	SessionID uuid.UUID
+	MemberID  uuid.UUID
+}
+
+type PlayRestRester struct {
+	SessionID   uuid.UUID
+	CharacterID uuid.UUID
+	TokenID     uuid.UUID
+	RollID      pgtype.UUID
 }
 
 type PlayRollDice struct {

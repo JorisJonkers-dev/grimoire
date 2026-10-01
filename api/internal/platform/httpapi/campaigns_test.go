@@ -145,8 +145,8 @@ func TestCampaignLifecycleOverHTTP(t *testing.T) {
 	if player["isMe"] != true {
 		t.Fatalf("player row = %v", player)
 	}
-	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2024","reactionTimeoutS":5,"highGround":true}`)
-	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2024" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true {
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2024","reactionTimeoutS":5,"highGround":true,"restSupplies":true}`)
+	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2024" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true || body["restSupplies"] != true {
 		t.Fatalf("update: %d %s", rec.Code, rec.Body.String())
 	}
 	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id+"/members/"+playerID, "dm", `{"role":"dm"}`)

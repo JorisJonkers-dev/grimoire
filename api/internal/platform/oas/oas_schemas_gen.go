@@ -1445,9 +1445,11 @@ type Campaign struct {
 	CreatedAt        time.Time          `json:"createdAt"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
-	HighGround OptBool  `json:"highGround"`
-	Me         Member   `json:"me"`
-	Members    []Member `json:"members"`
+	HighGround OptBool `json:"highGround"`
+	// Optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies OptBool  `json:"restSupplies"`
+	Me           Member   `json:"me"`
+	Members      []Member `json:"members"`
 }
 
 // GetID returns the value of ID.
@@ -1488,6 +1490,11 @@ func (s *Campaign) GetReactionTimeoutS() OptReactionTimeout {
 // GetHighGround returns the value of HighGround.
 func (s *Campaign) GetHighGround() OptBool {
 	return s.HighGround
+}
+
+// GetRestSupplies returns the value of RestSupplies.
+func (s *Campaign) GetRestSupplies() OptBool {
+	return s.RestSupplies
 }
 
 // GetMe returns the value of Me.
@@ -1538,6 +1545,11 @@ func (s *Campaign) SetReactionTimeoutS(val OptReactionTimeout) {
 // SetHighGround sets the value of HighGround.
 func (s *Campaign) SetHighGround(val OptBool) {
 	s.HighGround = val
+}
+
+// SetRestSupplies sets the value of RestSupplies.
+func (s *Campaign) SetRestSupplies(val OptBool) {
+	s.RestSupplies = val
 }
 
 // SetMe sets the value of Me.
@@ -1833,6 +1845,8 @@ type CampaignSummary struct {
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
+	// Optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies OptBool `json:"restSupplies"`
 }
 
 // GetID returns the value of ID.
@@ -1875,6 +1889,11 @@ func (s *CampaignSummary) GetHighGround() OptBool {
 	return s.HighGround
 }
 
+// GetRestSupplies returns the value of RestSupplies.
+func (s *CampaignSummary) GetRestSupplies() OptBool {
+	return s.RestSupplies
+}
+
 // SetID sets the value of ID.
 func (s *CampaignSummary) SetID(val ID) {
 	s.ID = val
@@ -1913,6 +1932,11 @@ func (s *CampaignSummary) SetReactionTimeoutS(val OptReactionTimeout) {
 // SetHighGround sets the value of HighGround.
 func (s *CampaignSummary) SetHighGround(val OptBool) {
 	s.HighGround = val
+}
+
+// SetRestSupplies sets the value of RestSupplies.
+func (s *CampaignSummary) SetRestSupplies(val OptBool) {
+	s.RestSupplies = val
 }
 
 // CampaignSummaryHeaders wraps CampaignSummary with response headers.
@@ -1973,6 +1997,8 @@ type CampaignUpdate struct {
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
+	// Optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies OptBool `json:"restSupplies"`
 }
 
 // GetName returns the value of Name.
@@ -1995,6 +2021,11 @@ func (s *CampaignUpdate) GetHighGround() OptBool {
 	return s.HighGround
 }
 
+// GetRestSupplies returns the value of RestSupplies.
+func (s *CampaignUpdate) GetRestSupplies() OptBool {
+	return s.RestSupplies
+}
+
 // SetName sets the value of Name.
 func (s *CampaignUpdate) SetName(val OptCampaignName) {
 	s.Name = val
@@ -2013,6 +2044,11 @@ func (s *CampaignUpdate) SetReactionTimeoutS(val OptReactionTimeout) {
 // SetHighGround sets the value of HighGround.
 func (s *CampaignUpdate) SetHighGround(val OptBool) {
 	s.HighGround = val
+}
+
+// SetRestSupplies sets the value of RestSupplies.
+func (s *CampaignUpdate) SetRestSupplies(val OptBool) {
+	s.RestSupplies = val
 }
 
 // The choices for a first-level Character.
@@ -9627,6 +9663,11 @@ const (
 	LiveCommandKindSpawnEncounter LiveCommandKind = "spawn_encounter"
 	LiveCommandKindAdjustHp       LiveCommandKind = "adjust_hp"
 	LiveCommandKindUndo           LiveCommandKind = "undo"
+	LiveCommandKindProposeRest    LiveCommandKind = "propose_rest"
+	LiveCommandKindAgreeRest      LiveCommandKind = "agree_rest"
+	LiveCommandKindSpendHitDie    LiveCommandKind = "spend_hit_die"
+	LiveCommandKindFinishRest     LiveCommandKind = "finish_rest"
+	LiveCommandKindInterruptRest  LiveCommandKind = "interrupt_rest"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -9690,6 +9731,11 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSpawnEncounter,
 		LiveCommandKindAdjustHp,
 		LiveCommandKindUndo,
+		LiveCommandKindProposeRest,
+		LiveCommandKindAgreeRest,
+		LiveCommandKindSpendHitDie,
+		LiveCommandKindFinishRest,
+		LiveCommandKindInterruptRest,
 	}
 }
 
@@ -9811,6 +9857,16 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindAdjustHp:
 		return []byte(s), nil
 	case LiveCommandKindUndo:
+		return []byte(s), nil
+	case LiveCommandKindProposeRest:
+		return []byte(s), nil
+	case LiveCommandKindAgreeRest:
+		return []byte(s), nil
+	case LiveCommandKindSpendHitDie:
+		return []byte(s), nil
+	case LiveCommandKindFinishRest:
+		return []byte(s), nil
+	case LiveCommandKindInterruptRest:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -9993,6 +10049,21 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindUndo:
 		*s = LiveCommandKindUndo
+		return nil
+	case LiveCommandKindProposeRest:
+		*s = LiveCommandKindProposeRest
+		return nil
+	case LiveCommandKindAgreeRest:
+		*s = LiveCommandKindAgreeRest
+		return nil
+	case LiveCommandKindSpendHitDie:
+		*s = LiveCommandKindSpendHitDie
+		return nil
+	case LiveCommandKindFinishRest:
+		*s = LiveCommandKindFinishRest
+		return nil
+	case LiveCommandKindInterruptRest:
+		*s = LiveCommandKindInterruptRest
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11366,6 +11437,297 @@ func (s *LivePromptKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// The rest the party proposed or is taking. It starts once the DM and every Player resting a Character
+// agree; a Short Rest spends Hit Dice.
+// Ref: #/components/schemas/LiveRest
+type LiveRest struct {
+	Kind        LiveRestKind   `json:"kind"`
+	Status      LiveRestStatus `json:"status"`
+	ProposedBy  ID             `json:"proposedBy"`
+	Agreed      []ID           `json:"agreed"`
+	Waiting     []ID           `json:"waiting"`
+	WaitingOnDm bool           `json:"waitingOnDm"`
+	Resters     []LiveRester   `json:"resters"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveRest) GetKind() LiveRestKind {
+	return s.Kind
+}
+
+// GetStatus returns the value of Status.
+func (s *LiveRest) GetStatus() LiveRestStatus {
+	return s.Status
+}
+
+// GetProposedBy returns the value of ProposedBy.
+func (s *LiveRest) GetProposedBy() ID {
+	return s.ProposedBy
+}
+
+// GetAgreed returns the value of Agreed.
+func (s *LiveRest) GetAgreed() []ID {
+	return s.Agreed
+}
+
+// GetWaiting returns the value of Waiting.
+func (s *LiveRest) GetWaiting() []ID {
+	return s.Waiting
+}
+
+// GetWaitingOnDm returns the value of WaitingOnDm.
+func (s *LiveRest) GetWaitingOnDm() bool {
+	return s.WaitingOnDm
+}
+
+// GetResters returns the value of Resters.
+func (s *LiveRest) GetResters() []LiveRester {
+	return s.Resters
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveRest) SetKind(val LiveRestKind) {
+	s.Kind = val
+}
+
+// SetStatus sets the value of Status.
+func (s *LiveRest) SetStatus(val LiveRestStatus) {
+	s.Status = val
+}
+
+// SetProposedBy sets the value of ProposedBy.
+func (s *LiveRest) SetProposedBy(val ID) {
+	s.ProposedBy = val
+}
+
+// SetAgreed sets the value of Agreed.
+func (s *LiveRest) SetAgreed(val []ID) {
+	s.Agreed = val
+}
+
+// SetWaiting sets the value of Waiting.
+func (s *LiveRest) SetWaiting(val []ID) {
+	s.Waiting = val
+}
+
+// SetWaitingOnDm sets the value of WaitingOnDm.
+func (s *LiveRest) SetWaitingOnDm(val bool) {
+	s.WaitingOnDm = val
+}
+
+// SetResters sets the value of Resters.
+func (s *LiveRest) SetResters(val []LiveRester) {
+	s.Resters = val
+}
+
+type LiveRestKind string
+
+const (
+	LiveRestKindShort LiveRestKind = "short"
+	LiveRestKindLong  LiveRestKind = "long"
+)
+
+// AllValues returns all LiveRestKind values.
+func (LiveRestKind) AllValues() []LiveRestKind {
+	return []LiveRestKind{
+		LiveRestKindShort,
+		LiveRestKindLong,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveRestKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveRestKindShort:
+		return []byte(s), nil
+	case LiveRestKindLong:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveRestKind) UnmarshalText(data []byte) error {
+	switch LiveRestKind(data) {
+	case LiveRestKindShort:
+		*s = LiveRestKindShort
+		return nil
+	case LiveRestKindLong:
+		*s = LiveRestKindLong
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveRestStatus string
+
+const (
+	LiveRestStatusProposed LiveRestStatus = "proposed"
+	LiveRestStatusResting  LiveRestStatus = "resting"
+)
+
+// AllValues returns all LiveRestStatus values.
+func (LiveRestStatus) AllValues() []LiveRestStatus {
+	return []LiveRestStatus{
+		LiveRestStatusProposed,
+		LiveRestStatusResting,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveRestStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveRestStatusProposed:
+		return []byte(s), nil
+	case LiveRestStatusResting:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveRestStatus) UnmarshalText(data []byte) error {
+	switch LiveRestStatus(data) {
+	case LiveRestStatusProposed:
+		*s = LiveRestStatusProposed
+		return nil
+	case LiveRestStatusResting:
+		*s = LiveRestStatusResting
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+// Ref: #/components/schemas/LiveRester
+type LiveRester struct {
+	CharacterId ID               `json:"characterId"`
+	TokenId     ID               `json:"tokenId"`
+	Name        string           `json:"name"`
+	HitDie      LiveResterHitDie `json:"hitDie"`
+	HitDiceLeft int32            `json:"hitDiceLeft"`
+	RollId      OptID            `json:"rollId"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveRester) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveRester) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetName returns the value of Name.
+func (s *LiveRester) GetName() string {
+	return s.Name
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *LiveRester) GetHitDie() LiveResterHitDie {
+	return s.HitDie
+}
+
+// GetHitDiceLeft returns the value of HitDiceLeft.
+func (s *LiveRester) GetHitDiceLeft() int32 {
+	return s.HitDiceLeft
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveRester) GetRollId() OptID {
+	return s.RollId
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveRester) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveRester) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveRester) SetName(val string) {
+	s.Name = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *LiveRester) SetHitDie(val LiveResterHitDie) {
+	s.HitDie = val
+}
+
+// SetHitDiceLeft sets the value of HitDiceLeft.
+func (s *LiveRester) SetHitDiceLeft(val int32) {
+	s.HitDiceLeft = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveRester) SetRollId(val OptID) {
+	s.RollId = val
+}
+
+type LiveResterHitDie string
+
+const (
+	LiveResterHitDieD6  LiveResterHitDie = "d6"
+	LiveResterHitDieD8  LiveResterHitDie = "d8"
+	LiveResterHitDieD10 LiveResterHitDie = "d10"
+	LiveResterHitDieD12 LiveResterHitDie = "d12"
+)
+
+// AllValues returns all LiveResterHitDie values.
+func (LiveResterHitDie) AllValues() []LiveResterHitDie {
+	return []LiveResterHitDie{
+		LiveResterHitDieD6,
+		LiveResterHitDieD8,
+		LiveResterHitDieD10,
+		LiveResterHitDieD12,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveResterHitDie) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveResterHitDieD6:
+		return []byte(s), nil
+	case LiveResterHitDieD8:
+		return []byte(s), nil
+	case LiveResterHitDieD10:
+		return []byte(s), nil
+	case LiveResterHitDieD12:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveResterHitDie) UnmarshalText(data []byte) error {
+	switch LiveResterHitDie(data) {
+	case LiveResterHitDieD6:
+		*s = LiveResterHitDieD6
+		return nil
+	case LiveResterHitDieD8:
+		*s = LiveResterHitDieD8
+		return nil
+	case LiveResterHitDieD10:
+		*s = LiveResterHitDieD10
+		return nil
+	case LiveResterHitDieD12:
+		*s = LiveResterHitDieD12
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A saving throw waiting on its Roll Card to end an Effect.
 // Ref: #/components/schemas/LiveSave
 type LiveSave struct {
@@ -12501,6 +12863,7 @@ type LiveView struct {
 	Checks     []LiveCheck      `json:"checks"`
 	Inventory  []LiveContainer  `json:"inventory"`
 	Shop       OptLiveShop      `json:"shop"`
+	Rest       OptLiveRest      `json:"rest"`
 	// Days passed in the Campaign; a long rest or travel moves it on.
 	GameDay OptInt32        `json:"gameDay"`
 	Walls   []HexCoord      `json:"walls"`
@@ -12601,6 +12964,11 @@ func (s *LiveView) GetInventory() []LiveContainer {
 // GetShop returns the value of Shop.
 func (s *LiveView) GetShop() OptLiveShop {
 	return s.Shop
+}
+
+// GetRest returns the value of Rest.
+func (s *LiveView) GetRest() OptLiveRest {
+	return s.Rest
 }
 
 // GetGameDay returns the value of GameDay.
@@ -12716,6 +13084,11 @@ func (s *LiveView) SetInventory(val []LiveContainer) {
 // SetShop sets the value of Shop.
 func (s *LiveView) SetShop(val OptLiveShop) {
 	s.Shop = val
+}
+
+// SetRest sets the value of Rest.
+func (s *LiveView) SetRest(val OptLiveRest) {
+	s.Rest = val
 }
 
 // SetGameDay sets the value of GameDay.
@@ -15774,6 +16147,52 @@ func (o OptLivePrompt) Get() (v LivePrompt, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLivePrompt) Or(d LivePrompt) LivePrompt {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveRest returns new OptLiveRest with value set to v.
+func NewOptLiveRest(v LiveRest) OptLiveRest {
+	return OptLiveRest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveRest is optional LiveRest.
+type OptLiveRest struct {
+	Value LiveRest
+	Set   bool
+}
+
+// IsSet returns true if OptLiveRest was set.
+func (o OptLiveRest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveRest) Reset() {
+	var v LiveRest
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveRest) SetTo(v LiveRest) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveRest) Get() (v LiveRest, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveRest) Or(d LiveRest) LiveRest {
 	if v, ok := o.Get(); ok {
 		return v
 	}

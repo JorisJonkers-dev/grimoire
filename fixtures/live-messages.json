@@ -579,6 +579,43 @@
       "r": 0,
       "hidden": false,
       "seq": 42
+    },
+    {
+      "nonce": "n64",
+      "kind": "propose_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "rest": "long"
+    },
+    {
+      "nonce": "n65",
+      "kind": "agree_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n66",
+      "kind": "spend_hit_die",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n67",
+      "kind": "finish_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n68",
+      "kind": "interrupt_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false
     }
   ],
   "updates": [
@@ -944,6 +981,26 @@
             {
               "characterId": "0190c7a8-0000-7000-8000-000000000034",
               "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ]
+        },
+        "rest": {
+          "kind": "short",
+          "status": "resting",
+          "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+          "agreed": [
+            "0190c7a8-0000-7000-8000-00000000000f"
+          ],
+          "waiting": [],
+          "waitingOnDm": false,
+          "resters": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "name": "Aria",
+              "hitDie": "d10",
+              "hitDiceLeft": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000036"
             }
           ]
         },
@@ -1366,6 +1423,26 @@
             }
           ]
         },
+        "rest": {
+          "kind": "short",
+          "status": "resting",
+          "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+          "agreed": [
+            "0190c7a8-0000-7000-8000-00000000000f"
+          ],
+          "waiting": [],
+          "waitingOnDm": false,
+          "resters": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "name": "Aria",
+              "hitDie": "d10",
+              "hitDiceLeft": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000036"
+            }
+          ]
+        },
         "gameDay": 3
       }
     },
@@ -1769,6 +1846,26 @@
             }
           ]
         },
+        "rest": {
+          "kind": "short",
+          "status": "resting",
+          "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+          "agreed": [
+            "0190c7a8-0000-7000-8000-00000000000f"
+          ],
+          "waiting": [],
+          "waitingOnDm": false,
+          "resters": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "name": "Aria",
+              "hitDie": "d10",
+              "hitDiceLeft": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000036"
+            }
+          ]
+        },
         "gameDay": 3
       },
       "steps": [
@@ -2125,6 +2222,26 @@
               {
                 "characterId": "0190c7a8-0000-7000-8000-000000000034",
                 "rollId": "0190c7a8-0000-7000-8000-000000000035"
+              }
+            ]
+          },
+          "rest": {
+            "kind": "short",
+            "status": "resting",
+            "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+            "agreed": [
+              "0190c7a8-0000-7000-8000-00000000000f"
+            ],
+            "waiting": [],
+            "waitingOnDm": false,
+            "resters": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+                "name": "Aria",
+                "hitDie": "d10",
+                "hitDiceLeft": 2,
+                "rollId": "0190c7a8-0000-7000-8000-000000000036"
               }
             ]
           },

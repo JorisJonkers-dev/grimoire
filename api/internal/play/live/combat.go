@@ -171,6 +171,10 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.checkRolled(c)
 		return true
 	}
+	if i, ok := r.st.pendingHitDie(id); ok {
+		r.hitDieRolled(i, id)
+		return true
+	}
 	if character, ok := r.st.pendingHaggle(id); ok {
 		r.haggled(character, id)
 		return true

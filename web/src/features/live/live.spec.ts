@@ -1508,3 +1508,75 @@ describe('action log', () => {
     expect(player.wrapper.find('[data-testid="action-log"]').exists()).toBe(false)
   })
 })
+
+describe('rest', () => {
+  const ARIA = '0190c7a8-0000-7000-8000-000000000071'
+  const BROM = '0190c7a8-0000-7000-8000-000000000072'
+  const ROLL = '0190c7a8-0000-7000-8000-000000000073'
+  const tokens: LiveToken[] = [
+    { id: ARIA, label: 'Aria', kind: 'party', q: 0, r: 0, hidden: false, darkvisionFt: 0, controllerId: player.id },
+    { id: BROM, label: 'Brom', kind: 'party', q: 1, r: 0, hidden: false, darkvisionFt: 0, controllerId: member.id },
+  ]
+  const resters = [
+    { characterId: ARIA, tokenId: ARIA, name: 'Aria', hitDie: 'd10' as const, hitDiceLeft: 2 },
+    { characterId: BROM, tokenId: BROM, name: 'Brom', hitDie: 'd12' as const, hitDiceLeft: 1, rollId: ROLL },
+  ]
+
+  it('lets a player propose a rest and spend their own Hit Dice', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot(tokens, 'party'))
+    await flushPromises()
+    await wrapper.get('[data-testid="propose-short"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'propose_rest', rest: 'short' })
+    await wrapper.get('[data-testid="propose-long"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'propose_rest', rest: 'long' })
+    s.receive(snapshot(tokens, 'party', { rest: { kind: 'short', status: 'proposed', proposedBy: player.id, agreed: [player.id], waiting: [], waitingOnDm: true, resters } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Short Rest proposed. Waiting on the DM.')
+    expect(wrapper.find('[data-testid="agree-rest"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="finish-rest"]').exists()).toBe(false)
+    s.receive(snapshot(tokens, 'party', { rest: { kind: 'short', status: 'resting', proposedBy: player.id, agreed: [player.id, member.id], waiting: [], waitingOnDm: false, resters } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Short Rest under way.')
+    expect(wrapper.get('[data-testid="rester-Brom"]').text()).toContain('Rolling…')
+    expect(wrapper.find('[aria-label="Spend a Hit Die for Brom"]').exists()).toBe(false)
+    await wrapper.get('[aria-label="Spend a Hit Die for Aria"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend_hit_die', tokenId: ARIA })
+    await expectAccessible(wrapper.get('[data-testid="rest"]').element)
+  })
+
+  it('lets the DM agree, finish, call off or interrupt, and never rest mid-fight', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign() })
+    const s = FakeSocket.last()
+    const proposed = { kind: 'long', status: 'proposed', proposedBy: player.id, agreed: [player.id], waiting: [BROM], waitingOnDm: true, resters }
+    s.receive(snapshot(tokens, 'dm', { rest: proposed }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Long Rest proposed. Waiting on the DM and 1 player.')
+    await wrapper.get('[data-testid="agree-rest"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'agree_rest' })
+    expect(wrapper.get('[data-testid="interrupt-rest"]').text()).toBe('Call it off')
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, waiting: [BROM, ARIA], waitingOnDm: false } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Long Rest proposed. Waiting on 2 players.')
+    expect(wrapper.find('[data-testid="agree-rest"]').exists()).toBe(false)
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, waiting: [], waitingOnDm: false } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Long Rest proposed.')
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, status: 'resting', waiting: [], waitingOnDm: false } }))
+    await flushPromises()
+    expect(wrapper.find('[aria-label="Spend a Hit Die for Aria"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="finish-rest"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'finish_rest' })
+    expect(wrapper.get('[data-testid="interrupt-rest"]').text()).toBe('Interrupt')
+    await wrapper.get('[data-testid="interrupt-rest"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'interrupt_rest' })
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, kind: 'short', status: 'resting', waiting: [], waitingOnDm: false } }))
+    await flushPromises()
+    await wrapper.get('[aria-label="Spend a Hit Die for Aria"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend_hit_die', tokenId: ARIA })
+    s.receive(snapshot(tokens, 'dm', { combat: { status: 'active', round: 1, combatants: [] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest"]').text()).toContain('Nobody rests in the middle of a fight.')
+  })
+})

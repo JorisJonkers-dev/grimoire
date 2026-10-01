@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -83,6 +84,13 @@ type Write struct {
 	Restock *prep.Shop
 	Day     *int
 	haggle  *haggleChange
+	// Resting is the rest a write leaves under way; RestOver ends it. Supplies are the Rations a Long
+	// Rest ate; Results what a finished rest leaves each Character with; Healed the hit points it gave back.
+	Resting  *domain.Rest
+	RestOver bool
+	Supplies []domain.Supply
+	Results  []domain.RestResult
+	Healed   []HPChange
 	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
 	Spawned []domain.Token
 	Undoes  uuid.UUID
@@ -106,12 +114,29 @@ type Write struct {
 	resource    combat.Resource
 }
 
+// loadRules reads the Effect catalogue and the rest the Session has under way.
+func (h *Hub) loadRules(ctx context.Context, s domain.Session) (effects.Catalog, *domain.Rest, error) {
+	catalog, err := h.Store.Effects(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	rest, err := h.Store.LoadRest(ctx, s.CampaignID, s.ID)
+	return catalog, rest, err
+}
+
 // Store is the runtime's persistence port.
 type Store interface {
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
+	// LoadRest reads the rest a Session has under way, with each rester's Hit Die roll still out; nil when none.
+	LoadRest(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (*domain.Rest, error)
+	// RestInfo reads what a rest needs of each Character; RestSupplies whether a Long Rest costs Rations.
+	RestInfo(ctx context.Context, campaign uuid.UUID, characters []uuid.UUID) ([]domain.Rester, error)
+	RestSupplies(ctx context.Context, campaign uuid.UUID) (bool, error)
+	// Features reads what classes, species and feats grant.
+	Features(ctx context.Context) (features.Catalog, error)
 	// Effects reads the Effect catalogue the rules resolve against.
 	Effects(ctx context.Context) (effects.Catalog, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
@@ -281,7 +306,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	catalog, err := h.Store.Effects(ctx)
+	catalog, rest, err := h.loadRules(ctx, s)
 	if err != nil {
 		release()
 		return nil, err
@@ -317,7 +342,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, rest: rest, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -552,7 +577,8 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie:
 		return true
 	}
 	return false
@@ -685,7 +711,11 @@ func change(s *state, w *Write) {
 		s.table, s.tableMap = *w.Table, w.tableMap
 		return
 	case domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
-		domain.ActionRestTaken, domain.ActionCheckScheduled:
+		domain.ActionCheckScheduled:
+		return
+	case domain.ActionRestTaken, domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent,
+		domain.ActionHitDieHealed, domain.ActionRestInterrupted:
+		applyRest(s, w)
 		return
 	case domain.ActionEncounterChecked, domain.ActionEncounterResolved:
 		applyCheck(s, *w.Check)

@@ -3332,6 +3332,7 @@ components:
         createdAt: { type: string, format: date-time, maxLength: 40 }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
+        restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
     CampaignPage:
       type: object
       description: One page of campaigns.
@@ -3371,6 +3372,7 @@ components:
         createdAt: { type: string, format: date-time, maxLength: 40 }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
+        restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         me: { $ref: "#/components/schemas/Member" }
         members:
           type: array
@@ -3394,6 +3396,7 @@ components:
         ruleset: { $ref: "#/components/schemas/CampaignRuleset" }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
+        restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
     ReactionTimeout:
       type: integer
       format: int32
@@ -4468,7 +4471,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4612,6 +4615,40 @@ components:
         name: { type: string, maxLength: 120 }
         count: { type: integer, format: int32, minimum: 1, maximum: 100000 }
         weightLb: { type: number, format: double, minimum: 0, maximum: 100000000 }
+    LiveRest:
+      type: object
+      description: The rest the party proposed or is taking. It starts once the DM and every Player resting a Character agree; a Short Rest spends Hit Dice.
+      additionalProperties: false
+      required: [kind, status, proposedBy, agreed, waiting, waitingOnDm, resters]
+      properties:
+        kind: { type: string, enum: [short, long] }
+        status: { type: string, enum: [proposed, resting] }
+        proposedBy: { $ref: "#/components/schemas/Id" }
+        agreed:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Id" }
+        waiting:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Id" }
+        waitingOnDm: { type: boolean }
+        resters:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/LiveRester" }
+    LiveRester:
+      type: object
+      description: A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+      additionalProperties: false
+      required: [characterId, tokenId, name, hitDie, hitDiceLeft]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        tokenId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        hitDie: { type: string, enum: [d6, d8, d10, d12] }
+        hitDiceLeft: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        rollId: { $ref: "#/components/schemas/Id" }
     LiveItemInstance:
       type: object
       description: One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
@@ -5134,6 +5171,7 @@ components:
           maxItems: 1000
           items: { $ref: "#/components/schemas/LiveContainer" }
         shop: { $ref: "#/components/schemas/LiveShop" }
+        rest: { $ref: "#/components/schemas/LiveRest" }
         gameDay: { type: integer, format: int32, minimum: 0, maximum: 1000000, description: "Days passed in the Campaign; a long rest or travel moves it on." }
         walls:
           type: array

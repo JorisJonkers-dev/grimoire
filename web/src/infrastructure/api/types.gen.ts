@@ -41,6 +41,10 @@ export type CampaignSummary = {
      * Optional rule: attacks from higher ground get +2 to hit.
      */
     highGround?: boolean;
+    /**
+     * Optional rule: a Long Rest costs each resting Character a day of Rations.
+     */
+    restSupplies?: boolean;
 };
 
 /**
@@ -77,6 +81,10 @@ export type Campaign = {
      * Optional rule: attacks from higher ground get +2 to hit.
      */
     highGround?: boolean;
+    /**
+     * Optional rule: a Long Rest costs each resting Character a day of Rations.
+     */
+    restSupplies?: boolean;
     me: Member;
     members: Array<Member>;
 };
@@ -101,6 +109,10 @@ export type CampaignUpdate = {
      * Optional rule: attacks from higher ground get +2 to hit.
      */
     highGround?: boolean;
+    /**
+     * Optional rule: a Long Rest costs each resting Character a day of Rations.
+     */
+    restSupplies?: boolean;
 };
 
 /**
@@ -1053,7 +1065,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1203,6 +1215,31 @@ export type LiveItem = {
     name: string;
     count: number;
     weightLb: number;
+};
+
+/**
+ * The rest the party proposed or is taking. It starts once the DM and every Player resting a Character agree; a Short Rest spends Hit Dice.
+ */
+export type LiveRest = {
+    kind: 'short' | 'long';
+    status: 'proposed' | 'resting';
+    proposedBy: Id;
+    agreed: Array<Id>;
+    waiting: Array<Id>;
+    waitingOnDm: boolean;
+    resters: Array<LiveRester>;
+};
+
+/**
+ * A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+ */
+export type LiveRester = {
+    characterId: Id;
+    tokenId: Id;
+    name: string;
+    hitDie: 'd6' | 'd8' | 'd10' | 'd12';
+    hitDiceLeft: number;
+    rollId?: Id;
 };
 
 /**
@@ -1656,6 +1693,7 @@ export type LiveView = {
     checks?: Array<LiveCheck>;
     inventory?: Array<LiveContainer>;
     shop?: LiveShop;
+    rest?: LiveRest;
     /**
      * Days passed in the Campaign; a long rest or travel moves it on.
      */
