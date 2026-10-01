@@ -14995,6 +14995,90 @@ func (s *LiveCommand) Validate() error {
 		})
 	}
 	if err := func() error {
+		if value, ok := s.Action.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "action",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Detail.Get(); ok {
+			if err := func() error {
+				if err := (validate.String{
+					MinLength:     0,
+					MinLengthSet:  false,
+					MaxLength:     200,
+					MaxLengthSet:  true,
+					Email:         false,
+					Hostname:      false,
+					Regex:         nil,
+					MinNumeric:    0,
+					MinNumericSet: false,
+					MaxNumeric:    0,
+					MaxNumericSet: false,
+				}).Validate(string(value)); err != nil {
+					return errors.Wrap(err, "string")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "detail",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Trigger.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "trigger",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Option.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "option",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if value, ok := s.ItemSlug.Get(); ok {
 			if err := func() error {
 				if err := value.Validate(); err != nil {
@@ -15156,6 +15240,35 @@ func (s *LiveCommand) Validate() error {
 	return nil
 }
 
+func (s LiveCommandAction) Validate() error {
+	switch s {
+	case "dash":
+		return nil
+	case "disengage":
+		return nil
+	case "dodge":
+		return nil
+	case "help":
+		return nil
+	case "hide":
+		return nil
+	case "influence":
+		return nil
+	case "magic":
+		return nil
+	case "ready":
+		return nil
+	case "search":
+		return nil
+	case "study":
+		return nil
+	case "utilize":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s LiveCommandDue) Validate() error {
 	switch s {
 	case "next_rest":
@@ -15294,6 +15407,23 @@ func (s LiveCommandKind) Validate() error {
 	case "finish_rest":
 		return nil
 	case "interrupt_rest":
+		return nil
+	case "take_action":
+		return nil
+	case "unarmed":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s LiveCommandOption) Validate() error {
+	switch s {
+	case "grapple":
+		return nil
+	case "shove_push":
+		return nil
+	case "shove_prone":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
@@ -15559,6 +15689,15 @@ func (s LiveCommandSurface) Validate() error {
 	case "web":
 		return nil
 	case "electrified":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s LiveCommandTrigger) Validate() error {
+	switch s {
+	case "enters_reach":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

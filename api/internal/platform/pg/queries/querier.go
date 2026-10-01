@@ -122,6 +122,7 @@ type Querier interface {
 	DeleteLootTable(ctx context.Context, arg DeleteLootTableParams) (int64, error)
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
+	DeletePendingAction(ctx context.Context, rollID uuid.UUID) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
@@ -201,6 +202,7 @@ type Querier interface {
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
 	InsertNode(ctx context.Context, arg InsertNodeParams) error
+	InsertPendingAction(ctx context.Context, arg InsertPendingActionParams) error
 	InsertPendingSave(ctx context.Context, arg InsertPendingSaveParams) error
 	InsertPoolMember(ctx context.Context, arg InsertPoolMemberParams) error
 	InsertPoolRevision(ctx context.Context, arg InsertPoolRevisionParams) error
@@ -347,6 +349,7 @@ type Querier interface {
 	SessionLog(ctx context.Context, arg SessionLogParams) ([]SessionLogRow, error)
 	SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error)
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
+	SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error)
 	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)
 	SessionShop(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
 	SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error)

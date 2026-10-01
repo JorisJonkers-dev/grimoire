@@ -84,6 +84,8 @@ const (
 	CmdSpendHitDie    = "spend_hit_die"
 	CmdFinishRest     = "finish_rest"
 	CmdInterruptRest  = "interrupt_rest"
+	CmdTakeAction     = "take_action"
+	CmdUnarmed        = "unarmed"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -172,9 +174,15 @@ type Command struct {
 	ToID         string           `json:"toId,omitempty"`
 	ItemSlug     string           `json:"itemSlug,omitempty"`
 	InstanceID   string           `json:"instanceId,omitempty"`
-	Coin         string           `json:"coin,omitempty"`
-	Count        int              `json:"count,omitempty"`
-	ShopID       string           `json:"shopId,omitempty"`
+	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
+	// Trigger sets off a readied attack; Option is a Grapple or Shove.
+	Action  string `json:"action,omitempty"`
+	Detail  string `json:"detail,omitempty"`
+	Trigger string `json:"trigger,omitempty"`
+	Option  string `json:"option,omitempty"`
+	Coin    string `json:"coin,omitempty"`
+	Count   int    `json:"count,omitempty"`
+	ShopID  string `json:"shopId,omitempty"`
 	// Monsters are what spawn_encounter places; HPDelta is what adjust_hp adds; Seq is the Action undo reverts.
 	Monsters []SpawnMonster `json:"monsters,omitempty"`
 	HPDelta  int            `json:"hpDelta,omitempty"`
@@ -545,6 +553,10 @@ type CombatantView struct {
 	Reaction     bool   `json:"reaction"`
 	MovementFt   int    `json:"movementFt"`
 	SpeedFt      int    `json:"speedFt"`
+	// Disengaged movement provokes no opportunity attacks; a Readied attack is shown to the DM and,
+	// for the party's own Combatants, to the party.
+	Disengaged bool `json:"disengaged,omitempty"`
+	Readied    bool `json:"readied,omitempty"`
 	// Tactics and Suggestion go to the DM only.
 	Surprised  bool            `json:"surprised,omitempty"`
 	Tactics    string          `json:"tactics,omitempty"`

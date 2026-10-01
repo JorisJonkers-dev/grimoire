@@ -616,6 +616,36 @@
       "q": 0,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n69",
+      "kind": "take_action",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "action": "ready",
+      "trigger": "enters_reach"
+    },
+    {
+      "nonce": "n70",
+      "kind": "take_action",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "action": "utilize",
+      "detail": "pulls the lever"
+    },
+    {
+      "nonce": "n71",
+      "kind": "unarmed",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "option": "shove_push"
     }
   ],
   "updates": [
@@ -736,6 +766,8 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "disengaged": true,
+              "readied": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1143,6 +1175,8 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "disengaged": true,
+              "readied": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1612,6 +1646,8 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "disengaged": true,
+              "readied": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1998,6 +2034,8 @@
                 "reaction": true,
                 "movementFt": 20,
                 "speedFt": 30,
+                "disengaged": true,
+                "readied": true,
                 "surprised": true,
                 "tactics": "auto",
                 "suggestion": {

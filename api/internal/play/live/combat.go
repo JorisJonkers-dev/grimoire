@@ -173,6 +173,10 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.checkRolled(c)
 		return true
 	}
+	if p, ok := r.st.pendingAction(id); ok {
+		r.actionRolled(p)
+		return true
+	}
 	if i, ok := r.st.pendingHitDie(id); ok {
 		r.hitDieRolled(i, id)
 		return true
@@ -298,6 +302,7 @@ func startTurn(c *domain.Combat, speed func(domain.Combatant) int) {
 	for i, x := range c.Combatants {
 		if c.Acting(x) {
 			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(speed(x)), false
+			c.Combatants[i].Disengaged, c.Combatants[i].Readied = false, nil
 		}
 	}
 }
@@ -365,7 +370,8 @@ func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, 
 	cv := CombatantView{
 		ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
 		Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
-		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised,
+		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised, Disengaged: x.Disengaged,
+		Readied: x.Readied != nil && (a == AudienceDM || t.Kind == domain.TokenParty),
 	}
 	if x.Initiative != nil {
 		cv.Rank = combat.Rank(totals, *x.Initiative)

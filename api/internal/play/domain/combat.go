@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
@@ -57,12 +58,39 @@ type Combatant struct {
 	Shielded bool
 	// Surprised Combatants did not notice the ambush and rolled initiative at disadvantage.
 	Surprised bool
+	// Disengaged movement provokes no opportunity attacks until the Combatant's next turn.
+	Disengaged bool
+	// Readied is an attack waiting on its trigger until the Combatant's next turn.
+	Readied *Readied
 }
+
+// Readied is a readied attack: what sets it off, and which attack it makes.
+type Readied struct {
+	Trigger  actions.Trigger
+	AttackNo int
+}
+
+// PendingAction is a Hide, Grapple or Shove waiting on its roll.
+type PendingAction struct {
+	RollID RollID
+	Actor  TokenID
+	Target *TokenID
+	Action string
+	DC     int
+}
+
+// Action kinds for the 2024 actions in the Action Log.
+const (
+	ActionTaken    = "action_taken"
+	ActionUnarmed  = "unarmed_strike"
+	ActionResolved = "action_resolved"
+)
 
 // Reaction kinds and the stage an attack waits in while its target decides.
 const (
 	PromptOpportunity = "opportunity_attack"
 	PromptShield      = "shield"
+	PromptReadied     = "readied"
 	StageReaction     = "reaction"
 )
 

@@ -81,6 +81,8 @@ type Stats struct {
 	Perception int
 	Initiative int
 	SpeedFt    int
+	// UnarmedDC is the save a Grapple or Shove from this creature forces.
+	UnarmedDC int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.

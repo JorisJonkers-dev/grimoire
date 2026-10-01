@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -49,6 +50,7 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	stats := domain.Stats{
 		Source: "monster:" + slug, AC: int(m.ArmorClass), HP: int(m.HitPoints), HPMax: int(m.HitPoints), Attacks: []domain.Attack{},
 		Intelligence: int(m.Intelligence), Saves: map[string]int{},
+		UnarmedDC: actions.UnarmedDC(rules.Modifier(int(m.Strength)), rules.ProficiencyByChallenge(m.ChallengeRating)),
 	}
 	scores := map[string]int32{
 		"strength": m.Strength, "dexterity": m.Dexterity, "constitution": m.Constitution, "intelligence": m.Intelligence, "wisdom": m.Wisdom,
@@ -93,7 +95,7 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	pb := sheet.Derived.ProficiencyBonus
 	stats := domain.Stats{
 		Source: "character:" + id.String(), AC: sheet.Derived.ArmorClass, HP: sheet.HPCurrent, HPMax: sheet.HPMax,
-		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{},
+		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{}, UnarmedDC: actions.UnarmedDC(str, pb),
 		Attacks: []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning"}},
 	}
 	for _, sv := range sheet.Derived.Saves {

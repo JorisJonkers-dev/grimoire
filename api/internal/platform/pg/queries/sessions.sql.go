@@ -266,7 +266,7 @@ func (q *Queries) CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAtt
 
 const combatCombatants = `-- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
-       shielded, surprised
+       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack
 FROM play.combatants WHERE combat_id = $1 ORDER BY id
 `
 
@@ -294,6 +294,10 @@ func (q *Queries) CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]P
 			&i.MovementFt,
 			&i.Shielded,
 			&i.Surprised,
+			&i.Disengaged,
+			&i.ReadiedTrigger,
+			&i.ReadiedWho,
+			&i.ReadiedAttack,
 		); err != nil {
 			return nil, err
 		}
@@ -332,6 +336,15 @@ func (q *Queries) CombatPrompt(ctx context.Context, combatID uuid.UUID) (CombatP
 		&i.Deadline,
 	)
 	return i, err
+}
+
+const deletePendingAction = `-- name: DeletePendingAction :exec
+DELETE FROM play.pending_actions WHERE roll_id = $1
+`
+
+func (q *Queries) DeletePendingAction(ctx context.Context, rollID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deletePendingAction, rollID)
+	return err
 }
 
 const deleteToken = `-- name: DeleteToken :exec
@@ -546,6 +559,32 @@ func (q *Queries) InsertManual(ctx context.Context, arg InsertManualParams) erro
 	return err
 }
 
+const insertPendingAction = `-- name: InsertPendingAction :exec
+INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertPendingActionParams struct {
+	RollID        uuid.UUID
+	SessionID     uuid.UUID
+	ActorTokenID  uuid.UUID
+	TargetTokenID pgtype.UUID
+	Action        string
+	Dc            int32
+}
+
+func (q *Queries) InsertPendingAction(ctx context.Context, arg InsertPendingActionParams) error {
+	_, err := q.db.Exec(ctx, insertPendingAction,
+		arg.RollID,
+		arg.SessionID,
+		arg.ActorTokenID,
+		arg.TargetTokenID,
+		arg.Action,
+		arg.Dc,
+	)
+	return err
+}
+
 const insertPendingSave = `-- name: InsertPendingSave :exec
 INSERT INTO play.pending_saves (roll_id, effect_id, session_id, dc) VALUES ($1, $2, $3, $4)
 `
@@ -656,10 +695,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20)
+    $18, $19, $20, $21)
 `
 
 type InsertTokenParams struct {
@@ -683,6 +722,7 @@ type InsertTokenParams struct {
 	Perception         int32
 	Initiative         int32
 	SpeedFt            int32
+	UnarmedDc          int32
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -707,6 +747,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.Perception,
 		arg.Initiative,
 		arg.SpeedFt,
+		arg.UnarmedDc,
 	)
 	return err
 }
@@ -1002,7 +1043,8 @@ func (q *Queries) MonsterSaves(ctx context.Context, monsterID int64) ([]MonsterS
 }
 
 const monsterStatblock = `-- name: MonsterStatblock :one
-SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma
+SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma,
+       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating
 FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = $1 AND ($2::text IS NULL OR d.key = $2::text)
@@ -1015,16 +1057,17 @@ type MonsterStatblockParams struct {
 }
 
 type MonsterStatblockRow struct {
-	ID           int64
-	Name         string
-	ArmorClass   int32
-	HitPoints    int32
-	Intelligence int32
-	Strength     int32
-	Dexterity    int32
-	Constitution int32
-	Wisdom       int32
-	Charisma     int32
+	ID              int64
+	Name            string
+	ArmorClass      int32
+	HitPoints       int32
+	Intelligence    int32
+	Strength        int32
+	Dexterity       int32
+	Constitution    int32
+	Wisdom          int32
+	Charisma        int32
+	ChallengeRating float64
 }
 
 func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockParams) (MonsterStatblockRow, error) {
@@ -1041,6 +1084,7 @@ func (q *Queries) MonsterStatblock(ctx context.Context, arg MonsterStatblockPara
 		&i.Constitution,
 		&i.Wisdom,
 		&i.Charisma,
+		&i.ChallengeRating,
 	)
 	return i, err
 }
@@ -1202,12 +1246,14 @@ func (q *Queries) SaveCombat(ctx context.Context, arg SaveCombatParams) error {
 
 const saveCombatant = `-- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft, shielded, surprised)
+    has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
-    $10, $11, $12, $13, $14)
+    $10, $11, $12, $13, $14, $15, $16, $17,
+    $18)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
-    shielded = excluded.shielded
+    shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
+    readied_who = excluded.readied_who, readied_attack = excluded.readied_attack
 `
 
 type SaveCombatantParams struct {
@@ -1225,6 +1271,10 @@ type SaveCombatantParams struct {
 	MovementFt      int32
 	Shielded        bool
 	Surprised       bool
+	Disengaged      bool
+	ReadiedTrigger  pgtype.Text
+	ReadiedWho      pgtype.UUID
+	ReadiedAttack   pgtype.Int4
 }
 
 func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) error {
@@ -1243,6 +1293,10 @@ func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) er
 		arg.MovementFt,
 		arg.Shielded,
 		arg.Surprised,
+		arg.Disengaged,
+		arg.ReadiedTrigger,
+		arg.ReadiedWho,
+		arg.ReadiedAttack,
 	)
 	return err
 }
@@ -1521,6 +1575,44 @@ func (q *Queries) SessionObservations(ctx context.Context, sessionID uuid.UUID) 
 	return items, nil
 }
 
+const sessionPendingActions = `-- name: SessionPendingActions :many
+SELECT roll_id, actor_token_id, target_token_id, action, dc FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id
+`
+
+type SessionPendingActionsRow struct {
+	RollID        uuid.UUID
+	ActorTokenID  uuid.UUID
+	TargetTokenID pgtype.UUID
+	Action        string
+	Dc            int32
+}
+
+func (q *Queries) SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error) {
+	rows, err := q.db.Query(ctx, sessionPendingActions, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionPendingActionsRow{}
+	for rows.Next() {
+		var i SessionPendingActionsRow
+		if err := rows.Scan(
+			&i.RollID,
+			&i.ActorTokenID,
+			&i.TargetTokenID,
+			&i.Action,
+			&i.Dc,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionPendingSaves = `-- name: SessionPendingSaves :many
 SELECT roll_id, effect_id, dc FROM play.pending_saves WHERE session_id = $1
 `
@@ -1682,7 +1774,7 @@ func (q *Queries) SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -1706,6 +1798,7 @@ type SessionTokensRow struct {
 	Perception         int32
 	Initiative         int32
 	SpeedFt            int32
+	UnarmedDc          int32
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -1738,6 +1831,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Perception,
 			&i.Initiative,
 			&i.SpeedFt,
+			&i.UnarmedDc,
 		); err != nil {
 			return nil, err
 		}

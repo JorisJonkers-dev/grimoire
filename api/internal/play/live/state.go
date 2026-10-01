@@ -47,8 +47,9 @@ type state struct {
 	fx       domain.Effects
 	// catalog is every Effect the rules know.
 	catalog effects.Catalog
-	// rest is the rest proposed or under way.
-	rest *domain.Rest
+	// rest is the rest proposed or under way; pending the Hides, Grapples and Shoves waiting on rolls.
+	rest    *domain.Rest
+	pending []domain.PendingAction
 }
 
 // cloneEffects copies a Session's Effects so a change never touches the committed state.
@@ -69,7 +70,7 @@ func (s *state) clone() *state {
 		next.zones = append(next.zones, cloneZone(z))
 	}
 	next.checks = slices.Clone(s.checks)
-	next.rest = s.rest.Clone()
+	next.rest, next.pending = s.rest.Clone(), slices.Clone(s.pending)
 	next.inventory, next.day = cloneInventory(s.inventory), s.day
 	if s.shop != nil {
 		next.shop = s.shop.Clone()

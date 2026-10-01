@@ -11859,6 +11859,18 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Disengaged.Set {
+			e.FieldStart("disengaged")
+			s.Disengaged.Encode(e)
+		}
+	}
+	{
+		if s.Readied.Set {
+			e.FieldStart("readied")
+			s.Readied.Encode(e)
+		}
+	}
+	{
 		if s.Tactics.Set {
 			e.FieldStart("tactics")
 			s.Tactics.Encode(e)
@@ -11872,7 +11884,7 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCombatant = [18]string{
+var jsonFieldsNameOfLiveCombatant = [20]string{
 	0:  "id",
 	1:  "tokenId",
 	2:  "label",
@@ -11889,8 +11901,10 @@ var jsonFieldsNameOfLiveCombatant = [18]string{
 	13: "movementFt",
 	14: "speedFt",
 	15: "surprised",
-	16: "tactics",
-	17: "suggestion",
+	16: "disengaged",
+	17: "readied",
+	18: "tactics",
+	19: "suggestion",
 }
 
 // Decode decodes LiveCombatant from json.
@@ -12077,6 +12091,26 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"surprised\"")
+			}
+		case "disengaged":
+			if err := func() error {
+				s.Disengaged.Reset()
+				if err := s.Disengaged.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"disengaged\"")
+			}
+		case "readied":
+			if err := func() error {
+				s.Readied.Reset()
+				if err := s.Readied.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"readied\"")
 			}
 		case "tactics":
 			if err := func() error {
@@ -12640,6 +12674,30 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Action.Set {
+			e.FieldStart("action")
+			s.Action.Encode(e)
+		}
+	}
+	{
+		if s.Detail.Set {
+			e.FieldStart("detail")
+			s.Detail.Encode(e)
+		}
+	}
+	{
+		if s.Trigger.Set {
+			e.FieldStart("trigger")
+			s.Trigger.Encode(e)
+		}
+	}
+	{
+		if s.Option.Set {
+			e.FieldStart("option")
+			s.Option.Encode(e)
+		}
+	}
+	{
 		if s.ToId.Set {
 			e.FieldStart("toId")
 			s.ToId.Encode(e)
@@ -12693,7 +12751,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [66]string{
+var jsonFieldsNameOfLiveCommand = [70]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -12752,14 +12810,18 @@ var jsonFieldsNameOfLiveCommand = [66]string{
 	55: "lootTableId",
 	56: "fromId",
 	57: "instanceId",
-	58: "toId",
-	59: "itemSlug",
-	60: "coin",
-	61: "count",
-	62: "shopId",
-	63: "monsters",
-	64: "hpDelta",
-	65: "seq",
+	58: "action",
+	59: "detail",
+	60: "trigger",
+	61: "option",
+	62: "toId",
+	63: "itemSlug",
+	64: "coin",
+	65: "count",
+	66: "shopId",
+	67: "monsters",
+	68: "hpDelta",
+	69: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13373,6 +13435,46 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"instanceId\"")
 			}
+		case "action":
+			if err := func() error {
+				s.Action.Reset()
+				if err := s.Action.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"action\"")
+			}
+		case "detail":
+			if err := func() error {
+				s.Detail.Reset()
+				if err := s.Detail.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"detail\"")
+			}
+		case "trigger":
+			if err := func() error {
+				s.Trigger.Reset()
+				if err := s.Trigger.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"trigger\"")
+			}
+		case "option":
+			if err := func() error {
+				s.Option.Reset()
+				if err := s.Option.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"option\"")
+			}
 		case "toId":
 			if err := func() error {
 				s.ToId.Reset()
@@ -13520,6 +13622,64 @@ func (s *LiveCommand) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveCommand) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandAction as json.
+func (s LiveCommandAction) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveCommandAction from json.
+func (s *LiveCommandAction) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveCommandAction to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveCommandAction(v) {
+	case LiveCommandActionDash:
+		*s = LiveCommandActionDash
+	case LiveCommandActionDisengage:
+		*s = LiveCommandActionDisengage
+	case LiveCommandActionDodge:
+		*s = LiveCommandActionDodge
+	case LiveCommandActionHelp:
+		*s = LiveCommandActionHelp
+	case LiveCommandActionHide:
+		*s = LiveCommandActionHide
+	case LiveCommandActionInfluence:
+		*s = LiveCommandActionInfluence
+	case LiveCommandActionMagic:
+		*s = LiveCommandActionMagic
+	case LiveCommandActionReady:
+		*s = LiveCommandActionReady
+	case LiveCommandActionSearch:
+		*s = LiveCommandActionSearch
+	case LiveCommandActionStudy:
+		*s = LiveCommandActionStudy
+	case LiveCommandActionUtilize:
+		*s = LiveCommandActionUtilize
+	default:
+		*s = LiveCommandAction(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveCommandAction) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveCommandAction) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -13706,6 +13866,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindFinishRest
 	case LiveCommandKindInterruptRest:
 		*s = LiveCommandKindInterruptRest
+	case LiveCommandKindTakeAction:
+		*s = LiveCommandKindTakeAction
+	case LiveCommandKindUnarmed:
+		*s = LiveCommandKindUnarmed
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -13722,6 +13886,48 @@ func (s LiveCommandKind) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveCommandKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandOption as json.
+func (s LiveCommandOption) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveCommandOption from json.
+func (s *LiveCommandOption) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveCommandOption to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveCommandOption(v) {
+	case LiveCommandOptionGrapple:
+		*s = LiveCommandOptionGrapple
+	case LiveCommandOptionShovePush:
+		*s = LiveCommandOptionShovePush
+	case LiveCommandOptionShoveProne:
+		*s = LiveCommandOptionShoveProne
+	default:
+		*s = LiveCommandOption(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveCommandOption) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveCommandOption) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -14016,6 +14222,44 @@ func (s LiveCommandSurface) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveCommandSurface) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandTrigger as json.
+func (s LiveCommandTrigger) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveCommandTrigger from json.
+func (s *LiveCommandTrigger) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveCommandTrigger to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveCommandTrigger(v) {
+	case LiveCommandTriggerEntersReach:
+		*s = LiveCommandTriggerEntersReach
+	default:
+		*s = LiveCommandTrigger(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveCommandTrigger) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveCommandTrigger) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -23808,6 +24052,39 @@ func (s *OptLiveCombat) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes LiveCommandAction as json.
+func (o OptLiveCommandAction) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveCommandAction from json.
+func (o *OptLiveCommandAction) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveCommandAction to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveCommandAction) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveCommandAction) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes LiveCommandDue as json.
 func (o OptLiveCommandDue) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -23837,6 +24114,39 @@ func (s OptLiveCommandDue) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveCommandDue) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandOption as json.
+func (o OptLiveCommandOption) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveCommandOption from json.
+func (o *OptLiveCommandOption) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveCommandOption to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveCommandOption) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveCommandOption) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -23936,6 +24246,39 @@ func (s OptLiveCommandSurface) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveCommandSurface) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandTrigger as json.
+func (o OptLiveCommandTrigger) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveCommandTrigger from json.
+func (o *OptLiveCommandTrigger) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveCommandTrigger to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveCommandTrigger) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveCommandTrigger) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

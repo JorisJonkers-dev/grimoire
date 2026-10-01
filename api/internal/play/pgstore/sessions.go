@@ -15,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
@@ -150,7 +151,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 			tok.Stats = &domain.Stats{
 				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
 				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
-				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt),
+				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc),
 			}
 		}
 		tokens = append(tokens, tok)
@@ -206,6 +207,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
 			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveRest(ctx, sess, w, actor, c, now) },
+			func() error { return tx.saveActions(ctx, sess, w, actor, c, now) },
 			func() error {
 				if board == nil {
 					return nil
@@ -272,7 +274,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
 		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
-		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted:
+		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
+		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved:
 		return nil
 	case domain.ActionEncounterSpawned:
 		for _, t := range w.Spawned {
@@ -309,13 +312,17 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
 	}
 	if t.Stats == nil {
-		p.SpeedFt = 30
+		p.SpeedFt, p.UnarmedDc = 30, 10
 		return s.q.InsertToken(ctx, p)
 	}
 	st := t.Stats
 	p.StatSource = pgtype.Text{String: st.Source, Valid: true}
 	p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
 	p.Stealth, p.Perception, p.Initiative, p.SpeedFt = int32(st.Stealth), int32(st.Perception), int32(st.Initiative), int32(st.SpeedFt)
+	p.UnarmedDc = int32(max(1, min(40, st.UnarmedDC)))
+	if st.UnarmedDC == 0 {
+		p.UnarmedDc = 10
+	}
 	if st.SpellDC > 0 {
 		p.SpellDc = pgInt(st.SpellDC)
 	}
@@ -408,7 +415,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
-		domain.ActionAreaResolved:
+		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -478,7 +485,13 @@ func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
 			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
 			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt), Shielded: x.Shielded,
-			Surprised: x.Surprised,
+			Surprised: x.Surprised, Disengaged: x.Disengaged,
+		}
+		if r := x.Readied; r != nil {
+			cp.ReadiedTrigger, cp.ReadiedAttack = pgtype.Text{String: string(r.Trigger.Kind), Valid: true}, pgInt(r.AttackNo)
+			if who, err := uuid.Parse(r.Trigger.Who); err == nil {
+				cp.ReadiedWho = pgtype.UUID{Bytes: who, Valid: true}
+			}
 		}
 		if x.Initiative != nil {
 			cp.Initiative = pgtype.Int4{Int32: int32(*x.Initiative), Valid: true}
@@ -696,12 +709,18 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	for _, x := range rows {
 		c := domain.Combatant{
 			ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
-			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised,
+			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised, Disengaged: x.Disengaged,
 			Economy: combat.Economy{Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt)},
 		}
 		if x.Initiative.Valid {
 			n := int(x.Initiative.Int32)
 			c.Initiative = &n
+		}
+		if x.ReadiedTrigger.Valid {
+			c.Readied = &domain.Readied{Trigger: actions.Trigger{Kind: actions.TriggerKind(x.ReadiedTrigger.String), Who: ""}, AttackNo: int(x.ReadiedAttack.Int32)}
+			if x.ReadiedWho.Valid {
+				c.Readied.Trigger.Who = uuid.UUID(x.ReadiedWho.Bytes).String()
+			}
 		}
 		out.Combatants = append(out.Combatants, c)
 	}

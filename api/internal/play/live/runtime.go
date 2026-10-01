@@ -91,6 +91,13 @@ type Write struct {
 	Supplies []domain.Supply
 	Results  []domain.RestResult
 	Healed   []HPChange
+	// Pending is a Hide, Grapple or Shove waiting on its roll; Settled the roll of one that resolved.
+	// Pushed is a shoved creature where it lands; Dragged a grappled creature pulled along a walk.
+	Pending *domain.PendingAction
+	Settled domain.RollID
+	Pushed  *domain.Token
+	Dragged *domain.Token
+	taken   *takenAction
 	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
 	Spawned []domain.Token
 	Undoes  uuid.UUID
@@ -114,14 +121,19 @@ type Write struct {
 	resource    combat.Resource
 }
 
-// loadRules reads the Effect catalogue and the rest the Session has under way.
-func (h *Hub) loadRules(ctx context.Context, s domain.Session) (effects.Catalog, *domain.Rest, error) {
+// loadRules reads the Effect catalogue, the rest the Session has under way, and the Hides, Grapples
+// and Shoves waiting on rolls.
+func (h *Hub) loadRules(ctx context.Context, s domain.Session) (effects.Catalog, *domain.Rest, []domain.PendingAction, error) {
 	catalog, err := h.Store.Effects(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	rest, err := h.Store.LoadRest(ctx, s.CampaignID, s.ID)
-	return catalog, rest, err
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	pending, err := h.Store.LoadPendingActions(ctx, s.ID)
+	return catalog, rest, pending, err
 }
 
 // Store is the runtime's persistence port.
@@ -132,6 +144,8 @@ type Store interface {
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
 	// LoadRest reads the rest a Session has under way, with each rester's Hit Die roll still out; nil when none.
 	LoadRest(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (*domain.Rest, error)
+	// LoadPendingActions reads the Hides, Grapples and Shoves waiting on rolls.
+	LoadPendingActions(ctx context.Context, id domain.SessionID) ([]domain.PendingAction, error)
 	// RestInfo reads what a rest needs of each Character; RestSupplies whether a Long Rest costs Rations.
 	RestInfo(ctx context.Context, campaign uuid.UUID, characters []uuid.UUID) ([]domain.Rester, error)
 	RestSupplies(ctx context.Context, campaign uuid.UUID) (bool, error)
@@ -306,7 +320,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	catalog, rest, err := h.loadRules(ctx, s)
+	catalog, rest, pending, err := h.loadRules(ctx, s)
 	if err != nil {
 		release()
 		return nil, err
@@ -342,7 +356,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, rest: rest, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, rest: rest, pending: pending, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -578,7 +592,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed:
 		return true
 	}
 	return false
@@ -690,6 +704,16 @@ func change(s *state, w *Write) {
 	case domain.ActionTokenWalked:
 		walk(s, w)
 		return
+	case domain.ActionTaken:
+		applyAction(s, w)
+		return
+	case domain.ActionUnarmed:
+		applyAction(s, w)
+		applyResolved(s, w)
+		return
+	case domain.ActionResolved:
+		applyResolved(s, w)
+		return
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded:
 		applyCombat(s, w)
 		return
@@ -771,6 +795,9 @@ func walk(s *state, w *Write) {
 		s.tokens[w.Token.ID] = w.Token
 		s.reveal(w)
 		w.frames = append(w.frames, s.clone())
+	}
+	if w.Dragged != nil {
+		s.tokens[w.Dragged.ID] = *w.Dragged
 	}
 }
 

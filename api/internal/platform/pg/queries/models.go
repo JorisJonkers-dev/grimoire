@@ -860,6 +860,10 @@ type PlayCombatant struct {
 	MovementFt      int32
 	Shielded        bool
 	Surprised       bool
+	Disengaged      bool
+	ReadiedTrigger  pgtype.Text
+	ReadiedWho      pgtype.UUID
+	ReadiedAttack   pgtype.Int4
 }
 
 type PlayEncounterZone struct {
@@ -894,6 +898,15 @@ type PlayObservedDamage struct {
 	ObserverTokenID uuid.UUID
 	AttackerTokenID uuid.UUID
 	RangedDamage    int32
+}
+
+type PlayPendingAction struct {
+	RollID        uuid.UUID
+	SessionID     uuid.UUID
+	ActorTokenID  uuid.UUID
+	TargetTokenID pgtype.UUID
+	Action        string
+	Dc            int32
 }
 
 type PlayPendingSafe struct {
@@ -1032,6 +1045,7 @@ type PlayToken struct {
 	Perception         int32
 	Initiative         int32
 	SpeedFt            int32
+	UnarmedDc          int32
 }
 
 type PlayTokenAttack struct {

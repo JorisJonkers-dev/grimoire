@@ -24,14 +24,14 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
     sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc), @stealth,
-    @perception, @initiative, @speed_ft);
+    @perception, @initiative, @speed_ft, @unarmed_dc);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -58,7 +58,7 @@ SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_t
 
 -- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
-       shielded, surprised
+       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack
 FROM play.combatants WHERE combat_id = $1 ORDER BY id;
 
 -- name: SaveCombat :exec
@@ -70,12 +70,14 @@ ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round,
 
 -- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft, shielded, surprised)
+    has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack)
 VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
-    @has_bonus_action, @has_reaction, @movement_ft, @shielded, @surprised)
+    @has_bonus_action, @has_reaction, @movement_ft, @shielded, @surprised, @disengaged, sqlc.narg(readied_trigger), sqlc.narg(readied_who),
+    sqlc.narg(readied_attack))
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
-    shielded = excluded.shielded;
+    shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
+    readied_who = excluded.readied_who, readied_attack = excluded.readied_attack;
 
 -- name: SetTokenHP :exec
 UPDATE play.tokens SET hp = @hp WHERE session_id = @session_id AND id = @id;
@@ -118,7 +120,8 @@ ORDER BY a.seq DESC LIMIT 1;
 SELECT ruleset_pref FROM campaign.campaigns WHERE id = $1;
 
 -- name: MonsterStatblock :one
-SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma
+SELECT m.id, m.name, m.armor_class, m.hit_points, m.intelligence, m.strength, m.dexterity, m.constitution, m.wisdom, m.charisma,
+       COALESCE(m.challenge_rating, 0)::float8 AS challenge_rating
 FROM compendium.monsters m
 JOIN compendium.documents d ON d.id = m.document_id
 WHERE m.slug = @slug AND (sqlc.narg(ruleset)::text IS NULL OR d.key = sqlc.narg(ruleset)::text)
@@ -288,3 +291,13 @@ WHERE z.session_id = $1 ORDER BY c.zone_id, c.token_id;
 
 -- name: AddZoneCreature :exec
 INSERT INTO play.zone_creatures (zone_id, token_id) VALUES (@zone_id, @token_id) ON CONFLICT DO NOTHING;
+
+-- name: SessionPendingActions :many
+SELECT roll_id, actor_token_id, target_token_id, action, dc FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id;
+
+-- name: InsertPendingAction :exec
+INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc)
+VALUES (@roll_id, @session_id, @actor_token_id, sqlc.narg(target_token_id), @action, @dc);
+
+-- name: DeletePendingAction :exec
+DELETE FROM play.pending_actions WHERE roll_id = $1;

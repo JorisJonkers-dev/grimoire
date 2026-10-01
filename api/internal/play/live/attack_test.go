@@ -37,7 +37,7 @@ func (bestiary) Monster(_ context.Context, _ uuid.UUID, slug string) (string, do
 	default:
 		return "", domain.Stats{}, errors.New("no such monster")
 	}
-	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Stealth: 6, Perception: -1, Initiative: 2, SpeedFt: 30, Attacks: []domain.Attack{
+	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Stealth: 6, Perception: -1, Initiative: 2, SpeedFt: 30, UnarmedDC: 12, Attacks: []domain.Attack{
 		{Name: "Scimitar", ToHit: 4, ReachFt: 5, Damage: "1d6", DamageBonus: 2, DamageType: "slashing"},
 		{Name: "Shortbow", ToHit: 4, RangeFt: 80, LongRangeFt: 320, Damage: "1d6", DamageBonus: 2, DamageType: "piercing"},
 		{Name: "Slam", ToHit: 4, ReachFt: 5, DamageBonus: 3, DamageType: "bludgeoning"},

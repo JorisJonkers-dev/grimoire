@@ -221,3 +221,12 @@ func TestBuildSheet(t *testing.T) {
 		t.Fatalf("unarmoured = %+v", light)
 	}
 }
+
+func TestProficiencyByChallenge(t *testing.T) {
+	t.Parallel()
+	for cr, want := range map[float64]int{0: 2, 0.25: 2, 4: 2, 5: 3, 8: 3, 9: 4, 12: 4, 13: 5, 17: 6, 21: 7, 25: 8, 29: 9, 30: 9} {
+		if got := rules.ProficiencyByChallenge(cr); got != want {
+			t.Errorf("ProficiencyByChallenge(%v) = %d, want %d", cr, got, want)
+		}
+	}
+}

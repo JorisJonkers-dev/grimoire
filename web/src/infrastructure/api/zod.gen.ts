@@ -1073,6 +1073,8 @@ export const zLiveCombatant = z.object({
     movementFt: z.int().gte(0).lte(120),
     speedFt: z.int().gte(0).lte(120),
     surprised: z.boolean().optional(),
+    disengaged: z.boolean().optional(),
+    readied: z.boolean().optional(),
     tactics: zTactics.optional(),
     suggestion: zLiveSuggestion.optional()
 });
@@ -1591,7 +1593,9 @@ export const zLiveCommand = z.object({
         'agree_rest',
         'spend_hit_die',
         'finish_rest',
-        'interrupt_rest'
+        'interrupt_rest',
+        'take_action',
+        'unarmed'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1660,6 +1664,26 @@ export const zLiveCommand = z.object({
     lootTableId: zId.optional(),
     fromId: zId.optional(),
     instanceId: zId.optional(),
+    action: z.enum([
+        'dash',
+        'disengage',
+        'dodge',
+        'help',
+        'hide',
+        'influence',
+        'magic',
+        'ready',
+        'search',
+        'study',
+        'utilize'
+    ]).optional(),
+    detail: z.string().max(200).optional(),
+    trigger: z.enum(['enters_reach']).optional(),
+    option: z.enum([
+        'grapple',
+        'shove_push',
+        'shove_prone'
+    ]).optional(),
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),

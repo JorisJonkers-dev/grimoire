@@ -11,6 +11,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -37,9 +38,20 @@ func (r *runtime) prompt(kind string, reactor, trigger domain.Token, attackNo in
 // still make an opportunity attack; the rest of the walk waits for the answer. A resumed walk skips the
 // step whose opportunity was already offered.
 func (r *runtime) walkWrite(t domain.Token, path []hex.Coord, resumed bool) Write {
+	held, dragging := r.st.dragged(t.ID)
+	w := r.walkPlan(t, path, resumed, dragging)
+	r.st.drag(&w, held, dragging)
+	return w
+}
+
+// walkPlan works a walk out, at double cost while dragging a grappled creature.
+func (r *runtime) walkPlan(t domain.Token, path []hex.Coord, resumed, dragging bool) Write {
 	costs := pathCosts(r.st.walkGrid(true, t, nil), path)
 	for i := range costs {
 		costs[i] *= r.st.catalog.MoveMultiplier(r.st.actives(t.ID))
+		if dragging {
+			costs[i] = actions.DragCostFt(costs[i])
+		}
 	}
 	w := Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: costs[len(costs)-1]}
 	first := 0
@@ -47,6 +59,15 @@ func (r *runtime) walkWrite(t domain.Token, path []hex.Coord, resumed bool) Writ
 		first = 1
 	}
 	k, reactor, no, ok := r.st.opportunity(t, path, first)
+	j, readier, rno, set := r.st.readied(t, path)
+	if set && (!ok || j-1 < k) {
+		with := readier.Stats.Attacks[rno]
+		w.prompt = r.prompt(domain.PromptReadied, readier, t, rno,
+			fmt.Sprintf("%s comes within %s's reach: readied %s attack (%+d).", t.Label, readier.Label, with.Name, with.ToHit))
+		w.resume = &domain.Resume{Token: t.ID, Path: path[j:], CostFt: costs[len(costs)-1] - costs[j]}
+		w.Path, w.CostFt = path[:j+1], costs[j]
+		return w
+	}
 	if !ok {
 		return w
 	}
@@ -59,6 +80,16 @@ func (r *runtime) walkWrite(t domain.Token, path []hex.Coord, resumed bool) Writ
 	}
 	w.Path, w.CostFt = path[:k+1], costs[k]
 	return w
+}
+
+// drag pulls a grappled creature along to the hex its grappler walked from.
+func (s *state) drag(w *Write, held domain.Token, dragging bool) {
+	if !dragging || len(w.Path) < 2 || w.Kind != domain.ActionTokenWalked {
+		return
+	}
+	from := w.Path[len(w.Path)-2]
+	held.Q, held.R = from.Q, from.R
+	w.Dragged = &held
 }
 
 // pathCosts is the movement spent reaching each hex of a path; a step that can no longer be taken ends it.
@@ -77,7 +108,7 @@ func pathCosts(g hex.Grid, path []hex.Coord) []int {
 // opportunity finds the first step of a path that leaves the reach of a standing enemy Combatant that
 // sees the mover and still has its reaction.
 func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (int, domain.Token, int, bool) {
-	if s.combat == nil || s.combat.Status != domain.CombatActive {
+	if !s.provokes(mover) {
 		return 0, domain.Token{}, 0, false
 	}
 	ids := make([]string, 0, len(s.tokens))
@@ -91,7 +122,7 @@ func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (in
 			h := s.tokens[domain.TokenID(uuid.MustParse(id))]
 			x, fighting := s.fighter(h.ID)
 			no := slices.IndexFunc(attacksOf(h), func(a domain.Attack) bool { return a.ReachFt > 0 })
-			if !fighting || !x.Economy.Reaction || !standing(h) || no < 0 || (h.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) || s.catalog.Incapacitated(s.actives(h.ID)) {
+			if !fighting || no < 0 || !s.canReactTo(h, x, mover) {
 				continue
 			}
 			at := hex.Coord{Q: h.Q, R: h.R}
@@ -103,6 +134,21 @@ func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (in
 		}
 	}
 	return 0, domain.Token{}, 0, false
+}
+
+// provokes reports whether moving can draw opportunity attacks: in an active fight, unless Disengaged.
+func (s *state) provokes(mover domain.Token) bool {
+	if s.combat == nil || s.combat.Status != domain.CombatActive {
+		return false
+	}
+	x, ok := s.fighter(mover.ID)
+	return !ok || !x.Disengaged
+}
+
+// canReactTo reports whether a creature can take a reaction against a mover of the other side: it is
+// standing, has its reaction left and is not Incapacitated.
+func (s *state) canReactTo(h domain.Token, x domain.Combatant, mover domain.Token) bool {
+	return x.Economy.Reaction && standing(h) && (h.Kind == domain.TokenParty) != (mover.Kind == domain.TokenParty) && !s.catalog.Incapacitated(s.actives(h.ID))
 }
 
 func attacksOf(t domain.Token) []domain.Attack {
@@ -169,7 +215,11 @@ func (r *runtime) answer(p *domain.ReactionPrompt, use bool, m domain.Member) Wr
 		return w
 	}
 	trigger, with := r.st.tokens[p.Trigger], reactor.Stats.Attacks[p.AttackNo]
-	roll := r.request(m, reactor, "Opportunity attack against "+trigger.Label+" with "+with.Name, "1d20", domain.Modifier{Label: with.Name, Value: with.ToHit})
+	purpose := "Opportunity attack against "
+	if p.Kind == domain.PromptReadied {
+		purpose = "Readied attack against "
+	}
+	roll := r.request(m, reactor, purpose+trigger.Label+" with "+with.Name, "1d20", domain.Modifier{Label: with.Name, Value: with.ToHit})
 	w.Rolls = []domain.Roll{roll}
 	w.attack = &domain.PendingAttack{
 		ID: uuid.New(), Attacker: reactor.ID, Target: trigger.ID, AttackNo: p.AttackNo, Stage: domain.StageToHit, RollID: roll.ID, Opportunity: true,
@@ -192,6 +242,13 @@ func applyReaction(s *state, w *Write) {
 		return
 	}
 	c.Prompt = nil
+	if w.answered != nil && w.answered.Kind == domain.PromptReadied {
+		for i := range c.Combatants {
+			if c.Combatants[i].TokenID == w.answered.Reactor {
+				c.Combatants[i].Readied = nil
+			}
+		}
+	}
 	if w.Kind == domain.ActionReactionUsed {
 		i := slices.IndexFunc(c.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
 		c.Combatants[i].Economy, _ = c.Combatants[i].Economy.Spend(combat.Reaction)

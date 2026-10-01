@@ -112,6 +112,8 @@ async function rollAll() {
 const tokenById = (id: string) => view.value?.tokens.find((t) => t.id === id)
 const pending = computed(() => combat.value?.attack ?? null)
 const aiming = ref<{ tokenId: string; attackNo: number } | null>(null)
+// grabbing is an Unarmed Strike waiting for its target: the next creature tapped is grappled or shoved.
+const grabbing = ref<{ tokenId: string; option: string } | null>(null)
 const bars = computed(() =>
   turns.value.flatMap((c) => {
     const token = tokenById(c.tokenId)
@@ -236,6 +238,11 @@ function pick(c: Coord) {
     return
   }
   const target = tokenAt(c)
+  if (grabbing.value && target) {
+    live.value.send({ kind: 'unarmed', tokenId: grabbing.value.tokenId, targetId: target.id, option: grabbing.value.option as 'grapple' })
+    grabbing.value = null
+    return
+  }
   if (aiming.value && target) {
     live.value.send({ kind: 'preview_attack', ...aiming.value, targetId: target.id })
     return
@@ -336,7 +343,11 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @use="useSuggestion(b.token.id, b.c.suggestion)"
         @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
         @area="(e) => aimArea(b.token, e)"
+        @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash' })"
+        @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
+        @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"
       />
+      <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
       <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
       <AreaPreviewCard v-if="areaPreview" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
       <LiveRoll v-for="id in areaRolls" :key="id" :campaign-id="campaignId" :roll-id="id" />

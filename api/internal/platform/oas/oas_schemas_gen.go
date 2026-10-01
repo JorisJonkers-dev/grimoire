@@ -8599,7 +8599,11 @@ type LiveCombatant struct {
 	MovementFt   int32     `json:"movementFt"`
 	SpeedFt      int32     `json:"speedFt"`
 	// Did not notice the ambush and rolled initiative at disadvantage.
-	Surprised  OptBool           `json:"surprised"`
+	Surprised OptBool `json:"surprised"`
+	// Moves without provoking opportunity attacks until its next turn.
+	Disengaged OptBool `json:"disengaged"`
+	// Has a readied attack waiting on its trigger; the party sees only its own.
+	Readied    OptBool           `json:"readied"`
 	Tactics    OptTactics        `json:"tactics"`
 	Suggestion OptLiveSuggestion `json:"suggestion"`
 }
@@ -8682,6 +8686,16 @@ func (s *LiveCombatant) GetSpeedFt() int32 {
 // GetSurprised returns the value of Surprised.
 func (s *LiveCombatant) GetSurprised() OptBool {
 	return s.Surprised
+}
+
+// GetDisengaged returns the value of Disengaged.
+func (s *LiveCombatant) GetDisengaged() OptBool {
+	return s.Disengaged
+}
+
+// GetReadied returns the value of Readied.
+func (s *LiveCombatant) GetReadied() OptBool {
+	return s.Readied
 }
 
 // GetTactics returns the value of Tactics.
@@ -8772,6 +8786,16 @@ func (s *LiveCombatant) SetSpeedFt(val int32) {
 // SetSurprised sets the value of Surprised.
 func (s *LiveCombatant) SetSurprised(val OptBool) {
 	s.Surprised = val
+}
+
+// SetDisengaged sets the value of Disengaged.
+func (s *LiveCombatant) SetDisengaged(val OptBool) {
+	s.Disengaged = val
+}
+
+// SetReadied sets the value of Readied.
+func (s *LiveCombatant) SetReadied(val OptBool) {
+	s.Readied = val
 }
 
 // SetTactics sets the value of Tactics.
@@ -8884,17 +8908,21 @@ type LiveCommand struct {
 	TableId OptID              `json:"tableId"`
 	Mode    OptEncounterMode   `json:"mode"`
 	// With a pick check, the index of the table entry.
-	Entry       OptInt32          `json:"entry"`
-	Due         OptLiveCommandDue `json:"due"`
-	LootTableId OptID             `json:"lootTableId"`
-	FromId      OptID             `json:"fromId"`
-	InstanceId  OptID             `json:"instanceId"`
-	ToId        OptID             `json:"toId"`
-	ItemSlug    OptSlug           `json:"itemSlug"`
-	Coin        OptCoin           `json:"coin"`
-	Count       OptInt32          `json:"count"`
-	ShopId      OptID             `json:"shopId"`
-	Monsters    []SpawnMonster    `json:"monsters"`
+	Entry       OptInt32              `json:"entry"`
+	Due         OptLiveCommandDue     `json:"due"`
+	LootTableId OptID                 `json:"lootTableId"`
+	FromId      OptID                 `json:"fromId"`
+	InstanceId  OptID                 `json:"instanceId"`
+	Action      OptLiveCommandAction  `json:"action"`
+	Detail      OptString             `json:"detail"`
+	Trigger     OptLiveCommandTrigger `json:"trigger"`
+	Option      OptLiveCommandOption  `json:"option"`
+	ToId        OptID                 `json:"toId"`
+	ItemSlug    OptSlug               `json:"itemSlug"`
+	Coin        OptCoin               `json:"coin"`
+	Count       OptInt32              `json:"count"`
+	ShopId      OptID                 `json:"shopId"`
+	Monsters    []SpawnMonster        `json:"monsters"`
 	// With adjust_hp, hit points to add; negative takes them away.
 	HpDelta OptInt32 `json:"hpDelta"`
 	// With undo, the Action Log sequence of the Action to undo.
@@ -9189,6 +9217,26 @@ func (s *LiveCommand) GetFromId() OptID {
 // GetInstanceId returns the value of InstanceId.
 func (s *LiveCommand) GetInstanceId() OptID {
 	return s.InstanceId
+}
+
+// GetAction returns the value of Action.
+func (s *LiveCommand) GetAction() OptLiveCommandAction {
+	return s.Action
+}
+
+// GetDetail returns the value of Detail.
+func (s *LiveCommand) GetDetail() OptString {
+	return s.Detail
+}
+
+// GetTrigger returns the value of Trigger.
+func (s *LiveCommand) GetTrigger() OptLiveCommandTrigger {
+	return s.Trigger
+}
+
+// GetOption returns the value of Option.
+func (s *LiveCommand) GetOption() OptLiveCommandOption {
+	return s.Option
 }
 
 // GetToId returns the value of ToId.
@@ -9521,6 +9569,26 @@ func (s *LiveCommand) SetInstanceId(val OptID) {
 	s.InstanceId = val
 }
 
+// SetAction sets the value of Action.
+func (s *LiveCommand) SetAction(val OptLiveCommandAction) {
+	s.Action = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *LiveCommand) SetDetail(val OptString) {
+	s.Detail = val
+}
+
+// SetTrigger sets the value of Trigger.
+func (s *LiveCommand) SetTrigger(val OptLiveCommandTrigger) {
+	s.Trigger = val
+}
+
+// SetOption sets the value of Option.
+func (s *LiveCommand) SetOption(val OptLiveCommandOption) {
+	s.Option = val
+}
+
 // SetToId sets the value of ToId.
 func (s *LiveCommand) SetToId(val OptID) {
 	s.ToId = val
@@ -9559,6 +9627,110 @@ func (s *LiveCommand) SetHpDelta(val OptInt32) {
 // SetSeq sets the value of Seq.
 func (s *LiveCommand) SetSeq(val OptInt32) {
 	s.Seq = val
+}
+
+type LiveCommandAction string
+
+const (
+	LiveCommandActionDash      LiveCommandAction = "dash"
+	LiveCommandActionDisengage LiveCommandAction = "disengage"
+	LiveCommandActionDodge     LiveCommandAction = "dodge"
+	LiveCommandActionHelp      LiveCommandAction = "help"
+	LiveCommandActionHide      LiveCommandAction = "hide"
+	LiveCommandActionInfluence LiveCommandAction = "influence"
+	LiveCommandActionMagic     LiveCommandAction = "magic"
+	LiveCommandActionReady     LiveCommandAction = "ready"
+	LiveCommandActionSearch    LiveCommandAction = "search"
+	LiveCommandActionStudy     LiveCommandAction = "study"
+	LiveCommandActionUtilize   LiveCommandAction = "utilize"
+)
+
+// AllValues returns all LiveCommandAction values.
+func (LiveCommandAction) AllValues() []LiveCommandAction {
+	return []LiveCommandAction{
+		LiveCommandActionDash,
+		LiveCommandActionDisengage,
+		LiveCommandActionDodge,
+		LiveCommandActionHelp,
+		LiveCommandActionHide,
+		LiveCommandActionInfluence,
+		LiveCommandActionMagic,
+		LiveCommandActionReady,
+		LiveCommandActionSearch,
+		LiveCommandActionStudy,
+		LiveCommandActionUtilize,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandAction) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandActionDash:
+		return []byte(s), nil
+	case LiveCommandActionDisengage:
+		return []byte(s), nil
+	case LiveCommandActionDodge:
+		return []byte(s), nil
+	case LiveCommandActionHelp:
+		return []byte(s), nil
+	case LiveCommandActionHide:
+		return []byte(s), nil
+	case LiveCommandActionInfluence:
+		return []byte(s), nil
+	case LiveCommandActionMagic:
+		return []byte(s), nil
+	case LiveCommandActionReady:
+		return []byte(s), nil
+	case LiveCommandActionSearch:
+		return []byte(s), nil
+	case LiveCommandActionStudy:
+		return []byte(s), nil
+	case LiveCommandActionUtilize:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandAction) UnmarshalText(data []byte) error {
+	switch LiveCommandAction(data) {
+	case LiveCommandActionDash:
+		*s = LiveCommandActionDash
+		return nil
+	case LiveCommandActionDisengage:
+		*s = LiveCommandActionDisengage
+		return nil
+	case LiveCommandActionDodge:
+		*s = LiveCommandActionDodge
+		return nil
+	case LiveCommandActionHelp:
+		*s = LiveCommandActionHelp
+		return nil
+	case LiveCommandActionHide:
+		*s = LiveCommandActionHide
+		return nil
+	case LiveCommandActionInfluence:
+		*s = LiveCommandActionInfluence
+		return nil
+	case LiveCommandActionMagic:
+		*s = LiveCommandActionMagic
+		return nil
+	case LiveCommandActionReady:
+		*s = LiveCommandActionReady
+		return nil
+	case LiveCommandActionSearch:
+		*s = LiveCommandActionSearch
+		return nil
+	case LiveCommandActionStudy:
+		*s = LiveCommandActionStudy
+		return nil
+	case LiveCommandActionUtilize:
+		*s = LiveCommandActionUtilize
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 type LiveCommandDue string
@@ -9668,6 +9840,8 @@ const (
 	LiveCommandKindSpendHitDie    LiveCommandKind = "spend_hit_die"
 	LiveCommandKindFinishRest     LiveCommandKind = "finish_rest"
 	LiveCommandKindInterruptRest  LiveCommandKind = "interrupt_rest"
+	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
+	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -9736,6 +9910,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSpendHitDie,
 		LiveCommandKindFinishRest,
 		LiveCommandKindInterruptRest,
+		LiveCommandKindTakeAction,
+		LiveCommandKindUnarmed,
 	}
 }
 
@@ -9867,6 +10043,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindFinishRest:
 		return []byte(s), nil
 	case LiveCommandKindInterruptRest:
+		return []byte(s), nil
+	case LiveCommandKindTakeAction:
+		return []byte(s), nil
+	case LiveCommandKindUnarmed:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10065,6 +10245,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindInterruptRest:
 		*s = LiveCommandKindInterruptRest
 		return nil
+	case LiveCommandKindTakeAction:
+		*s = LiveCommandKindTakeAction
+		return nil
+	case LiveCommandKindUnarmed:
+		*s = LiveCommandKindUnarmed
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -10072,6 +10258,54 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 
 // LiveCommandNoContent is response for LiveCommand operation.
 type LiveCommandNoContent struct{}
+
+type LiveCommandOption string
+
+const (
+	LiveCommandOptionGrapple    LiveCommandOption = "grapple"
+	LiveCommandOptionShovePush  LiveCommandOption = "shove_push"
+	LiveCommandOptionShoveProne LiveCommandOption = "shove_prone"
+)
+
+// AllValues returns all LiveCommandOption values.
+func (LiveCommandOption) AllValues() []LiveCommandOption {
+	return []LiveCommandOption{
+		LiveCommandOptionGrapple,
+		LiveCommandOptionShovePush,
+		LiveCommandOptionShoveProne,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandOption) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandOptionGrapple:
+		return []byte(s), nil
+	case LiveCommandOptionShovePush:
+		return []byte(s), nil
+	case LiveCommandOptionShoveProne:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandOption) UnmarshalText(data []byte) error {
+	switch LiveCommandOption(data) {
+	case LiveCommandOptionGrapple:
+		*s = LiveCommandOptionGrapple
+		return nil
+	case LiveCommandOptionShovePush:
+		*s = LiveCommandOptionShovePush
+		return nil
+	case LiveCommandOptionShoveProne:
+		*s = LiveCommandOptionShoveProne
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 type LiveCommandResource string
 
@@ -10337,6 +10571,40 @@ func (s *LiveCommandSurface) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandSurfaceElectrified:
 		*s = LiveCommandSurfaceElectrified
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandTrigger string
+
+const (
+	LiveCommandTriggerEntersReach LiveCommandTrigger = "enters_reach"
+)
+
+// AllValues returns all LiveCommandTrigger values.
+func (LiveCommandTrigger) AllValues() []LiveCommandTrigger {
+	return []LiveCommandTrigger{
+		LiveCommandTriggerEntersReach,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandTrigger) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandTriggerEntersReach:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandTrigger) UnmarshalText(data []byte) error {
+	switch LiveCommandTrigger(data) {
+	case LiveCommandTriggerEntersReach:
+		*s = LiveCommandTriggerEntersReach
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -15751,6 +16019,52 @@ func (o OptLiveCombat) Or(d LiveCombat) LiveCombat {
 	return d
 }
 
+// NewOptLiveCommandAction returns new OptLiveCommandAction with value set to v.
+func NewOptLiveCommandAction(v LiveCommandAction) OptLiveCommandAction {
+	return OptLiveCommandAction{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandAction is optional LiveCommandAction.
+type OptLiveCommandAction struct {
+	Value LiveCommandAction
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandAction was set.
+func (o OptLiveCommandAction) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandAction) Reset() {
+	var v LiveCommandAction
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandAction) SetTo(v LiveCommandAction) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandAction) Get() (v LiveCommandAction, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandAction) Or(d LiveCommandAction) LiveCommandAction {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveCommandDue returns new OptLiveCommandDue with value set to v.
 func NewOptLiveCommandDue(v LiveCommandDue) OptLiveCommandDue {
 	return OptLiveCommandDue{
@@ -15791,6 +16105,52 @@ func (o OptLiveCommandDue) Get() (v LiveCommandDue, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandDue) Or(d LiveCommandDue) LiveCommandDue {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandOption returns new OptLiveCommandOption with value set to v.
+func NewOptLiveCommandOption(v LiveCommandOption) OptLiveCommandOption {
+	return OptLiveCommandOption{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandOption is optional LiveCommandOption.
+type OptLiveCommandOption struct {
+	Value LiveCommandOption
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandOption was set.
+func (o OptLiveCommandOption) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandOption) Reset() {
+	var v LiveCommandOption
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandOption) SetTo(v LiveCommandOption) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandOption) Get() (v LiveCommandOption, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandOption) Or(d LiveCommandOption) LiveCommandOption {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -15929,6 +16289,52 @@ func (o OptLiveCommandSurface) Get() (v LiveCommandSurface, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandSurface) Or(d LiveCommandSurface) LiveCommandSurface {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandTrigger returns new OptLiveCommandTrigger with value set to v.
+func NewOptLiveCommandTrigger(v LiveCommandTrigger) OptLiveCommandTrigger {
+	return OptLiveCommandTrigger{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandTrigger is optional LiveCommandTrigger.
+type OptLiveCommandTrigger struct {
+	Value LiveCommandTrigger
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandTrigger was set.
+func (o OptLiveCommandTrigger) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandTrigger) Reset() {
+	var v LiveCommandTrigger
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandTrigger) SetTo(v LiveCommandTrigger) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandTrigger) Get() (v LiveCommandTrigger, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandTrigger) Or(d LiveCommandTrigger) LiveCommandTrigger {
 	if v, ok := o.Get(); ok {
 		return v
 	}
