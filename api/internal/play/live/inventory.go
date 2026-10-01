@@ -269,6 +269,38 @@ func (s *state) containerView(c domain.Container, a Audience) ContainerView {
 	return v
 }
 
+// private closes every Inventory that is not the member's own: they see whose it is and what it weighs,
+// never what is in it. The shared view is copied, never changed.
+func private(u Update, m domain.Member) Update {
+	if u.View == nil {
+		return u
+	}
+	v := *u.View
+	v.Inventory = closed(v.Inventory, m)
+	u.View = &v
+	if len(u.Steps) > 0 {
+		u.Steps = slices.Clone(u.Steps)
+		for i := range u.Steps {
+			u.Steps[i].Inventory = closed(u.Steps[i].Inventory, m)
+		}
+	}
+	return u
+}
+
+func closed(cs []ContainerView, m domain.Member) []ContainerView {
+	if cs == nil {
+		return nil
+	}
+	out := make([]ContainerView, len(cs))
+	for i, c := range cs {
+		if c.OwnerID != "" && c.OwnerID != m.ID.String() {
+			c.Items, c.Instances, c.Coins = []ItemView{}, []InstanceView{}, []CoinView{}
+		}
+		out[i] = c
+	}
+	return out
+}
+
 func (s *state) instanceView(in domain.Instance, a Audience) InstanceView {
 	info := s.itemInfo(in.Slug)
 	v := InstanceView{

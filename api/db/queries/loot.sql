@@ -52,11 +52,6 @@ FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id;
 -- name: CampaignContainers :many
 SELECT id, kind, character_id, parent_id, label, created_at FROM campaign.containers WHERE campaign_id = $1 ORDER BY created_at, id;
 
--- name: CampaignContainerItems :many
-SELECT i.container_id, i.item_slug, i.quantity
-FROM campaign.container_items i JOIN campaign.containers c ON c.id = i.container_id
-WHERE c.campaign_id = $1 ORDER BY i.container_id, i.item_slug;
-
 -- name: CampaignItemInstances :many
 SELECT i.id, i.container_id, i.item_slug, i.custom_name, i.quantity, i.charges, i.identified, i.attuned, i.equipped_slot
 FROM campaign.item_instances i JOIN campaign.containers c ON c.id = i.container_id
@@ -73,13 +68,6 @@ VALUES (@id, @campaign_id, @kind, sqlc.narg(character_id), @label, @now) ON CONF
 
 -- name: DeleteContainer :exec
 DELETE FROM campaign.containers WHERE id = $1;
-
--- name: SetContainerItem :exec
-INSERT INTO campaign.container_items (container_id, item_slug, quantity) VALUES (@container_id, @item_slug, @quantity)
-ON CONFLICT (container_id, item_slug) DO UPDATE SET quantity = excluded.quantity;
-
--- name: DeleteContainerItem :exec
-DELETE FROM campaign.container_items WHERE container_id = @container_id AND item_slug = @item_slug;
 
 -- name: SetContainerCoins :exec
 INSERT INTO campaign.container_coins (container_id, coin, amount) VALUES (@container_id, @coin, @amount)

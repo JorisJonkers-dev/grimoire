@@ -81,12 +81,6 @@ type CampaignContainerCoin struct {
 	Amount      int32
 }
 
-type CampaignContainerItem struct {
-	ContainerID uuid.UUID
-	ItemSlug    string
-	Quantity    int32
-}
-
 type CampaignInvite struct {
 	ID         uuid.UUID
 	CampaignID uuid.UUID

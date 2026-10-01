@@ -1286,6 +1286,8 @@ describe('inventory', () => {
     expect(wrapper.get('[data-testid="container-Aria"] [data-testid="encumbered"]').text()).toBe('Encumbered')
     expect(wrapper.get('[data-testid="container-Aria"] [data-testid="load"]').text()).toBe('301.2 / 120 lb')
     expect(wrapper.get('[data-testid="container-Party Stash"]').text()).toContain('Empty.')
+    expect(wrapper.get('[data-testid="container-Brom"] [data-testid="private"]').text()).toBe('Private.')
+    expect(wrapper.find('[data-testid="container-Aria"] [data-testid="private"]').exists()).toBe(false)
     s.receive(snapshot([], 'party', { inventory: [drop, lined, brom, stash] }))
     await flushPromises()
     const line = wrapper.get('[data-testid="container-Aria"] [data-testid="instance"]')

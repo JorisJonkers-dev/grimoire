@@ -3,13 +3,11 @@ package pgstore_test
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 
-	"github.com/JorisJonkers-dev/grimoire/api/db"
 	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
@@ -172,35 +170,3 @@ func TestItemInstancesAndBagsRefuseNonsense(t *testing.T) {
 	}
 }
 
-// The backfill turns every slug-keyed stack into a plain stack Instance, and running it again changes
-// nothing.
-func TestBackfillTurnsStacksIntoInstances(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-	tb := setup(t)
-	store := pgstore.New(tb.pool)
-	inv, err := store.LoadInventory(ctx, tb.campaign)
-	if err != nil {
-		t.Fatal(err)
-	}
-	stash := uuid.UUID(inv.Containers[0].ID)
-	if _, err := tb.pool.Exec(ctx, "INSERT INTO campaign.container_items (container_id, item_slug, quantity) VALUES ($1, 'rope', 4), ($1, 'torch', 10)", stash); err != nil {
-		t.Fatal(err)
-	}
-	backfill, err := fs.ReadFile(db.Migrations, "migrations/00048_backfill_item_instances.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for range 2 {
-		if _, err := tb.pool.Exec(ctx, string(backfill)); err != nil {
-			t.Fatal(err)
-		}
-	}
-	inv, err = store.LoadInventory(ctx, tb.campaign)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got := inv.Containers[0].Items; len(got) != 2 || got["rope"] != 4 || got["torch"] != 10 || len(inv.Containers[0].Instances) != 0 {
-		t.Fatalf("the stash after the backfill = %+v", inv.Containers[0])
-	}
-}

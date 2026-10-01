@@ -123,3 +123,50 @@ func TestItemInstancesShowBesideStacks(t *testing.T) {
 		}
 	}
 }
+
+// A Character's Inventory is private to its owner and the DM: another player sees whose pack it is and
+// what it weighs, never what is in it.
+func TestAnotherPlayerCannotReadAPrivateInventory(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w, tb := ambushTable(t)
+	stocked(t, w)
+	brom := containerNamed(t, look(t, w, join(t, w, w.dm, dmCaller, live.AudienceDM)), "Brom")
+	w.hub.Close(w.session.ID)
+	sack := uuid.New()
+	if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, parent_id, label, created_at) VALUES ($1, $2, 'bag', $3, 'Sack', now())`,
+		sack, w.session.CampaignID, brom.ID); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []string{brom.ID, sack.String()} {
+		if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.item_instances (id, container_id, item_slug, custom_name, quantity, identified, attuned, created_at)
+			VALUES ($1, $2, 'rope', 'Secret Rope', 1, true, false, now())`, uuid.New(), c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.container_coins (container_id, coin, amount) VALUES ($1, 'gp', 7)`, brom.ID); err != nil {
+		t.Fatal(err)
+	}
+	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
+	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
+	if c := containerNamed(t, look(t, w, tb.dm), "Brom"); len(c.Instances) != 1 || len(c.Coins) != 1 {
+		t.Fatalf("the DM sees into Brom's pack = %+v", c)
+	}
+	views := []*live.View{look(t, w, tb.player)}
+	d, p := tb.dmSays(live.Command{Kind: live.CmdPlace, Label: "Goblin", TokenKind: domain.TokenEnemy})
+	views = append(views, p.View)
+	if c := containerNamed(t, d.View, "Sack"); len(c.Instances) != 1 {
+		t.Fatalf("the DM sees into Brom's sack = %+v", c)
+	}
+	for _, v := range views {
+		for _, label := range []string{"Brom", "Sack"} {
+			c := containerNamed(t, v, label)
+			if len(c.Instances)+len(c.Items)+len(c.Coins) != 0 || c.WeightLb == 0 || c.OwnerID != w.dm.ID.String() {
+				t.Fatalf("Aria's player reads %s = %+v", label, c)
+			}
+		}
+		if containerNamed(t, v, "Aria").Items == nil {
+			t.Fatal("her own pack is open to her")
+		}
+	}
+}

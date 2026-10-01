@@ -67,7 +67,8 @@ function drop(ev: DragEvent, c: LiveContainer) {
           {{ c.label }} <span class="weight" data-testid="load">{{ load(c) }}</span>
           <span v-if="c.encumbered" class="g-tag heavy" data-testid="encumbered">Encumbered</span>
         </h3>
-        <p v-if="c.items.length + c.instances.length + c.coins.length === 0" class="hint">Empty.</p>
+        <p v-if="!dm && c.ownerId && c.ownerId !== me" class="hint" data-testid="private">Private.</p>
+        <p v-else-if="c.items.length + c.instances.length + c.coins.length === 0" class="hint">Empty.</p>
         <ul class="g-list">
           <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is a pointer shortcut; the Move controls are the accessible path -->
           <li

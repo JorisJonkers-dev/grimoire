@@ -481,6 +481,9 @@ func (r *runtime) send(sub *Subscriber, u Update) {
 	if _, ok := r.subs[sub]; !ok {
 		return
 	}
+	if sub.Audience == AudienceParty {
+		u = private(u, sub.Member)
+	}
 	select {
 	case sub.Out <- u:
 	default:

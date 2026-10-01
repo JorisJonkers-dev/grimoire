@@ -51,7 +51,6 @@ type Querier interface {
 	BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, error)
 	CampaignChecks(ctx context.Context, campaignID uuid.UUID) ([]CampaignChecksRow, error)
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
-	CampaignContainerItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerItem, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
@@ -112,7 +111,6 @@ type Querier interface {
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
-	DeleteContainerItem(ctx context.Context, arg DeleteContainerItemParams) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
@@ -337,7 +335,6 @@ type Querier interface {
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
-	SetContainerItem(ctx context.Context, arg SetContainerItemParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error

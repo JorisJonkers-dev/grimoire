@@ -39,32 +39,6 @@ func (q *Queries) CampaignContainerCoins(ctx context.Context, campaignID uuid.UU
 	return items, nil
 }
 
-const campaignContainerItems = `-- name: CampaignContainerItems :many
-SELECT i.container_id, i.item_slug, i.quantity
-FROM campaign.container_items i JOIN campaign.containers c ON c.id = i.container_id
-WHERE c.campaign_id = $1 ORDER BY i.container_id, i.item_slug
-`
-
-func (q *Queries) CampaignContainerItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerItem, error) {
-	rows, err := q.db.Query(ctx, campaignContainerItems, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []CampaignContainerItem{}
-	for rows.Next() {
-		var i CampaignContainerItem
-		if err := rows.Scan(&i.ContainerID, &i.ItemSlug, &i.Quantity); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const campaignContainers = `-- name: CampaignContainers :many
 SELECT id, kind, character_id, parent_id, label, created_at FROM campaign.containers WHERE campaign_id = $1 ORDER BY created_at, id
 `
@@ -217,20 +191,6 @@ type DeleteContainerCoinsParams struct {
 
 func (q *Queries) DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error {
 	_, err := q.db.Exec(ctx, deleteContainerCoins, arg.ContainerID, arg.Coin)
-	return err
-}
-
-const deleteContainerItem = `-- name: DeleteContainerItem :exec
-DELETE FROM campaign.container_items WHERE container_id = $1 AND item_slug = $2
-`
-
-type DeleteContainerItemParams struct {
-	ContainerID uuid.UUID
-	ItemSlug    string
-}
-
-func (q *Queries) DeleteContainerItem(ctx context.Context, arg DeleteContainerItemParams) error {
-	_, err := q.db.Exec(ctx, deleteContainerItem, arg.ContainerID, arg.ItemSlug)
 	return err
 }
 
@@ -637,22 +597,6 @@ type SetContainerCoinsParams struct {
 
 func (q *Queries) SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error {
 	_, err := q.db.Exec(ctx, setContainerCoins, arg.ContainerID, arg.Coin, arg.Amount)
-	return err
-}
-
-const setContainerItem = `-- name: SetContainerItem :exec
-INSERT INTO campaign.container_items (container_id, item_slug, quantity) VALUES ($1, $2, $3)
-ON CONFLICT (container_id, item_slug) DO UPDATE SET quantity = excluded.quantity
-`
-
-type SetContainerItemParams struct {
-	ContainerID uuid.UUID
-	ItemSlug    string
-	Quantity    int32
-}
-
-func (q *Queries) SetContainerItem(ctx context.Context, arg SetContainerItemParams) error {
-	_, err := q.db.Exec(ctx, setContainerItem, arg.ContainerID, arg.ItemSlug, arg.Quantity)
 	return err
 }
 
