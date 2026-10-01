@@ -1593,3 +1593,30 @@ describe('rest', () => {
     expect(wrapper.get('[data-testid="rest"]').text()).toContain('Nobody rests in the middle of a fight.')
   })
 })
+
+describe('hotbar', () => {
+  it('counts attacks left, opens the off-hand attack and the free object interaction', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const Hotbar = (await import('./Hotbar.vue')).default
+    const token: LiveToken = {
+      ...goblin, attacks: [
+        { name: 'Longsword', toHit: 6, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d8', damageBonus: 3 },
+        { name: 'Dagger', toHit: 6, reachFt: 5, rangeFt: 20, longRangeFt: 60, damage: '1d4', damageBonus: 3, light: true },
+      ],
+    }
+    const w = mount(Hotbar, { props: { token, armed: null, blocked: '', attacksLeft: 1, offHand: true, interaction: true } })
+    expect(w.get('[data-testid="attacks-left"]').text()).toBe('1 attack left this action')
+    expect(w.find('[data-testid="off-hand-0"]').isVisible()).toBe(false)
+    await w.get('[data-testid="off-hand-1"]').trigger('click')
+    expect(w.emitted('offHand')?.at(-1)).toEqual([1])
+    await w.get('form.interact').trigger('submit')
+    expect(w.emitted('interact')).toBeUndefined()
+    await w.get('[data-testid="interact-what"]').setValue(' draws a dagger ')
+    await w.get('form.interact').trigger('submit')
+    expect(w.emitted('interact')?.at(-1)).toEqual(['draws a dagger'])
+    await w.setProps({ attacksLeft: 2, offHand: false, interaction: false })
+    expect(w.get('[data-testid="attacks-left"]').text()).toBe('2 attacks left this action')
+    expect(w.find('[data-testid="off-hand-1"]').exists()).toBe(false)
+    expect(w.find('form.interact').exists()).toBe(false)
+  })
+})

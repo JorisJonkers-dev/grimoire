@@ -1,10 +1,21 @@
 <script setup lang="ts">
 import type { LiveSuggestion, LiveToken, Tactics } from '@/infrastructure/api/types.gen'
+import { ref } from 'vue'
 import { GButton } from '@/shared/ui'
 
 withDefaults(
-  defineProps<{ token: LiveToken; armed: number | null; blocked: string; suggestion?: LiveSuggestion; target?: string; tactics?: Tactics }>(),
-  { suggestion: undefined, target: 'its target', tactics: undefined },
+  defineProps<{
+    token: LiveToken
+    armed: number | null
+    blocked: string
+    suggestion?: LiveSuggestion
+    target?: string
+    tactics?: Tactics
+    attacksLeft?: number
+    offHand?: boolean
+    interaction?: boolean
+  }>(),
+  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false },
 )
 const emit = defineEmits<{
   arm: [attackNo: number]
@@ -14,7 +25,10 @@ const emit = defineEmits<{
   action: [action: string]
   ready: [attackNo: number]
   unarmed: [option: string]
+  offHand: [attackNo: number]
+  interact: [what: string]
 }>()
+const what = ref('')
 // The 2024 actions besides Attack and Ready, in the order the rules list them.
 const actions = [
   { key: 'dash', name: 'Dash', tip: 'Gain extra movement equal to your Speed this turn.' },
@@ -70,6 +84,20 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
       <span class="name">{{ a.name }}</span>
       <span class="stat">{{ signed(a.toHit) }} · {{ damage(a) }} · {{ reach(a) }}</span>
     </GButton>
+    <p v-if="attacksLeft" class="hint" data-testid="attacks-left">{{ attacksLeft }} {{ attacksLeft === 1 ? 'attack' : 'attacks' }} left this action</p>
+    <template v-if="offHand">
+      <GButton
+        v-for="(a, i) in token.attacks ?? []"
+        v-show="a.light"
+        :key="`off-${a.name}${String(i)}`"
+        class="action"
+        :disabled="blocked !== ''"
+        :data-testid="`off-hand-${String(i)}`"
+        @click="emit('offHand', i)"
+      >
+        Off-hand {{ a.name }}
+      </GButton>
+    </template>
     <div v-if="suggestion" class="suggestion" data-testid="suggestion">
       <p>
         <strong>Suggested: </strong>
@@ -94,6 +122,13 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
         {{ u.name }}
       </GButton>
     </div>
+    <form v-if="interaction" class="interact" @submit.prevent="what.trim() && (emit('interact', what.trim()), (what = ''))">
+      <label class="g-field grow">
+        <span>Free object interaction</span>
+        <input v-model="what" maxlength="200" placeholder="draws a dagger" data-testid="interact-what" />
+      </label>
+      <GButton type="submit" :disabled="blocked !== ''" data-testid="interact">Use</GButton>
+    </form>
     <label class="g-field tactics">
       <span>Ready an attack</span>
       <select :disabled="blocked !== ''" data-testid="ready" @change="emit('ready', Number(($event.target as HTMLSelectElement).value))">
@@ -120,6 +155,11 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
 </template>
 
 <style scoped>
+.interact {
+  display: flex;
+  gap: 6px;
+  align-items: end;
+}
 .actions {
   display: flex;
   flex-wrap: wrap;

@@ -168,7 +168,7 @@ func TestAttacksFromPreviewToDamageAndUndo(t *testing.T) {
 	if token(p.View, "Goblin").Health != "down" || p.View.Combat.Attack != nil {
 		t.Fatalf("9 damage fells the goblin = %+v", token(p.View, "Goblin"))
 	}
-	if u := tb.playerSays(aim(live.CmdAttack, "Aria", 0, "Goblin")); !strings.Contains(u.Reason, "already used their action") {
+	if u := tb.playerSays(aim(live.CmdAttack, "Aria", 0, "Goblin")); !strings.Contains(u.Reason, "no attacks left this turn") {
 		t.Fatalf("a second action = %+v", u)
 	}
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(p.View, "Aria").ID})

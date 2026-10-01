@@ -84,6 +84,8 @@ const (
 	ActionTaken    = "action_taken"
 	ActionUnarmed  = "unarmed_strike"
 	ActionResolved = "action_resolved"
+	// ActionObjectUsed is the turn's free object interaction.
+	ActionObjectUsed = "object_used"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.
@@ -143,6 +145,8 @@ type PendingAttack struct {
 	Total int
 	// Opportunity marks an opportunity attack; the interrupted walk resumes after it.
 	Opportunity bool
+	// OffHand marks the off-hand attack of a Light weapon.
+	OffHand bool
 }
 
 // Totals lists every rolled initiative.

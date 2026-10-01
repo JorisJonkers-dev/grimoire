@@ -370,6 +370,7 @@ func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, 
 	cv := CombatantView{
 		ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
 		Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
+		AttacksLeft: x.Economy.AttacksLeft, OffHand: x.Economy.CanOffHand(false), Interaction: x.Economy.Interaction,
 		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised, Disengaged: x.Disengaged,
 		Readied: x.Readied != nil && (a == AudienceDM || t.Kind == domain.TokenParty),
 	}
@@ -409,7 +410,12 @@ func applyAttack(s *state, w *Write) {
 	s.combat.Attack = w.attack
 	if w.Kind == domain.ActionAttackDeclared {
 		i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
-		s.combat.Combatants[i].Economy, _ = s.combat.Combatants[i].Economy.Spend(combat.Action)
+		x := &s.combat.Combatants[i]
+		if p := w.attack; p.OffHand {
+			x.Economy, _ = x.Economy.OffHandAttack(false)
+		} else {
+			x.Economy, _ = x.Economy.Attack(w.Token.Stats.AttacksPerAction, w.Token.Stats.Attacks[p.AttackNo].Light)
+		}
 	}
 	w.Combat = s.combat
 }

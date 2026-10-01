@@ -239,7 +239,7 @@ func (q *Queries) ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error 
 
 const combatAttack = `-- name: CombatAttack :one
 SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged, total,
-       opportunity
+       opportunity, off_hand
 FROM play.attacks WHERE combat_id = $1
 `
 
@@ -260,13 +260,14 @@ func (q *Queries) CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAtt
 		&i.Ranged,
 		&i.Total,
 		&i.Opportunity,
+		&i.OffHand,
 	)
 	return i, err
 }
 
 const combatCombatants = `-- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
-       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack
+       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack, attacks_left, light_attack, off_hand, interaction
 FROM play.combatants WHERE combat_id = $1 ORDER BY id
 `
 
@@ -298,6 +299,10 @@ func (q *Queries) CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]P
 			&i.ReadiedTrigger,
 			&i.ReadiedWho,
 			&i.ReadiedAttack,
+			&i.AttacksLeft,
+			&i.LightAttack,
+			&i.OffHand,
+			&i.Interaction,
 		); err != nil {
 			return nil, err
 		}
@@ -695,10 +700,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21)
+    $18, $19, $20, $21, $22)
 `
 
 type InsertTokenParams struct {
@@ -723,6 +728,7 @@ type InsertTokenParams struct {
 	Initiative         int32
 	SpeedFt            int32
 	UnarmedDc          int32
+	AttacksPerAction   int32
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -748,13 +754,15 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.Initiative,
 		arg.SpeedFt,
 		arg.UnarmedDc,
+		arg.AttacksPerAction,
 	)
 	return err
 }
 
 const insertTokenAttack = `-- name: InsertTokenAttack :exec
-INSERT INTO play.token_attacks (token_id, ordering, name, to_hit, reach_ft, range_ft, long_range_ft, damage_dice, damage_bonus, damage_type)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+INSERT INTO play.token_attacks (token_id, ordering, name, to_hit, reach_ft, range_ft, long_range_ft, damage_dice, damage_bonus, damage_type,
+    light, damage_mod)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 `
 
 type InsertTokenAttackParams struct {
@@ -768,6 +776,8 @@ type InsertTokenAttackParams struct {
 	DamageDice  string
 	DamageBonus int32
 	DamageType  string
+	Light       bool
+	DamageMod   int32
 }
 
 func (q *Queries) InsertTokenAttack(ctx context.Context, arg InsertTokenAttackParams) error {
@@ -782,6 +792,8 @@ func (q *Queries) InsertTokenAttack(ctx context.Context, arg InsertTokenAttackPa
 		arg.DamageDice,
 		arg.DamageBonus,
 		arg.DamageType,
+		arg.Light,
+		arg.DamageMod,
 	)
 	return err
 }
@@ -1168,9 +1180,9 @@ func (q *Queries) RunningCombat(ctx context.Context, sessionID uuid.UUID) (PlayC
 
 const saveAttack = `-- name: SaveAttack :exec
 INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged,
-    total, opportunity)
+    total, opportunity, off_hand)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-    $12, $13)
+    $12, $13, $14)
 ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id, total = excluded.total
 `
 
@@ -1188,6 +1200,7 @@ type SaveAttackParams struct {
 	Ranged          bool
 	Total           pgtype.Int4
 	Opportunity     bool
+	OffHand         bool
 }
 
 func (q *Queries) SaveAttack(ctx context.Context, arg SaveAttackParams) error {
@@ -1205,6 +1218,7 @@ func (q *Queries) SaveAttack(ctx context.Context, arg SaveAttackParams) error {
 		arg.Ranged,
 		arg.Total,
 		arg.Opportunity,
+		arg.OffHand,
 	)
 	return err
 }
@@ -1246,14 +1260,16 @@ func (q *Queries) SaveCombat(ctx context.Context, arg SaveCombatParams) error {
 
 const saveCombatant = `-- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack)
+    has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack,
+    attacks_left, light_attack, off_hand, interaction)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
     $10, $11, $12, $13, $14, $15, $16, $17,
-    $18)
+    $18, $19, $20, $21, $22)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
     shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
-    readied_who = excluded.readied_who, readied_attack = excluded.readied_attack
+    readied_who = excluded.readied_who, readied_attack = excluded.readied_attack, attacks_left = excluded.attacks_left,
+    light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction
 `
 
 type SaveCombatantParams struct {
@@ -1275,6 +1291,10 @@ type SaveCombatantParams struct {
 	ReadiedTrigger  pgtype.Text
 	ReadiedWho      pgtype.UUID
 	ReadiedAttack   pgtype.Int4
+	AttacksLeft     int32
+	LightAttack     bool
+	OffHand         bool
+	Interaction     bool
 }
 
 func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) error {
@@ -1297,6 +1317,10 @@ func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) er
 		arg.ReadiedTrigger,
 		arg.ReadiedWho,
 		arg.ReadiedAttack,
+		arg.AttacksLeft,
+		arg.LightAttack,
+		arg.OffHand,
+		arg.Interaction,
 	)
 	return err
 }
@@ -1713,7 +1737,8 @@ func (q *Queries) SessionTable(ctx context.Context, sessionID uuid.UUID) (Sessio
 }
 
 const sessionTokenAttacks = `-- name: SessionTokenAttacks :many
-SELECT a.token_id, a.ordering, a.name, a.to_hit, a.reach_ft, a.range_ft, a.long_range_ft, a.damage_dice, a.damage_bonus, a.damage_type
+SELECT a.token_id, a.ordering, a.name, a.to_hit, a.reach_ft, a.range_ft, a.long_range_ft, a.damage_dice, a.damage_bonus, a.damage_type,
+       a.light, a.damage_mod
 FROM play.token_attacks a JOIN play.tokens t ON t.id = a.token_id WHERE t.session_id = $1 ORDER BY a.token_id, a.ordering
 `
 
@@ -1737,6 +1762,8 @@ func (q *Queries) SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) 
 			&i.DamageDice,
 			&i.DamageBonus,
 			&i.DamageType,
+			&i.Light,
+			&i.DamageMod,
 		); err != nil {
 			return nil, err
 		}
@@ -1774,7 +1801,7 @@ func (q *Queries) SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -1799,6 +1826,7 @@ type SessionTokensRow struct {
 	Initiative         int32
 	SpeedFt            int32
 	UnarmedDc          int32
+	AttacksPerAction   int32
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -1832,6 +1860,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Initiative,
 			&i.SpeedFt,
 			&i.UnarmedDc,
+			&i.AttacksPerAction,
 		); err != nil {
 			return nil, err
 		}

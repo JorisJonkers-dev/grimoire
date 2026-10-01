@@ -646,6 +646,26 @@
       "hidden": false,
       "targetId": "0190c7a8-0000-7000-8000-00000000000a",
       "option": "shove_push"
+    },
+    {
+      "nonce": "n72",
+      "kind": "attack",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "attackNo": 1,
+      "offHand": true
+    },
+    {
+      "nonce": "n73",
+      "kind": "interact",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "detail": "draws a dagger"
     }
   ],
   "updates": [
@@ -768,6 +788,9 @@
               "speedFt": 30,
               "disengaged": true,
               "readied": true,
+              "attacksLeft": 1,
+              "offHand": true,
+              "interaction": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1177,6 +1200,9 @@
               "speedFt": 30,
               "disengaged": true,
               "readied": true,
+              "attacksLeft": 1,
+              "offHand": true,
+              "interaction": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1648,6 +1674,9 @@
               "speedFt": 30,
               "disengaged": true,
               "readied": true,
+              "attacksLeft": 1,
+              "offHand": true,
+              "interaction": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -2036,6 +2065,9 @@
                 "speedFt": 30,
                 "disengaged": true,
                 "readied": true,
+                "attacksLeft": 1,
+                "offHand": true,
+                "interaction": true,
                 "surprised": true,
                 "tactics": "auto",
                 "suggestion": {

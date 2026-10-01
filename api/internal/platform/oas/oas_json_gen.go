@@ -10491,9 +10491,15 @@ func (s *LiveAttack) encodeFields(e *jx.Encoder) {
 			s.DamageType.Encode(e)
 		}
 	}
+	{
+		if s.Light.Set {
+			e.FieldStart("light")
+			s.Light.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveAttack = [8]string{
+var jsonFieldsNameOfLiveAttack = [9]string{
 	0: "name",
 	1: "toHit",
 	2: "reachFt",
@@ -10502,6 +10508,7 @@ var jsonFieldsNameOfLiveAttack = [8]string{
 	5: "damage",
 	6: "damageBonus",
 	7: "damageType",
+	8: "light",
 }
 
 // Decode decodes LiveAttack from json.
@@ -10509,7 +10516,7 @@ func (s *LiveAttack) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveAttack to nil")
 	}
-	var requiredBitSet [1]uint8
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -10605,6 +10612,16 @@ func (s *LiveAttack) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"damageType\"")
 			}
+		case "light":
+			if err := func() error {
+				s.Light.Reset()
+				if err := s.Light.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"light\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -10614,8 +10631,9 @@ func (s *LiveAttack) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
+	for i, mask := range [2]uint8{
 		0b01011111,
+		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -11871,6 +11889,24 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.AttacksLeft.Set {
+			e.FieldStart("attacksLeft")
+			s.AttacksLeft.Encode(e)
+		}
+	}
+	{
+		if s.OffHand.Set {
+			e.FieldStart("offHand")
+			s.OffHand.Encode(e)
+		}
+	}
+	{
+		if s.Interaction.Set {
+			e.FieldStart("interaction")
+			s.Interaction.Encode(e)
+		}
+	}
+	{
 		if s.Tactics.Set {
 			e.FieldStart("tactics")
 			s.Tactics.Encode(e)
@@ -11884,7 +11920,7 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCombatant = [20]string{
+var jsonFieldsNameOfLiveCombatant = [23]string{
 	0:  "id",
 	1:  "tokenId",
 	2:  "label",
@@ -11903,8 +11939,11 @@ var jsonFieldsNameOfLiveCombatant = [20]string{
 	15: "surprised",
 	16: "disengaged",
 	17: "readied",
-	18: "tactics",
-	19: "suggestion",
+	18: "attacksLeft",
+	19: "offHand",
+	20: "interaction",
+	21: "tactics",
+	22: "suggestion",
 }
 
 // Decode decodes LiveCombatant from json.
@@ -12111,6 +12150,36 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"readied\"")
+			}
+		case "attacksLeft":
+			if err := func() error {
+				s.AttacksLeft.Reset()
+				if err := s.AttacksLeft.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"attacksLeft\"")
+			}
+		case "offHand":
+			if err := func() error {
+				s.OffHand.Reset()
+				if err := s.OffHand.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"offHand\"")
+			}
+		case "interaction":
+			if err := func() error {
+				s.Interaction.Reset()
+				if err := s.Interaction.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"interaction\"")
 			}
 		case "tactics":
 			if err := func() error {
@@ -12698,6 +12767,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.OffHand.Set {
+			e.FieldStart("offHand")
+			s.OffHand.Encode(e)
+		}
+	}
+	{
 		if s.ToId.Set {
 			e.FieldStart("toId")
 			s.ToId.Encode(e)
@@ -12751,7 +12826,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [70]string{
+var jsonFieldsNameOfLiveCommand = [71]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -12814,14 +12889,15 @@ var jsonFieldsNameOfLiveCommand = [70]string{
 	59: "detail",
 	60: "trigger",
 	61: "option",
-	62: "toId",
-	63: "itemSlug",
-	64: "coin",
-	65: "count",
-	66: "shopId",
-	67: "monsters",
-	68: "hpDelta",
-	69: "seq",
+	62: "offHand",
+	63: "toId",
+	64: "itemSlug",
+	65: "coin",
+	66: "count",
+	67: "shopId",
+	68: "monsters",
+	69: "hpDelta",
+	70: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13475,6 +13551,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"option\"")
 			}
+		case "offHand":
+			if err := func() error {
+				s.OffHand.Reset()
+				if err := s.OffHand.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"offHand\"")
+			}
 		case "toId":
 			if err := func() error {
 				s.ToId.Reset()
@@ -13870,6 +13956,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindTakeAction
 	case LiveCommandKindUnarmed:
 		*s = LiveCommandKindUnarmed
+	case LiveCommandKindInteract:
+		*s = LiveCommandKindInteract
 	default:
 		*s = LiveCommandKind(v)
 	}

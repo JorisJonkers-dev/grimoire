@@ -47,6 +47,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planAction(m, cmd)
 	case CmdUnarmed:
 		return r.planUnarmed(m, cmd)
+	case CmdInteract:
+		return r.planInteract(m, cmd)
 	case CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdFinishRest, CmdInterruptRest:
 		return r.planRest(m, cmd)
 	case CmdRest, CmdEncounterCheck, CmdScheduleCheck:

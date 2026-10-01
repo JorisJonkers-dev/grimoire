@@ -81,8 +81,10 @@ type Stats struct {
 	Perception int
 	Initiative int
 	SpeedFt    int
-	// UnarmedDC is the save a Grapple or Shove from this creature forces.
-	UnarmedDC int
+	// UnarmedDC is the save a Grapple or Shove from this creature forces; AttacksPerAction is how many
+	// attacks one Attack action holds (Extra Attack).
+	UnarmedDC        int
+	AttacksPerAction int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.
@@ -95,6 +97,10 @@ type Attack struct {
 	Damage      string
 	DamageBonus int
 	DamageType  string
+	// Light weapons open the off-hand attack; DamageMod is the ability modifier inside DamageBonus,
+	// which an off-hand attack leaves out.
+	Light     bool
+	DamageMod int
 }
 
 // Attack action kinds in the Action Log.

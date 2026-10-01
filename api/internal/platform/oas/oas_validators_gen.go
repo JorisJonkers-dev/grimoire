@@ -14053,6 +14053,34 @@ func (s *LiveCombatant) Validate() error {
 		})
 	}
 	if err := func() error {
+		if value, ok := s.AttacksLeft.Get(); ok {
+			if err := func() error {
+				if err := (validate.Int{
+					MinSet:        true,
+					Min:           0,
+					MaxSet:        true,
+					Max:           10,
+					MinExclusive:  false,
+					MaxExclusive:  false,
+					MultipleOfSet: false,
+					MultipleOf:    0,
+					Pattern:       nil,
+				}).Validate(int64(value)); err != nil {
+					return errors.Wrap(err, "int")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "attacksLeft",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if value, ok := s.Tactics.Get(); ok {
 			if err := func() error {
 				if err := value.Validate(); err != nil {
@@ -15411,6 +15439,8 @@ func (s LiveCommandKind) Validate() error {
 	case "take_action":
 		return nil
 	case "unarmed":
+		return nil
+	case "interact":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

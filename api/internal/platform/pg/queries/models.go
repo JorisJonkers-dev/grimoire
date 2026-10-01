@@ -824,6 +824,7 @@ type PlayAttack struct {
 	Ranged          bool
 	Total           pgtype.Int4
 	Opportunity     bool
+	OffHand         bool
 }
 
 type PlayCombat struct {
@@ -864,6 +865,10 @@ type PlayCombatant struct {
 	ReadiedTrigger  pgtype.Text
 	ReadiedWho      pgtype.UUID
 	ReadiedAttack   pgtype.Int4
+	AttacksLeft     int32
+	LightAttack     bool
+	OffHand         bool
+	Interaction     bool
 }
 
 type PlayEncounterZone struct {
@@ -1046,6 +1051,7 @@ type PlayToken struct {
 	Initiative         int32
 	SpeedFt            int32
 	UnarmedDc          int32
+	AttacksPerAction   int32
 }
 
 type PlayTokenAttack struct {
@@ -1059,6 +1065,8 @@ type PlayTokenAttack struct {
 	DamageDice  string
 	DamageBonus int32
 	DamageType  string
+	Light       bool
+	DamageMod   int32
 }
 
 type PlayTokenSafe struct {

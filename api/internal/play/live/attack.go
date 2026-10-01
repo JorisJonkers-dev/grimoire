@@ -61,14 +61,8 @@ func (r *runtime) aimAt(m domain.Member, cmd Command) (aim, string) {
 	case !m.DM && (a.Controller == nil || *a.Controller != m.ID):
 		return aim{}, "That token is not yours to play."
 	}
-	x, acting := r.st.combatantOf(a.ID)
-	switch {
-	case !acting:
-		return aim{}, "It is not " + a.Label + "'s turn."
-	case r.st.catalog.Incapacitated(r.st.actives(a.ID)):
-		return aim{}, a.Label + " can't act while Incapacitated."
-	case !x.Economy.Action:
-		return aim{}, a.Label + " has already used their action."
+	if reason := r.st.attackBlocked(a, cmd); reason != "" {
+		return aim{}, reason
 	}
 	t, ok := find(cmd.TargetID)
 	if !ok || t.ID == a.ID {
@@ -107,6 +101,25 @@ func (s *state) combatantOf(id domain.TokenID) (domain.Combatant, bool) {
 		}
 	}
 	return domain.Combatant{}, false
+}
+
+// attackBlocked says why a token cannot make this attack now: not its turn, Incapacitated, or no attack
+// of the Attack action (or off-hand attack) left.
+func (s *state) attackBlocked(a domain.Token, cmd Command) string {
+	x, acting := s.combatantOf(a.ID)
+	switch {
+	case !acting:
+		return "It is not " + a.Label + "'s turn."
+	case s.catalog.Incapacitated(s.actives(a.ID)):
+		return a.Label + " can't act while Incapacitated."
+	case cmd.OffHand && !a.Stats.Attacks[cmd.AttackNo].Light:
+		return "Only a Light weapon makes the off-hand attack."
+	case cmd.OffHand && !x.Economy.CanOffHand(false):
+		return a.Label + " has no off-hand attack left: it follows an attack with a Light weapon, for a Bonus Action."
+	case !cmd.OffHand && !x.Economy.CanAttack():
+		return a.Label + " has no attacks left this turn."
+	}
+	return ""
 }
 
 // shape applies range, sight, cover and the advantage sources to an attack.
@@ -196,7 +209,7 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
-		Stage: domain.StageToHit, RollID: roll.ID, Ranged: p.ranged,
+		Stage: domain.StageToHit, RollID: roll.ID, Ranged: p.ranged, OffHand: cmd.OffHand,
 	}
 	return Write{Kind: domain.ActionAttackDeclared, Token: p.attacker, Combatant: x.ID, Rolls: []domain.Roll{roll}, attack: pending}, ""
 }
@@ -264,14 +277,18 @@ func (s *state) closeCrit(a, t domain.Token) bool {
 func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, roll domain.Roll) Write {
 	with := a.Stats.Attacks[p.AttackNo]
 	spec := joinDice(with.Damage, r.st.catalog.ForAttack(nil, r.st.actives(t.ID), uuid.UUID(a.ID).String(), false).DamageDice)
+	bonus := with.DamageBonus
+	if p.OffHand && with.DamageMod > 0 {
+		bonus -= with.DamageMod
+	}
 	if len(spec.Groups) == 0 {
-		return r.hurt(t, with.DamageBonus, Write{Token: a, attack: &p})
+		return r.hurt(t, bonus, Write{Token: a, attack: &p})
 	}
 	purpose := with.Name + " damage to " + t.Label
 	if critical {
 		spec, purpose = attack.CriticalDice(spec), purpose+" (critical)"
 	}
-	dmg := r.request(roll.Roller, a, purpose, spec.String(), domain.Modifier{Label: with.Name, Value: with.DamageBonus})
+	dmg := r.request(roll.Roller, a, purpose, spec.String(), domain.Modifier{Label: with.Name, Value: bonus})
 	dmg.Roller, dmg.RequestedBy = roll.Roller, roll.RequestedBy
 	p.Stage, p.RollID, p.Critical = domain.StageDamage, dmg.ID, critical
 	return Write{Kind: domain.ActionAttackHit, Token: a, attack: &p, Rolls: []domain.Roll{dmg}}

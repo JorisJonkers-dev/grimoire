@@ -111,7 +111,7 @@ async function rollAll() {
 }
 const tokenById = (id: string) => view.value?.tokens.find((t) => t.id === id)
 const pending = computed(() => combat.value?.attack ?? null)
-const aiming = ref<{ tokenId: string; attackNo: number } | null>(null)
+const aiming = ref<{ tokenId: string; attackNo: number; offHand?: boolean } | null>(null)
 // grabbing is an Unarmed Strike waiting for its target: the next creature tapped is grappled or shoved.
 const grabbing = ref<{ tokenId: string; option: string } | null>(null)
 const bars = computed(() =>
@@ -122,15 +122,18 @@ const bars = computed(() =>
 )
 const blockedFor = (c: LiveCombatant) => (pending.value ? 'An attack is waiting on its roll.' : c.action ? '' : 'The action is used this turn.')
 function arm(token: LiveToken, attackNo: number) {
-  const same = aiming.value?.tokenId === token.id && aiming.value.attackNo === attackNo
+  const same = aiming.value?.tokenId === token.id && aiming.value.attackNo === attackNo && !aiming.value.offHand
   aiming.value = same ? null : { tokenId: token.id, attackNo }
+}
+function armOffHand(token: LiveToken, attackNo: number) {
+  aiming.value = { tokenId: token.id, attackNo, offHand: true }
 }
 const preview = computed(() => {
   const p = state.value?.preview
   return p && p.tokenId === aiming.value?.tokenId && p.attackNo === aiming.value.attackNo ? p : null
 })
 function confirmAttack(p: { tokenId: string; attackNo: number; targetId: string }) {
-  live.value?.send({ kind: 'attack', tokenId: p.tokenId, attackNo: p.attackNo, targetId: p.targetId })
+  live.value?.send({ kind: 'attack', tokenId: p.tokenId, attackNo: p.attackNo, targetId: p.targetId, ...(aiming.value?.offHand ? { offHand: true } : {}) })
   aiming.value = null
 }
 function useSuggestion(tokenId: string, s?: LiveSuggestion) {
@@ -339,6 +342,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :suggestion="b.c.suggestion"
         :target="b.c.suggestion ? tokenById(b.c.suggestion.targetId)?.label : undefined"
         :tactics="b.c.tactics"
+        :attacks-left="b.c.attacksLeft ?? 0"
+        :off-hand="b.c.offHand ?? false"
+        :interaction="b.c.interaction ?? false"
         @arm="(n) => arm(b.token, n)"
         @use="useSuggestion(b.token.id, b.c.suggestion)"
         @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
@@ -346,6 +352,8 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash' })"
         @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
         @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"
+        @off-hand="(n) => armOffHand(b.token, n)"
+        @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
       />
       <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
       <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>

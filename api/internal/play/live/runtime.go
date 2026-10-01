@@ -592,7 +592,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract:
 		return true
 	}
 	return false
@@ -706,6 +706,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionTaken:
 		applyAction(s, w)
+		return
+	case domain.ActionObjectUsed:
+		applyInteraction(s, w)
 		return
 	case domain.ActionUnarmed:
 		applyAction(s, w)

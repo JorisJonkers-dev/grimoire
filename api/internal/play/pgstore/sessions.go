@@ -151,7 +151,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 			tok.Stats = &domain.Stats{
 				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
 				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
-				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc),
+				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction),
 			}
 		}
 		tokens = append(tokens, tok)
@@ -175,7 +175,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == a.TokenID })
 		tokens[i].Stats.Attacks = append(tokens[i].Stats.Attacks, domain.Attack{
 			Name: a.Name, ToHit: int(a.ToHit), ReachFt: int(a.ReachFt), RangeFt: int(a.RangeFt), LongRangeFt: int(a.LongRangeFt),
-			Damage: a.DamageDice, DamageBonus: int(a.DamageBonus), DamageType: a.DamageType,
+			Damage: a.DamageDice, DamageBonus: int(a.DamageBonus), DamageType: a.DamageType, Light: a.Light, DamageMod: int(a.DamageMod),
 		})
 	}
 	sess := session(row)
@@ -275,7 +275,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
-		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved:
+		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed:
 		return nil
 	case domain.ActionEncounterSpawned:
 		for _, t := range w.Spawned {
@@ -312,7 +312,7 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
 	}
 	if t.Stats == nil {
-		p.SpeedFt, p.UnarmedDc = 30, 10
+		p.SpeedFt, p.UnarmedDc, p.AttacksPerAction = 30, 10, 1
 		return s.q.InsertToken(ctx, p)
 	}
 	st := t.Stats
@@ -323,6 +323,7 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	if st.UnarmedDC == 0 {
 		p.UnarmedDc = 10
 	}
+	p.AttacksPerAction = int32(max(1, min(4, st.AttacksPerAction)))
 	if st.SpellDC > 0 {
 		p.SpellDc = pgInt(st.SpellDC)
 	}
@@ -336,6 +337,7 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
 			TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
 			LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
+			Light: a.Light, DamageMod: int32(a.DamageMod),
 		}); err != nil {
 			return err
 		}
@@ -485,6 +487,7 @@ func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
 			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
 			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt), Shielded: x.Shielded,
+			AttacksLeft: int32(x.Economy.AttacksLeft), LightAttack: x.Economy.LightAttack, OffHand: x.Economy.OffHand, Interaction: x.Economy.Interaction,
 			Surprised: x.Surprised, Disengaged: x.Disengaged,
 		}
 		if r := x.Readied; r != nil {
@@ -542,7 +545,7 @@ func (s *Store) saveAttack(ctx context.Context, f *domain.Combat) error {
 	return s.q.SaveAttack(ctx, queries.SaveAttackParams{
 		ID: a.ID, CombatID: uuid.UUID(f.ID), AttackerTokenID: uuid.UUID(a.Attacker), TargetTokenID: uuid.UUID(a.Target), AttackNo: int32(a.AttackNo),
 		Mode: a.Mode.String(), CoverBonus: int32(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: uuid.UUID(a.RollID), Ranged: a.Ranged,
-		Total: pgtype.Int4{Int32: int32(a.Total), Valid: a.Stage == domain.StageReaction}, Opportunity: a.Opportunity,
+		Total: pgtype.Int4{Int32: int32(a.Total), Valid: a.Stage == domain.StageReaction}, Opportunity: a.Opportunity, OffHand: a.OffHand,
 	})
 }
 
@@ -710,7 +713,10 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 		c := domain.Combatant{
 			ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
 			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised, Disengaged: x.Disengaged,
-			Economy: combat.Economy{Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt)},
+			Economy: combat.Economy{
+				Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt),
+				AttacksLeft: int(x.AttacksLeft), LightAttack: x.LightAttack, OffHand: x.OffHand, Interaction: x.Interaction,
+			},
 		}
 		if x.Initiative.Valid {
 			n := int(x.Initiative.Int32)
@@ -738,7 +744,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	out.Attack = &domain.PendingAttack{
 		ID: a.ID, Attacker: domain.TokenID(a.AttackerTokenID), Target: domain.TokenID(a.TargetTokenID), AttackNo: int(a.AttackNo),
 		Mode: attack.Mode(mode), CoverBonus: int(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: domain.RollID(a.RollID),
-		Ranged: a.Ranged, Total: int(a.Total.Int32), Opportunity: a.Opportunity,
+		Ranged: a.Ranged, Total: int(a.Total.Int32), Opportunity: a.Opportunity, OffHand: a.OffHand,
 	}
 	return out, nil
 }

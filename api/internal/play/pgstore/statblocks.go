@@ -96,7 +96,8 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	stats := domain.Stats{
 		Source: "character:" + id.String(), AC: sheet.Derived.ArmorClass, HP: sheet.HPCurrent, HPMax: sheet.HPMax,
 		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{}, UnarmedDC: actions.UnarmedDC(str, pb),
-		Attacks: []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning"}},
+		Attacks:          []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning", DamageMod: str}},
+		AttacksPerAction: s.attacksPerAction(ctx, sheet.Class, sheet.Level),
 	}
 	for _, sv := range sheet.Derived.Saves {
 		stats.Saves[string(sv.Ability)] = sv.Bonus
@@ -125,7 +126,7 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 		dmg, flat := damage(w.DamageDice, bonus)
 		stats.Attacks = append(stats.Attacks, domain.Attack{
 			Name: w.Name, ToHit: toHit, ReachFt: reach, RangeFt: w.RangeFeet, LongRangeFt: w.LongRangeFeet, Damage: dmg,
-			DamageBonus: flat, DamageType: w.DamageType,
+			DamageBonus: flat, DamageType: w.DamageType, Light: slices.Contains(w.Properties, "Light"), DamageMod: bonus,
 		})
 	}
 	return sheet.Name, uuid.UUID(sheet.Owner.ID), stats, nil
@@ -169,4 +170,18 @@ func (s Statblocks) ambush(ctx context.Context, m queries.MonsterStatblockRow, s
 		}
 	}
 	return nil
+}
+
+// attacksPerAction is how many attacks a Character's Attack action holds: one, or what their class's
+// Extra Attack gives at their level.
+func (s Statblocks) attacksPerAction(ctx context.Context, class string, level int) int {
+	cat, err := s.Store.Features(ctx)
+	if err != nil {
+		return 1
+	}
+	n, _ := cat.Scales[class+"-extra-attack"].Steps.At(level)
+	if v, err := strconv.Atoi(n); err == nil {
+		return v
+	}
+	return 1
 }

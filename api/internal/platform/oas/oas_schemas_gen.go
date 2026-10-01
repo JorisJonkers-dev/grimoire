@@ -7947,6 +7947,8 @@ type LiveAttack struct {
 	Damage      OptString `json:"damage"`
 	DamageBonus int32     `json:"damageBonus"`
 	DamageType  OptString `json:"damageType"`
+	// A Light weapon, which opens the off-hand attack.
+	Light OptBool `json:"light"`
 }
 
 // GetName returns the value of Name.
@@ -7989,6 +7991,11 @@ func (s *LiveAttack) GetDamageType() OptString {
 	return s.DamageType
 }
 
+// GetLight returns the value of Light.
+func (s *LiveAttack) GetLight() OptBool {
+	return s.Light
+}
+
 // SetName sets the value of Name.
 func (s *LiveAttack) SetName(val string) {
 	s.Name = val
@@ -8027,6 +8034,11 @@ func (s *LiveAttack) SetDamageBonus(val int32) {
 // SetDamageType sets the value of DamageType.
 func (s *LiveAttack) SetDamageType(val OptString) {
 	s.DamageType = val
+}
+
+// SetLight sets the value of Light.
+func (s *LiveAttack) SetLight(val OptBool) {
+	s.Light = val
 }
 
 // What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name
@@ -8603,9 +8615,15 @@ type LiveCombatant struct {
 	// Moves without provoking opportunity attacks until its next turn.
 	Disengaged OptBool `json:"disengaged"`
 	// Has a readied attack waiting on its trigger; the party sees only its own.
-	Readied    OptBool           `json:"readied"`
-	Tactics    OptTactics        `json:"tactics"`
-	Suggestion OptLiveSuggestion `json:"suggestion"`
+	Readied OptBool `json:"readied"`
+	// Attacks left of an Attack action already begun (Extra Attack).
+	AttacksLeft OptInt32 `json:"attacksLeft"`
+	// The off-hand attack of a Light weapon is open.
+	OffHand OptBool `json:"offHand"`
+	// The turn's free object interaction is unused.
+	Interaction OptBool           `json:"interaction"`
+	Tactics     OptTactics        `json:"tactics"`
+	Suggestion  OptLiveSuggestion `json:"suggestion"`
 }
 
 // GetID returns the value of ID.
@@ -8696,6 +8714,21 @@ func (s *LiveCombatant) GetDisengaged() OptBool {
 // GetReadied returns the value of Readied.
 func (s *LiveCombatant) GetReadied() OptBool {
 	return s.Readied
+}
+
+// GetAttacksLeft returns the value of AttacksLeft.
+func (s *LiveCombatant) GetAttacksLeft() OptInt32 {
+	return s.AttacksLeft
+}
+
+// GetOffHand returns the value of OffHand.
+func (s *LiveCombatant) GetOffHand() OptBool {
+	return s.OffHand
+}
+
+// GetInteraction returns the value of Interaction.
+func (s *LiveCombatant) GetInteraction() OptBool {
+	return s.Interaction
 }
 
 // GetTactics returns the value of Tactics.
@@ -8796,6 +8829,21 @@ func (s *LiveCombatant) SetDisengaged(val OptBool) {
 // SetReadied sets the value of Readied.
 func (s *LiveCombatant) SetReadied(val OptBool) {
 	s.Readied = val
+}
+
+// SetAttacksLeft sets the value of AttacksLeft.
+func (s *LiveCombatant) SetAttacksLeft(val OptInt32) {
+	s.AttacksLeft = val
+}
+
+// SetOffHand sets the value of OffHand.
+func (s *LiveCombatant) SetOffHand(val OptBool) {
+	s.OffHand = val
+}
+
+// SetInteraction sets the value of Interaction.
+func (s *LiveCombatant) SetInteraction(val OptBool) {
+	s.Interaction = val
 }
 
 // SetTactics sets the value of Tactics.
@@ -8917,12 +8965,14 @@ type LiveCommand struct {
 	Detail      OptString             `json:"detail"`
 	Trigger     OptLiveCommandTrigger `json:"trigger"`
 	Option      OptLiveCommandOption  `json:"option"`
-	ToId        OptID                 `json:"toId"`
-	ItemSlug    OptSlug               `json:"itemSlug"`
-	Coin        OptCoin               `json:"coin"`
-	Count       OptInt32              `json:"count"`
-	ShopId      OptID                 `json:"shopId"`
-	Monsters    []SpawnMonster        `json:"monsters"`
+	// Makes the attack the off-hand attack of a Light weapon.
+	OffHand  OptBool        `json:"offHand"`
+	ToId     OptID          `json:"toId"`
+	ItemSlug OptSlug        `json:"itemSlug"`
+	Coin     OptCoin        `json:"coin"`
+	Count    OptInt32       `json:"count"`
+	ShopId   OptID          `json:"shopId"`
+	Monsters []SpawnMonster `json:"monsters"`
 	// With adjust_hp, hit points to add; negative takes them away.
 	HpDelta OptInt32 `json:"hpDelta"`
 	// With undo, the Action Log sequence of the Action to undo.
@@ -9237,6 +9287,11 @@ func (s *LiveCommand) GetTrigger() OptLiveCommandTrigger {
 // GetOption returns the value of Option.
 func (s *LiveCommand) GetOption() OptLiveCommandOption {
 	return s.Option
+}
+
+// GetOffHand returns the value of OffHand.
+func (s *LiveCommand) GetOffHand() OptBool {
+	return s.OffHand
 }
 
 // GetToId returns the value of ToId.
@@ -9589,6 +9644,11 @@ func (s *LiveCommand) SetOption(val OptLiveCommandOption) {
 	s.Option = val
 }
 
+// SetOffHand sets the value of OffHand.
+func (s *LiveCommand) SetOffHand(val OptBool) {
+	s.OffHand = val
+}
+
 // SetToId sets the value of ToId.
 func (s *LiveCommand) SetToId(val OptID) {
 	s.ToId = val
@@ -9842,6 +9902,7 @@ const (
 	LiveCommandKindInterruptRest  LiveCommandKind = "interrupt_rest"
 	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
 	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
+	LiveCommandKindInteract       LiveCommandKind = "interact"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -9912,6 +9973,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindInterruptRest,
 		LiveCommandKindTakeAction,
 		LiveCommandKindUnarmed,
+		LiveCommandKindInteract,
 	}
 }
 
@@ -10047,6 +10109,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindTakeAction:
 		return []byte(s), nil
 	case LiveCommandKindUnarmed:
+		return []byte(s), nil
+	case LiveCommandKindInteract:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10250,6 +10314,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindUnarmed:
 		*s = LiveCommandKindUnarmed
+		return nil
+	case LiveCommandKindInteract:
+		*s = LiveCommandKindInteract
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

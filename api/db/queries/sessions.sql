@@ -24,14 +24,14 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
     sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc), @stealth,
-    @perception, @initiative, @speed_ft, @unarmed_dc);
+    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action);
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -58,7 +58,7 @@ SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_t
 
 -- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
-       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack
+       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack, attacks_left, light_attack, off_hand, interaction
 FROM play.combatants WHERE combat_id = $1 ORDER BY id;
 
 -- name: SaveCombat :exec
@@ -70,36 +70,40 @@ ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round,
 
 -- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
-    has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack)
+    has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack,
+    attacks_left, light_attack, off_hand, interaction)
 VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
     @has_bonus_action, @has_reaction, @movement_ft, @shielded, @surprised, @disengaged, sqlc.narg(readied_trigger), sqlc.narg(readied_who),
-    sqlc.narg(readied_attack))
+    sqlc.narg(readied_attack), @attacks_left, @light_attack, @off_hand, @interaction)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
     shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
-    readied_who = excluded.readied_who, readied_attack = excluded.readied_attack;
+    readied_who = excluded.readied_who, readied_attack = excluded.readied_attack, attacks_left = excluded.attacks_left,
+    light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction;
 
 -- name: SetTokenHP :exec
 UPDATE play.tokens SET hp = @hp WHERE session_id = @session_id AND id = @id;
 
 -- name: SessionTokenAttacks :many
-SELECT a.token_id, a.ordering, a.name, a.to_hit, a.reach_ft, a.range_ft, a.long_range_ft, a.damage_dice, a.damage_bonus, a.damage_type
+SELECT a.token_id, a.ordering, a.name, a.to_hit, a.reach_ft, a.range_ft, a.long_range_ft, a.damage_dice, a.damage_bonus, a.damage_type,
+       a.light, a.damage_mod
 FROM play.token_attacks a JOIN play.tokens t ON t.id = a.token_id WHERE t.session_id = $1 ORDER BY a.token_id, a.ordering;
 
 -- name: InsertTokenAttack :exec
-INSERT INTO play.token_attacks (token_id, ordering, name, to_hit, reach_ft, range_ft, long_range_ft, damage_dice, damage_bonus, damage_type)
-VALUES (@token_id, @ordering, @name, @to_hit, @reach_ft, @range_ft, @long_range_ft, @damage_dice, @damage_bonus, @damage_type);
+INSERT INTO play.token_attacks (token_id, ordering, name, to_hit, reach_ft, range_ft, long_range_ft, damage_dice, damage_bonus, damage_type,
+    light, damage_mod)
+VALUES (@token_id, @ordering, @name, @to_hit, @reach_ft, @range_ft, @long_range_ft, @damage_dice, @damage_bonus, @damage_type, @light, @damage_mod);
 
 -- name: CombatAttack :one
 SELECT id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged, total,
-       opportunity
+       opportunity, off_hand
 FROM play.attacks WHERE combat_id = $1;
 
 -- name: SaveAttack :exec
 INSERT INTO play.attacks (id, combat_id, attacker_token_id, target_token_id, attack_no, mode, cover_bonus, stage, critical, roll_id, ranged,
-    total, opportunity)
+    total, opportunity, off_hand)
 VALUES (@id, @combat_id, @attacker_token_id, @target_token_id, @attack_no, @mode, @cover_bonus, @stage, @critical, @roll_id, @ranged,
-    sqlc.narg(total), @opportunity)
+    sqlc.narg(total), @opportunity, @off_hand)
 ON CONFLICT (id) DO UPDATE SET stage = excluded.stage, critical = excluded.critical, roll_id = excluded.roll_id, total = excluded.total;
 
 -- name: ClearAttacks :exec

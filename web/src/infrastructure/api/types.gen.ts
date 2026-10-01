@@ -1020,6 +1020,10 @@ export type LiveAttack = {
     damage?: string;
     damageBonus: number;
     damageType?: string;
+    /**
+     * A Light weapon, which opens the off-hand attack.
+     */
+    light?: boolean;
 };
 
 /**
@@ -1065,7 +1069,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1144,6 +1148,10 @@ export type LiveCommand = {
     detail?: string;
     trigger?: 'enters_reach';
     option?: 'grapple' | 'shove_push' | 'shove_prone';
+    /**
+     * Makes the attack the off-hand attack of a Light weapon.
+     */
+    offHand?: boolean;
     toId?: Id;
     itemSlug?: Slug;
     coin?: Coin;
@@ -1616,6 +1624,18 @@ export type LiveCombatant = {
      * Has a readied attack waiting on its trigger; the party sees only its own.
      */
     readied?: boolean;
+    /**
+     * Attacks left of an Attack action already begun (Extra Attack).
+     */
+    attacksLeft?: number;
+    /**
+     * The off-hand attack of a Light weapon is open.
+     */
+    offHand?: boolean;
+    /**
+     * The turn's free object interaction is unused.
+     */
+    interaction?: boolean;
     tactics?: Tactics;
     suggestion?: LiveSuggestion;
 };

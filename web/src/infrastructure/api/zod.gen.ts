@@ -664,7 +664,8 @@ export const zLiveAttack = z.object({
     longRangeFt: z.int().gte(0).lte(10000),
     damage: z.string().max(40).optional(),
     damageBonus: z.int().gte(-10).lte(50),
-    damageType: z.string().max(80).optional()
+    damageType: z.string().max(80).optional(),
+    light: z.boolean().optional()
 });
 
 /**
@@ -1075,6 +1076,9 @@ export const zLiveCombatant = z.object({
     surprised: z.boolean().optional(),
     disengaged: z.boolean().optional(),
     readied: z.boolean().optional(),
+    attacksLeft: z.int().gte(0).lte(10).optional(),
+    offHand: z.boolean().optional(),
+    interaction: z.boolean().optional(),
     tactics: zTactics.optional(),
     suggestion: zLiveSuggestion.optional()
 });
@@ -1595,7 +1599,8 @@ export const zLiveCommand = z.object({
         'finish_rest',
         'interrupt_rest',
         'take_action',
-        'unarmed'
+        'unarmed',
+        'interact'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1684,6 +1689,7 @@ export const zLiveCommand = z.object({
         'shove_push',
         'shove_prone'
     ]).optional(),
+    offHand: z.boolean().optional(),
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),

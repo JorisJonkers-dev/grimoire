@@ -4423,6 +4423,7 @@ components:
         damage: { type: string, maxLength: 40 }
         damageBonus: { type: integer, format: int32, minimum: -10, maximum: 50 }
         damageType: { type: string, maxLength: 80 }
+        light: { type: boolean, description: "A Light weapon, which opens the off-hand attack." }
     LiveAttackPreview:
       type: object
       description: What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
@@ -4471,7 +4472,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4538,6 +4539,7 @@ components:
         detail: { type: string, maxLength: 200 }
         trigger: { type: string, enum: [enters_reach] }
         option: { type: string, enum: [grapple, shove_push, shove_prone] }
+        offHand: { type: boolean, description: "Makes the attack the off-hand attack of a Light weapon." }
         toId: { $ref: "#/components/schemas/Id" }
         itemSlug: { $ref: "#/components/schemas/Slug" }
         coin: { $ref: "#/components/schemas/Coin" }
@@ -5051,6 +5053,9 @@ components:
         surprised: { type: boolean, description: "Did not notice the ambush and rolled initiative at disadvantage." }
         disengaged: { type: boolean, description: "Moves without provoking opportunity attacks until its next turn." }
         readied: { type: boolean, description: "Has a readied attack waiting on its trigger; the party sees only its own." }
+        attacksLeft: { type: integer, format: int32, minimum: 0, maximum: 10, description: "Attacks left of an Attack action already begun (Extra Attack)." }
+        offHand: { type: boolean, description: "The off-hand attack of a Light weapon is open." }
+        interaction: { type: boolean, description: "The turn's free object interaction is unused." }
         tactics: { $ref: "#/components/schemas/Tactics" }
         suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:

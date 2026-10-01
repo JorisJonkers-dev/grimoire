@@ -38,7 +38,7 @@ func samples() contract {
 	seventeen, zero := 17, 0
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
 		ID: "0190c7a8-0000-7000-8000-000000000010", TokenID: token.ID, Label: "Goblin", Kind: "enemy", RollID: "0190c7a8-0000-7000-8000-000000000011",
-		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30, Surprised: true, Disengaged: true, Readied: true,
+		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30, Surprised: true, Disengaged: true, Readied: true, AttacksLeft: 1, OffHand: true, Interaction: true,
 		Tactics: "auto", Suggestion: &live.SuggestionView{AttackNo: &zero, TargetID: "0190c7a8-0000-7000-8000-000000000013", Reason: "Simple: Aria is the nearest enemy, 5 ft away."},
 	}}, Attack: &live.PendingAttackView{
 		AttackerID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", Name: "Scimitar", Stage: "damage",
@@ -183,6 +183,8 @@ func samples() contract {
 			{Nonce: "n69", Kind: live.CmdTakeAction, TokenID: token.ID, Action: "ready", Trigger: "enters_reach", AttackNo: 0},
 			{Nonce: "n70", Kind: live.CmdTakeAction, TokenID: token.ID, Action: "utilize", Detail: "pulls the lever"},
 			{Nonce: "n71", Kind: live.CmdUnarmed, TokenID: token.ID, TargetID: token.ID, Option: "shove_push"},
+			{Nonce: "n72", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 1, TargetID: token.ID, OffHand: true},
+			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
 		},
 		Updates: []live.Update{
 			{

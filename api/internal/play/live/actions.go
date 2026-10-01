@@ -283,3 +283,42 @@ func (s *state) readied(mover domain.Token, path []hex.Coord) (int, domain.Token
 	}
 	return 0, domain.Token{}, 0, false
 }
+
+// planInteract uses the turn's one free object interaction: drawing a weapon, opening a door.
+func (r *runtime) planInteract(m domain.Member, cmd Command) (Write, string) {
+	t, ok := r.st.tokenByID(cmd.TokenID)
+	what := strings.TrimSpace(cmd.Detail)
+	switch {
+	case !ok || t.Stats == nil:
+		return Write{}, "No such creature."
+	case !m.DM && (t.Controller == nil || *t.Controller != m.ID):
+		return Write{}, "That token is not yours to play."
+	case what == "" || len([]rune(what)) > 200:
+		return Write{}, "Say what the object interaction does."
+	}
+	w := Write{Kind: domain.ActionObjectUsed, Token: t, manuals: []domain.ManualPrompt{{ID: uuid.New(), Text: t.Label + " " + what + "."}}}
+	if c := r.st.combat; c != nil && c.Status == domain.CombatActive {
+		x, acting := r.st.combatantOf(t.ID)
+		switch {
+		case !acting:
+			return Write{}, "It is not " + t.Label + "'s turn."
+		case !x.Economy.Interaction:
+			return Write{}, t.Label + " has used their free object interaction; another takes the Utilize action."
+		}
+		w.Combatant = x.ID
+	}
+	return w, ""
+}
+
+// applyInteraction uses up the free object interaction of a Combatant's turn.
+func applyInteraction(s *state, w *Write) {
+	if s.combat == nil {
+		return
+	}
+	i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
+	if i < 0 {
+		return
+	}
+	s.combat.Combatants[i].Economy, _ = s.combat.Combatants[i].Economy.Interact()
+	w.Combat = s.combat
+}
