@@ -2986,6 +2986,86 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/push/key:
+    get:
+      operationId: getPushKey
+      summary: Get the push key
+      description: The server's VAPID public key, for a device to subscribe to notifications with. Not found when the server sends none.
+      tags: [Identity]
+      responses:
+        "200":
+          description: The key.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushKey"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/push/subscriptions:
+    post:
+      operationId: createPushSubscription
+      summary: Subscribe a device
+      description: Asks for this device to be told about the caller's turns and Reaction Prompts while the app is closed.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushSubscriptionInput"
+      responses:
+        "201":
+          description: The subscription.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushSubscription"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/push/subscriptions/{subscriptionId}:
+    delete:
+      operationId: deletePushSubscription
+      summary: Unsubscribe a device
+      description: Stops notifications to one of the caller's devices.
+      tags: [Identity]
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          description: Subscription id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Unsubscribed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/status:
     get:
       operationId: getStatus
@@ -4020,6 +4100,34 @@ components:
         client: { type: string, maxLength: 80 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
         undoable: { type: boolean }
+    PushKey:
+      type: object
+      description: The VAPID public key devices subscribe with, base64url-encoded.
+      additionalProperties: false
+      required: [publicKey]
+      properties:
+        publicKey: { type: string, minLength: 1, maxLength: 200 }
+    PushSubscriptionInput:
+      type: object
+      description: A browser's push subscription, as PushSubscription.toJSON gives it.
+      additionalProperties: false
+      required: [endpoint, keys]
+      properties:
+        endpoint: { type: string, format: uri, minLength: 1, maxLength: 2000 }
+        keys:
+          type: object
+          additionalProperties: false
+          required: [p256dh, auth]
+          properties:
+            p256dh: { type: string, minLength: 1, maxLength: 200 }
+            auth: { type: string, minLength: 1, maxLength: 100 }
+    PushSubscription:
+      type: object
+      description: A device subscribed to notifications.
+      additionalProperties: false
+      required: [id]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
     FieldChange:
       type: object
       description: A field whose value differs between two Revisions.

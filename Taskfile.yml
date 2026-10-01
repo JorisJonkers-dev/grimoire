@@ -105,6 +105,13 @@ tasks:
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/shops
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/surface
 
+  android:
+    desc: Build the Capacitor Android shell as a debug APK from the web build (needs Java 21 and the Android SDK)
+    dir: web
+    cmds:
+      - pnpm exec cap sync android
+      - cd android && ./gradlew assembleDebug --no-daemon --quiet
+
   build:
     desc: Build the API binary and the web app
     cmds:

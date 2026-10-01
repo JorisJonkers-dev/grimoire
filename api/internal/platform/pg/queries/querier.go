@@ -118,6 +118,7 @@ type Querier interface {
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
+	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
 	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
 	DeleteShop(ctx context.Context, arg DeleteShopParams) (int64, error)
@@ -125,6 +126,7 @@ type Querier interface {
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
+	DropPushEndpoint(ctx context.Context, endpoint string) error
 	Edits(ctx context.Context, arg EditsParams) ([]EditsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
@@ -258,6 +260,7 @@ type Querier interface {
 	PartyLevels(ctx context.Context, campaignID uuid.UUID) ([]int32, error)
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
+	PushSubscriptions(ctx context.Context, subject string) ([]PushSubscriptionsRow, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
@@ -346,6 +349,7 @@ type Querier interface {
 	UpsertItem(ctx context.Context, arg UpsertItemParams) error
 	UpsertMagicSchool(ctx context.Context, arg UpsertMagicSchoolParams) (int64, error)
 	UpsertMonster(ctx context.Context, arg UpsertMonsterParams) (int64, error)
+	UpsertPushSubscription(ctx context.Context, arg UpsertPushSubscriptionParams) (uuid.UUID, error)
 	UpsertSpecies(ctx context.Context, arg UpsertSpeciesParams) (int64, error)
 	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)
 	UpsertWeapon(ctx context.Context, arg UpsertWeaponParams) (int64, error)

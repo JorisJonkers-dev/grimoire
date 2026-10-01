@@ -19,7 +19,7 @@ and import their own adventures.
 |---|---|
 | API | Go 1.26 · spec-first OpenAPI 3.1 (ogen) · sqlc · goose + squawk · WebSocket live runtime · MCP |
 | Web | Vue 3.5 · TypeScript (strict) · Vite · generated client + Zod · TanStack Query · Pinia · PixiJS + SVG map |
-| Apps | Installable PWA · Capacitor 7 shells for Android/iOS · kiosk browser for the Table |
+| Apps | Installable PWA · Capacitor 8 shell for Android · kiosk browser for the Table |
 | Data | PostgreSQL 16+ (normalised, no JSONB) · S3-compatible object storage |
 
 ## Documents
@@ -55,6 +55,12 @@ Grimoire serves MCP over Streamable HTTP at `/mcp`.
 - **Writes:** writes apply at once and return the Revision they recorded. The campaign's **AI activity** page lists the agent's changes, and each one can be undone.
 - **Live tools:** live tools act in a running Session with the same authority as the DM's own connection. Examples are `spawn_encounter`, `reveal_area`, `apply_effect`, `adjust_hp` and `run_encounter_check`. Each one returns the Action Log sequence it recorded. `undo_action`, or the session page's Action Log, reverts it.
 - **Adding a tool:** mark an OpenAPI operation with `x-mcp: { tool: <name>, entity: <revisioned type> }` and run `task gen`. See [ADR 0007](docs/adr/0007-mcp-tools-run-through-the-rest-router.md).
+
+## Phones and the Android app
+
+- **Install:** Grimoire is an installable PWA. The compendium and Character sheets a device has opened stay readable offline, and the app says when live play is waiting for the connection.
+- **Notifications:** set `GRIMOIRE_VAPID_PUBLIC_KEY`, `GRIMOIRE_VAPID_PRIVATE_KEY` and `GRIMOIRE_VAPID_CONTACT` to send Web Push. A player taps "Notify me on my turn" in a live Session, and the device then hears about their turn and Reaction Prompts while locked. Without the keys the server sends none.
+- **Android:** `task android` builds the Capacitor shell as a debug APK (Java 21 and the Android SDK). Set `GRIMOIRE_APP_URL` at build time to load a hosted server instead of the bundled build. The screen stays awake during a live Session.
 
 ## Layout
 

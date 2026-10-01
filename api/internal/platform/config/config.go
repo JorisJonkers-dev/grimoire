@@ -19,7 +19,18 @@ type Config struct {
 	// OAuthIssuer is the authorization server MCP agents sign in with; empty leaves discovery out.
 	OAuthIssuer string
 	S3          *S3
+	Push        *Push
 }
+
+// Push holds the VAPID keys Web Push is signed with; nil sends no notifications.
+type Push struct {
+	PublicKey  string
+	PrivateKey string
+	Contact    string
+}
+
+// ErrIncompletePush is returned when only part of the Web Push settings is given.
+var ErrIncompletePush = errors.New("config: GRIMOIRE_VAPID_PUBLIC_KEY, GRIMOIRE_VAPID_PRIVATE_KEY and GRIMOIRE_VAPID_CONTACT go together")
 
 // S3 locates the asset bucket; nil keeps assets on local disk under AssetDir.
 type S3 struct {
@@ -51,17 +62,11 @@ func Load(getenv func(string) string) (Config, error) {
 	if c.AssetDir == "" {
 		c.AssetDir = "/tmp/grimoire-assets"
 	}
-	if endpoint := getenv("GRIMOIRE_S3_ENDPOINT"); endpoint != "" {
-		c.S3 = &S3{
-			Endpoint: endpoint, Region: getenv("GRIMOIRE_S3_REGION"), Bucket: getenv("GRIMOIRE_S3_BUCKET"),
-			AccessKey: getenv("GRIMOIRE_S3_ACCESS_KEY_ID"), SecretKey: getenv("GRIMOIRE_S3_SECRET_ACCESS_KEY"),
-		}
-		if c.S3.Bucket == "" || c.S3.AccessKey == "" || c.S3.SecretKey == "" {
-			return Config{}, ErrIncompleteS3
-		}
-		if c.S3.Region == "" {
-			c.S3.Region = "garage"
-		}
+	if err := c.loadS3(getenv); err != nil {
+		return Config{}, err
+	}
+	if err := c.loadPush(getenv); err != nil {
+		return Config{}, err
 	}
 	if c.Addr == "" {
 		c.Addr = ":8080"
@@ -77,4 +82,35 @@ func Load(getenv func(string) string) (Config, error) {
 		c.RateLimit = n
 	}
 	return c, nil
+}
+
+func (c *Config) loadS3(getenv func(string) string) error {
+	endpoint := getenv("GRIMOIRE_S3_ENDPOINT")
+	if endpoint == "" {
+		return nil
+	}
+	s := &S3{
+		Endpoint: endpoint, Region: getenv("GRIMOIRE_S3_REGION"), Bucket: getenv("GRIMOIRE_S3_BUCKET"),
+		AccessKey: getenv("GRIMOIRE_S3_ACCESS_KEY_ID"), SecretKey: getenv("GRIMOIRE_S3_SECRET_ACCESS_KEY"),
+	}
+	if s.Bucket == "" || s.AccessKey == "" || s.SecretKey == "" {
+		return ErrIncompleteS3
+	}
+	if s.Region == "" {
+		s.Region = "garage"
+	}
+	c.S3 = s
+	return nil
+}
+
+func (c *Config) loadPush(getenv func(string) string) error {
+	p := Push{PublicKey: getenv("GRIMOIRE_VAPID_PUBLIC_KEY"), PrivateKey: getenv("GRIMOIRE_VAPID_PRIVATE_KEY"), Contact: getenv("GRIMOIRE_VAPID_CONTACT")}
+	switch {
+	case p == (Push{}):
+		return nil
+	case p.PublicKey == "" || p.PrivateKey == "" || p.Contact == "":
+		return ErrIncompletePush
+	}
+	c.Push = &p
+	return nil
 }

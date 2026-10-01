@@ -204,6 +204,7 @@ type runtime struct {
 	st       *state
 	seed     func() uint64
 	source   func(seed uint64) dice.Source
+	notify   Notifier
 	// dm is the DM last seen on this Session; an ambush opens its creatures' rolls for them.
 	dm    *domain.Member
 	subs  map[*Subscriber]struct{}
@@ -225,6 +226,8 @@ type Hub struct {
 	// Seed and Source drive Encounter Checks: each check keeps its seed so its draw can be replayed.
 	Seed   func() uint64
 	Source func(seed uint64) dice.Source
+	// Notify reaches players' devices when their turn starts or a Reaction Prompt waits; nil leaves them be.
+	Notify Notifier
 
 	mu       sync.Mutex
 	runtimes map[domain.SessionID]*runtime
@@ -316,7 +319,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	st.setBoard(board)
 	st.setWorld(world)
 	rt := &runtime{
-		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {
@@ -557,7 +560,9 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 	}
 	seq := done.Seq
 	next.session.Seq = seq
+	prev := r.st
 	r.st = next
+	r.nudge(prev, next)
 	views := map[Audience]Update{}
 	for sub := range r.subs {
 		u, ok := views[sub.Audience]

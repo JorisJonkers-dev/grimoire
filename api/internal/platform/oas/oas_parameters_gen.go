@@ -1476,6 +1476,79 @@ func decodeDeleteNpcParams(args [2]string, argsEscaped bool, r *http.Request) (p
 	return params, nil
 }
 
+// DeletePushSubscriptionParams is parameters of deletePushSubscription operation.
+type DeletePushSubscriptionParams struct {
+	// Subscription id.
+	SubscriptionId ID
+}
+
+func unpackDeletePushSubscriptionParams(packed middleware.Parameters) (params DeletePushSubscriptionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "subscriptionId",
+			In:   "path",
+		}
+		params.SubscriptionId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeDeletePushSubscriptionParams(args [1]string, argsEscaped bool, r *http.Request) (params DeletePushSubscriptionParams, _ error) {
+	// Decode path: subscriptionId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "subscriptionId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotSubscriptionIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotSubscriptionIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.SubscriptionId = ID(paramsDotSubscriptionIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "subscriptionId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // DeleteSettlementParams is parameters of deleteSettlement operation.
 type DeleteSettlementParams struct {
 	// Campaign id.

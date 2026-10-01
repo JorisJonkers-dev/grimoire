@@ -4,6 +4,7 @@ package oas
 
 import (
 	"io"
+	"net/url"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -3238,6 +3239,45 @@ func (s *DeleteNpcNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DeleteNpcNoContent) deleteNpcRes() {}
+
+// DeletePushSubscriptionNoContent is response for DeletePushSubscription operation.
+type DeletePushSubscriptionNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeletePushSubscriptionNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeletePushSubscriptionNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeletePushSubscriptionNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeletePushSubscriptionNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeletePushSubscriptionNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeletePushSubscriptionNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeletePushSubscriptionNoContent) deletePushSubscriptionRes() {}
 
 // DeleteSettlementNoContent is response for DeleteSettlement operation.
 type DeleteSettlementNoContent struct {
@@ -16532,6 +16572,7 @@ func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
@@ -16540,6 +16581,7 @@ func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) deleteLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) deletePushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
@@ -16556,6 +16598,7 @@ func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getPushKeyRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
 func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
@@ -16620,6 +16663,190 @@ func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
+
+// The VAPID public key devices subscribe with, base64url-encoded.
+// Ref: #/components/schemas/PushKey
+type PushKey struct {
+	PublicKey string `json:"publicKey"`
+}
+
+// GetPublicKey returns the value of PublicKey.
+func (s *PushKey) GetPublicKey() string {
+	return s.PublicKey
+}
+
+// SetPublicKey sets the value of PublicKey.
+func (s *PushKey) SetPublicKey(val string) {
+	s.PublicKey = val
+}
+
+// PushKeyHeaders wraps PushKey with response headers.
+type PushKeyHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           PushKey
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *PushKeyHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *PushKeyHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *PushKeyHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *PushKeyHeaders) GetResponse() PushKey {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *PushKeyHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *PushKeyHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *PushKeyHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *PushKeyHeaders) SetResponse(val PushKey) {
+	s.Response = val
+}
+
+func (*PushKeyHeaders) getPushKeyRes() {}
+
+// A device subscribed to notifications.
+// Ref: #/components/schemas/PushSubscription
+type PushSubscription struct {
+	ID ID `json:"id"`
+}
+
+// GetID returns the value of ID.
+func (s *PushSubscription) GetID() ID {
+	return s.ID
+}
+
+// SetID sets the value of ID.
+func (s *PushSubscription) SetID(val ID) {
+	s.ID = val
+}
+
+// PushSubscriptionHeaders wraps PushSubscription with response headers.
+type PushSubscriptionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           PushSubscription
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *PushSubscriptionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *PushSubscriptionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *PushSubscriptionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *PushSubscriptionHeaders) GetResponse() PushSubscription {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *PushSubscriptionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *PushSubscriptionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *PushSubscriptionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *PushSubscriptionHeaders) SetResponse(val PushSubscription) {
+	s.Response = val
+}
+
+func (*PushSubscriptionHeaders) createPushSubscriptionRes() {}
+
+// A browser's push subscription, as PushSubscription.toJSON gives it.
+// Ref: #/components/schemas/PushSubscriptionInput
+type PushSubscriptionInput struct {
+	Endpoint url.URL                   `json:"endpoint"`
+	Keys     PushSubscriptionInputKeys `json:"keys"`
+}
+
+// GetEndpoint returns the value of Endpoint.
+func (s *PushSubscriptionInput) GetEndpoint() url.URL {
+	return s.Endpoint
+}
+
+// GetKeys returns the value of Keys.
+func (s *PushSubscriptionInput) GetKeys() PushSubscriptionInputKeys {
+	return s.Keys
+}
+
+// SetEndpoint sets the value of Endpoint.
+func (s *PushSubscriptionInput) SetEndpoint(val url.URL) {
+	s.Endpoint = val
+}
+
+// SetKeys sets the value of Keys.
+func (s *PushSubscriptionInput) SetKeys(val PushSubscriptionInputKeys) {
+	s.Keys = val
+}
+
+type PushSubscriptionInputKeys struct {
+	P256dh string `json:"p256dh"`
+	Auth   string `json:"auth"`
+}
+
+// GetP256dh returns the value of P256dh.
+func (s *PushSubscriptionInputKeys) GetP256dh() string {
+	return s.P256dh
+}
+
+// GetAuth returns the value of Auth.
+func (s *PushSubscriptionInputKeys) GetAuth() string {
+	return s.Auth
+}
+
+// SetP256dh sets the value of P256dh.
+func (s *PushSubscriptionInputKeys) SetP256dh(val string) {
+	s.P256dh = val
+}
+
+// SetAuth sets the value of Auth.
+func (s *PushSubscriptionInputKeys) SetAuth(val string) {
+	s.Auth = val
+}
 
 // A reachable hex with its cost and where it is reached from.
 // Ref: #/components/schemas/ReachHex

@@ -392,6 +392,31 @@ export const zActivity = z.object({
 });
 
 /**
+ * The VAPID public key devices subscribe with, base64url-encoded.
+ */
+export const zPushKey = z.object({
+    publicKey: z.string().min(1).max(200)
+});
+
+/**
+ * A browser's push subscription, as PushSubscription.toJSON gives it.
+ */
+export const zPushSubscriptionInput = z.object({
+    endpoint: z.url().min(1).max(2000),
+    keys: z.object({
+        p256dh: z.string().min(1).max(200),
+        auth: z.string().min(1).max(100)
+    })
+});
+
+/**
+ * A device subscribed to notifications.
+ */
+export const zPushSubscription = z.object({
+    id: zId
+});
+
+/**
  * A field whose value differs between two Revisions.
  */
 export const zFieldChange = z.object({
@@ -3146,6 +3171,27 @@ export const zPreviewSightResponse = zSightPreview;
  * The signed-in account.
  */
 export const zGetMeResponse = zMe;
+
+/**
+ * The key.
+ */
+export const zGetPushKeyResponse = zPushKey;
+
+export const zCreatePushSubscriptionBody = zPushSubscriptionInput;
+
+/**
+ * The subscription.
+ */
+export const zCreatePushSubscriptionResponse = zPushSubscription;
+
+export const zDeletePushSubscriptionPath = z.object({
+    subscriptionId: zId
+});
+
+/**
+ * Unsubscribed.
+ */
+export const zDeletePushSubscriptionResponse = z.void();
 
 /**
  * The service status.

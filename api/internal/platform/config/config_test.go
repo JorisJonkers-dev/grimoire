@@ -32,11 +32,14 @@ func TestLoadOverrides(t *testing.T) {
 		"GRIMOIRE_AUTO_IMPORT":           "true",
 		"GRIMOIRE_RATE_LIMIT_PER_MINUTE": "42",
 		"GRIMOIRE_OAUTH_ISSUER":          "https://auth.example",
+		"GRIMOIRE_VAPID_PUBLIC_KEY":      "pub",
+		"GRIMOIRE_VAPID_PRIVATE_KEY":     "priv",
+		"GRIMOIRE_VAPID_CONTACT":         "mailto:dm@example.com",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" || c.OAuthIssuer != "https://auth.example" {
+	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" || c.OAuthIssuer != "https://auth.example" || *c.Push != (config.Push{PublicKey: "pub", PrivateKey: "priv", Contact: "mailto:dm@example.com"}) {
 		t.Fatalf("overrides not applied: %+v", c)
 	}
 }
@@ -80,5 +83,16 @@ func TestLoadStorage(t *testing.T) {
 	delete(s3, "GRIMOIRE_S3_BUCKET")
 	if _, err := config.Load(env(s3)); !errors.Is(err, config.ErrIncompleteS3) {
 		t.Fatalf("incomplete s3 = %v", err)
+	}
+}
+
+func TestLoadRejectsHalfAPushSetup(t *testing.T) {
+	t.Parallel()
+	if _, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x", "GRIMOIRE_VAPID_PUBLIC_KEY": "pub"})); !errors.Is(err, config.ErrIncompletePush) {
+		t.Fatalf("err = %v", err)
+	}
+	c, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x"}))
+	if err != nil || c.Push != nil {
+		t.Fatalf("no push = %+v %v", c.Push, err)
 	}
 }

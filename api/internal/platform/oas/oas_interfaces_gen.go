@@ -37,6 +37,10 @@ type CreateNpcRes interface {
 	createNpcRes()
 }
 
+type CreatePushSubscriptionRes interface {
+	createPushSubscriptionRes()
+}
+
 type CreateRollRes interface {
 	createRollRes()
 }
@@ -67,6 +71,10 @@ type DeleteLootTableRes interface {
 
 type DeleteNpcRes interface {
 	deleteNpcRes()
+}
+
+type DeletePushSubscriptionRes interface {
+	deletePushSubscriptionRes()
 }
 
 type DeleteSettlementRes interface {
@@ -131,6 +139,10 @@ type GetNpcRes interface {
 
 type GetPortraitRes interface {
 	getPortraitRes()
+}
+
+type GetPushKeyRes interface {
+	getPushKeyRes()
 }
 
 type GetReadinessRes interface {
