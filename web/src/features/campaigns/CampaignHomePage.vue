@@ -128,6 +128,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <RouterLink v-if="isDM" :to="{ name: 'encounters', params: { id } }" data-testid="encounters-link">Random encounters</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'loot', params: { id } }" data-testid="loot-link">Loot tables</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'shops', params: { id } }" data-testid="shops-link">Settlements and shops</RouterLink>
+        <RouterLink v-if="isDM" :to="{ name: 'activity', params: { id } }" data-testid="activity-link">AI activity</RouterLink>
       </nav>
 
       <section class="g-card" data-testid="sessions">

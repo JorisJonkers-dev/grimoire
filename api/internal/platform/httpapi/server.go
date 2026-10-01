@@ -11,6 +11,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/auth"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mcpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 )
 
@@ -22,6 +23,10 @@ type Options struct {
 	Now        func() time.Time
 	// Web serves the single-page app for every path the API does not own; nil leaves it out.
 	Web http.Handler
+	// Edits lets MCP tools report the Revisions they record; nil leaves /mcp out.
+	Edits mcpapi.Edits
+	// OAuthIssuer is the authorization server MCP agents sign in with; empty leaves discovery out.
+	OAuthIssuer string
 }
 
 // New builds the full HTTP handler: generated router, security, rate limiting and dev identity.
@@ -48,6 +53,18 @@ func New(o Options) (http.Handler, error) {
 			socket = httpx.DevIdentity(o.DevSubject, socket)
 		}
 		mux.Handle("GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live", socket)
+	}
+	if o.Edits != nil {
+		tools := http.Handler(limiter.Wrap(mcpapi.Handler(mcpapi.Options{
+			API: srv, Edits: o.Edits, Version: o.Handler.Version, Log: o.Handler.Log, Issuer: o.OAuthIssuer,
+		})))
+		if o.DevSubject != "" {
+			tools = httpx.DevIdentity(o.DevSubject, tools)
+		}
+		mux.Handle("/mcp", tools)
+	}
+	if o.OAuthIssuer != "" {
+		mux.Handle("GET "+mcpapi.MetadataPath, mcpapi.Metadata(o.OAuthIssuer))
 	}
 	mux.Handle("/api/", api)
 	mux.Handle("/healthz", api)

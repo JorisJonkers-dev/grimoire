@@ -209,10 +209,12 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: hub.RollResolved,
 			},
 		},
-		DevSubject: cfg.DevSubject,
-		RateLimit:  cfg.RateLimit,
-		Now:        time.Now,
-		Web:        webui.Handler(webui.Embedded()),
+		DevSubject:  cfg.DevSubject,
+		RateLimit:   cfg.RateLimit,
+		Now:         time.Now,
+		Web:         webui.Handler(webui.Embedded()),
+		Edits:       campaignpg.New(store.Pool()),
+		OAuthIssuer: cfg.OAuthIssuer,
 	})
 	if err != nil {
 		return err

@@ -46,6 +46,15 @@ task check          # everything CI runs on a pull request
 task test           # unit tests
 ```
 
+## Connecting an AI agent
+
+Grimoire serves MCP over Streamable HTTP at `/mcp`.
+
+- **Identity:** requests are authenticated the same way as the web app. The platform's forward-auth puts the account in `X-User-Id`. Set `GRIMOIRE_OAUTH_ISSUER` to publish `/.well-known/oauth-protected-resource`, so a connector can find the authorization server to sign in with.
+- **Access:** every tool that takes a `campaignId` works only for that campaign's DM.
+- **Writes:** writes apply at once and return the Revision they recorded. The campaign's **AI activity** page lists the agent's changes, and each one can be undone.
+- **Adding a tool:** mark an OpenAPI operation with `x-mcp: { tool: <name>, entity: <revisioned type> }` and run `task gen`. See [ADR 0007](docs/adr/0007-mcp-tools-run-through-the-rest-router.md).
+
 ## Layout
 
 ```

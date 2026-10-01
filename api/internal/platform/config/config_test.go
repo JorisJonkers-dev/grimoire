@@ -31,11 +31,12 @@ func TestLoadOverrides(t *testing.T) {
 		"GRIMOIRE_AUTO_MIGRATE":          "true",
 		"GRIMOIRE_AUTO_IMPORT":           "true",
 		"GRIMOIRE_RATE_LIMIT_PER_MINUTE": "42",
+		"GRIMOIRE_OAUTH_ISSUER":          "https://auth.example",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" {
+	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" || c.OAuthIssuer != "https://auth.example" {
 		t.Fatalf("overrides not applied: %+v", c)
 	}
 }

@@ -714,6 +714,23 @@ export type Revision = {
 };
 
 /**
+ * One prep change as a Revision, with what it changed and whether it is still the entity's latest.
+ */
+export type Activity = {
+    revisionId: Id;
+    entityType: 'npc' | 'encounter_pool' | 'encounter_table' | 'encounter_check' | 'loot_table' | 'settlement' | 'shop';
+    entityId: Id;
+    name: string;
+    no: number;
+    action: 'create' | 'update' | 'delete' | 'restore';
+    author: DisplayName;
+    origin: 'ui' | 'mcp' | 'generator' | 'system';
+    client?: string;
+    createdAt: string;
+    undoable: boolean;
+};
+
+/**
  * A field whose value differs between two Revisions.
  */
 export type FieldChange = {
@@ -4472,6 +4489,78 @@ export type RestoreNpcRevisionResponses = {
 };
 
 export type RestoreNpcRevisionResponse = RestoreNpcRevisionResponses[keyof RestoreNpcRevisionResponses];
+
+export type ListActivityData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/activity';
+};
+
+export type ListActivityErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListActivityError = ListActivityErrors[keyof ListActivityErrors];
+
+export type ListActivityResponses = {
+    /**
+     * The changes.
+     */
+    200: Array<Activity>;
+};
+
+export type ListActivityResponse = ListActivityResponses[keyof ListActivityResponses];
+
+export type UndoChangeData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * The Revision to undo.
+         */
+        revisionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/activity/{revisionId}/undo';
+};
+
+export type UndoChangeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UndoChangeError = UndoChangeErrors[keyof UndoChangeErrors];
+
+export type UndoChangeResponses = {
+    /**
+     * The Revision the undo recorded.
+     */
+    200: Activity;
+};
+
+export type UndoChangeResponse = UndoChangeResponses[keyof UndoChangeResponses];
 
 export type ListRollsData = {
     body?: never;

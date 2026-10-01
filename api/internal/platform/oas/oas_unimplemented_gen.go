@@ -78,7 +78,7 @@ func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInvit
 
 // CreateLootTable implements createLootTable operation.
 //
-// Adds an Loot Table and records its first Revision. DM only.
+// Adds a Loot Table and records its first Revision. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/loot-tables
 func (UnimplementedHandler) CreateLootTable(ctx context.Context, req *LootTableInput, params CreateLootTableParams) (r CreateLootTableRes, _ error) {
@@ -105,7 +105,7 @@ func (UnimplementedHandler) CreateRoll(ctx context.Context, req *RollCreate, par
 
 // CreateSettlement implements createSettlement operation.
 //
-// Adds an Settlement and records its first Revision. DM only.
+// Adds a Settlement and records its first Revision. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/settlements
 func (UnimplementedHandler) CreateSettlement(ctx context.Context, req *SettlementInput, params CreateSettlementParams) (r CreateSettlementRes, _ error) {
@@ -114,7 +114,7 @@ func (UnimplementedHandler) CreateSettlement(ctx context.Context, req *Settlemen
 
 // CreateShop implements createShop operation.
 //
-// Adds an Shop and records its first Revision. DM only.
+// Adds a Shop and records its first Revision. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/shops
 func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (r CreateShopRes, _ error) {
@@ -363,6 +363,16 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ er
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIconParams) (r GetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListActivity implements listActivity operation.
+//
+// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
+// only.
+//
+// GET /api/v1/campaigns/{campaignId}/activity
+func (UnimplementedHandler) ListActivity(ctx context.Context, params ListActivityParams) (r ListActivityRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -752,6 +762,17 @@ func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconRe
 //
 // POST /api/v1/campaigns/{campaignId}/sessions
 func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessionParams) (r StartSessionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UndoChange implements undoChange operation.
+//
+// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
+// Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
+func (UnimplementedHandler) UndoChange(ctx context.Context, params UndoChangeParams) (r UndoChangeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -1,0 +1,2610 @@
+[
+  {
+    "name": "create_encounter_pool",
+    "description": "Create an Encounter Pool. Adds an Encounter Pool and records its first Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-pools",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "encounter_pool",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "An Encounter Pool as the DM writes it.",
+          "properties": {
+            "difficulty": {
+              "description": "How hard a generated encounter aims to be, by the 2024 XP budget.",
+              "enum": [
+                "low",
+                "moderate",
+                "high"
+              ],
+              "type": "string"
+            },
+            "levelMax": {
+              "format": "int32",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "levelMin": {
+              "format": "int32",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "members": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A creature a Pool can field, how often it is drawn, and how many an encounter holds at least and at most.",
+                "properties": {
+                  "max": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "min": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "monsterSlug": {
+                    "description": "Lower-case, hyphenated identifier.",
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "monsterSlug",
+                  "weight",
+                  "min",
+                  "max"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "minItems": 1,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "levelMin",
+            "levelMax",
+            "difficulty",
+            "members"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "create_encounter_table",
+    "description": "Create an Encounter Table. Adds an Encounter Table and records its first Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-tables",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "encounter_table",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "An Encounter Table as the DM writes it. Without a regionId it applies everywhere.",
+          "properties": {
+            "chancePct": {
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "entries": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.",
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "encounter",
+                      "pool",
+                      "nothing"
+                    ],
+                    "type": "string"
+                  },
+                  "label": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "monsters": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "How many of one creature an encounter holds.",
+                      "properties": {
+                        "count": {
+                          "format": "int32",
+                          "maximum": 100,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "monsterSlug": {
+                          "description": "Lower-case, hyphenated identifier.",
+                          "maxLength": 80,
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "monsterSlug",
+                        "count"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  },
+                  "poolId": {
+                    "description": "Random identifier.",
+                    "format": "uuid",
+                    "maxLength": 36,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "weight",
+                  "kind",
+                  "label"
+                ],
+                "type": "object"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "regionId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "visibility": {
+              "description": "Secret checks show only the outcome; open checks show their roll on the Table Display.",
+              "enum": [
+                "secret",
+                "open"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "chancePct",
+            "visibility",
+            "entries"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "create_loot_table",
+    "description": "Create a Loot Table. Adds a Loot Table and records its first Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/loot-tables",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "loot_table",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Loot Table as the DM writes it.",
+          "properties": {
+            "entries": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One weighted line of a Loot Table. An item names itemSlug and an amount, coins name coin and an amount, a table names tableId; amounts read like 3, 2d6, 1d4+1 or 4d6x10.",
+                "properties": {
+                  "amount": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "coin": {
+                    "description": "A kind of coin.",
+                    "enum": [
+                      "cp",
+                      "sp",
+                      "ep",
+                      "gp",
+                      "pp"
+                    ],
+                    "type": "string"
+                  },
+                  "itemSlug": {
+                    "description": "Lower-case, hyphenated identifier.",
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "item",
+                      "currency",
+                      "table",
+                      "nothing"
+                    ],
+                    "type": "string"
+                  },
+                  "tableId": {
+                    "description": "Random identifier.",
+                    "format": "uuid",
+                    "maxLength": 36,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "weight",
+                  "kind"
+                ],
+                "type": "object"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "rolls": {
+              "format": "int32",
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "name",
+            "rolls",
+            "entries"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "create_npc",
+    "description": "Create an NPC. Adds an NPC and records its first Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/npcs",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "npc",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "The editable fields of an NPC.",
+          "properties": {
+            "description": {
+              "maxLength": 8000,
+              "type": "string"
+            },
+            "disposition": {
+              "description": "How an NPC feels about the party.",
+              "enum": [
+                "friendly",
+                "neutral",
+                "hostile"
+              ],
+              "type": "string"
+            },
+            "dmNotes": {
+              "maxLength": 8000,
+              "type": "string"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": {
+              "maxLength": 80,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "disposition"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "create_settlement",
+    "description": "Create a Settlement. Adds a Settlement and records its first Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/settlements",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "settlement",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Settlement as the DM writes it; locationId places it on a world map.",
+          "properties": {
+            "locationId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "size": {
+              "enum": [
+                "hamlet",
+                "village",
+                "town",
+                "city"
+              ],
+              "type": "string"
+            },
+            "wealth": {
+              "enum": [
+                "poor",
+                "modest",
+                "comfortable",
+                "wealthy"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "size",
+            "wealth"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "create_shop",
+    "description": "Create a Shop. Adds a Shop and records its first Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/shops",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "shop",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Shop as the DM writes it. restockDays is required when it restocks every few days.",
+          "properties": {
+            "haggleDc": {
+              "format": "int32",
+              "maximum": 30,
+              "minimum": 5,
+              "type": "integer"
+            },
+            "hagglePct": {
+              "format": "int32",
+              "maximum": 50,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "maxLength": 40,
+              "minLength": 1,
+              "type": "string"
+            },
+            "lootTableId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "markupPct": {
+              "format": "int32",
+              "maximum": 300,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "ownerId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "restock": {
+              "description": "When a Shop restocks from its Loot Table.",
+              "enum": [
+                "never",
+                "long_rest",
+                "days"
+              ],
+              "type": "string"
+            },
+            "restockDays": {
+              "format": "int32",
+              "maximum": 365,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "settlementId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "settlementId",
+            "name",
+            "kind",
+            "markupPct",
+            "haggleDc",
+            "hagglePct",
+            "restock"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "delete_encounter_pool",
+    "description": "Delete an Encounter Pool. Removes the Encounter Pool; its Revisions keep it restorable. DM only.",
+    "method": "DELETE",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}",
+    "pathParams": [
+      "campaignId",
+      "poolId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "encounter_pool",
+    "id": "poolId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "poolId": {
+          "description": "Encounter Pool id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "poolId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "delete_encounter_table",
+    "description": "Delete an Encounter Table. Removes the Encounter Table; its Revisions keep it restorable. DM only.",
+    "method": "DELETE",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}",
+    "pathParams": [
+      "campaignId",
+      "tableId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "encounter_table",
+    "id": "tableId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "tableId": {
+          "description": "Encounter Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "tableId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "delete_loot_table",
+    "description": "Delete a Loot Table. Removes the Loot Table; its Revisions keep it restorable. DM only.",
+    "method": "DELETE",
+    "path": "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}",
+    "pathParams": [
+      "campaignId",
+      "lootTableId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "loot_table",
+    "id": "lootTableId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "lootTableId": {
+          "description": "Loot Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "lootTableId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "delete_npc",
+    "description": "Delete an NPC. Removes the NPC; its Revisions keep it restorable. DM only.",
+    "method": "DELETE",
+    "path": "/api/v1/campaigns/{campaignId}/npcs/{npcId}",
+    "pathParams": [
+      "campaignId",
+      "npcId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "npc",
+    "id": "npcId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "npcId": {
+          "description": "NPC id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "npcId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "delete_settlement",
+    "description": "Delete a Settlement. Removes the Settlement; its Revisions keep it restorable. DM only.",
+    "method": "DELETE",
+    "path": "/api/v1/campaigns/{campaignId}/settlements/{settlementId}",
+    "pathParams": [
+      "campaignId",
+      "settlementId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "settlement",
+    "id": "settlementId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "settlementId": {
+          "description": "Settlement id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "settlementId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "delete_shop",
+    "description": "Delete a Shop. Removes the Shop; its Revisions keep it restorable. DM only.",
+    "method": "DELETE",
+    "path": "/api/v1/campaigns/{campaignId}/shops/{shopId}",
+    "pathParams": [
+      "campaignId",
+      "shopId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "shop",
+    "id": "shopId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "shopId": {
+          "description": "Shop id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "shopId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_automation_coverage",
+    "description": "Get automation coverage. How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.",
+    "method": "GET",
+    "path": "/api/v1/compendium/automation",
+    "pathParams": [],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_campaign",
+    "description": "Get a campaign. A Campaign's home with its settings, the caller's role and every Member. Members only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_compendium_entry",
+    "description": "Get a compendium entry. One entry rendered for reading, with the conditions its text mentions.",
+    "method": "GET",
+    "path": "/api/v1/compendium/entries/{kind}/{slug}",
+    "pathParams": [
+      "kind",
+      "slug"
+    ],
+    "queryParams": [
+      "ruleset"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "description": "Entry kind.",
+          "enum": [
+            "class",
+            "species",
+            "background",
+            "feat",
+            "weapon",
+            "armor",
+            "item",
+            "magic-item",
+            "monster",
+            "condition"
+          ],
+          "type": "string"
+        },
+        "ruleset": {
+          "description": "Restrict to one ruleset; omitted, the 2024 rules lead.",
+          "enum": [
+            "srd-2024",
+            "srd-2014"
+          ],
+          "type": "string"
+        },
+        "slug": {
+          "description": "Entry slug.",
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "slug"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_npc",
+    "description": "Get an NPC. One NPC. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/npcs/{npcId}",
+    "pathParams": [
+      "campaignId",
+      "npcId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "npcId": {
+          "description": "NPC id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "npcId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_spell",
+    "description": "Get a spell. One spell with its rules text and the conditions it mentions.",
+    "method": "GET",
+    "path": "/api/v1/compendium/spells/{slug}",
+    "pathParams": [
+      "slug"
+    ],
+    "queryParams": [
+      "ruleset"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "ruleset": {
+          "description": "Restrict to one ruleset; omitted, the 2024 rules lead.",
+          "enum": [
+            "srd-2024",
+            "srd-2014"
+          ],
+          "type": "string"
+        },
+        "slug": {
+          "description": "Spell slug.",
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_activity",
+    "description": "List AI activity. The latest prep changes made through MCP, newest first, and whether each can still be undone. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/activity",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_campaigns",
+    "description": "List my campaigns. The Campaigns the caller is a Member of, newest first.",
+    "method": "GET",
+    "path": "/api/v1/campaigns",
+    "pathParams": [],
+    "queryParams": [
+      "cursor",
+      "limit"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque cursor from the previous page.",
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "limit": {
+          "default": 50,
+          "description": "Page size.",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_characters",
+    "description": "List characters. The party's Characters. Members only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/characters",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_encounter_checks",
+    "description": "List Encounter Checks. The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-checks",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_encounter_pool_revisions",
+    "description": "List Encounter Pool revisions. Every Revision of the Encounter Pool, newest first. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions",
+    "pathParams": [
+      "campaignId",
+      "poolId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "poolId": {
+          "description": "Encounter Pool id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "poolId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_encounter_pools",
+    "description": "List Encounter Pools. The Campaign's Encounter Pools. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-pools",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_encounter_table_revisions",
+    "description": "List Encounter Table revisions. Every Revision of the Encounter Table, newest first. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions",
+    "pathParams": [
+      "campaignId",
+      "tableId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "tableId": {
+          "description": "Encounter Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "tableId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_encounter_tables",
+    "description": "List Encounter Tables. The Campaign's Encounter Tables. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-tables",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_locations",
+    "description": "List locations. The places on the Campaign's world maps an Encounter Table can belong to. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/locations",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_loot_table_revisions",
+    "description": "List Loot Table revisions. Every Revision of the Loot Table, newest first. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions",
+    "pathParams": [
+      "campaignId",
+      "lootTableId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "lootTableId": {
+          "description": "Loot Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "lootTableId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_loot_tables",
+    "description": "List Loot Tables. The Campaign's Loot Tables. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/loot-tables",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_npc_revisions",
+    "description": "List NPC revisions. Every Revision of the NPC, newest first, with its author and origin. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions",
+    "pathParams": [
+      "campaignId",
+      "npcId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "npcId": {
+          "description": "NPC id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "npcId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_npcs",
+    "description": "List NPCs. The Campaign's NPCs. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/npcs",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_settlement_revisions",
+    "description": "List Settlement revisions. Every Revision of the Settlement, newest first. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions",
+    "pathParams": [
+      "campaignId",
+      "settlementId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "settlementId": {
+          "description": "Settlement id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "settlementId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_settlements",
+    "description": "List Settlements. The Campaign's Settlements. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/settlements",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_shop_revisions",
+    "description": "List Shop revisions. Every Revision of the Shop, newest first. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/shops/{shopId}/revisions",
+    "pathParams": [
+      "campaignId",
+      "shopId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "shopId": {
+          "description": "Shop id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "shopId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "list_shops",
+    "description": "List Shops. The Campaign's Shops. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/shops",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "reroll_stock",
+    "description": "Reroll Stock. Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/shops/{shopId}/stock",
+    "pathParams": [
+      "campaignId",
+      "shopId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "shop",
+    "id": "shopId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "shopId": {
+          "description": "Shop id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "shopId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_encounter_pool_revision",
+    "description": "Restore an Encounter Pool revision. Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "campaignId",
+      "poolId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "encounter_pool",
+    "id": "poolId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "poolId": {
+          "description": "Encounter Pool id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "Revision number.",
+          "format": "int32",
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "campaignId",
+        "poolId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_encounter_table_revision",
+    "description": "Restore an Encounter Table revision. Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "campaignId",
+      "tableId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "encounter_table",
+    "id": "tableId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "Revision number.",
+          "format": "int32",
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "tableId": {
+          "description": "Encounter Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "tableId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_loot_table_revision",
+    "description": "Restore a Loot Table revision. Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "campaignId",
+      "lootTableId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "loot_table",
+    "id": "lootTableId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "lootTableId": {
+          "description": "Loot Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "Revision number.",
+          "format": "int32",
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "campaignId",
+        "lootTableId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_npc_revision",
+    "description": "Restore an NPC revision. Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "campaignId",
+      "npcId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "npc",
+    "id": "npcId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "npcId": {
+          "description": "NPC id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "Revision number.",
+          "format": "int32",
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "campaignId",
+        "npcId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_settlement_revision",
+    "description": "Restore a Settlement revision. Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "campaignId",
+      "settlementId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "settlement",
+    "id": "settlementId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "Revision number.",
+          "format": "int32",
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "settlementId": {
+          "description": "Settlement id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "settlementId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "restore_shop_revision",
+    "description": "Restore a Shop revision. Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore",
+    "pathParams": [
+      "campaignId",
+      "shopId",
+      "revisionNo"
+    ],
+    "queryParams": [],
+    "body": false,
+    "entity": "shop",
+    "id": "shopId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionNo": {
+          "description": "Revision number.",
+          "format": "int32",
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "shopId": {
+          "description": "Shop id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "shopId",
+        "revisionNo"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "search_compendium",
+    "description": "List compendium entries. Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.",
+    "method": "GET",
+    "path": "/api/v1/compendium/entries",
+    "pathParams": [],
+    "queryParams": [
+      "kind",
+      "q",
+      "ruleset",
+      "cursor",
+      "limit"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque cursor from the previous page.",
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Which kind of entry to list.",
+          "enum": [
+            "class",
+            "species",
+            "background",
+            "feat",
+            "weapon",
+            "armor",
+            "item",
+            "magic-item",
+            "monster",
+            "condition"
+          ],
+          "type": "string"
+        },
+        "limit": {
+          "default": 50,
+          "description": "Page size.",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "q": {
+          "description": "Part of the entry name.",
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        },
+        "ruleset": {
+          "description": "Restrict to one ruleset; omitted, the 2024 rules lead.",
+          "enum": [
+            "srd-2024",
+            "srd-2014"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "search_spells",
+    "description": "List spells. Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.",
+    "method": "GET",
+    "path": "/api/v1/compendium/spells",
+    "pathParams": [],
+    "queryParams": [
+      "q",
+      "level",
+      "school",
+      "class",
+      "ruleset",
+      "cursor",
+      "limit"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "description": "Class slug whose spell list to show.",
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "cursor": {
+          "description": "Opaque cursor from the previous page.",
+          "maxLength": 200,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        "level": {
+          "description": "Spell level; 0 is a cantrip.",
+          "format": "int32",
+          "maximum": 9,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "default": 50,
+          "description": "Page size.",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "q": {
+          "description": "Part of the spell name.",
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        },
+        "ruleset": {
+          "description": "Restrict to one ruleset; omitted, the 2024 rules lead.",
+          "enum": [
+            "srd-2024",
+            "srd-2014"
+          ],
+          "type": "string"
+        },
+        "school": {
+          "description": "Magic school slug.",
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "name": "undo_change",
+    "description": "Undo a change. Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM only.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/activity/{revisionId}/undo",
+    "pathParams": [
+      "campaignId",
+      "revisionId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "revisionId": {
+          "description": "The Revision to undo.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "revisionId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_encounter_pool",
+    "description": "Update an Encounter Pool. Replaces the Encounter Pool and records a Revision. DM only.",
+    "method": "PUT",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}",
+    "pathParams": [
+      "campaignId",
+      "poolId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "encounter_pool",
+    "id": "poolId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "An Encounter Pool as the DM writes it.",
+          "properties": {
+            "difficulty": {
+              "description": "How hard a generated encounter aims to be, by the 2024 XP budget.",
+              "enum": [
+                "low",
+                "moderate",
+                "high"
+              ],
+              "type": "string"
+            },
+            "levelMax": {
+              "format": "int32",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "levelMin": {
+              "format": "int32",
+              "maximum": 20,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "members": {
+              "items": {
+                "additionalProperties": false,
+                "description": "A creature a Pool can field, how often it is drawn, and how many an encounter holds at least and at most.",
+                "properties": {
+                  "max": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "min": {
+                    "format": "int32",
+                    "maximum": 20,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "monsterSlug": {
+                    "description": "Lower-case, hyphenated identifier.",
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "monsterSlug",
+                  "weight",
+                  "min",
+                  "max"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "minItems": 1,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "levelMin",
+            "levelMax",
+            "difficulty",
+            "members"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "poolId": {
+          "description": "Encounter Pool id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "poolId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_encounter_table",
+    "description": "Update an Encounter Table. Replaces the Encounter Table and records a Revision. DM only.",
+    "method": "PUT",
+    "path": "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}",
+    "pathParams": [
+      "campaignId",
+      "tableId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "encounter_table",
+    "id": "tableId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "An Encounter Table as the DM writes it. Without a regionId it applies everywhere.",
+          "properties": {
+            "chancePct": {
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "entries": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.",
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "encounter",
+                      "pool",
+                      "nothing"
+                    ],
+                    "type": "string"
+                  },
+                  "label": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "monsters": {
+                    "items": {
+                      "additionalProperties": false,
+                      "description": "How many of one creature an encounter holds.",
+                      "properties": {
+                        "count": {
+                          "format": "int32",
+                          "maximum": 100,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "monsterSlug": {
+                          "description": "Lower-case, hyphenated identifier.",
+                          "maxLength": 80,
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "monsterSlug",
+                        "count"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 10,
+                    "type": "array"
+                  },
+                  "poolId": {
+                    "description": "Random identifier.",
+                    "format": "uuid",
+                    "maxLength": 36,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "weight",
+                  "kind",
+                  "label"
+                ],
+                "type": "object"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "regionId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "visibility": {
+              "description": "Secret checks show only the outcome; open checks show their roll on the Table Display.",
+              "enum": [
+                "secret",
+                "open"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "chancePct",
+            "visibility",
+            "entries"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "tableId": {
+          "description": "Encounter Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "tableId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_loot_table",
+    "description": "Update a Loot Table. Replaces the Loot Table and records a Revision. DM only.",
+    "method": "PUT",
+    "path": "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}",
+    "pathParams": [
+      "campaignId",
+      "lootTableId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "loot_table",
+    "id": "lootTableId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Loot Table as the DM writes it.",
+          "properties": {
+            "entries": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One weighted line of a Loot Table. An item names itemSlug and an amount, coins name coin and an amount, a table names tableId; amounts read like 3, 2d6, 1d4+1 or 4d6x10.",
+                "properties": {
+                  "amount": {
+                    "maxLength": 20,
+                    "type": "string"
+                  },
+                  "coin": {
+                    "description": "A kind of coin.",
+                    "enum": [
+                      "cp",
+                      "sp",
+                      "ep",
+                      "gp",
+                      "pp"
+                    ],
+                    "type": "string"
+                  },
+                  "itemSlug": {
+                    "description": "Lower-case, hyphenated identifier.",
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "item",
+                      "currency",
+                      "table",
+                      "nothing"
+                    ],
+                    "type": "string"
+                  },
+                  "tableId": {
+                    "description": "Random identifier.",
+                    "format": "uuid",
+                    "maxLength": 36,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "maximum": 100,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "weight",
+                  "kind"
+                ],
+                "type": "object"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "rolls": {
+              "format": "int32",
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "name",
+            "rolls",
+            "entries"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "lootTableId": {
+          "description": "Loot Table id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "lootTableId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_npc",
+    "description": "Update an NPC. Replaces the NPC and records a Revision. DM only.",
+    "method": "PUT",
+    "path": "/api/v1/campaigns/{campaignId}/npcs/{npcId}",
+    "pathParams": [
+      "campaignId",
+      "npcId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "npc",
+    "id": "npcId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "The editable fields of an NPC.",
+          "properties": {
+            "description": {
+              "maxLength": 8000,
+              "type": "string"
+            },
+            "disposition": {
+              "description": "How an NPC feels about the party.",
+              "enum": [
+                "friendly",
+                "neutral",
+                "hostile"
+              ],
+              "type": "string"
+            },
+            "dmNotes": {
+              "maxLength": 8000,
+              "type": "string"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": {
+              "maxLength": 80,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "disposition"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "npcId": {
+          "description": "NPC id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "npcId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_settlement",
+    "description": "Update a Settlement. Replaces the Settlement and records a Revision. DM only.",
+    "method": "PUT",
+    "path": "/api/v1/campaigns/{campaignId}/settlements/{settlementId}",
+    "pathParams": [
+      "campaignId",
+      "settlementId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "settlement",
+    "id": "settlementId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Settlement as the DM writes it; locationId places it on a world map.",
+          "properties": {
+            "locationId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "size": {
+              "enum": [
+                "hamlet",
+                "village",
+                "town",
+                "city"
+              ],
+              "type": "string"
+            },
+            "wealth": {
+              "enum": [
+                "poor",
+                "modest",
+                "comfortable",
+                "wealthy"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "size",
+            "wealth"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "settlementId": {
+          "description": "Settlement id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "settlementId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "update_shop",
+    "description": "Update a Shop. Replaces the Shop and records a Revision. DM only.",
+    "method": "PUT",
+    "path": "/api/v1/campaigns/{campaignId}/shops/{shopId}",
+    "pathParams": [
+      "campaignId",
+      "shopId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "entity": "shop",
+    "id": "shopId",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "description": "A Shop as the DM writes it. restockDays is required when it restocks every few days.",
+          "properties": {
+            "haggleDc": {
+              "format": "int32",
+              "maximum": 30,
+              "minimum": 5,
+              "type": "integer"
+            },
+            "hagglePct": {
+              "format": "int32",
+              "maximum": 50,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "maxLength": 40,
+              "minLength": 1,
+              "type": "string"
+            },
+            "lootTableId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "markupPct": {
+              "format": "int32",
+              "maximum": 300,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "name": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "ownerId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "restock": {
+              "description": "When a Shop restocks from its Loot Table.",
+              "enum": [
+                "never",
+                "long_rest",
+                "days"
+              ],
+              "type": "string"
+            },
+            "restockDays": {
+              "format": "int32",
+              "maximum": 365,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "settlementId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "settlementId",
+            "name",
+            "kind",
+            "markupPct",
+            "haggleDc",
+            "hagglePct",
+            "restock"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "shopId": {
+          "description": "Shop id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "shopId",
+        "body"
+      ],
+      "type": "object"
+    }
+  }
+]

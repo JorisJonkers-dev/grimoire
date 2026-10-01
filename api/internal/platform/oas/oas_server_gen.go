@@ -52,7 +52,7 @@ type Handler interface {
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
 	// CreateLootTable implements createLootTable operation.
 	//
-	// Adds an Loot Table and records its first Revision. DM only.
+	// Adds a Loot Table and records its first Revision. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/loot-tables
 	CreateLootTable(ctx context.Context, req *LootTableInput, params CreateLootTableParams) (CreateLootTableRes, error)
@@ -70,13 +70,13 @@ type Handler interface {
 	CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (CreateRollRes, error)
 	// CreateSettlement implements createSettlement operation.
 	//
-	// Adds an Settlement and records its first Revision. DM only.
+	// Adds a Settlement and records its first Revision. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/settlements
 	CreateSettlement(ctx context.Context, req *SettlementInput, params CreateSettlementParams) (CreateSettlementRes, error)
 	// CreateShop implements createShop operation.
 	//
-	// Adds an Shop and records its first Revision. DM only.
+	// Adds a Shop and records its first Revision. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops
 	CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (CreateShopRes, error)
@@ -244,6 +244,13 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
+	// ListActivity implements listActivity operation.
+	//
+	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
+	// only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/activity
+	ListActivity(ctx context.Context, params ListActivityParams) (ListActivityRes, error)
 	// ListCampaigns implements listCampaigns operation.
 	//
 	// The Campaigns the caller is a Member of, newest first.
@@ -507,6 +514,14 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions
 	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
+	// UndoChange implements undoChange operation.
+	//
+	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
+	// Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
+	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
 	// UpdateCampaign implements updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.

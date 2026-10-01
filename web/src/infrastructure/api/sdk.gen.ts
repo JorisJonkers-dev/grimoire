@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateEncounterPoolData, CreateEncounterPoolErrors, CreateEncounterPoolResponses, CreateEncounterTableData, CreateEncounterTableErrors, CreateEncounterTableResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateLootTableData, CreateLootTableErrors, CreateLootTableResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreateRollData, CreateRollErrors, CreateRollResponses, CreateSettlementData, CreateSettlementErrors, CreateSettlementResponses, CreateShopData, CreateShopErrors, CreateShopResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteEncounterPoolData, DeleteEncounterPoolErrors, DeleteEncounterPoolResponses, DeleteEncounterTableData, DeleteEncounterTableErrors, DeleteEncounterTableResponses, DeleteLootTableData, DeleteLootTableErrors, DeleteLootTableResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DeleteSettlementData, DeleteSettlementErrors, DeleteSettlementResponses, DeleteShopData, DeleteShopErrors, DeleteShopResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMapData, GetMapErrors, GetMapImageData, GetMapImageErrors, GetMapImageResponses, GetMapResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSessionData, GetSessionErrors, GetSessionResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEncounterChecksData, ListEncounterChecksErrors, ListEncounterChecksResponses, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsErrors, ListEncounterPoolRevisionsResponses, ListEncounterPoolsData, ListEncounterPoolsErrors, ListEncounterPoolsResponses, ListEncounterTableRevisionsData, ListEncounterTableRevisionsErrors, ListEncounterTableRevisionsResponses, ListEncounterTablesData, ListEncounterTablesErrors, ListEncounterTablesResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListLocationsData, ListLocationsErrors, ListLocationsResponses, ListLootTableRevisionsData, ListLootTableRevisionsErrors, ListLootTableRevisionsResponses, ListLootTablesData, ListLootTablesErrors, ListLootTablesResponses, ListMapsData, ListMapsErrors, ListMapsResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListSettlementRevisionsData, ListSettlementRevisionsErrors, ListSettlementRevisionsResponses, ListSettlementsData, ListSettlementsErrors, ListSettlementsResponses, ListShopRevisionsData, ListShopRevisionsErrors, ListShopRevisionsResponses, ListShopsData, ListShopsErrors, ListShopsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, PreviewReachData, PreviewReachErrors, PreviewReachResponses, PreviewSightData, PreviewSightErrors, PreviewSightResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RerollStockData, RerollStockErrors, RerollStockResponses, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionErrors, RestoreEncounterPoolRevisionResponses, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionErrors, RestoreEncounterTableRevisionResponses, RestoreLootTableRevisionData, RestoreLootTableRevisionErrors, RestoreLootTableRevisionResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RestoreSettlementRevisionData, RestoreSettlementRevisionErrors, RestoreSettlementRevisionResponses, RestoreShopRevisionData, RestoreShopRevisionErrors, RestoreShopRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SetDieData, SetDieErrors, SetDieResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, StartSessionData, StartSessionErrors, StartSessionResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateEncounterPoolData, UpdateEncounterPoolErrors, UpdateEncounterPoolResponses, UpdateEncounterTableData, UpdateEncounterTableErrors, UpdateEncounterTableResponses, UpdateLootTableData, UpdateLootTableErrors, UpdateLootTableResponses, UpdateMapData, UpdateMapErrors, UpdateMapResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses, UpdateSettlementData, UpdateSettlementErrors, UpdateSettlementResponses, UpdateShopData, UpdateShopErrors, UpdateShopResponses, UploadMapData, UploadMapErrors, UploadMapResponses } from './types.gen';
-import { zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateEncounterPoolBody, zCreateEncounterPoolPath, zCreateEncounterPoolResponse, zCreateEncounterTableBody, zCreateEncounterTablePath, zCreateEncounterTableResponse, zCreateInvitePath, zCreateInviteResponse, zCreateLootTableBody, zCreateLootTablePath, zCreateLootTableResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zCreateSettlementBody, zCreateSettlementPath, zCreateSettlementResponse, zCreateShopBody, zCreateShopPath, zCreateShopResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteEncounterPoolPath, zDeleteEncounterPoolResponse, zDeleteEncounterTablePath, zDeleteEncounterTableResponse, zDeleteLootTablePath, zDeleteLootTableResponse, zDeleteNpcPath, zDeleteNpcResponse, zDeleteSettlementPath, zDeleteSettlementResponse, zDeleteShopPath, zDeleteShopResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zEndSessionPath, zEndSessionResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMapImagePath, zGetMapImageQuery, zGetMapImageResponse, zGetMapPath, zGetMapResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSessionPath, zGetSessionResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEncounterChecksPath, zListEncounterChecksResponse, zListEncounterPoolRevisionsPath, zListEncounterPoolRevisionsResponse, zListEncounterPoolsPath, zListEncounterPoolsResponse, zListEncounterTableRevisionsPath, zListEncounterTableRevisionsResponse, zListEncounterTablesPath, zListEncounterTablesResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListLocationsPath, zListLocationsResponse, zListLootTableRevisionsPath, zListLootTableRevisionsResponse, zListLootTablesPath, zListLootTablesResponse, zListMapsPath, zListMapsResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSessionsPath, zListSessionsResponse, zListSettlementRevisionsPath, zListSettlementRevisionsResponse, zListSettlementsPath, zListSettlementsResponse, zListShopRevisionsPath, zListShopRevisionsResponse, zListShopsPath, zListShopsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zPreviewReachBody, zPreviewReachResponse, zPreviewSightBody, zPreviewSightResponse, zRemoveMemberPath, zRemoveMemberResponse, zRerollStockPath, zRerollStockResponse, zRestoreEncounterPoolRevisionPath, zRestoreEncounterPoolRevisionResponse, zRestoreEncounterTableRevisionPath, zRestoreEncounterTableRevisionResponse, zRestoreLootTableRevisionPath, zRestoreLootTableRevisionResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRestoreSettlementRevisionPath, zRestoreSettlementRevisionResponse, zRestoreShopRevisionPath, zRestoreShopRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zStartSessionPath, zStartSessionResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateEncounterPoolBody, zUpdateEncounterPoolPath, zUpdateEncounterPoolResponse, zUpdateEncounterTableBody, zUpdateEncounterTablePath, zUpdateEncounterTableResponse, zUpdateLootTableBody, zUpdateLootTablePath, zUpdateLootTableResponse, zUpdateMapBody, zUpdateMapPath, zUpdateMapResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse, zUpdateSettlementBody, zUpdateSettlementPath, zUpdateSettlementResponse, zUpdateShopBody, zUpdateShopPath, zUpdateShopResponse, zUploadMapBody, zUploadMapPath, zUploadMapQuery, zUploadMapResponse } from './zod.gen';
+import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateEncounterPoolData, CreateEncounterPoolErrors, CreateEncounterPoolResponses, CreateEncounterTableData, CreateEncounterTableErrors, CreateEncounterTableResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateLootTableData, CreateLootTableErrors, CreateLootTableResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreateRollData, CreateRollErrors, CreateRollResponses, CreateSettlementData, CreateSettlementErrors, CreateSettlementResponses, CreateShopData, CreateShopErrors, CreateShopResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteEncounterPoolData, DeleteEncounterPoolErrors, DeleteEncounterPoolResponses, DeleteEncounterTableData, DeleteEncounterTableErrors, DeleteEncounterTableResponses, DeleteLootTableData, DeleteLootTableErrors, DeleteLootTableResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DeleteSettlementData, DeleteSettlementErrors, DeleteSettlementResponses, DeleteShopData, DeleteShopErrors, DeleteShopResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMapData, GetMapErrors, GetMapImageData, GetMapImageErrors, GetMapImageResponses, GetMapResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSessionData, GetSessionErrors, GetSessionResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListActivityData, ListActivityErrors, ListActivityResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEncounterChecksData, ListEncounterChecksErrors, ListEncounterChecksResponses, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsErrors, ListEncounterPoolRevisionsResponses, ListEncounterPoolsData, ListEncounterPoolsErrors, ListEncounterPoolsResponses, ListEncounterTableRevisionsData, ListEncounterTableRevisionsErrors, ListEncounterTableRevisionsResponses, ListEncounterTablesData, ListEncounterTablesErrors, ListEncounterTablesResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListLocationsData, ListLocationsErrors, ListLocationsResponses, ListLootTableRevisionsData, ListLootTableRevisionsErrors, ListLootTableRevisionsResponses, ListLootTablesData, ListLootTablesErrors, ListLootTablesResponses, ListMapsData, ListMapsErrors, ListMapsResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListSettlementRevisionsData, ListSettlementRevisionsErrors, ListSettlementRevisionsResponses, ListSettlementsData, ListSettlementsErrors, ListSettlementsResponses, ListShopRevisionsData, ListShopRevisionsErrors, ListShopRevisionsResponses, ListShopsData, ListShopsErrors, ListShopsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, PreviewReachData, PreviewReachErrors, PreviewReachResponses, PreviewSightData, PreviewSightErrors, PreviewSightResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RerollStockData, RerollStockErrors, RerollStockResponses, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionErrors, RestoreEncounterPoolRevisionResponses, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionErrors, RestoreEncounterTableRevisionResponses, RestoreLootTableRevisionData, RestoreLootTableRevisionErrors, RestoreLootTableRevisionResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RestoreSettlementRevisionData, RestoreSettlementRevisionErrors, RestoreSettlementRevisionResponses, RestoreShopRevisionData, RestoreShopRevisionErrors, RestoreShopRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SetDieData, SetDieErrors, SetDieResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, StartSessionData, StartSessionErrors, StartSessionResponses, UndoChangeData, UndoChangeErrors, UndoChangeResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateEncounterPoolData, UpdateEncounterPoolErrors, UpdateEncounterPoolResponses, UpdateEncounterTableData, UpdateEncounterTableErrors, UpdateEncounterTableResponses, UpdateLootTableData, UpdateLootTableErrors, UpdateLootTableResponses, UpdateMapData, UpdateMapErrors, UpdateMapResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses, UpdateSettlementData, UpdateSettlementErrors, UpdateSettlementResponses, UpdateShopData, UpdateShopErrors, UpdateShopResponses, UploadMapData, UploadMapErrors, UploadMapResponses } from './types.gen';
+import { zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateEncounterPoolBody, zCreateEncounterPoolPath, zCreateEncounterPoolResponse, zCreateEncounterTableBody, zCreateEncounterTablePath, zCreateEncounterTableResponse, zCreateInvitePath, zCreateInviteResponse, zCreateLootTableBody, zCreateLootTablePath, zCreateLootTableResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zCreateSettlementBody, zCreateSettlementPath, zCreateSettlementResponse, zCreateShopBody, zCreateShopPath, zCreateShopResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteEncounterPoolPath, zDeleteEncounterPoolResponse, zDeleteEncounterTablePath, zDeleteEncounterTableResponse, zDeleteLootTablePath, zDeleteLootTableResponse, zDeleteNpcPath, zDeleteNpcResponse, zDeleteSettlementPath, zDeleteSettlementResponse, zDeleteShopPath, zDeleteShopResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zEndSessionPath, zEndSessionResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMapImagePath, zGetMapImageQuery, zGetMapImageResponse, zGetMapPath, zGetMapResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSessionPath, zGetSessionResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListActivityPath, zListActivityResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEncounterChecksPath, zListEncounterChecksResponse, zListEncounterPoolRevisionsPath, zListEncounterPoolRevisionsResponse, zListEncounterPoolsPath, zListEncounterPoolsResponse, zListEncounterTableRevisionsPath, zListEncounterTableRevisionsResponse, zListEncounterTablesPath, zListEncounterTablesResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListLocationsPath, zListLocationsResponse, zListLootTableRevisionsPath, zListLootTableRevisionsResponse, zListLootTablesPath, zListLootTablesResponse, zListMapsPath, zListMapsResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSessionsPath, zListSessionsResponse, zListSettlementRevisionsPath, zListSettlementRevisionsResponse, zListSettlementsPath, zListSettlementsResponse, zListShopRevisionsPath, zListShopRevisionsResponse, zListShopsPath, zListShopsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zPreviewReachBody, zPreviewReachResponse, zPreviewSightBody, zPreviewSightResponse, zRemoveMemberPath, zRemoveMemberResponse, zRerollStockPath, zRerollStockResponse, zRestoreEncounterPoolRevisionPath, zRestoreEncounterPoolRevisionResponse, zRestoreEncounterTableRevisionPath, zRestoreEncounterTableRevisionResponse, zRestoreLootTableRevisionPath, zRestoreLootTableRevisionResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRestoreSettlementRevisionPath, zRestoreSettlementRevisionResponse, zRestoreShopRevisionPath, zRestoreShopRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zStartSessionPath, zStartSessionResponse, zUndoChangePath, zUndoChangeResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateEncounterPoolBody, zUpdateEncounterPoolPath, zUpdateEncounterPoolResponse, zUpdateEncounterTableBody, zUpdateEncounterTablePath, zUpdateEncounterTableResponse, zUpdateLootTableBody, zUpdateLootTablePath, zUpdateLootTableResponse, zUpdateMapBody, zUpdateMapPath, zUpdateMapResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse, zUpdateSettlementBody, zUpdateSettlementPath, zUpdateSettlementResponse, zUpdateShopBody, zUpdateShopPath, zUpdateShopResponse, zUploadMapBody, zUploadMapPath, zUploadMapQuery, zUploadMapResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -758,9 +758,9 @@ export const listLootTables = <ThrowOnError extends boolean = false>(options: Op
 });
 
 /**
- * Create an Loot Table
+ * Create a Loot Table
  *
- * Adds an Loot Table and records its first Revision. DM only.
+ * Adds a Loot Table and records its first Revision. DM only.
  */
 export const createLootTable = <ThrowOnError extends boolean = false>(options: Options<CreateLootTableData, ThrowOnError>): RequestResult<CreateLootTableResponses, CreateLootTableErrors, ThrowOnError> => (options.client ?? client).post<CreateLootTableResponses, CreateLootTableErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({
@@ -779,7 +779,7 @@ export const createLootTable = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
- * Delete an Loot Table
+ * Delete a Loot Table
  *
  * Removes the Loot Table; its Revisions keep it restorable. DM only.
  */
@@ -796,7 +796,7 @@ export const deleteLootTable = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
- * Update an Loot Table
+ * Update a Loot Table
  *
  * Replaces the Loot Table and records a Revision. DM only.
  */
@@ -834,7 +834,7 @@ export const listLootTableRevisions = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
- * Restore an Loot Table revision
+ * Restore a Loot Table revision
  *
  * Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
  */
@@ -868,9 +868,9 @@ export const listSettlements = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
- * Create an Settlement
+ * Create a Settlement
  *
- * Adds an Settlement and records its first Revision. DM only.
+ * Adds a Settlement and records its first Revision. DM only.
  */
 export const createSettlement = <ThrowOnError extends boolean = false>(options: Options<CreateSettlementData, ThrowOnError>): RequestResult<CreateSettlementResponses, CreateSettlementErrors, ThrowOnError> => (options.client ?? client).post<CreateSettlementResponses, CreateSettlementErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({
@@ -889,7 +889,7 @@ export const createSettlement = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
- * Delete an Settlement
+ * Delete a Settlement
  *
  * Removes the Settlement; its Revisions keep it restorable. DM only.
  */
@@ -906,7 +906,7 @@ export const deleteSettlement = <ThrowOnError extends boolean = false>(options: 
 });
 
 /**
- * Update an Settlement
+ * Update a Settlement
  *
  * Replaces the Settlement and records a Revision. DM only.
  */
@@ -944,7 +944,7 @@ export const listSettlementRevisions = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Restore an Settlement revision
+ * Restore a Settlement revision
  *
  * Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
  */
@@ -978,9 +978,9 @@ export const listShops = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
- * Create an Shop
+ * Create a Shop
  *
- * Adds an Shop and records its first Revision. DM only.
+ * Adds a Shop and records its first Revision. DM only.
  */
 export const createShop = <ThrowOnError extends boolean = false>(options: Options<CreateShopData, ThrowOnError>): RequestResult<CreateShopResponses, CreateShopErrors, ThrowOnError> => (options.client ?? client).post<CreateShopResponses, CreateShopErrors, ThrowOnError>({
     requestValidator: async (data) => await z.object({
@@ -999,7 +999,7 @@ export const createShop = <ThrowOnError extends boolean = false>(options: Option
 });
 
 /**
- * Delete an Shop
+ * Delete a Shop
  *
  * Removes the Shop; its Revisions keep it restorable. DM only.
  */
@@ -1016,7 +1016,7 @@ export const deleteShop = <ThrowOnError extends boolean = false>(options: Option
 });
 
 /**
- * Update an Shop
+ * Update a Shop
  *
  * Replaces the Shop and records a Revision. DM only.
  */
@@ -1054,7 +1054,7 @@ export const listShopRevisions = <ThrowOnError extends boolean = false>(options:
 });
 
 /**
- * Restore an Shop revision
+ * Restore a Shop revision
  *
  * Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
  */
@@ -1279,6 +1279,40 @@ export const restoreNpcRevision = <ThrowOnError extends boolean = false>(options
     responseValidator: async (data) => await zRestoreNpcRevisionResponse.parseAsync(data),
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore',
+    ...options
+});
+
+/**
+ * List AI activity
+ *
+ * The latest prep changes made through MCP, newest first, and whether each can still be undone. DM only.
+ */
+export const listActivity = <ThrowOnError extends boolean = false>(options: Options<ListActivityData, ThrowOnError>): RequestResult<ListActivityResponses, ListActivityErrors, ThrowOnError> => (options.client ?? client).get<ListActivityResponses, ListActivityErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zListActivityPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListActivityResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/activity',
+    ...options
+});
+
+/**
+ * Undo a change
+ *
+ * Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM only.
+ */
+export const undoChange = <ThrowOnError extends boolean = false>(options: Options<UndoChangeData, ThrowOnError>): RequestResult<UndoChangeResponses, UndoChangeErrors, ThrowOnError> => (options.client ?? client).post<UndoChangeResponses, UndoChangeErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zUndoChangePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUndoChangeResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/campaigns/{campaignId}/activity/{revisionId}/undo',
     ...options
 });
 

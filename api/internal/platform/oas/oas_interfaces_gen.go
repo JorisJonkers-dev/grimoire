@@ -157,6 +157,10 @@ type GetTokenIconRes interface {
 	getTokenIconRes()
 }
 
+type ListActivityRes interface {
+	listActivityRes()
+}
+
 type ListCampaignsRes interface {
 	listCampaignsRes()
 }
@@ -323,6 +327,10 @@ type SetTokenIconRes interface {
 
 type StartSessionRes interface {
 	startSessionRes()
+}
+
+type UndoChangeRes interface {
+	undoChangeRes()
 }
 
 type UpdateCampaignRes interface {

@@ -93,3 +93,22 @@ type DeletedNPC struct {
 	Name      string
 	DeletedAt time.Time
 }
+
+// Edit is one prep change as a Revision: what it changed, and whether it is still that entity's latest.
+type Edit struct {
+	Revision
+	RevisionID uuid.UUID
+	EntityType EntityType
+	EntityID   uuid.UUID
+	Name       string
+	Latest     bool
+}
+
+// EditFilter narrows a list of Edits; zero fields match everything.
+type EditFilter struct {
+	Origin     string
+	RevisionID uuid.UUID
+	EntityType EntityType
+	EntityID   uuid.UUID
+	Limit      int
+}

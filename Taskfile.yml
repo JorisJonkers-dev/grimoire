@@ -25,7 +25,7 @@ tasks:
     desc: Fail if generated code is stale
     cmds:
       - task: gen
-      - git diff --exit-code -- api/internal/platform/oas api/internal/platform/pg/queries web/src/infrastructure/api
+      - git diff --exit-code -- api/internal/platform/oas api/internal/platform/mcpapi/tools.json api/internal/platform/pg/queries web/src/infrastructure/api
 
   lint:
     desc: All linters
