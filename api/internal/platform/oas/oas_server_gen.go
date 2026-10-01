@@ -32,6 +32,18 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters
 	CreateCharacter(ctx context.Context, req *CharacterBuild, params CreateCharacterParams) (CreateCharacterRes, error)
+	// CreateEncounterPool implements createEncounterPool operation.
+	//
+	// Adds an Encounter Pool and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/encounter-pools
+	CreateEncounterPool(ctx context.Context, req *EncounterPoolInput, params CreateEncounterPoolParams) (CreateEncounterPoolRes, error)
+	// CreateEncounterTable implements createEncounterTable operation.
+	//
+	// Adds an Encounter Table and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/encounter-tables
+	CreateEncounterTable(ctx context.Context, req *EncounterTableInput, params CreateEncounterTableParams) (CreateEncounterTableRes, error)
 	// CreateInvite implements createInvite operation.
 	//
 	// Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
@@ -56,6 +68,18 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
+	// DeleteEncounterPool implements deleteEncounterPool operation.
+	//
+	// Removes the Encounter Pool; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}
+	DeleteEncounterPool(ctx context.Context, params DeleteEncounterPoolParams) (DeleteEncounterPoolRes, error)
+	// DeleteEncounterTable implements deleteEncounterTable operation.
+	//
+	// Removes the Encounter Table; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
+	DeleteEncounterTable(ctx context.Context, params DeleteEncounterTableParams) (DeleteEncounterTableRes, error)
 	// DeleteNpc implements deleteNpc operation.
 	//
 	// Removes the NPC; its Revisions keep it restorable. DM only.
@@ -202,6 +226,36 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
 	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
+	// ListEncounterChecks implements listEncounterChecks operation.
+	//
+	// The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-checks
+	ListEncounterChecks(ctx context.Context, params ListEncounterChecksParams) (ListEncounterChecksRes, error)
+	// ListEncounterPoolRevisions implements listEncounterPoolRevisions operation.
+	//
+	// Every Revision of the Encounter Pool, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions
+	ListEncounterPoolRevisions(ctx context.Context, params ListEncounterPoolRevisionsParams) (ListEncounterPoolRevisionsRes, error)
+	// ListEncounterPools implements listEncounterPools operation.
+	//
+	// The Campaign's Encounter Pools. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-pools
+	ListEncounterPools(ctx context.Context, params ListEncounterPoolsParams) (ListEncounterPoolsRes, error)
+	// ListEncounterTableRevisions implements listEncounterTableRevisions operation.
+	//
+	// Every Revision of the Encounter Table, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions
+	ListEncounterTableRevisions(ctx context.Context, params ListEncounterTableRevisionsParams) (ListEncounterTableRevisionsRes, error)
+	// ListEncounterTables implements listEncounterTables operation.
+	//
+	// The Campaign's Encounter Tables. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-tables
+	ListEncounterTables(ctx context.Context, params ListEncounterTablesParams) (ListEncounterTablesRes, error)
 	// ListEntries implements listEntries operation.
 	//
 	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -215,6 +269,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListLocations implements listLocations operation.
+	//
+	// The places on the Campaign's world maps an Encounter Table can belong to. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/locations
+	ListLocations(ctx context.Context, params ListLocationsParams) (ListLocationsRes, error)
 	// ListMaps implements listMaps operation.
 	//
 	// The Campaign's local and world Maps. DM only.
@@ -287,6 +347,20 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RestoreEncounterPoolRevision implements restoreEncounterPoolRevision operation.
+	//
+	// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore
+	RestoreEncounterPoolRevision(ctx context.Context, params RestoreEncounterPoolRevisionParams) (RestoreEncounterPoolRevisionRes, error)
+	// RestoreEncounterTableRevision implements restoreEncounterTableRevision operation.
+	//
+	// Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
+	RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (RestoreEncounterTableRevisionRes, error)
 	// RestoreNpcRevision implements restoreNpcRevision operation.
 	//
 	// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
@@ -345,6 +419,18 @@ type Handler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
 	UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (UpdateCharacterRes, error)
+	// UpdateEncounterPool implements updateEncounterPool operation.
+	//
+	// Replaces the Encounter Pool and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}
+	UpdateEncounterPool(ctx context.Context, req *EncounterPoolInput, params UpdateEncounterPoolParams) (UpdateEncounterPoolRes, error)
+	// UpdateEncounterTable implements updateEncounterTable operation.
+	//
+	// Replaces the Encounter Table and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
+	UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
 	// UpdateMap implements updateMap operation.
 	//
 	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.

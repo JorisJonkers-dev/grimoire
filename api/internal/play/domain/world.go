@@ -96,3 +96,11 @@ const (
 	ActionPartyPlaced  = "party_placed"
 	ActionTravelLeg    = "travel_leg"
 )
+
+// Random encounter action kinds in the Action Log.
+const (
+	ActionRestTaken         = "rest_taken"
+	ActionCheckScheduled    = "check_scheduled"
+	ActionEncounterChecked  = "encounter_checked"
+	ActionEncounterResolved = "encounter_resolved"
+)

@@ -214,6 +214,48 @@ export const zDeletedNpc = z.object({
 });
 
 /**
+ * How hard a generated encounter aims to be, by the 2024 XP budget.
+ */
+export const zEncounterDifficulty = z.enum([
+    'low',
+    'moderate',
+    'high'
+]);
+
+/**
+ * Secret checks show only the outcome; open checks show their roll on the Table Display.
+ */
+export const zEncounterVisibility = z.enum(['secret', 'open']);
+
+/**
+ * A place on one of the Campaign's world maps.
+ */
+export const zLocation = z.object({
+    id: zId,
+    name: z.string().max(40),
+    mapName: z.string().max(80)
+});
+
+/**
+ * What set off an Encounter Check.
+ */
+export const zEncounterTrigger = z.enum([
+    'short_rest',
+    'long_rest',
+    'travel_leg',
+    'dm'
+]);
+
+/**
+ * A normal check rolls the chance; force_encounter skips it and never draws Nothing; pick takes the entry the DM chose.
+ */
+export const zEncounterMode = z.enum([
+    'normal',
+    'force_encounter',
+    'pick'
+]);
+
+/**
  * One recorded version of a piece of prep data.
  */
 export const zRevision = z.object({
@@ -918,57 +960,6 @@ export const zLiveLight = z.object({
 });
 
 /**
- * What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
- */
-export const zLiveView = z.object({
-    tokens: z.array(zLiveToken).max(1000),
-    map: zLiveMap.optional(),
-    fog: z.boolean(),
-    visible: z.array(zHexCoord).max(100000),
-    remembered: z.array(zHexCoord).max(100000),
-    combat: zLiveCombat.optional(),
-    manual: z.array(zLiveManual).max(100).optional(),
-    resolving: z.boolean().optional(),
-    saves: z.array(zLiveSave).max(100).optional(),
-    surfaces: z.array(zLiveSurface).max(100000).optional(),
-    elevation: z.array(zLiveElevation).max(100000).optional(),
-    area: zLiveArea.optional(),
-    table: zLiveTable.optional(),
-    world: zLiveWorld.optional(),
-    zones: z.array(zLiveZone).max(200).optional(),
-    perception: z.array(zLivePerception).max(1000).optional(),
-    walls: z.array(zHexCoord).max(100000).optional(),
-    lights: z.array(zLiveLight).max(500).optional(),
-    ambient: zAmbientLight.optional()
-});
-
-/**
- * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
- */
-export const zLiveUpdate = z.object({
-    kind: z.enum([
-        'snapshot',
-        'view',
-        'rejected',
-        'ended',
-        'path',
-        'attack_preview',
-        'area_preview',
-        'ping'
-    ]),
-    seq: z.int().gte(0).lte(2147483647),
-    nonce: z.string().max(64).optional(),
-    reason: z.string().max(200).optional(),
-    session: zLiveSessionView.optional(),
-    view: zLiveView.optional(),
-    steps: z.array(zLiveView).max(60).optional(),
-    path: zLivePath.optional(),
-    preview: zLiveAttackPreview.optional(),
-    area: zLiveAreaPreview.optional(),
-    ping: zHexCoord.optional()
-});
-
-/**
  * An uploaded Map and its hex calibration.
  */
 export const zLocalMap = z.object({
@@ -1142,6 +1133,107 @@ export const zSkillChoice = z.object({
 });
 
 /**
+ * A creature a Pool can field, how often it is drawn, and how many an encounter holds at least and at most.
+ */
+export const zEncounterPoolMember = z.object({
+    monsterSlug: zSlug,
+    weight: z.int().gte(1).lte(100),
+    min: z.int().gte(0).lte(20),
+    max: z.int().gte(1).lte(20)
+});
+
+/**
+ * An Encounter Pool as the DM writes it.
+ */
+export const zEncounterPoolInput = z.object({
+    name: z.string().min(1).max(80),
+    levelMin: z.int().gte(1).lte(20),
+    levelMax: z.int().gte(1).lte(20),
+    difficulty: zEncounterDifficulty,
+    members: z.array(zEncounterPoolMember).min(1).max(20)
+});
+
+/**
+ * A weighted set of creatures for a band of party levels, filled to its difficulty's XP budget when drawn.
+ */
+export const zEncounterPool = z.object({
+    id: zId,
+    name: z.string().max(80),
+    levelMin: z.int().gte(1).lte(20),
+    levelMax: z.int().gte(1).lte(20),
+    difficulty: zEncounterDifficulty,
+    members: z.array(zEncounterPoolMember).max(20),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * How many of one creature an encounter holds.
+ */
+export const zEncounterMonster = z.object({
+    monsterSlug: zSlug,
+    count: z.int().gte(1).lte(100)
+});
+
+/**
+ * One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.
+ */
+export const zEncounterEntry = z.object({
+    weight: z.int().gte(1).lte(100),
+    kind: z.enum([
+        'encounter',
+        'pool',
+        'nothing'
+    ]),
+    label: z.string().max(80),
+    poolId: zId.optional(),
+    monsters: z.array(zEncounterMonster).max(10).optional()
+});
+
+/**
+ * An Encounter Table as the DM writes it. Without a regionId it applies everywhere.
+ */
+export const zEncounterTableInput = z.object({
+    name: z.string().min(1).max(80),
+    regionId: zId.optional(),
+    chancePct: z.int().gte(0).lte(100),
+    visibility: zEncounterVisibility,
+    entries: z.array(zEncounterEntry).min(1).max(50)
+});
+
+/**
+ * A Region's chance of an encounter and its weighted entries.
+ */
+export const zEncounterTable = z.object({
+    id: zId,
+    name: z.string().max(80),
+    regionId: zId.optional(),
+    chancePct: z.int().gte(0).lte(100),
+    visibility: zEncounterVisibility,
+    entries: z.array(zEncounterEntry).max(50),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * One Encounter Check, with the seed its draw used and what it produced.
+ */
+export const zEncounterCheck = z.object({
+    id: zId,
+    sessionId: zId.optional(),
+    tableName: z.string().max(80),
+    trigger: zEncounterTrigger,
+    mode: zEncounterMode,
+    visibility: zEncounterVisibility,
+    seed: z.string().max(20),
+    chancePct: z.int().gte(0).lte(100),
+    chanceRoll: z.int().gte(1).lte(100).optional(),
+    status: z.enum(['pending', 'resolved']),
+    outcome: z.enum(['encounter', 'nothing']).optional(),
+    entryLabel: z.string().max(80),
+    monsters: z.array(zEncounterMonster).max(50),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -1190,7 +1282,10 @@ export const zLiveCommand = z.object({
         'add_zone',
         'remove_zone',
         'hold_zone',
-        'spring_zone'
+        'spring_zone',
+        'rest',
+        'encounter_check',
+        'schedule_check'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1250,7 +1345,91 @@ export const zLiveCommand = z.object({
     pace: zTravelPace.optional(),
     zoneId: zId.optional(),
     radiusHexes: z.int().gte(1).lte(20).optional(),
-    dmOnly: z.boolean().optional()
+    dmOnly: z.boolean().optional(),
+    rest: z.enum(['short', 'long']).optional(),
+    tableId: zId.optional(),
+    mode: zEncounterMode.optional(),
+    entry: z.int().gte(0).lte(49).optional(),
+    due: z.enum(['next_rest', 'next_travel']).optional()
+});
+
+/**
+ * How many of one creature a check produced.
+ */
+export const zLiveCheckMonster = z.object({
+    slug: zSlug,
+    count: z.int().gte(1).lte(100)
+});
+
+/**
+ * An Encounter Check. Everyone sees what set it off and its outcome, and an open check's roll; only the DM sees its table, mode, seed, entry and creatures.
+ */
+export const zLiveCheck = z.object({
+    id: zId,
+    trigger: zEncounterTrigger,
+    visibility: zEncounterVisibility,
+    status: z.enum(['pending', 'resolved']),
+    outcome: z.enum(['encounter', 'nothing']).optional(),
+    chancePct: z.int().gte(0).lte(100).optional(),
+    chanceRoll: z.int().gte(1).lte(100).optional(),
+    rollId: zId.optional(),
+    tableName: z.string().max(80).optional(),
+    mode: zEncounterMode.optional(),
+    seed: z.string().max(20).optional(),
+    entryLabel: z.string().max(120).optional(),
+    monsters: z.array(zLiveCheckMonster).max(50).optional()
+});
+
+/**
+ * What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
+ */
+export const zLiveView = z.object({
+    tokens: z.array(zLiveToken).max(1000),
+    map: zLiveMap.optional(),
+    fog: z.boolean(),
+    visible: z.array(zHexCoord).max(100000),
+    remembered: z.array(zHexCoord).max(100000),
+    combat: zLiveCombat.optional(),
+    manual: z.array(zLiveManual).max(100).optional(),
+    resolving: z.boolean().optional(),
+    saves: z.array(zLiveSave).max(100).optional(),
+    surfaces: z.array(zLiveSurface).max(100000).optional(),
+    elevation: z.array(zLiveElevation).max(100000).optional(),
+    area: zLiveArea.optional(),
+    table: zLiveTable.optional(),
+    world: zLiveWorld.optional(),
+    zones: z.array(zLiveZone).max(200).optional(),
+    perception: z.array(zLivePerception).max(1000).optional(),
+    checks: z.array(zLiveCheck).max(10).optional(),
+    walls: z.array(zHexCoord).max(100000).optional(),
+    lights: z.array(zLiveLight).max(500).optional(),
+    ambient: zAmbientLight.optional()
+});
+
+/**
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+ */
+export const zLiveUpdate = z.object({
+    kind: z.enum([
+        'snapshot',
+        'view',
+        'rejected',
+        'ended',
+        'path',
+        'attack_preview',
+        'area_preview',
+        'ping'
+    ]),
+    seq: z.int().gte(0).lte(2147483647),
+    nonce: z.string().max(64).optional(),
+    reason: z.string().max(200).optional(),
+    session: zLiveSessionView.optional(),
+    view: zLiveView.optional(),
+    steps: z.array(zLiveView).max(60).optional(),
+    path: zLivePath.optional(),
+    preview: zLiveAttackPreview.optional(),
+    area: zLiveAreaPreview.optional(),
+    ping: zHexCoord.optional()
 });
 
 /**
@@ -1607,6 +1786,16 @@ export const zRollId = zId;
 export const zMapId = zId;
 
 /**
+ * Encounter Pool id.
+ */
+export const zPoolId = zId;
+
+/**
+ * Encounter Table id.
+ */
+export const zTableId = zId;
+
+/**
  * NPC id.
  */
 export const zNpcId = zId;
@@ -1932,6 +2121,150 @@ export const zSetTokenIconPath = z.object({
  * Stored.
  */
 export const zSetTokenIconResponse = z.void();
+
+export const zListEncounterPoolsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Encounter Pools.
+ */
+export const zListEncounterPoolsResponse = z.array(zEncounterPool).max(1000);
+
+export const zCreateEncounterPoolBody = zEncounterPoolInput;
+
+export const zCreateEncounterPoolPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Encounter Pool.
+ */
+export const zCreateEncounterPoolResponse = zEncounterPool;
+
+export const zDeleteEncounterPoolPath = z.object({
+    campaignId: zId,
+    poolId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteEncounterPoolResponse = z.void();
+
+export const zUpdateEncounterPoolBody = zEncounterPoolInput;
+
+export const zUpdateEncounterPoolPath = z.object({
+    campaignId: zId,
+    poolId: zId
+});
+
+/**
+ * The Encounter Pool.
+ */
+export const zUpdateEncounterPoolResponse = zEncounterPool;
+
+export const zListEncounterPoolRevisionsPath = z.object({
+    campaignId: zId,
+    poolId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListEncounterPoolRevisionsResponse = z.array(zRevision).max(1000);
+
+export const zRestoreEncounterPoolRevisionPath = z.object({
+    campaignId: zId,
+    poolId: zId,
+    revisionNo: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The restored Encounter Pool.
+ */
+export const zRestoreEncounterPoolRevisionResponse = zEncounterPool;
+
+export const zListEncounterTablesPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Encounter Tables.
+ */
+export const zListEncounterTablesResponse = z.array(zEncounterTable).max(1000);
+
+export const zCreateEncounterTableBody = zEncounterTableInput;
+
+export const zCreateEncounterTablePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Encounter Table.
+ */
+export const zCreateEncounterTableResponse = zEncounterTable;
+
+export const zDeleteEncounterTablePath = z.object({
+    campaignId: zId,
+    tableId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteEncounterTableResponse = z.void();
+
+export const zUpdateEncounterTableBody = zEncounterTableInput;
+
+export const zUpdateEncounterTablePath = z.object({
+    campaignId: zId,
+    tableId: zId
+});
+
+/**
+ * The Encounter Table.
+ */
+export const zUpdateEncounterTableResponse = zEncounterTable;
+
+export const zListEncounterTableRevisionsPath = z.object({
+    campaignId: zId,
+    tableId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListEncounterTableRevisionsResponse = z.array(zRevision).max(1000);
+
+export const zRestoreEncounterTableRevisionPath = z.object({
+    campaignId: zId,
+    tableId: zId,
+    revisionNo: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The restored Encounter Table.
+ */
+export const zRestoreEncounterTableRevisionResponse = zEncounterTable;
+
+export const zListLocationsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The locations.
+ */
+export const zListLocationsResponse = z.array(zLocation).max(1000);
+
+export const zListEncounterChecksPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The checks.
+ */
+export const zListEncounterChecksResponse = z.array(zEncounterCheck).max(1000);
 
 export const zListNpcsPath = z.object({
     campaignId: zId

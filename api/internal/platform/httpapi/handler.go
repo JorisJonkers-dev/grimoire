@@ -28,6 +28,7 @@ type Handler struct {
 	Rolls      RollService
 	Sessions   SessionService
 	Maps       MapService
+	Prep       PrepService
 	Hub        LiveHub
 	// LiveMembers answers membership for the live socket, which sits outside the generated router.
 	LiveMembers LiveMembers

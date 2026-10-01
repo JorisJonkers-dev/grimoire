@@ -786,3 +786,125 @@ type PlayZoneCreature struct {
 	ZoneID  uuid.UUID
 	TokenID uuid.UUID
 }
+
+type PrepCheckMonster struct {
+	CheckID     uuid.UUID
+	Position    int32
+	MonsterSlug string
+	Count       int32
+}
+
+type PrepEncounterCheck struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	SessionID  pgtype.UUID
+	TableID    pgtype.UUID
+	TableName  string
+	Trigger    string
+	Mode       string
+	Visibility string
+	Seed       int64
+	ChancePct  int32
+	ChanceRoll pgtype.Int4
+	RollID     pgtype.UUID
+	Status     string
+	Outcome    pgtype.Text
+	EntryLabel string
+	CreatedAt  time.Time
+}
+
+type PrepEncounterPool struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	LevelMin   int32
+	LevelMax   int32
+	Difficulty string
+	UpdatedAt  time.Time
+}
+
+type PrepEncounterTable struct {
+	ID           uuid.UUID
+	CampaignID   uuid.UUID
+	Name         string
+	RegionNodeID pgtype.UUID
+	ChancePct    int32
+	Visibility   string
+	UpdatedAt    time.Time
+}
+
+type PrepEntryMonster struct {
+	TableID     uuid.UUID
+	Ordering    int32
+	Position    int32
+	MonsterSlug string
+	Count       int32
+}
+
+type PrepPoolMember struct {
+	PoolID      uuid.UUID
+	Ordering    int32
+	MonsterSlug string
+	Weight      int32
+	MinCount    int32
+	MaxCount    int32
+}
+
+type PrepPoolRevision struct {
+	RevisionID uuid.UUID
+	Name       string
+	LevelMin   int32
+	LevelMax   int32
+	Difficulty string
+}
+
+type PrepPoolRevisionMember struct {
+	RevisionID  uuid.UUID
+	Ordering    int32
+	MonsterSlug string
+	Weight      int32
+	MinCount    int32
+	MaxCount    int32
+}
+
+type PrepScheduledCheck struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	TableID    uuid.UUID
+	Due        string
+	CreatedAt  time.Time
+}
+
+type PrepTableEntry struct {
+	TableID  uuid.UUID
+	Ordering int32
+	Weight   int32
+	Kind     string
+	Label    string
+	PoolID   pgtype.UUID
+}
+
+type PrepTableRevision struct {
+	RevisionID   uuid.UUID
+	Name         string
+	RegionNodeID pgtype.UUID
+	ChancePct    int32
+	Visibility   string
+}
+
+type PrepTableRevisionEntry struct {
+	RevisionID uuid.UUID
+	Ordering   int32
+	Weight     int32
+	Kind       string
+	Label      string
+	PoolID     pgtype.UUID
+}
+
+type PrepTableRevisionMonster struct {
+	RevisionID  uuid.UUID
+	Ordering    int32
+	Position    int32
+	MonsterSlug string
+	Count       int32
+}

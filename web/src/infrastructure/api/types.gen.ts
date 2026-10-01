@@ -463,6 +463,135 @@ export type DeletedNpc = {
 };
 
 /**
+ * How hard a generated encounter aims to be, by the 2024 XP budget.
+ */
+export type EncounterDifficulty = 'low' | 'moderate' | 'high';
+
+/**
+ * A creature a Pool can field, how often it is drawn, and how many an encounter holds at least and at most.
+ */
+export type EncounterPoolMember = {
+    monsterSlug: Slug;
+    weight: number;
+    min: number;
+    max: number;
+};
+
+/**
+ * An Encounter Pool as the DM writes it.
+ */
+export type EncounterPoolInput = {
+    name: string;
+    levelMin: number;
+    levelMax: number;
+    difficulty: EncounterDifficulty;
+    members: Array<EncounterPoolMember>;
+};
+
+/**
+ * A weighted set of creatures for a band of party levels, filled to its difficulty's XP budget when drawn.
+ */
+export type EncounterPool = {
+    id: Id;
+    name: string;
+    levelMin: number;
+    levelMax: number;
+    difficulty: EncounterDifficulty;
+    members: Array<EncounterPoolMember>;
+    updatedAt: string;
+};
+
+/**
+ * How many of one creature an encounter holds.
+ */
+export type EncounterMonster = {
+    monsterSlug: Slug;
+    count: number;
+};
+
+/**
+ * One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.
+ */
+export type EncounterEntry = {
+    weight: number;
+    kind: 'encounter' | 'pool' | 'nothing';
+    label: string;
+    poolId?: Id;
+    monsters?: Array<EncounterMonster>;
+};
+
+/**
+ * Secret checks show only the outcome; open checks show their roll on the Table Display.
+ */
+export type EncounterVisibility = 'secret' | 'open';
+
+/**
+ * An Encounter Table as the DM writes it. Without a regionId it applies everywhere.
+ */
+export type EncounterTableInput = {
+    name: string;
+    regionId?: Id;
+    chancePct: number;
+    visibility: EncounterVisibility;
+    entries: Array<EncounterEntry>;
+};
+
+/**
+ * A Region's chance of an encounter and its weighted entries.
+ */
+export type EncounterTable = {
+    id: Id;
+    name: string;
+    regionId?: Id;
+    chancePct: number;
+    visibility: EncounterVisibility;
+    entries: Array<EncounterEntry>;
+    updatedAt: string;
+};
+
+/**
+ * A place on one of the Campaign's world maps.
+ */
+export type Location = {
+    id: Id;
+    name: string;
+    mapName: string;
+};
+
+/**
+ * One Encounter Check, with the seed its draw used and what it produced.
+ */
+export type EncounterCheck = {
+    id: Id;
+    sessionId?: Id;
+    tableName: string;
+    trigger: EncounterTrigger;
+    mode: EncounterMode;
+    visibility: EncounterVisibility;
+    /**
+     * The draw's seed, as a decimal string.
+     */
+    seed: string;
+    chancePct: number;
+    chanceRoll?: number;
+    status: 'pending' | 'resolved';
+    outcome?: 'encounter' | 'nothing';
+    entryLabel: string;
+    monsters: Array<EncounterMonster>;
+    createdAt: string;
+};
+
+/**
+ * What set off an Encounter Check.
+ */
+export type EncounterTrigger = 'short_rest' | 'long_rest' | 'travel_leg' | 'dm';
+
+/**
+ * A normal check rolls the chance; force_encounter skips it and never draws Nothing; pick takes the entry the DM chose.
+ */
+export type EncounterMode = 'normal' | 'force_encounter' | 'pick';
+
+/**
  * One recorded version of a piece of prep data.
  */
 export type Revision = {
@@ -773,7 +902,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -837,6 +966,41 @@ export type LiveCommand = {
      * With add_zone, the zone springs only when the DM springs it.
      */
     dmOnly?: boolean;
+    rest?: 'short' | 'long';
+    tableId?: Id;
+    mode?: EncounterMode;
+    /**
+     * With a pick check, the index of the table entry.
+     */
+    entry?: number;
+    due?: 'next_rest' | 'next_travel';
+};
+
+/**
+ * An Encounter Check. Everyone sees what set it off and its outcome, and an open check's roll; only the DM sees its table, mode, seed, entry and creatures.
+ */
+export type LiveCheck = {
+    id: Id;
+    trigger: EncounterTrigger;
+    visibility: EncounterVisibility;
+    status: 'pending' | 'resolved';
+    outcome?: 'encounter' | 'nothing';
+    chancePct?: number;
+    chanceRoll?: number;
+    rollId?: Id;
+    tableName?: string;
+    mode?: EncounterMode;
+    seed?: string;
+    entryLabel?: string;
+    monsters?: Array<LiveCheckMonster>;
+};
+
+/**
+ * How many of one creature a check produced.
+ */
+export type LiveCheckMonster = {
+    slug: Slug;
+    count: number;
 };
 
 /**
@@ -1203,6 +1367,7 @@ export type LiveView = {
     world?: LiveWorld;
     zones?: Array<LiveZone>;
     perception?: Array<LivePerception>;
+    checks?: Array<LiveCheck>;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;
@@ -1458,6 +1623,16 @@ export type RollId = Id;
  * Map id.
  */
 export type MapId = Id;
+
+/**
+ * Encounter Pool id.
+ */
+export type PoolId = Id;
+
+/**
+ * Encounter Table id.
+ */
+export type TableId = Id;
 
 /**
  * NPC id.
@@ -2524,6 +2699,522 @@ export type SetTokenIconResponses = {
 };
 
 export type SetTokenIconResponse = SetTokenIconResponses[keyof SetTokenIconResponses];
+
+export type ListEncounterPoolsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-pools';
+};
+
+export type ListEncounterPoolsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListEncounterPoolsError = ListEncounterPoolsErrors[keyof ListEncounterPoolsErrors];
+
+export type ListEncounterPoolsResponses = {
+    /**
+     * The Encounter Pools.
+     */
+    200: Array<EncounterPool>;
+};
+
+export type ListEncounterPoolsResponse = ListEncounterPoolsResponses[keyof ListEncounterPoolsResponses];
+
+export type CreateEncounterPoolData = {
+    body: EncounterPoolInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-pools';
+};
+
+export type CreateEncounterPoolErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateEncounterPoolError = CreateEncounterPoolErrors[keyof CreateEncounterPoolErrors];
+
+export type CreateEncounterPoolResponses = {
+    /**
+     * The new Encounter Pool.
+     */
+    201: EncounterPool;
+};
+
+export type CreateEncounterPoolResponse = CreateEncounterPoolResponses[keyof CreateEncounterPoolResponses];
+
+export type DeleteEncounterPoolData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Pool id.
+         */
+        poolId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}';
+};
+
+export type DeleteEncounterPoolErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteEncounterPoolError = DeleteEncounterPoolErrors[keyof DeleteEncounterPoolErrors];
+
+export type DeleteEncounterPoolResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteEncounterPoolResponse = DeleteEncounterPoolResponses[keyof DeleteEncounterPoolResponses];
+
+export type UpdateEncounterPoolData = {
+    body: EncounterPoolInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Pool id.
+         */
+        poolId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}';
+};
+
+export type UpdateEncounterPoolErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateEncounterPoolError = UpdateEncounterPoolErrors[keyof UpdateEncounterPoolErrors];
+
+export type UpdateEncounterPoolResponses = {
+    /**
+     * The Encounter Pool.
+     */
+    200: EncounterPool;
+};
+
+export type UpdateEncounterPoolResponse = UpdateEncounterPoolResponses[keyof UpdateEncounterPoolResponses];
+
+export type ListEncounterPoolRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Pool id.
+         */
+        poolId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions';
+};
+
+export type ListEncounterPoolRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListEncounterPoolRevisionsError = ListEncounterPoolRevisionsErrors[keyof ListEncounterPoolRevisionsErrors];
+
+export type ListEncounterPoolRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<Revision>;
+};
+
+export type ListEncounterPoolRevisionsResponse = ListEncounterPoolRevisionsResponses[keyof ListEncounterPoolRevisionsResponses];
+
+export type RestoreEncounterPoolRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Pool id.
+         */
+        poolId: Id;
+        /**
+         * Revision number.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreEncounterPoolRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreEncounterPoolRevisionError = RestoreEncounterPoolRevisionErrors[keyof RestoreEncounterPoolRevisionErrors];
+
+export type RestoreEncounterPoolRevisionResponses = {
+    /**
+     * The restored Encounter Pool.
+     */
+    200: EncounterPool;
+};
+
+export type RestoreEncounterPoolRevisionResponse = RestoreEncounterPoolRevisionResponses[keyof RestoreEncounterPoolRevisionResponses];
+
+export type ListEncounterTablesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-tables';
+};
+
+export type ListEncounterTablesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListEncounterTablesError = ListEncounterTablesErrors[keyof ListEncounterTablesErrors];
+
+export type ListEncounterTablesResponses = {
+    /**
+     * The Encounter Tables.
+     */
+    200: Array<EncounterTable>;
+};
+
+export type ListEncounterTablesResponse = ListEncounterTablesResponses[keyof ListEncounterTablesResponses];
+
+export type CreateEncounterTableData = {
+    body: EncounterTableInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-tables';
+};
+
+export type CreateEncounterTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateEncounterTableError = CreateEncounterTableErrors[keyof CreateEncounterTableErrors];
+
+export type CreateEncounterTableResponses = {
+    /**
+     * The new Encounter Table.
+     */
+    201: EncounterTable;
+};
+
+export type CreateEncounterTableResponse = CreateEncounterTableResponses[keyof CreateEncounterTableResponses];
+
+export type DeleteEncounterTableData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Table id.
+         */
+        tableId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}';
+};
+
+export type DeleteEncounterTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteEncounterTableError = DeleteEncounterTableErrors[keyof DeleteEncounterTableErrors];
+
+export type DeleteEncounterTableResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteEncounterTableResponse = DeleteEncounterTableResponses[keyof DeleteEncounterTableResponses];
+
+export type UpdateEncounterTableData = {
+    body: EncounterTableInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Table id.
+         */
+        tableId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}';
+};
+
+export type UpdateEncounterTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateEncounterTableError = UpdateEncounterTableErrors[keyof UpdateEncounterTableErrors];
+
+export type UpdateEncounterTableResponses = {
+    /**
+     * The Encounter Table.
+     */
+    200: EncounterTable;
+};
+
+export type UpdateEncounterTableResponse = UpdateEncounterTableResponses[keyof UpdateEncounterTableResponses];
+
+export type ListEncounterTableRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Table id.
+         */
+        tableId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions';
+};
+
+export type ListEncounterTableRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListEncounterTableRevisionsError = ListEncounterTableRevisionsErrors[keyof ListEncounterTableRevisionsErrors];
+
+export type ListEncounterTableRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<Revision>;
+};
+
+export type ListEncounterTableRevisionsResponse = ListEncounterTableRevisionsResponses[keyof ListEncounterTableRevisionsResponses];
+
+export type RestoreEncounterTableRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Encounter Table id.
+         */
+        tableId: Id;
+        /**
+         * Revision number.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreEncounterTableRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreEncounterTableRevisionError = RestoreEncounterTableRevisionErrors[keyof RestoreEncounterTableRevisionErrors];
+
+export type RestoreEncounterTableRevisionResponses = {
+    /**
+     * The restored Encounter Table.
+     */
+    200: EncounterTable;
+};
+
+export type RestoreEncounterTableRevisionResponse = RestoreEncounterTableRevisionResponses[keyof RestoreEncounterTableRevisionResponses];
+
+export type ListLocationsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/locations';
+};
+
+export type ListLocationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLocationsError = ListLocationsErrors[keyof ListLocationsErrors];
+
+export type ListLocationsResponses = {
+    /**
+     * The locations.
+     */
+    200: Array<Location>;
+};
+
+export type ListLocationsResponse = ListLocationsResponses[keyof ListLocationsResponses];
+
+export type ListEncounterChecksData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/encounter-checks';
+};
+
+export type ListEncounterChecksErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListEncounterChecksError = ListEncounterChecksErrors[keyof ListEncounterChecksErrors];
+
+export type ListEncounterChecksResponses = {
+    /**
+     * The checks.
+     */
+    200: Array<EncounterCheck>;
+};
+
+export type ListEncounterChecksResponse = ListEncounterChecksResponses[keyof ListEncounterChecksResponses];
 
 export type ListNpcsData = {
     body?: never;

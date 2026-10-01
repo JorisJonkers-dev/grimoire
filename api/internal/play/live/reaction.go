@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
@@ -208,6 +209,14 @@ func applyReaction(s *state, w *Write) {
 func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	if actor.DM {
 		r.dm = &actor
+	}
+	switch {
+	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
+		r.encounterChecks(prep.TriggerLongRest, prep.DueNextRest, actor, c)
+	case w.Kind == domain.ActionRestTaken:
+		r.encounterChecks(prep.TriggerShortRest, prep.DueNextRest, actor, c)
+	case w.Kind == domain.ActionTravelLeg:
+		r.encounterChecks(prep.TriggerTravelLeg, prep.DueNextTravel, actor, c)
 	}
 	f := r.st.combat
 	if f == nil {

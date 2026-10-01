@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -166,7 +167,29 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.perceived(z, id)
 		return true
 	}
+	if c, ok := r.st.pendingCheck(id); ok {
+		r.checkRolled(c)
+		return true
+	}
 	return false
+}
+
+// waitingRolls are the Perception and Encounter Check rolls still open outside Combat.
+func (s *state) waitingRolls() []domain.RollID {
+	var out []domain.RollID
+	for _, z := range s.zones {
+		for _, c := range z.Checks {
+			if c.RollID != nil && c.Noticed == nil {
+				out = append(out, *c.RollID)
+			}
+		}
+	}
+	for _, c := range s.checks {
+		if c.Status == prep.CheckPending {
+			out = append(out, domain.RollID(*c.RollID))
+		}
+	}
+	return out
 }
 
 // catchUp takes in rolls resolved while the runtime was not running.
@@ -174,12 +197,8 @@ func (r *runtime) catchUp() {
 	if r.st.cast != nil {
 		r.areaRolled()
 	}
-	for _, z := range r.st.zones {
-		for _, c := range z.Checks {
-			if c.RollID != nil && c.Noticed == nil {
-				r.rolled(request{cmd: Command{rollID: *c.RollID}})
-			}
-		}
+	for _, id := range r.st.waitingRolls() {
+		r.rolled(request{cmd: Command{rollID: id}})
 	}
 	if r.st.combat == nil {
 		return

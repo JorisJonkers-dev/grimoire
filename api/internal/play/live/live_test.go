@@ -17,10 +17,12 @@ import (
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -57,7 +59,11 @@ func setup(t *testing.T) world {
 	members := pgstore.CampaignMembers{Store: campaignpg.New(store.Pool())}
 	dm, _ := members.Membership(ctx, uuid.UUID(d.ID), dmCaller.Subject)
 	player, _ := members.Membership(ctx, uuid.UUID(d.ID), playerCaller.Subject)
-	hub := &live.Hub{Store: pgstore.New(store.Pool()), Members: members, Owner: pgstore.Owner{Pool: store.Pool()}, Now: time.Now, Log: quiet}
+	seed := uint64(0)
+	hub := &live.Hub{
+		Store: pgstore.New(store.Pool()), Members: members, Owner: pgstore.Owner{Pool: store.Pool()}, Now: time.Now, Log: quiet,
+		Seed: func() uint64 { seed++; return seed }, Source: func(s uint64) dice.Source { return rng.New(s) },
+	}
 	t.Cleanup(hub.Shutdown)
 	sessions := &app.Sessions{Repo: pgstore.New(store.Pool()), Members: members, Live: hub, Now: time.Now}
 	s, err := sessions.Start(ctx, dmCaller, uuid.UUID(d.ID))

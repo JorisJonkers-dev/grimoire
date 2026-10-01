@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createInvite, createNpc, createRoll, deleteCharacter, deleteNpc, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getReadiness, getRoll, getSession, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEntries, listInvites, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, restoreNpcRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, startSession, updateCampaign, updateCharacter, updateMap, updateMember, updateNpc, uploadMap } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UploadMapData, UploadMapError, UploadMapResponse } from '../types.gen';
+import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createNpc, createRoll, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteNpc, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getReadiness, getRoll, getSession, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listInvites, listLocations, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreNpcRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, startSession, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateMap, updateMember, updateNpc, uploadMap } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UploadMapData, UploadMapError, UploadMapResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -690,6 +690,278 @@ export const setTokenIconMutation = (options?: Partial<Options<SetTokenIconData>
     };
     return mutationOptions;
 };
+
+export const listEncounterPoolsQueryKey = (options: Options<ListEncounterPoolsData>) => createQueryKey('listEncounterPools', options);
+
+/**
+ * List Encounter Pools
+ *
+ * The Campaign's Encounter Pools. DM only.
+ */
+export const listEncounterPoolsOptions = (options: Options<ListEncounterPoolsData>) => queryOptions<ListEncounterPoolsResponse, ListEncounterPoolsError, ListEncounterPoolsResponse, ReturnType<typeof listEncounterPoolsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listEncounterPools({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listEncounterPoolsQueryKey(options)
+});
+
+/**
+ * Create an Encounter Pool
+ *
+ * Adds an Encounter Pool and records its first Revision. DM only.
+ */
+export const createEncounterPoolMutation = (options?: Partial<Options<CreateEncounterPoolData>>): UseMutationOptions<CreateEncounterPoolResponse, CreateEncounterPoolError, Options<CreateEncounterPoolData>> => {
+    const mutationOptions: UseMutationOptions<CreateEncounterPoolResponse, CreateEncounterPoolError, Options<CreateEncounterPoolData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createEncounterPool({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete an Encounter Pool
+ *
+ * Removes the Encounter Pool; its Revisions keep it restorable. DM only.
+ */
+export const deleteEncounterPoolMutation = (options?: Partial<Options<DeleteEncounterPoolData>>): UseMutationOptions<DeleteEncounterPoolResponse, DeleteEncounterPoolError, Options<DeleteEncounterPoolData>> => {
+    const mutationOptions: UseMutationOptions<DeleteEncounterPoolResponse, DeleteEncounterPoolError, Options<DeleteEncounterPoolData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteEncounterPool({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update an Encounter Pool
+ *
+ * Replaces the Encounter Pool and records a Revision. DM only.
+ */
+export const updateEncounterPoolMutation = (options?: Partial<Options<UpdateEncounterPoolData>>): UseMutationOptions<UpdateEncounterPoolResponse, UpdateEncounterPoolError, Options<UpdateEncounterPoolData>> => {
+    const mutationOptions: UseMutationOptions<UpdateEncounterPoolResponse, UpdateEncounterPoolError, Options<UpdateEncounterPoolData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateEncounterPool({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listEncounterPoolRevisionsQueryKey = (options: Options<ListEncounterPoolRevisionsData>) => createQueryKey('listEncounterPoolRevisions', options);
+
+/**
+ * List Encounter Pool revisions
+ *
+ * Every Revision of the Encounter Pool, newest first. DM only.
+ */
+export const listEncounterPoolRevisionsOptions = (options: Options<ListEncounterPoolRevisionsData>) => queryOptions<ListEncounterPoolRevisionsResponse, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ReturnType<typeof listEncounterPoolRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listEncounterPoolRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listEncounterPoolRevisionsQueryKey(options)
+});
+
+/**
+ * Restore an Encounter Pool revision
+ *
+ * Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
+ */
+export const restoreEncounterPoolRevisionMutation = (options?: Partial<Options<RestoreEncounterPoolRevisionData>>): UseMutationOptions<RestoreEncounterPoolRevisionResponse, RestoreEncounterPoolRevisionError, Options<RestoreEncounterPoolRevisionData>> => {
+    const mutationOptions: UseMutationOptions<RestoreEncounterPoolRevisionResponse, RestoreEncounterPoolRevisionError, Options<RestoreEncounterPoolRevisionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await restoreEncounterPoolRevision({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listEncounterTablesQueryKey = (options: Options<ListEncounterTablesData>) => createQueryKey('listEncounterTables', options);
+
+/**
+ * List Encounter Tables
+ *
+ * The Campaign's Encounter Tables. DM only.
+ */
+export const listEncounterTablesOptions = (options: Options<ListEncounterTablesData>) => queryOptions<ListEncounterTablesResponse, ListEncounterTablesError, ListEncounterTablesResponse, ReturnType<typeof listEncounterTablesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listEncounterTables({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listEncounterTablesQueryKey(options)
+});
+
+/**
+ * Create an Encounter Table
+ *
+ * Adds an Encounter Table and records its first Revision. DM only.
+ */
+export const createEncounterTableMutation = (options?: Partial<Options<CreateEncounterTableData>>): UseMutationOptions<CreateEncounterTableResponse, CreateEncounterTableError, Options<CreateEncounterTableData>> => {
+    const mutationOptions: UseMutationOptions<CreateEncounterTableResponse, CreateEncounterTableError, Options<CreateEncounterTableData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createEncounterTable({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete an Encounter Table
+ *
+ * Removes the Encounter Table; its Revisions keep it restorable. DM only.
+ */
+export const deleteEncounterTableMutation = (options?: Partial<Options<DeleteEncounterTableData>>): UseMutationOptions<DeleteEncounterTableResponse, DeleteEncounterTableError, Options<DeleteEncounterTableData>> => {
+    const mutationOptions: UseMutationOptions<DeleteEncounterTableResponse, DeleteEncounterTableError, Options<DeleteEncounterTableData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteEncounterTable({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update an Encounter Table
+ *
+ * Replaces the Encounter Table and records a Revision. DM only.
+ */
+export const updateEncounterTableMutation = (options?: Partial<Options<UpdateEncounterTableData>>): UseMutationOptions<UpdateEncounterTableResponse, UpdateEncounterTableError, Options<UpdateEncounterTableData>> => {
+    const mutationOptions: UseMutationOptions<UpdateEncounterTableResponse, UpdateEncounterTableError, Options<UpdateEncounterTableData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateEncounterTable({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listEncounterTableRevisionsQueryKey = (options: Options<ListEncounterTableRevisionsData>) => createQueryKey('listEncounterTableRevisions', options);
+
+/**
+ * List Encounter Table revisions
+ *
+ * Every Revision of the Encounter Table, newest first. DM only.
+ */
+export const listEncounterTableRevisionsOptions = (options: Options<ListEncounterTableRevisionsData>) => queryOptions<ListEncounterTableRevisionsResponse, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ReturnType<typeof listEncounterTableRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listEncounterTableRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listEncounterTableRevisionsQueryKey(options)
+});
+
+/**
+ * Restore an Encounter Table revision
+ *
+ * Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
+ */
+export const restoreEncounterTableRevisionMutation = (options?: Partial<Options<RestoreEncounterTableRevisionData>>): UseMutationOptions<RestoreEncounterTableRevisionResponse, RestoreEncounterTableRevisionError, Options<RestoreEncounterTableRevisionData>> => {
+    const mutationOptions: UseMutationOptions<RestoreEncounterTableRevisionResponse, RestoreEncounterTableRevisionError, Options<RestoreEncounterTableRevisionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await restoreEncounterTableRevision({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listLocationsQueryKey = (options: Options<ListLocationsData>) => createQueryKey('listLocations', options);
+
+/**
+ * List locations
+ *
+ * The places on the Campaign's world maps an Encounter Table can belong to. DM only.
+ */
+export const listLocationsOptions = (options: Options<ListLocationsData>) => queryOptions<ListLocationsResponse, ListLocationsError, ListLocationsResponse, ReturnType<typeof listLocationsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listLocations({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listLocationsQueryKey(options)
+});
+
+export const listEncounterChecksQueryKey = (options: Options<ListEncounterChecksData>) => createQueryKey('listEncounterChecks', options);
+
+/**
+ * List Encounter Checks
+ *
+ * The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
+ */
+export const listEncounterChecksOptions = (options: Options<ListEncounterChecksData>) => queryOptions<ListEncounterChecksResponse, ListEncounterChecksError, ListEncounterChecksResponse, ReturnType<typeof listEncounterChecksQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listEncounterChecks({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listEncounterChecksQueryKey(options)
+});
 
 export const listNpcsQueryKey = (options: Options<ListNpcsData>) => createQueryKey('listNpcs', options);
 

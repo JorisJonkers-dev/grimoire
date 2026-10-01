@@ -441,6 +441,33 @@
       "r": 0,
       "hidden": false,
       "zoneId": "0190c7a8-0000-7000-8000-000000000025"
+    },
+    {
+      "nonce": "n49",
+      "kind": "rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "rest": "long"
+    },
+    {
+      "nonce": "n50",
+      "kind": "encounter_check",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "tableId": "0190c7a8-0000-7000-8000-000000000029",
+      "mode": "pick",
+      "entry": 2
+    },
+    {
+      "nonce": "n51",
+      "kind": "schedule_check",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "tableId": "0190c7a8-0000-7000-8000-000000000029",
+      "due": "next_travel"
     }
   ],
   "updates": [
@@ -713,6 +740,17 @@
           {
             "rollId": "0190c7a8-0000-7000-8000-000000000026",
             "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+          }
+        ],
+        "checks": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000027",
+            "trigger": "long_rest",
+            "visibility": "open",
+            "status": "resolved",
+            "outcome": "encounter",
+            "chancePct": 25,
+            "chanceRoll": 12
           }
         ]
       }
@@ -1026,6 +1064,28 @@
             "rollId": "0190c7a8-0000-7000-8000-000000000026",
             "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
           }
+        ],
+        "checks": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000027",
+            "trigger": "long_rest",
+            "visibility": "open",
+            "status": "resolved",
+            "outcome": "encounter",
+            "chancePct": 25,
+            "chanceRoll": 12,
+            "rollId": "0190c7a8-0000-7000-8000-000000000028",
+            "tableName": "Road",
+            "mode": "normal",
+            "seed": "42",
+            "entryLabel": "Ambush",
+            "monsters": [
+              {
+                "slug": "goblin",
+                "count": 3
+              }
+            ]
+          }
         ]
       }
     },
@@ -1333,6 +1393,17 @@
             "rollId": "0190c7a8-0000-7000-8000-000000000026",
             "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
           }
+        ],
+        "checks": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000027",
+            "trigger": "long_rest",
+            "visibility": "open",
+            "status": "resolved",
+            "outcome": "encounter",
+            "chancePct": 25,
+            "chanceRoll": 12
+          }
         ]
       },
       "steps": [
@@ -1596,6 +1667,17 @@
             {
               "rollId": "0190c7a8-0000-7000-8000-000000000026",
               "tokenId": "0190c7a8-0000-7000-8000-00000000000a"
+            }
+          ],
+          "checks": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000027",
+              "trigger": "long_rest",
+              "visibility": "open",
+              "status": "resolved",
+              "outcome": "encounter",
+              "chancePct": 25,
+              "chanceRoll": 12
             }
           ]
         }

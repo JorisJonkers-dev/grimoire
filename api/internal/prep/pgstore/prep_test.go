@@ -1,0 +1,325 @@
+package pgstore_test
+
+import (
+	"context"
+	"errors"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	campaignapp "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
+	campaigndomain "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
+	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
+	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	playdomain "github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
+)
+
+var (
+	dm     = caller.UI("dm")
+	player = caller.UI("player")
+)
+
+type world struct {
+	pool     *pgxpool.Pool
+	campaign uuid.UUID
+	town     uuid.UUID
+}
+
+func creature(slug, name string, xp int) snapshot.Monster {
+	return snapshot.Monster{
+		Entry: snapshot.Entry{Document: "srd-2024", Slug: slug, Name: name}, Size: "small", Type: "humanoid", Alignment: "neutral", ArmorClass: 12,
+		HitPoints: 7, HitDice: "2d6", ChallengeRating: 0.25, XP: xp,
+		Abilities: map[string]int{"strength": 8, "dexterity": 14, "constitution": 10, "intelligence": 10, "wisdom": 8, "charisma": 8},
+		Saves:     map[string]int{}, Skills: map[string]int{}, Speeds: map[string]int{"walk": 30}, Senses: map[string]int{},
+		Resistances: []string{}, Immunities: []string{}, Vulnerabilities: []string{}, ConditionImmunities: []string{}, Traits: []snapshot.Named{},
+		Actions: []snapshot.Action{},
+	}
+}
+
+func setup(t *testing.T) world {
+	t.Helper()
+	ctx := context.Background()
+	store, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(store.Close)
+	camp := campaignapp.NewService(campaignpg.New(store.Pool()))
+	d, err := camp.Create(ctx, dm, campaignapp.CreateInput{Name: "Wilds", DisplayName: "Joris"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	inv, _ := camp.CreateInvite(ctx, dm, d.ID)
+	if _, err := camp.AcceptInvite(ctx, player, inv.Token, "Tamsin"); err != nil {
+		t.Fatal(err)
+	}
+	snap := snapshot.Snapshot{
+		Documents: []snapshot.Document{{Key: "srd-2024", Title: "SRD 5.2", RulesetYear: 2024, Precedence: 20, License: "CC-BY-4.0", Attribution: "a", URL: "https://a"}},
+		Monsters:  []snapshot.Monster{creature("goblin", "Goblin", 50), creature("ogre", "Ogre", 450)},
+	}
+	if _, err := comppg.New(store.Pool()).Import(ctx, snap, "prep"); err != nil {
+		t.Fatal(err)
+	}
+	m, err := playpg.New(store.Pool()).InsertMap(ctx, playdomain.Map{
+		CampaignID: uuid.UUID(d.ID), Name: "Realm", Kind: playdomain.MapWorld, ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, HexSize: 40, OriginX: 35, OriginY: 40,
+	}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	town := uuid.New()
+	if err := queries.New(store.Pool()).InsertNode(ctx, queries.InsertNodeParams{ID: town, MapID: uuid.UUID(m.ID), Name: "Oakford"}); err != nil {
+		t.Fatal(err)
+	}
+	return world{pool: store.Pool(), campaign: uuid.UUID(d.ID), town: town}
+}
+
+func service(w world, repo app.Repository) *app.Service {
+	return &app.Service{Repo: repo, Members: playpg.CampaignMembers{Store: campaignpg.New(w.pool)}, Now: func() time.Time { return time.Date(2026, 10, 1, 20, 0, 0, 0, time.UTC) }}
+}
+
+func goblins() domain.Pool {
+	return domain.Pool{Name: " Goblin band ", LevelMin: 1, LevelMax: 4, Difficulty: "moderate", Members: []domain.PoolMember{
+		{Slug: "goblin", Weight: 3, Min: 1, Max: 6}, {Slug: "ogre", Weight: 1, Min: 0, Max: 1},
+	}}
+}
+
+func refused(t *testing.T, err error, want string) {
+	t.Helper()
+	var rule *apperr.RuleError
+	if !errors.As(err, &rule) || !strings.Contains(rule.Reason, want) {
+		t.Errorf("want refusal %q, got %v", want, err)
+	}
+}
+
+func TestPoolsAreValidatedRevisionedAndRestorable(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w := setup(t)
+	s := service(w, pgstore.New(w.pool))
+	p, err := s.SavePool(ctx, dm, w.campaign, goblins())
+	if err != nil || p.Name != "Goblin band" || p.ID == (domain.PoolID{}) {
+		t.Fatalf("create = %+v %v", p, err)
+	}
+	p.LevelMax, p.Difficulty = 6, "high"
+	if _, err := s.SavePool(ctx, dm, w.campaign, p); err != nil {
+		t.Fatal(err)
+	}
+	list, err := s.Pools(ctx, dm, w.campaign)
+	if err != nil || len(list) != 1 || list[0].LevelMax != 6 || len(list[0].Members) != 2 || list[0].Members[0] != (domain.PoolMember{Slug: "goblin", Weight: 3, Min: 1, Max: 6}) {
+		t.Fatalf("list = %+v %v", list, err)
+	}
+	bad := map[string]func(p *domain.Pool){
+		"name of up to 80":       func(p *domain.Pool) { p.Name = " " },
+		"levels run from 1":      func(p *domain.Pool) { p.LevelMin = 5; p.LevelMax = 2 },
+		"low, moderate or high":  func(p *domain.Pool) { p.Difficulty = "deadly" },
+		"1 to 20 creatures":      func(p *domain.Pool) { p.Members = nil },
+		"weights run from 1":     func(p *domain.Pool) { p.Members[0].Min = 7 },
+		"there is no monster":    func(p *domain.Pool) { p.Members[0].Slug = "dragon" },
+		"levels run from 1 to 2": func(p *domain.Pool) { p.LevelMax = 21 },
+	}
+	for want, change := range bad {
+		x := goblins()
+		change(&x)
+		_, err := s.SavePool(ctx, dm, w.campaign, x)
+		refused(t, err, want)
+	}
+	if _, err := s.SavePool(ctx, dm, w.campaign, domain.Pool{ID: domain.PoolID(uuid.New()), Name: "Ghost"}); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("update unknown = %v", err)
+	}
+	if _, err := s.Pools(ctx, player, w.campaign); !errors.Is(err, apperr.ErrForbidden) {
+		t.Errorf("player list = %v", err)
+	}
+	if err := s.DeletePool(ctx, dm, w.campaign, p.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DeletePool(ctx, dm, w.campaign, p.ID); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("delete twice = %v", err)
+	}
+	revs, err := s.PoolRevisions(ctx, dm, w.campaign, p.ID)
+	if err != nil || len(revs) != 3 || revs[0].Action != campaigndomain.ActionDelete || revs[2].Action != campaigndomain.ActionCreate || revs[0].Author != "Joris" {
+		t.Fatalf("revisions = %+v %v", revs, err)
+	}
+	back, err := s.RestorePool(ctx, dm, w.campaign, p.ID, 1)
+	if err != nil || back.LevelMax != 4 || back.Difficulty != "moderate" || len(back.Members) != 2 {
+		t.Fatalf("restore = %+v %v", back, err)
+	}
+	if revs, _ := s.PoolRevisions(ctx, dm, w.campaign, p.ID); revs[0].Action != campaigndomain.ActionRestore || revs[0].RestoredFrom != 1 {
+		t.Fatalf("restore revision = %+v", revs[0])
+	}
+	if _, err := s.RestorePool(ctx, dm, w.campaign, p.ID, 9); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("restore unknown revision = %v", err)
+	}
+	if _, err := s.PoolRevisions(ctx, dm, w.campaign, domain.PoolID(uuid.New())); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("revisions of nothing = %v", err)
+	}
+	for _, op := range []func() error{
+		func() error { _, err := s.PoolRevisions(ctx, player, w.campaign, p.ID); return err },
+		func() error { _, err := s.RestorePool(ctx, player, w.campaign, p.ID, 1); return err },
+		func() error { return s.DeletePool(ctx, player, w.campaign, p.ID) },
+	} {
+		if err := op(); !errors.Is(err, apperr.ErrForbidden) {
+			t.Errorf("player = %v", err)
+		}
+	}
+}
+
+func TestTablesHoldEncountersPoolDrawsAndNothing(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w := setup(t)
+	s := service(w, pgstore.New(w.pool))
+	pool, _ := s.SavePool(ctx, dm, w.campaign, goblins())
+	table := func() domain.Table {
+		return domain.Table{Name: "Forest road", RegionID: &w.town, ChancePct: 25, Visibility: domain.Open, Entries: []domain.Entry{
+			{Weight: 2, Kind: domain.EntryEncounter, Label: " Ambush ", Monsters: []domain.EntryMonster{{Slug: "goblin", Count: 3}}, PoolID: &pool.ID},
+			{Weight: 1, Kind: domain.EntryPool, PoolID: &pool.ID, Monsters: []domain.EntryMonster{{Slug: "ogre", Count: 1}}},
+			{Weight: 5, Kind: domain.EntryNothing, Label: "Birdsong", PoolID: &pool.ID},
+		}}
+	}
+	tb, err := s.SaveTable(ctx, dm, w.campaign, table())
+	if err != nil {
+		t.Fatal(err)
+	}
+	list, err := s.Tables(ctx, dm, w.campaign)
+	e := list[0].Entries
+	if err != nil || len(list) != 1 || *list[0].RegionID != w.town || len(e) != 3 || e[0].Label != "Ambush" || e[0].PoolID != nil || len(e[0].Monsters) != 1 ||
+		*e[1].PoolID != pool.ID || e[1].Monsters != nil || e[2].PoolID != nil {
+		t.Fatalf("tables = %+v %v", list, err)
+	}
+	stranger := uuid.New()
+	missing := domain.PoolID(uuid.New())
+	bad := map[string]func(t *domain.Table){
+		"chance runs from 0":     func(t *domain.Table) { t.ChancePct = 101 },
+		"secret or open":         func(t *domain.Table) { t.Visibility = "loud" },
+		"1 to 50 entries":        func(t *domain.Table) { t.Entries = nil },
+		"choose a location":      func(t *domain.Table) { t.RegionID = &stranger },
+		"one of the campaign's":  func(t *domain.Table) { t.Entries[1].PoolID = &missing },
+		"has a name and 1 to 10": func(t *domain.Table) { t.Entries[0].Label = "" },
+		"1 to 20 of each":        func(t *domain.Table) { t.Entries[0].Monsters[0].Count = 0 },
+		"no monster":             func(t *domain.Table) { t.Entries[0].Monsters[0].Slug = "dragon" },
+		"encounter, a pool draw": func(t *domain.Table) { t.Entries[2].Kind = "treasure" },
+		"weights run from 1":     func(t *domain.Table) { t.Entries[2].Weight = 0 },
+		"name of up to 80":       func(t *domain.Table) { t.Name = "" },
+	}
+	for want, change := range bad {
+		x := table()
+		change(&x)
+		_, err := s.SaveTable(ctx, dm, w.campaign, x)
+		refused(t, err, want)
+	}
+	refused(t, s.DeletePool(ctx, dm, w.campaign, pool.ID), "a table still draws")
+	tb.ChancePct, tb.RegionID = 50, nil
+	if _, err := s.SaveTable(ctx, dm, w.campaign, tb); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveTable(ctx, dm, w.campaign, domain.Table{ID: domain.TableID(uuid.New())}); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("update unknown = %v", err)
+	}
+	if err := s.DeleteTable(ctx, dm, w.campaign, tb.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DeleteTable(ctx, dm, w.campaign, tb.ID); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("delete twice = %v", err)
+	}
+	back, err := s.RestoreTable(ctx, dm, w.campaign, tb.ID, 1)
+	if err != nil || back.ChancePct != 25 || *back.RegionID != w.town || len(back.Entries) != 3 || back.Entries[0].Monsters[0].Count != 3 {
+		t.Fatalf("restore = %+v %v", back, err)
+	}
+	revs, err := s.TableRevisions(ctx, dm, w.campaign, tb.ID)
+	if err != nil || len(revs) != 4 {
+		t.Fatalf("revisions = %+v %v", revs, err)
+	}
+	if _, err := s.TableRevisions(ctx, dm, w.campaign, domain.TableID(uuid.New())); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("revisions of nothing = %v", err)
+	}
+	if _, err := s.RestoreTable(ctx, dm, w.campaign, tb.ID, 9); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("restore unknown = %v", err)
+	}
+	locs, err := s.Locations(ctx, dm, w.campaign)
+	if err != nil || len(locs) != 1 || locs[0].Name != "Oakford" || locs[0].MapName != "Realm" {
+		t.Fatalf("locations = %+v %v", locs, err)
+	}
+	checks, err := s.Checks(ctx, dm, w.campaign)
+	if err != nil || len(checks) != 0 {
+		t.Fatalf("checks = %+v %v", checks, err)
+	}
+	for _, op := range []func() error{
+		func() error { _, err := s.Tables(ctx, player, w.campaign); return err },
+		func() error { _, err := s.Locations(ctx, player, w.campaign); return err },
+		func() error { _, err := s.Checks(ctx, player, w.campaign); return err },
+		func() error { _, err := s.TableRevisions(ctx, player, w.campaign, tb.ID); return err },
+		func() error { _, err := s.SaveTable(ctx, player, w.campaign, table()); return err },
+	} {
+		if err := op(); !errors.Is(err, apperr.ErrForbidden) {
+			t.Errorf("player = %v", err)
+		}
+	}
+}
+
+func TestEveryPrepDatabaseFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w := setup(t)
+	base := service(w, pgstore.New(w.pool))
+	pool, _ := base.SavePool(ctx, dm, w.campaign, goblins())
+	tb, err := base.SaveTable(ctx, dm, w.campaign, domain.Table{Name: "Road", RegionID: &w.town, ChancePct: 10, Visibility: domain.Secret, Entries: []domain.Entry{
+		{Weight: 1, Kind: domain.EntryEncounter, Label: "Pack", Monsters: []domain.EntryMonster{{Slug: "goblin", Count: 2}}},
+		{Weight: 1, Kind: domain.EntryPool, PoolID: &pool.ID},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	spare, _ := base.SavePool(ctx, dm, w.campaign, goblins())
+	if err := base.DeletePool(ctx, dm, w.campaign, spare.ID); err != nil {
+		t.Fatal(err)
+	}
+	ops := map[string]func(s *app.Service) error{
+		"pools":     func(s *app.Service) error { _, err := s.Pools(ctx, dm, w.campaign); return err },
+		"save pool": func(s *app.Service) error { _, err := s.SavePool(ctx, dm, w.campaign, pool); return err },
+		"delete pool": func(s *app.Service) error {
+			fresh, err := base.SavePool(ctx, dm, w.campaign, goblins())
+			if err != nil {
+				t.Fatal(err)
+			}
+			return s.DeletePool(ctx, dm, w.campaign, fresh.ID)
+		},
+		"pool revs":    func(s *app.Service) error { _, err := s.PoolRevisions(ctx, dm, w.campaign, pool.ID); return err },
+		"restore pool": func(s *app.Service) error { _, err := s.RestorePool(ctx, dm, w.campaign, spare.ID, 1); return err },
+		"tables":       func(s *app.Service) error { _, err := s.Tables(ctx, dm, w.campaign); return err },
+		"save table":   func(s *app.Service) error { _, err := s.SaveTable(ctx, dm, w.campaign, tb); return err },
+		"delete table": func(s *app.Service) error {
+			fresh := tb
+			fresh.ID = domain.TableID{}
+			if fresh, err = base.SaveTable(ctx, dm, w.campaign, fresh); err != nil {
+				t.Fatal(err)
+			}
+			return s.DeleteTable(ctx, dm, w.campaign, fresh.ID)
+		},
+		"table revs":    func(s *app.Service) error { _, err := s.TableRevisions(ctx, dm, w.campaign, tb.ID); return err },
+		"restore table": func(s *app.Service) error { _, err := s.RestoreTable(ctx, dm, w.campaign, tb.ID, 1); return err },
+		"locations":     func(s *app.Service) error { _, err := s.Locations(ctx, dm, w.campaign); return err },
+		"checks":        func(s *app.Service) error { _, err := s.Checks(ctx, dm, w.campaign); return err },
+	}
+	for name, op := range ops {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := op(service(w, pgstore.NewFaulty(w.pool, f)))
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+}

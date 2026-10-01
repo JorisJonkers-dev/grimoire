@@ -1,12 +1,13 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
+import type { LiveCheck, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { fakeClock, mountApp } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials, zoneHexes } from './board'
 import { focus } from './camera'
+import { checkLine } from './checks'
 import { cellsFor, key, layoutOf } from './geometry'
 import { duration, journey } from './travel'
 
@@ -1137,5 +1138,100 @@ describe('encounter zones', () => {
     await flushPromises()
     expect(wrapper.get('[data-testid="rail-Aria"] [data-testid="surprised"]').text()).toBe('Surprised')
     expect(wrapper.find('[data-testid="rail-Brom"] [data-testid="surprised"]').exists()).toBe(false)
+  })
+})
+
+describe('encounter checks', () => {
+  const ROAD = '0190c7a8-0000-7000-8000-000000000032'
+  const road = {
+    id: ROAD, name: 'Road', chancePct: 30, visibility: 'open', updatedAt: '2026-10-01T20:00:00Z',
+    entries: [{ weight: 1, kind: 'encounter', label: 'Ambush', monsters: [{ monsterSlug: 'goblin', count: 3 }] }, { weight: 1, kind: 'nothing', label: '', monsters: [] }],
+  }
+  const ROLL = '0190c7a8-0000-7000-8000-000000000045'
+  const dmChecks: LiveCheck[] = [
+    { id: '0190c7a8-0000-7000-8000-000000000041', trigger: 'long_rest', visibility: 'open', status: 'resolved', outcome: 'encounter', chancePct: 30, chanceRoll: 12, tableName: 'Road', mode: 'normal', seed: '42', entryLabel: 'Ambush', monsters: [{ slug: 'goblin', count: 3 }, { slug: 'ogre', count: 1 }] },
+    { id: '0190c7a8-0000-7000-8000-000000000042', trigger: 'dm', visibility: 'secret', status: 'resolved', outcome: 'nothing', tableName: 'Den', mode: 'pick', seed: '7', entryLabel: 'Wind' },
+    { id: '0190c7a8-0000-7000-8000-000000000043', trigger: 'travel_leg', visibility: 'open', status: 'pending', chancePct: 30, rollId: ROLL, tableName: 'Road', mode: 'normal', seed: '8' },
+  ]
+  const [longRest, picked, travelling] = dmChecks as [LiveCheck, LiveCheck, LiveCheck]
+  const roll = (id: string) => ({
+    id, purpose: 'Encounter check', notation: '1d100', requestedBy: 'Joris', roller: { id: member.id, name: 'Joris' }, mine: true, canRoll: true,
+    status: 'pending', groups: [{ index: 0, count: 1, faces: 100, sign: 1 }], dice: [{ no: 0, group: 0, faces: 100, kept: false }], modifiers: [], createdAt: '2026-10-01T20:00:00Z',
+  })
+
+  it('writes each check as one line', () => {
+    expect(checkLine(longRest)).toBe('Long rest on Road · rolled 12 against 30% · encounter: Ambush · goblin x3, ogre · seed 42')
+    expect(checkLine(picked)).toBe('The DM checks on Den · all quiet (Wind) · seed 7')
+    expect(checkLine(travelling)).toBe('Travel leg on Road · rolling… · seed 8')
+    expect(checkLine({ id: ROLL, trigger: 'short_rest', visibility: 'secret', status: 'resolved', outcome: 'encounter' })).toBe('Short rest · something approaches!')
+    expect(checkLine({ id: ROLL, trigger: 'short_rest', visibility: 'open', status: 'resolved', outcome: 'nothing', chanceRoll: 80 })).toBe('Short rest · rolled 80 against 0% · all quiet')
+  })
+
+  it('lets the DM rest, check, force, pick and schedule, and roll the open check', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/encounter-tables`]: () => [road],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => roll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'dm'))
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="encounter-checks"]')
+    expect(panel.text()).toContain('No checks yet this session.')
+    await panel.get('[data-testid="rest-short"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'rest', rest: 'short' })
+    await panel.get('[data-testid="rest-long"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'rest', rest: 'long' })
+    expect(panel.get('[data-testid="run-check"]').attributes('disabled')).toBeDefined()
+    await panel.get('[data-testid="check-table"]').setValue(ROAD)
+    await panel.get('[data-testid="run-check"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'encounter_check', tableId: ROAD, mode: 'normal' })
+    expect(s.sent.at(-1)).not.toHaveProperty('entry')
+    await panel.get('[data-testid="check-mode"]').setValue('pick')
+    await panel.get('[data-testid="check-entry"]').setValue(1)
+    expect(panel.get('[data-testid="check-entry"]').findAll('option').map((o) => o.text())).toEqual(['Ambush', 'nothing'])
+    await panel.get('[data-testid="run-check"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'encounter_check', mode: 'pick', entry: 1 })
+    await panel.get('[data-testid="check-due"]').setValue('next_travel')
+    await panel.get('[data-testid="schedule-check"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'schedule_check', tableId: ROAD, due: 'next_travel' })
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], fog: false, visible: [], remembered: [], checks: dmChecks } })
+    await flushPromises()
+    const lines = wrapper.get('[data-testid="encounter-checks"]').findAll('li').map((l) => l.text())
+    expect(lines[0]).toBe('Travel leg on Road · rolling… · seed 8')
+    expect(lines[2]).toContain('goblin x3, ogre')
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('shows players and the Table Display only what the check lets them see', async () => {
+    const playerChecks = [
+      { id: '0190c7a8-0000-7000-8000-000000000041', trigger: 'long_rest', visibility: 'secret', status: 'resolved', outcome: 'encounter' },
+      { id: '0190c7a8-0000-7000-8000-000000000043', trigger: 'travel_leg', visibility: 'open', status: 'pending', chancePct: 30, rollId: ROLL },
+    ]
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party'))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="encounter-checks"]').exists()).toBe(false)
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [], fog: false, visible: [], remembered: [], checks: playerChecks } })
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="encounter-checks"]')
+    expect(panel.find('[data-testid="rest-long"]').exists()).toBe(false)
+    expect(panel.findAll('li').map((l) => l.text())).toEqual(['Travel leg · rolling…', 'Long rest · something approaches!'])
+    expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(0)
+
+    const tv = await mountApp(`/campaigns/${ID}/sessions/${SID}/table`, { [`/api/v1/campaigns/${ID}/rolls/`]: (u) => roll(u.pathname.split('/')[6] ?? '') })
+    const t = FakeSocket.last()
+    t.receive(snapshot([], 'table', { checks: playerChecks }))
+    await flushPromises()
+    expect(tv.wrapper.get('[data-testid="table-check"] [data-testid="roll-card"]').text()).toContain('Encounter check')
+    t.receive({ kind: 'view', seq: 2, view: { tokens: [], fog: false, visible: [], remembered: [], checks: [{ ...playerChecks[1], status: 'resolved', outcome: 'nothing', chanceRoll: 88 }] } })
+    await flushPromises()
+    expect(tv.wrapper.get('[data-testid="table-check"]').text()).toBe('Travel leg · rolled 88 against 30% · all quiet')
+    t.receive({ kind: 'view', seq: 3, view: { tokens: [], fog: false, visible: [], remembered: [], checks: playerChecks, table: { camera: 'follow_turn', q: 0, r: 0, zoomPct: 100, scene: 'local', blackout: true } } })
+    await flushPromises()
+    expect(tv.wrapper.find('[data-testid="table-check"]').exists()).toBe(false)
   })
 })
