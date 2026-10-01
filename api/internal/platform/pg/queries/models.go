@@ -72,6 +72,7 @@ type CampaignContainer struct {
 	CharacterID pgtype.UUID
 	Label       string
 	CreatedAt   time.Time
+	ParentID    pgtype.UUID
 }
 
 type CampaignContainerCoin struct {
@@ -94,6 +95,19 @@ type CampaignInvite struct {
 	CreatedAt  time.Time
 	ExpiresAt  time.Time
 	RevokedAt  pgtype.Timestamptz
+}
+
+type CampaignItemInstance struct {
+	ID           uuid.UUID
+	ContainerID  uuid.UUID
+	ItemSlug     string
+	CustomName   pgtype.Text
+	Quantity     int32
+	Charges      pgtype.Int4
+	Identified   bool
+	Attuned      bool
+	EquippedSlot pgtype.Text
+	CreatedAt    time.Time
 }
 
 type CampaignMap struct {

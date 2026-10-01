@@ -13975,9 +13975,23 @@ func (s *LiveContainer) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.ParentId.Set {
+			e.FieldStart("parentId")
+			s.ParentId.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("items")
 		e.ArrStart()
 		for _, elem := range s.Items {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("instances")
+		e.ArrStart()
+		for _, elem := range s.Instances {
 			elem.Encode(e)
 		}
 		e.ArrEnd()
@@ -14008,17 +14022,19 @@ func (s *LiveContainer) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveContainer = [10]string{
-	0: "id",
-	1: "kind",
-	2: "label",
-	3: "characterId",
-	4: "ownerId",
-	5: "items",
-	6: "coins",
-	7: "weightLb",
-	8: "capacityLb",
-	9: "encumbered",
+var jsonFieldsNameOfLiveContainer = [12]string{
+	0:  "id",
+	1:  "kind",
+	2:  "label",
+	3:  "characterId",
+	4:  "ownerId",
+	5:  "parentId",
+	6:  "items",
+	7:  "instances",
+	8:  "coins",
+	9:  "weightLb",
+	10: "capacityLb",
+	11: "encumbered",
 }
 
 // Decode decodes LiveContainer from json.
@@ -14082,8 +14098,18 @@ func (s *LiveContainer) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ownerId\"")
 			}
+		case "parentId":
+			if err := func() error {
+				s.ParentId.Reset()
+				if err := s.ParentId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"parentId\"")
+			}
 		case "items":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				s.Items = make([]LiveItem, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -14100,8 +14126,26 @@ func (s *LiveContainer) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"items\"")
 			}
+		case "instances":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				s.Instances = make([]LiveItemInstance, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LiveItemInstance
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Instances = append(s.Instances, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"instances\"")
+			}
 		case "coins":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				s.Coins = make([]LiveCoins, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -14119,7 +14163,7 @@ func (s *LiveContainer) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"coins\"")
 			}
 		case "weightLb":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 1
 			if err := func() error {
 				v, err := d.Float64()
 				s.WeightLb = float64(v)
@@ -14160,8 +14204,8 @@ func (s *LiveContainer) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
-		0b11100111,
-		0b00000000,
+		0b11000111,
+		0b00000011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -14229,6 +14273,8 @@ func (s *LiveContainerKind) Decode(d *jx.Decoder) error {
 		*s = LiveContainerKindPartyStash
 	case LiveContainerKindLootDrop:
 		*s = LiveContainerKindLootDrop
+	case LiveContainerKindBag:
+		*s = LiveContainerKindBag
 	default:
 		*s = LiveContainerKind(v)
 	}
@@ -14827,6 +14873,295 @@ func (s *LiveItem) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveItem) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveItemInstance) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveItemInstance) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		s.ID.Encode(e)
+	}
+	{
+		e.FieldStart("slug")
+		s.Slug.Encode(e)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		e.FieldStart("count")
+		e.Int32(s.Count)
+	}
+	{
+		if s.Charges.Set {
+			e.FieldStart("charges")
+			s.Charges.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("identified")
+		e.Bool(s.Identified)
+	}
+	{
+		if s.Attuned.Set {
+			e.FieldStart("attuned")
+			s.Attuned.Encode(e)
+		}
+	}
+	{
+		if s.Slot.Set {
+			e.FieldStart("slot")
+			s.Slot.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("weightLb")
+		e.Float64(s.WeightLb)
+	}
+}
+
+var jsonFieldsNameOfLiveItemInstance = [9]string{
+	0: "id",
+	1: "slug",
+	2: "name",
+	3: "count",
+	4: "charges",
+	5: "identified",
+	6: "attuned",
+	7: "slot",
+	8: "weightLb",
+}
+
+// Decode decodes LiveItemInstance from json.
+func (s *LiveItemInstance) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveItemInstance to nil")
+	}
+	var requiredBitSet [2]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.ID.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "slug":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Slug.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"slug\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "count":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int32()
+				s.Count = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"count\"")
+			}
+		case "charges":
+			if err := func() error {
+				s.Charges.Reset()
+				if err := s.Charges.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"charges\"")
+			}
+		case "identified":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Identified = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"identified\"")
+			}
+		case "attuned":
+			if err := func() error {
+				s.Attuned.Reset()
+				if err := s.Attuned.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"attuned\"")
+			}
+		case "slot":
+			if err := func() error {
+				s.Slot.Reset()
+				if err := s.Slot.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"slot\"")
+			}
+		case "weightLb":
+			requiredBitSet[1] |= 1 << 0
+			if err := func() error {
+				v, err := d.Float64()
+				s.WeightLb = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"weightLb\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveItemInstance")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [2]uint8{
+		0b00101111,
+		0b00000001,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveItemInstance) {
+					name = jsonFieldsNameOfLiveItemInstance[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveItemInstance) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveItemInstance) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveItemInstanceSlot as json.
+func (s LiveItemInstanceSlot) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveItemInstanceSlot from json.
+func (s *LiveItemInstanceSlot) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveItemInstanceSlot to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveItemInstanceSlot(v) {
+	case LiveItemInstanceSlotMainHand:
+		*s = LiveItemInstanceSlotMainHand
+	case LiveItemInstanceSlotOffHand:
+		*s = LiveItemInstanceSlotOffHand
+	case LiveItemInstanceSlotRangedMain:
+		*s = LiveItemInstanceSlotRangedMain
+	case LiveItemInstanceSlotRangedOff:
+		*s = LiveItemInstanceSlotRangedOff
+	case LiveItemInstanceSlotArmor:
+		*s = LiveItemInstanceSlotArmor
+	case LiveItemInstanceSlotHead:
+		*s = LiveItemInstanceSlotHead
+	case LiveItemInstanceSlotCloak:
+		*s = LiveItemInstanceSlotCloak
+	case LiveItemInstanceSlotHands:
+		*s = LiveItemInstanceSlotHands
+	case LiveItemInstanceSlotFeet:
+		*s = LiveItemInstanceSlotFeet
+	case LiveItemInstanceSlotNeck:
+		*s = LiveItemInstanceSlotNeck
+	case LiveItemInstanceSlotRing1:
+		*s = LiveItemInstanceSlotRing1
+	case LiveItemInstanceSlotRing2:
+		*s = LiveItemInstanceSlotRing2
+	default:
+		*s = LiveItemInstanceSlot(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveItemInstanceSlot) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveItemInstanceSlot) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -22967,6 +23302,39 @@ func (s OptLiveCommandSurface) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveCommandSurface) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveItemInstanceSlot as json.
+func (o OptLiveItemInstanceSlot) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveItemInstanceSlot from json.
+func (o *OptLiveItemInstanceSlot) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveItemInstanceSlot to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveItemInstanceSlot) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveItemInstanceSlot) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

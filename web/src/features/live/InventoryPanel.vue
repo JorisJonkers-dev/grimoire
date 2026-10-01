@@ -3,7 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import type { LiveContainer, LootTable } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import { GButton } from '@/shared/ui'
-import { canPut, canTake, type Dragged, load } from './inventory'
+import { canPut, canTake, instanceLabel, type Dragged, load } from './inventory'
 
 const props = defineProps<{ containers: LiveContainer[]; dm: boolean; me: string; lootTables: LootTable[] }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
@@ -12,7 +12,8 @@ const lootTable = ref('')
 const target = reactive<Record<string, string>>({})
 const count = reactive<Record<string, number>>({})
 const over = ref('')
-const sorted = computed(() => [...props.containers].sort((a, b) => ['party_stash', 'character', 'loot_drop'].indexOf(a.kind) - ['party_stash', 'character', 'loot_drop'].indexOf(b.kind)))
+const order = ['party_stash', 'character', 'bag', 'loot_drop']
+const sorted = computed(() => [...props.containers].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind)))
 const destinations = (from: LiveContainer) => sorted.value.filter((c) => c.id !== from.id && canPut(c, props.dm, props.me))
 
 function move(d: Dragged, to: string) {
@@ -65,7 +66,7 @@ function drop(ev: DragEvent, c: LiveContainer) {
           {{ c.label }} <span class="weight" data-testid="load">{{ load(c) }}</span>
           <span v-if="c.encumbered" class="g-tag heavy" data-testid="encumbered">Encumbered</span>
         </h3>
-        <p v-if="c.items.length + c.coins.length === 0" class="hint">Empty.</p>
+        <p v-if="c.items.length + c.instances.length + c.coins.length === 0" class="hint">Empty.</p>
         <ul class="g-list">
           <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is a pointer shortcut; the Move controls are the accessible path -->
           <li
@@ -83,6 +84,9 @@ function drop(ev: DragEvent, c: LiveContainer) {
               <input v-model.number="count[`${c.id}:${i.slug}`]" type="number" min="1" :max="i.count" :placeholder="String(i.count)" :aria-label="`How many ${i.name}`" />
               <GButton :aria-label="`Move ${i.name} from ${c.label}`" @click="moveStack(c, i.slug, { from: c.id, itemSlug: i.slug, count: i.count })">Move</GButton>
             </template>
+          </li>
+          <li v-for="i in c.instances" :key="i.id" class="stack" data-testid="instance">
+            <span>{{ instanceLabel(i) }} · {{ Math.round(i.weightLb * 10) / 10 }} lb</span>
           </li>
           <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is a pointer shortcut; the Move controls are the accessible path -->
           <li

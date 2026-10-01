@@ -66,13 +66,14 @@ func (q *Queries) CampaignContainerItems(ctx context.Context, campaignID uuid.UU
 }
 
 const campaignContainers = `-- name: CampaignContainers :many
-SELECT id, kind, character_id, label, created_at FROM campaign.containers WHERE campaign_id = $1 ORDER BY created_at, id
+SELECT id, kind, character_id, parent_id, label, created_at FROM campaign.containers WHERE campaign_id = $1 ORDER BY created_at, id
 `
 
 type CampaignContainersRow struct {
 	ID          uuid.UUID
 	Kind        string
 	CharacterID pgtype.UUID
+	ParentID    pgtype.UUID
 	Label       string
 	CreatedAt   time.Time
 }
@@ -90,8 +91,57 @@ func (q *Queries) CampaignContainers(ctx context.Context, campaignID uuid.UUID) 
 			&i.ID,
 			&i.Kind,
 			&i.CharacterID,
+			&i.ParentID,
 			&i.Label,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const campaignItemInstances = `-- name: CampaignItemInstances :many
+SELECT i.id, i.container_id, i.item_slug, i.custom_name, i.quantity, i.charges, i.identified, i.attuned, i.equipped_slot
+FROM campaign.item_instances i JOIN campaign.containers c ON c.id = i.container_id
+WHERE c.campaign_id = $1 ORDER BY i.container_id, i.created_at, i.id
+`
+
+type CampaignItemInstancesRow struct {
+	ID           uuid.UUID
+	ContainerID  uuid.UUID
+	ItemSlug     string
+	CustomName   pgtype.Text
+	Quantity     int32
+	Charges      pgtype.Int4
+	Identified   bool
+	Attuned      bool
+	EquippedSlot pgtype.Text
+}
+
+func (q *Queries) CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error) {
+	rows, err := q.db.Query(ctx, campaignItemInstances, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignItemInstancesRow{}
+	for rows.Next() {
+		var i CampaignItemInstancesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ContainerID,
+			&i.ItemSlug,
+			&i.CustomName,
+			&i.Quantity,
+			&i.Charges,
+			&i.Identified,
+			&i.Attuned,
+			&i.EquippedSlot,
 		); err != nil {
 			return nil, err
 		}

@@ -8,7 +8,7 @@ import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials, zoneHexes } from './board'
 import { focus } from './camera'
 import { checkLine } from './checks'
-import { canPut, canTake, load } from './inventory'
+import { canPut, canTake, instanceLabel, load } from './inventory'
 import { cellsFor, key, layoutOf } from './geometry'
 import { duration, journey } from './travel'
 
@@ -1243,18 +1243,36 @@ describe('inventory', () => {
   const BROM = '0190c7a8-0000-7000-8000-000000000063'
   const DROP = '0190c7a8-0000-7000-8000-000000000064'
   const containers: LiveContainer[] = [
-    { id: DROP, kind: 'loot_drop', label: 'Loot: Hoard', items: [{ slug: 'anvil', name: 'Anvil', count: 4, weightLb: 400 }], coins: [{ coin: 'gp', count: 100 }], weightLb: 402 },
-    { id: ARIA, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, items: [{ slug: 'rope', name: 'Rope', count: 2, weightLb: 10 }], coins: [], weightLb: 301.2, capacityLb: 120, encumbered: true },
-    { id: BROM, kind: 'character', label: 'Brom', characterId: BROM, ownerId: member.id, items: [{ slug: 'rope', name: 'Rope', count: 1, weightLb: 5 }], coins: [], weightLb: 5, capacityLb: 225 },
-    { id: STASH, kind: 'party_stash', label: 'Party Stash', items: [], coins: [], weightLb: 0 },
+    { id: DROP, kind: 'loot_drop', label: 'Loot: Hoard', items: [{ slug: 'anvil', name: 'Anvil', count: 4, weightLb: 400 }], instances: [], coins: [{ coin: 'gp', count: 100 }], weightLb: 402 },
+    { id: ARIA, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, items: [{ slug: 'rope', name: 'Rope', count: 2, weightLb: 10 }], instances: [], coins: [], weightLb: 301.2, capacityLb: 120, encumbered: true },
+    { id: BROM, kind: 'character', label: 'Brom', characterId: BROM, ownerId: member.id, items: [{ slug: 'rope', name: 'Rope', count: 1, weightLb: 5 }], instances: [], coins: [], weightLb: 5, capacityLb: 225 },
+    { id: STASH, kind: 'party_stash', label: 'Party Stash', items: [], instances: [], coins: [], weightLb: 0 },
   ]
   const [drop, aria, brom, stash] = containers as [LiveContainer, LiveContainer, LiveContainer, LiveContainer]
+  const lined: LiveContainer = { ...aria, instances: [{ id: DROP, slug: 'rope', name: 'Climbing Line', count: 1, charges: 3, identified: true, weightLb: 5 }] }
   const transfer = (data: string) => ({ getData: () => data, setData: () => undefined })
 
   it('knows who may take and put, and what a pack weighs', () => {
     expect([canTake(drop, false, player.id), canTake(aria, false, player.id), canTake(brom, false, player.id), canTake(brom, true, player.id)]).toEqual([true, true, false, true])
     expect([canPut(drop, true, player.id), canPut(stash, false, player.id), canPut(brom, false, player.id), canPut(brom, true, member.id)]).toEqual([false, true, false, true])
     expect([load(aria), load(stash), load({ ...stash, weightLb: 2.25 })]).toEqual(['301.2 / 120 lb', '0 lb', '2.3 lb'])
+    const bag = (ownerId?: string): LiveContainer => ({ id: STASH, kind: 'bag', label: 'Backpack', parentId: ARIA, ownerId, items: [], instances: [], coins: [], weightLb: 0 })
+    expect([canTake(bag(player.id), false, player.id), canTake(bag(member.id), false, player.id), canTake(bag(), false, player.id), canPut(bag(member.id), false, player.id)]).toEqual([
+      true,
+      false,
+      true,
+      false,
+    ])
+  })
+
+  it('names Item Instances by what the viewer may know', () => {
+    const one = { id: ARIA, slug: 'rope', name: 'Climbing Line', count: 1, identified: true, weightLb: 5 }
+    expect([
+      instanceLabel({ ...one, charges: 3, slot: 'ring_1', attuned: true }),
+      instanceLabel({ ...one, charges: 1 }),
+      instanceLabel({ ...one, name: 'Anvil', identified: false }),
+      instanceLabel({ ...one, name: 'Rope', count: 3 }),
+    ]).toEqual(['Climbing Line · 3 charges · ring 1 · attuned', 'Climbing Line · 1 charge', 'Anvil · unidentified', 'Rope ×3'])
   })
 
   it('lets a player take loot into their own pack by choosing or dragging', async () => {
@@ -1268,6 +1286,11 @@ describe('inventory', () => {
     expect(wrapper.get('[data-testid="container-Aria"] [data-testid="encumbered"]').text()).toBe('Encumbered')
     expect(wrapper.get('[data-testid="container-Aria"] [data-testid="load"]').text()).toBe('301.2 / 120 lb')
     expect(wrapper.get('[data-testid="container-Party Stash"]').text()).toContain('Empty.')
+    s.receive(snapshot([], 'party', { inventory: [drop, lined, brom, stash] }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="container-Aria"] [data-testid="instance"]').text()).toBe('Climbing Line · 3 charges · 5 lb')
+    s.receive(snapshot([], 'party', { inventory: containers }))
+    await flushPromises()
     expect(wrapper.find('[aria-label="Move Rope from Brom"]').exists()).toBe(false)
     const hoard = wrapper.get('[data-testid="container-Loot: Hoard"]')
     expect(hoard.get('[aria-label="Where Anvil goes"]').findAll('option').map((o) => o.text())).toEqual(['Party Stash', 'Aria'])
@@ -1334,9 +1357,9 @@ describe('shopping', () => {
   const BROM_PACK = '0190c7a8-0000-7000-8000-000000000073'
   const ROLL = '0190c7a8-0000-7000-8000-000000000082'
   const packs: LiveContainer[] = [
-    { id: ARIA_PACK, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, items: [{ slug: 'rope', name: 'Rope', count: 2, weightLb: 10 }], coins: [], weightLb: 10 },
-    { id: BROM_PACK, kind: 'character', label: 'Brom', characterId: BROM, ownerId: member.id, items: [], coins: [], weightLb: 0 },
-    { id: '0190c7a8-0000-7000-8000-000000000061', kind: 'party_stash', label: 'Party Stash', items: [], coins: [], weightLb: 0 },
+    { id: ARIA_PACK, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, items: [{ slug: 'rope', name: 'Rope', count: 2, weightLb: 10 }], instances: [], coins: [], weightLb: 10 },
+    { id: BROM_PACK, kind: 'character', label: 'Brom', characterId: BROM, ownerId: member.id, items: [], instances: [], coins: [], weightLb: 0 },
+    { id: '0190c7a8-0000-7000-8000-000000000061', kind: 'party_stash', label: 'Party Stash', items: [], instances: [], coins: [], weightLb: 0 },
   ]
   const open: LiveShop = {
     id: STORE, name: 'Store', kind: 'general', settlement: 'Oakford', owner: 'Tamsin',

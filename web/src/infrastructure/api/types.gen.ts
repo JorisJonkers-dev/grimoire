@@ -1177,15 +1177,17 @@ export type SessionAction = {
 };
 
 /**
- * A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
+ * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
     id: Id;
-    kind: 'character' | 'party_stash' | 'loot_drop';
+    kind: 'character' | 'party_stash' | 'loot_drop' | 'bag';
     label: string;
     characterId?: Id;
     ownerId?: Id;
+    parentId?: Id;
     items: Array<LiveItem>;
+    instances: Array<LiveItemInstance>;
     coins: Array<LiveCoins>;
     weightLb: number;
     capacityLb?: number;
@@ -1199,6 +1201,21 @@ export type LiveItem = {
     slug: Slug;
     name: string;
     count: number;
+    weightLb: number;
+};
+
+/**
+ * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
+ */
+export type LiveItemInstance = {
+    id: Id;
+    slug: Slug;
+    name: string;
+    count: number;
+    charges?: number;
+    identified: boolean;
+    attuned?: boolean;
+    slot?: 'main_hand' | 'off_hand' | 'ranged_main' | 'ranged_off' | 'armor' | 'head' | 'cloak' | 'hands' | 'feet' | 'neck' | 'ring_1' | 'ring_2';
     weightLb: number;
 };
 

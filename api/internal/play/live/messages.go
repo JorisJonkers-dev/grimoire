@@ -332,16 +332,18 @@ type View struct {
 // ContainerView is a Character's Inventory, the Party Stash or a drop of loot, with what it weighs.
 // A Character's carries its owner and how much they can carry.
 type ContainerView struct {
-	ID          string     `json:"id"`
-	Kind        string     `json:"kind"`
-	Label       string     `json:"label"`
-	CharacterID string     `json:"characterId,omitempty"`
-	OwnerID     string     `json:"ownerId,omitempty"`
-	Items       []ItemView `json:"items"`
-	Coins       []CoinView `json:"coins"`
-	WeightLb    float64    `json:"weightLb"`
-	CapacityLb  float64    `json:"capacityLb,omitempty"`
-	Encumbered  bool       `json:"encumbered,omitempty"`
+	ID          string         `json:"id"`
+	Kind        string         `json:"kind"`
+	Label       string         `json:"label"`
+	CharacterID string         `json:"characterId,omitempty"`
+	OwnerID     string         `json:"ownerId,omitempty"`
+	ParentID    string         `json:"parentId,omitempty"`
+	Items       []ItemView     `json:"items"`
+	Instances   []InstanceView `json:"instances"`
+	Coins       []CoinView     `json:"coins"`
+	WeightLb    float64        `json:"weightLb"`
+	CapacityLb  float64        `json:"capacityLb,omitempty"`
+	Encumbered  bool           `json:"encumbered,omitempty"`
 }
 
 // ItemView is a stack of one item in a Container.
@@ -350,6 +352,20 @@ type ItemView struct {
 	Name     string  `json:"name"`
 	Count    int     `json:"count"`
 	WeightLb float64 `json:"weightLb"`
+}
+
+// InstanceView is one Item Instance. Only the DM sees what an unidentified item really is: the party
+// sees the base item, without its own name or Charges.
+type InstanceView struct {
+	ID         string  `json:"id"`
+	Slug       string  `json:"slug"`
+	Name       string  `json:"name"`
+	Count      int     `json:"count"`
+	Charges    *int    `json:"charges,omitempty"`
+	Identified bool    `json:"identified"`
+	Attuned    bool    `json:"attuned,omitempty"`
+	Slot       string  `json:"slot,omitempty"`
+	WeightLb   float64 `json:"weightLb"`
 }
 
 // CoinView is how many coins of one kind a Container holds.

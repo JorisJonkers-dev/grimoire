@@ -2,6 +2,7 @@ package domain
 
 import (
 	"maps"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,27 +11,47 @@ import (
 // ContainerID identifies a Container.
 type ContainerID uuid.UUID
 
-// Container kinds: a Character's Inventory, the Party Stash, or a drop of loot.
+// Container kinds: a Character's Inventory, the Party Stash, a drop of loot, or a bag inside another Container.
 const (
 	ContainerCharacter = "character"
 	ContainerStash     = "party_stash"
 	ContainerDrop      = "loot_drop"
+	ContainerBag       = "bag"
 )
+
+// InstanceID identifies an Item Instance.
+type InstanceID uuid.UUID
+
+// Instance is one Item Instance: a base or homebrew item with its own name, Charges, identified and
+// attuned state and equipped slot. Plain stackable gear keeps a Quantity instead.
+type Instance struct {
+	ID         InstanceID
+	Slug       string
+	CustomName string
+	Quantity   int
+	Charges    *int
+	Identified bool
+	Attuned    bool
+	Slot       string
+}
 
 // Container holds items by slug and coins by kind.
 type Container struct {
 	ID          ContainerID
 	Kind        string
 	CharacterID *uuid.UUID
-	Label       string
-	Items       map[string]int
-	Coins       map[string]int
-	CreatedAt   time.Time
+	// ParentID is the Container a bag sits in.
+	ParentID  *ContainerID
+	Label     string
+	Items     map[string]int
+	Instances []Instance
+	Coins     map[string]int
+	CreatedAt time.Time
 }
 
 // Clone copies the Container so a change never touches the committed state.
 func (c Container) Clone() Container {
-	c.Items, c.Coins = maps.Clone(c.Items), maps.Clone(c.Coins)
+	c.Items, c.Coins, c.Instances = maps.Clone(c.Items), maps.Clone(c.Coins), slices.Clone(c.Instances)
 	return c
 }
 

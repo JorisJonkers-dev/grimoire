@@ -68,10 +68,16 @@ func samples() contract {
 		Legs:        []live.LegView{{From: "Mill", To: "Oakford", Pace: "normal", DistanceMi: 12, Minutes: 240, Days: 1}},
 	}
 	view.Perception = []live.PerceptionView{{RollID: "0190c7a8-0000-7000-8000-000000000026", TokenID: token.ID}}
-	view.Inventory = []live.ContainerView{{
-		ID: "0190c7a8-0000-7000-8000-000000000030", Kind: "character", Label: "Aria", CharacterID: "0190c7a8-0000-7000-8000-000000000012", OwnerID: "0190c7a8-0000-7000-8000-00000000000f",
-		Items: []live.ItemView{{Slug: "rope", Name: "Rope", Count: 2, WeightLb: 10}}, Coins: []live.CoinView{{Coin: "gp", Count: 50}}, WeightLb: 11, CapacityLb: 120,
-	}, {ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Coins: []live.CoinView{}, Encumbered: false}}
+	three := 3
+	view.Inventory = []live.ContainerView{
+		{
+			ID: "0190c7a8-0000-7000-8000-000000000030", Kind: "character", Label: "Aria", CharacterID: "0190c7a8-0000-7000-8000-000000000012", OwnerID: "0190c7a8-0000-7000-8000-00000000000f",
+			Items: []live.ItemView{{Slug: "rope", Name: "Rope", Count: 2, WeightLb: 10}}, Coins: []live.CoinView{{Coin: "gp", Count: 50}}, WeightLb: 11, CapacityLb: 120,
+			Instances: []live.InstanceView{{ID: "0190c7a8-0000-7000-8000-000000000034", Slug: "rope", Name: "Climbing Line", Count: 1, Charges: &three, Identified: true, Attuned: true, Slot: "neck", WeightLb: 5}},
+		},
+		{ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false},
+		{ID: "0190c7a8-0000-7000-8000-000000000035", Kind: "bag", Label: "Backpack", ParentID: "0190c7a8-0000-7000-8000-000000000030", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}},
+	}
 	view.Checks = []live.CheckView{{ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12}}
 	off := -10
 	view.Shop = &live.ShopView{

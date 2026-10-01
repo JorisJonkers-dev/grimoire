@@ -66,6 +66,10 @@ func (s *Store) readContainers(ctx context.Context, campaign uuid.UUID, inv doma
 	if err != nil {
 		return inv, err
 	}
+	instances, err := s.q.CampaignItemInstances(ctx, campaign)
+	if err != nil {
+		return inv, err
+	}
 	coins, err := s.q.CampaignContainerCoins(ctx, campaign)
 	if err != nil {
 		return inv, err
@@ -77,21 +81,42 @@ func (s *Store) readContainers(ctx context.Context, campaign uuid.UUID, inv doma
 			id := uuid.UUID(r.CharacterID.Bytes)
 			c.CharacterID = &id
 		}
+		if r.ParentID.Valid {
+			id := domain.ContainerID(r.ParentID.Bytes)
+			c.ParentID = &id
+		}
 		inv.Containers = append(inv.Containers, c)
 	}
-	byID := map[uuid.UUID]domain.Container{}
-	for _, c := range inv.Containers {
-		byID[uuid.UUID(c.ID)] = c
+	byID := map[uuid.UUID]*domain.Container{}
+	for i := range inv.Containers {
+		byID[uuid.UUID(inv.Containers[i].ID)] = &inv.Containers[i]
 	}
 	for _, i := range items {
 		byID[i.ContainerID].Items[i.ItemSlug] = int(i.Quantity)
 		slugs = append(slugs, i.ItemSlug)
+	}
+	for _, r := range instances {
+		c := byID[r.ContainerID]
+		c.Instances = append(c.Instances, instanceOf(r))
+		slugs = append(slugs, r.ItemSlug)
 	}
 	for _, k := range coins {
 		byID[k.ContainerID].Coins[k.Coin] = int(k.Amount)
 	}
 	inv.Items, err = s.Items(ctx, campaign, slugs)
 	return inv, err
+}
+
+func instanceOf(r queries.CampaignItemInstancesRow) domain.Instance {
+	in := domain.Instance{
+		ID: domain.InstanceID(r.ID), Slug: r.ItemSlug, CustomName: r.CustomName.String, Quantity: int(r.Quantity),
+		Identified: r.Identified, Attuned: r.Attuned, Slot: r.EquippedSlot.String,
+	}
+	if r.Charges.Valid {
+		n := int(r.Charges.Int32)
+		in.Charges = &n
+	}
+	return in
 }
 
 // saveInventory writes a drop of loot, or the two Containers a transfer changed, and clears an emptied drop.
