@@ -10,6 +10,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 )
 
 func sample() snapshot.Snapshot {
@@ -83,4 +84,41 @@ func TestEveryPresenterFaultSurfaces(t *testing.T) {
 			return err
 		})
 	}
+}
+
+func TestEveryEffectFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	store, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(store.Close)
+	s := New(store.Pool())
+	every := func(f func(slug string, d effects.Definition)) {
+		for slug, d := range effects.Builtin() {
+			f(slug, d)
+		}
+	}
+	every(func(slug string, d effects.Definition) {
+		if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}, d); err != nil {
+			t.Fatal(err)
+		}
+	})
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		f.DB = store.Pool()
+		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).Effects(ctx)
+		return err
+	})
+	every(func(slug string, d effects.Definition) {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			tx, err := store.Pool().Begin(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = tx.Rollback(ctx) }()
+			f.DB = tx
+			return saveEffect(ctx, queries.New(f), effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}, d)
+		})
+	})
 }

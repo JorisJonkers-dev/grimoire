@@ -117,6 +117,31 @@ func (d Definition) Automated() bool {
 	return true
 }
 
+// Catalog is every Effect the engine knows, keyed by slug.
+type Catalog map[string]Definition
+
+// OwnerKind is what an Effect belongs to; every Effect has exactly one owner.
+type OwnerKind string
+
+// Owner kinds.
+const (
+	OwnedBySpell           OwnerKind = "spell"
+	OwnedByFeature         OwnerKind = "feature"
+	OwnedByItemProperty    OwnerKind = "item_property"
+	OwnedByCondition       OwnerKind = "condition"
+	OwnedByMonsterAction   OwnerKind = "monster_action"
+	OwnedBySurface         OwnerKind = "surface"
+	OwnedByRuleVariant     OwnerKind = "rule_variant"
+	OwnedByTrap            OwnerKind = "trap"
+	OwnedByRollTableResult OwnerKind = "roll_table_result"
+)
+
+// Owner is the thing an Effect belongs to, by kind and slug.
+type Owner struct {
+	Kind OwnerKind
+	Slug string
+}
+
 // Active is an Effect on a creature, and who put it there.
 type Active struct {
 	Slug   string
@@ -135,12 +160,17 @@ type AttackProfile struct {
 
 // ForAttack folds the attacker's and the target's effects into one attack's profile.
 func ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
+	return Builtin().ForAttack(attacker, target, attackerID, withinFive)
+}
+
+// ForAttack folds the attacker's and the target's effects into one attack's profile.
+func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
 	var p AttackProfile
 	for _, a := range attacker {
-		p.attacking(lookup(a.Slug))
+		p.attacking(cat[a.Slug])
 	}
 	for _, a := range target {
-		p.attacked(lookup(a.Slug), a.Source == attackerID, withinFive)
+		p.attacked(cat[a.Slug], a.Source == attackerID, withinFive)
 	}
 	return p
 }
@@ -202,9 +232,14 @@ func (p *AttackProfile) add(name string, e Edge) {
 
 // SaveDice are the dice a creature's effects add to its saving throws.
 func SaveDice(bearer []Active) []string {
+	return Builtin().SaveDice(bearer)
+}
+
+// SaveDice are the dice a creature's effects add to its saving throws.
+func (cat Catalog) SaveDice(bearer []Active) []string {
 	var out []string
 	for _, a := range bearer {
-		for _, c := range lookup(a.Slug).Components {
+		for _, c := range cat[a.Slug].Components {
 			if b, ok := c.(BonusDie); ok && slices.Contains(b.On, SavingThrows) {
 				out = append(out, b.Dice)
 			}
@@ -215,9 +250,14 @@ func SaveDice(bearer []Active) []string {
 
 // MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
 func MoveMultiplier(bearer []Active) int {
+	return Builtin().MoveMultiplier(bearer)
+}
+
+// MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
+func (cat Catalog) MoveMultiplier(bearer []Active) int {
 	most := 1
 	for _, a := range bearer {
-		for _, c := range lookup(a.Slug).Components {
+		for _, c := range cat[a.Slug].Components {
 			if m, ok := c.(MoveCost); ok {
 				most = max(most, m.Multiplier)
 			}
@@ -229,7 +269,13 @@ func MoveMultiplier(bearer []Active) int {
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
 // instruction, so nothing is ever skipped silently.
 func Instructions(slug, name string) []string {
-	d, known := catalog()[slug]
+	return Builtin().Instructions(slug, name)
+}
+
+// Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
+// instruction, so nothing is ever skipped silently.
+func (cat Catalog) Instructions(slug, name string) []string {
+	d, known := cat[slug]
 	if !known {
 		return []string{"Resolve " + name + " by hand."}
 	}
@@ -255,7 +301,12 @@ type AreaSpell struct {
 
 // AreaOf finds a modelled area Effect.
 func AreaOf(slug string) (AreaSpell, bool) {
-	d, known := catalog()[slug]
+	return Builtin().AreaOf(slug)
+}
+
+// AreaOf finds a modelled area Effect.
+func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
+	d, known := cat[slug]
 	var out AreaSpell
 	out.Name = d.Name
 	found := false
@@ -279,23 +330,38 @@ func AreaOf(slug string) (AreaSpell, bool) {
 
 // Lookup finds a modelled Effect.
 func Lookup(slug string) (Definition, bool) {
-	d, ok := catalog()[slug]
+	return Builtin().Lookup(slug)
+}
+
+// Lookup finds a modelled Effect.
+func (cat Catalog) Lookup(slug string) (Definition, bool) {
+	d, ok := cat[slug]
 	return d, ok
 }
 
 // Automated lists the slugs of every Effect the engine computes in full.
 func Automated() []string {
-	return slugs(true)
+	return Builtin().Automated()
 }
 
 // Partial lists the slugs of Effects the engine computes in part, leaving the rest to the DM.
 func Partial() []string {
-	return slugs(false)
+	return Builtin().Partial()
 }
 
-func slugs(automated bool) []string {
+// Automated lists the slugs of every Effect the engine computes in full.
+func (cat Catalog) Automated() []string {
+	return cat.slugs(true)
+}
+
+// Partial lists the slugs of Effects the engine computes in part, leaving the rest to the DM.
+func (cat Catalog) Partial() []string {
+	return cat.slugs(false)
+}
+
+func (cat Catalog) slugs(automated bool) []string {
 	var out []string
-	for slug, d := range catalog() {
+	for slug, d := range cat {
 		if d.Automated() == automated {
 			out = append(out, slug)
 		}
@@ -304,13 +370,10 @@ func slugs(automated bool) []string {
 	return out
 }
 
-func lookup(slug string) Definition {
-	return catalog()[slug]
-}
-
-// catalog is every Effect the engine models, keyed by compendium slug.
-func catalog() map[string]Definition {
-	return map[string]Definition{
+// Builtin is the Effects the engine shipped with before they moved into the database; it seeds the
+// compendium and backs the package-level functions until every caller reads a Catalog.
+func Builtin() Catalog {
+	return Catalog{
 		"bless": {Slug: "bless", Name: "Bless", Concentration: true, Components: []Component{
 			BonusDie{On: []Roll{AttackRolls, SavingThrows}, Dice: "1d4"},
 		}},

@@ -304,6 +304,95 @@ type CompendiumDocument struct {
 	Url         string
 }
 
+type CompendiumEffectArea struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Shape    string
+	SizeFt   int32
+	RangeFt  int32
+}
+
+type CompendiumEffectBonusDice struct {
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Dice      string
+	OnAttacks bool
+	OnSaves   bool
+}
+
+type CompendiumEffectComponent struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+}
+
+type CompendiumEffectDefinition struct {
+	ID            int64
+	Slug          string
+	Name          string
+	Concentration bool
+	OwnerKind     string
+	OwnerSlug     string
+}
+
+type CompendiumEffectEdge struct {
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Against   bool
+	Advantage bool
+	Reach     string
+}
+
+type CompendiumEffectExtraDamage struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Dice     string
+}
+
+type CompendiumEffectManual struct {
+	EffectID    int64
+	Ordinal     int32
+	Kind        string
+	Instruction string
+}
+
+type CompendiumEffectMoveCost struct {
+	EffectID   int64
+	Ordinal    int32
+	Kind       string
+	Multiplier int32
+}
+
+type CompendiumEffectSaveCondition struct {
+	EffectID      int64
+	Ordinal       int32
+	Kind          string
+	Ability       string
+	ConditionSlug string
+}
+
+type CompendiumEffectSaveDamage struct {
+	EffectID   int64
+	Ordinal    int32
+	Kind       string
+	Ability    string
+	Dice       string
+	DamageType string
+	Half       bool
+}
+
+type CompendiumEffectSurface struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Surface  string
+	Rounds   int32
+}
+
 type CompendiumEntry struct {
 	Kind       string
 	ID         int64
