@@ -2523,6 +2523,70 @@ func (s *ClearTokenIconNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*ClearTokenIconNoContent) clearTokenIconRes() {}
 
+// A kind of coin.
+// Ref: #/components/schemas/Coin
+type Coin string
+
+const (
+	CoinCp Coin = "cp"
+	CoinSp Coin = "sp"
+	CoinEp Coin = "ep"
+	CoinGp Coin = "gp"
+	CoinPp Coin = "pp"
+)
+
+// AllValues returns all Coin values.
+func (Coin) AllValues() []Coin {
+	return []Coin{
+		CoinCp,
+		CoinSp,
+		CoinEp,
+		CoinGp,
+		CoinPp,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s Coin) MarshalText() ([]byte, error) {
+	switch s {
+	case CoinCp:
+		return []byte(s), nil
+	case CoinSp:
+		return []byte(s), nil
+	case CoinEp:
+		return []byte(s), nil
+	case CoinGp:
+		return []byte(s), nil
+	case CoinPp:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *Coin) UnmarshalText(data []byte) error {
+	switch Coin(data) {
+	case CoinCp:
+		*s = CoinCp
+		return nil
+	case CoinSp:
+		*s = CoinSp
+		return nil
+	case CoinEp:
+		*s = CoinEp
+		return nil
+	case CoinGp:
+		*s = CoinGp
+		return nil
+	case CoinPp:
+		*s = CoinPp
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A condition named in rules text, with its own text for tooltips.
 // Ref: #/components/schemas/ConditionRef
 type ConditionRef struct {
@@ -2734,6 +2798,45 @@ func (s *DeleteEncounterTableNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DeleteEncounterTableNoContent) deleteEncounterTableRes() {}
+
+// DeleteLootTableNoContent is response for DeleteLootTable operation.
+type DeleteLootTableNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteLootTableNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteLootTableNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteLootTableNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteLootTableNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteLootTableNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteLootTableNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteLootTableNoContent) deleteLootTableRes() {}
 
 // DeleteNpcNoContent is response for DeleteNpc operation.
 type DeleteNpcNoContent struct {
@@ -6367,6 +6470,106 @@ func (s *ListLocationsOKHeaders) SetResponse(val []Location) {
 
 func (*ListLocationsOKHeaders) listLocationsRes() {}
 
+// ListLootTableRevisionsOKHeaders wraps []Revision with response headers.
+type ListLootTableRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Revision
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLootTableRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLootTableRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLootTableRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLootTableRevisionsOKHeaders) GetResponse() []Revision {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLootTableRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLootTableRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLootTableRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLootTableRevisionsOKHeaders) SetResponse(val []Revision) {
+	s.Response = val
+}
+
+func (*ListLootTableRevisionsOKHeaders) listLootTableRevisionsRes() {}
+
+// ListLootTablesOKHeaders wraps []LootTable with response headers.
+type ListLootTablesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LootTable
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLootTablesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLootTablesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLootTablesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLootTablesOKHeaders) GetResponse() []LootTable {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLootTablesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLootTablesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLootTablesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLootTablesOKHeaders) SetResponse(val []LootTable) {
+	s.Response = val
+}
+
+func (*ListLootTablesOKHeaders) listLootTablesRes() {}
+
 // ListMapsOKHeaders wraps []LocalMap with response headers.
 type ListMapsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -7395,6 +7598,33 @@ func (s *LiveCheckStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// How many coins of one kind a container holds.
+// Ref: #/components/schemas/LiveCoins
+type LiveCoins struct {
+	Coin  Coin  `json:"coin"`
+	Count int32 `json:"count"`
+}
+
+// GetCoin returns the value of Coin.
+func (s *LiveCoins) GetCoin() Coin {
+	return s.Coin
+}
+
+// GetCount returns the value of Count.
+func (s *LiveCoins) GetCount() int32 {
+	return s.Count
+}
+
+// SetCoin sets the value of Coin.
+func (s *LiveCoins) SetCoin(val Coin) {
+	s.Coin = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveCoins) SetCount(val int32) {
+	s.Count = val
+}
+
 // The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share
 // a rank and act at the same time.
 // Ref: #/components/schemas/LiveCombat
@@ -7801,8 +8031,14 @@ type LiveCommand struct {
 	TableId OptID              `json:"tableId"`
 	Mode    OptEncounterMode   `json:"mode"`
 	// With a pick check, the index of the table entry.
-	Entry OptInt32          `json:"entry"`
-	Due   OptLiveCommandDue `json:"due"`
+	Entry       OptInt32          `json:"entry"`
+	Due         OptLiveCommandDue `json:"due"`
+	LootTableId OptID             `json:"lootTableId"`
+	FromId      OptID             `json:"fromId"`
+	ToId        OptID             `json:"toId"`
+	ItemSlug    OptSlug           `json:"itemSlug"`
+	Coin        OptCoin           `json:"coin"`
+	Count       OptInt32          `json:"count"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -8080,6 +8316,36 @@ func (s *LiveCommand) GetDue() OptLiveCommandDue {
 	return s.Due
 }
 
+// GetLootTableId returns the value of LootTableId.
+func (s *LiveCommand) GetLootTableId() OptID {
+	return s.LootTableId
+}
+
+// GetFromId returns the value of FromId.
+func (s *LiveCommand) GetFromId() OptID {
+	return s.FromId
+}
+
+// GetToId returns the value of ToId.
+func (s *LiveCommand) GetToId() OptID {
+	return s.ToId
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *LiveCommand) GetItemSlug() OptSlug {
+	return s.ItemSlug
+}
+
+// GetCoin returns the value of Coin.
+func (s *LiveCommand) GetCoin() OptCoin {
+	return s.Coin
+}
+
+// GetCount returns the value of Count.
+func (s *LiveCommand) GetCount() OptInt32 {
+	return s.Count
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -8355,6 +8621,36 @@ func (s *LiveCommand) SetDue(val OptLiveCommandDue) {
 	s.Due = val
 }
 
+// SetLootTableId sets the value of LootTableId.
+func (s *LiveCommand) SetLootTableId(val OptID) {
+	s.LootTableId = val
+}
+
+// SetFromId sets the value of FromId.
+func (s *LiveCommand) SetFromId(val OptID) {
+	s.FromId = val
+}
+
+// SetToId sets the value of ToId.
+func (s *LiveCommand) SetToId(val OptID) {
+	s.ToId = val
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *LiveCommand) SetItemSlug(val OptSlug) {
+	s.ItemSlug = val
+}
+
+// SetCoin sets the value of Coin.
+func (s *LiveCommand) SetCoin(val OptCoin) {
+	s.Coin = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveCommand) SetCount(val OptInt32) {
+	s.Count = val
+}
+
 type LiveCommandDue string
 
 const (
@@ -8446,6 +8742,9 @@ const (
 	LiveCommandKindRest           LiveCommandKind = "rest"
 	LiveCommandKindEncounterCheck LiveCommandKind = "encounter_check"
 	LiveCommandKindScheduleCheck  LiveCommandKind = "schedule_check"
+	LiveCommandKindRollLoot       LiveCommandKind = "roll_loot"
+	LiveCommandKindMoveItem       LiveCommandKind = "move_item"
+	LiveCommandKindMoveCoins      LiveCommandKind = "move_coins"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -8498,6 +8797,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindRest,
 		LiveCommandKindEncounterCheck,
 		LiveCommandKindScheduleCheck,
+		LiveCommandKindRollLoot,
+		LiveCommandKindMoveItem,
+		LiveCommandKindMoveCoins,
 	}
 }
 
@@ -8597,6 +8899,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindEncounterCheck:
 		return []byte(s), nil
 	case LiveCommandKindScheduleCheck:
+		return []byte(s), nil
+	case LiveCommandKindRollLoot:
+		return []byte(s), nil
+	case LiveCommandKindMoveItem:
+		return []byte(s), nil
+	case LiveCommandKindMoveCoins:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -8746,6 +9054,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindScheduleCheck:
 		*s = LiveCommandKindScheduleCheck
+		return nil
+	case LiveCommandKindRollLoot:
+		*s = LiveCommandKindRollLoot
+		return nil
+	case LiveCommandKindMoveItem:
+		*s = LiveCommandKindMoveItem
+		return nil
+	case LiveCommandKindMoveCoins:
+		*s = LiveCommandKindMoveCoins
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -8914,6 +9231,170 @@ func (s *LiveCommandSurface) UnmarshalText(data []byte) error {
 	}
 }
 
+// A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's
+// names its owner and how much they can carry.
+// Ref: #/components/schemas/LiveContainer
+type LiveContainer struct {
+	ID          ID                `json:"id"`
+	Kind        LiveContainerKind `json:"kind"`
+	Label       string            `json:"label"`
+	CharacterId OptID             `json:"characterId"`
+	OwnerId     OptID             `json:"ownerId"`
+	Items       []LiveItem        `json:"items"`
+	Coins       []LiveCoins       `json:"coins"`
+	WeightLb    float64           `json:"weightLb"`
+	CapacityLb  OptFloat64        `json:"capacityLb"`
+	Encumbered  OptBool           `json:"encumbered"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveContainer) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveContainer) GetKind() LiveContainerKind {
+	return s.Kind
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveContainer) GetLabel() string {
+	return s.Label
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveContainer) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetOwnerId returns the value of OwnerId.
+func (s *LiveContainer) GetOwnerId() OptID {
+	return s.OwnerId
+}
+
+// GetItems returns the value of Items.
+func (s *LiveContainer) GetItems() []LiveItem {
+	return s.Items
+}
+
+// GetCoins returns the value of Coins.
+func (s *LiveContainer) GetCoins() []LiveCoins {
+	return s.Coins
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *LiveContainer) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// GetCapacityLb returns the value of CapacityLb.
+func (s *LiveContainer) GetCapacityLb() OptFloat64 {
+	return s.CapacityLb
+}
+
+// GetEncumbered returns the value of Encumbered.
+func (s *LiveContainer) GetEncumbered() OptBool {
+	return s.Encumbered
+}
+
+// SetID sets the value of ID.
+func (s *LiveContainer) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveContainer) SetKind(val LiveContainerKind) {
+	s.Kind = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveContainer) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveContainer) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetOwnerId sets the value of OwnerId.
+func (s *LiveContainer) SetOwnerId(val OptID) {
+	s.OwnerId = val
+}
+
+// SetItems sets the value of Items.
+func (s *LiveContainer) SetItems(val []LiveItem) {
+	s.Items = val
+}
+
+// SetCoins sets the value of Coins.
+func (s *LiveContainer) SetCoins(val []LiveCoins) {
+	s.Coins = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *LiveContainer) SetWeightLb(val float64) {
+	s.WeightLb = val
+}
+
+// SetCapacityLb sets the value of CapacityLb.
+func (s *LiveContainer) SetCapacityLb(val OptFloat64) {
+	s.CapacityLb = val
+}
+
+// SetEncumbered sets the value of Encumbered.
+func (s *LiveContainer) SetEncumbered(val OptBool) {
+	s.Encumbered = val
+}
+
+type LiveContainerKind string
+
+const (
+	LiveContainerKindCharacter  LiveContainerKind = "character"
+	LiveContainerKindPartyStash LiveContainerKind = "party_stash"
+	LiveContainerKindLootDrop   LiveContainerKind = "loot_drop"
+)
+
+// AllValues returns all LiveContainerKind values.
+func (LiveContainerKind) AllValues() []LiveContainerKind {
+	return []LiveContainerKind{
+		LiveContainerKindCharacter,
+		LiveContainerKindPartyStash,
+		LiveContainerKindLootDrop,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveContainerKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveContainerKindCharacter:
+		return []byte(s), nil
+	case LiveContainerKindPartyStash:
+		return []byte(s), nil
+	case LiveContainerKindLootDrop:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveContainerKind) UnmarshalText(data []byte) error {
+	switch LiveContainerKind(data) {
+	case LiveContainerKindCharacter:
+		*s = LiveContainerKindCharacter
+		return nil
+	case LiveContainerKindPartyStash:
+		*s = LiveContainerKindPartyStash
+		return nil
+	case LiveContainerKindLootDrop:
+		*s = LiveContainerKindLootDrop
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // An Effect on a token, which everyone who sees the token sees.
 // Ref: #/components/schemas/LiveEffect
 type LiveEffect struct {
@@ -9021,6 +9502,55 @@ func (s *LiveElevation) SetR(val int32) {
 // SetElevationFt sets the value of ElevationFt.
 func (s *LiveElevation) SetElevationFt(val int32) {
 	s.ElevationFt = val
+}
+
+// A stack of one item and what it weighs in all.
+// Ref: #/components/schemas/LiveItem
+type LiveItem struct {
+	Slug     Slug    `json:"slug"`
+	Name     string  `json:"name"`
+	Count    int32   `json:"count"`
+	WeightLb float64 `json:"weightLb"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveItem) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LiveItem) GetName() string {
+	return s.Name
+}
+
+// GetCount returns the value of Count.
+func (s *LiveItem) GetCount() int32 {
+	return s.Count
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *LiveItem) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveItem) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveItem) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *LiveItem) SetWeightLb(val float64) {
+	s.WeightLb = val
 }
 
 // A light on the Map, for the DM.
@@ -10491,6 +11021,7 @@ type LiveView struct {
 	Zones      []LiveZone       `json:"zones"`
 	Perception []LivePerception `json:"perception"`
 	Checks     []LiveCheck      `json:"checks"`
+	Inventory  []LiveContainer  `json:"inventory"`
 	Walls      []HexCoord       `json:"walls"`
 	Lights     []LiveLight      `json:"lights"`
 	Ambient    OptAmbientLight  `json:"ambient"`
@@ -10579,6 +11110,11 @@ func (s *LiveView) GetPerception() []LivePerception {
 // GetChecks returns the value of Checks.
 func (s *LiveView) GetChecks() []LiveCheck {
 	return s.Checks
+}
+
+// GetInventory returns the value of Inventory.
+func (s *LiveView) GetInventory() []LiveContainer {
+	return s.Inventory
 }
 
 // GetWalls returns the value of Walls.
@@ -10679,6 +11215,11 @@ func (s *LiveView) SetPerception(val []LivePerception) {
 // SetChecks sets the value of Checks.
 func (s *LiveView) SetChecks(val []LiveCheck) {
 	s.Checks = val
+}
+
+// SetInventory sets the value of Inventory.
+func (s *LiveView) SetInventory(val []LiveContainer) {
+	s.Inventory = val
 }
 
 // SetWalls sets the value of Walls.
@@ -11282,6 +11823,283 @@ func (s *Location) SetName(val string) {
 // SetMapName sets the value of MapName.
 func (s *Location) SetMapName(val string) {
 	s.MapName = val
+}
+
+// One weighted line of a Loot Table. An item names itemSlug and an amount, coins name coin and an
+// amount, a table names tableId; amounts read like 3, 2d6, 1d4+1 or 4d6x10.
+// Ref: #/components/schemas/LootEntry
+type LootEntry struct {
+	Weight   int32         `json:"weight"`
+	Kind     LootEntryKind `json:"kind"`
+	ItemSlug OptSlug       `json:"itemSlug"`
+	Coin     OptCoin       `json:"coin"`
+	Amount   OptString     `json:"amount"`
+	TableId  OptID         `json:"tableId"`
+}
+
+// GetWeight returns the value of Weight.
+func (s *LootEntry) GetWeight() int32 {
+	return s.Weight
+}
+
+// GetKind returns the value of Kind.
+func (s *LootEntry) GetKind() LootEntryKind {
+	return s.Kind
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *LootEntry) GetItemSlug() OptSlug {
+	return s.ItemSlug
+}
+
+// GetCoin returns the value of Coin.
+func (s *LootEntry) GetCoin() OptCoin {
+	return s.Coin
+}
+
+// GetAmount returns the value of Amount.
+func (s *LootEntry) GetAmount() OptString {
+	return s.Amount
+}
+
+// GetTableId returns the value of TableId.
+func (s *LootEntry) GetTableId() OptID {
+	return s.TableId
+}
+
+// SetWeight sets the value of Weight.
+func (s *LootEntry) SetWeight(val int32) {
+	s.Weight = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LootEntry) SetKind(val LootEntryKind) {
+	s.Kind = val
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *LootEntry) SetItemSlug(val OptSlug) {
+	s.ItemSlug = val
+}
+
+// SetCoin sets the value of Coin.
+func (s *LootEntry) SetCoin(val OptCoin) {
+	s.Coin = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *LootEntry) SetAmount(val OptString) {
+	s.Amount = val
+}
+
+// SetTableId sets the value of TableId.
+func (s *LootEntry) SetTableId(val OptID) {
+	s.TableId = val
+}
+
+type LootEntryKind string
+
+const (
+	LootEntryKindItem     LootEntryKind = "item"
+	LootEntryKindCurrency LootEntryKind = "currency"
+	LootEntryKindTable    LootEntryKind = "table"
+	LootEntryKindNothing  LootEntryKind = "nothing"
+)
+
+// AllValues returns all LootEntryKind values.
+func (LootEntryKind) AllValues() []LootEntryKind {
+	return []LootEntryKind{
+		LootEntryKindItem,
+		LootEntryKindCurrency,
+		LootEntryKindTable,
+		LootEntryKindNothing,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LootEntryKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LootEntryKindItem:
+		return []byte(s), nil
+	case LootEntryKindCurrency:
+		return []byte(s), nil
+	case LootEntryKindTable:
+		return []byte(s), nil
+	case LootEntryKindNothing:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LootEntryKind) UnmarshalText(data []byte) error {
+	switch LootEntryKind(data) {
+	case LootEntryKindItem:
+		*s = LootEntryKindItem
+		return nil
+	case LootEntryKindCurrency:
+		*s = LootEntryKindCurrency
+		return nil
+	case LootEntryKindTable:
+		*s = LootEntryKindTable
+		return nil
+	case LootEntryKindNothing:
+		*s = LootEntryKindNothing
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Loot Table, rolled a number of times over its weighted entries.
+// Ref: #/components/schemas/LootTable
+type LootTable struct {
+	ID        ID          `json:"id"`
+	Name      string      `json:"name"`
+	Rolls     int32       `json:"rolls"`
+	Entries   []LootEntry `json:"entries"`
+	UpdatedAt time.Time   `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *LootTable) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LootTable) GetName() string {
+	return s.Name
+}
+
+// GetRolls returns the value of Rolls.
+func (s *LootTable) GetRolls() int32 {
+	return s.Rolls
+}
+
+// GetEntries returns the value of Entries.
+func (s *LootTable) GetEntries() []LootEntry {
+	return s.Entries
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *LootTable) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *LootTable) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LootTable) SetName(val string) {
+	s.Name = val
+}
+
+// SetRolls sets the value of Rolls.
+func (s *LootTable) SetRolls(val int32) {
+	s.Rolls = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *LootTable) SetEntries(val []LootEntry) {
+	s.Entries = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *LootTable) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// LootTableHeaders wraps LootTable with response headers.
+type LootTableHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LootTable
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LootTableHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LootTableHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LootTableHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LootTableHeaders) GetResponse() LootTable {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LootTableHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LootTableHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LootTableHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LootTableHeaders) SetResponse(val LootTable) {
+	s.Response = val
+}
+
+func (*LootTableHeaders) createLootTableRes()          {}
+func (*LootTableHeaders) restoreLootTableRevisionRes() {}
+func (*LootTableHeaders) updateLootTableRes()          {}
+
+// A Loot Table as the DM writes it.
+// Ref: #/components/schemas/LootTableInput
+type LootTableInput struct {
+	Name    string      `json:"name"`
+	Rolls   int32       `json:"rolls"`
+	Entries []LootEntry `json:"entries"`
+}
+
+// GetName returns the value of Name.
+func (s *LootTableInput) GetName() string {
+	return s.Name
+}
+
+// GetRolls returns the value of Rolls.
+func (s *LootTableInput) GetRolls() int32 {
+	return s.Rolls
+}
+
+// GetEntries returns the value of Entries.
+func (s *LootTableInput) GetEntries() []LootEntry {
+	return s.Entries
+}
+
+// SetName sets the value of Name.
+func (s *LootTableInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetRolls sets the value of Rolls.
+func (s *LootTableInput) SetRolls(val int32) {
+	s.Rolls = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *LootTableInput) SetEntries(val []LootEntry) {
+	s.Entries = val
 }
 
 // A Map's name, calibration and ambient light.
@@ -12261,6 +13079,52 @@ func (o OptCharacterName) Or(d CharacterName) CharacterName {
 	return d
 }
 
+// NewOptCoin returns new OptCoin with value set to v.
+func NewOptCoin(v Coin) OptCoin {
+	return OptCoin{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCoin is optional Coin.
+type OptCoin struct {
+	Value Coin
+	Set   bool
+}
+
+// IsSet returns true if OptCoin was set.
+func (o OptCoin) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCoin) Reset() {
+	var v Coin
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCoin) SetTo(v Coin) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCoin) Get() (v Coin, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCoin) Or(d Coin) Coin {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptCoverLevel returns new OptCoverLevel with value set to v.
 func NewOptCoverLevel(v CoverLevel) OptCoverLevel {
 	return OptCoverLevel{
@@ -12485,6 +13349,52 @@ func (o OptEncounterMode) Get() (v EncounterMode, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptEncounterMode) Or(d EncounterMode) EncounterMode {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptFloat64 returns new OptFloat64 with value set to v.
+func NewOptFloat64(v float64) OptFloat64 {
+	return OptFloat64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptFloat64 is optional float64.
+type OptFloat64 struct {
+	Value float64
+	Set   bool
+}
+
+// IsSet returns true if OptFloat64 was set.
+func (o OptFloat64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptFloat64) Reset() {
+	var v float64
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptFloat64) SetTo(v float64) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptFloat64) Get() (v float64, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptFloat64) Or(d float64) float64 {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -14356,11 +15266,13 @@ func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) deleteLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
@@ -14393,6 +15305,8 @@ func (*ProblemStatusCodeWithHeaders) listEncounterTablesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
+func (*ProblemStatusCodeWithHeaders) listLootTableRevisionsRes()        {}
+func (*ProblemStatusCodeWithHeaders) listLootTablesRes()                {}
 func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
@@ -14407,6 +15321,7 @@ func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
+func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
@@ -14418,6 +15333,7 @@ func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}

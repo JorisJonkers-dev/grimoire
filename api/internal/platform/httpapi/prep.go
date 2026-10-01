@@ -26,6 +26,11 @@ type PrepService interface {
 	RestoreTable(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.TableID, no int) (domain.Table, error)
 	Locations(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Location, error)
 	Checks(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Check, error)
+	LootTables(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.LootTable, error)
+	SaveLootTable(ctx context.Context, c caller.Caller, campaign uuid.UUID, t domain.LootTable) (domain.LootTable, error)
+	DeleteLootTable(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.LootTableID) error
+	LootTableRevisions(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.LootTableID) ([]campaigndomain.Revision, error)
+	RestoreLootTable(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.LootTableID, no int) (domain.LootTable, error)
 }
 
 func poolIn(id domain.PoolID, req *oas.EncounterPoolInput) domain.Pool {

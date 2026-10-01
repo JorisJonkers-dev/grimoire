@@ -50,6 +50,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// CreateLootTable implements createLootTable operation.
+	//
+	// Adds an Loot Table and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/loot-tables
+	CreateLootTable(ctx context.Context, req *LootTableInput, params CreateLootTableParams) (CreateLootTableRes, error)
 	// CreateNpc implements createNpc operation.
 	//
 	// Adds an NPC and records its first Revision. DM only.
@@ -80,6 +86,12 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	DeleteEncounterTable(ctx context.Context, params DeleteEncounterTableParams) (DeleteEncounterTableRes, error)
+	// DeleteLootTable implements deleteLootTable operation.
+	//
+	// Removes the Loot Table; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
+	DeleteLootTable(ctx context.Context, params DeleteLootTableParams) (DeleteLootTableRes, error)
 	// DeleteNpc implements deleteNpc operation.
 	//
 	// Removes the NPC; its Revisions keep it restorable. DM only.
@@ -275,6 +287,18 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/locations
 	ListLocations(ctx context.Context, params ListLocationsParams) (ListLocationsRes, error)
+	// ListLootTableRevisions implements listLootTableRevisions operation.
+	//
+	// Every Revision of the Loot Table, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions
+	ListLootTableRevisions(ctx context.Context, params ListLootTableRevisionsParams) (ListLootTableRevisionsRes, error)
+	// ListLootTables implements listLootTables operation.
+	//
+	// The Campaign's Loot Tables. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/loot-tables
+	ListLootTables(ctx context.Context, params ListLootTablesParams) (ListLootTablesRes, error)
 	// ListMaps implements listMaps operation.
 	//
 	// The Campaign's local and world Maps. DM only.
@@ -361,6 +385,13 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
 	RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (RestoreEncounterTableRevisionRes, error)
+	// RestoreLootTableRevision implements restoreLootTableRevision operation.
+	//
+	// Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore
+	RestoreLootTableRevision(ctx context.Context, params RestoreLootTableRevisionParams) (RestoreLootTableRevisionRes, error)
 	// RestoreNpcRevision implements restoreNpcRevision operation.
 	//
 	// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
@@ -431,6 +462,12 @@ type Handler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
+	// UpdateLootTable implements updateLootTable operation.
+	//
+	// Replaces the Loot Table and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
+	UpdateLootTable(ctx context.Context, req *LootTableInput, params UpdateLootTableParams) (UpdateLootTableRes, error)
 	// UpdateMap implements updateMap operation.
 	//
 	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.

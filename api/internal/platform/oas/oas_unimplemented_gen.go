@@ -76,6 +76,15 @@ func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInvit
 	return r, ht.ErrNotImplemented
 }
 
+// CreateLootTable implements createLootTable operation.
+//
+// Adds an Loot Table and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/loot-tables
+func (UnimplementedHandler) CreateLootTable(ctx context.Context, req *LootTableInput, params CreateLootTableParams) (r CreateLootTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateNpc implements createNpc operation.
 //
 // Adds an NPC and records its first Revision. DM only.
@@ -118,6 +127,15 @@ func (UnimplementedHandler) DeleteEncounterPool(ctx context.Context, params Dele
 //
 // DELETE /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 func (UnimplementedHandler) DeleteEncounterTable(ctx context.Context, params DeleteEncounterTableParams) (r DeleteEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteLootTable implements deleteLootTable operation.
+//
+// Removes the Loot Table; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
+func (UnimplementedHandler) DeleteLootTable(ctx context.Context, params DeleteLootTableParams) (r DeleteLootTableRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -412,6 +430,24 @@ func (UnimplementedHandler) ListLocations(ctx context.Context, params ListLocati
 	return r, ht.ErrNotImplemented
 }
 
+// ListLootTableRevisions implements listLootTableRevisions operation.
+//
+// Every Revision of the Loot Table, newest first. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions
+func (UnimplementedHandler) ListLootTableRevisions(ctx context.Context, params ListLootTableRevisionsParams) (r ListLootTableRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListLootTables implements listLootTables operation.
+//
+// The Campaign's Loot Tables. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/loot-tables
+func (UnimplementedHandler) ListLootTables(ctx context.Context, params ListLootTablesParams) (r ListLootTablesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListMaps implements listMaps operation.
 //
 // The Campaign's local and world Maps. DM only.
@@ -540,6 +576,16 @@ func (UnimplementedHandler) RestoreEncounterTableRevision(ctx context.Context, p
 	return r, ht.ErrNotImplemented
 }
 
+// RestoreLootTableRevision implements restoreLootTableRevision operation.
+//
+// Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a
+// Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore
+func (UnimplementedHandler) RestoreLootTableRevision(ctx context.Context, params RestoreLootTableRevisionParams) (r RestoreLootTableRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RestoreNpcRevision implements restoreNpcRevision operation.
 //
 // Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
@@ -640,6 +686,15 @@ func (UnimplementedHandler) UpdateEncounterPool(ctx context.Context, req *Encoun
 //
 // PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 func (UnimplementedHandler) UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (r UpdateEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateLootTable implements updateLootTable operation.
+//
+// Replaces the Loot Table and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
+func (UnimplementedHandler) UpdateLootTable(ctx context.Context, req *LootTableInput, params UpdateLootTableParams) (r UpdateLootTableRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

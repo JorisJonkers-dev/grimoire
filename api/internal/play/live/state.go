@@ -35,6 +35,8 @@ type state struct {
 	zones      []domain.Zone
 	// checks are this Session's Encounter Checks.
 	checks []prep.Check
+	// inventory is every Container of the Campaign.
+	inventory domain.Inventory
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -59,6 +61,7 @@ func (s *state) clone() *state {
 		next.zones = append(next.zones, cloneZone(z))
 	}
 	next.checks = slices.Clone(s.checks)
+	next.inventory = cloneInventory(s.inventory)
 	if s.cast != nil {
 		c := *s.cast
 		next.cast = &c
@@ -152,7 +155,7 @@ func (s *state) project(a Audience) View {
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
-	v.Table, v.World, v.Perception, v.Checks = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a)
+	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
 	if a == AudienceDM {
 		v.Zones = s.zoneViews()
 	}

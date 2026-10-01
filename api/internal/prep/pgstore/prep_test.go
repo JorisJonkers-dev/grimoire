@@ -69,6 +69,7 @@ func setup(t *testing.T) world {
 	snap := snapshot.Snapshot{
 		Documents: []snapshot.Document{{Key: "srd-2024", Title: "SRD 5.2", RulesetYear: 2024, Precedence: 20, License: "CC-BY-4.0", Attribution: "a", URL: "https://a"}},
 		Monsters:  []snapshot.Monster{creature("goblin", "Goblin", 50), creature("ogre", "Ogre", 450)},
+		Items:     []snapshot.Item{{Entry: snapshot.Entry{Document: "srd-2024", Slug: "rope", Name: "Rope", Description: "Rope."}, Category: "gear", WeightLB: 5}},
 	}
 	if _, err := comppg.New(store.Pool()).Import(ctx, snap, "prep"); err != nil {
 		t.Fatal(err)
@@ -312,6 +313,116 @@ func TestEveryPrepDatabaseFaultSurfaces(t *testing.T) {
 		"restore table": func(s *app.Service) error { _, err := s.RestoreTable(ctx, dm, w.campaign, tb.ID, 1); return err },
 		"locations":     func(s *app.Service) error { _, err := s.Locations(ctx, dm, w.campaign); return err },
 		"checks":        func(s *app.Service) error { _, err := s.Checks(ctx, dm, w.campaign); return err },
+	}
+	for name, op := range ops {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := op(service(w, pgstore.NewFaulty(w.pool, f)))
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+}
+
+func TestLootTablesNestWithoutLoopsAndKeepTheirHistory(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w := setup(t)
+	s := service(w, pgstore.New(w.pool))
+	coins, err := s.SaveLootTable(ctx, dm, w.campaign, domain.LootTable{Name: " Purse ", Rolls: 1, Entries: []domain.LootEntry{
+		{Weight: 2, Kind: "currency", Coin: "gp", Amount: "2d6x10", Item: "rope"},
+		{Weight: 1, Kind: "nothing", Amount: "9", Coin: "cp"},
+	}})
+	if err != nil || coins.Name != "Purse" || coins.Entries[0].Item != "" || coins.Entries[1].Amount != "" || coins.Entries[1].Coin != "" {
+		t.Fatalf("purse = %+v %v", coins, err)
+	}
+	hoard, err := s.SaveLootTable(ctx, dm, w.campaign, domain.LootTable{Name: "Hoard", Rolls: 3, Entries: []domain.LootEntry{
+		{Weight: 1, Kind: "table", Table: &coins.ID}, {Weight: 1, Kind: "item", Item: "rope", Amount: "1d4"},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	missing := domain.LootTableID(uuid.New())
+	bad := map[string]func(t *domain.LootTable){
+		"name of up to 80":   func(t *domain.LootTable) { t.Name = "" },
+		"rolled 1 to 10":     func(t *domain.LootTable) { t.Rolls = 11 },
+		"1 to 50 entries":    func(t *domain.LootTable) { t.Entries = nil },
+		"weights run from 1": func(t *domain.LootTable) { t.Entries[0].Weight = 0 },
+		"write amounts as":   func(t *domain.LootTable) { t.Entries[1].Amount = "lots" },
+		"there is no item":   func(t *domain.LootTable) { t.Entries[1].Item = "sword-of-ages" },
+		"coins are cp": func(t *domain.LootTable) {
+			t.Entries[1] = domain.LootEntry{Weight: 1, Kind: "currency", Coin: "dollar", Amount: "1"}
+		},
+		"one of the campaign's":   func(t *domain.LootTable) { t.Entries[0].Table = &missing },
+		"an item, coins, another": func(t *domain.LootTable) { t.Entries[1].Kind = "spell" },
+		"cannot roll on itself":   func(t *domain.LootTable) { t.Entries[0].Table = &t.ID },
+	}
+	for want, change := range bad {
+		x := hoard
+		x.Entries = append([]domain.LootEntry(nil), hoard.Entries...)
+		change(&x)
+		_, err := s.SaveLootTable(ctx, dm, w.campaign, x)
+		refused(t, err, want)
+	}
+	loop := coins
+	loop.Entries = []domain.LootEntry{{Weight: 1, Kind: "table", Table: &hoard.ID}}
+	_, err = s.SaveLootTable(ctx, dm, w.campaign, loop)
+	refused(t, err, "cannot roll on itself")
+	refused(t, s.DeleteLootTable(ctx, dm, w.campaign, coins.ID), "still rolls on this one")
+	if _, err := s.SaveLootTable(ctx, dm, w.campaign, domain.LootTable{ID: missing, Name: "Ghost"}); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("update unknown = %v", err)
+	}
+	hoard.Rolls = 1
+	if _, err := s.SaveLootTable(ctx, dm, w.campaign, hoard); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DeleteLootTable(ctx, dm, w.campaign, hoard.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DeleteLootTable(ctx, dm, w.campaign, hoard.ID); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("delete twice = %v", err)
+	}
+	back, err := s.RestoreLootTable(ctx, dm, w.campaign, hoard.ID, 1)
+	if err != nil || back.Rolls != 3 || len(back.Entries) != 2 || *back.Entries[0].Table != coins.ID || back.Entries[1].Amount != "1d4" {
+		t.Fatalf("restore = %+v %v", back, err)
+	}
+	revs, err := s.LootTableRevisions(ctx, dm, w.campaign, hoard.ID)
+	if err != nil || len(revs) != 4 || revs[0].RestoredFrom != 1 {
+		t.Fatalf("revisions = %+v %v", revs, err)
+	}
+	if _, err := s.LootTableRevisions(ctx, dm, w.campaign, missing); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("revisions of nothing = %v", err)
+	}
+	if _, err := s.RestoreLootTable(ctx, dm, w.campaign, hoard.ID, 9); !errors.Is(err, apperr.ErrNotFound) {
+		t.Errorf("restore unknown = %v", err)
+	}
+	list, err := s.LootTables(ctx, dm, w.campaign)
+	if err != nil || len(list) != 2 {
+		t.Fatalf("list = %+v %v", list, err)
+	}
+	for _, op := range []func() error{
+		func() error { _, err := s.LootTables(ctx, player, w.campaign); return err },
+		func() error { _, err := s.LootTableRevisions(ctx, player, w.campaign, hoard.ID); return err },
+		func() error { return s.DeleteLootTable(ctx, player, w.campaign, hoard.ID) },
+	} {
+		if err := op(); !errors.Is(err, apperr.ErrForbidden) {
+			t.Errorf("player = %v", err)
+		}
+	}
+	ops := map[string]func(s *app.Service) error{
+		"loot tables": func(s *app.Service) error { _, err := s.LootTables(ctx, dm, w.campaign); return err },
+		"save loot":   func(s *app.Service) error { _, err := s.SaveLootTable(ctx, dm, w.campaign, back); return err },
+		"delete loot": func(s *app.Service) error {
+			fresh := back
+			fresh.ID = domain.LootTableID{}
+			if fresh, err = service(w, pgstore.New(w.pool)).SaveLootTable(ctx, dm, w.campaign, fresh); err != nil {
+				t.Fatal(err)
+			}
+			return s.DeleteLootTable(ctx, dm, w.campaign, fresh.ID)
+		},
+		"loot revs":    func(s *app.Service) error { _, err := s.LootTableRevisions(ctx, dm, w.campaign, hoard.ID); return err },
+		"restore loot": func(s *app.Service) error { _, err := s.RestoreLootTable(ctx, dm, w.campaign, hoard.ID, 1); return err },
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {

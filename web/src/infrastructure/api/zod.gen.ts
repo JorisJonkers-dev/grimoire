@@ -256,6 +256,17 @@ export const zEncounterMode = z.enum([
 ]);
 
 /**
+ * A kind of coin.
+ */
+export const zCoin = z.enum([
+    'cp',
+    'sp',
+    'ep',
+    'gp',
+    'pp'
+]);
+
+/**
  * One recorded version of a piece of prep data.
  */
 export const zRevision = z.object({
@@ -577,6 +588,14 @@ export const zLiveSessionView = z.object({
         'party',
         'table'
     ])
+});
+
+/**
+ * How many coins of one kind a container holds.
+ */
+export const zLiveCoins = z.object({
+    coin: zCoin,
+    count: z.int().gte(1).lte(10000000)
 });
 
 /**
@@ -1234,6 +1253,43 @@ export const zEncounterCheck = z.object({
 });
 
 /**
+ * One weighted line of a Loot Table. An item names itemSlug and an amount, coins name coin and an amount, a table names tableId; amounts read like 3, 2d6, 1d4+1 or 4d6x10.
+ */
+export const zLootEntry = z.object({
+    weight: z.int().gte(1).lte(100),
+    kind: z.enum([
+        'item',
+        'currency',
+        'table',
+        'nothing'
+    ]),
+    itemSlug: zSlug.optional(),
+    coin: zCoin.optional(),
+    amount: z.string().max(20).optional(),
+    tableId: zId.optional()
+});
+
+/**
+ * A Loot Table as the DM writes it.
+ */
+export const zLootTableInput = z.object({
+    name: z.string().min(1).max(80),
+    rolls: z.int().gte(1).lte(10),
+    entries: z.array(zLootEntry).min(1).max(50)
+});
+
+/**
+ * A Loot Table, rolled a number of times over its weighted entries.
+ */
+export const zLootTable = z.object({
+    id: zId,
+    name: z.string().max(80),
+    rolls: z.int().gte(1).lte(10),
+    entries: z.array(zLootEntry).max(50),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -1285,7 +1341,10 @@ export const zLiveCommand = z.object({
         'spring_zone',
         'rest',
         'encounter_check',
-        'schedule_check'
+        'schedule_check',
+        'roll_loot',
+        'move_item',
+        'move_coins'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1350,7 +1409,43 @@ export const zLiveCommand = z.object({
     tableId: zId.optional(),
     mode: zEncounterMode.optional(),
     entry: z.int().gte(0).lte(49).optional(),
-    due: z.enum(['next_rest', 'next_travel']).optional()
+    due: z.enum(['next_rest', 'next_travel']).optional(),
+    lootTableId: zId.optional(),
+    fromId: zId.optional(),
+    toId: zId.optional(),
+    itemSlug: zSlug.optional(),
+    coin: zCoin.optional(),
+    count: z.int().gte(1).lte(10000000).optional()
+});
+
+/**
+ * A stack of one item and what it weighs in all.
+ */
+export const zLiveItem = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
+ */
+export const zLiveContainer = z.object({
+    id: zId,
+    kind: z.enum([
+        'character',
+        'party_stash',
+        'loot_drop'
+    ]),
+    label: z.string().max(80),
+    characterId: zId.optional(),
+    ownerId: zId.optional(),
+    items: z.array(zLiveItem).max(1000),
+    coins: z.array(zLiveCoins).max(5),
+    weightLb: z.number().gte(0).lte(100000000),
+    capacityLb: z.number().gte(0).lte(100000).optional(),
+    encumbered: z.boolean().optional()
 });
 
 /**
@@ -1401,6 +1496,7 @@ export const zLiveView = z.object({
     zones: z.array(zLiveZone).max(200).optional(),
     perception: z.array(zLivePerception).max(1000).optional(),
     checks: z.array(zLiveCheck).max(10).optional(),
+    inventory: z.array(zLiveContainer).max(1000).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -1784,6 +1880,11 @@ export const zRollId = zId;
  * Map id.
  */
 export const zMapId = zId;
+
+/**
+ * Loot Table id.
+ */
+export const zLootTableId = zId;
 
 /**
  * Encounter Pool id.
@@ -2247,6 +2348,69 @@ export const zRestoreEncounterTableRevisionPath = z.object({
  * The restored Encounter Table.
  */
 export const zRestoreEncounterTableRevisionResponse = zEncounterTable;
+
+export const zListLootTablesPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Loot Tables.
+ */
+export const zListLootTablesResponse = z.array(zLootTable).max(1000);
+
+export const zCreateLootTableBody = zLootTableInput;
+
+export const zCreateLootTablePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Loot Table.
+ */
+export const zCreateLootTableResponse = zLootTable;
+
+export const zDeleteLootTablePath = z.object({
+    campaignId: zId,
+    lootTableId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteLootTableResponse = z.void();
+
+export const zUpdateLootTableBody = zLootTableInput;
+
+export const zUpdateLootTablePath = z.object({
+    campaignId: zId,
+    lootTableId: zId
+});
+
+/**
+ * The Loot Table.
+ */
+export const zUpdateLootTableResponse = zLootTable;
+
+export const zListLootTableRevisionsPath = z.object({
+    campaignId: zId,
+    lootTableId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListLootTableRevisionsResponse = z.array(zRevision).max(1000);
+
+export const zRestoreLootTableRevisionPath = z.object({
+    campaignId: zId,
+    lootTableId: zId,
+    revisionNo: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The restored Loot Table.
+ */
+export const zRestoreLootTableRevisionResponse = zLootTable;
 
 export const zListLocationsPath = z.object({
     campaignId: zId

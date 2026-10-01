@@ -71,6 +71,12 @@ type Write struct {
 	Check      *prep.Check
 	Schedule   *prep.Scheduled
 	Unschedule uuid.UUID
+	// Drop is a new drop of loot; Move a transfer between Containers; Gone the drop it emptied.
+	Drop      *domain.Container
+	Move      *domain.Move
+	Gone      *domain.ContainerID
+	items     map[string]domain.ItemInfo
+	lootTable string
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -104,6 +110,10 @@ type Store interface {
 	// LoadPrep reads the Campaign's Encounter Tables, Pools, creature XP, party levels and scheduled checks.
 	LoadPrep(ctx context.Context, campaign uuid.UUID) (prep.Prep, error)
 	LoadChecks(ctx context.Context, campaign uuid.UUID, sid domain.SessionID) ([]prep.Check, error)
+	// LoadInventory reads every Container of the Campaign, making the Party Stash and each Character's Inventory first.
+	LoadInventory(ctx context.Context, campaign uuid.UUID) (domain.Inventory, error)
+	LoadLoot(ctx context.Context, campaign uuid.UUID) ([]prep.LootTable, error)
+	Items(ctx context.Context, campaign uuid.UUID, slugs []string) (map[string]domain.ItemInfo, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -263,7 +273,12 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap, zones: zones, checks: checks}
+	inventory, err := h.Store.LoadInventory(ctx, s.CampaignID)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap, zones: zones, checks: checks, inventory: inventory}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -470,7 +485,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins:
 		return true
 	}
 	return false
@@ -601,6 +616,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionEncounterChecked, domain.ActionEncounterResolved:
 		applyCheck(s, *w.Check)
+		return
+	case domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved:
+		applyInventory(s, w)
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:

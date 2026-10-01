@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -15,6 +15,7 @@ import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
+import InventoryPanel from './InventoryPanel.vue'
 import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
@@ -38,6 +39,8 @@ const maps = useQuery(computed(() => ({ ...listMapsOptions({ path: { campaignId 
 const localMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'local') ?? [])
 const worldMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'world') ?? [])
 const scope = ref<'local' | 'world'>('local')
+const lootTables = useQuery(computed(() => ({ ...listLootTablesOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
+const fightLoot = ref('')
 const encounterTables = useQuery(computed(() => ({ ...listEncounterTablesOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
 const characters = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId } }), enabled: isDM.value })))
 const live = shallowRef<ReturnType<typeof useLiveSession> | null>(null)
@@ -469,7 +472,16 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <div class="row">
           <GButton data-testid="undo-damage" @click="live?.send({ kind: 'undo_damage' })">Undo last damage</GButton>
-          <GButton v-if="combat" variant="danger" data-testid="end-combat" @click="live?.send({ kind: 'end_combat' })">End combat</GButton>
+          <template v-if="combat">
+            <label class="g-field">
+              <span>Loot when it ends</span>
+              <select v-model="fightLoot" data-testid="fight-loot">
+                <option value="">None</option>
+                <option v-for="t in lootTables.data.value ?? []" :key="t.id" :value="t.id">{{ t.name }}</option>
+              </select>
+            </label>
+            <GButton variant="danger" data-testid="end-combat" @click="live?.send(fightLoot ? { kind: 'end_combat', lootTableId: fightLoot } : { kind: 'end_combat' })">End combat</GButton>
+          </template>
           <GButton v-else-if="!choosing" data-testid="choose-combatants" :disabled="!view?.tokens.length" @click="choosing = true">
             Start combat…
           </GButton>
@@ -486,6 +498,14 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         />
         <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
       </section>
+      <InventoryPanel
+        v-if="view?.inventory?.length"
+        :containers="view.inventory"
+        :dm="isDM"
+        :me="campaign.data.value?.me.id ?? ''"
+        :loot-tables="lootTables.data.value ?? []"
+        @send="(cmd) => live?.send(cmd)"
+      />
       <EncounterChecks
         v-if="isDM || (view?.checks?.length ?? 0) > 0"
         :checks="view?.checks ?? []"

@@ -1,6 +1,6 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveCheck, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
+import type { LiveCheck, LiveContainer, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { fakeClock, mountApp } from '@/test/mountApp'
@@ -8,6 +8,7 @@ import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials, zoneHexes } from './board'
 import { focus } from './camera'
 import { checkLine } from './checks'
+import { canPut, canTake, load } from './inventory'
 import { cellsFor, key, layoutOf } from './geometry'
 import { duration, journey } from './travel'
 
@@ -1233,5 +1234,94 @@ describe('encounter checks', () => {
     t.receive({ kind: 'view', seq: 3, view: { tokens: [], fog: false, visible: [], remembered: [], checks: playerChecks, table: { camera: 'follow_turn', q: 0, r: 0, zoomPct: 100, scene: 'local', blackout: true } } })
     await flushPromises()
     expect(tv.wrapper.find('[data-testid="table-check"]').exists()).toBe(false)
+  })
+})
+
+describe('inventory', () => {
+  const STASH = '0190c7a8-0000-7000-8000-000000000061'
+  const ARIA = '0190c7a8-0000-7000-8000-000000000062'
+  const BROM = '0190c7a8-0000-7000-8000-000000000063'
+  const DROP = '0190c7a8-0000-7000-8000-000000000064'
+  const containers: LiveContainer[] = [
+    { id: DROP, kind: 'loot_drop', label: 'Loot: Hoard', items: [{ slug: 'anvil', name: 'Anvil', count: 4, weightLb: 400 }], coins: [{ coin: 'gp', count: 100 }], weightLb: 402 },
+    { id: ARIA, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, items: [{ slug: 'rope', name: 'Rope', count: 2, weightLb: 10 }], coins: [], weightLb: 301.2, capacityLb: 120, encumbered: true },
+    { id: BROM, kind: 'character', label: 'Brom', characterId: BROM, ownerId: member.id, items: [{ slug: 'rope', name: 'Rope', count: 1, weightLb: 5 }], coins: [], weightLb: 5, capacityLb: 225 },
+    { id: STASH, kind: 'party_stash', label: 'Party Stash', items: [], coins: [], weightLb: 0 },
+  ]
+  const [drop, aria, brom, stash] = containers as [LiveContainer, LiveContainer, LiveContainer, LiveContainer]
+  const transfer = (data: string) => ({ getData: () => data, setData: () => undefined })
+
+  it('knows who may take and put, and what a pack weighs', () => {
+    expect([canTake(drop, false, player.id), canTake(aria, false, player.id), canTake(brom, false, player.id), canTake(brom, true, player.id)]).toEqual([true, true, false, true])
+    expect([canPut(drop, true, player.id), canPut(stash, false, player.id), canPut(brom, false, player.id), canPut(brom, true, member.id)]).toEqual([false, true, false, true])
+    expect([load(aria), load(stash), load({ ...stash, weightLb: 2.25 })]).toEqual(['301.2 / 120 lb', '0 lb', '2.3 lb'])
+  })
+
+  it('lets a player take loot into their own pack by choosing or dragging', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party', { inventory: containers }))
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="inventory"]')
+    expect(panel.find('[data-testid="roll-loot"]').exists()).toBe(false)
+    expect(panel.findAll('article').map((a) => a.attributes('aria-label'))).toEqual(['Party Stash', 'Aria', 'Brom', 'Loot: Hoard'])
+    expect(wrapper.get('[data-testid="container-Aria"] [data-testid="encumbered"]').text()).toBe('Encumbered')
+    expect(wrapper.get('[data-testid="container-Aria"] [data-testid="load"]').text()).toBe('301.2 / 120 lb')
+    expect(wrapper.get('[data-testid="container-Party Stash"]').text()).toContain('Empty.')
+    expect(wrapper.find('[aria-label="Move Rope from Brom"]').exists()).toBe(false)
+    const hoard = wrapper.get('[data-testid="container-Loot: Hoard"]')
+    expect(hoard.get('[aria-label="Where Anvil goes"]').findAll('option').map((o) => o.text())).toEqual(['Party Stash', 'Aria'])
+    await hoard.get('[aria-label="Where Anvil goes"]').setValue(ARIA)
+    await hoard.get('[aria-label="How many Anvil"]').setValue(3)
+    await hoard.get('[aria-label="Move Anvil from Loot: Hoard"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_item', fromId: DROP, toId: ARIA, itemSlug: 'anvil', count: 3 })
+    await hoard.get('[aria-label="How many gp"]').setValue(500)
+    await hoard.get('[aria-label="Move gp from Loot: Hoard"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_coins', fromId: DROP, toId: STASH, coin: 'gp', count: 100 })
+    const stack = hoard.get('li')
+    const dragged: Record<string, string> = {}
+    await stack.trigger('dragstart', { dataTransfer: { setData: (k: string, v: string) => (dragged[k] = v), getData: () => '' } })
+    const packOf = wrapper.get('[data-testid="container-Aria"]')
+    await packOf.trigger('dragover', { dataTransfer: transfer('') })
+    expect(packOf.classes()).toContain('over')
+    await packOf.trigger('dragleave')
+    await packOf.trigger('drop', { dataTransfer: transfer(dragged['application/json'] ?? '') })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_item', fromId: DROP, toId: ARIA, itemSlug: 'anvil', count: 4 })
+    const sent = s.sent.length
+    await wrapper.get('[data-testid="container-Brom"]').trigger('dragover', { dataTransfer: transfer('') })
+    expect(wrapper.get('[data-testid="container-Brom"]').classes()).not.toContain('over')
+    await wrapper.get('[data-testid="container-Brom"]').trigger('drop', { dataTransfer: transfer(dragged['application/json'] ?? '') })
+    await hoard.trigger('drop', { dataTransfer: transfer(dragged['application/json'] ?? '') })
+    await packOf.trigger('drop', { dataTransfer: transfer('') })
+    await packOf.trigger('drop', { dataTransfer: transfer(JSON.stringify({ from: ARIA, itemSlug: 'rope', count: 2 })) })
+    expect(s.sent.length).toBe(sent)
+    await wrapper.get('[data-testid="container-Aria"] li').trigger('dragstart', { dataTransfer: { setData: (k: string, v: string) => (dragged[k] = v), getData: () => '' } })
+    await wrapper.get('[data-testid="container-Party Stash"]').trigger('drop', { dataTransfer: transfer(dragged['application/json'] ?? '') })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_item', fromId: ARIA, toId: STASH, itemSlug: 'rope', count: 2 })
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('lets the DM roll loot, end a fight with loot, and move anything', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/loot-tables`]: () => [{ id: '0190c7a8-0000-7000-8000-000000000071', name: 'Purse', rolls: 1, entries: [], updatedAt: '2026-10-01T20:00:00Z' }],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const combat = { status: 'active', round: 1, combatants: [] }
+    s.receive(snapshot([goblin], 'dm', { inventory: containers, combat }))
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="inventory"]')
+    expect(panel.get('[data-testid="roll-loot"]').attributes('disabled')).toBeDefined()
+    await panel.get('[data-testid="roll-loot-table"]').setValue('0190c7a8-0000-7000-8000-000000000071')
+    await panel.get('[data-testid="roll-loot"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'roll_loot', lootTableId: '0190c7a8-0000-7000-8000-000000000071' })
+    await wrapper.get('[aria-label="Move Rope from Brom"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_item', fromId: BROM, toId: STASH, itemSlug: 'rope', count: 1 })
+    await wrapper.get('[data-testid="end-combat"]').trigger('click')
+    expect(s.sent.at(-1)).not.toHaveProperty('lootTableId')
+    await wrapper.get('[data-testid="fight-loot"]').setValue('0190c7a8-0000-7000-8000-000000000071')
+    await wrapper.get('[data-testid="end-combat"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'end_combat', lootTableId: '0190c7a8-0000-7000-8000-000000000071' })
   })
 })

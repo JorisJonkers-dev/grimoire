@@ -33,6 +33,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planTerrain(cmd)
 	case CmdTableCamera, CmdTableScene, CmdTableBlackout:
 		return r.planTable(cmd)
+	case CmdRollLoot:
+		return r.planLoot(cmd.LootTableID)
+	case CmdMoveItem, CmdMoveCoins:
+		return r.planMove(m, cmd)
 	case CmdRest, CmdEncounterCheck, CmdScheduleCheck:
 		return r.planEncounter(m, cmd)
 	case CmdAddZone, CmdRemoveZone, CmdHoldZone, CmdSpringZone:

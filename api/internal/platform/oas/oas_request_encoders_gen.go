@@ -80,6 +80,20 @@ func encodeCreateEncounterTableRequest(
 	return nil
 }
 
+func encodeCreateLootTableRequest(
+	req *LootTableInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateNpcRequest(
 	req *NpcInput,
 	r *http.Request,
@@ -242,6 +256,20 @@ func encodeUpdateEncounterPoolRequest(
 
 func encodeUpdateEncounterTableRequest(
 	req *EncounterTableInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateLootTableRequest(
+	req *LootTableInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
