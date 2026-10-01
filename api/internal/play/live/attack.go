@@ -68,6 +68,9 @@ func (r *runtime) aimAt(m domain.Member, cmd Command) (aim, string) {
 	if !ok || t.ID == a.ID {
 		return aim{}, "Choose a creature to attack."
 	}
+	if x, _ := r.st.combatantOf(a.ID); cmd.Cleave && !r.st.cleavable(x, t) {
+		return aim{}, "Cleave strikes a second creature within 5 feet of the first."
+	}
 	p, reason := r.st.shape(aim{attacker: a, target: t, no: cmd.AttackNo, with: a.Stats.Attacks[cmd.AttackNo]})
 	if reason == "" {
 		r.highGround(&p)
@@ -112,9 +115,13 @@ func (s *state) attackBlocked(a domain.Token, cmd Command) string {
 		return "It is not " + a.Label + "'s turn."
 	case s.catalog.Incapacitated(s.actives(a.ID)):
 		return a.Label + " can't act while Incapacitated."
+	case cmd.Cleave && (x.CleaveFrom == nil || x.Cleaved):
+		return a.Label + " has no Cleave attack open: it follows a Cleave hit, once a turn."
+	case cmd.Cleave:
+		return ""
 	case cmd.OffHand && !a.Stats.Attacks[cmd.AttackNo].Light:
 		return "Only a Light weapon makes the off-hand attack."
-	case cmd.OffHand && !x.Economy.CanOffHand(false):
+	case cmd.OffHand && !x.Economy.CanOffHand(nicks(a.Stats.Attacks[cmd.AttackNo])):
 		return a.Label + " has no off-hand attack left: it follows an attack with a Light weapon, for a Bonus Action."
 	case !cmd.OffHand && !x.Economy.CanAttack():
 		return a.Label + " has no attacks left this turn."
@@ -209,7 +216,7 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
-		Stage: domain.StageToHit, RollID: roll.ID, Ranged: p.ranged, OffHand: cmd.OffHand,
+		Stage: domain.StageToHit, RollID: roll.ID, Ranged: p.ranged, OffHand: cmd.OffHand, Cleave: cmd.Cleave,
 	}
 	return Write{Kind: domain.ActionAttackDeclared, Token: p.attacker, Combatant: x.ID, Rolls: []domain.Roll{roll}, attack: pending}, ""
 }
@@ -247,12 +254,15 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 	a, t := r.st.tokens[p.Attacker], r.st.tokens[p.Target]
 	sys := caller.Caller{Subject: roll.Roller.Subject, Origin: caller.OriginSystem, Client: ""}
 	if p.Stage == domain.StageDamage {
-		r.commit(request{}, r.hurt(t, roll.Total, Write{Token: a, attack: &p}), roll.Roller, sys)
+		w := r.hurt(t, roll.Total, Write{Token: a, attack: &p})
+		r.commit(request{}, w, roll.Roller, sys)
+		r.masteryAfterHit(a, t, p, w.HP.Before-w.HP.After, roll.Roller, sys)
 		return
 	}
 	result := attack.Outcome(natural(roll), roll.Total-natural(roll), r.st.armor(t)+p.CoverBonus)
 	if result == attack.Miss {
 		r.commit(request{}, Write{Kind: domain.ActionAttackMissed, Token: a}, roll.Roller, sys)
+		r.graze(a, t, p, roll.Roller, sys)
 		return
 	}
 	if result == attack.Hit && r.st.closeCrit(a, t) {
@@ -263,7 +273,11 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 		r.commit(request{}, Write{Kind: domain.ActionReactionOffered, Token: t, attack: &p, prompt: pr}, roll.Roller, sys)
 		return
 	}
-	r.commit(request{}, r.hit(a, t, p, result == attack.Critical, roll), roll.Roller, sys)
+	w := r.hit(a, t, p, result == attack.Critical, roll)
+	r.commit(request{}, w, roll.Roller, sys)
+	if w.Kind == domain.ActionDamageDealt {
+		r.masteryAfterHit(a, t, p, w.HP.Before-w.HP.After, roll.Roller, sys)
+	}
 }
 
 // closeCrit reports whether the target's effects turn a hit from where the attacker stands into a
@@ -278,7 +292,7 @@ func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, 
 	with := a.Stats.Attacks[p.AttackNo]
 	spec := joinDice(with.Damage, r.st.catalog.ForAttack(nil, r.st.actives(t.ID), uuid.UUID(a.ID).String(), false).DamageDice)
 	bonus := with.DamageBonus
-	if p.OffHand && with.DamageMod > 0 {
+	if (p.OffHand || p.Cleave) && with.DamageMod > 0 {
 		bonus -= with.DamageMod
 	}
 	if len(spec.Groups) == 0 {

@@ -42,10 +42,12 @@ type BonusDie struct {
 }
 
 // Edge gives advantage or disadvantage: on the bearer's own attacks, or on attacks against the bearer.
+// A SourceOnly edge against the bearer counts only for the Effect's source (Vex).
 type Edge struct {
-	Against   bool
-	Advantage bool
-	Range     Range
+	Against    bool
+	Advantage  bool
+	Range      Range
+	SourceOnly bool
 }
 
 // ExtraDamage adds dice to hits against the bearer by the effect's source (Hunter's Mark).
@@ -117,6 +119,11 @@ type CritWithin struct {
 	Feet int
 }
 
+// SpeedPenalty takes feet off the bearer's speed (Slow); several do not add up.
+type SpeedPenalty struct {
+	Ft int
+}
+
 // Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
 // speed, and at DeathAt levels the bearer dies.
 type Exhausting struct {
@@ -131,6 +138,7 @@ func (Immobile) isComponent()      {}
 func (SaveEdge) isComponent()      {}
 func (CritWithin) isComponent()    {}
 func (Exhausting) isComponent()    {}
+func (SpeedPenalty) isComponent()  {}
 func (Edge) isComponent()          {}
 func (ExtraDamage) isComponent()   {}
 func (MoveCost) isComponent()      {}
@@ -236,7 +244,7 @@ func (p *AttackProfile) attacking(d Definition, levels int) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty:
 		}
 	}
 }
@@ -246,7 +254,7 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 	for _, c := range d.Components {
 		switch c := c.(type) {
 		case Edge:
-			if c.Against && c.Range.covers(withinFive) {
+			if c.Against && c.Range.covers(withinFive) && (!c.SourceOnly || bySource) {
 				p.add(d.Name, c)
 			}
 		case ExtraDamage:
@@ -259,7 +267,7 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty:
 		}
 	}
 }
@@ -360,24 +368,29 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty:
 			}
 		}
 	}
 	return p
 }
 
-// SpeedPenaltyFt is how many feet the bearer's effects take off its speed.
+// SpeedPenaltyFt is how many feet the bearer's effects take off its speed: exhaustion by level, plus
+// the largest single SpeedPenalty.
 func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
-	ft := 0
+	ft, worst := 0, 0
 	for _, a := range bearer {
 		for _, c := range cat[a.Slug].Components {
-			if e, ok := c.(Exhausting); ok {
-				ft += e.SpeedFtPerLevel * a.levels()
+			switch c := c.(type) {
+			case Exhausting:
+				ft += c.SpeedFtPerLevel * a.levels()
+			case SpeedPenalty:
+				worst = max(worst, c.Ft)
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin:
 			}
 		}
 	}
-	return ft
+	return ft + worst
 }
 
 // Fatal names the effect that kills the bearer at its level, if any (six levels of exhaustion).
@@ -443,7 +456,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Surface = c
 		case Manual:
 			out.Instructions = append(out.Instructions, c.Instruction)
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting:
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty:
 		}
 	}
 	return out, known && found

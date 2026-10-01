@@ -666,6 +666,16 @@
       "r": 0,
       "hidden": false,
       "detail": "draws a dagger"
+    },
+    {
+      "nonce": "n74",
+      "kind": "attack",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "cleave": true
     }
   ],
   "updates": [
@@ -727,7 +737,8 @@
                 "longRangeFt": 0,
                 "damage": "1d8",
                 "damageBonus": 3,
-                "damageType": "slashing"
+                "damageType": "slashing",
+                "mastery": "sap"
               }
             ],
             "shield": true
@@ -791,6 +802,7 @@
               "attacksLeft": 1,
               "offHand": true,
               "interaction": true,
+              "cleave": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1123,7 +1135,8 @@
                 "longRangeFt": 0,
                 "damage": "1d8",
                 "damageBonus": 3,
-                "damageType": "slashing"
+                "damageType": "slashing",
+                "mastery": "sap"
               }
             ],
             "shield": true
@@ -1203,6 +1216,7 @@
               "attacksLeft": 1,
               "offHand": true,
               "interaction": true,
+              "cleave": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1613,7 +1627,8 @@
                 "longRangeFt": 0,
                 "damage": "1d8",
                 "damageBonus": 3,
-                "damageType": "slashing"
+                "damageType": "slashing",
+                "mastery": "sap"
               }
             ],
             "shield": true
@@ -1677,6 +1692,7 @@
               "attacksLeft": 1,
               "offHand": true,
               "interaction": true,
+              "cleave": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -2004,7 +2020,8 @@
                   "longRangeFt": 0,
                   "damage": "1d8",
                   "damageBonus": 3,
-                  "damageType": "slashing"
+                  "damageType": "slashing",
+                  "mastery": "sap"
                 }
               ],
               "shield": true
@@ -2068,6 +2085,7 @@
                 "attacksLeft": 1,
                 "offHand": true,
                 "interaction": true,
+                "cleave": true,
                 "surprised": true,
                 "tactics": "auto",
                 "suggestion": {

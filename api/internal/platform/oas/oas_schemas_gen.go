@@ -7949,6 +7949,8 @@ type LiveAttack struct {
 	DamageType  OptString `json:"damageType"`
 	// A Light weapon, which opens the off-hand attack.
 	Light OptBool `json:"light"`
+	// The weapon's mastery, when the creature has mastered it.
+	Mastery OptLiveAttackMastery `json:"mastery"`
 }
 
 // GetName returns the value of Name.
@@ -7996,6 +7998,11 @@ func (s *LiveAttack) GetLight() OptBool {
 	return s.Light
 }
 
+// GetMastery returns the value of Mastery.
+func (s *LiveAttack) GetMastery() OptLiveAttackMastery {
+	return s.Mastery
+}
+
 // SetName sets the value of Name.
 func (s *LiveAttack) SetName(val string) {
 	s.Name = val
@@ -8039,6 +8046,95 @@ func (s *LiveAttack) SetDamageType(val OptString) {
 // SetLight sets the value of Light.
 func (s *LiveAttack) SetLight(val OptBool) {
 	s.Light = val
+}
+
+// SetMastery sets the value of Mastery.
+func (s *LiveAttack) SetMastery(val OptLiveAttackMastery) {
+	s.Mastery = val
+}
+
+// The weapon's mastery, when the creature has mastered it.
+type LiveAttackMastery string
+
+const (
+	LiveAttackMasteryCleave LiveAttackMastery = "cleave"
+	LiveAttackMasteryGraze  LiveAttackMastery = "graze"
+	LiveAttackMasteryNick   LiveAttackMastery = "nick"
+	LiveAttackMasteryPush   LiveAttackMastery = "push"
+	LiveAttackMasterySap    LiveAttackMastery = "sap"
+	LiveAttackMasterySlow   LiveAttackMastery = "slow"
+	LiveAttackMasteryTopple LiveAttackMastery = "topple"
+	LiveAttackMasteryVex    LiveAttackMastery = "vex"
+)
+
+// AllValues returns all LiveAttackMastery values.
+func (LiveAttackMastery) AllValues() []LiveAttackMastery {
+	return []LiveAttackMastery{
+		LiveAttackMasteryCleave,
+		LiveAttackMasteryGraze,
+		LiveAttackMasteryNick,
+		LiveAttackMasteryPush,
+		LiveAttackMasterySap,
+		LiveAttackMasterySlow,
+		LiveAttackMasteryTopple,
+		LiveAttackMasteryVex,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveAttackMastery) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveAttackMasteryCleave:
+		return []byte(s), nil
+	case LiveAttackMasteryGraze:
+		return []byte(s), nil
+	case LiveAttackMasteryNick:
+		return []byte(s), nil
+	case LiveAttackMasteryPush:
+		return []byte(s), nil
+	case LiveAttackMasterySap:
+		return []byte(s), nil
+	case LiveAttackMasterySlow:
+		return []byte(s), nil
+	case LiveAttackMasteryTopple:
+		return []byte(s), nil
+	case LiveAttackMasteryVex:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveAttackMastery) UnmarshalText(data []byte) error {
+	switch LiveAttackMastery(data) {
+	case LiveAttackMasteryCleave:
+		*s = LiveAttackMasteryCleave
+		return nil
+	case LiveAttackMasteryGraze:
+		*s = LiveAttackMasteryGraze
+		return nil
+	case LiveAttackMasteryNick:
+		*s = LiveAttackMasteryNick
+		return nil
+	case LiveAttackMasteryPush:
+		*s = LiveAttackMasteryPush
+		return nil
+	case LiveAttackMasterySap:
+		*s = LiveAttackMasterySap
+		return nil
+	case LiveAttackMasterySlow:
+		*s = LiveAttackMasterySlow
+		return nil
+	case LiveAttackMasteryTopple:
+		*s = LiveAttackMasteryTopple
+		return nil
+	case LiveAttackMasteryVex:
+		*s = LiveAttackMasteryVex
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name
@@ -8621,9 +8717,11 @@ type LiveCombatant struct {
 	// The off-hand attack of a Light weapon is open.
 	OffHand OptBool `json:"offHand"`
 	// The turn's free object interaction is unused.
-	Interaction OptBool           `json:"interaction"`
-	Tactics     OptTactics        `json:"tactics"`
-	Suggestion  OptLiveSuggestion `json:"suggestion"`
+	Interaction OptBool `json:"interaction"`
+	// A Cleave hit leaves a second attack open.
+	Cleave     OptBool           `json:"cleave"`
+	Tactics    OptTactics        `json:"tactics"`
+	Suggestion OptLiveSuggestion `json:"suggestion"`
 }
 
 // GetID returns the value of ID.
@@ -8729,6 +8827,11 @@ func (s *LiveCombatant) GetOffHand() OptBool {
 // GetInteraction returns the value of Interaction.
 func (s *LiveCombatant) GetInteraction() OptBool {
 	return s.Interaction
+}
+
+// GetCleave returns the value of Cleave.
+func (s *LiveCombatant) GetCleave() OptBool {
+	return s.Cleave
 }
 
 // GetTactics returns the value of Tactics.
@@ -8844,6 +8947,11 @@ func (s *LiveCombatant) SetOffHand(val OptBool) {
 // SetInteraction sets the value of Interaction.
 func (s *LiveCombatant) SetInteraction(val OptBool) {
 	s.Interaction = val
+}
+
+// SetCleave sets the value of Cleave.
+func (s *LiveCombatant) SetCleave(val OptBool) {
+	s.Cleave = val
 }
 
 // SetTactics sets the value of Tactics.
@@ -8966,7 +9074,9 @@ type LiveCommand struct {
 	Trigger     OptLiveCommandTrigger `json:"trigger"`
 	Option      OptLiveCommandOption  `json:"option"`
 	// Makes the attack the off-hand attack of a Light weapon.
-	OffHand  OptBool        `json:"offHand"`
+	OffHand OptBool `json:"offHand"`
+	// Makes the attack the second attack a Cleave hit allows.
+	Cleave   OptBool        `json:"cleave"`
 	ToId     OptID          `json:"toId"`
 	ItemSlug OptSlug        `json:"itemSlug"`
 	Coin     OptCoin        `json:"coin"`
@@ -9292,6 +9402,11 @@ func (s *LiveCommand) GetOption() OptLiveCommandOption {
 // GetOffHand returns the value of OffHand.
 func (s *LiveCommand) GetOffHand() OptBool {
 	return s.OffHand
+}
+
+// GetCleave returns the value of Cleave.
+func (s *LiveCommand) GetCleave() OptBool {
+	return s.Cleave
 }
 
 // GetToId returns the value of ToId.
@@ -9647,6 +9762,11 @@ func (s *LiveCommand) SetOption(val OptLiveCommandOption) {
 // SetOffHand sets the value of OffHand.
 func (s *LiveCommand) SetOffHand(val OptBool) {
 	s.OffHand = val
+}
+
+// SetCleave sets the value of Cleave.
+func (s *LiveCommand) SetCleave(val OptBool) {
+	s.Cleave = val
 }
 
 // SetToId sets the value of ToId.
@@ -15942,6 +16062,52 @@ func (o OptLiveAreaPreview) Get() (v LiveAreaPreview, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveAreaPreview) Or(d LiveAreaPreview) LiveAreaPreview {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveAttackMastery returns new OptLiveAttackMastery with value set to v.
+func NewOptLiveAttackMastery(v LiveAttackMastery) OptLiveAttackMastery {
+	return OptLiveAttackMastery{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveAttackMastery is optional LiveAttackMastery.
+type OptLiveAttackMastery struct {
+	Value LiveAttackMastery
+	Set   bool
+}
+
+// IsSet returns true if OptLiveAttackMastery was set.
+func (o OptLiveAttackMastery) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveAttackMastery) Reset() {
+	var v LiveAttackMastery
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveAttackMastery) SetTo(v LiveAttackMastery) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveAttackMastery) Get() (v LiveAttackMastery, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveAttackMastery) Or(d LiveAttackMastery) LiveAttackMastery {
 	if v, ok := o.Get(); ok {
 		return v
 	}

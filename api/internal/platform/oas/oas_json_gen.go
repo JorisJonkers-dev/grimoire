@@ -10497,9 +10497,15 @@ func (s *LiveAttack) encodeFields(e *jx.Encoder) {
 			s.Light.Encode(e)
 		}
 	}
+	{
+		if s.Mastery.Set {
+			e.FieldStart("mastery")
+			s.Mastery.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveAttack = [9]string{
+var jsonFieldsNameOfLiveAttack = [10]string{
 	0: "name",
 	1: "toHit",
 	2: "reachFt",
@@ -10509,6 +10515,7 @@ var jsonFieldsNameOfLiveAttack = [9]string{
 	6: "damageBonus",
 	7: "damageType",
 	8: "light",
+	9: "mastery",
 }
 
 // Decode decodes LiveAttack from json.
@@ -10622,6 +10629,16 @@ func (s *LiveAttack) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"light\"")
 			}
+		case "mastery":
+			if err := func() error {
+				s.Mastery.Reset()
+				if err := s.Mastery.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"mastery\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -10675,6 +10692,58 @@ func (s *LiveAttack) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveAttack) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveAttackMastery as json.
+func (s LiveAttackMastery) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveAttackMastery from json.
+func (s *LiveAttackMastery) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveAttackMastery to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveAttackMastery(v) {
+	case LiveAttackMasteryCleave:
+		*s = LiveAttackMasteryCleave
+	case LiveAttackMasteryGraze:
+		*s = LiveAttackMasteryGraze
+	case LiveAttackMasteryNick:
+		*s = LiveAttackMasteryNick
+	case LiveAttackMasteryPush:
+		*s = LiveAttackMasteryPush
+	case LiveAttackMasterySap:
+		*s = LiveAttackMasterySap
+	case LiveAttackMasterySlow:
+		*s = LiveAttackMasterySlow
+	case LiveAttackMasteryTopple:
+		*s = LiveAttackMasteryTopple
+	case LiveAttackMasteryVex:
+		*s = LiveAttackMasteryVex
+	default:
+		*s = LiveAttackMastery(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveAttackMastery) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveAttackMastery) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -11907,6 +11976,12 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Cleave.Set {
+			e.FieldStart("cleave")
+			s.Cleave.Encode(e)
+		}
+	}
+	{
 		if s.Tactics.Set {
 			e.FieldStart("tactics")
 			s.Tactics.Encode(e)
@@ -11920,7 +11995,7 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCombatant = [23]string{
+var jsonFieldsNameOfLiveCombatant = [24]string{
 	0:  "id",
 	1:  "tokenId",
 	2:  "label",
@@ -11942,8 +12017,9 @@ var jsonFieldsNameOfLiveCombatant = [23]string{
 	18: "attacksLeft",
 	19: "offHand",
 	20: "interaction",
-	21: "tactics",
-	22: "suggestion",
+	21: "cleave",
+	22: "tactics",
+	23: "suggestion",
 }
 
 // Decode decodes LiveCombatant from json.
@@ -12180,6 +12256,16 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"interaction\"")
+			}
+		case "cleave":
+			if err := func() error {
+				s.Cleave.Reset()
+				if err := s.Cleave.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cleave\"")
 			}
 		case "tactics":
 			if err := func() error {
@@ -12773,6 +12859,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Cleave.Set {
+			e.FieldStart("cleave")
+			s.Cleave.Encode(e)
+		}
+	}
+	{
 		if s.ToId.Set {
 			e.FieldStart("toId")
 			s.ToId.Encode(e)
@@ -12826,7 +12918,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [71]string{
+var jsonFieldsNameOfLiveCommand = [72]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -12890,14 +12982,15 @@ var jsonFieldsNameOfLiveCommand = [71]string{
 	60: "trigger",
 	61: "option",
 	62: "offHand",
-	63: "toId",
-	64: "itemSlug",
-	65: "coin",
-	66: "count",
-	67: "shopId",
-	68: "monsters",
-	69: "hpDelta",
-	70: "seq",
+	63: "cleave",
+	64: "toId",
+	65: "itemSlug",
+	66: "coin",
+	67: "count",
+	68: "shopId",
+	69: "monsters",
+	70: "hpDelta",
+	71: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13560,6 +13653,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"offHand\"")
+			}
+		case "cleave":
+			if err := func() error {
+				s.Cleave.Reset()
+				if err := s.Cleave.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cleave\"")
 			}
 		case "toId":
 			if err := func() error {
@@ -24037,6 +24140,39 @@ func (s OptLiveAreaPreview) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveAreaPreview) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveAttackMastery as json.
+func (o OptLiveAttackMastery) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveAttackMastery from json.
+func (o *OptLiveAttackMastery) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveAttackMastery to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveAttackMastery) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveAttackMastery) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

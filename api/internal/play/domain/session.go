@@ -101,6 +101,8 @@ type Attack struct {
 	// which an off-hand attack leaves out.
 	Light     bool
 	DamageMod int
+	// Mastery is the weapon's mastery, when the creature has mastered it.
+	Mastery string
 }
 
 // Attack action kinds in the Action Log.

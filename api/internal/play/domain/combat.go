@@ -62,6 +62,10 @@ type Combatant struct {
 	Disengaged bool
 	// Readied is an attack waiting on its trigger until the Combatant's next turn.
 	Readied *Readied
+	// CleaveFrom is the creature a Cleave hit struck this turn, opening a second attack against one next
+	// to it; Cleaved is set once that attack is made.
+	CleaveFrom *TokenID
+	Cleaved    bool
 }
 
 // Readied is a readied attack: what sets it off, and which attack it makes.
@@ -86,6 +90,8 @@ const (
 	ActionResolved = "action_resolved"
 	// ActionObjectUsed is the turn's free object interaction.
 	ActionObjectUsed = "object_used"
+	// ActionMasteryUsed is what a Weapon Mastery did after an attack.
+	ActionMasteryUsed = "mastery_used"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.
@@ -145,8 +151,9 @@ type PendingAttack struct {
 	Total int
 	// Opportunity marks an opportunity attack; the interrupted walk resumes after it.
 	Opportunity bool
-	// OffHand marks the off-hand attack of a Light weapon.
+	// OffHand marks the off-hand attack of a Light weapon; Cleave the second attack Cleave allows.
 	OffHand bool
+	Cleave  bool
 }
 
 // Totals lists every rolled initiative.

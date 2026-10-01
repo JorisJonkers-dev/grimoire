@@ -17,8 +17,8 @@ INSERT INTO compendium.effect_bonus_dice (effect_id, ordinal, dice, on_attacks, 
 VALUES (@effect_id, @ordinal, @dice, @on_attacks, @on_saves);
 
 -- name: InsertEffectEdge :exec
-INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach)
-VALUES (@effect_id, @ordinal, @against, @advantage, @reach);
+INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach, source_only)
+VALUES (@effect_id, @ordinal, @against, @advantage, @reach, @source_only);
 
 -- name: InsertEffectExtraDamage :exec
 INSERT INTO compendium.effect_extra_damage (effect_id, ordinal, dice) VALUES (@effect_id, @ordinal, @dice);
@@ -54,7 +54,7 @@ SELECT effect_id, ordinal, kind FROM compendium.effect_components ORDER BY effec
 SELECT effect_id, ordinal, dice, on_attacks, on_saves FROM compendium.effect_bonus_dice;
 
 -- name: ListEffectEdges :many
-SELECT effect_id, ordinal, against, advantage, reach FROM compendium.effect_edges;
+SELECT effect_id, ordinal, against, advantage, reach, source_only FROM compendium.effect_edges;
 
 -- name: ListEffectExtraDamage :many
 SELECT effect_id, ordinal, dice FROM compendium.effect_extra_damage;
@@ -95,3 +95,9 @@ SELECT effect_id, ordinal, feet FROM compendium.effect_crits;
 
 -- name: ListEffectExhaustion :many
 SELECT effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at FROM compendium.effect_exhaustion;
+
+-- name: InsertEffectSpeedPenalty :exec
+INSERT INTO compendium.effect_speed_penalties (effect_id, ordinal, ft) VALUES (@effect_id, @ordinal, @ft);
+
+-- name: ListEffectSpeedPenalties :many
+SELECT effect_id, ordinal, ft FROM compendium.effect_speed_penalties;

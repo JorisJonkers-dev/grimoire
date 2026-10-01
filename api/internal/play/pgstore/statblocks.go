@@ -19,6 +19,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/mastery"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -114,6 +115,11 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	if ability, casts := spellcasting()[sheet.Class]; casts {
 		stats.SpellDC = 8 + pb + rules.Modifier(sheet.Scores[ability])
 	}
+	var carried []string
+	for _, w := range sheet.Weapons {
+		carried = append(carried, w.Slug)
+	}
+	mastered := mastery.Mastered(carried, s.masteryCount(ctx, sheet.Class, sheet.Level))
 	for _, w := range sheet.Weapons {
 		props := attack.Weapon{
 			Finesse: slices.Contains(w.Properties, "Finesse"), Ammunition: slices.Contains(w.Properties, "Ammunition"),
@@ -127,6 +133,7 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 		stats.Attacks = append(stats.Attacks, domain.Attack{
 			Name: w.Name, ToHit: toHit, ReachFt: reach, RangeFt: w.RangeFeet, LongRangeFt: w.LongRangeFeet, Damage: dmg,
 			DamageBonus: flat, DamageType: w.DamageType, Light: slices.Contains(w.Properties, "Light"), DamageMod: bonus,
+			Mastery: masteryOf(w.Properties, slices.Contains(mastered, w.Slug)),
 		})
 	}
 	return sheet.Name, uuid.UUID(sheet.Owner.ID), stats, nil
@@ -184,4 +191,24 @@ func (s Statblocks) attacksPerAction(ctx context.Context, class string, level in
 		return v
 	}
 	return 1
+}
+
+// masteryCount is how many weapons a Character's class lets it master at its level.
+func (s Statblocks) masteryCount(ctx context.Context, class string, level int) int {
+	cat, err := s.Store.Features(ctx)
+	if err != nil {
+		return 0
+	}
+	n, _ := cat.Scales[class+"-weapon-mastery"].Steps.At(level)
+	count, _ := strconv.Atoi(n)
+	return count
+}
+
+// masteryOf is a weapon's mastery when the Character has mastered it.
+func masteryOf(properties []string, mastered bool) string {
+	m, ok := mastery.Of(properties)
+	if !ok || !mastered {
+		return ""
+	}
+	return string(m)
 }

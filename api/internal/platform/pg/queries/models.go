@@ -374,12 +374,13 @@ type CompendiumEffectDefinition struct {
 }
 
 type CompendiumEffectEdge struct {
-	EffectID  int64
-	Ordinal   int32
-	Kind      string
-	Against   bool
-	Advantage bool
-	Reach     string
+	EffectID   int64
+	Ordinal    int32
+	Kind       string
+	Against    bool
+	Advantage  bool
+	Reach      string
+	SourceOnly bool
 }
 
 type CompendiumEffectExhaustion struct {
@@ -436,6 +437,13 @@ type CompendiumEffectSaveEdge struct {
 	Kind     string
 	Ability  string
 	Mode     string
+}
+
+type CompendiumEffectSpeedPenalty struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ft       int32
 }
 
 type CompendiumEffectSurface struct {
@@ -825,6 +833,7 @@ type PlayAttack struct {
 	Total           pgtype.Int4
 	Opportunity     bool
 	OffHand         bool
+	Cleave          bool
 }
 
 type PlayCombat struct {
@@ -869,6 +878,8 @@ type PlayCombatant struct {
 	LightAttack     bool
 	OffHand         bool
 	Interaction     bool
+	CleaveFrom      pgtype.UUID
+	Cleaved         bool
 }
 
 type PlayEncounterZone struct {
@@ -1067,6 +1078,7 @@ type PlayTokenAttack struct {
 	DamageType  string
 	Light       bool
 	DamageMod   int32
+	Mastery     pgtype.Text
 }
 
 type PlayTokenSafe struct {

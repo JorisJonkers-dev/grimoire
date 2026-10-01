@@ -1024,6 +1024,10 @@ export type LiveAttack = {
      * A Light weapon, which opens the off-hand attack.
      */
     light?: boolean;
+    /**
+     * The weapon's mastery, when the creature has mastered it.
+     */
+    mastery?: 'cleave' | 'graze' | 'nick' | 'push' | 'sap' | 'slow' | 'topple' | 'vex';
 };
 
 /**
@@ -1152,6 +1156,10 @@ export type LiveCommand = {
      * Makes the attack the off-hand attack of a Light weapon.
      */
     offHand?: boolean;
+    /**
+     * Makes the attack the second attack a Cleave hit allows.
+     */
+    cleave?: boolean;
     toId?: Id;
     itemSlug?: Slug;
     coin?: Coin;
@@ -1636,6 +1644,10 @@ export type LiveCombatant = {
      * The turn's free object interaction is unused.
      */
     interaction?: boolean;
+    /**
+     * A Cleave hit leaves a second attack open.
+     */
+    cleave?: boolean;
     tactics?: Tactics;
     suggestion?: LiveSuggestion;
 };

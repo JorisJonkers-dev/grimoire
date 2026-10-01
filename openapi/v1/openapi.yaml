@@ -4424,6 +4424,7 @@ components:
         damageBonus: { type: integer, format: int32, minimum: -10, maximum: 50 }
         damageType: { type: string, maxLength: 80 }
         light: { type: boolean, description: "A Light weapon, which opens the off-hand attack." }
+        mastery: { type: string, enum: [cleave, graze, nick, push, sap, slow, topple, vex], description: "The weapon's mastery, when the creature has mastered it." }
     LiveAttackPreview:
       type: object
       description: What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
@@ -4540,6 +4541,7 @@ components:
         trigger: { type: string, enum: [enters_reach] }
         option: { type: string, enum: [grapple, shove_push, shove_prone] }
         offHand: { type: boolean, description: "Makes the attack the off-hand attack of a Light weapon." }
+        cleave: { type: boolean, description: "Makes the attack the second attack a Cleave hit allows." }
         toId: { $ref: "#/components/schemas/Id" }
         itemSlug: { $ref: "#/components/schemas/Slug" }
         coin: { $ref: "#/components/schemas/Coin" }
@@ -5056,6 +5058,7 @@ components:
         attacksLeft: { type: integer, format: int32, minimum: 0, maximum: 10, description: "Attacks left of an Attack action already begun (Extra Attack)." }
         offHand: { type: boolean, description: "The off-hand attack of a Light weapon is open." }
         interaction: { type: boolean, description: "The turn's free object interaction is unused." }
+        cleave: { type: boolean, description: "A Cleave hit leaves a second attack open." }
         tactics: { $ref: "#/components/schemas/Tactics" }
         suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:

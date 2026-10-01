@@ -97,16 +97,17 @@ func (q *Queries) InsertEffectCrit(ctx context.Context, arg InsertEffectCritPara
 }
 
 const insertEffectEdge = `-- name: InsertEffectEdge :exec
-INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach, source_only)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type InsertEffectEdgeParams struct {
-	EffectID  int64
-	Ordinal   int32
-	Against   bool
-	Advantage bool
-	Reach     string
+	EffectID   int64
+	Ordinal    int32
+	Against    bool
+	Advantage  bool
+	Reach      string
+	SourceOnly bool
 }
 
 func (q *Queries) InsertEffectEdge(ctx context.Context, arg InsertEffectEdgeParams) error {
@@ -116,6 +117,7 @@ func (q *Queries) InsertEffectEdge(ctx context.Context, arg InsertEffectEdgePara
 		arg.Against,
 		arg.Advantage,
 		arg.Reach,
+		arg.SourceOnly,
 	)
 	return err
 }
@@ -255,6 +257,21 @@ func (q *Queries) InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSave
 		arg.Ability,
 		arg.Mode,
 	)
+	return err
+}
+
+const insertEffectSpeedPenalty = `-- name: InsertEffectSpeedPenalty :exec
+INSERT INTO compendium.effect_speed_penalties (effect_id, ordinal, ft) VALUES ($1, $2, $3)
+`
+
+type InsertEffectSpeedPenaltyParams struct {
+	EffectID int64
+	Ordinal  int32
+	Ft       int32
+}
+
+func (q *Queries) InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffectSpeedPenaltyParams) error {
+	_, err := q.db.Exec(ctx, insertEffectSpeedPenalty, arg.EffectID, arg.Ordinal, arg.Ft)
 	return err
 }
 
@@ -446,15 +463,16 @@ func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefini
 }
 
 const listEffectEdges = `-- name: ListEffectEdges :many
-SELECT effect_id, ordinal, against, advantage, reach FROM compendium.effect_edges
+SELECT effect_id, ordinal, against, advantage, reach, source_only FROM compendium.effect_edges
 `
 
 type ListEffectEdgesRow struct {
-	EffectID  int64
-	Ordinal   int32
-	Against   bool
-	Advantage bool
-	Reach     string
+	EffectID   int64
+	Ordinal    int32
+	Against    bool
+	Advantage  bool
+	Reach      string
+	SourceOnly bool
 }
 
 func (q *Queries) ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, error) {
@@ -472,6 +490,7 @@ func (q *Queries) ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, er
 			&i.Against,
 			&i.Advantage,
 			&i.Reach,
+			&i.SourceOnly,
 		); err != nil {
 			return nil, err
 		}
@@ -713,6 +732,36 @@ func (q *Queries) ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdge
 			&i.Ability,
 			&i.Mode,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectSpeedPenalties = `-- name: ListEffectSpeedPenalties :many
+SELECT effect_id, ordinal, ft FROM compendium.effect_speed_penalties
+`
+
+type ListEffectSpeedPenaltiesRow struct {
+	EffectID int64
+	Ordinal  int32
+	Ft       int32
+}
+
+func (q *Queries) ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error) {
+	rows, err := q.db.Query(ctx, listEffectSpeedPenalties)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectSpeedPenaltiesRow{}
+	for rows.Next() {
+		var i ListEffectSpeedPenaltiesRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Ft); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

@@ -1601,10 +1601,16 @@ describe('hotbar', () => {
     const token: LiveToken = {
       ...goblin, attacks: [
         { name: 'Longsword', toHit: 6, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d8', damageBonus: 3 },
-        { name: 'Dagger', toHit: 6, reachFt: 5, rangeFt: 20, longRangeFt: 60, damage: '1d4', damageBonus: 3, light: true },
+        { name: 'Dagger', toHit: 6, reachFt: 5, rangeFt: 20, longRangeFt: 60, damage: '1d4', damageBonus: 3, light: true, mastery: 'nick' },
+        { name: 'Greataxe', toHit: 6, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d12', damageBonus: 3, mastery: 'cleave' },
       ],
     }
-    const w = mount(Hotbar, { props: { token, armed: null, blocked: '', attacksLeft: 1, offHand: true, interaction: true } })
+    const w = mount(Hotbar, { props: { token, armed: null, blocked: '', attacksLeft: 1, offHand: true, interaction: true, cleave: true } })
+    expect(w.get('[data-testid="mastery-1"]').text()).toBe('nick')
+    expect(w.get('[data-testid="mastery-2"]').attributes('title')).toContain('second creature')
+    expect(w.find('[data-testid="mastery-0"]').exists()).toBe(false)
+    await w.get('[data-testid="cleave"]').trigger('click')
+    expect(w.emitted('cleave')?.at(-1)).toEqual([2])
     expect(w.get('[data-testid="attacks-left"]').text()).toBe('1 attack left this action')
     expect(w.find('[data-testid="off-hand-0"]').isVisible()).toBe(false)
     await w.get('[data-testid="off-hand-1"]').trigger('click')

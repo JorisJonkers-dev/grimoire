@@ -37,7 +37,7 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 //nolint:gosec // coordinates are bounded by the map
 func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
-	if (w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed) && w.Combat == nil {
+	if (w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed) && w.Combat == nil {
 		if err := s.openRolls(ctx, sess, w.Rolls, actor, c, now); err != nil {
 			return err
 		}

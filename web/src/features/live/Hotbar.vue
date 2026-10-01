@@ -14,8 +14,9 @@ withDefaults(
     attacksLeft?: number
     offHand?: boolean
     interaction?: boolean
+    cleave?: boolean
   }>(),
-  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false },
+  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false, cleave: false },
 )
 const emit = defineEmits<{
   arm: [attackNo: number]
@@ -26,9 +27,21 @@ const emit = defineEmits<{
   ready: [attackNo: number]
   unarmed: [option: string]
   offHand: [attackNo: number]
+  cleave: [attackNo: number]
   interact: [what: string]
 }>()
 const what = ref('')
+// What each mastery does, for the hotbar's tooltips.
+const masteries: Record<string, string> = {
+  cleave: 'Cleave: on a hit, attack a second creature next to the first, once a turn.',
+  graze: 'Graze: on a miss, deal your ability modifier in damage.',
+  nick: 'Nick: the off-hand attack is part of the Attack action.',
+  push: 'Push: on a hit, push the target 10 ft away.',
+  sap: 'Sap: on a hit, the target has Disadvantage on its next attack.',
+  slow: 'Slow: on a damaging hit, the target loses 10 ft of Speed.',
+  topple: 'Topple: on a hit, the target saves (Constitution) or falls Prone.',
+  vex: 'Vex: on a damaging hit, your next attack against it has Advantage.',
+}
 // The 2024 actions besides Attack and Ready, in the order the rules list them.
 const actions = [
   { key: 'dash', name: 'Dash', tip: 'Gain extra movement equal to your Speed this turn.' },
@@ -83,8 +96,19 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
     >
       <span class="name">{{ a.name }}</span>
       <span class="stat">{{ signed(a.toHit) }} · {{ damage(a) }} · {{ reach(a) }}</span>
+      <span v-if="a.mastery" class="g-tag mastery" :title="masteries[a.mastery]" :data-testid="`mastery-${String(i)}`">{{ a.mastery }}</span>
     </GButton>
     <p v-if="attacksLeft" class="hint" data-testid="attacks-left">{{ attacksLeft }} {{ attacksLeft === 1 ? 'attack' : 'attacks' }} left this action</p>
+    <GButton
+      v-if="cleave"
+      variant="primary"
+      class="action"
+      :disabled="blocked !== ''"
+      data-testid="cleave"
+      @click="emit('cleave', (token.attacks ?? []).findIndex((a) => a.mastery === 'cleave'))"
+    >
+      Cleave a second creature
+    </GButton>
     <template v-if="offHand">
       <GButton
         v-for="(a, i) in token.attacks ?? []"
@@ -155,6 +179,9 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
 </template>
 
 <style scoped>
+.mastery {
+  text-transform: capitalize;
+}
 .interact {
   display: flex;
   gap: 6px;

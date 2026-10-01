@@ -98,6 +98,7 @@ type Write struct {
 	Pushed  *domain.Token
 	Dragged *domain.Token
 	taken   *takenAction
+	cleave  *domain.TokenID
 	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
 	Spawned []domain.Token
 	Undoes  uuid.UUID
@@ -709,6 +710,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionObjectUsed:
 		applyInteraction(s, w)
+		return
+	case domain.ActionMasteryUsed:
+		applyMastery(s, w)
 		return
 	case domain.ActionUnarmed:
 		applyAction(s, w)

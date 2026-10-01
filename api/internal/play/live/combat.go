@@ -303,6 +303,7 @@ func startTurn(c *domain.Combat, speed func(domain.Combatant) int) {
 		if c.Acting(x) {
 			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(speed(x)), false
 			c.Combatants[i].Disengaged, c.Combatants[i].Readied = false, nil
+			c.Combatants[i].CleaveFrom, c.Combatants[i].Cleaved = nil, false
 		}
 	}
 }
@@ -370,7 +371,8 @@ func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, 
 	cv := CombatantView{
 		ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
 		Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
-		AttacksLeft: x.Economy.AttacksLeft, OffHand: x.Economy.CanOffHand(false), Interaction: x.Economy.Interaction,
+		AttacksLeft: x.Economy.AttacksLeft, OffHand: x.Economy.CanOffHand(s.anyNick(t)), Interaction: x.Economy.Interaction,
+		Cleave:   x.CleaveFrom != nil && !x.Cleaved,
 		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised, Disengaged: x.Disengaged,
 		Readied: x.Readied != nil && (a == AudienceDM || t.Kind == domain.TokenParty),
 	}
@@ -411,9 +413,12 @@ func applyAttack(s *state, w *Write) {
 	if w.Kind == domain.ActionAttackDeclared {
 		i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
 		x := &s.combat.Combatants[i]
-		if p := w.attack; p.OffHand {
-			x.Economy, _ = x.Economy.OffHandAttack(false)
-		} else {
+		switch p := w.attack; {
+		case p.Cleave:
+			x.Cleaved, x.CleaveFrom = true, nil
+		case p.OffHand:
+			x.Economy, _ = x.Economy.OffHandAttack(nicks(w.Token.Stats.Attacks[p.AttackNo]))
+		default:
 			x.Economy, _ = x.Economy.Attack(w.Token.Stats.AttacksPerAction, w.Token.Stats.Attacks[p.AttackNo].Light)
 		}
 	}

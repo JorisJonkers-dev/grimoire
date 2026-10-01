@@ -67,7 +67,7 @@ func TestManualFallback(t *testing.T) {
 	if got := srd().Instructions("bless", "Bless"); got != nil {
 		t.Fatalf("fully modelled = %v", got)
 	}
-	want := []string{"bless", "burning-hands", "cone-of-cold", "exhaustion", "faerie-fire", "fireball", "grease", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "shatter", "stunned"}
+	want := []string{"bless", "burning-hands", "cone-of-cold", "exhaustion", "faerie-fire", "fireball", "grease", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "stunned", "vexed"}
 	if got := srd().Automated(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("automated = %v", got)
 	}
@@ -211,6 +211,25 @@ func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
 	}
 }
 
+func TestMasteryEffects(t *testing.T) {
+	t.Parallel()
+	cat := srd()
+	vexed := []effects.Active{{Slug: "vexed", Source: "aria"}}
+	if p := cat.ForAttack(nil, vexed, "aria", true); len(p.Advantages) != 1 {
+		t.Errorf("the vexer has advantage = %+v", p)
+	}
+	if p := cat.ForAttack(nil, vexed, "brom", true); len(p.Advantages) != 0 {
+		t.Errorf("nobody else does = %+v", p)
+	}
+	if p := cat.ForAttack([]effects.Active{{Slug: "sapped"}}, nil, "x", true); len(p.Disadvantages) != 1 {
+		t.Errorf("a sapped attacker = %+v", p)
+	}
+	slowed := []effects.Active{{Slug: "slowed"}, {Slug: "slowed"}, {Slug: "exhaustion", Level: 1}}
+	if got := cat.SpeedPenaltyFt(slowed); got != 15 {
+		t.Errorf("two Slows count once, exhaustion adds = %d", got)
+	}
+}
+
 // srd mirrors the Effects the migrations seed, so the rules can be tested without a database.
 func srd() effects.Catalog {
 	return effects.Catalog{
@@ -265,6 +284,9 @@ func srd() effects.Catalog {
 		"deafened": {Slug: "deafened", Name: "Deafened", Components: []effects.Component{
 			effects.Manual{Instruction: "Deafened: can't hear, and fails any ability check that needs hearing."},
 		}},
+		"sapped":     {Slug: "sapped", Name: "Sapped", Components: []effects.Component{effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange}}},
+		"slowed":     {Slug: "slowed", Name: "Slowed", Components: []effects.Component{effects.SpeedPenalty{Ft: 10}}},
+		"vexed":      {Slug: "vexed", Name: "Vexed", Components: []effects.Component{effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange, SourceOnly: true}}},
 		"exhaustion": {Slug: "exhaustion", Name: "Exhaustion", Components: []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6}}},
 		"frightened": {Slug: "frightened", Name: "Frightened", Components: []effects.Component{
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},

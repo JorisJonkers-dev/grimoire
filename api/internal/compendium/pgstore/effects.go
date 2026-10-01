@@ -72,7 +72,9 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		}
 	case effects.Edge:
 		return "edge", func() error {
-			return q.InsertEffectEdge(ctx, queries.InsertEffectEdgeParams{EffectID: id, Ordinal: ord, Against: c.Against, Advantage: c.Advantage, Reach: reachName(c.Range)})
+			return q.InsertEffectEdge(ctx, queries.InsertEffectEdgeParams{
+				EffectID: id, Ordinal: ord, Against: c.Against, Advantage: c.Advantage, Reach: reachName(c.Range), SourceOnly: c.SourceOnly,
+			})
 		}
 	case effects.ExtraDamage:
 		return "extra_damage", func() error {
@@ -105,6 +107,10 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 	case effects.CreateSurface:
 		return "create_surface", func() error {
 			return q.InsertEffectSurface(ctx, queries.InsertEffectSurfaceParams{EffectID: id, Ordinal: ord, Surface: string(c.Kind), Rounds: int32(c.Rounds)}) //nolint:gosec // bounded by a check
+		}
+	case effects.SpeedPenalty:
+		return "speed_penalty", func() error {
+			return q.InsertEffectSpeedPenalty(ctx, queries.InsertEffectSpeedPenaltyParams{EffectID: id, Ordinal: ord, Ft: int32(c.Ft)}) //nolint:gosec // bounded by a check
 		}
 	case effects.Incapacitated:
 		return "incapacitated", func() error { return nil }
@@ -205,7 +211,7 @@ func (s *Store) componentsBySlot(ctx context.Context) (map[slot]effects.Componen
 		return nil, err
 	}
 	for _, r := range edges {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Edge{Against: r.Against, Advantage: r.Advantage, Range: reachOf(r.Reach)}
+		out[slot{r.EffectID, r.Ordinal}] = effects.Edge{Against: r.Against, Advantage: r.Advantage, Range: reachOf(r.Reach), SourceOnly: r.SourceOnly}
 	}
 	extra, err := s.q.ListEffectExtraDamage(ctx)
 	if err != nil {
@@ -286,6 +292,13 @@ func (s *Store) conditionComponents(ctx context.Context, out map[slot]effects.Co
 	}
 	for _, r := range tired {
 		out[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt)}
+	}
+	slow, err := s.q.ListEffectSpeedPenalties(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range slow {
+		out[slot{r.EffectID, r.Ordinal}] = effects.SpeedPenalty{Ft: int(r.Ft)}
 	}
 	return out, nil
 }

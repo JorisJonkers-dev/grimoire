@@ -182,10 +182,12 @@ type Command struct {
 	Trigger string `json:"trigger,omitempty"`
 	Option  string `json:"option,omitempty"`
 	// OffHand makes an attack the off-hand attack of a Light weapon.
-	OffHand bool   `json:"offHand,omitempty"`
-	Coin    string `json:"coin,omitempty"`
-	Count   int    `json:"count,omitempty"`
-	ShopID  string `json:"shopId,omitempty"`
+	OffHand bool `json:"offHand,omitempty"`
+	// Cleave makes an attack the second attack of a Cleave hit.
+	Cleave bool   `json:"cleave,omitempty"`
+	Coin   string `json:"coin,omitempty"`
+	Count  int    `json:"count,omitempty"`
+	ShopID string `json:"shopId,omitempty"`
 	// Monsters are what spawn_encounter places; HPDelta is what adjust_hp adds; Seq is the Action undo reverts.
 	Monsters []SpawnMonster `json:"monsters,omitempty"`
 	HPDelta  int            `json:"hpDelta,omitempty"`
@@ -262,8 +264,9 @@ type AttackView struct {
 	Damage      string `json:"damage,omitempty"`
 	DamageBonus int    `json:"damageBonus"`
 	DamageType  string `json:"damageType,omitempty"`
-	// Light weapons open the off-hand attack.
-	Light bool `json:"light,omitempty"`
+	// Light weapons open the off-hand attack; Mastery is the weapon's mastery, when it is mastered.
+	Light   bool   `json:"light,omitempty"`
+	Mastery string `json:"mastery,omitempty"`
 }
 
 // AttackPreview is what an attack would do, sent only to whoever asked: the chance to hit, the damage
@@ -567,6 +570,8 @@ type CombatantView struct {
 	AttacksLeft int  `json:"attacksLeft,omitempty"`
 	OffHand     bool `json:"offHand,omitempty"`
 	Interaction bool `json:"interaction,omitempty"`
+	// Cleave is set while a Cleave hit leaves a second attack open.
+	Cleave bool `json:"cleave,omitempty"`
 	// Tactics and Suggestion go to the DM only.
 	Surprised  bool            `json:"surprised,omitempty"`
 	Tactics    string          `json:"tactics,omitempty"`
@@ -672,7 +677,7 @@ func tokenView(t domain.Token, a Audience) TokenView {
 		for _, x := range s.Attacks {
 			v.Attacks = append(v.Attacks, AttackView{
 				Name: x.Name, ToHit: x.ToHit, ReachFt: x.ReachFt, RangeFt: x.RangeFt, LongRangeFt: x.LongRangeFt, Damage: x.Damage,
-				DamageBonus: x.DamageBonus, DamageType: x.DamageType, Light: x.Light,
+				DamageBonus: x.DamageBonus, DamageType: x.DamageType, Light: x.Light, Mastery: x.Mastery,
 			})
 		}
 	default:

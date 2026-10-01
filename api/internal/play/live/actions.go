@@ -217,7 +217,7 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 // pushed 5 feet straight away when that hex is open.
 func (s *state) unarmedOutcome(w *Write, a, t domain.Token, option string) {
 	switch actions.Option(option) {
-	case actions.Grapple, actions.ShoveDown:
+	case actions.Grapple, actions.ShoveDown, toppled:
 		e := domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: "prone", Name: "Prone", Level: 1}
 		if actions.Option(option) == actions.Grapple {
 			e.Slug, e.Name, e.Source = "grappled", "Grappled", &a.ID

@@ -13196,10 +13196,51 @@ func (s *LiveAttack) Validate() error {
 			Error: err,
 		})
 	}
+	if err := func() error {
+		if value, ok := s.Mastery.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "mastery",
+			Error: err,
+		})
+	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
+}
+
+func (s LiveAttackMastery) Validate() error {
+	switch s {
+	case "cleave":
+		return nil
+	case "graze":
+		return nil
+	case "nick":
+		return nil
+	case "push":
+		return nil
+	case "sap":
+		return nil
+	case "slow":
+		return nil
+	case "topple":
+		return nil
+	case "vex":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
 }
 
 func (s *LiveAttackPreview) Validate() error {
