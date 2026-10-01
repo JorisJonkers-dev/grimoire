@@ -45,6 +45,19 @@ func TestBuiltinEffectsRoundTripThroughTheDatabase(t *testing.T) {
 	}
 }
 
+// The migrations seed every Effect the engine shipped with, so a fresh database plays exactly as the
+// catalogue in code did.
+func TestFreshDatabasesHoldTheBuiltinEffects(t *testing.T) {
+	t.Parallel()
+	got, err := pgstore.New(openPool(t)).Effects(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, effects.Builtin()) {
+		t.Fatalf("seeded catalogue differs:\n got %+v\nwant %+v", got, effects.Builtin())
+	}
+}
+
 // Saving an Effect again replaces its components rather than adding to them.
 func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 	t.Parallel()

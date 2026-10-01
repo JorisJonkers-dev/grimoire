@@ -12,7 +12,6 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -40,7 +39,7 @@ func (r *runtime) prompt(kind string, reactor, trigger domain.Token, attackNo in
 func (r *runtime) walkWrite(t domain.Token, path []hex.Coord, resumed bool) Write {
 	costs := pathCosts(r.st.walkGrid(true, t, nil), path)
 	for i := range costs {
-		costs[i] *= effects.MoveMultiplier(r.st.actives(t.ID))
+		costs[i] *= r.st.catalog.MoveMultiplier(r.st.actives(t.ID))
 	}
 	w := Write{Kind: domain.ActionTokenWalked, Token: t, Path: path, CostFt: costs[len(costs)-1]}
 	first := 0

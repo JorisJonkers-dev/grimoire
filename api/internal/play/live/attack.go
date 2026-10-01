@@ -144,7 +144,7 @@ func (s *state) shape(p aim) (aim, string) {
 		disadvantages++
 		p.reasons = append(p.reasons, "Disadvantage: a hostile creature is next to the attacker")
 	}
-	p.prof = effects.ForAttack(s.actives(p.attacker.ID), s.actives(p.target.ID), uuid.UUID(p.attacker.ID).String(), hex.Distance(from, to) <= 1)
+	p.prof = s.catalog.ForAttack(s.actives(p.attacker.ID), s.actives(p.target.ID), uuid.UUID(p.attacker.ID).String(), hex.Distance(from, to) <= 1)
 	p.reasons = append(append(append(p.reasons, p.prof.Advantages...), p.prof.Disadvantages...), p.prof.Notes...)
 	p.mode = attack.ModeOf(len(p.prof.Advantages), disadvantages+len(p.prof.Disadvantages))
 	return p, ""
@@ -251,7 +251,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 // hit opens the damage roll of an attack that hit, every die doubled on a critical; flat damage lands at once.
 func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, roll domain.Roll) Write {
 	with := a.Stats.Attacks[p.AttackNo]
-	spec := joinDice(with.Damage, effects.ForAttack(nil, r.st.actives(t.ID), uuid.UUID(a.ID).String(), false).DamageDice)
+	spec := joinDice(with.Damage, r.st.catalog.ForAttack(nil, r.st.actives(t.ID), uuid.UUID(a.ID).String(), false).DamageDice)
 	if len(spec.Groups) == 0 {
 		return r.hurt(t, with.DamageBonus, Write{Token: a, attack: &p})
 	}

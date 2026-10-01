@@ -56,7 +56,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	if reason != "" {
 		return Write{}, reason
 	}
-	def, known := effects.Lookup(slug)
+	def, known := r.st.catalog.Lookup(slug)
 	name := def.Name
 	if !known {
 		name = strings.TrimSpace(cmd.EffectName)
@@ -74,7 +74,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 			w.ended = append(w.ended, old.ID)
 		}
 	}
-	for _, text := range effects.Instructions(slug, name) {
+	for _, text := range r.st.catalog.Instructions(slug, name) {
 		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + ": " + text})
 	}
 	return w, ""
@@ -125,7 +125,7 @@ func (s *state) actives(id domain.TokenID) []effects.Active {
 func (r *runtime) saves(dm domain.Member, t domain.Token) ([]domain.Roll, []domain.PendingSave) {
 	var rolls []domain.Roll
 	var pending []domain.PendingSave
-	extra := effects.SaveDice(r.st.actives(t.ID))
+	extra := r.st.catalog.SaveDice(r.st.actives(t.ID))
 	for _, e := range r.st.fx.Active {
 		if e.Target != t.ID || e.SaveAbility == "" || slices.ContainsFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.Effect == e.ID }) {
 			continue

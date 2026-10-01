@@ -33,7 +33,7 @@ type areaPlan struct {
 func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 	id, _ := uuid.Parse(cmd.TokenID)
 	caster, ok := r.st.tokens[domain.TokenID(id)]
-	spell, known := effects.AreaOf(strings.ToLower(strings.TrimSpace(cmd.Effect)))
+	spell, known := r.st.catalog.AreaOf(strings.ToLower(strings.TrimSpace(cmd.Effect)))
 	switch {
 	case !ok || caster.Stats == nil || (!m.DM && !r.st.shows(caster, r.st.vision())):
 		return areaPlan{}, "No such caster."
@@ -123,7 +123,7 @@ func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
 		if ability != "" {
 			name := strings.ToUpper(ability[:1]) + ability[1:]
 			roll := r.request(m, t, fmt.Sprintf("%s save against %s (DC %d)", name, p.spell.Name, cast.DC),
-				strings.Join(append([]string{"1d20"}, effects.SaveDice(r.st.actives(t.ID))...), "+"),
+				strings.Join(append([]string{"1d20"}, r.st.catalog.SaveDice(r.st.actives(t.ID))...), "+"),
 				domain.Modifier{Label: name + " save", Value: t.Stats.Saves[ability]})
 			target.SaveRoll = &roll.ID
 			w.Rolls = append(w.Rolls, roll)
@@ -155,7 +155,7 @@ func (r *runtime) areaRolled() {
 	if !ok {
 		return
 	}
-	spell, _ := effects.AreaOf(c.Spell)
+	spell, _ := r.st.catalog.AreaOf(c.Spell)
 	sys := caller.Caller{Subject: actor.Subject, Origin: caller.OriginSystem, Client: ""}
 	caster := r.st.tokens[c.Caster]
 	failed, hits := r.st.outcomes(&c, spell, totals)
@@ -167,7 +167,7 @@ func (r *runtime) areaRolled() {
 	if spell.Condition == "" {
 		return
 	}
-	def, _ := effects.Lookup(spell.Condition)
+	def, _ := r.st.catalog.Lookup(spell.Condition)
 	for _, t := range failed {
 		e := domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: spell.Condition, Name: def.Name}
 		r.commit(request{}, Write{Kind: domain.ActionEffectApplied, Token: t, effect: &e}, actor, sys)
@@ -363,7 +363,7 @@ func (s *state) terrainViews(v *View, a Audience, seen map[hex.Coord]bool) {
 }
 
 func (s *state) areaView(c *domain.AreaCast, a Audience, seen map[hex.Coord]bool) *AreaView {
-	spell, _ := effects.AreaOf(c.Spell)
+	spell, _ := s.catalog.AreaOf(c.Spell)
 	av := &AreaView{CasterID: uuid.UUID(c.Caster).String(), Name: spell.Name, Hexes: wireHexes(c.Hexes), Saves: []AreaSave{}}
 	if c.DamageRoll != nil {
 		av.DamageRollID = uuid.UUID(*c.DamageRoll).String()
