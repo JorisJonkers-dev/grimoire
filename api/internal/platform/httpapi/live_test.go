@@ -210,6 +210,10 @@ func (b brokenSessions) End(context.Context, caller.Caller, uuid.UUID, playdomai
 	return playdomain.Session{}, b.err
 }
 
+func (b brokenSessions) Log(context.Context, caller.Caller, uuid.UUID, playdomain.SessionID, int) ([]playdomain.LoggedAction, error) {
+	return nil, b.err
+}
+
 type idleHub struct{}
 
 func (idleHub) Join(context.Context, playdomain.SessionID, playdomain.Member, caller.Caller, live.Audience) (*live.Subscriber, error) {

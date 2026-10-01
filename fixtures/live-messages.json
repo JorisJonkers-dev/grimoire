@@ -549,6 +549,36 @@
       "q": 0,
       "r": 0,
       "hidden": false
+    },
+    {
+      "nonce": "n61",
+      "kind": "spawn_encounter",
+      "q": 2,
+      "r": 0,
+      "hidden": true,
+      "monsters": [
+        {
+          "monsterSlug": "goblin",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "nonce": "n62",
+      "kind": "adjust_hp",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "hpDelta": -4
+    },
+    {
+      "nonce": "n63",
+      "kind": "undo",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "seq": 42
     }
   ],
   "updates": [
@@ -900,6 +930,7 @@
       "kind": "view",
       "seq": 5,
       "nonce": "n3",
+      "actionSeq": 42,
       "view": {
         "tokens": [
           {

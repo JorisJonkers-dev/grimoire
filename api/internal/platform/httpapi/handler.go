@@ -32,6 +32,8 @@ type Handler struct {
 	Hub        LiveHub
 	// LiveMembers answers membership for the live socket, which sits outside the generated router.
 	LiveMembers LiveMembers
+	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
+	LiveTimeout time.Duration
 	Log         *slog.Logger
 }
 

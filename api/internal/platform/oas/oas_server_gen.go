@@ -226,6 +226,18 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}
 	GetSession(ctx context.Context, params GetSessionParams) (GetSessionRes, error)
+	// GetSessionLog implements getSessionLog operation.
+	//
+	// The Session's latest Actions, newest first, and whether each can still be undone. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/log
+	GetSessionLog(ctx context.Context, params GetSessionLogParams) (GetSessionLogRes, error)
+	// GetSessionView implements getSessionView operation.
+	//
+	// What the caller may see of a live Session now; the DM sees everything. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view
+	GetSessionView(ctx context.Context, params GetSessionViewParams) (GetSessionViewRes, error)
 	// GetSpell implements getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
@@ -487,6 +499,13 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
 	RollRest(ctx context.Context, params RollRestParams) (RollRestRes, error)
+	// SendLiveCommand implements sendLiveCommand operation.
+	//
+	// Sends one command to a live Session as the caller, with the same authority as their live connection,
+	// and answers once the Session has applied it. Members only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
+	SendLiveCommand(ctx context.Context, req *LiveCommand, params SendLiveCommandParams) (SendLiveCommandRes, error)
 	// SetDie implements setDie operation.
 	//
 	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller

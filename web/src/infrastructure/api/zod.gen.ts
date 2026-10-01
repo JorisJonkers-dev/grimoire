@@ -693,6 +693,25 @@ export const zLiveSessionView = z.object({
 });
 
 /**
+ * One Action of a live Session, what it touched, and whether it can still be undone.
+ */
+export const zSessionAction = z.object({
+    seq: z.int().gte(1).lte(2147483647),
+    kind: z.string().max(40),
+    actor: zDisplayName,
+    origin: z.enum([
+        'ui',
+        'mcp',
+        'generator',
+        'system'
+    ]),
+    client: z.string().max(80).optional(),
+    label: z.string().max(2000),
+    undoable: z.boolean(),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
  * How many coins of one kind a container holds.
  */
 export const zLiveCoins = z.object({
@@ -1020,6 +1039,17 @@ export const zLivePath = z.object({
     tokenId: zId,
     hexes: z.array(zHexCoord).max(61),
     costFt: z.int().gte(0).lte(1000)
+});
+
+/**
+ * How a live Session answered a command. actionSeq is the Action Log sequence of the change it made, for undo; previews answer with what they would do.
+ */
+export const zLiveCommandResult = z.object({
+    seq: z.int().gte(0).lte(2147483647),
+    actionSeq: z.int().gte(1).lte(2147483647).optional(),
+    path: zLivePath.optional(),
+    preview: zLiveAttackPreview.optional(),
+    area: zLiveAreaPreview.optional()
 });
 
 /**
@@ -1430,6 +1460,14 @@ export const zShop = z.object({
 });
 
 /**
+ * One kind of monster an encounter spawns, and how many.
+ */
+export const zSpawnMonster = z.object({
+    monsterSlug: zSlug,
+    count: z.int().gte(1).lte(30)
+});
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -1489,7 +1527,10 @@ export const zLiveCommand = z.object({
         'close_shop',
         'buy',
         'sell',
-        'haggle'
+        'haggle',
+        'spawn_encounter',
+        'adjust_hp',
+        'undo'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1561,7 +1602,10 @@ export const zLiveCommand = z.object({
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),
     count: z.int().gte(1).lte(10000000).optional(),
-    shopId: zId.optional()
+    shopId: zId.optional(),
+    monsters: z.array(zSpawnMonster).max(10).optional(),
+    hpDelta: z.int().gte(-1000).lte(1000).optional(),
+    seq: z.int().gte(1).lte(2147483647).optional()
 });
 
 /**
@@ -1690,6 +1734,7 @@ export const zLiveUpdate = z.object({
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
+    actionSeq: z.int().gte(1).lte(2147483647).optional(),
     reason: z.string().max(200).optional(),
     session: zLiveSessionView.optional(),
     view: zLiveView.optional(),
@@ -2961,6 +3006,42 @@ export const zGetSessionPath = z.object({
  * The session.
  */
 export const zGetSessionResponse = zPlaySession;
+
+export const zGetSessionViewPath = z.object({
+    campaignId: zId,
+    sessionId: zId
+});
+
+/**
+ * The view.
+ */
+export const zGetSessionViewResponse = zLiveView;
+
+export const zGetSessionLogPath = z.object({
+    campaignId: zId,
+    sessionId: zId
+});
+
+export const zGetSessionLogQuery = z.object({
+    limit: z.int().gte(1).lte(100).optional().default(30)
+});
+
+/**
+ * The actions.
+ */
+export const zGetSessionLogResponse = z.array(zSessionAction).max(100);
+
+export const zSendLiveCommandBody = zLiveCommand;
+
+export const zSendLiveCommandPath = z.object({
+    campaignId: zId,
+    sessionId: zId
+});
+
+/**
+ * How the Session answered.
+ */
+export const zSendLiveCommandResponse = zLiveCommandResult;
 
 export const zEndSessionPath = z.object({
     campaignId: zId,

@@ -5796,6 +5796,56 @@ func (s *GetPortraitOKImageWEBPHeaders) SetResponse(val GetPortraitOKImageWEBP) 
 
 func (*GetPortraitOKImageWEBPHeaders) getPortraitRes() {}
 
+// GetSessionLogOKHeaders wraps []SessionAction with response headers.
+type GetSessionLogOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []SessionAction
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetSessionLogOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetSessionLogOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetSessionLogOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetSessionLogOKHeaders) GetResponse() []SessionAction {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetSessionLogOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetSessionLogOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetSessionLogOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetSessionLogOKHeaders) SetResponse(val []SessionAction) {
+	s.Response = val
+}
+
+func (*GetSessionLogOKHeaders) getSessionLogRes() {}
+
 // GetSpellNotModified is response for GetSpell operation.
 type GetSpellNotModified struct {
 	ETag OptString
@@ -8730,6 +8780,11 @@ type LiveCommand struct {
 	Coin        OptCoin           `json:"coin"`
 	Count       OptInt32          `json:"count"`
 	ShopId      OptID             `json:"shopId"`
+	Monsters    []SpawnMonster    `json:"monsters"`
+	// With adjust_hp, hit points to add; negative takes them away.
+	HpDelta OptInt32 `json:"hpDelta"`
+	// With undo, the Action Log sequence of the Action to undo.
+	Seq OptInt32 `json:"seq"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -9042,6 +9097,21 @@ func (s *LiveCommand) GetShopId() OptID {
 	return s.ShopId
 }
 
+// GetMonsters returns the value of Monsters.
+func (s *LiveCommand) GetMonsters() []SpawnMonster {
+	return s.Monsters
+}
+
+// GetHpDelta returns the value of HpDelta.
+func (s *LiveCommand) GetHpDelta() OptInt32 {
+	return s.HpDelta
+}
+
+// GetSeq returns the value of Seq.
+func (s *LiveCommand) GetSeq() OptInt32 {
+	return s.Seq
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -9352,6 +9422,21 @@ func (s *LiveCommand) SetShopId(val OptID) {
 	s.ShopId = val
 }
 
+// SetMonsters sets the value of Monsters.
+func (s *LiveCommand) SetMonsters(val []SpawnMonster) {
+	s.Monsters = val
+}
+
+// SetHpDelta sets the value of HpDelta.
+func (s *LiveCommand) SetHpDelta(val OptInt32) {
+	s.HpDelta = val
+}
+
+// SetSeq sets the value of Seq.
+func (s *LiveCommand) SetSeq(val OptInt32) {
+	s.Seq = val
+}
+
 type LiveCommandDue string
 
 const (
@@ -9451,6 +9536,9 @@ const (
 	LiveCommandKindBuy            LiveCommandKind = "buy"
 	LiveCommandKindSell           LiveCommandKind = "sell"
 	LiveCommandKindHaggle         LiveCommandKind = "haggle"
+	LiveCommandKindSpawnEncounter LiveCommandKind = "spawn_encounter"
+	LiveCommandKindAdjustHp       LiveCommandKind = "adjust_hp"
+	LiveCommandKindUndo           LiveCommandKind = "undo"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -9511,6 +9599,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindBuy,
 		LiveCommandKindSell,
 		LiveCommandKindHaggle,
+		LiveCommandKindSpawnEncounter,
+		LiveCommandKindAdjustHp,
+		LiveCommandKindUndo,
 	}
 }
 
@@ -9626,6 +9717,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindSell:
 		return []byte(s), nil
 	case LiveCommandKindHaggle:
+		return []byte(s), nil
+	case LiveCommandKindSpawnEncounter:
+		return []byte(s), nil
+	case LiveCommandKindAdjustHp:
+		return []byte(s), nil
+	case LiveCommandKindUndo:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -9800,6 +9897,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindHaggle:
 		*s = LiveCommandKindHaggle
 		return nil
+	case LiveCommandKindSpawnEncounter:
+		*s = LiveCommandKindSpawnEncounter
+		return nil
+	case LiveCommandKindAdjustHp:
+		*s = LiveCommandKindAdjustHp
+		return nil
+	case LiveCommandKindUndo:
+		*s = LiveCommandKindUndo
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -9896,6 +10002,117 @@ func (s *LiveCommandRest) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// How a live Session answered a command. actionSeq is the Action Log sequence of the change it made,
+// for undo; previews answer with what they would do.
+// Ref: #/components/schemas/LiveCommandResult
+type LiveCommandResult struct {
+	Seq       int32                `json:"seq"`
+	ActionSeq OptInt32             `json:"actionSeq"`
+	Path      OptLivePath          `json:"path"`
+	Preview   OptLiveAttackPreview `json:"preview"`
+	Area      OptLiveAreaPreview   `json:"area"`
+}
+
+// GetSeq returns the value of Seq.
+func (s *LiveCommandResult) GetSeq() int32 {
+	return s.Seq
+}
+
+// GetActionSeq returns the value of ActionSeq.
+func (s *LiveCommandResult) GetActionSeq() OptInt32 {
+	return s.ActionSeq
+}
+
+// GetPath returns the value of Path.
+func (s *LiveCommandResult) GetPath() OptLivePath {
+	return s.Path
+}
+
+// GetPreview returns the value of Preview.
+func (s *LiveCommandResult) GetPreview() OptLiveAttackPreview {
+	return s.Preview
+}
+
+// GetArea returns the value of Area.
+func (s *LiveCommandResult) GetArea() OptLiveAreaPreview {
+	return s.Area
+}
+
+// SetSeq sets the value of Seq.
+func (s *LiveCommandResult) SetSeq(val int32) {
+	s.Seq = val
+}
+
+// SetActionSeq sets the value of ActionSeq.
+func (s *LiveCommandResult) SetActionSeq(val OptInt32) {
+	s.ActionSeq = val
+}
+
+// SetPath sets the value of Path.
+func (s *LiveCommandResult) SetPath(val OptLivePath) {
+	s.Path = val
+}
+
+// SetPreview sets the value of Preview.
+func (s *LiveCommandResult) SetPreview(val OptLiveAttackPreview) {
+	s.Preview = val
+}
+
+// SetArea sets the value of Area.
+func (s *LiveCommandResult) SetArea(val OptLiveAreaPreview) {
+	s.Area = val
+}
+
+// LiveCommandResultHeaders wraps LiveCommandResult with response headers.
+type LiveCommandResultHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LiveCommandResult
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LiveCommandResultHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LiveCommandResultHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LiveCommandResultHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LiveCommandResultHeaders) GetResponse() LiveCommandResult {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LiveCommandResultHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LiveCommandResultHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LiveCommandResultHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LiveCommandResultHeaders) SetResponse(val LiveCommandResult) {
+	s.Response = val
+}
+
+func (*LiveCommandResultHeaders) sendLiveCommandRes() {}
 
 // With paint_surface; leave it out to clear.
 type LiveCommandSurface string
@@ -11707,17 +11924,18 @@ func (s *LiveTravelPlan) SetDays(val int32) {
 // the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
-	Kind    LiveUpdateKind       `json:"kind"`
-	Seq     int32                `json:"seq"`
-	Nonce   OptString            `json:"nonce"`
-	Reason  OptString            `json:"reason"`
-	Session OptLiveSessionView   `json:"session"`
-	View    OptLiveView          `json:"view"`
-	Steps   []LiveView           `json:"steps"`
-	Path    OptLivePath          `json:"path"`
-	Preview OptLiveAttackPreview `json:"preview"`
-	Area    OptLiveAreaPreview   `json:"area"`
-	Ping    OptHexCoord          `json:"ping"`
+	Kind      LiveUpdateKind       `json:"kind"`
+	Seq       int32                `json:"seq"`
+	Nonce     OptString            `json:"nonce"`
+	ActionSeq OptInt32             `json:"actionSeq"`
+	Reason    OptString            `json:"reason"`
+	Session   OptLiveSessionView   `json:"session"`
+	View      OptLiveView          `json:"view"`
+	Steps     []LiveView           `json:"steps"`
+	Path      OptLivePath          `json:"path"`
+	Preview   OptLiveAttackPreview `json:"preview"`
+	Area      OptLiveAreaPreview   `json:"area"`
+	Ping      OptHexCoord          `json:"ping"`
 }
 
 // GetKind returns the value of Kind.
@@ -11733,6 +11951,11 @@ func (s *LiveUpdate) GetSeq() int32 {
 // GetNonce returns the value of Nonce.
 func (s *LiveUpdate) GetNonce() OptString {
 	return s.Nonce
+}
+
+// GetActionSeq returns the value of ActionSeq.
+func (s *LiveUpdate) GetActionSeq() OptInt32 {
+	return s.ActionSeq
 }
 
 // GetReason returns the value of Reason.
@@ -11788,6 +12011,11 @@ func (s *LiveUpdate) SetSeq(val int32) {
 // SetNonce sets the value of Nonce.
 func (s *LiveUpdate) SetNonce(val OptString) {
 	s.Nonce = val
+}
+
+// SetActionSeq sets the value of ActionSeq.
+func (s *LiveUpdate) SetActionSeq(val OptInt32) {
+	s.ActionSeq = val
 }
 
 // SetReason sets the value of Reason.
@@ -12176,6 +12404,56 @@ func (s *LiveView) SetLights(val []LiveLight) {
 func (s *LiveView) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
 }
+
+// LiveViewHeaders wraps LiveView with response headers.
+type LiveViewHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LiveView
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LiveViewHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LiveViewHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LiveViewHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LiveViewHeaders) GetResponse() LiveView {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LiveViewHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LiveViewHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LiveViewHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LiveViewHeaders) SetResponse(val LiveView) {
+	s.Response = val
+}
+
+func (*LiveViewHeaders) getSessionViewRes() {}
 
 // The world map the party travels. The DM gets every location and route; players and the Table get the
 // locations the party has seen or can reach from where it stands, and the routes between them.
@@ -16280,7 +16558,9 @@ func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
+func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
@@ -16323,6 +16603,7 @@ func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
@@ -17412,6 +17693,154 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 		return nil
 	case RulesetSrd2014:
 		*s = RulesetSrd2014
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One Action of a live Session, what it touched, and whether it can still be undone.
+// Ref: #/components/schemas/SessionAction
+type SessionAction struct {
+	Seq       int32               `json:"seq"`
+	Kind      string              `json:"kind"`
+	Actor     DisplayName         `json:"actor"`
+	Origin    SessionActionOrigin `json:"origin"`
+	Client    OptString           `json:"client"`
+	Label     string              `json:"label"`
+	Undoable  bool                `json:"undoable"`
+	CreatedAt time.Time           `json:"createdAt"`
+}
+
+// GetSeq returns the value of Seq.
+func (s *SessionAction) GetSeq() int32 {
+	return s.Seq
+}
+
+// GetKind returns the value of Kind.
+func (s *SessionAction) GetKind() string {
+	return s.Kind
+}
+
+// GetActor returns the value of Actor.
+func (s *SessionAction) GetActor() DisplayName {
+	return s.Actor
+}
+
+// GetOrigin returns the value of Origin.
+func (s *SessionAction) GetOrigin() SessionActionOrigin {
+	return s.Origin
+}
+
+// GetClient returns the value of Client.
+func (s *SessionAction) GetClient() OptString {
+	return s.Client
+}
+
+// GetLabel returns the value of Label.
+func (s *SessionAction) GetLabel() string {
+	return s.Label
+}
+
+// GetUndoable returns the value of Undoable.
+func (s *SessionAction) GetUndoable() bool {
+	return s.Undoable
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *SessionAction) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetSeq sets the value of Seq.
+func (s *SessionAction) SetSeq(val int32) {
+	s.Seq = val
+}
+
+// SetKind sets the value of Kind.
+func (s *SessionAction) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetActor sets the value of Actor.
+func (s *SessionAction) SetActor(val DisplayName) {
+	s.Actor = val
+}
+
+// SetOrigin sets the value of Origin.
+func (s *SessionAction) SetOrigin(val SessionActionOrigin) {
+	s.Origin = val
+}
+
+// SetClient sets the value of Client.
+func (s *SessionAction) SetClient(val OptString) {
+	s.Client = val
+}
+
+// SetLabel sets the value of Label.
+func (s *SessionAction) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetUndoable sets the value of Undoable.
+func (s *SessionAction) SetUndoable(val bool) {
+	s.Undoable = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *SessionAction) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+type SessionActionOrigin string
+
+const (
+	SessionActionOriginUI        SessionActionOrigin = "ui"
+	SessionActionOriginMcp       SessionActionOrigin = "mcp"
+	SessionActionOriginGenerator SessionActionOrigin = "generator"
+	SessionActionOriginSystem    SessionActionOrigin = "system"
+)
+
+// AllValues returns all SessionActionOrigin values.
+func (SessionActionOrigin) AllValues() []SessionActionOrigin {
+	return []SessionActionOrigin{
+		SessionActionOriginUI,
+		SessionActionOriginMcp,
+		SessionActionOriginGenerator,
+		SessionActionOriginSystem,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SessionActionOrigin) MarshalText() ([]byte, error) {
+	switch s {
+	case SessionActionOriginUI:
+		return []byte(s), nil
+	case SessionActionOriginMcp:
+		return []byte(s), nil
+	case SessionActionOriginGenerator:
+		return []byte(s), nil
+	case SessionActionOriginSystem:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SessionActionOrigin) UnmarshalText(data []byte) error {
+	switch SessionActionOrigin(data) {
+	case SessionActionOriginUI:
+		*s = SessionActionOriginUI
+		return nil
+	case SessionActionOriginMcp:
+		*s = SessionActionOriginMcp
+		return nil
+	case SessionActionOriginGenerator:
+		*s = SessionActionOriginGenerator
+		return nil
+	case SessionActionOriginSystem:
+		*s = SessionActionOriginSystem
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -18577,6 +19006,33 @@ func (s *Source) SetAttribution(val string) {
 // SetURL sets the value of URL.
 func (s *Source) SetURL(val string) {
 	s.URL = val
+}
+
+// One kind of monster an encounter spawns, and how many.
+// Ref: #/components/schemas/SpawnMonster
+type SpawnMonster struct {
+	MonsterSlug Slug  `json:"monsterSlug"`
+	Count       int32 `json:"count"`
+}
+
+// GetMonsterSlug returns the value of MonsterSlug.
+func (s *SpawnMonster) GetMonsterSlug() Slug {
+	return s.MonsterSlug
+}
+
+// GetCount returns the value of Count.
+func (s *SpawnMonster) GetCount() int32 {
+	return s.Count
+}
+
+// SetMonsterSlug sets the value of MonsterSlug.
+func (s *SpawnMonster) SetMonsterSlug(val Slug) {
+	s.MonsterSlug = val
+}
+
+// SetCount sets the value of Count.
+func (s *SpawnMonster) SetCount(val int32) {
+	s.Count = val
 }
 
 // A playable species.

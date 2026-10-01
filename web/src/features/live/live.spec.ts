@@ -1427,3 +1427,51 @@ describe('shopping', () => {
     await expectAccessible(wrapper.element as Element)
   })
 })
+
+describe('action log', () => {
+  const entry = (seq: number, extra: object = {}) => ({
+    seq, kind: 'hp_adjusted', actor: 'Joris', origin: 'mcp', client: 'prep-agent', label: 'Goblin 1', undoable: true, createdAt: '2026-10-01T20:00:00Z', ...extra,
+  })
+
+  it('lists the session\'s actions for the DM and undoes one over the socket', async () => {
+    let calls = 0
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/sessions/${SID}/log`]: () => {
+        calls += 1
+        return [entry(12), entry(11, { kind: 'encounter_spawned', label: 'Goblin 1, Goblin 2', client: undefined, origin: 'ui', undoable: false }), entry(10, { kind: 'rest_taken', label: '' })]
+      },
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'dm'))
+    await flushPromises()
+    const log = wrapper.get('[data-testid="action-log"]')
+    expect(log.get('[data-testid="log-12"]').text()).toContain('#12 hp adjusted: Goblin 1 · Joris via prep-agent')
+    expect(log.get('[data-testid="log-11"]').text()).toContain('encounter spawned: Goblin 1, Goblin 2 · Joris')
+    expect(log.get('[data-testid="log-10"]').text()).toContain('#10 rest taken · Joris via prep-agent')
+    expect(log.find('[data-testid="undo-11"]').exists()).toBe(false)
+    await log.get('[data-testid="undo-12"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'undo', seq: 12 })
+    const before = calls
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [], fog: false, visible: [], remembered: [] } })
+    await flushPromises()
+    expect(calls).toBeGreaterThan(before)
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('says when the log cannot be read, and players never see it', async () => {
+    const dm = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/sessions/${SID}/log`]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 503 }, 503),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    FakeSocket.last().receive(snapshot([], 'dm'))
+    await flushPromises()
+    expect(dm.wrapper.get('[data-testid="action-log"]').text()).toContain('The Action Log could not be read.')
+    const player = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    FakeSocket.last().receive(snapshot([], 'party'))
+    await flushPromises()
+    expect(player.wrapper.find('[data-testid="action-log"]').exists()).toBe(false)
+  })
+})

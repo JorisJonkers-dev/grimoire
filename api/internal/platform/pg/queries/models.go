@@ -511,6 +511,11 @@ type PlayAction struct {
 	SessionID     pgtype.UUID
 }
 
+type PlayActionEffectEvent struct {
+	ActionID uuid.UUID
+	EffectID uuid.UUID
+}
+
 type PlayActionHexEvent struct {
 	ActionID uuid.UUID
 	Q        int32
@@ -542,6 +547,12 @@ type PlayActionRollEvent struct {
 	Value    int32
 }
 
+type PlayActionSpawnEvent struct {
+	ActionID uuid.UUID
+	TokenID  uuid.UUID
+	Label    string
+}
+
 type PlayActionTokenEvent struct {
 	ActionID uuid.UUID
 	TokenID  uuid.UUID
@@ -549,6 +560,11 @@ type PlayActionTokenEvent struct {
 	Q        int32
 	R        int32
 	Hidden   bool
+}
+
+type PlayActionUndo struct {
+	ActionID       uuid.UUID
+	UndoesActionID uuid.UUID
 }
 
 type PlayActiveEffect struct {

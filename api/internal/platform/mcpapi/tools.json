@@ -1,5 +1,172 @@
 [
   {
+    "name": "adjust_hp",
+    "description": "Adds hit points to a creature, or takes them away with a negative hpDelta, within 0 and its maximum.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "adjust_hp"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "hpDelta": {
+              "description": "With adjust_hp, hit points to add; negative takes them away.",
+              "format": "int32",
+              "maximum": 1000,
+              "minimum": -1000,
+              "type": "integer"
+            },
+            "tokenId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "tokenId",
+            "hpDelta"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "apply_effect",
+    "description": "Puts an Effect, such as a condition or a spell, on a token.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "apply_effect"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "effect": {
+              "description": "With apply_effect, the Effect's compendium slug.",
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "effectName": {
+              "maxLength": 80,
+              "type": "string"
+            },
+            "rounds": {
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "saveAbility": {
+              "description": "One of the six abilities.",
+              "enum": [
+                "strength",
+                "dexterity",
+                "constitution",
+                "intelligence",
+                "wisdom",
+                "charisma"
+              ],
+              "type": "string"
+            },
+            "saveDc": {
+              "format": "int32",
+              "maximum": 40,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "sourceId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "targetId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "targetId",
+            "effect"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "create_encounter_pool",
     "description": "Create an Encounter Pool. Adds an Encounter Pool and records its first Revision. DM only.",
     "method": "POST",
@@ -811,6 +978,65 @@
     }
   },
   {
+    "name": "end_effect",
+    "description": "Ends an Effect.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "end_effect"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "effectId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "effectId"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "get_automation_coverage",
     "description": "Get automation coverage. How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.",
     "method": "GET",
@@ -936,6 +1162,84 @@
       "required": [
         "campaignId",
         "npcId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_session_log",
+    "description": "Read a session's Action Log. The Session's latest Actions, newest first, and whether each can still be undone. DM only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/log",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [
+      "limit"
+    ],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "limit": {
+          "default": 30,
+          "description": "How many to return, newest first.",
+          "format": "int32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "get_session_state",
+    "description": "See a live session. What the caller may see of a live Session now; the DM sees everything. Members only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/view",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId"
       ],
       "type": "object"
     }
@@ -1356,6 +1660,32 @@
     }
   },
   {
+    "name": "list_sessions",
+    "description": "List sessions. The Campaign's Sessions, newest first. Members only.",
+    "method": "GET",
+    "path": "/api/v1/campaigns/{campaignId}/sessions",
+    "pathParams": [
+      "campaignId"
+    ],
+    "queryParams": [],
+    "body": false,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "list_settlement_revisions",
     "description": "List Settlement revisions. Every Revision of the Settlement, newest first. DM only.",
     "method": "GET",
@@ -1471,6 +1801,186 @@
       },
       "required": [
         "campaignId"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "move_token",
+    "description": "Moves a token straight to a hex, without spending movement.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "move_token"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "q": {
+              "format": "int32",
+              "maximum": 500,
+              "minimum": -500,
+              "type": "integer"
+            },
+            "r": {
+              "format": "int32",
+              "maximum": 500,
+              "minimum": -500,
+              "type": "integer"
+            },
+            "tokenId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "tokenId",
+            "q",
+            "r"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "place_token",
+    "description": "Places one token. A monsterSlug or characterId gives it that creature's stats and name.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "place_token"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "characterId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "controllerId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
+            "darkvisionFt": {
+              "format": "int32",
+              "maximum": 300,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "hidden": {
+              "type": "boolean"
+            },
+            "label": {
+              "maxLength": 40,
+              "type": "string"
+            },
+            "monsterSlug": {
+              "description": "Lower-case, hyphenated identifier.",
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "q": {
+              "format": "int32",
+              "maximum": 500,
+              "minimum": -500,
+              "type": "integer"
+            },
+            "r": {
+              "format": "int32",
+              "maximum": 500,
+              "minimum": -500,
+              "type": "integer"
+            },
+            "tokenKind": {
+              "description": "What a Token stands for.",
+              "enum": [
+                "party",
+                "enemy",
+                "npc",
+                "object"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "tokenKind"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
       ],
       "type": "object"
     }
@@ -1782,6 +2292,233 @@
     }
   },
   {
+    "name": "reveal_area",
+    "description": "Reveals hexes of the map to the party, or conceals them again with on set to false.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "reveal_hexes"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "on": true,
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "hexes": {
+              "items": {
+                "additionalProperties": false,
+                "description": "An axial hex coordinate.",
+                "properties": {
+                  "q": {
+                    "format": "int32",
+                    "maximum": 500,
+                    "minimum": -500,
+                    "type": "integer"
+                  },
+                  "r": {
+                    "format": "int32",
+                    "maximum": 500,
+                    "minimum": -500,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "q",
+                  "r"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2000,
+              "type": "array"
+            },
+            "on": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "hexes"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "run_encounter_check",
+    "description": "Runs an Encounter Check on an encounter table now; mode force guarantees an encounter and pick takes the entry you name.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "encounter_check"
+    },
+    "defaults": {
+      "hidden": false,
+      "mode": "normal",
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "entry": {
+              "description": "With a pick check, the index of the table entry.",
+              "format": "int32",
+              "maximum": 49,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "mode": {
+              "description": "A normal check rolls the chance; force_encounter skips it and never draws Nothing; pick takes the entry the DM chose.",
+              "enum": [
+                "normal",
+                "force_encounter",
+                "pick"
+              ],
+              "type": "string"
+            },
+            "tableId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "tableId"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "schedule_encounter_check",
+    "description": "Schedules an Encounter Check for the next rest or the next Travel Leg.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "schedule_check"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "due": {
+              "enum": [
+                "next_rest",
+                "next_travel"
+              ],
+              "type": "string"
+            },
+            "tableId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            }
+          },
+          "required": [
+            "tableId",
+            "due"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
     "name": "search_compendium",
     "description": "List compendium entries. Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.",
     "method": "GET",
@@ -1921,6 +2658,162 @@
         }
       },
       "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "name": "spawn_encounter",
+    "description": "Places an encounter's monsters as enemy tokens on the free hexes nearest q, r, numbered when there are several. Undo it with undo_action to remove them all.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "spawn_encounter"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "hidden": {
+              "type": "boolean"
+            },
+            "monsters": {
+              "items": {
+                "additionalProperties": false,
+                "description": "One kind of monster an encounter spawns, and how many.",
+                "properties": {
+                  "count": {
+                    "format": "int32",
+                    "maximum": 30,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "monsterSlug": {
+                    "description": "Lower-case, hyphenated identifier.",
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "monsterSlug",
+                  "count"
+                ],
+                "type": "object"
+              },
+              "maxItems": 10,
+              "type": "array"
+            },
+            "q": {
+              "format": "int32",
+              "maximum": 500,
+              "minimum": -500,
+              "type": "integer"
+            },
+            "r": {
+              "format": "int32",
+              "maximum": 500,
+              "minimum": -500,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "monsters"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "undo_action",
+    "description": "Undoes one Action of the Session by its Action Log sequence, as every live tool returns it.",
+    "method": "POST",
+    "path": "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands",
+    "pathParams": [
+      "campaignId",
+      "sessionId"
+    ],
+    "queryParams": [],
+    "body": true,
+    "preset": {
+      "kind": "undo"
+    },
+    "defaults": {
+      "hidden": false,
+      "nonce": "mcp",
+      "q": 0,
+      "r": 0
+    },
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": false,
+          "properties": {
+            "seq": {
+              "description": "With undo, the Action Log sequence of the Action to undo.",
+              "format": "int32",
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "seq"
+          ],
+          "type": "object"
+        },
+        "campaignId": {
+          "description": "Campaign id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "Session id.",
+          "format": "uuid",
+          "maxLength": 36,
+          "type": "string"
+        }
+      },
+      "required": [
+        "campaignId",
+        "sessionId",
+        "body"
+      ],
       "type": "object"
     }
   },

@@ -83,14 +83,16 @@ func TestExportRefusesBrokenSpecs(t *testing.T) {
 		return "paths:\n  /a/{id}:\n    post:\n      x-mcp: " + x + "\n      summary: S\n" + extra
 	}
 	for name, spec := range map[string]string{
-		"yaml":         "paths: [",
-		"no name":      op("{ entity: npc }", ""),
-		"no entity":    op("{ tool: make }", ""),
-		"bad param":    op("{ tool: make, entity: npc }", "      parameters:\n        - $ref: \"#/components/parameters/Nope\"\n"),
-		"bad body":     op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { $ref: \"#/components/schemas/Nope\" }\n"),
-		"loop":         op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { $ref: \"#/components/schemas/A\" }\ncomponents:\n  schemas:\n    A: { $ref: \"#/components/schemas/A\" }\n"),
-		"bad nested":   op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { properties: { a: { $ref: \"#/components/schemas/Nope\" } } }\n"),
-		"loop in list": op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { allOf: [{ $ref: \"#/components/schemas/A\" }] }\ncomponents:\n  schemas:\n    A: { allOf: [{ $ref: \"#/components/schemas/A\" }] }\n"),
+		"yaml":           "paths: [",
+		"no name":        op("{ entity: npc }", ""),
+		"no entity":      op("{ tool: make }", ""),
+		"bad param":      op("{ tool: make, entity: npc }", "      parameters:\n        - $ref: \"#/components/parameters/Nope\"\n"),
+		"bad body":       op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { $ref: \"#/components/schemas/Nope\" }\n"),
+		"loop":           op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { $ref: \"#/components/schemas/A\" }\ncomponents:\n  schemas:\n    A: { $ref: \"#/components/schemas/A\" }\n"),
+		"bad nested":     op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { properties: { a: { $ref: \"#/components/schemas/Nope\" } } }\n"),
+		"unknown field":  "paths:\n  /a:\n    post:\n      x-mcp: { tools: [{ tool: go, kind: go, fields: [nope] }] }\n      requestBody:\n        content:\n          application/json:\n            schema: { properties: { a: { type: string } } }\n",
+		"stray required": "paths:\n  /a:\n    post:\n      x-mcp: { tools: [{ tool: go, kind: go, fields: [a], required: [b] }] }\n      requestBody:\n        content:\n          application/json:\n            schema: { properties: { a: { type: string } } }\n",
+		"loop in list":   op("{ tool: make, entity: npc }", "      requestBody:\n        content:\n          application/json:\n            schema: { allOf: [{ $ref: \"#/components/schemas/A\" }] }\ncomponents:\n  schemas:\n    A: { allOf: [{ $ref: \"#/components/schemas/A\" }] }\n"),
 	} {
 		if _, err := mcpapi.Export([]byte(spec)); err == nil {
 			t.Fatalf("%s: exported", name)
@@ -105,12 +107,12 @@ func TestExportRefusesBrokenSpecs(t *testing.T) {
       description: One a.
       parameters:
         - { name: id, in: path, required: true, schema: { type: string } }
-        - { name: q, in: query, schema: { type: string } }
+        - { name: q, in: query, schema: { type: string, example: x, discriminator: { propertyName: q } } }
         - { name: If-None-Match, in: header, schema: { type: string } }
     put:
       summary: Not a tool
 `))
-	if err != nil || len(tools) != 1 || tools[0].Description != "Read. One a." || !reflect.DeepEqual(tools[0].QueryParams, []string{"q"}) {
+	if err != nil || len(tools) != 1 || tools[0].Description != "Read. One a." || !reflect.DeepEqual(tools[0].QueryParams, []string{"q"}) || strings.Contains(string(tools[0].InputSchema), "example") {
 		t.Fatalf("tools %+v, %v", tools, err)
 	}
 }
@@ -278,6 +280,34 @@ func TestUnnamedClientsAreRecordedAsMCP(t *testing.T) {
 	s := connect(t, mcpapi.Handler(mcpapi.Options{API: api, Edits: &edits{}, Log: quiet}), "dm", "")
 	if _, failed := callTool(t, s, "list_campaigns", nil); failed || got != "mcp" {
 		t.Fatalf("client %q", got)
+	}
+}
+
+func TestAToolCallWithoutArguments(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(mcpapi.Handler(mcpapi.Options{API: &fakeAPI{role: "dm", reply: func(*http.Request) (int, string) { return 200, "[]" }}, Edits: &edits{}, Log: quiet}))
+	t.Cleanup(srv.Close)
+	post := func(session, payload string) (string, string) {
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, srv.URL, strings.NewReader(payload))
+		req.Header.Set("X-User-Id", "dm")
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json, text/event-stream")
+		if session != "" {
+			req.Header.Set("Mcp-Session-Id", session)
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = res.Body.Close() }()
+		got, _ := io.ReadAll(res.Body)
+		return res.Header.Get("Mcp-Session-Id"), string(got)
+	}
+	session, _ := post("", `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"raw","version":"1"}}}`)
+	post(session, `{"jsonrpc":"2.0","method":"notifications/initialized"}`)
+	_, body := post(session, `{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_campaigns"}}`)
+	if !strings.Contains(body, `{\"result\":[]}`) {
+		t.Fatalf("no arguments: %s", body)
 	}
 }
 

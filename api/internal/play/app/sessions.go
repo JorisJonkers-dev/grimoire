@@ -17,6 +17,7 @@ type SessionRepository interface {
 	Session(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (domain.Session, error)
 	Sessions(ctx context.Context, campaign uuid.UUID) ([]domain.Session, error)
 	EndSession(ctx context.Context, campaign uuid.UUID, id domain.SessionID, actor domain.Member, c caller.Caller, now time.Time) error
+	SessionLog(ctx context.Context, id domain.SessionID, limit int) ([]domain.LoggedAction, error)
 }
 
 // Closer shuts a live Session's runtime down once the Session ends.
@@ -58,6 +59,17 @@ func (s *Sessions) Get(ctx context.Context, c caller.Caller, campaign uuid.UUID,
 		return domain.Session{}, err
 	}
 	return s.Repo.Session(ctx, campaign, id)
+}
+
+// Log lists a Session's latest Actions, newest first. DM only.
+func (s *Sessions) Log(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.SessionID, limit int) ([]domain.LoggedAction, error) {
+	if _, err := s.dm(ctx, c, campaign); err != nil {
+		return nil, err
+	}
+	if _, err := s.Repo.Session(ctx, campaign, id); err != nil {
+		return nil, err
+	}
+	return s.Repo.SessionLog(ctx, id, limit)
 }
 
 // List returns the Campaign's Sessions, newest first.

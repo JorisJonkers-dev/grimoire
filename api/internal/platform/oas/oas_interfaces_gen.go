@@ -141,8 +141,16 @@ type GetRollRes interface {
 	getRollRes()
 }
 
+type GetSessionLogRes interface {
+	getSessionLogRes()
+}
+
 type GetSessionRes interface {
 	getSessionRes()
+}
+
+type GetSessionViewRes interface {
+	getSessionViewRes()
 }
 
 type GetSpellRes interface {
@@ -311,6 +319,10 @@ type RevokeInviteRes interface {
 
 type RollRestRes interface {
 	rollRestRes()
+}
+
+type SendLiveCommandRes interface {
+	sendLiveCommandRes()
 }
 
 type SetDieRes interface {

@@ -339,6 +339,24 @@ func (UnimplementedHandler) GetSession(ctx context.Context, params GetSessionPar
 	return r, ht.ErrNotImplemented
 }
 
+// GetSessionLog implements getSessionLog operation.
+//
+// The Session's latest Actions, newest first, and whether each can still be undone. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/log
+func (UnimplementedHandler) GetSessionLog(ctx context.Context, params GetSessionLogParams) (r GetSessionLogRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetSessionView implements getSessionView operation.
+//
+// What the caller may see of a live Session now; the DM sees everything. Members only.
+//
+// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view
+func (UnimplementedHandler) GetSessionView(ctx context.Context, params GetSessionViewParams) (r GetSessionViewRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -723,6 +741,16 @@ func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInvit
 //
 // POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
 func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams) (r RollRestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SendLiveCommand implements sendLiveCommand operation.
+//
+// Sends one command to a live Session as the caller, with the same authority as their live connection,
+// and answers once the Session has applied it. Members only.
+//
+// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
+func (UnimplementedHandler) SendLiveCommand(ctx context.Context, req *LiveCommand, params SendLiveCommandParams) (r SendLiveCommandRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

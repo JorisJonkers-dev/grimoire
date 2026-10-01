@@ -15,15 +15,19 @@ import (
 
 // Tool is one MCP tool: an API operation an agent may call, with its input schema.
 type Tool struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Method      string          `json:"method"`
-	Path        string          `json:"path"`
-	PathParams  []string        `json:"pathParams"`
-	QueryParams []string        `json:"queryParams"`
-	Body        bool            `json:"body"`
-	Entity      string          `json:"entity,omitempty"`
-	ID          string          `json:"id,omitempty"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Method      string   `json:"method"`
+	Path        string   `json:"path"`
+	PathParams  []string `json:"pathParams"`
+	QueryParams []string `json:"queryParams"`
+	Body        bool     `json:"body"`
+	Entity      string   `json:"entity,omitempty"`
+	ID          string   `json:"id,omitempty"`
+	// Preset is forced into the body and Defaults fill what the caller leaves out, for tools that are
+	// one variant of an operation such as a live command.
+	Preset      map[string]any  `json:"preset,omitempty"`
+	Defaults    map[string]any  `json:"defaults,omitempty"`
 	InputSchema json.RawMessage `json:"inputSchema"`
 }
 
@@ -43,19 +47,43 @@ func Export(spec []byte) ([]Tool, error) {
 			if !ok || o["x-mcp"] == nil {
 				continue
 			}
-			t, err := tool(doc, path, strings.ToUpper(method), o)
-			if err != nil {
-				return nil, fmt.Errorf("%s %s: %w", method, path, err)
+			for _, x := range variants(o["x-mcp"].(node)) {
+				t, err := tool(doc, path, strings.ToUpper(method), o, x)
+				if err != nil {
+					return nil, fmt.Errorf("%s %s: %w", method, path, err)
+				}
+				tools = append(tools, t)
 			}
-			tools = append(tools, t)
 		}
 	}
 	sort.Slice(tools, func(i, j int) bool { return tools[i].Name < tools[j].Name })
 	return tools, nil
 }
 
-func tool(doc node, path, method string, o node) (Tool, error) {
-	x, _ := o["x-mcp"].(node)
+// variants lists the tools an operation declares: one, or one per entry of a tools list sharing
+// the operation's defaults.
+func variants(x node) []node {
+	list, ok := x["tools"].([]any)
+	if !ok {
+		return []node{x}
+	}
+	out := make([]node, 0, len(list))
+	for _, raw := range list {
+		v, _ := raw.(node)
+		defaults := node{}
+		for _, d := range []any{x["defaults"], v["defaults"]} {
+			m, _ := d.(node)
+			for k, val := range m {
+				defaults[k] = val
+			}
+		}
+		v["defaults"] = defaults
+		out = append(out, v)
+	}
+	return out
+}
+
+func tool(doc node, path, method string, o, x node) (Tool, error) {
 	t := Tool{Method: method, Path: path, PathParams: []string{}, QueryParams: []string{}}
 	t.Name, _ = x["tool"].(string)
 	t.Entity, _ = x["entity"].(string)
@@ -80,18 +108,56 @@ func tool(doc node, path, method string, o node) (Tool, error) {
 		if err != nil {
 			return Tool{}, err
 		}
-		props["body"] = body
+		if props["body"], err = t.variant(x, body.(node)); err != nil {
+			return Tool{}, err
+		}
 		t.Body = true
 		if r, _ := rb["required"].(bool); r {
 			required = append(required, "body")
 		}
 	}
-	if method != http.MethodGet && t.Entity == "" && t.Name != "undo_change" {
+	if method != http.MethodGet && t.Entity == "" && t.Preset == nil && t.Name != "undo_change" {
 		return Tool{}, errors.New("a write tool needs an entity")
 	}
 	schema, err := json.Marshal(node{"type": "object", "additionalProperties": false, "properties": props, "required": required})
 	t.InputSchema = schema
 	return t, err
+}
+
+// variant narrows a body schema to the fields one tool of an operation takes, and records the kind
+// it forces and the values it fills in.
+func (t *Tool) variant(x, body node) (node, error) {
+	kind, ok := x["kind"].(string)
+	if !ok {
+		return body, nil
+	}
+	t.Preset, t.Defaults = map[string]any{"kind": kind}, x["defaults"].(node)
+	if d, ok := x["description"].(string); ok {
+		t.Description = d
+	}
+	all, _ := body["properties"].(node)
+	props := node{}
+	fields, _ := x["fields"].([]any)
+	for _, f := range fields {
+		name := fmt.Sprint(f)
+		if all[name] == nil {
+			return nil, fmt.Errorf("tool %s: no field %s", t.Name, name)
+		}
+		props[name] = all[name]
+	}
+	required, _ := x["required"].([]any)
+	for _, r := range required {
+		if props[fmt.Sprint(r)] == nil {
+			return nil, fmt.Errorf("tool %s: required %v is not one of its fields", t.Name, r)
+		}
+	}
+	out := node{}
+	for k, v := range body {
+		out[k] = v
+	}
+	out["properties"], out["required"] = props, append([]any{}, required...)
+	delete(out, "description")
+	return out, nil
 }
 
 // param adds a path or query parameter to the input schema; header parameters stay out.

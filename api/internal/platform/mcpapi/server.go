@@ -43,9 +43,7 @@ type Options struct {
 // Tools are the tools the spec declares; the generated file is checked by its tests.
 func Tools() []Tool {
 	var t []Tool
-	if err := json.Unmarshal(toolsJSON, &t); err != nil {
-		panic(err)
-	}
+	_ = json.Unmarshal(toolsJSON, &t)
 	return t
 }
 
@@ -113,7 +111,11 @@ func (o Options) call(t Tool) mcp.ToolHandler {
 				return failure(msg), nil
 			}
 		}
-		status, body := o.serve(ctx, subject, t.Method, path, args["body"])
+		input, ok := t.body(args["body"])
+		if !ok {
+			return failure("The body must be a JSON object."), nil
+		}
+		status, body := o.serve(ctx, subject, t.Method, path, input)
 		if status >= http.StatusBadRequest {
 			return failure(detail(body)), nil
 		}
@@ -142,6 +144,26 @@ func (o Options) answer(ctx context.Context, t Tool, args map[string]json.RawMes
 	}
 	out.Revision = rev
 	return out
+}
+
+// body is the request body: the caller's, or for a variant tool its defaults, then the caller's
+// fields, then the preset it forces.
+func (t Tool) body(given json.RawMessage) (json.RawMessage, bool) {
+	if t.Preset == nil {
+		return given, true
+	}
+	merged := map[string]any{}
+	for k, v := range t.Defaults {
+		merged[k] = v
+	}
+	if len(given) > 0 && json.Unmarshal(given, &merged) != nil {
+		return nil, false
+	}
+	for k, v := range t.Preset {
+		merged[k] = v
+	}
+	out, err := json.Marshal(merged)
+	return out, err == nil
 }
 
 // fill puts the path and query arguments into the operation's URL, or names a missing one.

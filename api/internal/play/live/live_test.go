@@ -390,8 +390,8 @@ type brokenStore struct {
 	live.Store
 }
 
-func (brokenStore) Commit(context.Context, domain.Session, *domain.MapState, live.Write, domain.Member, caller.Caller, time.Time) (int64, error) {
-	return 0, errors.New("disk full")
+func (brokenStore) Commit(context.Context, domain.Session, *domain.MapState, live.Write, domain.Member, caller.Caller, time.Time) (live.Committed, error) {
+	return live.Committed{}, errors.New("disk full")
 }
 
 type failingLoad struct{ live.Store }

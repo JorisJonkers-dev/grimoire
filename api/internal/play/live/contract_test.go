@@ -159,13 +159,16 @@ func samples() contract {
 			{Nonce: "n58", Kind: live.CmdSell, FromID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 1},
 			{Nonce: "n59", Kind: live.CmdHaggle, FromID: "0190c7a8-0000-7000-8000-000000000030"},
 			{Nonce: "n60", Kind: live.CmdCloseShop},
+			{Nonce: "n61", Kind: live.CmdSpawnEncounter, Q: 2, R: 0, Hidden: true, Monsters: []live.SpawnMonster{{Slug: "goblin", Count: 3}}},
+			{Nonce: "n62", Kind: live.CmdAdjustHP, TokenID: token.ID, HPDelta: -4},
+			{Nonce: "n63", Kind: live.CmdUndo, Seq: 42},
 		},
 		Updates: []live.Update{
 			{
 				Kind: live.UpdSnapshot, Seq: 4, View: view,
 				Session: &live.SessionView{ID: "0190c7a8-0000-7000-8000-00000000000b", Number: 3, GridRadius: 10, Audience: live.AudienceParty},
 			},
-			{Kind: live.UpdView, Seq: 5, Nonce: "n3", View: &dmView},
+			{Kind: live.UpdView, Seq: 5, Nonce: "n3", ActionSeq: 42, View: &dmView},
 			{Kind: live.UpdView, Seq: 6, View: &live.View{Tokens: []live.TokenView{}, Visible: []live.Hex{}, Remembered: []live.Hex{}}},
 			{Kind: live.UpdRejected, Seq: 6, Nonce: "n9", Reason: "Only the DM can change the table."},
 			{Kind: live.UpdPath, Seq: 6, Nonce: "n13", Path: &live.PathView{TokenID: token.ID, Hexes: []live.Hex{{Q: 2, R: -1}, {Q: 3, R: -1}, {Q: 3, R: 0}}, CostFt: 10}},

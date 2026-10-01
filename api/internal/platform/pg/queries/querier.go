@@ -14,7 +14,12 @@ import (
 
 type Querier interface {
 	AbilityIDBySlug(ctx context.Context, slug string) (int64, error)
+	ActionEffectEvent(ctx context.Context, actionID uuid.UUID) (uuid.UUID, error)
+	ActionHPEvent(ctx context.Context, actionID uuid.UUID) (ActionHPEventRow, error)
+	ActionHexEvents(ctx context.Context, actionID uuid.UUID) ([]ActionHexEventsRow, error)
 	ActionLog(ctx context.Context, arg ActionLogParams) ([]ActionLogRow, error)
+	ActionSpawnEvents(ctx context.Context, actionID uuid.UUID) ([]ActionSpawnEventsRow, error)
+	ActionTokenEvent(ctx context.Context, actionID uuid.UUID) (ActionTokenEventRow, error)
 	AddBackgroundBenefit(ctx context.Context, arg AddBackgroundBenefitParams) error
 	AddCharacterSkill(ctx context.Context, arg AddCharacterSkillParams) error
 	AddCharacterWeapon(ctx context.Context, arg AddCharacterWeaponParams) error
@@ -160,6 +165,7 @@ type Querier interface {
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
 	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
+	InsertEffectEvent(ctx context.Context, arg InsertEffectEventParams) error
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
@@ -189,6 +195,7 @@ type Querier interface {
 	InsertSettlementRevision(ctx context.Context, arg InsertSettlementRevisionParams) error
 	InsertShopRevision(ctx context.Context, arg InsertShopRevisionParams) error
 	InsertShopRevisionStock(ctx context.Context, arg InsertShopRevisionStockParams) error
+	InsertSpawnEvent(ctx context.Context, arg InsertSpawnEventParams) error
 	InsertSurface(ctx context.Context, arg InsertSurfaceParams) error
 	InsertTableEntry(ctx context.Context, arg InsertTableEntryParams) error
 	InsertTableRevision(ctx context.Context, arg InsertTableRevisionParams) error
@@ -199,6 +206,7 @@ type Querier interface {
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
 	InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
+	InsertUndo(ctx context.Context, arg InsertUndoParams) error
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
 	ItemPrices(ctx context.Context, arg ItemPricesParams) ([]ItemPricesRow, error)
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
@@ -277,11 +285,13 @@ type Querier interface {
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
+	SessionActionBySeq(ctx context.Context, arg SessionActionBySeqParams) (SessionActionBySeqRow, error)
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
 	SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]SessionChecksRow, error)
 	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
 	SessionHaggles(ctx context.Context, sessionID uuid.UUID) ([]SessionHagglesRow, error)
+	SessionLog(ctx context.Context, arg SessionLogParams) ([]SessionLogRow, error)
 	SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error)
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
 	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)

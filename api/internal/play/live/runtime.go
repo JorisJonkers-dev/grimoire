@@ -83,6 +83,9 @@ type Write struct {
 	Restock *prep.Shop
 	Day     *int
 	haggle  *haggleChange
+	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
+	Spawned []domain.Token
+	Undoes  uuid.UUID
 	price   *prep.ItemPrice
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
@@ -140,7 +143,15 @@ type Store interface {
 	ReactionTimeout(ctx context.Context, campaign uuid.UUID) (int, error)
 	// LastDamage is the Session's latest damage not undone yet; its Undoes names that damage's Action.
 	LastDamage(ctx context.Context, id domain.SessionID) (HPChange, bool, error)
-	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error)
+	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (Committed, error)
+	// Action reads one Action of the Session by its Action Log sequence.
+	Action(ctx context.Context, id domain.SessionID, seq int64) (ActionRecord, error)
+}
+
+// Committed is where a write landed: the Session's sequence and the Action Log's.
+type Committed struct {
+	Seq    int64
+	Action int64
 }
 
 // Statblocks copies fighting stats onto new tokens.
@@ -513,6 +524,9 @@ func (r *runtime) handle(req request) {
 	case !req.from.Member.DM && !playerMay(req.cmd.Kind):
 		r.reject(req, "Only the DM can change the table.")
 		return
+	case req.cmd.Kind == CmdUndo:
+		r.undo(req)
+		return
 	}
 	w, reason := r.plan(req)
 	if reason != "" {
@@ -535,12 +549,13 @@ func playerMay(kind string) bool {
 func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Caller) {
 	next := r.st.clone()
 	apply(next, &w)
-	seq, err := r.store.Commit(context.Background(), next.session, next.board, w, actor, c, r.now())
+	done, err := r.store.Commit(context.Background(), next.session, next.board, w, actor, c, r.now())
 	if err != nil {
 		r.log.Error("live: commit", "error", err)
 		r.reject(req, "That change could not be saved.")
 		return
 	}
+	seq := done.Seq
 	next.session.Seq = seq
 	r.st = next
 	views := map[Audience]Update{}
@@ -551,7 +566,7 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 			views[sub.Audience] = u
 		}
 		if sub == req.from {
-			u.Nonce = req.cmd.Nonce
+			u.Nonce, u.ActionSeq = req.cmd.Nonce, done.Action
 		}
 		r.send(sub, u)
 	}
@@ -671,6 +686,17 @@ func change(s *state, w *Write) {
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:
 		applyWorld(s, w)
 		return
+	case domain.ActionHPAdjusted:
+		t := s.tokens[w.HP.Token]
+		stats := *t.Stats
+		stats.HP = w.HP.After
+		t.Stats = &stats
+		s.tokens[t.ID] = t
+		return
+	case domain.ActionEncounterSpawned:
+		for _, t := range w.Spawned {
+			s.tokens[t.ID] = t
+		}
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)
 		dropCombatant(s, w)

@@ -2419,6 +2419,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions:
     get:
       operationId: listSessions
+      x-mcp: { tool: list_sessions }
       summary: List sessions
       description: The Campaign's Sessions, newest first. Members only.
       tags: [Play]
@@ -2493,6 +2494,157 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PlaySession"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view:
+    get:
+      operationId: getSessionView
+      x-mcp: { tool: get_session_state }
+      summary: See a live session
+      description: What the caller may see of a live Session now; the DM sees everything. Members only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: The view.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveView"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/sessions/{sessionId}/log:
+    get:
+      operationId: getSessionLog
+      x-mcp: { tool: get_session_log }
+      summary: Read a session's Action Log
+      description: The Session's latest Actions, newest first, and whether each can still be undone. DM only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/SessionId"
+        - name: limit
+          in: query
+          description: How many to return, newest first.
+          schema: { type: integer, format: int32, minimum: 1, maximum: 100, default: 30 }
+      responses:
+        "200":
+          description: The actions.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/SessionAction"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands:
+    post:
+      operationId: sendLiveCommand
+      x-mcp:
+        defaults: { nonce: mcp, q: 0, r: 0, hidden: false }
+        tools:
+          - tool: spawn_encounter
+            kind: spawn_encounter
+            fields: [monsters, q, r, hidden]
+            required: [monsters]
+            description: Places an encounter's monsters as enemy tokens on the free hexes nearest q, r, numbered when there are several. Undo it with undo_action to remove them all.
+          - tool: place_token
+            kind: place_token
+            fields: [label, tokenKind, monsterSlug, characterId, controllerId, q, r, hidden, darkvisionFt]
+            required: [tokenKind]
+            description: Places one token. A monsterSlug or characterId gives it that creature's stats and name.
+          - tool: move_token
+            kind: move_token
+            fields: [tokenId, q, r]
+            required: [tokenId, q, r]
+            description: Moves a token straight to a hex, without spending movement.
+          - tool: reveal_area
+            kind: reveal_hexes
+            fields: [hexes, "on"]
+            required: [hexes]
+            defaults: { "on": true }
+            description: Reveals hexes of the map to the party, or conceals them again with on set to false.
+          - tool: apply_effect
+            kind: apply_effect
+            fields: [targetId, effect, effectName, sourceId, rounds, saveAbility, saveDc]
+            required: [targetId, effect]
+            description: Puts an Effect, such as a condition or a spell, on a token.
+          - tool: end_effect
+            kind: end_effect
+            fields: [effectId]
+            required: [effectId]
+            description: Ends an Effect.
+          - tool: adjust_hp
+            kind: adjust_hp
+            fields: [tokenId, hpDelta]
+            required: [tokenId, hpDelta]
+            description: Adds hit points to a creature, or takes them away with a negative hpDelta, within 0 and its maximum.
+          - tool: run_encounter_check
+            kind: encounter_check
+            fields: [tableId, mode, entry]
+            required: [tableId]
+            defaults: { mode: normal }
+            description: Runs an Encounter Check on an encounter table now; mode force guarantees an encounter and pick takes the entry you name.
+          - tool: schedule_encounter_check
+            kind: schedule_check
+            fields: [tableId, due]
+            required: [tableId, due]
+            description: Schedules an Encounter Check for the next rest or the next Travel Leg.
+          - tool: undo_action
+            kind: undo
+            fields: [seq]
+            required: [seq]
+            description: Undoes one Action of the Session by its Action Log sequence, as every live tool returns it.
+      summary: Act in a live session
+      description: Sends one command to a live Session as the caller, with the same authority as their live connection, and answers once the Session has applied it. Members only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LiveCommand"
+      responses:
+        "200":
+          description: How the Session answered.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveCommandResult"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -4208,7 +4360,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4275,6 +4427,45 @@ components:
         coin: { $ref: "#/components/schemas/Coin" }
         count: { type: integer, format: int32, minimum: 1, maximum: 10000000 }
         shopId: { $ref: "#/components/schemas/Id" }
+        monsters:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/SpawnMonster" }
+        hpDelta: { type: integer, format: int32, minimum: -1000, maximum: 1000, description: "With adjust_hp, hit points to add; negative takes them away." }
+        seq: { type: integer, format: int32, minimum: 1, maximum: 2147483647, description: "With undo, the Action Log sequence of the Action to undo." }
+    SpawnMonster:
+      type: object
+      description: One kind of monster an encounter spawns, and how many.
+      additionalProperties: false
+      required: [monsterSlug, count]
+      properties:
+        monsterSlug: { $ref: "#/components/schemas/Slug" }
+        count: { type: integer, format: int32, minimum: 1, maximum: 30 }
+    LiveCommandResult:
+      type: object
+      description: How a live Session answered a command. actionSeq is the Action Log sequence of the change it made, for undo; previews answer with what they would do.
+      additionalProperties: false
+      required: [seq]
+      properties:
+        seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
+        actionSeq: { type: integer, format: int32, minimum: 1, maximum: 2147483647 }
+        path: { $ref: "#/components/schemas/LivePath" }
+        preview: { $ref: "#/components/schemas/LiveAttackPreview" }
+        area: { $ref: "#/components/schemas/LiveAreaPreview" }
+    SessionAction:
+      type: object
+      description: One Action of a live Session, what it touched, and whether it can still be undone.
+      additionalProperties: false
+      required: [seq, kind, actor, origin, label, undoable, createdAt]
+      properties:
+        seq: { type: integer, format: int32, minimum: 1, maximum: 2147483647 }
+        kind: { type: string, maxLength: 40 }
+        actor: { $ref: "#/components/schemas/DisplayName" }
+        origin: { type: string, enum: [ui, mcp, generator, system] }
+        client: { type: string, maxLength: 80 }
+        label: { type: string, maxLength: 2000 }
+        undoable: { type: boolean }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
@@ -4698,6 +4889,7 @@ components:
         kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
+        actionSeq: { type: integer, format: int32, minimum: 1, maximum: 2147483647 }
         reason: { type: string, maxLength: 200 }
         session: { $ref: "#/components/schemas/LiveSessionView" }
         view: { $ref: "#/components/schemas/LiveView" }
