@@ -217,7 +217,7 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 			amount = map[bool]int{true: amount / 2, false: 0}[spell.Damage.Half]
 		}
 		if amount > 0 {
-			hits = append(hits, HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount, 0)})
+			hits = append(hits, HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount, 0), Raw: amount})
 		}
 	}
 	return failed, hits

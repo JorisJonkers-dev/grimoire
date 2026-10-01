@@ -14185,6 +14185,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindInteract
 	case LiveCommandKindSetReaction:
 		*s = LiveCommandKindSetReaction
+	case LiveCommandKindStabilise:
+		*s = LiveCommandKindStabilise
+	case LiveCommandKindRevive:
+		*s = LiveCommandKindRevive
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -14227,6 +14231,16 @@ func (s *LiveCommandOption) Decode(d *jx.Decoder) error {
 		*s = LiveCommandOptionShovePush
 	case LiveCommandOptionShoveProne:
 		*s = LiveCommandOptionShoveProne
+	case LiveCommandOptionMedicine:
+		*s = LiveCommandOptionMedicine
+	case LiveCommandOptionSpell:
+		*s = LiveCommandOptionSpell
+	case LiveCommandOptionRevivify:
+		*s = LiveCommandOptionRevivify
+	case LiveCommandOptionRaiseDead:
+		*s = LiveCommandOptionRaiseDead
+	case LiveCommandOptionResurrection:
+		*s = LiveCommandOptionResurrection
 	default:
 		*s = LiveCommandOption(v)
 	}
@@ -15015,6 +15029,170 @@ func (s LiveContainerKind) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveContainerKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveDying) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveDying) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("successes")
+		e.Int32(s.Successes)
+	}
+	{
+		e.FieldStart("failures")
+		e.Int32(s.Failures)
+	}
+	{
+		if s.Stable.Set {
+			e.FieldStart("stable")
+			s.Stable.Encode(e)
+		}
+	}
+	{
+		if s.Dead.Set {
+			e.FieldStart("dead")
+			s.Dead.Encode(e)
+		}
+	}
+	{
+		if s.RollId.Set {
+			e.FieldStart("rollId")
+			s.RollId.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfLiveDying = [5]string{
+	0: "successes",
+	1: "failures",
+	2: "stable",
+	3: "dead",
+	4: "rollId",
+}
+
+// Decode decodes LiveDying from json.
+func (s *LiveDying) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveDying to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "successes":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.Successes = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"successes\"")
+			}
+		case "failures":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Int32()
+				s.Failures = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"failures\"")
+			}
+		case "stable":
+			if err := func() error {
+				s.Stable.Reset()
+				if err := s.Stable.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"stable\"")
+			}
+		case "dead":
+			if err := func() error {
+				s.Dead.Reset()
+				if err := s.Dead.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"dead\"")
+			}
+		case "rollId":
+			if err := func() error {
+				s.RollId.Reset()
+				if err := s.RollId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rollId\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveDying")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveDying) {
+					name = jsonFieldsNameOfLiveDying[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveDying) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveDying) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -19218,9 +19396,15 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 			e.ArrEnd()
 		}
 	}
+	{
+		if s.Dying.Set {
+			e.FieldStart("dying")
+			s.Dying.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveToken = [16]string{
+var jsonFieldsNameOfLiveToken = [17]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
@@ -19237,6 +19421,7 @@ var jsonFieldsNameOfLiveToken = [16]string{
 	13: "shield",
 	14: "effects",
 	15: "reactions",
+	16: "dying",
 }
 
 // Decode decodes LiveToken from json.
@@ -19244,7 +19429,7 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveToken to nil")
 	}
-	var requiredBitSet [2]uint8
+	var requiredBitSet [3]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -19439,6 +19624,16 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"reactions\"")
 			}
+		case "dying":
+			if err := func() error {
+				s.Dying.Reset()
+				if err := s.Dying.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"dying\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -19448,8 +19643,9 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [2]uint8{
+	for i, mask := range [3]uint8{
 		0b01111111,
+		0b00000000,
 		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
@@ -25094,6 +25290,39 @@ func (s OptLiveCommandTrigger) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveCommandTrigger) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveDying as json.
+func (o OptLiveDying) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveDying from json.
+func (o *OptLiveDying) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveDying to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveDying) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveDying) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

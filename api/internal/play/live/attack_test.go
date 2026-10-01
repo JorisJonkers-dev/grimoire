@@ -193,9 +193,9 @@ func TestAttacksFromPreviewToDamageAndUndo(t *testing.T) {
 	if roll.Notation != "2d6" || !strings.HasSuffix(roll.Purpose, "(critical)") || roll.Roller.ID != w.dm.ID {
 		t.Fatalf("critical damage roll = %+v", roll)
 	}
-	fill(p.View.Combat.Attack.RollID, w.dm, 6, 6)
-	if hp := *token(tb.party[len(tb.party)-1].View, "Aria").HP; hp != 0 {
-		t.Fatalf("14 damage drops Aria to 0: hp %d", hp)
+	fill(p.View.Combat.Attack.RollID, w.dm, 1, 1)
+	if hp := *token(tb.party[len(tb.party)-1].View, "Aria").HP; hp != 5 {
+		t.Fatalf("4 critical damage leaves Aria on 5: hp %d", hp)
 	}
 	tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Archer").ID})
 

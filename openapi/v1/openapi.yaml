@@ -4413,6 +4413,18 @@ components:
           type: array
           maxItems: 4
           items: { $ref: "#/components/schemas/LiveReactionSetting" }
+        dying: { $ref: "#/components/schemas/LiveDying" }
+    LiveDying:
+      type: object
+      description: A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
+      additionalProperties: false
+      required: [successes, failures]
+      properties:
+        successes: { type: integer, format: int32, minimum: 0, maximum: 3 }
+        failures: { type: integer, format: int32, minimum: 0, maximum: 3 }
+        stable: { type: boolean }
+        dead: { type: boolean }
+        rollId: { $ref: "#/components/schemas/Id" }
     LiveReactionSetting:
       type: object
       description: A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
@@ -4486,7 +4498,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4552,7 +4564,7 @@ components:
         action: { type: string, enum: [dash, disengage, dodge, help, hide, influence, magic, ready, search, study, utilize] }
         detail: { type: string, maxLength: 200 }
         trigger: { type: string, enum: [enters_reach] }
-        option: { type: string, enum: [grapple, shove_push, shove_prone] }
+        option: { type: string, enum: [grapple, shove_push, shove_prone, medicine, spell, revivify, raise_dead, resurrection] }
         offHand: { type: boolean, description: "Makes the attack the off-hand attack of a Light weapon." }
         cleave: { type: boolean, description: "Makes the attack the second attack a Cleave hit allows." }
         reactionKind: { type: string, enum: [opportunity_attack, shield, readied, effect] }

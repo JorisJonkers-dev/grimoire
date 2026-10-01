@@ -654,6 +654,17 @@ export const zTokenKind = z.enum([
 ]);
 
 /**
+ * A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
+ */
+export const zLiveDying = z.object({
+    successes: z.int().gte(0).lte(3),
+    failures: z.int().gte(0).lte(3),
+    stable: z.boolean().optional(),
+    dead: z.boolean().optional(),
+    rollId: zId.optional()
+});
+
+/**
  * A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
  */
 export const zLiveReactionSetting = z.object({
@@ -1023,7 +1034,8 @@ export const zLiveToken = z.object({
     attacks: z.array(zLiveAttack).max(50).optional(),
     shield: z.boolean().optional(),
     effects: z.array(zLiveEffect).max(50).optional(),
-    reactions: z.array(zLiveReactionSetting).max(4).optional()
+    reactions: z.array(zLiveReactionSetting).max(4).optional(),
+    dying: zLiveDying.optional()
 });
 
 /**
@@ -1637,7 +1649,9 @@ export const zLiveCommand = z.object({
         'take_action',
         'unarmed',
         'interact',
-        'set_reaction'
+        'set_reaction',
+        'stabilise',
+        'revive'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1724,7 +1738,12 @@ export const zLiveCommand = z.object({
     option: z.enum([
         'grapple',
         'shove_push',
-        'shove_prone'
+        'shove_prone',
+        'medicine',
+        'spell',
+        'revivify',
+        'raise_dead',
+        'resurrection'
     ]).optional(),
     offHand: z.boolean().optional(),
     cleave: z.boolean().optional(),

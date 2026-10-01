@@ -346,6 +346,15 @@ func (q *Queries) CombatPrompt(ctx context.Context, combatID uuid.UUID) (CombatP
 	return i, err
 }
 
+const deleteDying = `-- name: DeleteDying :exec
+DELETE FROM play.dying WHERE token_id = $1
+`
+
+func (q *Queries) DeleteDying(ctx context.Context, tokenID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteDying, tokenID)
+	return err
+}
+
 const deletePendingAction = `-- name: DeletePendingAction :exec
 DELETE FROM play.pending_actions WHERE roll_id = $1
 `
@@ -1338,6 +1347,46 @@ func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) er
 	return err
 }
 
+const saveDying = `-- name: SaveDying :exec
+INSERT INTO play.dying (token_id, session_id, successes, failures, stable, dead, effect_id, roll_id, died_fight, died_round, died_day)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
+    $10, $11)
+ON CONFLICT (token_id) DO UPDATE SET successes = excluded.successes, failures = excluded.failures, stable = excluded.stable,
+    dead = excluded.dead, effect_id = excluded.effect_id, roll_id = excluded.roll_id, died_fight = excluded.died_fight,
+    died_round = excluded.died_round, died_day = excluded.died_day
+`
+
+type SaveDyingParams struct {
+	TokenID   uuid.UUID
+	SessionID uuid.UUID
+	Successes int32
+	Failures  int32
+	Stable    bool
+	Dead      bool
+	EffectID  pgtype.UUID
+	RollID    pgtype.UUID
+	DiedFight pgtype.Text
+	DiedRound int32
+	DiedDay   int32
+}
+
+func (q *Queries) SaveDying(ctx context.Context, arg SaveDyingParams) error {
+	_, err := q.db.Exec(ctx, saveDying,
+		arg.TokenID,
+		arg.SessionID,
+		arg.Successes,
+		arg.Failures,
+		arg.Stable,
+		arg.Dead,
+		arg.EffectID,
+		arg.RollID,
+		arg.DiedFight,
+		arg.DiedRound,
+		arg.DiedDay,
+	)
+	return err
+}
+
 const savePrompt = `-- name: SavePrompt :exec
 INSERT INTO play.reaction_prompts (id, combat_id, kind, reactor_token_id, trigger_token_id, attack_no, effect, deadline)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -1507,6 +1556,55 @@ func (q *Queries) SessionCast(ctx context.Context, sessionID uuid.UUID) (Session
 		&i.DamageRollID,
 	)
 	return i, err
+}
+
+const sessionDying = `-- name: SessionDying :many
+SELECT token_id, successes, failures, stable, dead, effect_id, roll_id, died_fight, died_round, died_day
+FROM play.dying WHERE session_id = $1 ORDER BY token_id
+`
+
+type SessionDyingRow struct {
+	TokenID   uuid.UUID
+	Successes int32
+	Failures  int32
+	Stable    bool
+	Dead      bool
+	EffectID  pgtype.UUID
+	RollID    pgtype.UUID
+	DiedFight pgtype.Text
+	DiedRound int32
+	DiedDay   int32
+}
+
+func (q *Queries) SessionDying(ctx context.Context, sessionID uuid.UUID) ([]SessionDyingRow, error) {
+	rows, err := q.db.Query(ctx, sessionDying, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionDyingRow{}
+	for rows.Next() {
+		var i SessionDyingRow
+		if err := rows.Scan(
+			&i.TokenID,
+			&i.Successes,
+			&i.Failures,
+			&i.Stable,
+			&i.Dead,
+			&i.EffectID,
+			&i.RollID,
+			&i.DiedFight,
+			&i.DiedRound,
+			&i.DiedDay,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const sessionEffects = `-- name: SessionEffects :many

@@ -116,6 +116,7 @@ type Querier interface {
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
+	DeleteDying(ctx context.Context, tokenID uuid.UUID) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
@@ -330,6 +331,7 @@ type Querier interface {
 	SaveAttack(ctx context.Context, arg SaveAttackParams) error
 	SaveCombat(ctx context.Context, arg SaveCombatParams) error
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
+	SaveDying(ctx context.Context, arg SaveDyingParams) error
 	SaveEncounterCheck(ctx context.Context, arg SaveEncounterCheckParams) error
 	SaveEncounterTable(ctx context.Context, arg SaveEncounterTableParams) error
 	SaveHaggle(ctx context.Context, arg SaveHaggleParams) error
@@ -348,6 +350,7 @@ type Querier interface {
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
 	SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]SessionChecksRow, error)
+	SessionDying(ctx context.Context, sessionID uuid.UUID) ([]SessionDyingRow, error)
 	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
 	SessionHaggles(ctx context.Context, sessionID uuid.UUID) ([]SessionHagglesRow, error)
 	SessionLog(ctx context.Context, arg SessionLogParams) ([]SessionLogRow, error)

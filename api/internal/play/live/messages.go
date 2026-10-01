@@ -88,6 +88,8 @@ const (
 	CmdUnarmed        = "unarmed"
 	CmdInteract       = "interact"
 	CmdSetReaction    = "set_reaction"
+	CmdStabilise      = "stabilise"
+	CmdRevive         = "revive"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -239,8 +241,10 @@ type TokenView struct {
 	Attacks []AttackView `json:"attacks,omitempty"`
 	Shield  bool         `json:"shield,omitempty"`
 	Effects []EffectView `json:"effects,omitempty"`
-	// Reactions are the Controller's reaction settings, shown to the DM and for the party's tokens.
+	// Reactions are the Controller's reaction settings, shown to the DM and for the party's tokens;
+	// Dying is a Character's death saves at 0 hit points.
 	Reactions []ReactionSettingView `json:"reactions,omitempty"`
+	Dying     *DyingView            `json:"dying,omitempty"`
 }
 
 // EffectView is an Effect on a token, which everyone who sees the token sees.

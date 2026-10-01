@@ -99,6 +99,9 @@ type Write struct {
 	Dragged *domain.Token
 	taken   *takenAction
 	cleave  *domain.TokenID
+	// Dying is a Character's death saves after the change; Undying the one that woke or was revived.
+	Dying   *domain.Dying
+	Undying *domain.TokenID
 	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
 	Spawned []domain.Token
 	Undoes  uuid.UUID
@@ -122,19 +125,30 @@ type Write struct {
 	resource    combat.Resource
 }
 
-// loadRules reads the Effect catalogue, the rest the Session has under way, and the Hides, Grapples
-// and Shoves waiting on rolls.
-func (h *Hub) loadRules(ctx context.Context, s domain.Session) (effects.Catalog, *domain.Rest, []domain.PendingAction, error) {
-	catalog, err := h.Store.Effects(ctx)
-	if err != nil {
-		return nil, nil, nil, err
+// loaded is what the rules keep between a Session's runtimes besides tokens, Combat and Effects.
+type loaded struct {
+	catalog effects.Catalog
+	rest    *domain.Rest
+	pending []domain.PendingAction
+	dying   map[domain.TokenID]domain.Dying
+}
+
+// loadRules reads the Effect catalogue, the rest the Session has under way, the Hides, Grapples and
+// Shoves waiting on rolls, and the Characters at 0 hit points.
+func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
+	var out loaded
+	var err error
+	if out.catalog, err = h.Store.Effects(ctx); err != nil {
+		return out, err
 	}
-	rest, err := h.Store.LoadRest(ctx, s.CampaignID, s.ID)
-	if err != nil {
-		return nil, nil, nil, err
+	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
+		return out, err
 	}
-	pending, err := h.Store.LoadPendingActions(ctx, s.ID)
-	return catalog, rest, pending, err
+	if out.pending, err = h.Store.LoadPendingActions(ctx, s.ID); err != nil {
+		return out, err
+	}
+	out.dying, err = h.Store.LoadDying(ctx, s.ID)
+	return out, err
 }
 
 // Store is the runtime's persistence port.
@@ -147,6 +161,8 @@ type Store interface {
 	LoadRest(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (*domain.Rest, error)
 	// LoadPendingActions reads the Hides, Grapples and Shoves waiting on rolls.
 	LoadPendingActions(ctx context.Context, id domain.SessionID) ([]domain.PendingAction, error)
+	// LoadDying reads the Characters at 0 hit points.
+	LoadDying(ctx context.Context, id domain.SessionID) (map[domain.TokenID]domain.Dying, error)
 	// RestInfo reads what a rest needs of each Character; RestSupplies whether a Long Rest costs Rations.
 	RestInfo(ctx context.Context, campaign uuid.UUID, characters []uuid.UUID) ([]domain.Rester, error)
 	RestSupplies(ctx context.Context, campaign uuid.UUID) (bool, error)
@@ -321,7 +337,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	catalog, rest, pending, err := h.loadRules(ctx, s)
+	kept, err := h.loadRules(ctx, s)
 	if err != nil {
 		release()
 		return nil, err
@@ -357,7 +373,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, rest: rest, pending: pending, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -593,7 +609,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive:
 		return true
 	}
 	return false
@@ -707,6 +723,10 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionTaken, domain.ActionConcentrationChecked:
 		applyAction(s, w)
+		applyDying(s, w)
+		return
+	case domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived:
+		applyDying(s, w)
 		return
 	case domain.ActionObjectUsed:
 		applyInteraction(s, w)

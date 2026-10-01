@@ -890,6 +890,20 @@ type PlayCombatant struct {
 	Cleaved         bool
 }
 
+type PlayDying struct {
+	TokenID   uuid.UUID
+	SessionID uuid.UUID
+	Successes int32
+	Failures  int32
+	Stable    bool
+	Dead      bool
+	EffectID  pgtype.UUID
+	RollID    pgtype.UUID
+	DiedFight pgtype.Text
+	DiedRound int32
+	DiedDay   int32
+}
+
 type PlayEncounterZone struct {
 	ID          uuid.UUID
 	SessionID   uuid.UUID

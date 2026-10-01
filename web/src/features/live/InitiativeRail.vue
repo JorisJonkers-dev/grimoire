@@ -7,6 +7,12 @@ import { effectLabel } from './conditions'
 
 const props = withDefaults(defineProps<{ combat: LiveCombat; tokens?: LiveToken[] }>(), { tokens: () => [] })
 const effectsOf = (tokenId: string) => props.tokens.find((t) => t.id === tokenId)?.effects ?? []
+const dyingOf = (tokenId: string) => {
+  const d = props.tokens.find((t) => t.id === tokenId)?.dying
+  if (!d) return ''
+  if (d.dead) return 'Dead'
+  return d.stable ? 'Stable' : `Dying ${String(d.successes)}✓ ${String(d.failures)}✗`
+}
 const tied = computed(() => {
   const ranks = props.combat.combatants.map((c) => c.rank)
   return (rank?: number) => ranks.filter((r) => r === rank).length > 1
@@ -31,6 +37,7 @@ const tied = computed(() => {
           <template v-else>rolling…</template>
         </span>
         <span v-if="c.surprised" class="surprised" data-testid="surprised">Surprised</span>
+        <span v-if="dyingOf(c.tokenId)" class="fallen" data-testid="fallen">{{ dyingOf(c.tokenId) }}</span>
         <span v-if="effectsOf(c.tokenId).length" class="statuses" data-testid="statuses">
           <StatusIcon v-for="e in effectsOf(c.tokenId)" :key="e.id" :slug="e.slug" :label="effectLabel(e)" :size="12" />
         </span>
@@ -41,6 +48,10 @@ const tied = computed(() => {
 </template>
 
 <style scoped>
+.fallen {
+  font-size: 12px;
+  color: var(--color-enemy-soft);
+}
 .statuses {
   display: flex;
   flex-wrap: wrap;

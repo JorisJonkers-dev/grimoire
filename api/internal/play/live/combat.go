@@ -173,6 +173,10 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.checkRolled(c)
 		return true
 	}
+	if d, ok := r.st.pendingDeath(id); ok {
+		r.deathRolled(d, id)
+		return true
+	}
 	if p, ok := r.st.pendingAction(id); ok {
 		r.actionRolled(p)
 		return true

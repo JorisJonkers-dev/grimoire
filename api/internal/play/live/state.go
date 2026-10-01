@@ -50,6 +50,8 @@ type state struct {
 	// rest is the rest proposed or under way; pending the Hides, Grapples and Shoves waiting on rolls.
 	rest    *domain.Rest
 	pending []domain.PendingAction
+	// dying are the Characters at 0 hit points.
+	dying map[domain.TokenID]domain.Dying
 }
 
 // cloneEffects copies a Session's Effects so a change never touches the committed state.
@@ -70,7 +72,7 @@ func (s *state) clone() *state {
 		next.zones = append(next.zones, cloneZone(z))
 	}
 	next.checks = slices.Clone(s.checks)
-	next.rest, next.pending = s.rest.Clone(), slices.Clone(s.pending)
+	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
 	next.inventory, next.day = cloneInventory(s.inventory), s.day
 	if s.shop != nil {
 		next.shop = s.shop.Clone()
@@ -161,6 +163,9 @@ func (s *state) project(a Audience) View {
 		if a == AudienceDM || (!t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])) {
 			tv := tokenView(t, a)
 			tv.Effects = s.effectViews(t.ID)
+			if a == AudienceDM || t.Kind == domain.TokenParty {
+				tv.Dying = s.dyingView(t.ID)
+			}
 			v.Tokens = append(v.Tokens, tv)
 		}
 	}

@@ -1653,3 +1653,48 @@ describe('reaction settings', () => {
     w.unmount()
   })
 })
+
+describe('the fallen', () => {
+  it('shows death saves and offers stabilising and revival', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const DyingPanel = (await import('./DyingPanel.vue')).default
+    const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000081', label: 'Aria', kind: 'party', dying: { successes: 1, failures: 2 } }
+    const brom: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000082', label: 'Brom', kind: 'party', dying: { successes: 0, failures: 0, dead: true } }
+    const nim: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000083', label: 'Nim', kind: 'party', dying: { successes: 0, failures: 0, stable: true } }
+    const helper: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000084', label: 'Mira', kind: 'party' }
+    const w = mount(DyingPanel, { props: { tokens: [aria, brom, nim, helper], dm: true, helper }, attachTo: document.body })
+    expect(w.get('[data-testid="dying-Aria"]').text()).toContain('Aria: 1 success, 2 failures')
+    expect(w.get('[data-testid="dying-Brom"]').text()).toContain('Dead')
+    expect(w.get('[data-testid="dying-Nim"]').text()).toContain('Stable')
+    await w.get('[aria-label="Stabilise Aria with Medicine"]').trigger('click')
+    expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'stabilise', tokenId: helper.id, targetId: aria.id, option: 'medicine' }])
+    await w.get('[aria-label="Stabilise Aria with a spell"]').trigger('click')
+    expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'stabilise', tokenId: helper.id, targetId: aria.id, option: 'spell' }])
+    await w.get('[aria-label="Revive Brom with raise dead"]').trigger('click')
+    expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'revive', targetId: brom.id, option: 'raise_dead' }])
+    expect(w.find('[aria-label="Stabilise Nim with Medicine"]').exists()).toBe(false)
+    await expectAccessible(w.element as Element)
+    await w.setProps({ tokens: [{ ...aria, dying: { successes: 2, failures: 1 } }], dm: false, helper: null })
+    expect(w.text()).toContain('2 successes, 1 failure')
+    expect(w.find('button').exists()).toBe(false)
+    await w.setProps({ tokens: [helper] })
+    expect(w.find('[data-testid="dying"]').exists()).toBe(false)
+    w.unmount()
+  })
+
+  it('marks the fallen on the initiative rail', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const InitiativeRail = (await import('./InitiativeRail.vue')).default
+    const tokens: LiveToken[] = [
+      { ...goblin, id: '0190c7a8-0000-7000-8000-000000000091', dying: { successes: 1, failures: 2 } },
+      { ...goblin, id: '0190c7a8-0000-7000-8000-000000000092', dying: { successes: 0, failures: 0, stable: true } },
+      { ...goblin, id: '0190c7a8-0000-7000-8000-000000000093', dying: { successes: 0, failures: 3, dead: true } },
+    ]
+    const c = (n: number, label: string) => ({
+      id: `0190c7a8-0000-7000-8000-00000000010${String(n)}`, tokenId: tokens[n]?.id ?? '', label, kind: 'party' as const, rollId: goblin.id,
+      acting: false, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30,
+    })
+    const w = mount(InitiativeRail, { props: { combat: { status: 'active', round: 1, combatants: [c(0, 'A'), c(1, 'B'), c(2, 'C')] }, tokens } })
+    expect(w.findAll('[data-testid="fallen"]').map((f) => f.text())).toEqual(['Dying 1✓ 2✗', 'Stable', 'Dead'])
+  })
+})

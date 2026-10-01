@@ -275,6 +275,10 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 		return
 	}
 	r.concentrationSave(w, actor, c)
+	r.lifeAndDeath(w, actor, c)
+	if w.Kind == domain.ActionTurnEnded || w.Kind == domain.ActionInitiativeRolled {
+		r.deathSaves(actor, c)
+	}
 	r.lootAfterFight(w, actor, c)
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:

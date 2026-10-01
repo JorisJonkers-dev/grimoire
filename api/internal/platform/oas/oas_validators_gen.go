@@ -15598,6 +15598,10 @@ func (s LiveCommandKind) Validate() error {
 		return nil
 	case "set_reaction":
 		return nil
+	case "stabilise":
+		return nil
+	case "revive":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
@@ -15610,6 +15614,16 @@ func (s LiveCommandOption) Validate() error {
 	case "shove_push":
 		return nil
 	case "shove_prone":
+		return nil
+	case "medicine":
+		return nil
+	case "spell":
+		return nil
+	case "revivify":
+		return nil
+	case "raise_dead":
+		return nil
+	case "resurrection":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
@@ -16134,6 +16148,60 @@ func (s LiveContainerKind) Validate() error {
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
+}
+
+func (s *LiveDying) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Int{
+			MinSet:        true,
+			Min:           0,
+			MaxSet:        true,
+			Max:           3,
+			MinExclusive:  false,
+			MaxExclusive:  false,
+			MultipleOfSet: false,
+			MultipleOf:    0,
+			Pattern:       nil,
+		}).Validate(int64(s.Successes)); err != nil {
+			return errors.Wrap(err, "int")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "successes",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Int{
+			MinSet:        true,
+			Min:           0,
+			MaxSet:        true,
+			Max:           3,
+			MinExclusive:  false,
+			MaxExclusive:  false,
+			MultipleOfSet: false,
+			MultipleOf:    0,
+			Pattern:       nil,
+		}).Validate(int64(s.Failures)); err != nil {
+			return errors.Wrap(err, "int")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "failures",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
 }
 
 func (s *LiveEffect) Validate() error {
@@ -18518,6 +18586,24 @@ func (s *LiveToken) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "reactions",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Dying.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "dying",
 			Error: err,
 		})
 	}

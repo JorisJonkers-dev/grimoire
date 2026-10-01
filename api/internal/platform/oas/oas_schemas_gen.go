@@ -10110,6 +10110,8 @@ const (
 	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
 	LiveCommandKindInteract       LiveCommandKind = "interact"
 	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
+	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
+	LiveCommandKindRevive         LiveCommandKind = "revive"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10182,6 +10184,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindUnarmed,
 		LiveCommandKindInteract,
 		LiveCommandKindSetReaction,
+		LiveCommandKindStabilise,
+		LiveCommandKindRevive,
 	}
 }
 
@@ -10321,6 +10325,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindInteract:
 		return []byte(s), nil
 	case LiveCommandKindSetReaction:
+		return []byte(s), nil
+	case LiveCommandKindStabilise:
+		return []byte(s), nil
+	case LiveCommandKindRevive:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10531,6 +10539,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindSetReaction:
 		*s = LiveCommandKindSetReaction
 		return nil
+	case LiveCommandKindStabilise:
+		*s = LiveCommandKindStabilise
+		return nil
+	case LiveCommandKindRevive:
+		*s = LiveCommandKindRevive
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -10542,9 +10556,14 @@ type LiveCommandNoContent struct{}
 type LiveCommandOption string
 
 const (
-	LiveCommandOptionGrapple    LiveCommandOption = "grapple"
-	LiveCommandOptionShovePush  LiveCommandOption = "shove_push"
-	LiveCommandOptionShoveProne LiveCommandOption = "shove_prone"
+	LiveCommandOptionGrapple      LiveCommandOption = "grapple"
+	LiveCommandOptionShovePush    LiveCommandOption = "shove_push"
+	LiveCommandOptionShoveProne   LiveCommandOption = "shove_prone"
+	LiveCommandOptionMedicine     LiveCommandOption = "medicine"
+	LiveCommandOptionSpell        LiveCommandOption = "spell"
+	LiveCommandOptionRevivify     LiveCommandOption = "revivify"
+	LiveCommandOptionRaiseDead    LiveCommandOption = "raise_dead"
+	LiveCommandOptionResurrection LiveCommandOption = "resurrection"
 )
 
 // AllValues returns all LiveCommandOption values.
@@ -10553,6 +10572,11 @@ func (LiveCommandOption) AllValues() []LiveCommandOption {
 		LiveCommandOptionGrapple,
 		LiveCommandOptionShovePush,
 		LiveCommandOptionShoveProne,
+		LiveCommandOptionMedicine,
+		LiveCommandOptionSpell,
+		LiveCommandOptionRevivify,
+		LiveCommandOptionRaiseDead,
+		LiveCommandOptionResurrection,
 	}
 }
 
@@ -10564,6 +10588,16 @@ func (s LiveCommandOption) MarshalText() ([]byte, error) {
 	case LiveCommandOptionShovePush:
 		return []byte(s), nil
 	case LiveCommandOptionShoveProne:
+		return []byte(s), nil
+	case LiveCommandOptionMedicine:
+		return []byte(s), nil
+	case LiveCommandOptionSpell:
+		return []byte(s), nil
+	case LiveCommandOptionRevivify:
+		return []byte(s), nil
+	case LiveCommandOptionRaiseDead:
+		return []byte(s), nil
+	case LiveCommandOptionResurrection:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10581,6 +10615,21 @@ func (s *LiveCommandOption) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandOptionShoveProne:
 		*s = LiveCommandOptionShoveProne
+		return nil
+	case LiveCommandOptionMedicine:
+		*s = LiveCommandOptionMedicine
+		return nil
+	case LiveCommandOptionSpell:
+		*s = LiveCommandOptionSpell
+		return nil
+	case LiveCommandOptionRevivify:
+		*s = LiveCommandOptionRevivify
+		return nil
+	case LiveCommandOptionRaiseDead:
+		*s = LiveCommandOptionRaiseDead
+		return nil
+	case LiveCommandOptionResurrection:
+		*s = LiveCommandOptionResurrection
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11185,6 +11234,67 @@ func (s *LiveContainerKind) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and
+// for the party's tokens.
+// Ref: #/components/schemas/LiveDying
+type LiveDying struct {
+	Successes int32   `json:"successes"`
+	Failures  int32   `json:"failures"`
+	Stable    OptBool `json:"stable"`
+	Dead      OptBool `json:"dead"`
+	RollId    OptID   `json:"rollId"`
+}
+
+// GetSuccesses returns the value of Successes.
+func (s *LiveDying) GetSuccesses() int32 {
+	return s.Successes
+}
+
+// GetFailures returns the value of Failures.
+func (s *LiveDying) GetFailures() int32 {
+	return s.Failures
+}
+
+// GetStable returns the value of Stable.
+func (s *LiveDying) GetStable() OptBool {
+	return s.Stable
+}
+
+// GetDead returns the value of Dead.
+func (s *LiveDying) GetDead() OptBool {
+	return s.Dead
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveDying) GetRollId() OptID {
+	return s.RollId
+}
+
+// SetSuccesses sets the value of Successes.
+func (s *LiveDying) SetSuccesses(val int32) {
+	s.Successes = val
+}
+
+// SetFailures sets the value of Failures.
+func (s *LiveDying) SetFailures(val int32) {
+	s.Failures = val
+}
+
+// SetStable sets the value of Stable.
+func (s *LiveDying) SetStable(val OptBool) {
+	s.Stable = val
+}
+
+// SetDead sets the value of Dead.
+func (s *LiveDying) SetDead(val OptBool) {
+	s.Dead = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveDying) SetRollId(val OptID) {
+	s.RollId = val
 }
 
 // An Effect on a token, which everyone who sees the token sees.
@@ -13151,6 +13261,7 @@ type LiveToken struct {
 	Shield    OptBool               `json:"shield"`
 	Effects   []LiveEffect          `json:"effects"`
 	Reactions []LiveReactionSetting `json:"reactions"`
+	Dying     OptLiveDying          `json:"dying"`
 }
 
 // GetID returns the value of ID.
@@ -13233,6 +13344,11 @@ func (s *LiveToken) GetReactions() []LiveReactionSetting {
 	return s.Reactions
 }
 
+// GetDying returns the value of Dying.
+func (s *LiveToken) GetDying() OptLiveDying {
+	return s.Dying
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -13311,6 +13427,11 @@ func (s *LiveToken) SetEffects(val []LiveEffect) {
 // SetReactions sets the value of Reactions.
 func (s *LiveToken) SetReactions(val []LiveReactionSetting) {
 	s.Reactions = val
+}
+
+// SetDying sets the value of Dying.
+func (s *LiveToken) SetDying(val OptLiveDying) {
+	s.Dying = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -17103,6 +17224,52 @@ func (o OptLiveCommandTrigger) Get() (v LiveCommandTrigger, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandTrigger) Or(d LiveCommandTrigger) LiveCommandTrigger {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveDying returns new OptLiveDying with value set to v.
+func NewOptLiveDying(v LiveDying) OptLiveDying {
+	return OptLiveDying{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveDying is optional LiveDying.
+type OptLiveDying struct {
+	Value LiveDying
+	Set   bool
+}
+
+// IsSet returns true if OptLiveDying was set.
+func (o OptLiveDying) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveDying) Reset() {
+	var v LiveDying
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveDying) SetTo(v LiveDying) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveDying) Get() (v LiveDying, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveDying) Or(d LiveDying) LiveDying {
 	if v, ok := o.Get(); ok {
 		return v
 	}

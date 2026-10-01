@@ -136,15 +136,12 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	if a := v().Area; a == nil || len(a.Saves) != 3 {
 		t.Fatalf("the cast survives a restart = %+v", a)
 	}
-	fill(saves[ids["Brom"]], 9)
-	var last live.Update
-	for range 4 {
-		last = next(t, tb.dm)
-		next(t, tb.player)
-	}
-	now := last.View
-	if now.Area != nil || *token(now, "Goblin").HP != 0 || *token(now, "Archer").HP != 1 || *token(now, "Brom").HP != 0 {
-		t.Fatalf("12 thunder: the goblin fails, the archer halves it to 6, brom fails = %+v %+v %+v", token(now, "Goblin"), token(now, "Archer"), token(now, "Brom"))
+	fill(saves[ids["Brom"]], 13)
+	drain(tb.dm)
+	drain(tb.player)
+	now := look(t, w, tb.dm)
+	if now.Area != nil || *token(now, "Goblin").HP != 0 || *token(now, "Archer").HP != 1 || *token(now, "Brom").HP != 6 {
+		t.Fatalf("12 thunder: the goblin fails, the archer and brom halve it to 6 = %+v %+v %+v", token(now, "Goblin"), token(now, "Archer"), token(now, "Brom"))
 	}
 
 	tb.dmSays(live.Command{Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 3, R: 0}}, Surface: "grease"})

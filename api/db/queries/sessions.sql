@@ -315,3 +315,18 @@ WHERE t.session_id = $1 ORDER BY r.token_id, r.kind;
 -- name: SetTokenReaction :exec
 INSERT INTO play.token_reactions (token_id, kind, mode, condition) VALUES (@token_id, @kind, @mode, @condition)
 ON CONFLICT (token_id, kind) DO UPDATE SET mode = excluded.mode, condition = excluded.condition;
+
+-- name: SessionDying :many
+SELECT token_id, successes, failures, stable, dead, effect_id, roll_id, died_fight, died_round, died_day
+FROM play.dying WHERE session_id = $1 ORDER BY token_id;
+
+-- name: SaveDying :exec
+INSERT INTO play.dying (token_id, session_id, successes, failures, stable, dead, effect_id, roll_id, died_fight, died_round, died_day)
+VALUES (@token_id, @session_id, @successes, @failures, @stable, @dead, sqlc.narg(effect_id), sqlc.narg(roll_id), sqlc.narg(died_fight),
+    @died_round, @died_day)
+ON CONFLICT (token_id) DO UPDATE SET successes = excluded.successes, failures = excluded.failures, stable = excluded.stable,
+    dead = excluded.dead, effect_id = excluded.effect_id, roll_id = excluded.roll_id, died_fight = excluded.died_fight,
+    died_round = excluded.died_round, died_day = excluded.died_day;
+
+-- name: DeleteDying :exec
+DELETE FROM play.dying WHERE token_id = $1;

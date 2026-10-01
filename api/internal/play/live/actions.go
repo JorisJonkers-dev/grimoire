@@ -204,6 +204,11 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 	a := r.st.tokens[p.Actor]
 	w := Write{Kind: domain.ActionResolved, Token: a, Settled: p.RollID}
 	switch {
+	case p.Action == stabilising:
+		if d, down := r.st.dying[*p.Target]; down && roll.Total >= p.DC && d.State.Rolls() {
+			d.State = d.State.Stabilise()
+			w.Dying = &d
+		}
 	case p.Action == concentrating:
 		if roll.Total < p.DC {
 			for _, e := range r.st.held(a.ID) {
@@ -251,6 +256,7 @@ func (s *state) occupied(c hex.Coord) bool {
 
 // applyResolved settles a pending action and moves a pushed creature.
 func applyResolved(s *state, w *Write) {
+	applyDying(s, w)
 	s.pending = slices.DeleteFunc(s.pending, func(p domain.PendingAction) bool { return p.RollID == w.Settled })
 	if w.Pushed != nil {
 		s.tokens[w.Pushed.ID] = *w.Pushed

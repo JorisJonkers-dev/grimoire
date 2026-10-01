@@ -10,6 +10,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dying"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -37,12 +38,15 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 //nolint:gosec // coordinates are bounded by the map
 func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
-	if (w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed || w.Kind == domain.ActionConcentrationChecked) && w.Combat == nil {
+	if (w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed || w.Kind == domain.ActionConcentrationChecked || w.Kind == domain.ActionDyingChanged) && w.Combat == nil {
 		if err := s.openRolls(ctx, sess, w.Rolls, actor, c, now); err != nil {
 			return err
 		}
 	}
 	if err := s.savePending(ctx, sid, w); err != nil {
+		return err
+	}
+	if err := s.saveDying(ctx, sid, w); err != nil {
 		return err
 	}
 	for _, t := range []*domain.Token{w.Pushed, w.Dragged} {
@@ -73,4 +77,54 @@ func (s *Store) savePending(ctx context.Context, sid uuid.UUID, w live.Write) er
 		return nil
 	}
 	return s.q.DeletePendingAction(ctx, uuid.UUID(w.Settled))
+}
+
+// LoadDying reads the Characters of a Session at 0 hit points.
+func (s *Store) LoadDying(ctx context.Context, id domain.SessionID) (map[domain.TokenID]domain.Dying, error) {
+	rows, err := s.q.SessionDying(ctx, uuid.UUID(id))
+	if err != nil {
+		return nil, err
+	}
+	out := map[domain.TokenID]domain.Dying{}
+	for _, r := range rows {
+		d := domain.Dying{
+			Token: domain.TokenID(r.TokenID),
+			State: dying.State{Successes: int(r.Successes), Failures: int(r.Failures), Stable: r.Stable, Dead: r.Dead},
+			Died:  dying.Died{Fight: r.DiedFight.String, Round: int(r.DiedRound), Day: int(r.DiedDay)},
+		}
+		if r.EffectID.Valid {
+			e := domain.EffectID(r.EffectID.Bytes)
+			d.Effect = &e
+		}
+		if r.RollID.Valid {
+			roll := domain.RollID(r.RollID.Bytes)
+			d.RollID = &roll
+		}
+		out[d.Token] = d
+	}
+	return out, nil
+}
+
+// saveDying writes a Character's death saves, or drops them once it is back on its feet.
+//
+//nolint:gosec // counts and rounds are bounded by the rules
+func (s *Store) saveDying(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if id := w.Undying; id != nil {
+		return s.q.DeleteDying(ctx, uuid.UUID(*id))
+	}
+	d := w.Dying
+	if d == nil {
+		return nil
+	}
+	p := queries.SaveDyingParams{
+		TokenID: uuid.UUID(d.Token), SessionID: sid, Successes: int32(d.State.Successes), Failures: int32(d.State.Failures), Stable: d.State.Stable,
+		Dead: d.State.Dead, DiedFight: pgtype.Text{String: d.Died.Fight, Valid: d.Died.Fight != ""}, DiedRound: int32(d.Died.Round), DiedDay: int32(d.Died.Day),
+	}
+	if d.Effect != nil {
+		p.EffectID = pgtype.UUID{Bytes: *d.Effect, Valid: true}
+	}
+	if d.RollID != nil {
+		p.RollID = pgtype.UUID{Bytes: *d.RollID, Valid: true}
+	}
+	return s.q.SaveDying(ctx, p)
 }

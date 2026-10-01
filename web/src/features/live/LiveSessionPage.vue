@@ -17,6 +17,7 @@ import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
 import ActionLog from './ActionLog.vue'
+import DyingPanel from './DyingPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
 import ReactionSettings from './ReactionSettings.vue'
@@ -551,6 +552,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :game-day="view?.gameDay ?? 0"
         @send="(cmd) => live?.send(cmd)"
       />
+      <DyingPanel v-if="view" :tokens="view.tokens" :dm="isDM" :helper="walker" @send="(cmd) => live?.send(cmd)" />
       <ReactionSettings
         v-if="walker?.attacks"
         :token="walker"

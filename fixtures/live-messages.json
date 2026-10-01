@@ -678,6 +678,25 @@
       "cleave": true
     },
     {
+      "nonce": "n76",
+      "kind": "stabilise",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "option": "medicine"
+    },
+    {
+      "nonce": "n77",
+      "kind": "revive",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "option": "revivify"
+    },
+    {
       "nonce": "n75",
       "kind": "set_reaction",
       "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
@@ -758,7 +777,12 @@
                 "kind": "shield",
                 "mode": "always"
               }
-            ]
+            ],
+            "dying": {
+              "successes": 1,
+              "failures": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000038"
+            }
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1162,7 +1186,12 @@
                 "kind": "shield",
                 "mode": "always"
               }
-            ]
+            ],
+            "dying": {
+              "successes": 1,
+              "failures": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000038"
+            }
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1660,7 +1689,12 @@
                 "kind": "shield",
                 "mode": "always"
               }
-            ]
+            ],
+            "dying": {
+              "successes": 1,
+              "failures": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000038"
+            }
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -2059,7 +2093,12 @@
                   "kind": "shield",
                   "mode": "always"
                 }
-              ]
+              ],
+              "dying": {
+                "successes": 1,
+                "failures": 2,
+                "rollId": "0190c7a8-0000-7000-8000-000000000038"
+              }
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000014",

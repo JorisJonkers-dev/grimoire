@@ -22,6 +22,10 @@ type HPChange struct {
 	Before int
 	After  int
 	Undoes uuid.UUID
+	// Raw is the damage dealt before hit points stopped it at 0, negative for healing; Critical marks
+	// damage from a Critical Hit.
+	Raw      int
+	Critical bool
 }
 
 // aim is an attack worked out against the rules, before anything is rolled.
@@ -314,9 +318,9 @@ func (r *runtime) hit(a, t domain.Token, p domain.PendingAttack, critical bool, 
 // deal damage remember it.
 func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
 	before := t.Stats.HP
-	ranged := w.attack.Ranged
+	ranged, critical := w.attack.Ranged, w.attack.Critical
 	w.Kind, w.attack = domain.ActionDamageDealt, nil
-	w.HP = &HPChange{Token: t.ID, Before: before, After: max(before-max(amount, 0), 0)}
+	w.HP = &HPChange{Token: t.ID, Before: before, After: max(before-max(amount, 0), 0), Raw: max(amount, 0), Critical: critical}
 	if ranged && w.HP.After < before {
 		w.Observers = r.st.witnesses(w.Token)
 	}
