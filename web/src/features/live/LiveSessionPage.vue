@@ -8,6 +8,8 @@ import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, L
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
+import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
+import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
 import { board, describe, hexes, zoneHexes } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
@@ -48,6 +50,8 @@ const encounterTables = useQuery(computed(() => ({ ...listEncounterTablesOptions
 const characters = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId } }), enabled: isDM.value })))
 const live = shallowRef<ReturnType<typeof useLiveSession> | null>(null)
 const state = computed(() => live.value?.view)
+// The screen stays on while the Session is live, so a phone on the table does not sleep mid-fight.
+useWakeLock(() => state.value?.connection === 'open')
 const view = computed(() => state.value?.view ?? null)
 
 watch(
@@ -302,6 +306,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <h1>Session {{ state.session?.number ?? '' }}</h1>
         <span class="g-tag" :class="`conn--${state.connection}`" data-testid="connection" role="status">{{ status }}</span>
         <RouterLink :to="{ name: 'table', params: { id: campaignId, sid: sessionId } }" class="table-link">Table display</RouterLink>
+        <NotifyToggle />
       </header>
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
       <InitiativeRail v-if="combat" :combat="combat" />

@@ -86,6 +86,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: task build
 
+      - name: Android shell builds
+        if: ${{ !cancelled() }}
+        run: JAVA_HOME="$JAVA_HOME_21_X64" task android
+
       - name: Secret scan
         if: ${{ !cancelled() }}
         run: task secrets

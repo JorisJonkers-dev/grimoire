@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useOnline } from '@/shared/pwa/online'
 
 const route = useRoute()
+const online = useOnline()
 const bare = computed(() => route.meta.bare === true)
 </script>
 
@@ -16,6 +18,9 @@ const bare = computed(() => route.meta.bare === true)
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
       </nav>
     </header>
+    <p v-if="!online" role="status" class="offline" data-testid="offline">
+      You are offline. The compendium and your Character sheets still open from this device; live play picks up again when the connection returns.
+    </p>
     <RouterView />
     <footer class="credit">
       Grimoire by <a href="https://jorisjonkers.dev">Joris Jonkers</a> ·
@@ -39,6 +44,13 @@ const bare = computed(() => route.meta.bare === true)
   min-height: 56px;
   border-bottom: 1px solid var(--color-line);
   background: var(--color-surface);
+}
+.offline {
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-gold);
+  color: var(--color-gold-high);
 }
 .brand {
   font-family: var(--font-display);

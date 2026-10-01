@@ -26,6 +26,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/push"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/webui"
@@ -186,8 +187,18 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) },
 	}
 	defer hub.Shutdown()
+	var notices httpapi.PushService
+	if p := cfg.Push; p != nil {
+		sender := &push.Sender{
+			Pool: store.Pool(), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, PublicKey: p.PublicKey, PrivateKey: p.PrivateKey,
+			Contact: p.Contact, Log: logger,
+		}
+		defer sender.Wait()
+		hub.Notify, notices = sender, sender
+	}
 	handler, err := httpapi.New(httpapi.Options{
 		Handler: &httpapi.Handler{
+			Push:    notices,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

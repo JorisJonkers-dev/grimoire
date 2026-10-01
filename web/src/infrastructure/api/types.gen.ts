@@ -731,6 +731,31 @@ export type Activity = {
 };
 
 /**
+ * The VAPID public key devices subscribe with, base64url-encoded.
+ */
+export type PushKey = {
+    publicKey: string;
+};
+
+/**
+ * A browser's push subscription, as PushSubscription.toJSON gives it.
+ */
+export type PushSubscriptionInput = {
+    endpoint: string;
+    keys: {
+        p256dh: string;
+        auth: string;
+    };
+};
+
+/**
+ * A device subscribed to notifications.
+ */
+export type PushSubscription = {
+    id: Id;
+};
+
+/**
  * A field whose value differs between two Revisions.
  */
 export type FieldChange = {
@@ -5438,6 +5463,98 @@ export type GetMeResponses = {
 };
 
 export type GetMeResponse = GetMeResponses[keyof GetMeResponses];
+
+export type GetPushKeyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/push/key';
+};
+
+export type GetPushKeyErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetPushKeyError = GetPushKeyErrors[keyof GetPushKeyErrors];
+
+export type GetPushKeyResponses = {
+    /**
+     * The key.
+     */
+    200: PushKey;
+};
+
+export type GetPushKeyResponse = GetPushKeyResponses[keyof GetPushKeyResponses];
+
+export type CreatePushSubscriptionData = {
+    body: PushSubscriptionInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/push/subscriptions';
+};
+
+export type CreatePushSubscriptionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreatePushSubscriptionError = CreatePushSubscriptionErrors[keyof CreatePushSubscriptionErrors];
+
+export type CreatePushSubscriptionResponses = {
+    /**
+     * The subscription.
+     */
+    201: PushSubscription;
+};
+
+export type CreatePushSubscriptionResponse = CreatePushSubscriptionResponses[keyof CreatePushSubscriptionResponses];
+
+export type DeletePushSubscriptionData = {
+    body?: never;
+    path: {
+        /**
+         * Subscription id.
+         */
+        subscriptionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/push/subscriptions/{subscriptionId}';
+};
+
+export type DeletePushSubscriptionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeletePushSubscriptionError = DeletePushSubscriptionErrors[keyof DeletePushSubscriptionErrors];
+
+export type DeletePushSubscriptionResponses = {
+    /**
+     * Unsubscribed.
+     */
+    204: void;
+};
+
+export type DeletePushSubscriptionResponse = DeletePushSubscriptionResponses[keyof DeletePushSubscriptionResponses];
 
 export type GetStatusData = {
     body?: never;

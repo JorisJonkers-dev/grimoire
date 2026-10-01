@@ -191,6 +191,15 @@ type CampaignNpcRevision struct {
 	Disposition string
 }
 
+type CampaignPushSubscription struct {
+	ID        uuid.UUID
+	Subject   string
+	Endpoint  string
+	P256dh    string
+	Auth      string
+	CreatedAt time.Time
+}
+
 type CampaignRevision struct {
 	ID            uuid.UUID
 	CampaignID    uuid.UUID

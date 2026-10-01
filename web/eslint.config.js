@@ -3,7 +3,7 @@ import pluginVue from 'eslint-plugin-vue'
 import vueA11y from 'eslint-plugin-vuejs-accessibility'
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'coverage/**', 'src/infrastructure/api/**', 'playwright-report/**', 'test-results/**'] },
+  { ignores: ['dist/**', 'coverage/**', 'src/infrastructure/api/**', 'playwright-report/**', 'test-results/**', 'android/**'] },
   ...tseslint.configs.strictTypeChecked,
   ...pluginVue.configs['flat/recommended'],
   ...vueA11y.configs['flat/recommended'],

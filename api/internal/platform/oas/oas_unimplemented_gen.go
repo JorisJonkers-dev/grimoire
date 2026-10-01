@@ -94,6 +94,16 @@ func (UnimplementedHandler) CreateNpc(ctx context.Context, req *NpcInput, params
 	return r, ht.ErrNotImplemented
 }
 
+// CreatePushSubscription implements createPushSubscription operation.
+//
+// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
+// closed.
+//
+// POST /api/v1/push/subscriptions
+func (UnimplementedHandler) CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (r CreatePushSubscriptionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateRoll implements createRoll operation.
 //
 // Opens a Roll Request for the caller, or, from a DM, for another Member.
@@ -163,6 +173,15 @@ func (UnimplementedHandler) DeleteLootTable(ctx context.Context, params DeleteLo
 //
 // DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 func (UnimplementedHandler) DeleteNpc(ctx context.Context, params DeleteNpcParams) (r DeleteNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeletePushSubscription implements deletePushSubscription operation.
+//
+// Stops notifications to one of the caller's devices.
+//
+// DELETE /api/v1/push/subscriptions/{subscriptionId}
+func (UnimplementedHandler) DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (r DeletePushSubscriptionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -309,6 +328,16 @@ func (UnimplementedHandler) GetNpc(ctx context.Context, params GetNpcParams) (r 
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 func (UnimplementedHandler) GetPortrait(ctx context.Context, params GetPortraitParams) (r GetPortraitRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetPushKey implements getPushKey operation.
+//
+// The server's VAPID public key, for a device to subscribe to notifications with. Not found when the
+// server sends none.
+//
+// GET /api/v1/push/key
+func (UnimplementedHandler) GetPushKey(ctx context.Context) (r GetPushKeyRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

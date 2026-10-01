@@ -108,6 +108,20 @@ func encodeCreateNpcRequest(
 	return nil
 }
 
+func encodeCreatePushSubscriptionRequest(
+	req *PushSubscriptionInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateRollRequest(
 	req *RollCreate,
 	r *http.Request,

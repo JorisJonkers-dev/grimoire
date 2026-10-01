@@ -62,6 +62,13 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
+	// CreatePushSubscription implements createPushSubscription operation.
+	//
+	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
+	// closed.
+	//
+	// POST /api/v1/push/subscriptions
+	CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
 	// CreateRoll implements createRoll operation.
 	//
 	// Opens a Roll Request for the caller, or, from a DM, for another Member.
@@ -110,6 +117,12 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
+	// DeletePushSubscription implements deletePushSubscription operation.
+	//
+	// Stops notifications to one of the caller's devices.
+	//
+	// DELETE /api/v1/push/subscriptions/{subscriptionId}
+	DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (DeletePushSubscriptionRes, error)
 	// DeleteSettlement implements deleteSettlement operation.
 	//
 	// Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -208,6 +221,13 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 	GetPortrait(ctx context.Context, params GetPortraitParams) (GetPortraitRes, error)
+	// GetPushKey implements getPushKey operation.
+	//
+	// The server's VAPID public key, for a device to subscribe to notifications with. Not found when the
+	// server sends none.
+	//
+	// GET /api/v1/push/key
+	GetPushKey(ctx context.Context) (GetPushKeyRes, error)
 	// GetReadiness implements getReadiness operation.
 	//
 	// Returns ok once the API can serve traffic.
