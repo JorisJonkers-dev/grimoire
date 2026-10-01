@@ -1,17 +1,16 @@
 # Tag-triggered publish flow for deploy-platform service repos.
 #
 # push of a v*.*.* tag (authored by release.yml via the App token) drives:
-#   publish-image -> resolve-image-lock -> publish-deploy-artifact -> register-service
+#   publish-image -> resolve-image-lock -> publish-deploy-artifact -> notify-fleet-infra
 #
-# Boundary rule (R1-2): the image lock crosses the reusable-workflow boundary
-# as an UPLOADED ARTIFACT (image-lock-artifact), never as a runner-local path.
-# deploy-artifact.yml downloads the artifact itself; there is no intermediate
-# download job and no image-lock-path input on the deploy-artifact call.
+# The image lock crosses the reusable-workflow boundary as an UPLOADED ARTIFACT, never a
+# runner-local path.
 name: Publish
 
-# Manual until platform onboarding (database, secrets, namespace, auth allow-list) is complete;
-# then switch this trigger back to `push: tags: ['v*.*.*']`.
 on:
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       tag:
@@ -22,14 +21,13 @@ on:
 permissions: {}
 
 jobs:
-  # -- 1. Build and push the container image --------------------------------
-  # Reusable workflow: consume its results via needs.<job>.outputs downstream;
-  # a `uses:` job must not redeclare an outputs: block.
+  # -- 1. Build and push the multi-arch container image ----------------------
   publish-image:
     uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@1efce81af819868fb2f5fd99ee7b04a1275845d8 # v0.18.0
     with:
       image-name: grimoire
-      version: ${{ inputs.tag }}
+      version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      platforms: linux/amd64,linux/arm64
     permissions:
       contents: read
       packages: write
@@ -47,16 +45,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
       - name: resolve-image-digest
         id: digest
-        # container-publish.yml does not expose a digest output; resolve the
-        # digest of the tag it just pushed from the registry.
         env:
           GH_TOKEN: ${{ github.token }}
           IMAGE: ghcr.io/jorisjonkers-dev/grimoire
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: |
           set -euo pipefail
           printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
@@ -65,30 +61,26 @@ jobs:
             echo "E_FLOATING_IMAGE: could not resolve a digest for ${IMAGE}:${TAG}" >&2
             exit 1
           fi
+          platforms="$(docker buildx imagetools inspect "${IMAGE}:${TAG}" --format '{{json .Manifest}}' | jq -r '[.manifests[]?.platform | "\(.os)/\(.architecture)"] | join(",")')"
+          case "$platforms" in
+            *linux/amd64*linux/arm64*|*linux/arm64*linux/amd64*) echo "Platforms: $platforms" ;;
+            *) echo "E_SINGLE_ARCH: expected linux/amd64 and linux/arm64, got '$platforms'" >&2; exit 1 ;;
+          esac
           echo "image-digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: lock-image
-        # deploy-config-schema@0.16.0 has no top-level 'images' subcommand.
-        # Write the object-form images.lock.json directly; the schema CLI and
-        # deploy-artifact action consume it as a plain JSON file.
         env:
           IMAGE_DIGEST: ${{ steps.digest.outputs.image-digest }}
         run: |
           set -euo pipefail
-          if [ -z "$IMAGE_DIGEST" ] || [ "$IMAGE_DIGEST" = "null" ]; then
-            echo "E_FLOATING_IMAGE: IMAGE_DIGEST is empty" >&2
-            exit 1
-          fi
           case "$IMAGE_DIGEST" in
             sha256:*) ;;
             *) echo "E_FLOATING_IMAGE: IMAGE_DIGEST is not a digest ref (got: $IMAGE_DIGEST)" >&2; exit 1 ;;
           esac
-          printf '{"grimoire":"ghcr.io/jorisjonkers-dev/grimoire@%s"}\n' "$IMAGE_DIGEST" \
-            > platform/images.lock.json
+          printf '{"grimoire":"ghcr.io/jorisjonkers-dev/grimoire@%s"}\n' "$IMAGE_DIGEST" > platform/images.lock.json
           echo "Locked image: ghcr.io/jorisjonkers-dev/grimoire@${IMAGE_DIGEST}"
 
       - name: verify-lock
-        # Guard: confirm images.lock.json is well-formed and digest-pinned.
         run: |
           set -euo pipefail
           lock_ref=$(jq -r '.["grimoire"]' platform/images.lock.json)
@@ -105,15 +97,13 @@ jobs:
           retention-days: 1
 
   # -- 3. Render and publish the deploy artifact ----------------------------
-  # The reusable workflow downloads the image-lock artifact itself;
-  # image-lock-artifact is the ONLY lock input passed across the boundary.
   publish-deploy-artifact:
     needs: [resolve-image-lock]
     uses: JorisJonkers-dev/github-workflows/.github/workflows/deploy-artifact.yml@1efce81af819868fb2f5fd99ee7b04a1275845d8 # v0.18.0
     with:
-      ref: ${{ inputs.tag }}
+      ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
       artifact-name: grimoire
-      artifact-version: ${{ inputs.tag }}
+      artifact-version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
       schema-version: 0.22.0
       apply-bundle: true
       context-ref: ghcr.io/jorisjonkers-dev/cluster-deploy-context-public@sha256:95dc39fc695694c8fb4b0c538d7fe13038d407c7302c3725c98f0496c6a83499
@@ -125,3 +115,50 @@ jobs:
       packages: write
       id-token: write
       attestations: write
+
+  # -- 4. Tell fleet-infra the image exists ---------------------------------
+  # Skips the auto-bump cron's hours of delay. Runs only after the image and deploy
+  # artifact are out; if it fails, the cron still picks the release up.
+  notify-fleet-infra:
+    name: Notify fleet-infra
+    needs: [publish-deploy-artifact]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    steps:
+      - name: mint-app-token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # GITHUB_TOKEN cannot dispatch to another repository.
+          owner: JorisJonkers-dev
+          repositories: fleet-infra
+
+      - name: assert-token-minted
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if [ -z "$APP_TOKEN" ]; then
+            echo "E_APP_TOKEN_MISSING: Release App token was not minted." >&2
+            echo "Secrets RELEASE_APP_ID and RELEASE_APP_PRIVATE_KEY must be configured," >&2
+            echo "and the App must be installed on JorisJonkers-dev/fleet-infra." >&2
+            echo "GITHUB_TOKEN fallback is intentionally forbidden." >&2
+            exit 1
+          fi
+          echo "App token minted successfully (token prefix: ${APP_TOKEN:0:4}...)"
+
+      - name: dispatch-image-published
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh api \
+            --method POST \
+            repos/JorisJonkers-dev/fleet-infra/dispatches \
+            -f event_type=image-published \
+            -f "client_payload[service]=grimoire" \
+            -f "client_payload[version]=$TAG"
+          echo "Dispatched image-published to fleet-infra for grimoire $TAG"

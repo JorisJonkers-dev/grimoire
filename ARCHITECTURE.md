@@ -1078,7 +1078,7 @@ Imperative use-case names (`MoveToken`, `RunEncounterCheck`); ports named `…Re
 
 - One image, `grimoire`: a distroless static Go binary that also serves the built SPA (embedded at
   build time, SPA fallback, immutable hashed assets, strict CSP). Built and pushed by `publish.yml`
-  (manual until platform onboarding is complete); deployed via `platform/deployment.yml`
+  on every release tag; deployed via `platform/deployment.yml`
   (v2) with pinned digests in `images.lock.json`, through the estate's publish → `deploy/production`
   → Flux flow.
 - Route: `grimoire.jorisjonkers.dev`, `authMode: forward-auth` for the app and API; `/mcp` uses
