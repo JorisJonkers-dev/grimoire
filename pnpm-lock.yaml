@@ -169,8 +169,8 @@ importers:
   openapi:
     devDependencies:
       '@redocly/cli':
-        specifier: 2.53.3
-        version: 2.53.3
+        specifier: 2.54.2
+        version: 2.54.2
       '@stoplight/spectral-cli':
         specifier: 6.16.3
         version: 6.16.3
@@ -508,8 +508,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  '@redocly/cli@2.53.3':
-    resolution: {integrity: sha512-hzNAWzHCOZ05vwRx0ehTxNeJaxxizjGV505eKtfs9MR/8ieD/8lYhAK4GF5FaqRRwOEpLO0PvzQwBSKYXmxhRA==}
+  '@redocly/cli@2.54.2':
+    resolution: {integrity: sha512-YQ53kSQV/zpYSdY3WiQvf7JxuVLD8jTEX37YOY6MS+G3tyHDCeONpUkAt6qr9n2/nmGm6m+A+PB/mGFvhkt1uQ==}
     engines: {node: '>=22.12.0 || >=20.19.0 <21.0.0', npm: '>=10'}
     hasBin: true
 
@@ -2982,7 +2982,7 @@ snapshots:
     dependencies:
       playwright: 1.63.0
 
-  '@redocly/cli@2.53.3': {}
+  '@redocly/cli@2.54.2': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.9':
     optional: true
