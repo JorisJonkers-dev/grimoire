@@ -169,4 +169,3 @@ func TestItemInstancesAndBagsRefuseNonsense(t *testing.T) {
 		}
 	}
 }
-
