@@ -71,6 +71,11 @@ const (
 	CmdRollLoot       = "roll_loot"
 	CmdMoveItem       = "move_item"
 	CmdMoveCoins      = "move_coins"
+	CmdOpenShop       = "open_shop"
+	CmdCloseShop      = "close_shop"
+	CmdBuy            = "buy"
+	CmdSell           = "sell"
+	CmdHaggle         = "haggle"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -160,6 +165,7 @@ type Command struct {
 	ItemSlug     string           `json:"itemSlug,omitempty"`
 	Coin         string           `json:"coin,omitempty"`
 	Count        int              `json:"count,omitempty"`
+	ShopID       string           `json:"shopId,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -312,6 +318,8 @@ type View struct {
 	Perception []PerceptionView `json:"perception,omitempty"`
 	Checks     []CheckView      `json:"checks,omitempty"`
 	Inventory  []ContainerView  `json:"inventory,omitempty"`
+	Shop       *ShopView        `json:"shop,omitempty"`
+	GameDay    int              `json:"gameDay"`
 }
 
 // ContainerView is a Character's Inventory, the Party Stash or a drop of loot, with what it weighs.
@@ -623,4 +631,32 @@ func hexes(set map[hex.Coord]bool) []Hex {
 	}
 	sortHexes(out)
 	return out
+}
+
+// ShopView is the Shop open in the Session: its Stock with asking prices in copper, and each
+// Character's haggling there, settled or waiting on its roll.
+type ShopView struct {
+	ID         string       `json:"id"`
+	Name       string       `json:"name"`
+	Kind       string       `json:"kind"`
+	Settlement string       `json:"settlement"`
+	Owner      string       `json:"owner,omitempty"`
+	Stock      []StockView  `json:"stock"`
+	Haggles    []HaggleView `json:"haggles"`
+}
+
+// StockView is one item the open Shop sells.
+type StockView struct {
+	Slug     string  `json:"slug"`
+	Name     string  `json:"name"`
+	Count    int     `json:"count"`
+	PriceCP  int     `json:"priceCp"`
+	WeightLb float64 `json:"weightLb"`
+}
+
+// HaggleView is a Character's haggling: its roll while out, then its price adjustment in percent.
+type HaggleView struct {
+	CharacterID string `json:"characterId"`
+	RollID      string `json:"rollId,omitempty"`
+	AdjustPct   *int   `json:"adjustPct,omitempty"`
 }

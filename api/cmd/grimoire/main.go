@@ -196,7 +196,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},
 			Hub: hub, LiveMembers: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
-			Prep: &prepapp.Service{Repo: preppg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now},
+			Prep: &prepapp.Service{
+				Repo: preppg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now,
+				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) },
+			},
 			Maps: &playapp.Maps{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
 				Blobs: blobs(cfg, logger), Now: time.Now,

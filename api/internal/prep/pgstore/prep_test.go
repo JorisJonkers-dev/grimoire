@@ -3,6 +3,7 @@ package pgstore_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -18,11 +19,13 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	playdomain "github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -69,7 +72,11 @@ func setup(t *testing.T) world {
 	snap := snapshot.Snapshot{
 		Documents: []snapshot.Document{{Key: "srd-2024", Title: "SRD 5.2", RulesetYear: 2024, Precedence: 20, License: "CC-BY-4.0", Attribution: "a", URL: "https://a"}},
 		Monsters:  []snapshot.Monster{creature("goblin", "Goblin", 50), creature("ogre", "Ogre", 450)},
-		Items:     []snapshot.Item{{Entry: snapshot.Entry{Document: "srd-2024", Slug: "rope", Name: "Rope", Description: "Rope."}, Category: "gear", WeightLB: 5}},
+		Items: []snapshot.Item{
+			{Entry: snapshot.Entry{Document: "srd-2024", Slug: "rope", Name: "Rope", Description: "Rope."}, Category: "gear", CostGP: 1, WeightLB: 5},
+			{Entry: snapshot.Entry{Document: "srd-2024", Slug: "crown", Name: "Crown", Description: "Crown."}, Category: "treasure", CostGP: 5000, WeightLB: 3},
+			{Entry: snapshot.Entry{Document: "srd-2024", Slug: "wand", Name: "Wand", Description: "Wand."}, Category: "wand", Magic: true, Rarity: "uncommon"},
+		},
 	}
 	if _, err := comppg.New(store.Pool()).Import(ctx, snap, "prep"); err != nil {
 		t.Fatal(err)
@@ -88,7 +95,10 @@ func setup(t *testing.T) world {
 }
 
 func service(w world, repo app.Repository) *app.Service {
-	return &app.Service{Repo: repo, Members: playpg.CampaignMembers{Store: campaignpg.New(w.pool)}, Now: func() time.Time { return time.Date(2026, 10, 1, 20, 0, 0, 0, time.UTC) }}
+	return &app.Service{
+		Repo: repo, Members: playpg.CampaignMembers{Store: campaignpg.New(w.pool)}, Now: func() time.Time { return time.Date(2026, 10, 1, 20, 0, 0, 0, time.UTC) },
+		Seed: func() uint64 { return 9 }, Source: func(s uint64) dice.Source { return rng.New(s) },
+	}
 }
 
 func goblins() domain.Pool {
@@ -423,6 +433,165 @@ func TestLootTablesNestWithoutLoopsAndKeepTheirHistory(t *testing.T) {
 		},
 		"loot revs":    func(s *app.Service) error { _, err := s.LootTableRevisions(ctx, dm, w.campaign, hoard.ID); return err },
 		"restore loot": func(s *app.Service) error { _, err := s.RestoreLootTable(ctx, dm, w.campaign, hoard.ID, 1); return err },
+	}
+	for name, op := range ops {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := op(service(w, pgstore.NewFaulty(w.pool, f)))
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+}
+
+func TestSettlementsAndShopsStockFromLootAndKeepTheirHistory(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w := setup(t)
+	s := service(w, pgstore.New(w.pool))
+	var npc uuid.UUID
+	if err := w.pool.QueryRow(ctx, "INSERT INTO campaign.npcs (campaign_id, name) VALUES ($1, 'Hilda') RETURNING id", w.campaign).Scan(&npc); err != nil {
+		t.Fatal(err)
+	}
+	wares, err := s.SaveLootTable(ctx, dm, w.campaign, domain.LootTable{Name: "Wares", Rolls: 1, Entries: []domain.LootEntry{
+		{Weight: 1, Kind: "item", Item: "rope", Amount: "2"},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	treasure, _ := s.SaveLootTable(ctx, dm, w.campaign, domain.LootTable{Name: "Treasure", Rolls: 3, Entries: []domain.LootEntry{
+		{Weight: 1, Kind: "item", Item: "crown", Amount: "1"}, {Weight: 1, Kind: "item", Item: "wand", Amount: "1"}, {Weight: 1, Kind: "currency", Coin: "gp", Amount: "5"},
+	}})
+	town, err := s.SaveSettlement(ctx, dm, w.campaign, domain.Settlement{Name: " Oakford ", Size: "town", Wealth: "modest", LocationID: &w.town})
+	if err != nil || town.Name != "Oakford" {
+		t.Fatalf("settlement = %+v %v", town, err)
+	}
+	stranger := uuid.New()
+	for want, x := range map[string]domain.Settlement{
+		"name of up to 80": {Size: "town", Wealth: "modest"},
+		"hamlet, village":  {Name: "A", Size: "megacity", Wealth: "modest"},
+		"poor, modest":     {Name: "A", Size: "town", Wealth: "rich"},
+		"location on one":  {Name: "A", Size: "town", Wealth: "modest", LocationID: &stranger},
+	} {
+		_, err := s.SaveSettlement(ctx, dm, w.campaign, x)
+		refused(t, err, want)
+	}
+	shop := domain.Shop{SettlementID: town.ID, Name: "Store", Kind: " general ", OwnerID: &npc, MarkupPct: 50, HaggleDC: 15, HagglePct: 20, LootTable: &wares.ID, Restock: "days", RestockDays: 3}
+	store, err := s.SaveShop(ctx, dm, w.campaign, shop)
+	if err != nil || store.Kind != "general" || len(store.Stock) != 0 {
+		t.Fatalf("shop = %+v %v", store, err)
+	}
+	missingTable := domain.LootTableID(uuid.New())
+	for want, change := range map[string]func(x *domain.Shop){
+		"trade of up to 40":      func(x *domain.Shop) { x.Kind = "" },
+		"markup runs":            func(x *domain.Shop) { x.MarkupPct = 301 },
+		"haggling has a DC":      func(x *domain.Shop) { x.HaggleDC = 40 },
+		"restocks never":         func(x *domain.Shop) { x.Restock = "weekly" },
+		"every 1 to 365":         func(x *domain.Shop) { x.RestockDays = 0 },
+		"campaign's settlements": func(x *domain.Shop) { x.SettlementID = domain.SettlementID(uuid.New()) },
+		"NPCs as the owner":      func(x *domain.Shop) { x.OwnerID = &stranger },
+		"loot tables for":        func(x *domain.Shop) { x.LootTable = &missingTable },
+		"name of up to 80":       func(x *domain.Shop) { x.Name = "" },
+	} {
+		x := shop
+		change(&x)
+		_, err := s.SaveShop(ctx, dm, w.campaign, x)
+		refused(t, err, want)
+	}
+	stocked, err := s.RerollStock(ctx, dm, w.campaign, store.ID)
+	if err != nil || len(stocked.Stock) != 1 || stocked.Stock[0] != (domain.StockItem{Slug: "rope", Quantity: 6, PriceCP: 150}) {
+		t.Fatalf("a town rolls the wares three times = %+v %v", stocked, err)
+	}
+	store.LootTable, store.Restock = &treasure.ID, "never"
+	if store, err = s.SaveShop(ctx, dm, w.campaign, store); err != nil || store.RestockDays != 0 || len(store.Stock) != 1 {
+		t.Fatalf("an edit keeps the stock = %+v %v", store, err)
+	}
+	rich, err := s.RerollStock(ctx, dm, w.campaign, store.ID)
+	if err != nil || slices.ContainsFunc(rich.Stock, func(k domain.StockItem) bool { return k.Slug == "crown" || k.Slug == "wand" }) {
+		t.Fatalf("a modest town stocks nothing dearer than 100 gp = %+v %v", rich, err)
+	}
+	town.Wealth = "wealthy"
+	if _, err := s.SaveSettlement(ctx, dm, w.campaign, town); err != nil {
+		t.Fatal(err)
+	}
+	rich, _ = s.RerollStock(ctx, dm, w.campaign, store.ID)
+	if !slices.ContainsFunc(rich.Stock, func(k domain.StockItem) bool { return k.Slug == "wand" && k.PriceCP == 60000 }) {
+		t.Fatalf("a wealthy town prices an uncommon wand at 400 gp plus markup = %+v", rich.Stock)
+	}
+	refused(t, s.DeleteSettlement(ctx, dm, w.campaign, town.ID), "shops first")
+	if err := s.DeleteShop(ctx, dm, w.campaign, store.ID); err != nil {
+		t.Fatal(err)
+	}
+	back, err := s.RestoreShop(ctx, dm, w.campaign, store.ID, 2)
+	if err != nil || len(back.Stock) != 1 || back.Stock[0].Quantity != 6 || back.Restock != "days" {
+		t.Fatalf("restoring the shop brings its stock back = %+v %v", back, err)
+	}
+	revs, err := s.ShopRevisions(ctx, dm, w.campaign, store.ID)
+	if err != nil || len(revs) != 7 {
+		t.Fatalf("shop revisions = %d %v", len(revs), err)
+	}
+	if err := s.DeleteShop(ctx, dm, w.campaign, store.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.DeleteSettlement(ctx, dm, w.campaign, town.ID); err != nil {
+		t.Fatal(err)
+	}
+	if again, err := s.RestoreSettlement(ctx, dm, w.campaign, town.ID, 1); err != nil || again.Wealth != "modest" {
+		t.Fatalf("restore settlement = %+v %v", again, err)
+	}
+	if revs, err := s.SettlementRevisions(ctx, dm, w.campaign, town.ID); err != nil || len(revs) != 4 {
+		t.Fatalf("settlement revisions = %d %v", len(revs), err)
+	}
+	for name, err := range map[string]error{
+		"settlement unknown": func() error {
+			_, err := s.SaveSettlement(ctx, dm, w.campaign, domain.Settlement{ID: domain.SettlementID(uuid.New())})
+			return err
+		}(),
+		"shop unknown": func() error {
+			_, err := s.SaveShop(ctx, dm, w.campaign, domain.Shop{ID: domain.ShopID(uuid.New())})
+			return err
+		}(),
+		"delete shop":       s.DeleteShop(ctx, dm, w.campaign, domain.ShopID(uuid.New())),
+		"delete settlement": s.DeleteSettlement(ctx, dm, w.campaign, domain.SettlementID(uuid.New())),
+		"reroll unknown":    func() error { _, err := s.RerollStock(ctx, dm, w.campaign, domain.ShopID(uuid.New())); return err }(),
+		"revisions":         func() error { _, err := s.ShopRevisions(ctx, dm, w.campaign, domain.ShopID(uuid.New())); return err }(),
+	} {
+		if !errors.Is(err, apperr.ErrNotFound) {
+			t.Errorf("%s = %v", name, err)
+		}
+	}
+	if _, err := s.Shops(ctx, player, w.campaign); !errors.Is(err, apperr.ErrForbidden) {
+		t.Errorf("player = %v", err)
+	}
+	if _, err := s.Settlements(ctx, player, w.campaign); !errors.Is(err, apperr.ErrForbidden) {
+		t.Errorf("player = %v", err)
+	}
+	shop.LootTable = &wares.ID
+	live, _ := s.SaveShop(ctx, dm, w.campaign, shop)
+	ops := map[string]func(x *app.Service) error{
+		"settlements":  func(x *app.Service) error { _, err := x.Settlements(ctx, dm, w.campaign); return err },
+		"save town":    func(x *app.Service) error { _, err := x.SaveSettlement(ctx, dm, w.campaign, town); return err },
+		"shops":        func(x *app.Service) error { _, err := x.Shops(ctx, dm, w.campaign); return err },
+		"save shop":    func(x *app.Service) error { _, err := x.SaveShop(ctx, dm, w.campaign, live); return err },
+		"reroll":       func(x *app.Service) error { _, err := x.RerollStock(ctx, dm, w.campaign, live.ID); return err },
+		"restore":      func(x *app.Service) error { _, err := x.RestoreShop(ctx, dm, w.campaign, store.ID, 2); return err },
+		"restore town": func(x *app.Service) error { _, err := x.RestoreSettlement(ctx, dm, w.campaign, town.ID, 1); return err },
+		"delete shop": func(x *app.Service) error {
+			fresh := shop
+			fresh, err := s.SaveShop(ctx, dm, w.campaign, fresh)
+			if err != nil {
+				t.Fatal(err)
+			}
+			return x.DeleteShop(ctx, dm, w.campaign, fresh.ID)
+		},
+		"delete town": func(x *app.Service) error {
+			fresh, err := s.SaveSettlement(ctx, dm, w.campaign, domain.Settlement{Name: "Ghost", Size: "hamlet", Wealth: "poor"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			return x.DeleteSettlement(ctx, dm, w.campaign, fresh.ID)
+		},
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {

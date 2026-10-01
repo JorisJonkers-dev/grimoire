@@ -17,6 +17,7 @@ const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
 const EncountersPage = () => import('@/features/prep/EncountersPage.vue')
 const LootPage = () => import('@/features/prep/LootPage.vue')
+const ShopsPage = () => import('@/features/prep/ShopsPage.vue')
 const DiceTrayPage = () => import('@/features/rolls/DiceTrayPage.vue')
 const LiveSessionPage = () => import('@/features/live/LiveSessionPage.vue')
 const TablePage = () => import('@/features/live/TablePage.vue')
@@ -43,6 +44,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },
       { path: '/campaigns/:id/loot', name: 'loot', component: LootPage },
+      { path: '/campaigns/:id/shops', name: 'shops', component: ShopsPage },
       { path: '/campaigns/:id/dice', name: 'dice', component: DiceTrayPage },
       { path: '/campaigns/:id/sessions/:sid', name: 'session', component: LiveSessionPage },
       { path: '/campaigns/:id/sessions/:sid/table', name: 'table', component: TablePage, meta: { bare: true } },

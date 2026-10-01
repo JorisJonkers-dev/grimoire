@@ -20,10 +20,12 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	prepapp "github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -100,6 +102,50 @@ func (brokenPrep) RestoreLootTable(context.Context, caller.Caller, uuid.UUID, do
 	return domain.LootTable{}, errBroken
 }
 
+func (brokenPrep) Settlements(context.Context, caller.Caller, uuid.UUID) ([]domain.Settlement, error) {
+	return nil, errBroken
+}
+
+func (brokenPrep) SaveSettlement(context.Context, caller.Caller, uuid.UUID, domain.Settlement) (domain.Settlement, error) {
+	return domain.Settlement{}, errBroken
+}
+
+func (brokenPrep) DeleteSettlement(context.Context, caller.Caller, uuid.UUID, domain.SettlementID) error {
+	return errBroken
+}
+
+func (brokenPrep) SettlementRevisions(context.Context, caller.Caller, uuid.UUID, domain.SettlementID) ([]campaigndomain.Revision, error) {
+	return nil, errBroken
+}
+
+func (brokenPrep) RestoreSettlement(context.Context, caller.Caller, uuid.UUID, domain.SettlementID, int) (domain.Settlement, error) {
+	return domain.Settlement{}, errBroken
+}
+
+func (brokenPrep) Shops(context.Context, caller.Caller, uuid.UUID) ([]domain.Shop, error) {
+	return nil, errBroken
+}
+
+func (brokenPrep) SaveShop(context.Context, caller.Caller, uuid.UUID, domain.Shop) (domain.Shop, error) {
+	return domain.Shop{}, errBroken
+}
+
+func (brokenPrep) DeleteShop(context.Context, caller.Caller, uuid.UUID, domain.ShopID) error {
+	return errBroken
+}
+
+func (brokenPrep) ShopRevisions(context.Context, caller.Caller, uuid.UUID, domain.ShopID) ([]campaigndomain.Revision, error) {
+	return nil, errBroken
+}
+
+func (brokenPrep) RestoreShop(context.Context, caller.Caller, uuid.UUID, domain.ShopID, int) (domain.Shop, error) {
+	return domain.Shop{}, errBroken
+}
+
+func (brokenPrep) RerollStock(context.Context, caller.Caller, uuid.UUID, domain.ShopID) (domain.Shop, error) {
+	return domain.Shop{}, errBroken
+}
+
 func TestEncounterPrepOverHTTP(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -122,7 +168,10 @@ func TestEncounterPrepOverHTTP(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := campaignpg.New(store.Pool())
-	svc := &prepapp.Service{Repo: preppg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now}
+	svc := &prepapp.Service{
+		Repo: preppg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now,
+		Seed: func() uint64 { return 5 }, Source: func(seed uint64) dice.Source { return rng.New(seed) },
+	}
 	h := campaignServer(t, campaignapp.NewService(repo), httpapi.PrepService(svc))
 	id, _ := campaignWithPlayer(t, h)
 	base := "/api/v1/campaigns/" + id
@@ -226,6 +275,68 @@ func TestEncounterPrepOverHTTP(t *testing.T) {
 	if rec := call(h, http.MethodGet, lootOne+"/revisions", "dm", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"action":"restore"`) {
 		t.Fatalf("loot revisions: %d %s", rec.Code, rec.Body.String())
 	}
+	var place, owner uuid.UUID
+	if err := store.Pool().QueryRow(ctx, `INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, created_at, updated_at)
+		VALUES ($1, 'Realm', 'world', 'k', 'image/png', 400, 300, 40, 35, 40, now(), now()) RETURNING id`, cid).Scan(&place); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Pool().QueryRow(ctx, "INSERT INTO campaign.map_nodes (id, map_id, name, q, r) VALUES (gen_random_uuid(), $1, 'Oakford', 0, 0) RETURNING id", place).Scan(&place); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Pool().QueryRow(ctx, "INSERT INTO campaign.npcs (campaign_id, name) VALUES ($1, 'Tamsin') RETURNING id", cid).Scan(&owner); err != nil {
+		t.Fatal(err)
+	}
+	rec = call(h, http.MethodPost, base+"/settlements", "dm", `{"name":"Oakford","size":"village","wealth":"modest","locationId":"`+place.String()+`"}`)
+	townID, _ := decode(t, rec)["id"].(string)
+	if rec.Code != http.StatusCreated || townID == "" {
+		t.Fatalf("create settlement: %d %s", rec.Code, rec.Body.String())
+	}
+	town := base + "/settlements/" + townID
+	if rec := call(h, http.MethodPut, town, "dm", `{"name":"Oakford","size":"town","wealth":"wealthy"}`); rec.Code != 200 || decode(t, rec)["size"] != "town" || strings.Contains(rec.Body.String(), "locationId") {
+		t.Fatalf("update settlement: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, base+"/settlements", "dm", ""); !strings.Contains(rec.Body.String(), `"wealth":"wealthy"`) {
+		t.Fatalf("list settlements: %s", rec.Body.String())
+	}
+	shopBody := `{"settlementId":"` + townID + `","ownerId":"` + owner.String() + `","name":"Store","kind":"general","markupPct":50,"haggleDc":15,"hagglePct":20,"lootTableId":"` + hoard + `","restock":"days","restockDays":3}`
+	rec = call(h, http.MethodPost, base+"/shops", "dm", shopBody)
+	shopID, _ := decode(t, rec)["id"].(string)
+	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"restockDays":3`) || !strings.Contains(rec.Body.String(), `"ownerId":"`+owner.String()) {
+		t.Fatalf("create shop: %d %s", rec.Code, rec.Body.String())
+	}
+	shop := base + "/shops/" + shopID
+	rec = call(h, http.MethodPost, shop+"/stock", "dm", "")
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"itemSlug":"rope"`) {
+		t.Fatalf("reroll stock: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPut, shop, "dm", strings.Replace(shopBody, `"restock":"days","restockDays":3`, `"restock":"never"`, 1)); rec.Code != 200 || strings.Contains(rec.Body.String(), "restockDays") {
+		t.Fatalf("update shop: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, base+"/shops", "dm", ""); !strings.Contains(rec.Body.String(), `"restock":"never"`) {
+		t.Fatalf("list shops: %s", rec.Body.String())
+	}
+	if rec := call(h, http.MethodDelete, shop, "dm", ""); rec.Code != http.StatusNoContent {
+		t.Fatalf("delete shop: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodPost, shop+"/revisions/2/restore", "dm", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"itemSlug":"rope"`) {
+		t.Fatalf("restore shop: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, shop+"/revisions", "dm", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"restoredFrom":2`) {
+		t.Fatalf("shop revisions: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodDelete, town, "dm", ""); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("delete a town with shops: %d", rec.Code)
+	}
+	call(h, http.MethodDelete, shop, "dm", "")
+	if rec := call(h, http.MethodDelete, town, "dm", ""); rec.Code != http.StatusNoContent {
+		t.Fatalf("delete settlement: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodPost, town+"/revisions/1/restore", "dm", ""); rec.Code != 200 || decode(t, rec)["locationId"] != place.String() {
+		t.Fatalf("restore settlement: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, town+"/revisions", "dm", ""); rec.Code != 200 {
+		t.Fatalf("settlement revisions: %d", rec.Code)
+	}
 	if rec := call(h, http.MethodGet, base+"/encounter-pools", "player", ""); rec.Code != http.StatusForbidden {
 		t.Fatalf("player: %d", rec.Code)
 	}
@@ -239,6 +350,8 @@ func TestEncounterPrepFailuresOverHTTP(t *testing.T) {
 	poolBody := `{"name":"A","levelMin":1,"levelMax":2,"difficulty":"low","members":[{"monsterSlug":"goblin","weight":1,"min":0,"max":1}]}`
 	tableBody := `{"name":"A","chancePct":1,"visibility":"secret","entries":[{"weight":1,"kind":"nothing","label":""}]}`
 	loot, lootBody := base+"/loot-tables/"+uuid.NewString(), `{"name":"A","rolls":1,"entries":[{"weight":1,"kind":"nothing"}]}`
+	town, townBody := base+"/settlements/"+uuid.NewString(), `{"name":"A","size":"town","wealth":"poor"}`
+	shop, shopBody := base+"/shops/"+uuid.NewString(), `{"settlementId":"`+uuid.NewString()+`","name":"A","kind":"b","markupPct":0,"haggleDc":10,"hagglePct":0,"restock":"never"}`
 	for _, o := range []struct{ method, path, body string }{
 		{http.MethodGet, base + "/encounter-pools", ""},
 		{http.MethodPost, base + "/encounter-pools", poolBody},
@@ -260,6 +373,19 @@ func TestEncounterPrepFailuresOverHTTP(t *testing.T) {
 		{http.MethodDelete, loot, ""},
 		{http.MethodGet, loot + "/revisions", ""},
 		{http.MethodPost, loot + "/revisions/1/restore", ""},
+		{http.MethodGet, base + "/settlements", ""},
+		{http.MethodPost, base + "/settlements", townBody},
+		{http.MethodPut, town, townBody},
+		{http.MethodDelete, town, ""},
+		{http.MethodGet, town + "/revisions", ""},
+		{http.MethodPost, town + "/revisions/1/restore", ""},
+		{http.MethodGet, base + "/shops", ""},
+		{http.MethodPost, base + "/shops", shopBody},
+		{http.MethodPut, shop, shopBody},
+		{http.MethodDelete, shop, ""},
+		{http.MethodGet, shop + "/revisions", ""},
+		{http.MethodPost, shop + "/revisions/1/restore", ""},
+		{http.MethodPost, shop + "/stock", ""},
 	} {
 		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
@@ -289,6 +415,19 @@ func TestEncounterPrepFailuresOverHTTP(t *testing.T) {
 	add(hh.DeleteLootTable(ctx, oas.DeleteLootTableParams{}))
 	add(hh.ListLootTableRevisions(ctx, oas.ListLootTableRevisionsParams{}))
 	add(hh.RestoreLootTableRevision(ctx, oas.RestoreLootTableRevisionParams{}))
+	add(hh.ListSettlements(ctx, oas.ListSettlementsParams{}))
+	add(hh.CreateSettlement(ctx, &oas.SettlementInput{}, oas.CreateSettlementParams{}))
+	add(hh.UpdateSettlement(ctx, &oas.SettlementInput{}, oas.UpdateSettlementParams{}))
+	add(hh.DeleteSettlement(ctx, oas.DeleteSettlementParams{}))
+	add(hh.ListSettlementRevisions(ctx, oas.ListSettlementRevisionsParams{}))
+	add(hh.RestoreSettlementRevision(ctx, oas.RestoreSettlementRevisionParams{}))
+	add(hh.ListShops(ctx, oas.ListShopsParams{}))
+	add(hh.CreateShop(ctx, &oas.ShopInput{}, oas.CreateShopParams{}))
+	add(hh.UpdateShop(ctx, &oas.ShopInput{}, oas.UpdateShopParams{}))
+	add(hh.DeleteShop(ctx, oas.DeleteShopParams{}))
+	add(hh.ListShopRevisions(ctx, oas.ListShopRevisionsParams{}))
+	add(hh.RestoreShopRevision(ctx, oas.RestoreShopRevisionParams{}))
+	add(hh.RerollStock(ctx, oas.RerollStockParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

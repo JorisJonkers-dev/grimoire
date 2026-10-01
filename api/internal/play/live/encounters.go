@@ -32,10 +32,7 @@ func tableByID(tables []prep.Table, id string) (prep.Table, bool) {
 // planEncounter takes a rest, schedules a check, or runs one now.
 func (r *runtime) planEncounter(m domain.Member, cmd Command) (Write, string) {
 	if cmd.Kind == CmdRest {
-		if cmd.Rest != RestShort && cmd.Rest != RestLong {
-			return Write{}, "A rest is short or long."
-		}
-		return Write{Kind: domain.ActionRestTaken, Rest: cmd.Rest}, ""
+		return r.rest(cmd.Rest)
 	}
 	p, err := r.store.LoadPrep(context.Background(), r.campaign)
 	if err != nil {
@@ -59,6 +56,19 @@ func (r *runtime) planEncounter(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "Pick one of the table's entries."
 	}
 	return r.check(m, p, t, prep.TriggerDM, cmd.Mode, cmd.Entry), ""
+}
+
+// rest takes a short or long rest; a long one moves the Campaign on a day.
+func (r *runtime) rest(kind string) (Write, string) {
+	if kind != RestShort && kind != RestLong {
+		return Write{}, "A rest is short or long."
+	}
+	w := Write{Kind: domain.ActionRestTaken, Rest: kind}
+	if kind == RestLong {
+		day := r.st.day + 1
+		w.Day = &day
+	}
+	return w, ""
 }
 
 // check runs an Encounter Check. A normal check on an open table opens a percentile Roll Request the

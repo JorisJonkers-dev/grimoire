@@ -37,6 +37,9 @@ type state struct {
 	checks []prep.Check
 	// inventory is every Container of the Campaign.
 	inventory domain.Inventory
+	// shop is the Shop open in the Session; day the Campaign's in-game day.
+	shop *domain.OpenShop
+	day  int
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -61,7 +64,10 @@ func (s *state) clone() *state {
 		next.zones = append(next.zones, cloneZone(z))
 	}
 	next.checks = slices.Clone(s.checks)
-	next.inventory = cloneInventory(s.inventory)
+	next.inventory, next.day = cloneInventory(s.inventory), s.day
+	if s.shop != nil {
+		next.shop = s.shop.Clone()
+	}
 	if s.cast != nil {
 		c := *s.cast
 		next.cast = &c
@@ -156,6 +162,7 @@ func (s *state) project(a Audience) View {
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
+	v.Shop, v.GameDay = s.shopView(), s.day
 	if a == AudienceDM {
 		v.Zones = s.zoneViews()
 	}

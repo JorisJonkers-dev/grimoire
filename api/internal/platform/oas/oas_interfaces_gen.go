@@ -41,6 +41,14 @@ type CreateRollRes interface {
 	createRollRes()
 }
 
+type CreateSettlementRes interface {
+	createSettlementRes()
+}
+
+type CreateShopRes interface {
+	createShopRes()
+}
+
 type DeleteCharacterRes interface {
 	deleteCharacterRes()
 }
@@ -59,6 +67,14 @@ type DeleteLootTableRes interface {
 
 type DeleteNpcRes interface {
 	deleteNpcRes()
+}
+
+type DeleteSettlementRes interface {
+	deleteSettlementRes()
+}
+
+type DeleteShopRes interface {
+	deleteShopRes()
 }
 
 type DiffNpcRevisionsRes interface {
@@ -213,6 +229,22 @@ type ListSessionsRes interface {
 	listSessionsRes()
 }
 
+type ListSettlementRevisionsRes interface {
+	listSettlementRevisionsRes()
+}
+
+type ListSettlementsRes interface {
+	listSettlementsRes()
+}
+
+type ListShopRevisionsRes interface {
+	listShopRevisionsRes()
+}
+
+type ListShopsRes interface {
+	listShopsRes()
+}
+
 type ListSourcesRes interface {
 	listSourcesRes()
 }
@@ -241,6 +273,10 @@ type RemoveMemberRes interface {
 	removeMemberRes()
 }
 
+type RerollStockRes interface {
+	rerollStockRes()
+}
+
 type RestoreEncounterPoolRevisionRes interface {
 	restoreEncounterPoolRevisionRes()
 }
@@ -255,6 +291,14 @@ type RestoreLootTableRevisionRes interface {
 
 type RestoreNpcRevisionRes interface {
 	restoreNpcRevisionRes()
+}
+
+type RestoreSettlementRevisionRes interface {
+	restoreSettlementRevisionRes()
+}
+
+type RestoreShopRevisionRes interface {
+	restoreShopRevisionRes()
 }
 
 type RevokeInviteRes interface {
@@ -311,6 +355,14 @@ type UpdateMemberRes interface {
 
 type UpdateNpcRes interface {
 	updateNpcRes()
+}
+
+type UpdateSettlementRes interface {
+	updateSettlementRes()
+}
+
+type UpdateShopRes interface {
+	updateShopRes()
 }
 
 type UploadMapRes interface {

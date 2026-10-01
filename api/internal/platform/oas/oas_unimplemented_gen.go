@@ -103,6 +103,24 @@ func (UnimplementedHandler) CreateRoll(ctx context.Context, req *RollCreate, par
 	return r, ht.ErrNotImplemented
 }
 
+// CreateSettlement implements createSettlement operation.
+//
+// Adds an Settlement and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/settlements
+func (UnimplementedHandler) CreateSettlement(ctx context.Context, req *SettlementInput, params CreateSettlementParams) (r CreateSettlementRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateShop implements createShop operation.
+//
+// Adds an Shop and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/shops
+func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (r CreateShopRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteCharacter implements deleteCharacter operation.
 //
 // Removes a Character. The owner or a DM, never during Combat.
@@ -145,6 +163,24 @@ func (UnimplementedHandler) DeleteLootTable(ctx context.Context, params DeleteLo
 //
 // DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 func (UnimplementedHandler) DeleteNpc(ctx context.Context, params DeleteNpcParams) (r DeleteNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteSettlement implements deleteSettlement operation.
+//
+// Removes the Settlement; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/settlements/{settlementId}
+func (UnimplementedHandler) DeleteSettlement(ctx context.Context, params DeleteSettlementParams) (r DeleteSettlementRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteShop implements deleteShop operation.
+//
+// Removes the Shop; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
+func (UnimplementedHandler) DeleteShop(ctx context.Context, params DeleteShopParams) (r DeleteShopRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -493,6 +529,42 @@ func (UnimplementedHandler) ListSessions(ctx context.Context, params ListSession
 	return r, ht.ErrNotImplemented
 }
 
+// ListSettlementRevisions implements listSettlementRevisions operation.
+//
+// Every Revision of the Settlement, newest first. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions
+func (UnimplementedHandler) ListSettlementRevisions(ctx context.Context, params ListSettlementRevisionsParams) (r ListSettlementRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSettlements implements listSettlements operation.
+//
+// The Campaign's Settlements. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/settlements
+func (UnimplementedHandler) ListSettlements(ctx context.Context, params ListSettlementsParams) (r ListSettlementsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListShopRevisions implements listShopRevisions operation.
+//
+// Every Revision of the Shop, newest first. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions
+func (UnimplementedHandler) ListShopRevisions(ctx context.Context, params ListShopRevisionsParams) (r ListShopRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListShops implements listShops operation.
+//
+// The Campaign's Shops. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/shops
+func (UnimplementedHandler) ListShops(ctx context.Context, params ListShopsParams) (r ListShopsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListSources implements listSources operation.
 //
 // The documents the compendium draws from, with the attribution each license requires.
@@ -556,6 +628,16 @@ func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMembe
 	return r, ht.ErrNotImplemented
 }
 
+// RerollStock implements rerollStock operation.
+//
+// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
+// Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
+func (UnimplementedHandler) RerollStock(ctx context.Context, params RerollStockParams) (r RerollStockRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RestoreEncounterPoolRevision implements restoreEncounterPoolRevision operation.
 //
 // Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
@@ -593,6 +675,26 @@ func (UnimplementedHandler) RestoreLootTableRevision(ctx context.Context, params
 //
 // POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
 func (UnimplementedHandler) RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (r RestoreNpcRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RestoreSettlementRevision implements restoreSettlementRevision operation.
+//
+// Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a
+// Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore
+func (UnimplementedHandler) RestoreSettlementRevision(ctx context.Context, params RestoreSettlementRevisionParams) (r RestoreSettlementRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RestoreShopRevision implements restoreShopRevision operation.
+//
+// Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
+func (UnimplementedHandler) RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (r RestoreShopRevisionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -722,6 +824,24 @@ func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate,
 //
 // PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 func (UnimplementedHandler) UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (r UpdateNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateSettlement implements updateSettlement operation.
+//
+// Replaces the Settlement and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/settlements/{settlementId}
+func (UnimplementedHandler) UpdateSettlement(ctx context.Context, req *SettlementInput, params UpdateSettlementParams) (r UpdateSettlementRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateShop implements updateShop operation.
+//
+// Replaces the Shop and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/shops/{shopId}
+func (UnimplementedHandler) UpdateShop(ctx context.Context, req *ShopInput, params UpdateShopParams) (r UpdateShopRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

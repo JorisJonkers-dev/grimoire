@@ -267,6 +267,73 @@ export const zCoin = z.enum([
 ]);
 
 /**
+ * A Settlement as the DM writes it; locationId places it on a world map.
+ */
+export const zSettlementInput = z.object({
+    name: z.string().min(1).max(80),
+    size: z.enum([
+        'hamlet',
+        'village',
+        'town',
+        'city'
+    ]),
+    wealth: z.enum([
+        'poor',
+        'modest',
+        'comfortable',
+        'wealthy'
+    ]),
+    locationId: zId.optional()
+});
+
+/**
+ * A named inhabited place with a size and a wealth tier.
+ */
+export const zSettlement = z.object({
+    id: zId,
+    name: z.string().max(80),
+    size: z.enum([
+        'hamlet',
+        'village',
+        'town',
+        'city'
+    ]),
+    wealth: z.enum([
+        'poor',
+        'modest',
+        'comfortable',
+        'wealthy'
+    ]),
+    locationId: zId.optional(),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * When a Shop restocks from its Loot Table.
+ */
+export const zShopRestock = z.enum([
+    'never',
+    'long_rest',
+    'days'
+]);
+
+/**
+ * A Shop as the DM writes it. restockDays is required when it restocks every few days.
+ */
+export const zShopInput = z.object({
+    settlementId: zId,
+    name: z.string().min(1).max(80),
+    kind: z.string().min(1).max(40),
+    ownerId: zId.optional(),
+    markupPct: z.int().gte(0).lte(300),
+    haggleDc: z.int().gte(5).lte(30),
+    hagglePct: z.int().gte(0).lte(50),
+    lootTableId: zId.optional(),
+    restock: zShopRestock,
+    restockDays: z.int().gte(1).lte(365).optional()
+});
+
+/**
  * One recorded version of a piece of prep data.
  */
 export const zRevision = z.object({
@@ -596,6 +663,15 @@ export const zLiveSessionView = z.object({
 export const zLiveCoins = z.object({
     coin: zCoin,
     count: z.int().gte(1).lte(10000000)
+});
+
+/**
+ * A Character's haggling with the open Shop. While the roll is out it names the roll; once rolled, the price adjustment in percent.
+ */
+export const zLiveHaggle = z.object({
+    characterId: zId,
+    rollId: zId.optional(),
+    adjustPct: z.int().gte(-100).lte(100).optional()
 });
 
 /**
@@ -1290,6 +1366,35 @@ export const zLootTable = z.object({
 });
 
 /**
+ * How many of an item a Shop sells and its asking price in copper.
+ */
+export const zStockItem = z.object({
+    itemSlug: zSlug,
+    quantity: z.int().gte(1).lte(100000),
+    priceCp: z.int().gte(1).lte(2000000000)
+});
+
+/**
+ * A trader in a Settlement with its Stock; stockedDay is the in-game day it last restocked.
+ */
+export const zShop = z.object({
+    id: zId,
+    settlementId: zId,
+    name: z.string().max(80),
+    kind: z.string().max(40),
+    ownerId: zId.optional(),
+    markupPct: z.int().gte(0).lte(300),
+    haggleDc: z.int().gte(5).lte(30),
+    hagglePct: z.int().gte(0).lte(50),
+    lootTableId: zId.optional(),
+    restock: zShopRestock,
+    restockDays: z.int().gte(1).lte(365).optional(),
+    stockedDay: z.int().gte(0).lte(1000000),
+    stock: z.array(zStockItem).max(1000),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -1344,7 +1449,12 @@ export const zLiveCommand = z.object({
         'schedule_check',
         'roll_loot',
         'move_item',
-        'move_coins'
+        'move_coins',
+        'open_shop',
+        'close_shop',
+        'buy',
+        'sell',
+        'haggle'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1415,7 +1525,8 @@ export const zLiveCommand = z.object({
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),
-    count: z.int().gte(1).lte(10000000).optional()
+    count: z.int().gte(1).lte(10000000).optional(),
+    shopId: zId.optional()
 });
 
 /**
@@ -1446,6 +1557,30 @@ export const zLiveContainer = z.object({
     weightLb: z.number().gte(0).lte(100000000),
     capacityLb: z.number().gte(0).lte(100000).optional(),
     encumbered: z.boolean().optional()
+});
+
+/**
+ * One item the open Shop sells, and its asking price in copper before haggling.
+ */
+export const zLiveStock = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    priceCp: z.int().gte(1).lte(100000000),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
+ */
+export const zLiveShop = z.object({
+    id: zId,
+    name: z.string().max(80),
+    kind: z.string().max(40),
+    settlement: z.string().max(80),
+    owner: z.string().max(80).optional(),
+    stock: z.array(zLiveStock).max(200),
+    haggles: z.array(zLiveHaggle).max(50)
 });
 
 /**
@@ -1497,6 +1632,8 @@ export const zLiveView = z.object({
     perception: z.array(zLivePerception).max(1000).optional(),
     checks: z.array(zLiveCheck).max(10).optional(),
     inventory: z.array(zLiveContainer).max(1000).optional(),
+    shop: zLiveShop.optional(),
+    gameDay: z.int().gte(0).lte(1000000).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -1885,6 +2022,16 @@ export const zMapId = zId;
  * Loot Table id.
  */
 export const zLootTableId = zId;
+
+/**
+ * Settlement id.
+ */
+export const zSettlementId = zId;
+
+/**
+ * Shop id.
+ */
+export const zShopId = zId;
 
 /**
  * Encounter Pool id.
@@ -2411,6 +2558,142 @@ export const zRestoreLootTableRevisionPath = z.object({
  * The restored Loot Table.
  */
 export const zRestoreLootTableRevisionResponse = zLootTable;
+
+export const zListSettlementsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Settlements.
+ */
+export const zListSettlementsResponse = z.array(zSettlement).max(1000);
+
+export const zCreateSettlementBody = zSettlementInput;
+
+export const zCreateSettlementPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Settlement.
+ */
+export const zCreateSettlementResponse = zSettlement;
+
+export const zDeleteSettlementPath = z.object({
+    campaignId: zId,
+    settlementId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteSettlementResponse = z.void();
+
+export const zUpdateSettlementBody = zSettlementInput;
+
+export const zUpdateSettlementPath = z.object({
+    campaignId: zId,
+    settlementId: zId
+});
+
+/**
+ * The Settlement.
+ */
+export const zUpdateSettlementResponse = zSettlement;
+
+export const zListSettlementRevisionsPath = z.object({
+    campaignId: zId,
+    settlementId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListSettlementRevisionsResponse = z.array(zRevision).max(1000);
+
+export const zRestoreSettlementRevisionPath = z.object({
+    campaignId: zId,
+    settlementId: zId,
+    revisionNo: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The restored Settlement.
+ */
+export const zRestoreSettlementRevisionResponse = zSettlement;
+
+export const zListShopsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Shops.
+ */
+export const zListShopsResponse = z.array(zShop).max(1000);
+
+export const zCreateShopBody = zShopInput;
+
+export const zCreateShopPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Shop.
+ */
+export const zCreateShopResponse = zShop;
+
+export const zDeleteShopPath = z.object({
+    campaignId: zId,
+    shopId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteShopResponse = z.void();
+
+export const zUpdateShopBody = zShopInput;
+
+export const zUpdateShopPath = z.object({
+    campaignId: zId,
+    shopId: zId
+});
+
+/**
+ * The Shop.
+ */
+export const zUpdateShopResponse = zShop;
+
+export const zListShopRevisionsPath = z.object({
+    campaignId: zId,
+    shopId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListShopRevisionsResponse = z.array(zRevision).max(1000);
+
+export const zRestoreShopRevisionPath = z.object({
+    campaignId: zId,
+    shopId: zId,
+    revisionNo: z.int().gte(1).lte(100000)
+});
+
+/**
+ * The restored Shop.
+ */
+export const zRestoreShopRevisionResponse = zShop;
+
+export const zRerollStockPath = z.object({
+    campaignId: zId,
+    shopId: zId
+});
+
+/**
+ * The restocked Shop.
+ */
+export const zRerollStockResponse = zShop;
 
 export const zListLocationsPath = z.object({
     campaignId: zId

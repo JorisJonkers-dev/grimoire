@@ -42,7 +42,12 @@ func (r *runtime) planWorld(cmd Command) (Write, string) {
 		}
 		return Write{Kind: domain.ActionRouteRemoved, Route: route}, ""
 	case CmdTravel:
-		return planTravel(w, cmd)
+		leg, reason := planTravel(w, cmd)
+		if reason == "" {
+			day := r.st.day + leg.Leg.Days
+			leg.Day = &day
+		}
+		return leg, reason
 	}
 	n, ok := w.Node(domain.NodeID(parseID(cmd.NodeID)))
 	if !ok {

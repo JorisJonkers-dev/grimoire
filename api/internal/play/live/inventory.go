@@ -84,20 +84,7 @@ func (r *runtime) planLoot(id string) (Write, string) {
 	if i < 0 {
 		return Write{}, "No such loot table."
 	}
-	rules := map[string]loot.Table{}
-	for _, t := range tables {
-		rt := loot.Table{Rolls: t.Rolls}
-		for _, e := range t.Entries {
-			amount, _ := loot.ParseAmount(e.Amount)
-			entry := loot.Entry{Weight: e.Weight, Kind: e.Kind, Slug: e.Item, Coin: e.Coin, Amount: amount}
-			if e.Table != nil {
-				entry.Table = uuid.UUID(*e.Table).String()
-			}
-			rt.Entries = append(rt.Entries, entry)
-		}
-		rules[uuid.UUID(t.ID).String()] = rt
-	}
-	drops := loot.Roll(r.source(r.seed()), uuid.UUID(tid).String(), rules)
+	drops := loot.Roll(r.source(r.seed()), uuid.UUID(tid).String(), prep.LootRules(tables))
 	if len(drops) == 0 {
 		return Write{}, "The loot table dropped nothing."
 	}
