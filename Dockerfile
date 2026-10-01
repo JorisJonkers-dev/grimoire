@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.10
+# syntax=docker/dockerfile:1.26
 # One image: the Go API serves the built web app (ARCHITECTURE.md §19.1).
 
 FROM node:24-alpine AS web
@@ -13,7 +13,7 @@ COPY fixtures fixtures
 COPY web web
 RUN pnpm --filter @grimoire/web build
 
-FROM golang:1.26-alpine AS api
+FROM golang:1.27-alpine AS api
 WORKDIR /src/api
 COPY api/go.mod api/go.sum ./
 RUN go mod download
