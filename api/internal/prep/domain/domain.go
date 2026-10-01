@@ -156,3 +156,29 @@ type Prep struct {
 	Levels    []int
 	Scheduled []Scheduled
 }
+
+// LootTableID identifies a Loot Table.
+type LootTableID uuid.UUID
+
+// LootEntry is one weighted line of a Loot Table: an Amount of an item, of coins of one kind, a roll
+// on another Loot Table, or nothing.
+type LootEntry struct {
+	Weight int
+	Kind   string
+	Item   string
+	Coin   string
+	Amount string
+	Table  *LootTableID
+}
+
+// LootTable is rolled Rolls times over its entries.
+type LootTable struct {
+	ID        LootTableID
+	Name      string
+	Rolls     int
+	Entries   []LootEntry
+	UpdatedAt time.Time
+}
+
+// EntityLoot is the revisioned entity type of Loot Tables.
+const EntityLoot = "loot_table"

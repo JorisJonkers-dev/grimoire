@@ -210,6 +210,7 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	if actor.DM {
 		r.dm = &actor
 	}
+	r.lootAfterFight(w, actor, c)
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
 		r.encounterChecks(prep.TriggerLongRest, prep.DueNextRest, actor, c)

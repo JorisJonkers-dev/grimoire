@@ -468,6 +468,44 @@
       "hidden": false,
       "tableId": "0190c7a8-0000-7000-8000-000000000029",
       "due": "next_travel"
+    },
+    {
+      "nonce": "n52",
+      "kind": "roll_loot",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "lootTableId": "0190c7a8-0000-7000-8000-000000000032"
+    },
+    {
+      "nonce": "n53",
+      "kind": "move_item",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000031",
+      "toId": "0190c7a8-0000-7000-8000-000000000030",
+      "itemSlug": "rope",
+      "count": 2
+    },
+    {
+      "nonce": "n54",
+      "kind": "move_coins",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000031",
+      "toId": "0190c7a8-0000-7000-8000-000000000030",
+      "coin": "gp",
+      "count": 50
+    },
+    {
+      "nonce": "n55",
+      "kind": "end_combat",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "lootTableId": "0190c7a8-0000-7000-8000-000000000032"
     }
   ],
   "updates": [
@@ -751,6 +789,39 @@
             "outcome": "encounter",
             "chancePct": 25,
             "chanceRoll": 12
+          }
+        ],
+        "inventory": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000030",
+            "kind": "character",
+            "label": "Aria",
+            "characterId": "0190c7a8-0000-7000-8000-000000000012",
+            "ownerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "items": [
+              {
+                "slug": "rope",
+                "name": "Rope",
+                "count": 2,
+                "weightLb": 10
+              }
+            ],
+            "coins": [
+              {
+                "coin": "gp",
+                "count": 50
+              }
+            ],
+            "weightLb": 11,
+            "capacityLb": 120
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000031",
+            "kind": "loot_drop",
+            "label": "Loot: Hoard",
+            "items": [],
+            "coins": [],
+            "weightLb": 0
           }
         ]
       }
@@ -1086,6 +1157,39 @@
               }
             ]
           }
+        ],
+        "inventory": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000030",
+            "kind": "character",
+            "label": "Aria",
+            "characterId": "0190c7a8-0000-7000-8000-000000000012",
+            "ownerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "items": [
+              {
+                "slug": "rope",
+                "name": "Rope",
+                "count": 2,
+                "weightLb": 10
+              }
+            ],
+            "coins": [
+              {
+                "coin": "gp",
+                "count": 50
+              }
+            ],
+            "weightLb": 11,
+            "capacityLb": 120
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000031",
+            "kind": "loot_drop",
+            "label": "Loot: Hoard",
+            "items": [],
+            "coins": [],
+            "weightLb": 0
+          }
         ]
       }
     },
@@ -1404,6 +1508,39 @@
             "chancePct": 25,
             "chanceRoll": 12
           }
+        ],
+        "inventory": [
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000030",
+            "kind": "character",
+            "label": "Aria",
+            "characterId": "0190c7a8-0000-7000-8000-000000000012",
+            "ownerId": "0190c7a8-0000-7000-8000-00000000000f",
+            "items": [
+              {
+                "slug": "rope",
+                "name": "Rope",
+                "count": 2,
+                "weightLb": 10
+              }
+            ],
+            "coins": [
+              {
+                "coin": "gp",
+                "count": 50
+              }
+            ],
+            "weightLb": 11,
+            "capacityLb": 120
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000031",
+            "kind": "loot_drop",
+            "label": "Loot: Hoard",
+            "items": [],
+            "coins": [],
+            "weightLb": 0
+          }
         ]
       },
       "steps": [
@@ -1678,6 +1815,39 @@
               "outcome": "encounter",
               "chancePct": 25,
               "chanceRoll": 12
+            }
+          ],
+          "inventory": [
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000030",
+              "kind": "character",
+              "label": "Aria",
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "ownerId": "0190c7a8-0000-7000-8000-00000000000f",
+              "items": [
+                {
+                  "slug": "rope",
+                  "name": "Rope",
+                  "count": 2,
+                  "weightLb": 10
+                }
+              ],
+              "coins": [
+                {
+                  "coin": "gp",
+                  "count": 50
+                }
+              ],
+              "weightLb": 11,
+              "capacityLb": 120
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000031",
+              "kind": "loot_drop",
+              "label": "Loot: Hoard",
+              "items": [],
+              "coins": [],
+              "weightLb": 0
             }
           ]
         }

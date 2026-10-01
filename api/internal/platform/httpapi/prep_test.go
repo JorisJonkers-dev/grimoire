@@ -80,6 +80,26 @@ func (brokenPrep) Checks(context.Context, caller.Caller, uuid.UUID) ([]domain.Ch
 	return nil, errBroken
 }
 
+func (brokenPrep) LootTables(context.Context, caller.Caller, uuid.UUID) ([]domain.LootTable, error) {
+	return nil, errBroken
+}
+
+func (brokenPrep) SaveLootTable(context.Context, caller.Caller, uuid.UUID, domain.LootTable) (domain.LootTable, error) {
+	return domain.LootTable{}, errBroken
+}
+
+func (brokenPrep) DeleteLootTable(context.Context, caller.Caller, uuid.UUID, domain.LootTableID) error {
+	return errBroken
+}
+
+func (brokenPrep) LootTableRevisions(context.Context, caller.Caller, uuid.UUID, domain.LootTableID) ([]campaigndomain.Revision, error) {
+	return nil, errBroken
+}
+
+func (brokenPrep) RestoreLootTable(context.Context, caller.Caller, uuid.UUID, domain.LootTableID, int) (domain.LootTable, error) {
+	return domain.LootTable{}, errBroken
+}
+
 func TestEncounterPrepOverHTTP(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -97,6 +117,7 @@ func TestEncounterPrepOverHTTP(t *testing.T) {
 	if _, err := comppg.New(store.Pool()).Import(ctx, snapshot.Snapshot{
 		Documents: []snapshot.Document{{Key: "srd-2024", Title: "SRD 5.2", RulesetYear: 2024, Precedence: 20, License: "CC-BY-4.0", Attribution: "a", URL: "https://a"}},
 		Monsters:  []snapshot.Monster{goblin},
+		Items:     []snapshot.Item{{Entry: snapshot.Entry{Document: "srd-2024", Slug: "rope", Name: "Rope", Description: "Rope."}, Category: "gear", WeightLB: 5}},
 	}, "http"); err != nil {
 		t.Fatal(err)
 	}
@@ -178,6 +199,33 @@ func TestEncounterPrepOverHTTP(t *testing.T) {
 	if rec := call(h, http.MethodGet, base+"/locations", "dm", ""); rec.Code != 200 || rec.Body.String() != "[]" {
 		t.Fatalf("locations: %d %s", rec.Code, rec.Body.String())
 	}
+	rec = call(h, http.MethodPost, base+"/loot-tables", "dm", `{"name":"Purse","rolls":1,"entries":[{"weight":1,"kind":"currency","coin":"gp","amount":"2d6x10"}]}`)
+	purse, _ := decode(t, rec)["id"].(string)
+	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"amount":"2d6x10"`) {
+		t.Fatalf("create loot: %d %s", rec.Code, rec.Body.String())
+	}
+	loot := `{"name":"Hoard","rolls":2,"entries":[{"weight":1,"kind":"table","tableId":"` + purse + `"},{"weight":2,"kind":"item","itemSlug":"rope","amount":"1"},{"weight":1,"kind":"nothing"}]}`
+	rec = call(h, http.MethodPost, base+"/loot-tables", "dm", loot)
+	hoard, _ := decode(t, rec)["id"].(string)
+	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"tableId":"`+purse) || !strings.Contains(rec.Body.String(), `"itemSlug":"rope"`) {
+		t.Fatalf("create hoard: %d %s", rec.Code, rec.Body.String())
+	}
+	lootOne := base + "/loot-tables/" + hoard
+	if rec := call(h, http.MethodPut, lootOne, "dm", strings.Replace(loot, `"rolls":2`, `"rolls":4`, 1)); rec.Code != 200 || decode(t, rec)["rolls"] != 4.0 {
+		t.Fatalf("update loot: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, base+"/loot-tables", "dm", ""); !strings.Contains(rec.Body.String(), `"name":"Purse"`) {
+		t.Fatalf("list loot: %s", rec.Body.String())
+	}
+	if rec := call(h, http.MethodDelete, lootOne, "dm", ""); rec.Code != http.StatusNoContent {
+		t.Fatalf("delete loot: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodPost, lootOne+"/revisions/1/restore", "dm", ""); rec.Code != 200 || decode(t, rec)["rolls"] != 2.0 {
+		t.Fatalf("restore loot: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodGet, lootOne+"/revisions", "dm", ""); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"action":"restore"`) {
+		t.Fatalf("loot revisions: %d %s", rec.Code, rec.Body.String())
+	}
 	if rec := call(h, http.MethodGet, base+"/encounter-pools", "player", ""); rec.Code != http.StatusForbidden {
 		t.Fatalf("player: %d", rec.Code)
 	}
@@ -190,6 +238,7 @@ func TestEncounterPrepFailuresOverHTTP(t *testing.T) {
 	pool, table := base+"/encounter-pools/"+uuid.NewString(), base+"/encounter-tables/"+uuid.NewString()
 	poolBody := `{"name":"A","levelMin":1,"levelMax":2,"difficulty":"low","members":[{"monsterSlug":"goblin","weight":1,"min":0,"max":1}]}`
 	tableBody := `{"name":"A","chancePct":1,"visibility":"secret","entries":[{"weight":1,"kind":"nothing","label":""}]}`
+	loot, lootBody := base+"/loot-tables/"+uuid.NewString(), `{"name":"A","rolls":1,"entries":[{"weight":1,"kind":"nothing"}]}`
 	for _, o := range []struct{ method, path, body string }{
 		{http.MethodGet, base + "/encounter-pools", ""},
 		{http.MethodPost, base + "/encounter-pools", poolBody},
@@ -205,6 +254,12 @@ func TestEncounterPrepFailuresOverHTTP(t *testing.T) {
 		{http.MethodPost, table + "/revisions/1/restore", ""},
 		{http.MethodGet, base + "/locations", ""},
 		{http.MethodGet, base + "/encounter-checks", ""},
+		{http.MethodGet, base + "/loot-tables", ""},
+		{http.MethodPost, base + "/loot-tables", lootBody},
+		{http.MethodPut, loot, lootBody},
+		{http.MethodDelete, loot, ""},
+		{http.MethodGet, loot + "/revisions", ""},
+		{http.MethodPost, loot + "/revisions/1/restore", ""},
 	} {
 		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s: %d %s", o.method, o.path, rec.Code, rec.Body.String())
@@ -228,6 +283,12 @@ func TestEncounterPrepFailuresOverHTTP(t *testing.T) {
 	add(hh.RestoreEncounterTableRevision(ctx, oas.RestoreEncounterTableRevisionParams{}))
 	add(hh.ListLocations(ctx, oas.ListLocationsParams{}))
 	add(hh.ListEncounterChecks(ctx, oas.ListEncounterChecksParams{}))
+	add(hh.ListLootTables(ctx, oas.ListLootTablesParams{}))
+	add(hh.CreateLootTable(ctx, &oas.LootTableInput{}, oas.CreateLootTableParams{}))
+	add(hh.UpdateLootTable(ctx, &oas.LootTableInput{}, oas.UpdateLootTableParams{}))
+	add(hh.DeleteLootTable(ctx, oas.DeleteLootTableParams{}))
+	add(hh.ListLootTableRevisions(ctx, oas.ListLootTableRevisionsParams{}))
+	add(hh.RestoreLootTableRevision(ctx, oas.RestoreLootTableRevisionParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

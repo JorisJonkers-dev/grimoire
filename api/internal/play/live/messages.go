@@ -68,6 +68,9 @@ const (
 	CmdRest           = "rest"
 	CmdEncounterCheck = "encounter_check"
 	CmdScheduleCheck  = "schedule_check"
+	CmdRollLoot       = "roll_loot"
+	CmdMoveItem       = "move_item"
+	CmdMoveCoins      = "move_coins"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -151,6 +154,12 @@ type Command struct {
 	Mode         string           `json:"mode,omitempty"`
 	Entry        int              `json:"entry,omitempty"`
 	Due          string           `json:"due,omitempty"`
+	LootTableID  string           `json:"lootTableId,omitempty"`
+	FromID       string           `json:"fromId,omitempty"`
+	ToID         string           `json:"toId,omitempty"`
+	ItemSlug     string           `json:"itemSlug,omitempty"`
+	Coin         string           `json:"coin,omitempty"`
+	Count        int              `json:"count,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -302,6 +311,36 @@ type View struct {
 	Zones      []ZoneView       `json:"zones,omitempty"`
 	Perception []PerceptionView `json:"perception,omitempty"`
 	Checks     []CheckView      `json:"checks,omitempty"`
+	Inventory  []ContainerView  `json:"inventory,omitempty"`
+}
+
+// ContainerView is a Character's Inventory, the Party Stash or a drop of loot, with what it weighs.
+// A Character's carries its owner and how much they can carry.
+type ContainerView struct {
+	ID          string     `json:"id"`
+	Kind        string     `json:"kind"`
+	Label       string     `json:"label"`
+	CharacterID string     `json:"characterId,omitempty"`
+	OwnerID     string     `json:"ownerId,omitempty"`
+	Items       []ItemView `json:"items"`
+	Coins       []CoinView `json:"coins"`
+	WeightLb    float64    `json:"weightLb"`
+	CapacityLb  float64    `json:"capacityLb,omitempty"`
+	Encumbered  bool       `json:"encumbered,omitempty"`
+}
+
+// ItemView is a stack of one item in a Container.
+type ItemView struct {
+	Slug     string  `json:"slug"`
+	Name     string  `json:"name"`
+	Count    int     `json:"count"`
+	WeightLb float64 `json:"weightLb"`
+}
+
+// CoinView is how many coins of one kind a Container holds.
+type CoinView struct {
+	Coin  string `json:"coin"`
+	Count int    `json:"count"`
 }
 
 // CheckView is an Encounter Check. Everyone sees what set it off and its outcome, and an open check's

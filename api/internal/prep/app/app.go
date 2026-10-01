@@ -39,6 +39,14 @@ type Repository interface {
 	Revisions(ctx context.Context, campaign uuid.UUID, entity string, id uuid.UUID) ([]campaigndomain.Revision, error)
 	PoolAt(ctx context.Context, campaign uuid.UUID, id domain.PoolID, no int) (domain.Pool, error)
 	TableAt(ctx context.Context, campaign uuid.UUID, id domain.TableID, no int) (domain.Table, error)
+	// ItemExists reports whether the compendium has an item.
+	ItemExists(ctx context.Context, campaign uuid.UUID, slug string) (bool, error)
+	LootTables(ctx context.Context, campaign uuid.UUID) ([]domain.LootTable, error)
+	SaveLootTable(ctx context.Context, campaign uuid.UUID, t domain.LootTable, now time.Time) error
+	DeleteLootTable(ctx context.Context, campaign uuid.UUID, id domain.LootTableID) (bool, error)
+	LootTableInUse(ctx context.Context, id domain.LootTableID) (bool, error)
+	RecordLootTable(ctx context.Context, campaign uuid.UUID, rev campaigndomain.Revision, c caller.Caller, t domain.LootTable) error
+	LootTableAt(ctx context.Context, campaign uuid.UUID, id domain.LootTableID, no int) (domain.LootTable, error)
 	// Checks lists the Campaign's latest Encounter Checks, newest first.
 	Checks(ctx context.Context, campaign uuid.UUID) ([]domain.Check, error)
 }

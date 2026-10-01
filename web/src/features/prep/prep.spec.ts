@@ -191,3 +191,86 @@ describe('random encounters page', () => {
     expect(wrapper.get('[data-testid="encounters-refused"]').text()).toBe('Only the DM can prepare encounters.')
   })
 })
+
+describe('loot tables page', () => {
+  const PURSE = '0190c7a8-0000-7000-8000-000000000051'
+  const HOARD = '0190c7a8-0000-7000-8000-000000000052'
+  const purse = { id: PURSE, name: 'Purse', rolls: 1, updatedAt: '2026-10-01T20:00:00Z', entries: [{ weight: 1, kind: 'currency', coin: 'gp', amount: '2d6x10' }] }
+  const hoard = {
+    id: HOARD, name: 'Hoard', rolls: 2, updatedAt: '2026-10-01T20:00:00Z',
+    entries: [{ weight: 1, kind: 'table', tableId: PURSE }, { weight: 2, kind: 'item', itemSlug: 'rope', amount: '1d4' }, { weight: 1, kind: 'nothing' }, { weight: 1, kind: 'table', tableId: '0190c7a8-0000-7000-8000-000000000099' }],
+  }
+  const lootBase = `${base}/loot-tables`
+
+  it('keeps loot tables of items, coins, other tables and nothing, with their history', async () => {
+    const writes: string[] = []
+    const { wrapper } = await mountApp(`/campaigns/${ID}/loot`, {
+      [`${lootBase}/${HOARD}/revisions/1/restore`]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 503 }, 503),
+      [`${lootBase}/${HOARD}/revisions`]: () => revisions,
+      [`${lootBase}/${HOARD}`]: async (_u, req) => {
+        writes.push(`${req.method} ${req.method === 'PUT' ? JSON.stringify(await req.json()) : ''}`)
+        return req.method === 'DELETE' ? jsonResponse({ type: 'about:blank', title: 'x', status: 422, detail: 'another loot table still rolls on this one' }, 422) : hoard
+      },
+      [lootBase]: async (_u, req) => {
+        if (req.method === 'POST') {
+          writes.push(`POST ${JSON.stringify(await req.json())}`)
+          return purse
+        }
+        return [hoard, purse]
+      },
+    })
+    expect(wrapper.get('[data-testid="loot-Hoard"]').text()).toContain('Hoard · rolled 2× · 1× roll Purse · 2× 1d4 rope · 1× nothing · 1× roll a table')
+    expect(wrapper.get('[data-testid="loot-Purse"]').text()).toContain('1× 2d6x10 gp')
+    await wrapper.get('[data-testid="new-loot"]').trigger('click')
+    await wrapper.get('[data-testid="loot-editor"]').findAll('button').at(-1)?.trigger('click')
+    expect(wrapper.find('[data-testid="loot-editor"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="new-loot"]').trigger('click')
+    const editor = wrapper.get('[data-testid="loot-editor"]')
+    await editor.get('[data-testid="loot-name"]').setValue(' Chest ')
+    await editor.get('[data-testid="loot-rolls"]').setValue(3)
+    await editor.get('[data-testid="loot-coin-0"]').setValue('sp')
+    await editor.get('[data-testid="loot-amount-0"]').setValue(' 4d6 ')
+    await editor.get('[data-testid="add-loot-entry"]').trigger('click')
+    await editor.get('[data-testid="loot-item-1"]').setValue(' rope ')
+    await editor.get('[data-testid="loot-weight-1"]').setValue(3)
+    await editor.get('[data-testid="add-loot-entry"]').trigger('click')
+    await editor.get('[data-testid="loot-kind-2"]').setValue('table')
+    await editor.get('[data-testid="loot-table-2"]').setValue(PURSE)
+    await editor.get('[data-testid="add-loot-entry"]').trigger('click')
+    await editor.get('[data-testid="loot-kind-3"]').setValue('nothing')
+    await editor.get('[data-testid="add-loot-entry"]').trigger('click')
+    await editor.get('[aria-label="Remove loot entry 5"]').trigger('click')
+    await expectAccessible(wrapper.element as Element)
+    await editor.trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(writes.at(-1)?.slice(5) ?? '{}')).toEqual({
+      name: 'Chest', rolls: 3,
+      entries: [
+        { weight: 1, kind: 'currency', coin: 'sp', amount: '4d6' },
+        { weight: 3, kind: 'item', itemSlug: 'rope', amount: '1' },
+        { weight: 1, kind: 'table', tableId: PURSE },
+        { weight: 1, kind: 'nothing' },
+      ],
+    })
+    await wrapper.get('[aria-label="Edit Hoard"]').trigger('click')
+    expect(wrapper.get('[data-testid="loot-table-0"]').findAll('option').map((o) => o.text())).toEqual(['Purse'])
+    await wrapper.get('[data-testid="loot-editor"]').trigger('submit')
+    await flushPromises()
+    expect(writes.at(-1)).toContain('PUT {"name":"Hoard","rolls":2')
+    await wrapper.get('[aria-label="Edit Hoard"]').trigger('click')
+    await wrapper.get('[data-testid="loot-editor"]').findAll('button').at(-1)?.trigger('click')
+    await wrapper.get('[aria-label="Delete Hoard"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="loot-error"]').text()).toBe('Deleting the loot table: another loot table still rolls on this one')
+    await wrapper.get('[aria-label="History of Hoard"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[aria-label="Restore Hoard to revision 1"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="loot-error"]').text()).toBe('Restoring the loot table failed. Try again shortly.')
+  })
+
+  it('tells players loot is the DM\'s', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/loot`, { [lootBase]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 403 }, 403) })
+    expect(wrapper.get('[data-testid="loot-refused"]').text()).toBe('Only the DM can prepare loot.')
+  })
+})

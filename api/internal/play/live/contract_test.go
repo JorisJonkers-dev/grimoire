@@ -68,6 +68,10 @@ func samples() contract {
 		Legs:        []live.LegView{{From: "Mill", To: "Oakford", Pace: "normal", DistanceMi: 12, Minutes: 240, Days: 1}},
 	}
 	view.Perception = []live.PerceptionView{{RollID: "0190c7a8-0000-7000-8000-000000000026", TokenID: token.ID}}
+	view.Inventory = []live.ContainerView{{
+		ID: "0190c7a8-0000-7000-8000-000000000030", Kind: "character", Label: "Aria", CharacterID: "0190c7a8-0000-7000-8000-000000000012", OwnerID: "0190c7a8-0000-7000-8000-00000000000f",
+		Items: []live.ItemView{{Slug: "rope", Name: "Rope", Count: 2, WeightLb: 10}}, Coins: []live.CoinView{{Coin: "gp", Count: 50}}, WeightLb: 11, CapacityLb: 120,
+	}, {ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Coins: []live.CoinView{}, Encumbered: false}}
 	view.Checks = []live.CheckView{{ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12}}
 	dmView := *view
 	noticed, target := true, "0190c7a8-0000-7000-8000-000000000013"
@@ -136,6 +140,10 @@ func samples() contract {
 			{Nonce: "n49", Kind: live.CmdRest, Rest: "long"},
 			{Nonce: "n50", Kind: live.CmdEncounterCheck, TableID: "0190c7a8-0000-7000-8000-000000000029", Mode: "pick", Entry: 2},
 			{Nonce: "n51", Kind: live.CmdScheduleCheck, TableID: "0190c7a8-0000-7000-8000-000000000029", Due: "next_travel"},
+			{Nonce: "n52", Kind: live.CmdRollLoot, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
+			{Nonce: "n53", Kind: live.CmdMoveItem, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 2},
+			{Nonce: "n54", Kind: live.CmdMoveCoins, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", Coin: "gp", Count: 50},
+			{Nonce: "n55", Kind: live.CmdEndCombat, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
 		},
 		Updates: []live.Update{
 			{

@@ -29,6 +29,10 @@ type CreateInviteRes interface {
 	createInviteRes()
 }
 
+type CreateLootTableRes interface {
+	createLootTableRes()
+}
+
 type CreateNpcRes interface {
 	createNpcRes()
 }
@@ -47,6 +51,10 @@ type DeleteEncounterPoolRes interface {
 
 type DeleteEncounterTableRes interface {
 	deleteEncounterTableRes()
+}
+
+type DeleteLootTableRes interface {
+	deleteLootTableRes()
 }
 
 type DeleteNpcRes interface {
@@ -177,6 +185,14 @@ type ListLocationsRes interface {
 	listLocationsRes()
 }
 
+type ListLootTableRevisionsRes interface {
+	listLootTableRevisionsRes()
+}
+
+type ListLootTablesRes interface {
+	listLootTablesRes()
+}
+
 type ListMapsRes interface {
 	listMapsRes()
 }
@@ -233,6 +249,10 @@ type RestoreEncounterTableRevisionRes interface {
 	restoreEncounterTableRevisionRes()
 }
 
+type RestoreLootTableRevisionRes interface {
+	restoreLootTableRevisionRes()
+}
+
 type RestoreNpcRevisionRes interface {
 	restoreNpcRevisionRes()
 }
@@ -275,6 +295,10 @@ type UpdateEncounterPoolRes interface {
 
 type UpdateEncounterTableRes interface {
 	updateEncounterTableRes()
+}
+
+type UpdateLootTableRes interface {
+	updateLootTableRes()
 }
 
 type UpdateMapRes interface {

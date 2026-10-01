@@ -64,6 +64,27 @@ type CampaignCharacterWeapon struct {
 	Ordering    int32
 }
 
+type CampaignContainer struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	Kind        string
+	CharacterID pgtype.UUID
+	Label       string
+	CreatedAt   time.Time
+}
+
+type CampaignContainerCoin struct {
+	ContainerID uuid.UUID
+	Coin        string
+	Amount      int32
+}
+
+type CampaignContainerItem struct {
+	ContainerID uuid.UUID
+	ItemSlug    string
+	Quantity    int32
+}
+
 type CampaignInvite struct {
 	ID         uuid.UUID
 	CampaignID uuid.UUID
@@ -503,6 +524,16 @@ type PlayActionHpEvent struct {
 	UndoesActionID pgtype.UUID
 }
 
+type PlayActionItemEvent struct {
+	ActionID  uuid.UUID
+	Position  int32
+	FromLabel string
+	ToLabel   string
+	ItemSlug  pgtype.Text
+	Coin      pgtype.Text
+	Count     int32
+}
+
 type PlayActionRollEvent struct {
 	ActionID uuid.UUID
 	RollID   uuid.UUID
@@ -839,6 +870,42 @@ type PrepEntryMonster struct {
 	Position    int32
 	MonsterSlug string
 	Count       int32
+}
+
+type PrepLootEntry struct {
+	TableID       uuid.UUID
+	Ordering      int32
+	Weight        int32
+	Kind          string
+	ItemSlug      pgtype.Text
+	Coin          pgtype.Text
+	Amount        string
+	NestedTableID pgtype.UUID
+}
+
+type PrepLootRevisionEntry struct {
+	RevisionID    uuid.UUID
+	Ordering      int32
+	Weight        int32
+	Kind          string
+	ItemSlug      pgtype.Text
+	Coin          pgtype.Text
+	Amount        string
+	NestedTableID pgtype.UUID
+}
+
+type PrepLootTable struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Rolls      int32
+	UpdatedAt  time.Time
+}
+
+type PrepLootTableRevision struct {
+	RevisionID uuid.UUID
+	Name       string
+	Rolls      int32
 }
 
 type PrepPoolMember struct {

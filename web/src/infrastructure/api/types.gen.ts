@@ -592,6 +592,43 @@ export type EncounterTrigger = 'short_rest' | 'long_rest' | 'travel_leg' | 'dm';
 export type EncounterMode = 'normal' | 'force_encounter' | 'pick';
 
 /**
+ * One weighted line of a Loot Table. An item names itemSlug and an amount, coins name coin and an amount, a table names tableId; amounts read like 3, 2d6, 1d4+1 or 4d6x10.
+ */
+export type LootEntry = {
+    weight: number;
+    kind: 'item' | 'currency' | 'table' | 'nothing';
+    itemSlug?: Slug;
+    coin?: Coin;
+    amount?: string;
+    tableId?: Id;
+};
+
+/**
+ * A kind of coin.
+ */
+export type Coin = 'cp' | 'sp' | 'ep' | 'gp' | 'pp';
+
+/**
+ * A Loot Table as the DM writes it.
+ */
+export type LootTableInput = {
+    name: string;
+    rolls: number;
+    entries: Array<LootEntry>;
+};
+
+/**
+ * A Loot Table, rolled a number of times over its weighted entries.
+ */
+export type LootTable = {
+    id: Id;
+    name: string;
+    rolls: number;
+    entries: Array<LootEntry>;
+    updatedAt: string;
+};
+
+/**
  * One recorded version of a piece of prep data.
  */
 export type Revision = {
@@ -902,7 +939,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -974,6 +1011,46 @@ export type LiveCommand = {
      */
     entry?: number;
     due?: 'next_rest' | 'next_travel';
+    lootTableId?: Id;
+    fromId?: Id;
+    toId?: Id;
+    itemSlug?: Slug;
+    coin?: Coin;
+    count?: number;
+};
+
+/**
+ * A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
+ */
+export type LiveContainer = {
+    id: Id;
+    kind: 'character' | 'party_stash' | 'loot_drop';
+    label: string;
+    characterId?: Id;
+    ownerId?: Id;
+    items: Array<LiveItem>;
+    coins: Array<LiveCoins>;
+    weightLb: number;
+    capacityLb?: number;
+    encumbered?: boolean;
+};
+
+/**
+ * A stack of one item and what it weighs in all.
+ */
+export type LiveItem = {
+    slug: Slug;
+    name: string;
+    count: number;
+    weightLb: number;
+};
+
+/**
+ * How many coins of one kind a container holds.
+ */
+export type LiveCoins = {
+    coin: Coin;
+    count: number;
 };
 
 /**
@@ -1368,6 +1445,7 @@ export type LiveView = {
     zones?: Array<LiveZone>;
     perception?: Array<LivePerception>;
     checks?: Array<LiveCheck>;
+    inventory?: Array<LiveContainer>;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;
@@ -1623,6 +1701,11 @@ export type RollId = Id;
  * Map id.
  */
 export type MapId = Id;
+
+/**
+ * Loot Table id.
+ */
+export type LootTableId = Id;
 
 /**
  * Encounter Pool id.
@@ -3147,6 +3230,230 @@ export type RestoreEncounterTableRevisionResponses = {
 };
 
 export type RestoreEncounterTableRevisionResponse = RestoreEncounterTableRevisionResponses[keyof RestoreEncounterTableRevisionResponses];
+
+export type ListLootTablesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/loot-tables';
+};
+
+export type ListLootTablesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLootTablesError = ListLootTablesErrors[keyof ListLootTablesErrors];
+
+export type ListLootTablesResponses = {
+    /**
+     * The Loot Tables.
+     */
+    200: Array<LootTable>;
+};
+
+export type ListLootTablesResponse = ListLootTablesResponses[keyof ListLootTablesResponses];
+
+export type CreateLootTableData = {
+    body: LootTableInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/loot-tables';
+};
+
+export type CreateLootTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateLootTableError = CreateLootTableErrors[keyof CreateLootTableErrors];
+
+export type CreateLootTableResponses = {
+    /**
+     * The new Loot Table.
+     */
+    201: LootTable;
+};
+
+export type CreateLootTableResponse = CreateLootTableResponses[keyof CreateLootTableResponses];
+
+export type DeleteLootTableData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Loot Table id.
+         */
+        lootTableId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}';
+};
+
+export type DeleteLootTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteLootTableError = DeleteLootTableErrors[keyof DeleteLootTableErrors];
+
+export type DeleteLootTableResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteLootTableResponse = DeleteLootTableResponses[keyof DeleteLootTableResponses];
+
+export type UpdateLootTableData = {
+    body: LootTableInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Loot Table id.
+         */
+        lootTableId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}';
+};
+
+export type UpdateLootTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateLootTableError = UpdateLootTableErrors[keyof UpdateLootTableErrors];
+
+export type UpdateLootTableResponses = {
+    /**
+     * The Loot Table.
+     */
+    200: LootTable;
+};
+
+export type UpdateLootTableResponse = UpdateLootTableResponses[keyof UpdateLootTableResponses];
+
+export type ListLootTableRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Loot Table id.
+         */
+        lootTableId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions';
+};
+
+export type ListLootTableRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLootTableRevisionsError = ListLootTableRevisionsErrors[keyof ListLootTableRevisionsErrors];
+
+export type ListLootTableRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<Revision>;
+};
+
+export type ListLootTableRevisionsResponse = ListLootTableRevisionsResponses[keyof ListLootTableRevisionsResponses];
+
+export type RestoreLootTableRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Loot Table id.
+         */
+        lootTableId: Id;
+        /**
+         * Revision number.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreLootTableRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreLootTableRevisionError = RestoreLootTableRevisionErrors[keyof RestoreLootTableRevisionErrors];
+
+export type RestoreLootTableRevisionResponses = {
+    /**
+     * The restored Loot Table.
+     */
+    200: LootTable;
+};
+
+export type RestoreLootTableRevisionResponse = RestoreLootTableRevisionResponses[keyof RestoreLootTableRevisionResponses];
 
 export type ListLocationsData = {
     body?: never;
