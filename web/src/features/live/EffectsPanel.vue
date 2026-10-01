@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import type { Ability, LiveToken } from '@/infrastructure/api/types.gen'
 import { GButton, StatusIcon } from '@/shared/ui'
 import { effectLabel, knownEffects } from './conditions'
@@ -13,6 +13,13 @@ const known = knownEffects
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
 const form = reactive({ effect: '', source: '', rounds: 0, dc: 0 })
 const saveWith = ref<Ability | ''>('')
+// ends names the concentration the chosen source would lose by putting on a concentration Effect.
+const ends = computed(() => {
+  if (!form.source || !knownEffects.find((k) => k.slug === form.effect.trim())?.concentration) return ''
+  const held = props.tokens.flatMap((t) => (t.effects ?? []).filter((e) => e.concentration && e.sourceId === form.source))
+  const who = props.tokens.find((t) => t.id === form.source)?.label ?? 'The source'
+  return held.length ? `${who} stops concentrating on ${held.map((e) => e.name).join(', ')}.` : ''
+})
 function apply() {
   const slug = form.effect.trim()
   const ability = saveWith.value
@@ -63,12 +70,17 @@ function apply() {
         </select>
       </label>
       <label class="g-field"><span>DC</span><input v-model.number="form.dc" type="number" min="0" max="40" data-testid="effect-dc" /></label>
+      <p v-if="ends" role="alert" class="warn" data-testid="concentration-warning">{{ ends }}</p>
       <GButton type="submit" data-testid="apply-effect">Apply</GButton>
     </form>
   </section>
 </template>
 
 <style scoped>
+.warn {
+  margin: 0;
+  color: var(--color-enemy-soft);
+}
 .what {
   display: inline-flex;
   align-items: center;

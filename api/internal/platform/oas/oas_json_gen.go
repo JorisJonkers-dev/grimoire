@@ -10053,9 +10053,19 @@ func (s *LiveAreaPreview) encodeFields(e *jx.Encoder) {
 		e.FieldStart("allies")
 		e.Int32(s.Allies)
 	}
+	{
+		if s.Ends != nil {
+			e.FieldStart("ends")
+			e.ArrStart()
+			for _, elem := range s.Ends {
+				e.Str(elem)
+			}
+			e.ArrEnd()
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveAreaPreview = [7]string{
+var jsonFieldsNameOfLiveAreaPreview = [8]string{
 	0: "tokenId",
 	1: "effect",
 	2: "name",
@@ -10063,6 +10073,7 @@ var jsonFieldsNameOfLiveAreaPreview = [7]string{
 	4: "hexes",
 	5: "targets",
 	6: "allies",
+	7: "ends",
 }
 
 // Decode decodes LiveAreaPreview from json.
@@ -10167,6 +10178,25 @@ func (s *LiveAreaPreview) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"allies\"")
+			}
+		case "ends":
+			if err := func() error {
+				s.Ends = make([]string, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem string
+					v, err := d.Str()
+					elem = string(v)
+					if err != nil {
+						return err
+					}
+					s.Ends = append(s.Ends, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"ends\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)

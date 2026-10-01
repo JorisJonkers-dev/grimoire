@@ -94,6 +94,8 @@ const (
 	ActionMasteryUsed = "mastery_used"
 	// ActionReactionSet is a Controller changing a token's reaction settings.
 	ActionReactionSet = "reaction_set"
+	// ActionConcentrationChecked is damage opening a concentration save.
+	ActionConcentrationChecked = "concentration_checked"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.

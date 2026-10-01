@@ -1486,6 +1486,10 @@ export type LiveAreaPreview = {
     hexes: Array<HexCoord>;
     targets: Array<LiveAreaTarget>;
     allies: number;
+    /**
+     * The Effects the caster concentrates on that casting this spell would end.
+     */
+    ends?: Array<string>;
 };
 
 /**

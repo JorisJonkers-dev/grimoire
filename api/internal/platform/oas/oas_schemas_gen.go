@@ -7810,6 +7810,8 @@ type LiveAreaPreview struct {
 	Hexes   []HexCoord       `json:"hexes"`
 	Targets []LiveAreaTarget `json:"targets"`
 	Allies  int32            `json:"allies"`
+	// The Effects the caster concentrates on that casting this spell would end.
+	Ends []string `json:"ends"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -7847,6 +7849,11 @@ func (s *LiveAreaPreview) GetAllies() int32 {
 	return s.Allies
 }
 
+// GetEnds returns the value of Ends.
+func (s *LiveAreaPreview) GetEnds() []string {
+	return s.Ends
+}
+
 // SetTokenId sets the value of TokenId.
 func (s *LiveAreaPreview) SetTokenId(val ID) {
 	s.TokenId = val
@@ -7880,6 +7887,11 @@ func (s *LiveAreaPreview) SetTargets(val []LiveAreaTarget) {
 // SetAllies sets the value of Allies.
 func (s *LiveAreaPreview) SetAllies(val int32) {
 	s.Allies = val
+}
+
+// SetEnds sets the value of Ends.
+func (s *LiveAreaPreview) SetEnds(val []string) {
+	s.Ends = val
 }
 
 // One target's saving throw against an area.

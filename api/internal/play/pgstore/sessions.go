@@ -280,7 +280,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
-		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed:
+		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
+		domain.ActionConcentrationChecked:
 		return nil
 	case domain.ActionReactionSet:
 		return s.saveReactionSettings(ctx, w.Token)
@@ -424,7 +425,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
-		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet:
+		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet, domain.ActionConcentrationChecked:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,

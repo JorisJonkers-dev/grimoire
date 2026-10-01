@@ -633,6 +633,8 @@ type AreaPreview struct {
 	Hexes   []Hex        `json:"hexes"`
 	Targets []AreaTarget `json:"targets"`
 	Allies  int          `json:"allies"`
+	// Ends names the Effects the caster concentrates on that casting this one would end.
+	Ends []string `json:"ends,omitempty"`
 }
 
 // AreaTarget is a creature an area catches.

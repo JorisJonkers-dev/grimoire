@@ -9,12 +9,15 @@ import (
 	"github.com/google/uuid"
 
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
+	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
 func surfaceAt(v *live.View, q, r int) string {
@@ -31,6 +34,12 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	ctx := context.Background()
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
+	storm := effects.Definition{Slug: "storm-sphere", Name: "Storm Sphere", Concentration: true, Components: []effects.Component{
+		effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, effects.SaveDamage{Ability: "strength", Dice: "2d6", Type: "bludgeoning", Half: false},
+	}}
+	if err := comppg.New(w.pool).SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: storm.Slug}, storm); err != nil {
+		t.Fatal(err)
+	}
 	rolls := &app.Rolls{
 		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },
 		Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: w.hub.RollResolved,
@@ -66,6 +75,14 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	if pv == nil || pv.Name != "Shatter" || pv.DC != 14 || len(pv.Hexes) != 19 || len(pv.Targets) != 3 || pv.Allies != 1 {
 		t.Fatalf("shatter preview = %+v", pv)
 	}
+	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Brom"], SourceID: ids["Aria"], Effect: "bless"})
+	if u := tb.playerSays(cast(live.CmdPreviewArea, "storm-sphere", 4, 0)); u.Area == nil || len(u.Area.Ends) != 1 || u.Area.Ends[0] != "Bless" {
+		t.Fatalf("a concentration area warns it ends Bless = %+v", u.Area)
+	}
+	if u := tb.playerSays(cast(live.CmdPreviewArea, "shatter", 4, 0)); u.Area.Ends != nil {
+		t.Fatalf("shatter needs no concentration = %+v", u.Area)
+	}
+	tb.dmSays(live.Command{Kind: live.CmdEndEffect, EffectID: effect(token(look(t, w, tb.dm), "Brom"), "Bless").ID})
 	if u := tb.playerSays(cast(live.CmdPreviewArea, "burning-hands", 1, 0)); len(u.Area.Targets) != 1 || u.Area.Targets[0].TokenID != ids["Goblin"] || u.Area.Allies != 0 {
 		t.Fatalf("burning hands east = %+v", u.Area)
 	}

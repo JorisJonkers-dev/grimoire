@@ -204,6 +204,12 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 	a := r.st.tokens[p.Actor]
 	w := Write{Kind: domain.ActionResolved, Token: a, Settled: p.RollID}
 	switch {
+	case p.Action == concentrating:
+		if roll.Total < p.DC {
+			for _, e := range r.st.held(a.ID) {
+				w.ended = append(w.ended, e.ID)
+			}
+		}
 	case p.Action == string(actions.Hide) && roll.Total >= p.DC:
 		e := domain.Effect{ID: domain.EffectID(uuid.New()), Target: a.ID, Slug: "invisible", Name: "Invisible", Level: 1}
 		w.effect = &e

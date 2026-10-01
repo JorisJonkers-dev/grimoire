@@ -705,7 +705,7 @@ func change(s *state, w *Write) {
 	case domain.ActionTokenWalked:
 		walk(s, w)
 		return
-	case domain.ActionTaken:
+	case domain.ActionTaken, domain.ActionConcentrationChecked:
 		applyAction(s, w)
 		return
 	case domain.ActionObjectUsed:

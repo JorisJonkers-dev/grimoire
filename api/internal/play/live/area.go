@@ -92,6 +92,11 @@ func (r *runtime) previewArea(req request) {
 		return
 	}
 	out := &AreaPreview{TokenID: req.cmd.TokenID, Effect: p.slug, Name: p.spell.Name, DC: spellDC(p.caster), Hexes: wireHexes(p.hexes), Targets: []AreaTarget{}}
+	if def, _ := r.st.catalog.Lookup(p.slug); def.Concentration {
+		for _, e := range r.st.held(p.caster.ID) {
+			out.Ends = append(out.Ends, e.Name)
+		}
+	}
 	seen := r.st.vision()
 	for _, t := range p.targets {
 		if req.from.Member.DM || r.st.shows(t, seen) {

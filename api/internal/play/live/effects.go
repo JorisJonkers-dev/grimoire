@@ -277,19 +277,57 @@ func (s *state) concentrate(h HPChange) bool {
 	if len(held) == 0 || h.After >= h.Before {
 		return false
 	}
-	if h.After == 0 {
-		ids := make([]domain.EffectID, 0, len(held))
-		for _, e := range held {
-			ids = append(ids, e.ID)
-		}
-		s.endEffects(ids)
-		return true
+	if h.After > 0 {
+		return false
 	}
-	taken := h.Before - h.After
-	s.fx.Manual = append(s.fx.Manual, domain.ManualPrompt{ID: uuid.New(), Text: fmt.Sprintf(
-		"%s took %d damage while concentrating on %s: Constitution save DC %d to keep it.", s.tokens[h.Token].Label, taken, held[0].Name, max(10, taken/2))})
+	ids := make([]domain.EffectID, 0, len(held))
+	for _, e := range held {
+		ids = append(ids, e.ID)
+	}
+	s.endEffects(ids)
 	return true
 }
+
+// held lists the concentration Effects a creature keeps up.
+func (s *state) held(id domain.TokenID) []domain.Effect {
+	var out []domain.Effect
+	for _, e := range s.fx.Active {
+		if e.Concentration && e.Source != nil && *e.Source == id {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+// concentrationSave opens the Constitution save a creature makes to keep concentrating once damage
+// leaves it standing: DC 10 or half the damage, at most 30. A save its effects make fail ends every
+// Effect it concentrates on at once.
+func (r *runtime) concentrationSave(w Write, actor domain.Member, c caller.Caller) {
+	h := w.HP
+	if h == nil || h.After >= h.Before || h.After == 0 || (w.Kind != domain.ActionDamageDealt && w.Kind != domain.ActionHPAdjusted) {
+		return
+	}
+	held := r.st.held(h.Token)
+	if len(held) == 0 {
+		return
+	}
+	t := r.st.tokens[h.Token]
+	dc := min(30, max(10, (h.Before-h.After)/2))
+	next := Write{Kind: domain.ActionConcentrationChecked, Token: t}
+	roll, ok := r.saveRoll(actor, t, "constitution", fmt.Sprintf("save to keep concentrating on %s (DC %d)", held[0].Name, dc))
+	if !ok {
+		for _, e := range held {
+			next.ended = append(next.ended, e.ID)
+		}
+	} else {
+		target := t.ID
+		next.Rolls, next.Pending = []domain.Roll{roll}, &domain.PendingAction{RollID: roll.ID, Actor: t.ID, Target: &target, Action: concentrating, DC: dc}
+	}
+	r.commit(request{}, next, actor, c)
+}
+
+// concentrating is the pending concentration save.
+const concentrating = "concentration"
 
 // forget drops a removed token's Effects and the source it gave to others.
 func (s *state) forget(id domain.TokenID) {

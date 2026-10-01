@@ -937,7 +937,8 @@ export const zLiveAreaPreview = z.object({
     dc: z.int().gte(1).lte(40),
     hexes: z.array(zHexCoord).max(2000),
     targets: z.array(zLiveAreaTarget).max(200),
-    allies: z.int().gte(0).lte(200)
+    allies: z.int().gte(0).lte(200),
+    ends: z.array(z.string().max(80)).max(10).optional()
 });
 
 /**

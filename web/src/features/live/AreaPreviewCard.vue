@@ -12,6 +12,9 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
     <p v-if="preview.allies > 0" role="alert" class="warn" data-testid="ally-warning">
       This catches {{ preview.allies }} {{ preview.allies === 1 ? 'ally' : 'allies' }}.
     </p>
+    <p v-if="preview.ends?.length" role="alert" class="warn" data-testid="concentration-warning">
+      Casting this ends your concentration on {{ preview.ends.join(', ') }}.
+    </p>
     <p v-if="preview.targets.length === 0" data-testid="area-empty">Nobody stands in the area.</p>
     <ul v-else class="g-list" aria-label="Caught in the area">
       <li v-for="t in preview.targets" :key="t.tokenId">{{ names[t.tokenId] ?? 'Someone' }}{{ t.ally ? ' (ally)' : '' }}</li>

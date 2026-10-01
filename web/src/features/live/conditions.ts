@@ -10,10 +10,10 @@ export function effectLabel(e: LiveEffect, long = false): string {
 }
 
 /** Every SRD condition and the modelled spells, for the effect picker. */
-export const knownEffects = [
-  { slug: 'bless', name: 'Bless' },
-  { slug: 'faerie-fire', name: 'Faerie Fire' },
-  { slug: 'hunters-mark', name: "Hunter's Mark" },
+export const knownEffects: { slug: string; name: string; concentration?: boolean }[] = [
+  { slug: 'bless', name: 'Bless', concentration: true },
+  { slug: 'faerie-fire', name: 'Faerie Fire', concentration: true },
+  { slug: 'hunters-mark', name: "Hunter's Mark", concentration: true },
   ...['blinded', 'charmed', 'deafened', 'exhaustion', 'frightened', 'grappled', 'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained', 'stunned', 'unconscious'].map(
     (slug) => ({ slug, name: (slug[0] ?? '').toUpperCase() + slug.slice(1) }),
   ),

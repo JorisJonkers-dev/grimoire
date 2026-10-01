@@ -614,8 +614,11 @@ describe('effects', () => {
     const sent = s.sent.length
     await panel.get('form').trigger('submit')
     expect(s.sent).toHaveLength(sent)
-    await panel.get('[data-testid="effect-name"]').setValue('hold-person')
+    await panel.get('[data-testid="effect-name"]').setValue('faerie-fire')
     await panel.get('[data-testid="effect-source"]').setValue(aria.id)
+    expect(panel.get('[data-testid="concentration-warning"]').text()).toBe('Aria stops concentrating on Bless.')
+    await panel.get('[data-testid="effect-name"]').setValue('hold-person')
+    expect(panel.find('[data-testid="concentration-warning"]').exists()).toBe(false)
     await panel.get('[data-testid="effect-rounds"]').setValue(10)
     await panel.get('[data-testid="effect-save"]').setValue('wisdom')
     await panel.get('[data-testid="effect-dc"]').setValue(13)
@@ -684,7 +687,7 @@ describe('areas and terrain', () => {
     expect(wrapper.get('[data-testid="area-aiming"]').text()).toBe('Tap where the spell goes.')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'preview_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0 })
-    const preview = { tokenId: boss.id, effect: 'fireball', name: 'Fireball', dc: 13, hexes: area.hexes, targets: [{ tokenId: aria.id, ally: false }, { tokenId: boss.id, ally: true }, { tokenId: '0190c7a8-0000-7000-8000-000000000099', ally: false }], allies: 1 }
+    const preview = { tokenId: boss.id, effect: 'fireball', name: 'Fireball', dc: 13, hexes: area.hexes, targets: [{ tokenId: aria.id, ally: false }, { tokenId: boss.id, ally: true }, { tokenId: '0190c7a8-0000-7000-8000-000000000099', ally: false }], allies: 1, ends: ['Bless'] }
     s.receive({ kind: 'area_preview', seq: 1, area: { ...preview, effect: 'shatter' } })
     await flushPromises()
     expect(wrapper.find('[data-testid="area-preview"]').exists()).toBe(false)
@@ -693,6 +696,7 @@ describe('areas and terrain', () => {
     const card = wrapper.get('[data-testid="area-preview"]')
     expect(card.get('h2').text()).toBe('Fireball · DC 13')
     expect(card.get('[data-testid="ally-warning"]').text()).toBe('This catches 1 ally.')
+    expect(card.get('[data-testid="concentration-warning"]').text()).toBe('Casting this ends your concentration on Bless.')
     expect(card.text()).toContain('Goblin Boss (ally)')
     expect(card.text()).toContain('Someone')
     expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in the area')

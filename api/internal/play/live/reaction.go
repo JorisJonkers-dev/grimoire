@@ -274,6 +274,7 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	if r.autoReact(w, actor, c) {
 		return
 	}
+	r.concentrationSave(w, actor, c)
 	r.lootAfterFight(w, actor, c)
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
