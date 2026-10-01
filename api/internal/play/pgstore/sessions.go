@@ -197,6 +197,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveZone(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveCheck(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
+			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
 			func() error {
 				if board == nil {
 					return nil
@@ -247,7 +248,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet,
 		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
-		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved:
+		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
+		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled:
 		return nil
 	case domain.ActionDamageDealt, domain.ActionDamageUndone:
 		return s.writeHP(ctx, sid, w)

@@ -53,14 +53,18 @@ type Querier interface {
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
 	CampaignNode(ctx context.Context, arg CampaignNodeParams) (CampaignNodeRow, error)
+	CampaignNpc(ctx context.Context, arg CampaignNpcParams) (string, error)
 	CampaignPoolMembers(ctx context.Context, campaignID uuid.UUID) ([]PrepPoolMember, error)
 	CampaignReactionTimeout(ctx context.Context, id uuid.UUID) (int32, error)
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
+	CampaignShopStock(ctx context.Context, campaignID uuid.UUID) ([]PrepShopStock, error)
+	CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]PrepShop, error)
 	CampaignTableEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepTableEntry, error)
 	CastHexes(ctx context.Context, castID uuid.UUID) ([]CastHexesRow, error)
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
+	CharacterTrade(ctx context.Context, campaignID uuid.UUID) ([]CharacterTradeRow, error)
 	CharacterWeapons(ctx context.Context, characterID uuid.UUID) ([]string, error)
 	CheckMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepCheckMonster, error)
 	ClassFeatures(ctx context.Context, classID int64) ([]ClassFeaturesRow, error)
@@ -70,6 +74,7 @@ type Querier interface {
 	ClearCasts(ctx context.Context, sessionID uuid.UUID) error
 	ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error
 	ClearClassChildren(ctx context.Context, classID int64) error
+	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
@@ -80,6 +85,9 @@ type Querier interface {
 	ClearPoolMembers(ctx context.Context, poolID uuid.UUID) error
 	ClearPrompts(ctx context.Context, combatID uuid.UUID) error
 	ClearResumePath(ctx context.Context, combatID uuid.UUID) error
+	ClearSessionHaggles(ctx context.Context, sessionID uuid.UUID) error
+	ClearSessionShop(ctx context.Context, sessionID uuid.UUID) error
+	ClearShopStock(ctx context.Context, shopID uuid.UUID) error
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
 	ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error
@@ -106,6 +114,9 @@ type Querier interface {
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
+	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
+	DeleteShop(ctx context.Context, arg DeleteShopParams) (int64, error)
+	DeleteShopStock(ctx context.Context, arg DeleteShopStockParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
@@ -113,6 +124,7 @@ type Querier interface {
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
 	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)
 	FindInvite(ctx context.Context, arg FindInviteParams) (FindInviteRow, error)
+	GameDay(ctx context.Context, id uuid.UUID) (int32, error)
 	GetArmorDetail(ctx context.Context, id int64) (GetArmorDetailRow, error)
 	GetBackgroundDetail(ctx context.Context, id int64) (string, error)
 	GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow, error)
@@ -132,6 +144,8 @@ type Querier interface {
 	GetPoolRevision(ctx context.Context, arg GetPoolRevisionParams) (GetPoolRevisionRow, error)
 	GetRoll(ctx context.Context, arg GetRollParams) (PlayRollRequest, error)
 	GetSession(ctx context.Context, arg GetSessionParams) (PlaySession, error)
+	GetSettlementRevision(ctx context.Context, arg GetSettlementRevisionParams) (GetSettlementRevisionRow, error)
+	GetShopRevision(ctx context.Context, arg GetShopRevisionParams) (GetShopRevisionRow, error)
 	GetSpeciesDetail(ctx context.Context, id int64) (GetSpeciesDetailRow, error)
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
 	GetTableRevision(ctx context.Context, arg GetTableRevisionParams) (GetTableRevisionRow, error)
@@ -171,6 +185,9 @@ type Querier interface {
 	InsertScheduledCheck(ctx context.Context, arg InsertScheduledCheckParams) error
 	InsertSession(ctx context.Context, arg InsertSessionParams) (PlaySession, error)
 	InsertSessionAction(ctx context.Context, arg InsertSessionActionParams) (uuid.UUID, error)
+	InsertSettlementRevision(ctx context.Context, arg InsertSettlementRevisionParams) error
+	InsertShopRevision(ctx context.Context, arg InsertShopRevisionParams) error
+	InsertShopRevisionStock(ctx context.Context, arg InsertShopRevisionStockParams) error
 	InsertSurface(ctx context.Context, arg InsertSurfaceParams) error
 	InsertTableEntry(ctx context.Context, arg InsertTableEntryParams) error
 	InsertTableRevision(ctx context.Context, arg InsertTableRevisionParams) error
@@ -182,6 +199,7 @@ type Querier interface {
 	InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
+	ItemPrices(ctx context.Context, arg ItemPricesParams) ([]ItemPricesRow, error)
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
@@ -197,6 +215,7 @@ type Querier interface {
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
 	ListRolls(ctx context.Context, arg ListRollsParams) ([]uuid.UUID, error)
 	ListSessions(ctx context.Context, campaignID uuid.UUID) ([]PlaySession, error)
+	ListSettlements(ctx context.Context, campaignID uuid.UUID) ([]ListSettlementsRow, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
 	ListTables(ctx context.Context, campaignID uuid.UUID) ([]ListTablesRow, error)
@@ -247,9 +266,12 @@ type Querier interface {
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SaveEncounterCheck(ctx context.Context, arg SaveEncounterCheckParams) error
 	SaveEncounterTable(ctx context.Context, arg SaveEncounterTableParams) error
+	SaveHaggle(ctx context.Context, arg SaveHaggleParams) error
 	SaveLootTable(ctx context.Context, arg SaveLootTableParams) error
 	SavePool(ctx context.Context, arg SavePoolParams) error
 	SavePrompt(ctx context.Context, arg SavePromptParams) error
+	SaveSettlement(ctx context.Context, arg SaveSettlementParams) error
+	SaveShop(ctx context.Context, arg SaveShopParams) error
 	SaveTable(ctx context.Context, arg SaveTableParams) error
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
@@ -258,9 +280,11 @@ type Querier interface {
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
 	SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]SessionChecksRow, error)
 	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
+	SessionHaggles(ctx context.Context, sessionID uuid.UUID) ([]SessionHagglesRow, error)
 	SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error)
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
 	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)
+	SessionShop(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
 	SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error)
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
@@ -276,14 +300,19 @@ type Querier interface {
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
 	SetContainerItem(ctx context.Context, arg SetContainerItemParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
+	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
+	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error
 	SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error
+	SetShopStock(ctx context.Context, arg SetShopStockParams) error
+	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
+	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)

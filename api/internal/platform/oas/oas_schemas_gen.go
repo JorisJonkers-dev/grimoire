@@ -2877,6 +2877,84 @@ func (s *DeleteNpcNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteNpcNoContent) deleteNpcRes() {}
 
+// DeleteSettlementNoContent is response for DeleteSettlement operation.
+type DeleteSettlementNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteSettlementNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteSettlementNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteSettlementNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteSettlementNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteSettlementNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteSettlementNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteSettlementNoContent) deleteSettlementRes() {}
+
+// DeleteShopNoContent is response for DeleteShop operation.
+type DeleteShopNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteShopNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteShopNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteShopNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteShopNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteShopNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteShopNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteShopNoContent) deleteShopRes() {}
+
 // An NPC that only its Revisions remember.
 // Ref: #/components/schemas/DeletedNpc
 type DeletedNpc struct {
@@ -6820,6 +6898,206 @@ func (s *ListSessionsOKHeaders) SetResponse(val []PlaySession) {
 
 func (*ListSessionsOKHeaders) listSessionsRes() {}
 
+// ListSettlementRevisionsOKHeaders wraps []Revision with response headers.
+type ListSettlementRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Revision
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSettlementRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSettlementRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSettlementRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSettlementRevisionsOKHeaders) GetResponse() []Revision {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSettlementRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSettlementRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSettlementRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSettlementRevisionsOKHeaders) SetResponse(val []Revision) {
+	s.Response = val
+}
+
+func (*ListSettlementRevisionsOKHeaders) listSettlementRevisionsRes() {}
+
+// ListSettlementsOKHeaders wraps []Settlement with response headers.
+type ListSettlementsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Settlement
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSettlementsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSettlementsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSettlementsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSettlementsOKHeaders) GetResponse() []Settlement {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSettlementsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSettlementsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSettlementsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSettlementsOKHeaders) SetResponse(val []Settlement) {
+	s.Response = val
+}
+
+func (*ListSettlementsOKHeaders) listSettlementsRes() {}
+
+// ListShopRevisionsOKHeaders wraps []Revision with response headers.
+type ListShopRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Revision
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListShopRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListShopRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListShopRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListShopRevisionsOKHeaders) GetResponse() []Revision {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListShopRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListShopRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListShopRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListShopRevisionsOKHeaders) SetResponse(val []Revision) {
+	s.Response = val
+}
+
+func (*ListShopRevisionsOKHeaders) listShopRevisionsRes() {}
+
+// ListShopsOKHeaders wraps []Shop with response headers.
+type ListShopsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Shop
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListShopsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListShopsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListShopsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListShopsOKHeaders) GetResponse() []Shop {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListShopsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListShopsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListShopsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListShopsOKHeaders) SetResponse(val []Shop) {
+	s.Response = val
+}
+
+func (*ListShopsOKHeaders) listShopsRes() {}
+
 // ListSourcesOKHeaders wraps []Source with response headers.
 type ListSourcesOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -8039,6 +8317,7 @@ type LiveCommand struct {
 	ItemSlug    OptSlug           `json:"itemSlug"`
 	Coin        OptCoin           `json:"coin"`
 	Count       OptInt32          `json:"count"`
+	ShopId      OptID             `json:"shopId"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -8346,6 +8625,11 @@ func (s *LiveCommand) GetCount() OptInt32 {
 	return s.Count
 }
 
+// GetShopId returns the value of ShopId.
+func (s *LiveCommand) GetShopId() OptID {
+	return s.ShopId
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -8651,6 +8935,11 @@ func (s *LiveCommand) SetCount(val OptInt32) {
 	s.Count = val
 }
 
+// SetShopId sets the value of ShopId.
+func (s *LiveCommand) SetShopId(val OptID) {
+	s.ShopId = val
+}
+
 type LiveCommandDue string
 
 const (
@@ -8745,6 +9034,11 @@ const (
 	LiveCommandKindRollLoot       LiveCommandKind = "roll_loot"
 	LiveCommandKindMoveItem       LiveCommandKind = "move_item"
 	LiveCommandKindMoveCoins      LiveCommandKind = "move_coins"
+	LiveCommandKindOpenShop       LiveCommandKind = "open_shop"
+	LiveCommandKindCloseShop      LiveCommandKind = "close_shop"
+	LiveCommandKindBuy            LiveCommandKind = "buy"
+	LiveCommandKindSell           LiveCommandKind = "sell"
+	LiveCommandKindHaggle         LiveCommandKind = "haggle"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -8800,6 +9094,11 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindRollLoot,
 		LiveCommandKindMoveItem,
 		LiveCommandKindMoveCoins,
+		LiveCommandKindOpenShop,
+		LiveCommandKindCloseShop,
+		LiveCommandKindBuy,
+		LiveCommandKindSell,
+		LiveCommandKindHaggle,
 	}
 }
 
@@ -8905,6 +9204,16 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindMoveItem:
 		return []byte(s), nil
 	case LiveCommandKindMoveCoins:
+		return []byte(s), nil
+	case LiveCommandKindOpenShop:
+		return []byte(s), nil
+	case LiveCommandKindCloseShop:
+		return []byte(s), nil
+	case LiveCommandKindBuy:
+		return []byte(s), nil
+	case LiveCommandKindSell:
+		return []byte(s), nil
+	case LiveCommandKindHaggle:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -9063,6 +9372,21 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindMoveCoins:
 		*s = LiveCommandKindMoveCoins
+		return nil
+	case LiveCommandKindOpenShop:
+		*s = LiveCommandKindOpenShop
+		return nil
+	case LiveCommandKindCloseShop:
+		*s = LiveCommandKindCloseShop
+		return nil
+	case LiveCommandKindBuy:
+		*s = LiveCommandKindBuy
+		return nil
+	case LiveCommandKindSell:
+		*s = LiveCommandKindSell
+		return nil
+	case LiveCommandKindHaggle:
+		*s = LiveCommandKindHaggle
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -9502,6 +9826,45 @@ func (s *LiveElevation) SetR(val int32) {
 // SetElevationFt sets the value of ElevationFt.
 func (s *LiveElevation) SetElevationFt(val int32) {
 	s.ElevationFt = val
+}
+
+// A Character's haggling with the open Shop. While the roll is out it names the roll; once rolled, the
+// price adjustment in percent.
+// Ref: #/components/schemas/LiveHaggle
+type LiveHaggle struct {
+	CharacterId ID       `json:"characterId"`
+	RollId      OptID    `json:"rollId"`
+	AdjustPct   OptInt32 `json:"adjustPct"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveHaggle) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveHaggle) GetRollId() OptID {
+	return s.RollId
+}
+
+// GetAdjustPct returns the value of AdjustPct.
+func (s *LiveHaggle) GetAdjustPct() OptInt32 {
+	return s.AdjustPct
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveHaggle) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveHaggle) SetRollId(val OptID) {
+	s.RollId = val
+}
+
+// SetAdjustPct sets the value of AdjustPct.
+func (s *LiveHaggle) SetAdjustPct(val OptInt32) {
+	s.AdjustPct = val
 }
 
 // A stack of one item and what it weighs in all.
@@ -10185,6 +10548,148 @@ func (s *LiveSessionViewAudience) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
+// Ref: #/components/schemas/LiveShop
+type LiveShop struct {
+	ID         ID           `json:"id"`
+	Name       string       `json:"name"`
+	Kind       string       `json:"kind"`
+	Settlement string       `json:"settlement"`
+	Owner      OptString    `json:"owner"`
+	Stock      []LiveStock  `json:"stock"`
+	Haggles    []LiveHaggle `json:"haggles"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveShop) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LiveShop) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveShop) GetKind() string {
+	return s.Kind
+}
+
+// GetSettlement returns the value of Settlement.
+func (s *LiveShop) GetSettlement() string {
+	return s.Settlement
+}
+
+// GetOwner returns the value of Owner.
+func (s *LiveShop) GetOwner() OptString {
+	return s.Owner
+}
+
+// GetStock returns the value of Stock.
+func (s *LiveShop) GetStock() []LiveStock {
+	return s.Stock
+}
+
+// GetHaggles returns the value of Haggles.
+func (s *LiveShop) GetHaggles() []LiveHaggle {
+	return s.Haggles
+}
+
+// SetID sets the value of ID.
+func (s *LiveShop) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveShop) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveShop) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetSettlement sets the value of Settlement.
+func (s *LiveShop) SetSettlement(val string) {
+	s.Settlement = val
+}
+
+// SetOwner sets the value of Owner.
+func (s *LiveShop) SetOwner(val OptString) {
+	s.Owner = val
+}
+
+// SetStock sets the value of Stock.
+func (s *LiveShop) SetStock(val []LiveStock) {
+	s.Stock = val
+}
+
+// SetHaggles sets the value of Haggles.
+func (s *LiveShop) SetHaggles(val []LiveHaggle) {
+	s.Haggles = val
+}
+
+// One item the open Shop sells, and its asking price in copper before haggling.
+// Ref: #/components/schemas/LiveStock
+type LiveStock struct {
+	Slug     Slug    `json:"slug"`
+	Name     string  `json:"name"`
+	Count    int32   `json:"count"`
+	PriceCp  int32   `json:"priceCp"`
+	WeightLb float64 `json:"weightLb"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveStock) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LiveStock) GetName() string {
+	return s.Name
+}
+
+// GetCount returns the value of Count.
+func (s *LiveStock) GetCount() int32 {
+	return s.Count
+}
+
+// GetPriceCp returns the value of PriceCp.
+func (s *LiveStock) GetPriceCp() int32 {
+	return s.PriceCp
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *LiveStock) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveStock) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveStock) SetName(val string) {
+	s.Name = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveStock) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetPriceCp sets the value of PriceCp.
+func (s *LiveStock) SetPriceCp(val int32) {
+	s.PriceCp = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *LiveStock) SetWeightLb(val float64) {
+	s.WeightLb = val
 }
 
 // A creature's Suggested Action for the DM. Without attackNo nothing reaches yet and it should close
@@ -11022,9 +11527,12 @@ type LiveView struct {
 	Perception []LivePerception `json:"perception"`
 	Checks     []LiveCheck      `json:"checks"`
 	Inventory  []LiveContainer  `json:"inventory"`
-	Walls      []HexCoord       `json:"walls"`
-	Lights     []LiveLight      `json:"lights"`
-	Ambient    OptAmbientLight  `json:"ambient"`
+	Shop       OptLiveShop      `json:"shop"`
+	// Days passed in the Campaign; a long rest or travel moves it on.
+	GameDay OptInt32        `json:"gameDay"`
+	Walls   []HexCoord      `json:"walls"`
+	Lights  []LiveLight     `json:"lights"`
+	Ambient OptAmbientLight `json:"ambient"`
 }
 
 // GetTokens returns the value of Tokens.
@@ -11115,6 +11623,16 @@ func (s *LiveView) GetChecks() []LiveCheck {
 // GetInventory returns the value of Inventory.
 func (s *LiveView) GetInventory() []LiveContainer {
 	return s.Inventory
+}
+
+// GetShop returns the value of Shop.
+func (s *LiveView) GetShop() OptLiveShop {
+	return s.Shop
+}
+
+// GetGameDay returns the value of GameDay.
+func (s *LiveView) GetGameDay() OptInt32 {
+	return s.GameDay
 }
 
 // GetWalls returns the value of Walls.
@@ -11220,6 +11738,16 @@ func (s *LiveView) SetChecks(val []LiveCheck) {
 // SetInventory sets the value of Inventory.
 func (s *LiveView) SetInventory(val []LiveContainer) {
 	s.Inventory = val
+}
+
+// SetShop sets the value of Shop.
+func (s *LiveView) SetShop(val OptLiveShop) {
+	s.Shop = val
+}
+
+// SetGameDay sets the value of GameDay.
+func (s *LiveView) SetGameDay(val OptInt32) {
+	s.GameDay = val
 }
 
 // SetWalls sets the value of Walls.
@@ -14183,6 +14711,52 @@ func (o OptLiveSessionView) Or(d LiveSessionView) LiveSessionView {
 	return d
 }
 
+// NewOptLiveShop returns new OptLiveShop with value set to v.
+func NewOptLiveShop(v LiveShop) OptLiveShop {
+	return OptLiveShop{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveShop is optional LiveShop.
+type OptLiveShop struct {
+	Value LiveShop
+	Set   bool
+}
+
+// IsSet returns true if OptLiveShop was set.
+func (o OptLiveShop) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveShop) Reset() {
+	var v LiveShop
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveShop) SetTo(v LiveShop) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveShop) Get() (v LiveShop, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveShop) Or(d LiveShop) LiveShop {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveSuggestion returns new OptLiveSuggestion with value set to v.
 func NewOptLiveSuggestion(v LiveSuggestion) OptLiveSuggestion {
 	return OptLiveSuggestion{
@@ -15269,11 +15843,15 @@ func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
+func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
+func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) deleteLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
+func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
@@ -15312,6 +15890,10 @@ func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
+func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
+func (*ProblemStatusCodeWithHeaders) listSettlementsRes()               {}
+func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
+func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
@@ -15319,10 +15901,13 @@ func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
+func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
 func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
+func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
+func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
@@ -15337,6 +15922,8 @@ func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
+func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
 
 // A reachable hex with its cost and where it is reached from.
@@ -16523,6 +17110,775 @@ func (s SetTokenIconReq) Read(p []byte) (n int, err error) {
 	return s.Data.Read(p)
 }
 
+// A named inhabited place with a size and a wealth tier.
+// Ref: #/components/schemas/Settlement
+type Settlement struct {
+	ID         ID               `json:"id"`
+	Name       string           `json:"name"`
+	Size       SettlementSize   `json:"size"`
+	Wealth     SettlementWealth `json:"wealth"`
+	LocationId OptID            `json:"locationId"`
+	UpdatedAt  time.Time        `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Settlement) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Settlement) GetName() string {
+	return s.Name
+}
+
+// GetSize returns the value of Size.
+func (s *Settlement) GetSize() SettlementSize {
+	return s.Size
+}
+
+// GetWealth returns the value of Wealth.
+func (s *Settlement) GetWealth() SettlementWealth {
+	return s.Wealth
+}
+
+// GetLocationId returns the value of LocationId.
+func (s *Settlement) GetLocationId() OptID {
+	return s.LocationId
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Settlement) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Settlement) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Settlement) SetName(val string) {
+	s.Name = val
+}
+
+// SetSize sets the value of Size.
+func (s *Settlement) SetSize(val SettlementSize) {
+	s.Size = val
+}
+
+// SetWealth sets the value of Wealth.
+func (s *Settlement) SetWealth(val SettlementWealth) {
+	s.Wealth = val
+}
+
+// SetLocationId sets the value of LocationId.
+func (s *Settlement) SetLocationId(val OptID) {
+	s.LocationId = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Settlement) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SettlementHeaders wraps Settlement with response headers.
+type SettlementHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Settlement
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SettlementHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SettlementHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SettlementHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SettlementHeaders) GetResponse() Settlement {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SettlementHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SettlementHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SettlementHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SettlementHeaders) SetResponse(val Settlement) {
+	s.Response = val
+}
+
+func (*SettlementHeaders) createSettlementRes()          {}
+func (*SettlementHeaders) restoreSettlementRevisionRes() {}
+func (*SettlementHeaders) updateSettlementRes()          {}
+
+// A Settlement as the DM writes it; locationId places it on a world map.
+// Ref: #/components/schemas/SettlementInput
+type SettlementInput struct {
+	Name       string                `json:"name"`
+	Size       SettlementInputSize   `json:"size"`
+	Wealth     SettlementInputWealth `json:"wealth"`
+	LocationId OptID                 `json:"locationId"`
+}
+
+// GetName returns the value of Name.
+func (s *SettlementInput) GetName() string {
+	return s.Name
+}
+
+// GetSize returns the value of Size.
+func (s *SettlementInput) GetSize() SettlementInputSize {
+	return s.Size
+}
+
+// GetWealth returns the value of Wealth.
+func (s *SettlementInput) GetWealth() SettlementInputWealth {
+	return s.Wealth
+}
+
+// GetLocationId returns the value of LocationId.
+func (s *SettlementInput) GetLocationId() OptID {
+	return s.LocationId
+}
+
+// SetName sets the value of Name.
+func (s *SettlementInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetSize sets the value of Size.
+func (s *SettlementInput) SetSize(val SettlementInputSize) {
+	s.Size = val
+}
+
+// SetWealth sets the value of Wealth.
+func (s *SettlementInput) SetWealth(val SettlementInputWealth) {
+	s.Wealth = val
+}
+
+// SetLocationId sets the value of LocationId.
+func (s *SettlementInput) SetLocationId(val OptID) {
+	s.LocationId = val
+}
+
+type SettlementInputSize string
+
+const (
+	SettlementInputSizeHamlet  SettlementInputSize = "hamlet"
+	SettlementInputSizeVillage SettlementInputSize = "village"
+	SettlementInputSizeTown    SettlementInputSize = "town"
+	SettlementInputSizeCity    SettlementInputSize = "city"
+)
+
+// AllValues returns all SettlementInputSize values.
+func (SettlementInputSize) AllValues() []SettlementInputSize {
+	return []SettlementInputSize{
+		SettlementInputSizeHamlet,
+		SettlementInputSizeVillage,
+		SettlementInputSizeTown,
+		SettlementInputSizeCity,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SettlementInputSize) MarshalText() ([]byte, error) {
+	switch s {
+	case SettlementInputSizeHamlet:
+		return []byte(s), nil
+	case SettlementInputSizeVillage:
+		return []byte(s), nil
+	case SettlementInputSizeTown:
+		return []byte(s), nil
+	case SettlementInputSizeCity:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SettlementInputSize) UnmarshalText(data []byte) error {
+	switch SettlementInputSize(data) {
+	case SettlementInputSizeHamlet:
+		*s = SettlementInputSizeHamlet
+		return nil
+	case SettlementInputSizeVillage:
+		*s = SettlementInputSizeVillage
+		return nil
+	case SettlementInputSizeTown:
+		*s = SettlementInputSizeTown
+		return nil
+	case SettlementInputSizeCity:
+		*s = SettlementInputSizeCity
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SettlementInputWealth string
+
+const (
+	SettlementInputWealthPoor        SettlementInputWealth = "poor"
+	SettlementInputWealthModest      SettlementInputWealth = "modest"
+	SettlementInputWealthComfortable SettlementInputWealth = "comfortable"
+	SettlementInputWealthWealthy     SettlementInputWealth = "wealthy"
+)
+
+// AllValues returns all SettlementInputWealth values.
+func (SettlementInputWealth) AllValues() []SettlementInputWealth {
+	return []SettlementInputWealth{
+		SettlementInputWealthPoor,
+		SettlementInputWealthModest,
+		SettlementInputWealthComfortable,
+		SettlementInputWealthWealthy,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SettlementInputWealth) MarshalText() ([]byte, error) {
+	switch s {
+	case SettlementInputWealthPoor:
+		return []byte(s), nil
+	case SettlementInputWealthModest:
+		return []byte(s), nil
+	case SettlementInputWealthComfortable:
+		return []byte(s), nil
+	case SettlementInputWealthWealthy:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SettlementInputWealth) UnmarshalText(data []byte) error {
+	switch SettlementInputWealth(data) {
+	case SettlementInputWealthPoor:
+		*s = SettlementInputWealthPoor
+		return nil
+	case SettlementInputWealthModest:
+		*s = SettlementInputWealthModest
+		return nil
+	case SettlementInputWealthComfortable:
+		*s = SettlementInputWealthComfortable
+		return nil
+	case SettlementInputWealthWealthy:
+		*s = SettlementInputWealthWealthy
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SettlementSize string
+
+const (
+	SettlementSizeHamlet  SettlementSize = "hamlet"
+	SettlementSizeVillage SettlementSize = "village"
+	SettlementSizeTown    SettlementSize = "town"
+	SettlementSizeCity    SettlementSize = "city"
+)
+
+// AllValues returns all SettlementSize values.
+func (SettlementSize) AllValues() []SettlementSize {
+	return []SettlementSize{
+		SettlementSizeHamlet,
+		SettlementSizeVillage,
+		SettlementSizeTown,
+		SettlementSizeCity,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SettlementSize) MarshalText() ([]byte, error) {
+	switch s {
+	case SettlementSizeHamlet:
+		return []byte(s), nil
+	case SettlementSizeVillage:
+		return []byte(s), nil
+	case SettlementSizeTown:
+		return []byte(s), nil
+	case SettlementSizeCity:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SettlementSize) UnmarshalText(data []byte) error {
+	switch SettlementSize(data) {
+	case SettlementSizeHamlet:
+		*s = SettlementSizeHamlet
+		return nil
+	case SettlementSizeVillage:
+		*s = SettlementSizeVillage
+		return nil
+	case SettlementSizeTown:
+		*s = SettlementSizeTown
+		return nil
+	case SettlementSizeCity:
+		*s = SettlementSizeCity
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type SettlementWealth string
+
+const (
+	SettlementWealthPoor        SettlementWealth = "poor"
+	SettlementWealthModest      SettlementWealth = "modest"
+	SettlementWealthComfortable SettlementWealth = "comfortable"
+	SettlementWealthWealthy     SettlementWealth = "wealthy"
+)
+
+// AllValues returns all SettlementWealth values.
+func (SettlementWealth) AllValues() []SettlementWealth {
+	return []SettlementWealth{
+		SettlementWealthPoor,
+		SettlementWealthModest,
+		SettlementWealthComfortable,
+		SettlementWealthWealthy,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SettlementWealth) MarshalText() ([]byte, error) {
+	switch s {
+	case SettlementWealthPoor:
+		return []byte(s), nil
+	case SettlementWealthModest:
+		return []byte(s), nil
+	case SettlementWealthComfortable:
+		return []byte(s), nil
+	case SettlementWealthWealthy:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SettlementWealth) UnmarshalText(data []byte) error {
+	switch SettlementWealth(data) {
+	case SettlementWealthPoor:
+		*s = SettlementWealthPoor
+		return nil
+	case SettlementWealthModest:
+		*s = SettlementWealthModest
+		return nil
+	case SettlementWealthComfortable:
+		*s = SettlementWealthComfortable
+		return nil
+	case SettlementWealthWealthy:
+		*s = SettlementWealthWealthy
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A trader in a Settlement with its Stock; stockedDay is the in-game day it last restocked.
+// Ref: #/components/schemas/Shop
+type Shop struct {
+	ID           ID          `json:"id"`
+	SettlementId ID          `json:"settlementId"`
+	Name         string      `json:"name"`
+	Kind         string      `json:"kind"`
+	OwnerId      OptID       `json:"ownerId"`
+	MarkupPct    int32       `json:"markupPct"`
+	HaggleDc     int32       `json:"haggleDc"`
+	HagglePct    int32       `json:"hagglePct"`
+	LootTableId  OptID       `json:"lootTableId"`
+	Restock      ShopRestock `json:"restock"`
+	RestockDays  OptInt32    `json:"restockDays"`
+	StockedDay   int32       `json:"stockedDay"`
+	Stock        []StockItem `json:"stock"`
+	UpdatedAt    time.Time   `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Shop) GetID() ID {
+	return s.ID
+}
+
+// GetSettlementId returns the value of SettlementId.
+func (s *Shop) GetSettlementId() ID {
+	return s.SettlementId
+}
+
+// GetName returns the value of Name.
+func (s *Shop) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *Shop) GetKind() string {
+	return s.Kind
+}
+
+// GetOwnerId returns the value of OwnerId.
+func (s *Shop) GetOwnerId() OptID {
+	return s.OwnerId
+}
+
+// GetMarkupPct returns the value of MarkupPct.
+func (s *Shop) GetMarkupPct() int32 {
+	return s.MarkupPct
+}
+
+// GetHaggleDc returns the value of HaggleDc.
+func (s *Shop) GetHaggleDc() int32 {
+	return s.HaggleDc
+}
+
+// GetHagglePct returns the value of HagglePct.
+func (s *Shop) GetHagglePct() int32 {
+	return s.HagglePct
+}
+
+// GetLootTableId returns the value of LootTableId.
+func (s *Shop) GetLootTableId() OptID {
+	return s.LootTableId
+}
+
+// GetRestock returns the value of Restock.
+func (s *Shop) GetRestock() ShopRestock {
+	return s.Restock
+}
+
+// GetRestockDays returns the value of RestockDays.
+func (s *Shop) GetRestockDays() OptInt32 {
+	return s.RestockDays
+}
+
+// GetStockedDay returns the value of StockedDay.
+func (s *Shop) GetStockedDay() int32 {
+	return s.StockedDay
+}
+
+// GetStock returns the value of Stock.
+func (s *Shop) GetStock() []StockItem {
+	return s.Stock
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Shop) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Shop) SetID(val ID) {
+	s.ID = val
+}
+
+// SetSettlementId sets the value of SettlementId.
+func (s *Shop) SetSettlementId(val ID) {
+	s.SettlementId = val
+}
+
+// SetName sets the value of Name.
+func (s *Shop) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *Shop) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetOwnerId sets the value of OwnerId.
+func (s *Shop) SetOwnerId(val OptID) {
+	s.OwnerId = val
+}
+
+// SetMarkupPct sets the value of MarkupPct.
+func (s *Shop) SetMarkupPct(val int32) {
+	s.MarkupPct = val
+}
+
+// SetHaggleDc sets the value of HaggleDc.
+func (s *Shop) SetHaggleDc(val int32) {
+	s.HaggleDc = val
+}
+
+// SetHagglePct sets the value of HagglePct.
+func (s *Shop) SetHagglePct(val int32) {
+	s.HagglePct = val
+}
+
+// SetLootTableId sets the value of LootTableId.
+func (s *Shop) SetLootTableId(val OptID) {
+	s.LootTableId = val
+}
+
+// SetRestock sets the value of Restock.
+func (s *Shop) SetRestock(val ShopRestock) {
+	s.Restock = val
+}
+
+// SetRestockDays sets the value of RestockDays.
+func (s *Shop) SetRestockDays(val OptInt32) {
+	s.RestockDays = val
+}
+
+// SetStockedDay sets the value of StockedDay.
+func (s *Shop) SetStockedDay(val int32) {
+	s.StockedDay = val
+}
+
+// SetStock sets the value of Stock.
+func (s *Shop) SetStock(val []StockItem) {
+	s.Stock = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Shop) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// ShopHeaders wraps Shop with response headers.
+type ShopHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Shop
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ShopHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ShopHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ShopHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ShopHeaders) GetResponse() Shop {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ShopHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ShopHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ShopHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ShopHeaders) SetResponse(val Shop) {
+	s.Response = val
+}
+
+func (*ShopHeaders) createShopRes()          {}
+func (*ShopHeaders) rerollStockRes()         {}
+func (*ShopHeaders) restoreShopRevisionRes() {}
+func (*ShopHeaders) updateShopRes()          {}
+
+// A Shop as the DM writes it. restockDays is required when it restocks every few days.
+// Ref: #/components/schemas/ShopInput
+type ShopInput struct {
+	SettlementId ID          `json:"settlementId"`
+	Name         string      `json:"name"`
+	Kind         string      `json:"kind"`
+	OwnerId      OptID       `json:"ownerId"`
+	MarkupPct    int32       `json:"markupPct"`
+	HaggleDc     int32       `json:"haggleDc"`
+	HagglePct    int32       `json:"hagglePct"`
+	LootTableId  OptID       `json:"lootTableId"`
+	Restock      ShopRestock `json:"restock"`
+	RestockDays  OptInt32    `json:"restockDays"`
+}
+
+// GetSettlementId returns the value of SettlementId.
+func (s *ShopInput) GetSettlementId() ID {
+	return s.SettlementId
+}
+
+// GetName returns the value of Name.
+func (s *ShopInput) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *ShopInput) GetKind() string {
+	return s.Kind
+}
+
+// GetOwnerId returns the value of OwnerId.
+func (s *ShopInput) GetOwnerId() OptID {
+	return s.OwnerId
+}
+
+// GetMarkupPct returns the value of MarkupPct.
+func (s *ShopInput) GetMarkupPct() int32 {
+	return s.MarkupPct
+}
+
+// GetHaggleDc returns the value of HaggleDc.
+func (s *ShopInput) GetHaggleDc() int32 {
+	return s.HaggleDc
+}
+
+// GetHagglePct returns the value of HagglePct.
+func (s *ShopInput) GetHagglePct() int32 {
+	return s.HagglePct
+}
+
+// GetLootTableId returns the value of LootTableId.
+func (s *ShopInput) GetLootTableId() OptID {
+	return s.LootTableId
+}
+
+// GetRestock returns the value of Restock.
+func (s *ShopInput) GetRestock() ShopRestock {
+	return s.Restock
+}
+
+// GetRestockDays returns the value of RestockDays.
+func (s *ShopInput) GetRestockDays() OptInt32 {
+	return s.RestockDays
+}
+
+// SetSettlementId sets the value of SettlementId.
+func (s *ShopInput) SetSettlementId(val ID) {
+	s.SettlementId = val
+}
+
+// SetName sets the value of Name.
+func (s *ShopInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ShopInput) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetOwnerId sets the value of OwnerId.
+func (s *ShopInput) SetOwnerId(val OptID) {
+	s.OwnerId = val
+}
+
+// SetMarkupPct sets the value of MarkupPct.
+func (s *ShopInput) SetMarkupPct(val int32) {
+	s.MarkupPct = val
+}
+
+// SetHaggleDc sets the value of HaggleDc.
+func (s *ShopInput) SetHaggleDc(val int32) {
+	s.HaggleDc = val
+}
+
+// SetHagglePct sets the value of HagglePct.
+func (s *ShopInput) SetHagglePct(val int32) {
+	s.HagglePct = val
+}
+
+// SetLootTableId sets the value of LootTableId.
+func (s *ShopInput) SetLootTableId(val OptID) {
+	s.LootTableId = val
+}
+
+// SetRestock sets the value of Restock.
+func (s *ShopInput) SetRestock(val ShopRestock) {
+	s.Restock = val
+}
+
+// SetRestockDays sets the value of RestockDays.
+func (s *ShopInput) SetRestockDays(val OptInt32) {
+	s.RestockDays = val
+}
+
+// When a Shop restocks from its Loot Table.
+// Ref: #/components/schemas/ShopRestock
+type ShopRestock string
+
+const (
+	ShopRestockNever    ShopRestock = "never"
+	ShopRestockLongRest ShopRestock = "long_rest"
+	ShopRestockDays     ShopRestock = "days"
+)
+
+// AllValues returns all ShopRestock values.
+func (ShopRestock) AllValues() []ShopRestock {
+	return []ShopRestock{
+		ShopRestockNever,
+		ShopRestockLongRest,
+		ShopRestockDays,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ShopRestock) MarshalText() ([]byte, error) {
+	switch s {
+	case ShopRestockNever:
+		return []byte(s), nil
+	case ShopRestockLongRest:
+		return []byte(s), nil
+	case ShopRestockDays:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ShopRestock) UnmarshalText(data []byte) error {
+	switch ShopRestock(data) {
+	case ShopRestockNever:
+		*s = ShopRestockNever
+		return nil
+	case ShopRestockLongRest:
+		*s = ShopRestockLongRest
+		return nil
+	case ShopRestockDays:
+		*s = ShopRestockDays
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // What one hex sees of another.
 // Ref: #/components/schemas/SightPreview
 type SightPreview struct {
@@ -17558,6 +18914,44 @@ func (s *StatusHeaders) SetResponse(val Status) {
 }
 
 func (*StatusHeaders) getStatusRes() {}
+
+// How many of an item a Shop sells and its asking price in copper.
+// Ref: #/components/schemas/StockItem
+type StockItem struct {
+	ItemSlug Slug  `json:"itemSlug"`
+	Quantity int32 `json:"quantity"`
+	PriceCp  int32 `json:"priceCp"`
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *StockItem) GetItemSlug() Slug {
+	return s.ItemSlug
+}
+
+// GetQuantity returns the value of Quantity.
+func (s *StockItem) GetQuantity() int32 {
+	return s.Quantity
+}
+
+// GetPriceCp returns the value of PriceCp.
+func (s *StockItem) GetPriceCp() int32 {
+	return s.PriceCp
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *StockItem) SetItemSlug(val Slug) {
+	s.ItemSlug = val
+}
+
+// SetQuantity sets the value of Quantity.
+func (s *StockItem) SetQuantity(val int32) {
+	s.Quantity = val
+}
+
+// SetPriceCp sets the value of PriceCp.
+func (s *StockItem) SetPriceCp(val int32) {
+	s.PriceCp = val
+}
 
 // How the Table Display's camera moves.
 // Ref: #/components/schemas/TableCamera

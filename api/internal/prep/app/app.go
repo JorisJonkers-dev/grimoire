@@ -15,6 +15,7 @@ import (
 	campaigndomain "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	playdomain "github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/encounters"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -47,6 +48,21 @@ type Repository interface {
 	LootTableInUse(ctx context.Context, id domain.LootTableID) (bool, error)
 	RecordLootTable(ctx context.Context, campaign uuid.UUID, rev campaigndomain.Revision, c caller.Caller, t domain.LootTable) error
 	LootTableAt(ctx context.Context, campaign uuid.UUID, id domain.LootTableID, no int) (domain.LootTable, error)
+	Settlements(ctx context.Context, campaign uuid.UUID) ([]domain.Settlement, error)
+	SaveSettlement(ctx context.Context, campaign uuid.UUID, s domain.Settlement, now time.Time) error
+	DeleteSettlement(ctx context.Context, campaign uuid.UUID, id domain.SettlementID) (bool, error)
+	RecordSettlement(ctx context.Context, campaign uuid.UUID, rev campaigndomain.Revision, c caller.Caller, s domain.Settlement) error
+	SettlementAt(ctx context.Context, campaign uuid.UUID, id domain.SettlementID, no int) (domain.Settlement, error)
+	Shops(ctx context.Context, campaign uuid.UUID) ([]domain.Shop, error)
+	// SaveShop writes a Shop's fields; SetStock replaces its Stock and the day it was stocked.
+	SaveShop(ctx context.Context, s domain.Shop, now time.Time) error
+	SetStock(ctx context.Context, id domain.ShopID, stock []domain.StockItem, day int) error
+	DeleteShop(ctx context.Context, campaign uuid.UUID, id domain.ShopID) (bool, error)
+	RecordShop(ctx context.Context, campaign uuid.UUID, rev campaigndomain.Revision, c caller.Caller, s domain.Shop) error
+	ShopAt(ctx context.Context, campaign uuid.UUID, id domain.ShopID, no int) (domain.Shop, error)
+	NpcExists(ctx context.Context, campaign, id uuid.UUID) (bool, error)
+	ItemPrices(ctx context.Context, campaign uuid.UUID, slugs []string) (map[string]domain.ItemPrice, error)
+	GameDay(ctx context.Context, campaign uuid.UUID) (int, error)
 	// Checks lists the Campaign's latest Encounter Checks, newest first.
 	Checks(ctx context.Context, campaign uuid.UUID) ([]domain.Check, error)
 }
@@ -61,6 +77,9 @@ type Service struct {
 	Repo    Repository
 	Members Members
 	Now     func() time.Time
+	// Seed and Source drive Stock rolls.
+	Seed   func() uint64
+	Source func(seed uint64) dice.Source
 }
 
 func (s *Service) dm(ctx context.Context, c caller.Caller, campaign uuid.UUID) (playdomain.Member, error) {

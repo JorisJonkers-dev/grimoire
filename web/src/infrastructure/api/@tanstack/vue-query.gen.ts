@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createRoll, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getReadiness, getRoll, getSession, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, startSession, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateNpc, uploadMap } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UploadMapData, UploadMapError, UploadMapResponse } from '../types.gen';
+import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createRoll, createSettlement, createShop, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deleteSettlement, deleteShop, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getReadiness, getRoll, getSession, getSpell, getStatus, getTokenIcon, listCampaigns, listCharacters, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, rerollStock, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeInvite, rollRest, setDie, setPortrait, setTokenIcon, startSession, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateNpc, updateSettlement, updateShop, uploadMap } from '../sdk.gen';
+import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RerollStockData, RerollStockError, RerollStockResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -1029,6 +1029,257 @@ export const restoreLootTableRevisionMutation = (options?: Partial<Options<Resto
     const mutationOptions: UseMutationOptions<RestoreLootTableRevisionResponse, RestoreLootTableRevisionError, Options<RestoreLootTableRevisionData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await restoreLootTableRevision({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listSettlementsQueryKey = (options: Options<ListSettlementsData>) => createQueryKey('listSettlements', options);
+
+/**
+ * List Settlements
+ *
+ * The Campaign's Settlements. DM only.
+ */
+export const listSettlementsOptions = (options: Options<ListSettlementsData>) => queryOptions<ListSettlementsResponse, ListSettlementsError, ListSettlementsResponse, ReturnType<typeof listSettlementsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listSettlements({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listSettlementsQueryKey(options)
+});
+
+/**
+ * Create an Settlement
+ *
+ * Adds an Settlement and records its first Revision. DM only.
+ */
+export const createSettlementMutation = (options?: Partial<Options<CreateSettlementData>>): UseMutationOptions<CreateSettlementResponse, CreateSettlementError, Options<CreateSettlementData>> => {
+    const mutationOptions: UseMutationOptions<CreateSettlementResponse, CreateSettlementError, Options<CreateSettlementData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createSettlement({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete an Settlement
+ *
+ * Removes the Settlement; its Revisions keep it restorable. DM only.
+ */
+export const deleteSettlementMutation = (options?: Partial<Options<DeleteSettlementData>>): UseMutationOptions<DeleteSettlementResponse, DeleteSettlementError, Options<DeleteSettlementData>> => {
+    const mutationOptions: UseMutationOptions<DeleteSettlementResponse, DeleteSettlementError, Options<DeleteSettlementData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteSettlement({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update an Settlement
+ *
+ * Replaces the Settlement and records a Revision. DM only.
+ */
+export const updateSettlementMutation = (options?: Partial<Options<UpdateSettlementData>>): UseMutationOptions<UpdateSettlementResponse, UpdateSettlementError, Options<UpdateSettlementData>> => {
+    const mutationOptions: UseMutationOptions<UpdateSettlementResponse, UpdateSettlementError, Options<UpdateSettlementData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateSettlement({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listSettlementRevisionsQueryKey = (options: Options<ListSettlementRevisionsData>) => createQueryKey('listSettlementRevisions', options);
+
+/**
+ * List Settlement revisions
+ *
+ * Every Revision of the Settlement, newest first. DM only.
+ */
+export const listSettlementRevisionsOptions = (options: Options<ListSettlementRevisionsData>) => queryOptions<ListSettlementRevisionsResponse, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ReturnType<typeof listSettlementRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listSettlementRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listSettlementRevisionsQueryKey(options)
+});
+
+/**
+ * Restore an Settlement revision
+ *
+ * Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
+ */
+export const restoreSettlementRevisionMutation = (options?: Partial<Options<RestoreSettlementRevisionData>>): UseMutationOptions<RestoreSettlementRevisionResponse, RestoreSettlementRevisionError, Options<RestoreSettlementRevisionData>> => {
+    const mutationOptions: UseMutationOptions<RestoreSettlementRevisionResponse, RestoreSettlementRevisionError, Options<RestoreSettlementRevisionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await restoreSettlementRevision({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listShopsQueryKey = (options: Options<ListShopsData>) => createQueryKey('listShops', options);
+
+/**
+ * List Shops
+ *
+ * The Campaign's Shops. DM only.
+ */
+export const listShopsOptions = (options: Options<ListShopsData>) => queryOptions<ListShopsResponse, ListShopsError, ListShopsResponse, ReturnType<typeof listShopsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listShops({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listShopsQueryKey(options)
+});
+
+/**
+ * Create an Shop
+ *
+ * Adds an Shop and records its first Revision. DM only.
+ */
+export const createShopMutation = (options?: Partial<Options<CreateShopData>>): UseMutationOptions<CreateShopResponse, CreateShopError, Options<CreateShopData>> => {
+    const mutationOptions: UseMutationOptions<CreateShopResponse, CreateShopError, Options<CreateShopData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createShop({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete an Shop
+ *
+ * Removes the Shop; its Revisions keep it restorable. DM only.
+ */
+export const deleteShopMutation = (options?: Partial<Options<DeleteShopData>>): UseMutationOptions<DeleteShopResponse, DeleteShopError, Options<DeleteShopData>> => {
+    const mutationOptions: UseMutationOptions<DeleteShopResponse, DeleteShopError, Options<DeleteShopData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteShop({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update an Shop
+ *
+ * Replaces the Shop and records a Revision. DM only.
+ */
+export const updateShopMutation = (options?: Partial<Options<UpdateShopData>>): UseMutationOptions<UpdateShopResponse, UpdateShopError, Options<UpdateShopData>> => {
+    const mutationOptions: UseMutationOptions<UpdateShopResponse, UpdateShopError, Options<UpdateShopData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateShop({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listShopRevisionsQueryKey = (options: Options<ListShopRevisionsData>) => createQueryKey('listShopRevisions', options);
+
+/**
+ * List Shop revisions
+ *
+ * Every Revision of the Shop, newest first. DM only.
+ */
+export const listShopRevisionsOptions = (options: Options<ListShopRevisionsData>) => queryOptions<ListShopRevisionsResponse, ListShopRevisionsError, ListShopRevisionsResponse, ReturnType<typeof listShopRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listShopRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listShopRevisionsQueryKey(options)
+});
+
+/**
+ * Restore an Shop revision
+ *
+ * Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
+ */
+export const restoreShopRevisionMutation = (options?: Partial<Options<RestoreShopRevisionData>>): UseMutationOptions<RestoreShopRevisionResponse, RestoreShopRevisionError, Options<RestoreShopRevisionData>> => {
+    const mutationOptions: UseMutationOptions<RestoreShopRevisionResponse, RestoreShopRevisionError, Options<RestoreShopRevisionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await restoreShopRevision({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Reroll Stock
+ *
+ * Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a Revision. DM only.
+ */
+export const rerollStockMutation = (options?: Partial<Options<RerollStockData>>): UseMutationOptions<RerollStockResponse, RerollStockError, Options<RerollStockData>> => {
+    const mutationOptions: UseMutationOptions<RerollStockResponse, RerollStockError, Options<RerollStockData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rerollStock({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

@@ -20,6 +20,7 @@ type CampaignCampaign struct {
 	UpdatedAt        time.Time
 	ReactionTimeoutS int32
 	HighGround       bool
+	GameDay          int32
 }
 
 type CampaignCharacter struct {
@@ -649,6 +650,14 @@ type PlayEncounterZone struct {
 	Dc          int32
 }
 
+type PlayHaggle struct {
+	SessionID   uuid.UUID
+	ShopID      uuid.UUID
+	CharacterID uuid.UUID
+	RollID      pgtype.UUID
+	AdjustPct   pgtype.Int4
+}
+
 type PlayManualPrompt struct {
 	ID        uuid.UUID
 	SessionID uuid.UUID
@@ -728,6 +737,11 @@ type PlaySession struct {
 	EndedAt    pgtype.Timestamptz
 	MapID      pgtype.UUID
 	WorldMapID pgtype.UUID
+}
+
+type PlaySessionShop struct {
+	SessionID uuid.UUID
+	ShopID    uuid.UUID
 }
 
 type PlaySurface struct {
@@ -940,6 +954,69 @@ type PrepScheduledCheck struct {
 	TableID    uuid.UUID
 	Due        string
 	CreatedAt  time.Time
+}
+
+type PrepSettlement struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Size       string
+	Wealth     string
+	LocationID pgtype.UUID
+	UpdatedAt  time.Time
+}
+
+type PrepSettlementRevision struct {
+	RevisionID uuid.UUID
+	Name       string
+	Size       string
+	Wealth     string
+	LocationID pgtype.UUID
+}
+
+type PrepShop struct {
+	ID           uuid.UUID
+	SettlementID uuid.UUID
+	Name         string
+	Kind         string
+	OwnerNpcID   pgtype.UUID
+	MarkupPct    int32
+	HaggleDc     int32
+	HagglePct    int32
+	LootTableID  pgtype.UUID
+	Restock      string
+	RestockDays  pgtype.Int4
+	StockedDay   int32
+	UpdatedAt    time.Time
+}
+
+type PrepShopRevision struct {
+	RevisionID   uuid.UUID
+	SettlementID uuid.UUID
+	Name         string
+	Kind         string
+	OwnerNpcID   pgtype.UUID
+	MarkupPct    int32
+	HaggleDc     int32
+	HagglePct    int32
+	LootTableID  pgtype.UUID
+	Restock      string
+	RestockDays  pgtype.Int4
+	StockedDay   int32
+}
+
+type PrepShopRevisionStock struct {
+	RevisionID uuid.UUID
+	ItemSlug   string
+	Quantity   int32
+	PriceCp    int32
+}
+
+type PrepShopStock struct {
+	ShopID   uuid.UUID
+	ItemSlug string
+	Quantity int32
+	PriceCp  int32
 }
 
 type PrepTableEntry struct {

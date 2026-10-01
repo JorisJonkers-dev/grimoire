@@ -68,6 +68,18 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/rolls
 	CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (CreateRollRes, error)
+	// CreateSettlement implements createSettlement operation.
+	//
+	// Adds an Settlement and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/settlements
+	CreateSettlement(ctx context.Context, req *SettlementInput, params CreateSettlementParams) (CreateSettlementRes, error)
+	// CreateShop implements createShop operation.
+	//
+	// Adds an Shop and records its first Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/shops
+	CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (CreateShopRes, error)
 	// DeleteCharacter implements deleteCharacter operation.
 	//
 	// Removes a Character. The owner or a DM, never during Combat.
@@ -98,6 +110,18 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
+	// DeleteSettlement implements deleteSettlement operation.
+	//
+	// Removes the Settlement; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/settlements/{settlementId}
+	DeleteSettlement(ctx context.Context, params DeleteSettlementParams) (DeleteSettlementRes, error)
+	// DeleteShop implements deleteShop operation.
+	//
+	// Removes the Shop; its Revisions keep it restorable. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
+	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
 	// DiffNpcRevisions implements diffNpcRevisions operation.
 	//
 	// The fields that differ between two Revisions. DM only.
@@ -329,6 +353,30 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/sessions
 	ListSessions(ctx context.Context, params ListSessionsParams) (ListSessionsRes, error)
+	// ListSettlementRevisions implements listSettlementRevisions operation.
+	//
+	// Every Revision of the Settlement, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions
+	ListSettlementRevisions(ctx context.Context, params ListSettlementRevisionsParams) (ListSettlementRevisionsRes, error)
+	// ListSettlements implements listSettlements operation.
+	//
+	// The Campaign's Settlements. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/settlements
+	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
+	// ListShopRevisions implements listShopRevisions operation.
+	//
+	// Every Revision of the Shop, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions
+	ListShopRevisions(ctx context.Context, params ListShopRevisionsParams) (ListShopRevisionsRes, error)
+	// ListShops implements listShops operation.
+	//
+	// The Campaign's Shops. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/shops
+	ListShops(ctx context.Context, params ListShopsParams) (ListShopsRes, error)
 	// ListSources implements listSources operation.
 	//
 	// The documents the compendium draws from, with the attribution each license requires.
@@ -371,6 +419,13 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RerollStock implements rerollStock operation.
+	//
+	// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
+	RerollStock(ctx context.Context, params RerollStockParams) (RerollStockRes, error)
 	// RestoreEncounterPoolRevision implements restoreEncounterPoolRevision operation.
 	//
 	// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
@@ -399,6 +454,20 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
 	RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (RestoreNpcRevisionRes, error)
+	// RestoreSettlementRevision implements restoreSettlementRevision operation.
+	//
+	// Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore
+	RestoreSettlementRevision(ctx context.Context, params RestoreSettlementRevisionParams) (RestoreSettlementRevisionRes, error)
+	// RestoreShopRevision implements restoreShopRevision operation.
+	//
+	// Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
+	RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (RestoreShopRevisionRes, error)
 	// RevokeInvite implements revokeInvite operation.
 	//
 	// Closes an invite link. DM only.
@@ -486,6 +555,18 @@ type Handler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
+	// UpdateSettlement implements updateSettlement operation.
+	//
+	// Replaces the Settlement and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/settlements/{settlementId}
+	UpdateSettlement(ctx context.Context, req *SettlementInput, params UpdateSettlementParams) (UpdateSettlementRes, error)
+	// UpdateShop implements updateShop operation.
+	//
+	// Replaces the Shop and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/shops/{shopId}
+	UpdateShop(ctx context.Context, req *ShopInput, params UpdateShopParams) (UpdateShopRes, error)
 	// UploadMap implements uploadMap operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM

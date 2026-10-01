@@ -31,6 +31,17 @@ type PrepService interface {
 	DeleteLootTable(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.LootTableID) error
 	LootTableRevisions(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.LootTableID) ([]campaigndomain.Revision, error)
 	RestoreLootTable(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.LootTableID, no int) (domain.LootTable, error)
+	Settlements(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Settlement, error)
+	SaveSettlement(ctx context.Context, c caller.Caller, campaign uuid.UUID, x domain.Settlement) (domain.Settlement, error)
+	DeleteSettlement(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.SettlementID) error
+	SettlementRevisions(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.SettlementID) ([]campaigndomain.Revision, error)
+	RestoreSettlement(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.SettlementID, no int) (domain.Settlement, error)
+	Shops(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Shop, error)
+	SaveShop(ctx context.Context, c caller.Caller, campaign uuid.UUID, x domain.Shop) (domain.Shop, error)
+	DeleteShop(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.ShopID) error
+	ShopRevisions(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.ShopID) ([]campaigndomain.Revision, error)
+	RestoreShop(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.ShopID, no int) (domain.Shop, error)
+	RerollStock(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.ShopID) (domain.Shop, error)
 }
 
 func poolIn(id domain.PoolID, req *oas.EncounterPoolInput) domain.Pool {

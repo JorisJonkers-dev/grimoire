@@ -506,6 +506,49 @@
       "r": 0,
       "hidden": false,
       "lootTableId": "0190c7a8-0000-7000-8000-000000000032"
+    },
+    {
+      "nonce": "n56",
+      "kind": "open_shop",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "shopId": "0190c7a8-0000-7000-8000-000000000033"
+    },
+    {
+      "nonce": "n57",
+      "kind": "buy",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000030",
+      "itemSlug": "rope",
+      "count": 1
+    },
+    {
+      "nonce": "n58",
+      "kind": "sell",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000030",
+      "itemSlug": "rope",
+      "count": 1
+    },
+    {
+      "nonce": "n59",
+      "kind": "haggle",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000030"
+    },
+    {
+      "nonce": "n60",
+      "kind": "close_shop",
+      "q": 0,
+      "r": 0,
+      "hidden": false
     }
   ],
   "updates": [
@@ -823,7 +866,34 @@
             "coins": [],
             "weightLb": 0
           }
-        ]
+        ],
+        "shop": {
+          "id": "0190c7a8-0000-7000-8000-000000000033",
+          "name": "Store",
+          "kind": "general",
+          "settlement": "Oakford",
+          "owner": "Tamsin",
+          "stock": [
+            {
+              "slug": "rope",
+              "name": "Rope",
+              "count": 3,
+              "priceCp": 150,
+              "weightLb": 5
+            }
+          ],
+          "haggles": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "adjustPct": -10
+            },
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000034",
+              "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ]
+        },
+        "gameDay": 3
       }
     },
     {
@@ -1190,7 +1260,34 @@
             "coins": [],
             "weightLb": 0
           }
-        ]
+        ],
+        "shop": {
+          "id": "0190c7a8-0000-7000-8000-000000000033",
+          "name": "Store",
+          "kind": "general",
+          "settlement": "Oakford",
+          "owner": "Tamsin",
+          "stock": [
+            {
+              "slug": "rope",
+              "name": "Rope",
+              "count": 3,
+              "priceCp": 150,
+              "weightLb": 5
+            }
+          ],
+          "haggles": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "adjustPct": -10
+            },
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000034",
+              "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ]
+        },
+        "gameDay": 3
       }
     },
     {
@@ -1200,7 +1297,8 @@
         "tokens": [],
         "fog": false,
         "visible": [],
-        "remembered": []
+        "remembered": [],
+        "gameDay": 0
       }
     },
     {
@@ -1541,7 +1639,34 @@
             "coins": [],
             "weightLb": 0
           }
-        ]
+        ],
+        "shop": {
+          "id": "0190c7a8-0000-7000-8000-000000000033",
+          "name": "Store",
+          "kind": "general",
+          "settlement": "Oakford",
+          "owner": "Tamsin",
+          "stock": [
+            {
+              "slug": "rope",
+              "name": "Rope",
+              "count": 3,
+              "priceCp": 150,
+              "weightLb": 5
+            }
+          ],
+          "haggles": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "adjustPct": -10
+            },
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000034",
+              "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ]
+        },
+        "gameDay": 3
       },
       "steps": [
         {
@@ -1849,7 +1974,34 @@
               "coins": [],
               "weightLb": 0
             }
-          ]
+          ],
+          "shop": {
+            "id": "0190c7a8-0000-7000-8000-000000000033",
+            "name": "Store",
+            "kind": "general",
+            "settlement": "Oakford",
+            "owner": "Tamsin",
+            "stock": [
+              {
+                "slug": "rope",
+                "name": "Rope",
+                "count": 3,
+                "priceCp": 150,
+                "weightLb": 5
+              }
+            ],
+            "haggles": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "adjustPct": -10
+              },
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000034",
+                "rollId": "0190c7a8-0000-7000-8000-000000000035"
+              }
+            ]
+          },
+          "gameDay": 3
         }
       ]
     },

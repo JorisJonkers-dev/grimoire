@@ -77,6 +77,13 @@ type Write struct {
 	Gone      *domain.ContainerID
 	items     map[string]domain.ItemInfo
 	lootTable string
+	// Shop opens a Shop; Trade buys or sells there; Restock is a Shop with fresh Stock; Day the in-game day after the change.
+	Shop    *domain.OpenShop
+	Trade   *domain.Trade
+	Restock *prep.Shop
+	Day     *int
+	haggle  *haggleChange
+	price   *prep.ItemPrice
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -114,6 +121,16 @@ type Store interface {
 	LoadInventory(ctx context.Context, campaign uuid.UUID) (domain.Inventory, error)
 	LoadLoot(ctx context.Context, campaign uuid.UUID) ([]prep.LootTable, error)
 	Items(ctx context.Context, campaign uuid.UUID, slugs []string) (map[string]domain.ItemInfo, error)
+	// LoadShop reads a Shop to open; LoadOpenShop the one a Session has open, if any.
+	LoadShop(ctx context.Context, campaign uuid.UUID, id prep.ShopID) (*domain.OpenShop, error)
+	LoadOpenShop(ctx context.Context, campaign uuid.UUID, sid domain.SessionID) (*domain.OpenShop, error)
+	LoadShops(ctx context.Context, campaign uuid.UUID) ([]prep.Shop, error)
+	// Stock rolls fresh Stock for a Shop.
+	Stock(ctx context.Context, campaign uuid.UUID, shop prep.Shop, src dice.Source) ([]prep.StockItem, error)
+	ItemPrices(ctx context.Context, campaign uuid.UUID, slugs []string) (map[string]prep.ItemPrice, error)
+	// TradeBonus is a Character's Persuasion bonus.
+	TradeBonus(ctx context.Context, campaign, character uuid.UUID) (int, error)
+	GameDay(ctx context.Context, campaign uuid.UUID) (int, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -273,12 +290,15 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	inventory, err := h.Store.LoadInventory(ctx, s.CampaignID)
+	trade, err := h.loadTrade(ctx, s)
 	if err != nil {
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap, zones: zones, checks: checks, inventory: inventory}
+	st := &state{
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table,
+		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
+	}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
@@ -307,6 +327,26 @@ func (h *Hub) loadTable(ctx context.Context, s domain.Session) (domain.TableDisp
 		return t, nil, err
 	}
 	return t, &board.Map, nil
+}
+
+type trading struct {
+	inventory domain.Inventory
+	shop      *domain.OpenShop
+	day       int
+}
+
+// loadTrade reads the Campaign's Containers, the Shop the Session has open and the in-game day.
+func (h *Hub) loadTrade(ctx context.Context, s domain.Session) (trading, error) {
+	var out trading
+	var err error
+	if out.inventory, err = h.Store.LoadInventory(ctx, s.CampaignID); err != nil {
+		return out, err
+	}
+	if out.shop, err = h.Store.LoadOpenShop(ctx, s.CampaignID, s.ID); err != nil {
+		return out, err
+	}
+	out.day, err = h.Store.GameDay(ctx, s.CampaignID)
+	return out, err
 }
 
 // loadWorld reads the world map the Session travels, if any.
@@ -485,7 +525,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle:
 		return true
 	}
 	return false
@@ -540,6 +580,9 @@ func apply(s *state, w *Write) {
 		round = s.combat.Round
 	}
 	change(s, w)
+	if w.Day != nil {
+		s.day = *w.Day
+	}
 	applyZones(s, w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
@@ -619,6 +662,10 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved:
 		applyInventory(s, w)
+		return
+	case domain.ActionShopOpened, domain.ActionShopClosed, domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted,
+		domain.ActionHaggled, domain.ActionStockRolled:
+		applyShop(s, w)
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:

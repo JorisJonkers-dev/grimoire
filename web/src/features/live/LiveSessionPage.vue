@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -20,6 +20,7 @@ import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
 import MapBoard from './MapBoard.vue'
+import ShopPanel from './ShopPanel.vue'
 import ReactionPrompt from './ReactionPrompt.vue'
 import StartCombat from './StartCombat.vue'
 import TableRemote from './TableRemote.vue'
@@ -41,6 +42,7 @@ const worldMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'worl
 const scope = ref<'local' | 'world'>('local')
 const lootTables = useQuery(computed(() => ({ ...listLootTablesOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
 const fightLoot = ref('')
+const shops = useQuery(computed(() => ({ ...listShopsOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
 const encounterTables = useQuery(computed(() => ({ ...listEncounterTablesOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
 const characters = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId } }), enabled: isDM.value })))
 const live = shallowRef<ReturnType<typeof useLiveSession> | null>(null)
@@ -504,6 +506,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :dm="isDM"
         :me="campaign.data.value?.me.id ?? ''"
         :loot-tables="lootTables.data.value ?? []"
+        @send="(cmd) => live?.send(cmd)"
+      />
+      <ShopPanel
+        v-if="isDM || view?.shop"
+        :shop="view?.shop"
+        :shops="shops.data.value ?? []"
+        :containers="view?.inventory ?? []"
+        :dm="isDM"
+        :me="campaign.data.value?.me.id ?? ''"
+        :campaign-id="campaignId"
+        :game-day="view?.gameDay ?? 0"
         @send="(cmd) => live?.send(cmd)"
       />
       <EncounterChecks

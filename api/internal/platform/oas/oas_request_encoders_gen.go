@@ -122,6 +122,34 @@ func encodeCreateRollRequest(
 	return nil
 }
 
+func encodeCreateSettlementRequest(
+	req *SettlementInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCreateShopRequest(
+	req *ShopInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewCharacterRequest(
 	req *CharacterBuild,
 	r *http.Request,
@@ -312,6 +340,34 @@ func encodeUpdateMemberRequest(
 
 func encodeUpdateNpcRequest(
 	req *NpcInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateSettlementRequest(
+	req *SettlementInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateShopRequest(
+	req *ShopInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

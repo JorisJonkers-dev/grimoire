@@ -1,6 +1,6 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LiveCheck, LiveContainer, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
+import type { LiveCheck, LiveContainer, LiveShop, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
 import { fakeClock, mountApp } from '@/test/mountApp'
@@ -1323,5 +1323,107 @@ describe('inventory', () => {
     await wrapper.get('[data-testid="fight-loot"]').setValue('0190c7a8-0000-7000-8000-000000000071')
     await wrapper.get('[data-testid="end-combat"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'end_combat', lootTableId: '0190c7a8-0000-7000-8000-000000000071' })
+  })
+})
+
+describe('shopping', () => {
+  const STORE = '0190c7a8-0000-7000-8000-000000000081'
+  const ARIA = '0190c7a8-0000-7000-8000-000000000062'
+  const BROM = '0190c7a8-0000-7000-8000-000000000063'
+  const ARIA_PACK = '0190c7a8-0000-7000-8000-000000000072'
+  const BROM_PACK = '0190c7a8-0000-7000-8000-000000000073'
+  const ROLL = '0190c7a8-0000-7000-8000-000000000082'
+  const packs: LiveContainer[] = [
+    { id: ARIA_PACK, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, items: [{ slug: 'rope', name: 'Rope', count: 2, weightLb: 10 }], coins: [], weightLb: 10 },
+    { id: BROM_PACK, kind: 'character', label: 'Brom', characterId: BROM, ownerId: member.id, items: [], coins: [], weightLb: 0 },
+    { id: '0190c7a8-0000-7000-8000-000000000061', kind: 'party_stash', label: 'Party Stash', items: [], coins: [], weightLb: 0 },
+  ]
+  const open: LiveShop = {
+    id: STORE, name: 'Store', kind: 'general', settlement: 'Oakford', owner: 'Tamsin',
+    stock: [{ slug: 'rope', name: 'Rope', count: 3, priceCp: 150, weightLb: 5 }, { slug: 'torch', name: 'Torch', count: 10, priceCp: 1, weightLb: 1 }],
+    haggles: [],
+  }
+  const roll = (id: string) => ({
+    id, purpose: 'Haggle at Store', notation: '1d20', requestedBy: 'Joris', roller: { id: player.id, name: 'Aria' }, mine: true, canRoll: true,
+    status: 'pending', groups: [{ index: 0, count: 1, faces: 20, sign: 1 }], dice: [{ no: 0, group: 0, faces: 20, kept: false }], modifiers: [], createdAt: '2026-10-01T20:00:00Z',
+  })
+  const view = (extra: object) => ({ kind: 'view', seq: 2, view: { tokens: [], fog: false, visible: [], remembered: [], inventory: packs, gameDay: 4, ...extra } })
+
+  it('lets the DM open a shop, trade for any Character and close it', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/shops`]: () => [{ id: STORE, settlementId: OAK, name: 'Store', kind: 'general', markupPct: 50, haggleDc: 15, hagglePct: 10, restock: 'never', stockedDay: 0, stock: [], updatedAt: '2026-10-01T20:00:00Z' }],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'dm', { inventory: packs, gameDay: 4 }))
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="shop-panel"]')
+    expect(panel.get('[data-testid="game-day"]').text()).toBe('Day 4')
+    expect(panel.get('[data-testid="open-shop"]').attributes('disabled')).toBeDefined()
+    await panel.get('[data-testid="shop-choice"]').setValue(STORE)
+    await panel.get('[data-testid="open-shop"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'open_shop', shopId: STORE })
+    s.receive(view({ shop: open }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="shop-open"]').text()).toBe('Store · general in Oakford · kept by Tamsin')
+    expect(wrapper.get('[data-testid="shop-buyer"]').findAll('option').map((o) => o.text())).toEqual(['Aria', 'Brom'])
+    await wrapper.get('[data-testid="shop-buyer"]').setValue(BROM_PACK)
+    await wrapper.get('[aria-label="How many Torch"]').setValue(4)
+    await wrapper.get('[data-testid="buy-torch"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'buy', fromId: BROM_PACK, itemSlug: 'torch', count: 4 })
+    await wrapper.get('[data-testid="buy-rope"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'buy', fromId: BROM_PACK, itemSlug: 'rope', count: 1 })
+    expect(wrapper.find('[data-testid="sell-item"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="haggle"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'haggle', fromId: BROM_PACK })
+    s.receive({ ...view({ shop: { ...open, stock: [] } }), seq: 3 })
+    await flushPromises()
+    expect(wrapper.get('[aria-label="Stock of Store"]').text()).toBe('Sold out.')
+    await wrapper.get('[data-testid="close-shop"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'close_shop' })
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('lets a player haggle, see the price move, buy and sell for their own Character', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/rolls/`]: (u) => roll(u.pathname.split('/')[6] ?? ''),
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party', { inventory: packs }))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="shop-panel"]').exists()).toBe(false)
+    s.receive(view({ shop: open }))
+    await flushPromises()
+    const panel = wrapper.get('[data-testid="shop-panel"]')
+    expect(panel.find('[data-testid="open-shop"]').exists()).toBe(false)
+    expect(panel.find('[data-testid="shop-buyer"]').exists()).toBe(false)
+    expect(panel.get('[data-testid="stock-rope"] [data-testid="price"]').text()).toBe('1 gp 5 sp')
+    await panel.get('[data-testid="haggle"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'haggle', fromId: ARIA_PACK })
+    s.receive({ ...view({ shop: { ...open, haggles: [{ characterId: ARIA, rollId: ROLL }, { characterId: BROM, rollId: '0190c7a8-0000-7000-8000-000000000083' }] } }), seq: 3 })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="haggle-pending"]').text()).toBe('Haggling…')
+    expect(wrapper.findAll('[data-testid="shop-panel"] [data-testid="roll-card"]')).toHaveLength(1)
+    s.receive({ ...view({ shop: { ...open, haggles: [{ characterId: ARIA, rollId: ROLL, adjustPct: -10 }] } }), seq: 4 })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="haggle-result"]').text()).toBe('Haggled: 10% off')
+    expect(wrapper.get('[data-testid="stock-rope"] [data-testid="price"]').text()).toBe('1 gp 3 sp 5 cp')
+    expect(wrapper.findAll('[data-testid="shop-panel"] [data-testid="roll-card"]')).toHaveLength(0)
+    await wrapper.get('[data-testid="buy-rope"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'buy', fromId: ARIA_PACK, itemSlug: 'rope', count: 1 })
+    expect(wrapper.get('[data-testid="sell"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="sell-item"]').setValue('rope')
+    await wrapper.get('[data-testid="sell-count"]').setValue(2)
+    await wrapper.get('[data-testid="sell"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'sell', fromId: ARIA_PACK, itemSlug: 'rope', count: 2 })
+    s.receive({ ...view({ shop: { ...open, haggles: [{ characterId: ARIA, adjustPct: 20 }] } }), seq: 5 })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="haggle-result"]').text()).toBe('Haggled: 20% dearer')
+    s.receive({ ...view({ shop: { ...open, haggles: [{ characterId: ARIA, adjustPct: 0 }] } }), seq: 6 })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="haggle-result"]').text()).toBe('Haggled: no change')
+    await expectAccessible(wrapper.element as Element)
   })
 })

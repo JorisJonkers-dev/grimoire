@@ -168,6 +168,15 @@ func (s *Store) logItems(ctx context.Context, actionID uuid.UUID, w live.Write) 
 	if mv := w.Move; mv != nil {
 		lines = append(lines, line{from: mv.FromLabel, to: mv.ToLabel, item: mv.Item, coin: mv.Coin, n: mv.Count})
 	}
+	if t := w.Trade; t != nil && w.Kind == domain.ActionItemBought {
+		lines = append(lines, line{from: t.Shop, to: t.Label, item: t.Item, n: t.Count}, line{from: t.Label, to: t.Shop, coin: "cp", n: t.PriceCP})
+	}
+	if t := w.Trade; t != nil && w.Kind == domain.ActionItemSold {
+		lines = append(lines, line{from: t.Label, to: t.Shop, item: t.Item, n: t.Count})
+		if t.PriceCP > 0 {
+			lines = append(lines, line{from: t.Shop, to: t.Label, coin: "cp", n: t.PriceCP})
+		}
+	}
 	for i, l := range lines {
 		p := queries.InsertItemEventParams{ActionID: actionID, Position: int32(i), FromLabel: l.from, ToLabel: l.to, Count: int32(l.n)}
 		p.ItemSlug = pgtype.Text{String: l.item, Valid: l.item != ""}

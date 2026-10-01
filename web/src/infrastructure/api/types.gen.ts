@@ -629,6 +629,78 @@ export type LootTable = {
 };
 
 /**
+ * A Settlement as the DM writes it; locationId places it on a world map.
+ */
+export type SettlementInput = {
+    name: string;
+    size: 'hamlet' | 'village' | 'town' | 'city';
+    wealth: 'poor' | 'modest' | 'comfortable' | 'wealthy';
+    locationId?: Id;
+};
+
+/**
+ * A named inhabited place with a size and a wealth tier.
+ */
+export type Settlement = {
+    id: Id;
+    name: string;
+    size: 'hamlet' | 'village' | 'town' | 'city';
+    wealth: 'poor' | 'modest' | 'comfortable' | 'wealthy';
+    locationId?: Id;
+    updatedAt: string;
+};
+
+/**
+ * When a Shop restocks from its Loot Table.
+ */
+export type ShopRestock = 'never' | 'long_rest' | 'days';
+
+/**
+ * A Shop as the DM writes it. restockDays is required when it restocks every few days.
+ */
+export type ShopInput = {
+    settlementId: Id;
+    name: string;
+    kind: string;
+    ownerId?: Id;
+    markupPct: number;
+    haggleDc: number;
+    hagglePct: number;
+    lootTableId?: Id;
+    restock: ShopRestock;
+    restockDays?: number;
+};
+
+/**
+ * How many of an item a Shop sells and its asking price in copper.
+ */
+export type StockItem = {
+    itemSlug: Slug;
+    quantity: number;
+    priceCp: number;
+};
+
+/**
+ * A trader in a Settlement with its Stock; stockedDay is the in-game day it last restocked.
+ */
+export type Shop = {
+    id: Id;
+    settlementId: Id;
+    name: string;
+    kind: string;
+    ownerId?: Id;
+    markupPct: number;
+    haggleDc: number;
+    hagglePct: number;
+    lootTableId?: Id;
+    restock: ShopRestock;
+    restockDays?: number;
+    stockedDay: number;
+    stock: Array<StockItem>;
+    updatedAt: string;
+};
+
+/**
  * One recorded version of a piece of prep data.
  */
 export type Revision = {
@@ -939,7 +1011,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1017,6 +1089,7 @@ export type LiveCommand = {
     itemSlug?: Slug;
     coin?: Coin;
     count?: number;
+    shopId?: Id;
 };
 
 /**
@@ -1051,6 +1124,39 @@ export type LiveItem = {
 export type LiveCoins = {
     coin: Coin;
     count: number;
+};
+
+/**
+ * The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
+ */
+export type LiveShop = {
+    id: Id;
+    name: string;
+    kind: string;
+    settlement: string;
+    owner?: string;
+    stock: Array<LiveStock>;
+    haggles: Array<LiveHaggle>;
+};
+
+/**
+ * One item the open Shop sells, and its asking price in copper before haggling.
+ */
+export type LiveStock = {
+    slug: Slug;
+    name: string;
+    count: number;
+    priceCp: number;
+    weightLb: number;
+};
+
+/**
+ * A Character's haggling with the open Shop. While the roll is out it names the roll; once rolled, the price adjustment in percent.
+ */
+export type LiveHaggle = {
+    characterId: Id;
+    rollId?: Id;
+    adjustPct?: number;
 };
 
 /**
@@ -1446,6 +1552,11 @@ export type LiveView = {
     perception?: Array<LivePerception>;
     checks?: Array<LiveCheck>;
     inventory?: Array<LiveContainer>;
+    shop?: LiveShop;
+    /**
+     * Days passed in the Campaign; a long rest or travel moves it on.
+     */
+    gameDay?: number;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;
@@ -1706,6 +1817,16 @@ export type MapId = Id;
  * Loot Table id.
  */
 export type LootTableId = Id;
+
+/**
+ * Settlement id.
+ */
+export type SettlementId = Id;
+
+/**
+ * Shop id.
+ */
+export type ShopId = Id;
 
 /**
  * Encounter Pool id.
@@ -3454,6 +3575,492 @@ export type RestoreLootTableRevisionResponses = {
 };
 
 export type RestoreLootTableRevisionResponse = RestoreLootTableRevisionResponses[keyof RestoreLootTableRevisionResponses];
+
+export type ListSettlementsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/settlements';
+};
+
+export type ListSettlementsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSettlementsError = ListSettlementsErrors[keyof ListSettlementsErrors];
+
+export type ListSettlementsResponses = {
+    /**
+     * The Settlements.
+     */
+    200: Array<Settlement>;
+};
+
+export type ListSettlementsResponse = ListSettlementsResponses[keyof ListSettlementsResponses];
+
+export type CreateSettlementData = {
+    body: SettlementInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/settlements';
+};
+
+export type CreateSettlementErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateSettlementError = CreateSettlementErrors[keyof CreateSettlementErrors];
+
+export type CreateSettlementResponses = {
+    /**
+     * The new Settlement.
+     */
+    201: Settlement;
+};
+
+export type CreateSettlementResponse = CreateSettlementResponses[keyof CreateSettlementResponses];
+
+export type DeleteSettlementData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Settlement id.
+         */
+        settlementId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/settlements/{settlementId}';
+};
+
+export type DeleteSettlementErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteSettlementError = DeleteSettlementErrors[keyof DeleteSettlementErrors];
+
+export type DeleteSettlementResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteSettlementResponse = DeleteSettlementResponses[keyof DeleteSettlementResponses];
+
+export type UpdateSettlementData = {
+    body: SettlementInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Settlement id.
+         */
+        settlementId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/settlements/{settlementId}';
+};
+
+export type UpdateSettlementErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateSettlementError = UpdateSettlementErrors[keyof UpdateSettlementErrors];
+
+export type UpdateSettlementResponses = {
+    /**
+     * The Settlement.
+     */
+    200: Settlement;
+};
+
+export type UpdateSettlementResponse = UpdateSettlementResponses[keyof UpdateSettlementResponses];
+
+export type ListSettlementRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Settlement id.
+         */
+        settlementId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions';
+};
+
+export type ListSettlementRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSettlementRevisionsError = ListSettlementRevisionsErrors[keyof ListSettlementRevisionsErrors];
+
+export type ListSettlementRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<Revision>;
+};
+
+export type ListSettlementRevisionsResponse = ListSettlementRevisionsResponses[keyof ListSettlementRevisionsResponses];
+
+export type RestoreSettlementRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Settlement id.
+         */
+        settlementId: Id;
+        /**
+         * Revision number.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreSettlementRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreSettlementRevisionError = RestoreSettlementRevisionErrors[keyof RestoreSettlementRevisionErrors];
+
+export type RestoreSettlementRevisionResponses = {
+    /**
+     * The restored Settlement.
+     */
+    200: Settlement;
+};
+
+export type RestoreSettlementRevisionResponse = RestoreSettlementRevisionResponses[keyof RestoreSettlementRevisionResponses];
+
+export type ListShopsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops';
+};
+
+export type ListShopsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListShopsError = ListShopsErrors[keyof ListShopsErrors];
+
+export type ListShopsResponses = {
+    /**
+     * The Shops.
+     */
+    200: Array<Shop>;
+};
+
+export type ListShopsResponse = ListShopsResponses[keyof ListShopsResponses];
+
+export type CreateShopData = {
+    body: ShopInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops';
+};
+
+export type CreateShopErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateShopError = CreateShopErrors[keyof CreateShopErrors];
+
+export type CreateShopResponses = {
+    /**
+     * The new Shop.
+     */
+    201: Shop;
+};
+
+export type CreateShopResponse = CreateShopResponses[keyof CreateShopResponses];
+
+export type DeleteShopData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Shop id.
+         */
+        shopId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops/{shopId}';
+};
+
+export type DeleteShopErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteShopError = DeleteShopErrors[keyof DeleteShopErrors];
+
+export type DeleteShopResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteShopResponse = DeleteShopResponses[keyof DeleteShopResponses];
+
+export type UpdateShopData = {
+    body: ShopInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Shop id.
+         */
+        shopId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops/{shopId}';
+};
+
+export type UpdateShopErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateShopError = UpdateShopErrors[keyof UpdateShopErrors];
+
+export type UpdateShopResponses = {
+    /**
+     * The Shop.
+     */
+    200: Shop;
+};
+
+export type UpdateShopResponse = UpdateShopResponses[keyof UpdateShopResponses];
+
+export type ListShopRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Shop id.
+         */
+        shopId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops/{shopId}/revisions';
+};
+
+export type ListShopRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListShopRevisionsError = ListShopRevisionsErrors[keyof ListShopRevisionsErrors];
+
+export type ListShopRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<Revision>;
+};
+
+export type ListShopRevisionsResponse = ListShopRevisionsResponses[keyof ListShopRevisionsResponses];
+
+export type RestoreShopRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Shop id.
+         */
+        shopId: Id;
+        /**
+         * Revision number.
+         */
+        revisionNo: number;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore';
+};
+
+export type RestoreShopRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RestoreShopRevisionError = RestoreShopRevisionErrors[keyof RestoreShopRevisionErrors];
+
+export type RestoreShopRevisionResponses = {
+    /**
+     * The restored Shop.
+     */
+    200: Shop;
+};
+
+export type RestoreShopRevisionResponse = RestoreShopRevisionResponses[keyof RestoreShopRevisionResponses];
+
+export type RerollStockData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Shop id.
+         */
+        shopId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/shops/{shopId}/stock';
+};
+
+export type RerollStockErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RerollStockError = RerollStockErrors[keyof RerollStockErrors];
+
+export type RerollStockResponses = {
+    /**
+     * The restocked Shop.
+     */
+    200: Shop;
+};
+
+export type RerollStockResponse = RerollStockResponses[keyof RerollStockResponses];
 
 export type ListLocationsData = {
     body?: never;

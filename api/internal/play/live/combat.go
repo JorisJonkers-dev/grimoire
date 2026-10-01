@@ -171,6 +171,10 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.checkRolled(c)
 		return true
 	}
+	if character, ok := r.st.pendingHaggle(id); ok {
+		r.haggled(character, id)
+		return true
+	}
 	return false
 }
 
@@ -187,6 +191,20 @@ func (s *state) waitingRolls() []domain.RollID {
 	for _, c := range s.checks {
 		if c.Status == prep.CheckPending {
 			out = append(out, domain.RollID(*c.RollID))
+		}
+	}
+	return append(out, s.haggleRolls()...)
+}
+
+// haggleRolls are the haggling rolls still out at the open Shop.
+func (s *state) haggleRolls() []domain.RollID {
+	if s.shop == nil {
+		return nil
+	}
+	var out []domain.RollID
+	for _, h := range s.shop.Haggles {
+		if h.RollID != nil && h.Adjust == nil {
+			out = append(out, *h.RollID)
 		}
 	}
 	return out

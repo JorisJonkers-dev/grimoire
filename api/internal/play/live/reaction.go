@@ -214,10 +214,12 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
 		r.encounterChecks(prep.TriggerLongRest, prep.DueNextRest, actor, c)
+		r.restock(true, actor, c)
 	case w.Kind == domain.ActionRestTaken:
 		r.encounterChecks(prep.TriggerShortRest, prep.DueNextRest, actor, c)
 	case w.Kind == domain.ActionTravelLeg:
 		r.encounterChecks(prep.TriggerTravelLeg, prep.DueNextTravel, actor, c)
+		r.restock(false, actor, c)
 	}
 	f := r.st.combat
 	if f == nil {

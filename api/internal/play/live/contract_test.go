@@ -73,6 +73,16 @@ func samples() contract {
 		Items: []live.ItemView{{Slug: "rope", Name: "Rope", Count: 2, WeightLb: 10}}, Coins: []live.CoinView{{Coin: "gp", Count: 50}}, WeightLb: 11, CapacityLb: 120,
 	}, {ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Coins: []live.CoinView{}, Encumbered: false}}
 	view.Checks = []live.CheckView{{ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12}}
+	off := -10
+	view.Shop = &live.ShopView{
+		ID: "0190c7a8-0000-7000-8000-000000000033", Name: "Store", Kind: "general", Settlement: "Oakford", Owner: "Tamsin",
+		Stock: []live.StockView{{Slug: "rope", Name: "Rope", Count: 3, PriceCP: 150, WeightLb: 5}},
+		Haggles: []live.HaggleView{
+			{CharacterID: "0190c7a8-0000-7000-8000-000000000012", AdjustPct: &off},
+			{CharacterID: "0190c7a8-0000-7000-8000-000000000034", RollID: "0190c7a8-0000-7000-8000-000000000035"},
+		},
+	}
+	view.GameDay = 3
 	dmView := *view
 	noticed, target := true, "0190c7a8-0000-7000-8000-000000000013"
 	dmView.Checks = []live.CheckView{{
@@ -144,6 +154,11 @@ func samples() contract {
 			{Nonce: "n53", Kind: live.CmdMoveItem, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 2},
 			{Nonce: "n54", Kind: live.CmdMoveCoins, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", Coin: "gp", Count: 50},
 			{Nonce: "n55", Kind: live.CmdEndCombat, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
+			{Nonce: "n56", Kind: live.CmdOpenShop, ShopID: "0190c7a8-0000-7000-8000-000000000033"},
+			{Nonce: "n57", Kind: live.CmdBuy, FromID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 1},
+			{Nonce: "n58", Kind: live.CmdSell, FromID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 1},
+			{Nonce: "n59", Kind: live.CmdHaggle, FromID: "0190c7a8-0000-7000-8000-000000000030"},
+			{Nonce: "n60", Kind: live.CmdCloseShop},
 		},
 		Updates: []live.Update{
 			{

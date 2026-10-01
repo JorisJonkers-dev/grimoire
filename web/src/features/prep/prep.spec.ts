@@ -274,3 +274,172 @@ describe('loot tables page', () => {
     expect(wrapper.get('[data-testid="loot-refused"]').text()).toBe('Only the DM can prepare loot.')
   })
 })
+
+describe('settlements and shops page', () => {
+  const OAK = '0190c7a8-0000-7000-8000-000000000051'
+  const MILL = '0190c7a8-0000-7000-8000-000000000052'
+  const STORE = '0190c7a8-0000-7000-8000-000000000053'
+  const FORGE = '0190c7a8-0000-7000-8000-000000000054'
+  const NODE = '0190c7a8-0000-7000-8000-000000000055'
+  const NPC = '0190c7a8-0000-7000-8000-000000000056'
+  const HOARD = '0190c7a8-0000-7000-8000-000000000057'
+  const at = '2026-10-01T20:00:00Z'
+  const oak = { id: OAK, name: 'Oakford', size: 'town', wealth: 'modest', locationId: NODE, updatedAt: at }
+  const mill = { id: MILL, name: 'Mill', size: 'hamlet', wealth: 'poor', updatedAt: at }
+  const store = {
+    id: STORE, settlementId: OAK, name: 'Store', kind: 'general', ownerId: NPC, markupPct: 50, haggleDc: 15, hagglePct: 10, lootTableId: HOARD,
+    restock: 'days', restockDays: 3, stockedDay: 2, stock: [{ itemSlug: 'rope', quantity: 3, priceCp: 150 }], updatedAt: at,
+  }
+  const forge = { id: FORGE, settlementId: OAK, name: 'Forge', kind: 'smith', markupPct: 0, haggleDc: 12, hagglePct: 5, restock: 'never', stockedDay: 0, stock: [], updatedAt: at }
+  const shopBase = `${base}/shops`
+  const townBase = `${base}/settlements`
+  const lists = {
+    [`${base}/locations`]: () => [{ id: NODE, name: 'Oakford crossing', mapName: 'Realm' }],
+    [`${base}/npcs`]: () => [{ id: NPC, name: 'Tamsin', title: '', description: '', dmNotes: '', disposition: 'friendly', updatedAt: at }],
+    [`${base}/loot-tables`]: () => [{ id: HOARD, name: 'Hoard', rolls: 1, entries: [], updatedAt: at }],
+  }
+
+  it('keeps settlements with their history', async () => {
+    const writes: string[] = []
+    const { wrapper } = await mountApp(`/campaigns/${ID}/shops`, {
+      ...lists,
+      [`${townBase}/${OAK}/revisions/1/restore`]: () => (writes.push('restore'), oak),
+      [`${townBase}/${OAK}/revisions`]: () => revisions,
+      [`${townBase}/${OAK}`]: async (_u, req) => {
+        writes.push(`${req.method} ${req.method === 'PUT' ? JSON.stringify(await req.json()) : ''}`)
+        return req.method === 'DELETE' ? jsonResponse({ type: 'about:blank', title: 'x', status: 422, detail: 'a shop still stands in this settlement' }, 422) : oak
+      },
+      [townBase]: async (_u, req) => {
+        if (req.method === 'POST') {
+          writes.push(`POST ${JSON.stringify(await req.json())}`)
+          return mill
+        }
+        return [oak, mill]
+      },
+      [shopBase]: () => [],
+    })
+    expect(wrapper.get('[data-testid="settlement-Oakford"] p').text()).toBe('Oakford · modest town · at Oakford crossing')
+    expect(wrapper.get('[data-testid="settlement-Mill"] p').text()).toBe('Mill · poor hamlet')
+    await wrapper.get('[data-testid="new-settlement"]').trigger('click')
+    await wrapper.get('[data-testid="settlement-editor"]').findAll('button').at(-1)?.trigger('click')
+    expect(wrapper.find('[data-testid="settlement-editor"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="new-settlement"]').trigger('click')
+    const editor = wrapper.get('[data-testid="settlement-editor"]')
+    expect(editor.get('[data-testid="save-settlement"]').attributes('disabled')).toBeDefined()
+    await editor.get('[data-testid="settlement-name"]').setValue(' Greyfen ')
+    await editor.get('[data-testid="settlement-size"]').setValue('city')
+    await editor.get('[data-testid="settlement-wealth"]').setValue('wealthy')
+    await editor.get('[data-testid="settlement-location"]').setValue(NODE)
+    await expectAccessible(wrapper.element as Element)
+    await editor.trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(writes.at(-1)?.slice(5) ?? '{}')).toEqual({ name: 'Greyfen', size: 'city', wealth: 'wealthy', locationId: NODE })
+    expect(wrapper.find('[data-testid="settlement-editor"]').exists()).toBe(false)
+    await wrapper.get('[aria-label="Edit Oakford"]').trigger('click')
+    await wrapper.get('[data-testid="settlement-location"]').setValue('')
+    await wrapper.get('[data-testid="settlement-editor"]').trigger('submit')
+    await flushPromises()
+    expect(writes.at(-1)).toBe('PUT {"name":"Oakford","size":"town","wealth":"modest"}')
+    await wrapper.get('[aria-label="Edit Mill"]').trigger('click')
+    await wrapper.get('[data-testid="settlement-editor"]').findAll('button').at(-1)?.trigger('click')
+    expect(wrapper.find('[data-testid="settlement-editor"]').exists()).toBe(false)
+    await wrapper.get('[aria-label="Delete Oakford"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="shops-error"]').text()).toBe('Deleting the settlement: a shop still stands in this settlement')
+    await wrapper.get('[aria-label="History of Oakford"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[aria-label="Restore Oakford to revision 1"]').trigger('click')
+    await flushPromises()
+    expect(writes.at(-1)).toBe('restore')
+    expect(wrapper.find('[data-testid="shops-error"]').exists()).toBe(false)
+    await wrapper.get('[aria-label="History of Oakford"]').trigger('click')
+    expect(wrapper.find('[aria-label="Restore Oakford to revision 1"]').exists()).toBe(false)
+  })
+
+  it('keeps shops with their stock, rerolls and history', async () => {
+    const writes: string[] = []
+    const { wrapper } = await mountApp(`/campaigns/${ID}/shops`, {
+      ...lists,
+      [`${shopBase}/${STORE}/revisions/1/restore`]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 503 }, 503),
+      [`${shopBase}/${STORE}/revisions`]: () => revisions,
+      [`${shopBase}/${STORE}/stock`]: () => (writes.push('reroll'), store),
+      [`${shopBase}/${STORE}`]: async (_u, req) => {
+        writes.push(`${req.method} ${req.method === 'PUT' ? JSON.stringify(await req.json()) : ''}`)
+        return req.method === 'DELETE' ? jsonResponse({ type: 'about:blank', title: 'x', status: 503 }, 503) : store
+      },
+      [`${shopBase}/${FORGE}`]: (_u, req) => (writes.push(`${req.method} forge`), forge),
+      [shopBase]: async (_u, req) => {
+        if (req.method === 'POST') {
+          writes.push(`POST ${JSON.stringify(await req.json())}`)
+          return forge
+        }
+        return [store, forge, { ...forge, id: '0190c7a8-0000-7000-8000-000000000058', name: 'Tannery', restock: 'long_rest' }]
+      },
+      [townBase]: () => [oak],
+    })
+    const shop = wrapper.get('[data-testid="shop-Store"]')
+    expect(shop.get('p').text()).toBe('Store · general · kept by Tamsin · +50% · haggle DC 15 (±10%) · restocks every 3 days')
+    expect(shop.get('[data-testid="stock-Store-rope"]').text()).toBe('3× rope · 1 gp 5 sp')
+    expect(wrapper.get('[data-testid="shop-Forge"]').text()).toContain('never restocks')
+    expect(wrapper.get('[data-testid="shop-Forge"]').text()).toContain('Nothing in stock.')
+    expect(wrapper.get('[data-testid="shop-Tannery"]').text()).toContain('restocks after a long rest')
+    expect(wrapper.get('[aria-label="Reroll stock of Forge"]').attributes('disabled')).toBeDefined()
+    await shop.get('[aria-label="Reroll stock of Store"]').trigger('click')
+    await flushPromises()
+    expect(writes.at(-1)).toBe('reroll')
+    await wrapper.get('[data-testid="new-shop"]').trigger('click')
+    const editor = wrapper.get('[data-testid="shop-editor"]')
+    await editor.get('[data-testid="shop-name"]').setValue(' Smithy ')
+    await editor.get('[data-testid="shop-settlement"]').setValue(OAK)
+    await editor.get('[data-testid="shop-kind"]').setValue(' smith ')
+    await editor.get('[data-testid="shop-owner"]').setValue(NPC)
+    await editor.get('[data-testid="shop-markup"]').setValue(25)
+    await editor.get('[data-testid="shop-haggle-dc"]').setValue(14)
+    await editor.get('[data-testid="shop-haggle-pct"]').setValue(20)
+    await editor.get('[data-testid="shop-loot"]').setValue(HOARD)
+    await editor.get('[data-testid="shop-restock"]').setValue('days')
+    await editor.get('[data-testid="shop-restock-days"]').setValue(5)
+    await expectAccessible(wrapper.element as Element)
+    await editor.trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(writes.at(-1)?.slice(5) ?? '{}')).toEqual({
+      settlementId: OAK, name: 'Smithy', kind: 'smith', ownerId: NPC, markupPct: 25, haggleDc: 14, hagglePct: 20, lootTableId: HOARD, restock: 'days', restockDays: 5,
+    })
+    await wrapper.get('[data-testid="new-shop"]').trigger('click')
+    await wrapper.get('[data-testid="shop-editor"]').findAll('button').at(-1)?.trigger('click')
+    expect(wrapper.find('[data-testid="shop-editor"]').exists()).toBe(false)
+    await wrapper.get('[aria-label="Edit Forge"]').trigger('click')
+    await wrapper.get('[data-testid="shop-editor"]').trigger('submit')
+    await flushPromises()
+    expect(writes.at(-1)).toBe('PUT forge')
+    await wrapper.get('[aria-label="Edit Store"]').trigger('click')
+    await wrapper.get('[data-testid="shop-restock"]').setValue('long_rest')
+    await wrapper.get('[data-testid="shop-editor"]').trigger('submit')
+    await flushPromises()
+    expect(JSON.parse(writes.at(-1)?.slice(4) ?? '{}')).toMatchObject({ restock: 'long_rest', lootTableId: HOARD })
+    expect(writes.at(-1)).not.toContain('restockDays')
+    await wrapper.get('[aria-label="Edit Store"]').trigger('click')
+    await wrapper.get('[data-testid="shop-editor"]').findAll('button').at(-1)?.trigger('click')
+    await wrapper.get('[aria-label="Delete Store"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="shops-error"]').text()).toBe('Deleting the shop failed. Try again shortly.')
+    await wrapper.get('[aria-label="History of Store"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[aria-label="Restore Store to revision 1"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="shops-error"]').text()).toBe('Restoring the shop failed. Try again shortly.')
+  })
+
+  it('needs a settlement before a shop, and tells players shops are the DM\'s', async () => {
+    const empty = await mountApp(`/campaigns/${ID}/shops`, { ...lists, [townBase]: () => [], [shopBase]: () => [] })
+    expect(empty.wrapper.get('[data-testid="new-shop"]').attributes('disabled')).toBeDefined()
+    const { wrapper } = await mountApp(`/campaigns/${ID}/shops`, {
+      [townBase]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 403 }, 403),
+      [shopBase]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 403 }, 403),
+      [`${base}/locations`]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 403 }, 403),
+      [`${base}/npcs`]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 403 }, 403),
+      [`${base}/loot-tables`]: () => jsonResponse({ type: 'about:blank', title: 'x', status: 403 }, 403),
+    })
+    expect(wrapper.get('[data-testid="shops-refused"]').text()).toBe('Only the DM can prepare settlements and shops.')
+  })
+})
