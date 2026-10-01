@@ -2438,6 +2438,15 @@ func (s *CampaignRefHeaders) Validate() error {
 	return nil
 }
 
+func (s CampaignRuleset) Validate() error {
+	switch s {
+	case "srd-2024":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *CampaignSummary) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer

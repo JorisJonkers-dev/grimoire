@@ -3,7 +3,7 @@ import { useInfiniteQuery, useMutation } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createCampaignMutation, listCampaignsInfiniteOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { CampaignPage, Ruleset } from '@/infrastructure/api/types.gen'
+import type { CampaignPage } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 
 const router = useRouter()
@@ -18,12 +18,11 @@ const items = computed(() => campaigns.data.value?.pages.flatMap((p) => p.items)
 
 const name = ref('')
 const displayName = ref('')
-const ruleset = ref<Ruleset>('srd-2024')
 const create = useMutation(createCampaignMutation())
 const canCreate = computed(() => name.value.trim() !== '' && displayName.value.trim() !== '' && !create.isPending.value)
 function submit() {
   create.mutate(
-    { body: { name: name.value.trim(), displayName: displayName.value.trim(), ruleset: ruleset.value } },
+    { body: { name: name.value.trim(), displayName: displayName.value.trim() } },
     { onSuccess: (campaign) => void router.push({ name: 'campaign', params: { id: campaign.id } }) },
   )
 }
@@ -40,7 +39,7 @@ function submit() {
         <li v-for="c in items" :key="c.id">
           <RouterLink :to="{ name: 'campaign', params: { id: c.id } }" class="row">
             <span class="name">{{ c.name }}</span>
-            <span class="meta">{{ c.memberCount }} {{ c.memberCount === 1 ? 'member' : 'members' }} · {{ c.ruleset === 'srd-2024' ? '2024 rules' : '2014 rules' }}</span>
+            <span class="meta">{{ c.memberCount }} {{ c.memberCount === 1 ? 'member' : 'members' }}</span>
             <span class="g-tag role">{{ c.myRole === 'dm' ? 'DM' : 'Player' }}</span>
           </RouterLink>
         </li>
@@ -59,13 +58,6 @@ function submit() {
       <label class="g-field">
         <span>Your name at this table</span>
         <input v-model="displayName" maxlength="60" required data-testid="campaign-display-name" />
-      </label>
-      <label class="g-field">
-        <span>Rules</span>
-        <select v-model="ruleset">
-          <option value="srd-2024">2024 rules</option>
-          <option value="srd-2014">2014 rules</option>
-        </select>
       </label>
       <p v-if="create.isError.value" role="alert" class="g-alert">The campaign could not be created. Check the names and try again.</p>
       <GButton type="submit" variant="primary" :disabled="!canCreate">Start as DM</GButton>

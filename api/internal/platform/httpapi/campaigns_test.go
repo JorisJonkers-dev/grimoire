@@ -145,8 +145,8 @@ func TestCampaignLifecycleOverHTTP(t *testing.T) {
 	if player["isMe"] != true {
 		t.Fatalf("player row = %v", player)
 	}
-	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2014","reactionTimeoutS":5,"highGround":true}`)
-	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2014" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true {
+	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id, "dm", `{"name":"Greyfen","ruleset":"srd-2024","reactionTimeoutS":5,"highGround":true}`)
+	if body := decode(t, rec); rec.Code != 200 || body["ruleset"] != "srd-2024" || body["reactionTimeoutS"] != float64(5) || body["highGround"] != true {
 		t.Fatalf("update: %d %s", rec.Code, rec.Body.String())
 	}
 	rec = call(h, http.MethodPatch, "/api/v1/campaigns/"+id+"/members/"+playerID, "dm", `{"role":"dm"}`)
@@ -244,6 +244,12 @@ func TestCampaignEdgeCasesOverHTTP(t *testing.T) {
 	}
 	if rec := call(h, http.MethodPost, "/api/v1/campaigns", "dm", `{"name":"  ","displayName":"x"}`); rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("blank name: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodPost, "/api/v1/campaigns", "dm", `{"name":"Old rules","displayName":"x","ruleset":"srd-2014"}`); rec.Code != http.StatusBadRequest {
+		t.Errorf("2014 ruleset accepted for a new campaign: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodPatch, base, "dm", `{"ruleset":"srd-2014"}`); rec.Code != http.StatusBadRequest {
+		t.Errorf("campaign switched to the 2014 ruleset: %d", rec.Code)
 	}
 	unknown := `{"token":"` + strings.Repeat("x", 43) + `"}`
 	if rec := call(h, http.MethodPost, "/api/v1/invites/preview", "someone", unknown); rec.Code != http.StatusNotFound {

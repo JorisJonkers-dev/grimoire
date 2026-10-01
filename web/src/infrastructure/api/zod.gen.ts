@@ -1814,25 +1814,6 @@ export const zCampaign = z.object({
 });
 
 /**
- * A new Campaign.
- */
-export const zCampaignCreate = z.object({
-    name: zCampaignName,
-    ruleset: zRuleset.optional(),
-    displayName: zDisplayName
-});
-
-/**
- * Settings to change; omitted fields stay as they are.
- */
-export const zCampaignUpdate = z.object({
-    name: zCampaignName.optional(),
-    ruleset: zRuleset.optional(),
-    reactionTimeoutS: zReactionTimeout.optional(),
-    highGround: z.boolean().optional()
-});
-
-/**
  * A Character's sheet with every value derived by the rules.
  */
 export const zCharacterSheet = z.object({
@@ -1887,6 +1868,30 @@ export const zBuilderOptions = z.object({
     armor: z.array(zArmorOptionItem).max(100),
     weapons: z.array(zWeaponLine).max(200),
     skills: z.array(zSkillChoice).max(18)
+});
+
+/**
+ * The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the compendium.
+ */
+export const zCampaignRuleset = z.enum(['srd-2024']);
+
+/**
+ * A new Campaign.
+ */
+export const zCampaignCreate = z.object({
+    name: zCampaignName,
+    ruleset: zCampaignRuleset.optional(),
+    displayName: zDisplayName
+});
+
+/**
+ * Settings to change; omitted fields stay as they are.
+ */
+export const zCampaignUpdate = z.object({
+    name: zCampaignName.optional(),
+    ruleset: zCampaignRuleset.optional(),
+    reactionTimeoutS: zReactionTimeout.optional(),
+    highGround: z.boolean().optional()
 });
 
 /**

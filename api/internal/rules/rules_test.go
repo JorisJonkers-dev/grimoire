@@ -173,40 +173,32 @@ func TestArmorClassAndHP(t *testing.T) {
 
 func TestResourcesByCaster(t *testing.T) {
 	t.Parallel()
-	slots := func(class string, year int) int {
-		for _, r := range rules.FirstLevelResources(class, 8, year) {
+	slots := func(class string) int {
+		for _, r := range rules.FirstLevelResources(class, 8) {
 			if r.Key == "spell-slots-1" {
 				return r.Max
 			}
 		}
 		return 0
 	}
-	cases := map[string]int{"wizard/2024": 2, "paladin/2024": 2, "paladin/2014": 0, "warlock/2014": 1, "fighter/2024": 0}
-	for key, want := range cases {
-		class, year, _ := strings.Cut(key, "/")
-		y := 2024
-		if year == "2014" {
-			y = 2014
-		}
-		if got := slots(class, y); got != want {
-			t.Errorf("%s: %d slots", key, got)
+	cases := map[string]int{"wizard": 2, "paladin": 2, "ranger": 2, "warlock": 1, "fighter": 0}
+	for class, want := range cases {
+		if got := slots(class); got != want {
+			t.Errorf("%s: %d slots", class, got)
 		}
 	}
-	if n := len(rules.FirstLevelResources("fighter", 10, 2024)); n != 1 {
+	if n := len(rules.FirstLevelResources("fighter", 10)); n != 1 {
 		t.Fatalf("fighter has %d resources", n)
 	}
-	if r := rules.FirstLevelResources("wizard", 6, 2024)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 {
+	if r := rules.FirstLevelResources("wizard", 6)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 {
 		t.Fatalf("hit dice = %+v", r)
-	}
-	if rules.CasterFor("cleric") != rules.FullCaster || rules.CasterFor("rogue") != rules.NoCaster {
-		t.Fatal("caster kinds")
 	}
 }
 
 func TestBuildSheet(t *testing.T) {
 	t.Parallel()
 	in := rules.SheetInput{
-		Class: "fighter", Level: 1, RulesetYear: 2024, HitDie: 10, Scores: scores(13, 14, 15, 8, 12, 10),
+		Class: "fighter", Level: 1, HitDie: 10, Scores: scores(13, 14, 15, 8, 12, 10),
 		SaveProfs: []rules.Ability{rules.Strength, rules.Constitution}, SkillProfs: []rules.Skill{"perception", "athletics"},
 		Armor: &rules.Armor{Base: 18, DexCap: 0, StrengthRequired: 15, Stealth: true}, ShieldBonus: 2, SpeedFeet: 30,
 	}

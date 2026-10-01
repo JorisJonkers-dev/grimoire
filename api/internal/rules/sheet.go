@@ -65,17 +65,14 @@ type Resource struct {
 	Max     int
 }
 
-// FirstLevelResources are the pools a first-level character starts with.
-func FirstLevelResources(class string, hitDie, rulesetYear int) []Resource {
+// FirstLevelResources are the pools a first-level character starts with (SRD 5.2: half casters
+// cast from level 1).
+func FirstLevelResources(class string, hitDie int) []Resource {
 	out := []Resource{{Key: "hit-dice", Label: "Hit Dice (d" + strconv.Itoa(hitDie) + ")", Current: 1, Max: 1}}
 	slots := 0
 	switch CasterFor(class) {
-	case FullCaster:
+	case FullCaster, HalfCaster:
 		slots = 2
-	case HalfCaster:
-		if rulesetYear >= 2024 {
-			slots = 2
-		}
 	case PactCaster:
 		slots = 1
 	case NoCaster:
@@ -107,7 +104,6 @@ type SkillBonus struct {
 type SheetInput struct {
 	Class       string
 	Level       int
-	RulesetYear int
 	HitDie      int
 	Scores      map[Ability]int
 	SaveProfs   []Ability
@@ -142,7 +138,7 @@ func BuildSheet(in SheetInput) Sheet {
 		PassivePerception: 0,
 		Saves:             make([]Save, 0, 6),
 		Skills:            make([]SkillBonus, 0, 18),
-		Resources:         FirstLevelResources(in.Class, in.HitDie, in.RulesetYear),
+		Resources:         FirstLevelResources(in.Class, in.HitDie),
 		Warnings:          []string{},
 	}
 	for _, a := range Abilities() {

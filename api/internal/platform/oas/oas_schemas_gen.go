@@ -1553,9 +1553,9 @@ func (s *Campaign) SetMembers(val []Member) {
 // A new Campaign.
 // Ref: #/components/schemas/CampaignCreate
 type CampaignCreate struct {
-	Name        CampaignName `json:"name"`
-	Ruleset     OptRuleset   `json:"ruleset"`
-	DisplayName DisplayName  `json:"displayName"`
+	Name        CampaignName       `json:"name"`
+	Ruleset     OptCampaignRuleset `json:"ruleset"`
+	DisplayName DisplayName        `json:"displayName"`
 }
 
 // GetName returns the value of Name.
@@ -1564,7 +1564,7 @@ func (s *CampaignCreate) GetName() CampaignName {
 }
 
 // GetRuleset returns the value of Ruleset.
-func (s *CampaignCreate) GetRuleset() OptRuleset {
+func (s *CampaignCreate) GetRuleset() OptCampaignRuleset {
 	return s.Ruleset
 }
 
@@ -1579,7 +1579,7 @@ func (s *CampaignCreate) SetName(val CampaignName) {
 }
 
 // SetRuleset sets the value of Ruleset.
-func (s *CampaignCreate) SetRuleset(val OptRuleset) {
+func (s *CampaignCreate) SetRuleset(val OptCampaignRuleset) {
 	s.Ruleset = val
 }
 
@@ -1784,6 +1784,43 @@ func (s *CampaignRefHeaders) SetResponse(val CampaignRef) {
 
 func (*CampaignRefHeaders) acceptInviteRes() {}
 
+// The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the
+// compendium.
+// Ref: #/components/schemas/CampaignRuleset
+type CampaignRuleset string
+
+const (
+	CampaignRulesetSrd2024 CampaignRuleset = "srd-2024"
+)
+
+// AllValues returns all CampaignRuleset values.
+func (CampaignRuleset) AllValues() []CampaignRuleset {
+	return []CampaignRuleset{
+		CampaignRulesetSrd2024,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CampaignRuleset) MarshalText() ([]byte, error) {
+	switch s {
+	case CampaignRulesetSrd2024:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CampaignRuleset) UnmarshalText(data []byte) error {
+	switch CampaignRuleset(data) {
+	case CampaignRulesetSrd2024:
+		*s = CampaignRulesetSrd2024
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A Campaign as it appears in the caller's list.
 // Ref: #/components/schemas/CampaignSummary
 type CampaignSummary struct {
@@ -1932,7 +1969,7 @@ func (*CampaignSummaryHeaders) updateCampaignRes() {}
 // Ref: #/components/schemas/CampaignUpdate
 type CampaignUpdate struct {
 	Name             OptCampaignName    `json:"name"`
-	Ruleset          OptRuleset         `json:"ruleset"`
+	Ruleset          OptCampaignRuleset `json:"ruleset"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
@@ -1944,7 +1981,7 @@ func (s *CampaignUpdate) GetName() OptCampaignName {
 }
 
 // GetRuleset returns the value of Ruleset.
-func (s *CampaignUpdate) GetRuleset() OptRuleset {
+func (s *CampaignUpdate) GetRuleset() OptCampaignRuleset {
 	return s.Ruleset
 }
 
@@ -1964,7 +2001,7 @@ func (s *CampaignUpdate) SetName(val OptCampaignName) {
 }
 
 // SetRuleset sets the value of Ruleset.
-func (s *CampaignUpdate) SetRuleset(val OptRuleset) {
+func (s *CampaignUpdate) SetRuleset(val OptCampaignRuleset) {
 	s.Ruleset = val
 }
 
@@ -14285,6 +14322,52 @@ func (o OptCampaignName) Get() (v CampaignName, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptCampaignName) Or(d CampaignName) CampaignName {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptCampaignRuleset returns new OptCampaignRuleset with value set to v.
+func NewOptCampaignRuleset(v CampaignRuleset) OptCampaignRuleset {
+	return OptCampaignRuleset{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCampaignRuleset is optional CampaignRuleset.
+type OptCampaignRuleset struct {
+	Value CampaignRuleset
+	Set   bool
+}
+
+// IsSet returns true if OptCampaignRuleset was set.
+func (o OptCampaignRuleset) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCampaignRuleset) Reset() {
+	var v CampaignRuleset
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCampaignRuleset) SetTo(v CampaignRuleset) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCampaignRuleset) Get() (v CampaignRuleset, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCampaignRuleset) Or(d CampaignRuleset) CampaignRuleset {
 	if v, ok := o.Get(); ok {
 		return v
 	}

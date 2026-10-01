@@ -86,7 +86,7 @@ export type Campaign = {
  */
 export type CampaignCreate = {
     name: CampaignName;
-    ruleset?: Ruleset;
+    ruleset?: CampaignRuleset;
     displayName: DisplayName;
 };
 
@@ -95,7 +95,7 @@ export type CampaignCreate = {
  */
 export type CampaignUpdate = {
     name?: CampaignName;
-    ruleset?: Ruleset;
+    ruleset?: CampaignRuleset;
     reactionTimeoutS?: ReactionTimeout;
     /**
      * Optional rule: attacks from higher ground get +2 to hit.
@@ -1683,6 +1683,11 @@ export type Slug = string;
  * Rules document key.
  */
 export type Ruleset = 'srd-2024' | 'srd-2014';
+
+/**
+ * The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the compendium.
+ */
+export type CampaignRuleset = 'srd-2024';
 
 /**
  * A spell as it appears in a list.

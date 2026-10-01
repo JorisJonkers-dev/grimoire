@@ -81,10 +81,6 @@ func TestCreateMakesTheCreatorDM(t *testing.T) {
 			t.Errorf("%+v: %v", in, err)
 		}
 	}
-	old, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "Tomb", Ruleset: "srd-2014", DisplayName: "Joris"})
-	if err != nil || old.Ruleset != "srd-2014" {
-		t.Fatalf("2014 campaign = %+v %v", old, err)
-	}
 }
 
 func TestListPagesNewestFirst(t *testing.T) {
@@ -146,9 +142,9 @@ func TestUpdateChangesSettings(t *testing.T) {
 	ctx := context.Background()
 	s, _ := service(t, pgstore.New(open(t).Pool()))
 	d := table(t, s)
-	name, ruleset := " Out of the Abyss ", "srd-2014"
+	name, ruleset := " Out of the Abyss ", "srd-2024"
 	got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{Name: &name, Ruleset: &ruleset})
-	if err != nil || got.Name != "Out of the Abyss" || got.Ruleset != "srd-2014" {
+	if err != nil || got.Name != "Out of the Abyss" || got.Ruleset != "srd-2024" {
 		t.Fatalf("updated = %+v %v", got, err)
 	}
 	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{}); err != nil || got.Name != "Out of the Abyss" {

@@ -3383,7 +3383,7 @@ components:
       required: [name, displayName]
       properties:
         name: { $ref: "#/components/schemas/CampaignName" }
-        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        ruleset: { $ref: "#/components/schemas/CampaignRuleset" }
         displayName: { $ref: "#/components/schemas/DisplayName" }
     CampaignUpdate:
       type: object
@@ -3391,7 +3391,7 @@ components:
       additionalProperties: false
       properties:
         name: { $ref: "#/components/schemas/CampaignName" }
-        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        ruleset: { $ref: "#/components/schemas/CampaignRuleset" }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
     ReactionTimeout:
@@ -5160,6 +5160,10 @@ components:
       type: string
       description: Rules document key.
       enum: [srd-2024, srd-2014]
+    CampaignRuleset:
+      type: string
+      description: The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the compendium.
+      enum: [srd-2024]
     SpellSummary:
       type: object
       description: A spell as it appears in a list.
