@@ -8852,6 +8852,7 @@ type LiveCommand struct {
 	Due         OptLiveCommandDue `json:"due"`
 	LootTableId OptID             `json:"lootTableId"`
 	FromId      OptID             `json:"fromId"`
+	InstanceId  OptID             `json:"instanceId"`
 	ToId        OptID             `json:"toId"`
 	ItemSlug    OptSlug           `json:"itemSlug"`
 	Coin        OptCoin           `json:"coin"`
@@ -9147,6 +9148,11 @@ func (s *LiveCommand) GetLootTableId() OptID {
 // GetFromId returns the value of FromId.
 func (s *LiveCommand) GetFromId() OptID {
 	return s.FromId
+}
+
+// GetInstanceId returns the value of InstanceId.
+func (s *LiveCommand) GetInstanceId() OptID {
+	return s.InstanceId
 }
 
 // GetToId returns the value of ToId.
@@ -9472,6 +9478,11 @@ func (s *LiveCommand) SetLootTableId(val OptID) {
 // SetFromId sets the value of FromId.
 func (s *LiveCommand) SetFromId(val OptID) {
 	s.FromId = val
+}
+
+// SetInstanceId sets the value of InstanceId.
+func (s *LiveCommand) SetInstanceId(val OptID) {
+	s.InstanceId = val
 }
 
 // SetToId sets the value of ToId.

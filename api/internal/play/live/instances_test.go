@@ -29,7 +29,7 @@ func look(t *testing.T, w world, sub *live.Subscriber) *live.View {
 	return next(t, sub).View
 }
 
-// Item Instances show beside the old stacks: each with its own name, Charges and state, a bag nested in
+// Item Instances show beside plain stacks: each with its own name, Charges and state, a bag nested in
 // its bearer's Inventory, and an unidentified item kept a mystery from the party.
 func TestItemInstancesShowBesideStacks(t *testing.T) {
 	t.Parallel()
@@ -58,14 +58,10 @@ func TestItemInstancesShowBesideStacks(t *testing.T) {
 		sack, w.session.CampaignID, brom.ID, time.Now()); err != nil {
 		t.Fatal(err)
 	}
-	for _, c := range []uuid.UUID{bag, sack} {
-		if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.container_items (container_id, item_slug, quantity) VALUES ($1, 'rope', 2)`, c); err != nil {
-			t.Fatal(err)
-		}
-	}
 	put(aria.ID, "rope", "Climbing Line", 1, 3, true, true, "neck")
 	put(aria.ID, "anvil", "Anvil of Storms", 1, 7, false, false, nil)
 	put(bag, "rope", nil, 3, nil, true, false, nil)
+	put(sack, "rope", nil, 2, nil, true, false, nil)
 
 	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
 	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
@@ -80,10 +76,10 @@ func TestItemInstancesShowBesideStacks(t *testing.T) {
 	if storms := instanceNamed(t, ariaDM, "Anvil of Storms"); storms.Identified || storms.Charges == nil {
 		t.Fatalf("the DM sees an unidentified item for what it is = %+v", storms)
 	}
-	if packDM.Kind != domain.ContainerBag || packDM.ParentID != ariaDM.ID || len(packDM.Instances) != 1 || packDM.Instances[0].Name != "Rope" || packDM.Instances[0].Count != 3 {
+	if packDM.Kind != domain.ContainerBag || packDM.ParentID != ariaDM.ID || len(packDM.Instances) != 0 || len(packDM.Items) != 1 || packDM.Items[0].Count != 3 {
 		t.Fatalf("the backpack = %+v", packDM)
 	}
-	if ariaDM.WeightLb != 5+100+15+10 {
+	if ariaDM.WeightLb != 5+100+15 {
 		t.Fatalf("Aria carries her backpack too = %v", ariaDM.WeightLb)
 	}
 	if mystery := instanceNamed(t, containerNamed(t, p, "Aria"), "Anvil"); mystery.Identified || mystery.Charges != nil {
@@ -102,8 +98,24 @@ func TestItemInstancesShowBesideStacks(t *testing.T) {
 		t.Fatalf("putting into Brom's sack = %+v", u)
 	}
 	moved := tb.playerSays(live.Command{Kind: live.CmdMoveItem, FromID: containerNamed(t, p, "Backpack").ID, ToID: stash, ItemSlug: "rope", Count: 1})
-	if pack := containerNamed(t, moved.View, "Backpack"); len(pack.Items) != 1 || pack.Items[0].Count != 1 {
+	if pack := containerNamed(t, moved.View, "Backpack"); len(pack.Items) != 1 || pack.Items[0].Count != 2 {
 		t.Fatalf("taking from her own backpack = %+v", pack)
+	}
+	w.hub.Submit(tb.player, live.Command{Kind: live.CmdMoveItem, FromID: ariaDM.ID, ToID: stash, InstanceID: uuid.NewString()})
+	if u := next(t, tb.player); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, "no such item") {
+		t.Fatalf("moving an instance that is not there = %+v", u)
+	}
+	moved = tb.playerSays(live.Command{Kind: live.CmdMoveItem, FromID: ariaDM.ID, ToID: packDM.ID, InstanceID: line.ID})
+	if got := instanceNamed(t, containerNamed(t, moved.View, "Backpack"), "Climbing Line"); got.Slot != "" || !got.Attuned || got.Charges == nil {
+		t.Fatalf("the rope comes off her neck into the pack, still attuned = %+v", got)
+	}
+	if len(containerNamed(t, moved.View, "Aria").Instances) != 1 {
+		t.Fatalf("Aria keeps only the anvil = %+v", containerNamed(t, moved.View, "Aria"))
+	}
+	w.hub.Close(w.session.ID)
+	again := look(t, w, join(t, w, w.dm, dmCaller, live.AudienceDM))
+	if got := instanceNamed(t, containerNamed(t, again, "Backpack"), "Climbing Line"); got.Slot != "" || containerNamed(t, again, "Backpack").Items[0].Count != 2 {
+		t.Fatalf("the move is stored = %+v", containerNamed(t, again, "Backpack"))
 	}
 	for _, c := range tv.Inventory {
 		if c.Kind != domain.ContainerStash {

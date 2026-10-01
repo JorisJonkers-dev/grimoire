@@ -166,6 +166,7 @@ type Command struct {
 	FromID       string           `json:"fromId,omitempty"`
 	ToID         string           `json:"toId,omitempty"`
 	ItemSlug     string           `json:"itemSlug,omitempty"`
+	InstanceID   string           `json:"instanceId,omitempty"`
 	Coin         string           `json:"coin,omitempty"`
 	Count        int              `json:"count,omitempty"`
 	ShopID       string           `json:"shopId,omitempty"`

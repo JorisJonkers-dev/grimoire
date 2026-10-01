@@ -18,6 +18,7 @@ const destinations = (from: LiveContainer) => sorted.value.filter((c) => c.id !=
 
 function move(d: Dragged, to: string) {
   if (d.coin) emit('send', { kind: 'move_coins', fromId: d.from, toId: to, coin: d.coin, count: d.count })
+  else if (d.instanceId) emit('send', { kind: 'move_item', fromId: d.from, toId: to, instanceId: d.instanceId })
   else emit('send', { kind: 'move_item', fromId: d.from, toId: to, itemSlug: d.itemSlug ?? '', count: d.count })
 }
 function moveStack(c: LiveContainer, key: string, d: Dragged) {
@@ -85,8 +86,22 @@ function drop(ev: DragEvent, c: LiveContainer) {
               <GButton :aria-label="`Move ${i.name} from ${c.label}`" @click="moveStack(c, i.slug, { from: c.id, itemSlug: i.slug, count: i.count })">Move</GButton>
             </template>
           </li>
-          <li v-for="i in c.instances" :key="i.id" class="stack" data-testid="instance">
+          <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is a pointer shortcut; the Move controls are the accessible path -->
+          <li
+            v-for="i in c.instances"
+            :key="i.id"
+            class="stack"
+            data-testid="instance"
+            :draggable="canTake(c, dm, me)"
+            @dragstart="drag($event, { from: c.id, instanceId: i.id, count: i.count })"
+          >
             <span>{{ instanceLabel(i) }} · {{ Math.round(i.weightLb * 10) / 10 }} lb</span>
+            <template v-if="canTake(c, dm, me) && destinations(c).length">
+              <select v-model="target[`${c.id}:${i.id}`]" :aria-label="`Where ${i.name} goes`">
+                <option v-for="d in destinations(c)" :key="d.id" :value="d.id">{{ d.label }}</option>
+              </select>
+              <GButton :aria-label="`Move ${i.name} from ${c.label}`" @click="moveStack(c, i.id, { from: c.id, instanceId: i.id, count: i.count })">Move</GButton>
+            </template>
           </li>
           <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is a pointer shortcut; the Move controls are the accessible path -->
           <li

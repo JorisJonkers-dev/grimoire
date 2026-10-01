@@ -12582,6 +12582,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.InstanceId.Set {
+			e.FieldStart("instanceId")
+			s.InstanceId.Encode(e)
+		}
+	}
+	{
 		if s.ToId.Set {
 			e.FieldStart("toId")
 			s.ToId.Encode(e)
@@ -12635,7 +12641,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [65]string{
+var jsonFieldsNameOfLiveCommand = [66]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -12693,14 +12699,15 @@ var jsonFieldsNameOfLiveCommand = [65]string{
 	54: "due",
 	55: "lootTableId",
 	56: "fromId",
-	57: "toId",
-	58: "itemSlug",
-	59: "coin",
-	60: "count",
-	61: "shopId",
-	62: "monsters",
-	63: "hpDelta",
-	64: "seq",
+	57: "instanceId",
+	58: "toId",
+	59: "itemSlug",
+	60: "coin",
+	61: "count",
+	62: "shopId",
+	63: "monsters",
+	64: "hpDelta",
+	65: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13303,6 +13310,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"fromId\"")
+			}
+		case "instanceId":
+			if err := func() error {
+				s.InstanceId.Reset()
+				if err := s.InstanceId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"instanceId\"")
 			}
 		case "toId":
 			if err := func() error {

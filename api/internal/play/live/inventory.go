@@ -62,6 +62,9 @@ func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "That is not yours to move."
 	}
 	mv := domain.Move{From: from.ID, To: to.ID, Count: cmd.Count, FromLabel: from.Label, ToLabel: to.Label}
+	if cmd.InstanceID != "" {
+		return planMoveInstance(from, mv, cmd.InstanceID)
+	}
 	have, kind := from.Items[cmd.ItemSlug], domain.ActionItemMoved
 	mv.Item = cmd.ItemSlug
 	if cmd.Kind == CmdMoveCoins {
@@ -71,6 +74,17 @@ func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "There are not that many to move."
 	}
 	return Write{Kind: kind, Move: &mv}, ""
+}
+
+// planMoveInstance moves an Item Instance whole; it comes out of any slot it was worn in.
+func planMoveInstance(from domain.Container, mv domain.Move, id string) (Write, string) {
+	iid := domain.InstanceID(parseID(id))
+	i := slices.IndexFunc(from.Instances, func(in domain.Instance) bool { return in.ID == iid })
+	if i < 0 {
+		return Write{}, "There is no such item there."
+	}
+	mv.Instance, mv.Item, mv.Count = &iid, from.Instances[i].Slug, from.Instances[i].Quantity
+	return Write{Kind: domain.ActionItemMoved, Move: &mv}, ""
 }
 
 // planLoot rolls a Loot Table into a new drop.
@@ -137,12 +151,20 @@ func applyInventory(s *state, w *Write) {
 			delete(src, key)
 		}
 	}
-	if mv.Coin != "" {
+	switch {
+	case mv.Instance != nil:
+		src := &inv.Containers[from]
+		i := slices.IndexFunc(src.Instances, func(in domain.Instance) bool { return in.ID == *mv.Instance })
+		in := src.Instances[i]
+		in.Slot = ""
+		src.Instances = slices.Delete(src.Instances, i, i+1)
+		inv.Containers[to].Instances = append(inv.Containers[to].Instances, in)
+	case mv.Coin != "":
 		shift(inv.Containers[from].Coins, inv.Containers[to].Coins, mv.Coin)
-	} else {
+	default:
 		shift(inv.Containers[from].Items, inv.Containers[to].Items, mv.Item)
 	}
-	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Coins) == 0 {
+	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Instances)+len(c.Coins) == 0 {
 		w.Gone = &c.ID
 		inv.Containers = slices.Delete(inv.Containers, from, from+1)
 	}

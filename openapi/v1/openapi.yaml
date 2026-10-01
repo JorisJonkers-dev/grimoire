@@ -4530,6 +4530,7 @@ components:
         due: { type: string, enum: [next_rest, next_travel] }
         lootTableId: { $ref: "#/components/schemas/Id" }
         fromId: { $ref: "#/components/schemas/Id" }
+        instanceId: { $ref: "#/components/schemas/Id" }
         toId: { $ref: "#/components/schemas/Id" }
         itemSlug: { $ref: "#/components/schemas/Slug" }
         coin: { $ref: "#/components/schemas/Coin" }

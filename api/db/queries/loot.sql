@@ -92,3 +92,17 @@ DELETE FROM campaign.container_coins WHERE container_id = @container_id AND coin
 INSERT INTO play.action_item_events (action_id, position, from_label, to_label, item_slug, coin, count)
 VALUES (@action_id, @position, @from_label, @to_label, sqlc.narg(item_slug), sqlc.narg(coin), @count);
 
+
+-- name: SetStack :exec
+INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+VALUES (@id, @container_id, @item_slug, @quantity, true, false, @now)
+ON CONFLICT (container_id, item_slug) WHERE custom_name IS NULL AND charges IS NULL AND equipped_slot IS NULL AND NOT attuned AND identified
+DO UPDATE SET quantity = excluded.quantity;
+
+-- name: DeleteStack :exec
+DELETE FROM campaign.item_instances
+WHERE container_id = @container_id AND item_slug = @item_slug
+    AND custom_name IS NULL AND charges IS NULL AND equipped_slot IS NULL AND NOT attuned AND identified;
+
+-- name: MoveInstance :exec
+UPDATE campaign.item_instances SET container_id = @container_id, equipped_slot = NULL WHERE id = @id;

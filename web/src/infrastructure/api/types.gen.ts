@@ -1127,6 +1127,7 @@ export type LiveCommand = {
     due?: 'next_rest' | 'next_travel';
     lootTableId?: Id;
     fromId?: Id;
+    instanceId?: Id;
     toId?: Id;
     itemSlug?: Slug;
     coin?: Coin;

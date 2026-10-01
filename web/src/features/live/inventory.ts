@@ -32,4 +32,4 @@ export function load(c: LiveContainer): string {
 }
 
 /** What is being dragged, as the drop target reads it back. */
-export type Dragged = { from: string; itemSlug?: string; coin?: LiveContainer['coins'][number]['coin']; count: number }
+export type Dragged = { from: string; itemSlug?: string; instanceId?: string; coin?: LiveContainer['coins'][number]['coin']; count: number }

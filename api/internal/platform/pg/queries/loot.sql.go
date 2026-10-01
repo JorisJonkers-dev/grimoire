@@ -251,6 +251,22 @@ func (q *Queries) DeleteLootTable(ctx context.Context, arg DeleteLootTableParams
 	return result.RowsAffected(), nil
 }
 
+const deleteStack = `-- name: DeleteStack :exec
+DELETE FROM campaign.item_instances
+WHERE container_id = $1 AND item_slug = $2
+    AND custom_name IS NULL AND charges IS NULL AND equipped_slot IS NULL AND NOT attuned AND identified
+`
+
+type DeleteStackParams struct {
+	ContainerID uuid.UUID
+	ItemSlug    string
+}
+
+func (q *Queries) DeleteStack(ctx context.Context, arg DeleteStackParams) error {
+	_, err := q.db.Exec(ctx, deleteStack, arg.ContainerID, arg.ItemSlug)
+	return err
+}
+
 const getLootTableRevision = `-- name: GetLootTableRevision :one
 SELECT r.id, t.name, t.rolls
 FROM campaign.revisions r JOIN prep.loot_table_revisions t ON t.revision_id = r.id
@@ -570,6 +586,20 @@ func (q *Queries) LootTableInUse(ctx context.Context, nestedTableID pgtype.UUID)
 	return column_1, err
 }
 
+const moveInstance = `-- name: MoveInstance :exec
+UPDATE campaign.item_instances SET container_id = $1, equipped_slot = NULL WHERE id = $2
+`
+
+type MoveInstanceParams struct {
+	ContainerID uuid.UUID
+	ID          uuid.UUID
+}
+
+func (q *Queries) MoveInstance(ctx context.Context, arg MoveInstanceParams) error {
+	_, err := q.db.Exec(ctx, moveInstance, arg.ContainerID, arg.ID)
+	return err
+}
+
 const saveLootTable = `-- name: SaveLootTable :exec
 INSERT INTO prep.loot_tables (id, campaign_id, name, rolls, updated_at) VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (id) DO UPDATE SET name = excluded.name, rolls = excluded.rolls, updated_at = excluded.updated_at
@@ -623,5 +653,31 @@ type SetContainerItemParams struct {
 
 func (q *Queries) SetContainerItem(ctx context.Context, arg SetContainerItemParams) error {
 	_, err := q.db.Exec(ctx, setContainerItem, arg.ContainerID, arg.ItemSlug, arg.Quantity)
+	return err
+}
+
+const setStack = `-- name: SetStack :exec
+INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+VALUES ($1, $2, $3, $4, true, false, $5)
+ON CONFLICT (container_id, item_slug) WHERE custom_name IS NULL AND charges IS NULL AND equipped_slot IS NULL AND NOT attuned AND identified
+DO UPDATE SET quantity = excluded.quantity
+`
+
+type SetStackParams struct {
+	ID          uuid.UUID
+	ContainerID uuid.UUID
+	ItemSlug    string
+	Quantity    int32
+	Now         time.Time
+}
+
+func (q *Queries) SetStack(ctx context.Context, arg SetStackParams) error {
+	_, err := q.db.Exec(ctx, setStack,
+		arg.ID,
+		arg.ContainerID,
+		arg.ItemSlug,
+		arg.Quantity,
+		arg.Now,
+	)
 	return err
 }

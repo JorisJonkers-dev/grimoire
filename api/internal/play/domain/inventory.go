@@ -35,7 +35,13 @@ type Instance struct {
 	Slot       string
 }
 
-// Container holds items by slug and coins by kind.
+// Plain reports whether an Instance is a plain stack: nothing singles it out, so it merges with others
+// of its item.
+func (in Instance) Plain() bool {
+	return in.CustomName == "" && in.Charges == nil && in.Slot == "" && !in.Attuned && in.Identified
+}
+
+// Container holds plain stacks by slug, the Item Instances singled out, and coins by kind.
 type Container struct {
 	ID          ContainerID
 	Kind        string
@@ -78,8 +84,10 @@ type Inventory struct {
 
 // Move is a number of one item, or of one kind of coin, going from one Container to another.
 type Move struct {
-	From      ContainerID
-	To        ContainerID
+	From ContainerID
+	To   ContainerID
+	// Instance is the Item Instance moved whole, if it is one rather than part of a plain stack.
+	Instance  *InstanceID
 	Item      string
 	Coin      string
 	Count     int

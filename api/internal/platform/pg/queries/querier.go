@@ -125,6 +125,7 @@ type Querier interface {
 	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
 	DeleteShop(ctx context.Context, arg DeleteShopParams) (int64, error)
 	DeleteShopStock(ctx context.Context, arg DeleteShopStockParams) error
+	DeleteStack(ctx context.Context, arg DeleteStackParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
@@ -276,6 +277,7 @@ type Querier interface {
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
 	MonsterXP(ctx context.Context, arg MonsterXPParams) (MonsterXPRow, error)
+	MoveInstance(ctx context.Context, arg MoveInstanceParams) error
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
@@ -347,6 +349,7 @@ type Querier interface {
 	SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
+	SetStack(ctx context.Context, arg SetStackParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)

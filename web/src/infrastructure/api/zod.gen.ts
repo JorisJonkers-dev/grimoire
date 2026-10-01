@@ -1623,6 +1623,7 @@ export const zLiveCommand = z.object({
     due: z.enum(['next_rest', 'next_travel']).optional(),
     lootTableId: zId.optional(),
     fromId: zId.optional(),
+    instanceId: zId.optional(),
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),
