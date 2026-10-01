@@ -47,7 +47,7 @@ func samples() contract {
 		ID: "0190c7a8-0000-7000-8000-000000000016", Kind: "shield", ReactorID: "0190c7a8-0000-7000-8000-000000000013", TriggerID: token.ID,
 		Effect: "Shield: AC 15 → 20, so the attack (18) would miss.", SecondsLeft: 9,
 	}}
-	view.Tokens[0].Effects = []live.EffectView{{ID: "0190c7a8-0000-7000-8000-000000000017", Slug: "bless", Name: "Bless", SourceID: token.ID, Concentration: true, RoundsLeft: 9}}
+	view.Tokens[0].Effects = []live.EffectView{{ID: "0190c7a8-0000-7000-8000-000000000017", Slug: "bless", Name: "Bless", SourceID: token.ID, Concentration: true, RoundsLeft: 9}, {ID: "0190c7a8-0000-7000-8000-000000000037", Slug: "exhaustion", Name: "Exhaustion", Level: 2}}
 	view.Resolving = true
 	view.Saves = []live.SaveView{{RollID: "0190c7a8-0000-7000-8000-000000000019", TokenID: token.ID, Effect: "Hold Person", DC: 13}}
 	view.Surfaces = []live.SurfaceView{{Q: 1, R: 1, Kind: "grease", RoundsLeft: 9}}

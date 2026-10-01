@@ -177,13 +177,16 @@ type Querier interface {
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
 	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
 	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
+	InsertEffectCrit(ctx context.Context, arg InsertEffectCritParams) error
 	InsertEffectEdge(ctx context.Context, arg InsertEffectEdgeParams) error
 	InsertEffectEvent(ctx context.Context, arg InsertEffectEventParams) error
+	InsertEffectExhaustion(ctx context.Context, arg InsertEffectExhaustionParams) error
 	InsertEffectExtraDamage(ctx context.Context, arg InsertEffectExtraDamageParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
+	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
 	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
@@ -237,13 +240,16 @@ type Querier interface {
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
+	ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error)
 	ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error)
 	ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, error)
+	ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaustionRow, error)
 	ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraDamageRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
+	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)

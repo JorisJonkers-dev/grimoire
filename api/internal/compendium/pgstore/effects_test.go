@@ -29,10 +29,12 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"bless", "burning-hands", "cone-of-cold", "faerie-fire", "fireball", "grease", "hunters-mark", "lightning-bolt", "prone", "shatter"}; !reflect.DeepEqual(got.Automated(), want) {
+	want := []string{"bless", "burning-hands", "cone-of-cold", "exhaustion", "faerie-fire", "fireball", "grease", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "shatter", "stunned"}
+	if !reflect.DeepEqual(got.Automated(), want) {
 		t.Fatalf("automated = %v", got.Automated())
 	}
-	if !reflect.DeepEqual(got.Partial(), []string{"poisoned", "thunderwave"}) {
+	partial := []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "petrified", "poisoned", "thunderwave", "unconscious"}
+	if !reflect.DeepEqual(got.Partial(), partial) {
 		t.Fatalf("partial = %v", got.Partial())
 	}
 	blessed := []effects.Active{{Slug: "bless", Source: "cleric"}}
@@ -41,6 +43,13 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	}
 	if fb, ok := got.AreaOf("fireball"); !ok || fb.Area != (effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}) || fb.Damage.Dice != "8d6" || fb.Save != "dexterity" {
 		t.Fatalf("fireball = %+v", fb)
+	}
+	paralyzed := []effects.Active{{Slug: "paralyzed"}}
+	if !got.Incapacitated(paralyzed) || !got.Immobile(paralyzed) || !got.ForSave(paralyzed, "dexterity").Fails || !got.ForAttack(nil, paralyzed, "x", true).Crit {
+		t.Fatalf("paralysed from rows = %+v", got["paralyzed"])
+	}
+	if got.SpeedPenaltyFt([]effects.Active{{Slug: "exhaustion", Level: 2}}) != 10 {
+		t.Fatalf("exhaustion from rows = %+v", got["exhaustion"])
 	}
 	if g, _ := got.AreaOf("grease"); g.Condition != "prone" || g.Surface.Rounds != 10 {
 		t.Fatalf("grease = %+v", g)

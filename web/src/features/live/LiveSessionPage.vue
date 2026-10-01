@@ -310,7 +310,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <NotifyToggle />
       </header>
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
-      <InitiativeRail v-if="combat" :combat="combat" />
+      <InitiativeRail v-if="combat" :combat="combat" :tokens="view?.tokens ?? []" />
       <p v-if="!isDM && turns.length > 0" role="status" class="banner" data-testid="your-turn">Your turn</p>
       <section v-if="toRoll.length > 0" class="rolls" aria-label="Initiative to roll">
         <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { LiveCombat } from '@/infrastructure/api/types.gen'
+import type { LiveCombat, LiveToken } from '@/infrastructure/api/types.gen'
+import { StatusIcon } from '@/shared/ui'
 import { initials } from './board'
+import { effectLabel } from './conditions'
 
-const props = defineProps<{ combat: LiveCombat }>()
+const props = withDefaults(defineProps<{ combat: LiveCombat; tokens?: LiveToken[] }>(), { tokens: () => [] })
+const effectsOf = (tokenId: string) => props.tokens.find((t) => t.id === tokenId)?.effects ?? []
 const tied = computed(() => {
   const ranks = props.combat.combatants.map((c) => c.rank)
   return (rank?: number) => ranks.filter((r) => r === rank).length > 1
@@ -28,6 +31,9 @@ const tied = computed(() => {
           <template v-else>rolling…</template>
         </span>
         <span v-if="c.surprised" class="surprised" data-testid="surprised">Surprised</span>
+        <span v-if="effectsOf(c.tokenId).length" class="statuses" data-testid="statuses">
+          <StatusIcon v-for="e in effectsOf(c.tokenId)" :key="e.id" :slug="e.slug" :label="effectLabel(e)" :size="12" />
+        </span>
         <span v-if="c.acting" class="sr-only">acting now</span>
       </li>
     </ol>
@@ -35,6 +41,12 @@ const tied = computed(() => {
 </template>
 
 <style scoped>
+.statuses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
 .surprised {
   font-size: 12px;
   color: var(--color-enemy-soft);

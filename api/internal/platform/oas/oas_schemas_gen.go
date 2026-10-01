@@ -10545,6 +10545,8 @@ type LiveEffect struct {
 	SourceId      OptID    `json:"sourceId"`
 	Concentration bool     `json:"concentration"`
 	RoundsLeft    OptInt32 `json:"roundsLeft"`
+	// Levels of a stacking Effect, such as exhaustion.
+	Level OptInt32 `json:"level"`
 }
 
 // GetID returns the value of ID.
@@ -10577,6 +10579,11 @@ func (s *LiveEffect) GetRoundsLeft() OptInt32 {
 	return s.RoundsLeft
 }
 
+// GetLevel returns the value of Level.
+func (s *LiveEffect) GetLevel() OptInt32 {
+	return s.Level
+}
+
 // SetID sets the value of ID.
 func (s *LiveEffect) SetID(val ID) {
 	s.ID = val
@@ -10605,6 +10612,11 @@ func (s *LiveEffect) SetConcentration(val bool) {
 // SetRoundsLeft sets the value of RoundsLeft.
 func (s *LiveEffect) SetRoundsLeft(val OptInt32) {
 	s.RoundsLeft = val
+}
+
+// SetLevel sets the value of Level.
+func (s *LiveEffect) SetLevel(val OptInt32) {
+	s.Level = val
 }
 
 // A raised or sunken hex.

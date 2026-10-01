@@ -14411,15 +14411,22 @@ func (s *LiveEffect) encodeFields(e *jx.Encoder) {
 			s.RoundsLeft.Encode(e)
 		}
 	}
+	{
+		if s.Level.Set {
+			e.FieldStart("level")
+			s.Level.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveEffect = [6]string{
+var jsonFieldsNameOfLiveEffect = [7]string{
 	0: "id",
 	1: "slug",
 	2: "name",
 	3: "sourceId",
 	4: "concentration",
 	5: "roundsLeft",
+	6: "level",
 }
 
 // Decode decodes LiveEffect from json.
@@ -14496,6 +14503,16 @@ func (s *LiveEffect) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"roundsLeft\"")
+			}
+		case "level":
+			if err := func() error {
+				s.Level.Reset()
+				if err := s.Level.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"level\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)

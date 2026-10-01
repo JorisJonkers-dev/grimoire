@@ -647,6 +647,13 @@
                 "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                 "concentration": true,
                 "roundsLeft": 9
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000037",
+                "slug": "exhaustion",
+                "name": "Exhaustion",
+                "concentration": false,
+                "level": 2
               }
             ]
           },
@@ -1031,6 +1038,13 @@
                 "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                 "concentration": true,
                 "roundsLeft": 9
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000037",
+                "slug": "exhaustion",
+                "name": "Exhaustion",
+                "concentration": false,
+                "level": 2
               }
             ]
           },
@@ -1509,6 +1523,13 @@
                 "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                 "concentration": true,
                 "roundsLeft": 9
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000037",
+                "slug": "exhaustion",
+                "name": "Exhaustion",
+                "concentration": false,
+                "level": 2
               }
             ]
           },
@@ -1888,6 +1909,13 @@
                   "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                   "concentration": true,
                   "roundsLeft": 9
+                },
+                {
+                  "id": "0190c7a8-0000-7000-8000-000000000037",
+                  "slug": "exhaustion",
+                  "name": "Exhaustion",
+                  "concentration": false,
+                  "level": 2
                 }
               ]
             },

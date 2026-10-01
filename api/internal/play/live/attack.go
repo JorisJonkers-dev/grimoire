@@ -65,6 +65,8 @@ func (r *runtime) aimAt(m domain.Member, cmd Command) (aim, string) {
 	switch {
 	case !acting:
 		return aim{}, "It is not " + a.Label + "'s turn."
+	case r.st.catalog.Incapacitated(r.st.actives(a.ID)):
+		return aim{}, a.Label + " can't act while Incapacitated."
 	case !x.Economy.Action:
 		return aim{}, a.Label + " has already used their action."
 	}
@@ -155,11 +157,11 @@ func standing(t domain.Token) bool {
 	return !t.Hidden && t.Stats != nil && t.Stats.HP > 0
 }
 
-// hostileNextTo reports a standing creature of the other side within 5 feet.
+// hostileNextTo reports a standing creature of the other side within 5 feet that is not Incapacitated.
 func (s *state) hostileNextTo(a domain.Token) bool {
 	for _, t := range s.tokens {
 		near := hex.Distance(hex.Coord{Q: a.Q, R: a.R}, hex.Coord{Q: t.Q, R: t.R}) == 1
-		if near && standing(t) && (t.Kind == domain.TokenParty) != (a.Kind == domain.TokenParty) {
+		if near && standing(t) && (t.Kind == domain.TokenParty) != (a.Kind == domain.TokenParty) && !s.catalog.Incapacitated(s.actives(t.ID)) {
 			return true
 		}
 	}
@@ -177,7 +179,7 @@ func (r *runtime) previewAttack(req request) {
 	_, critMost := attack.DamageRange(attack.CriticalDice(spec), p.with.DamageBonus)
 	r.send(req.from, Update{Kind: UpdAttackPreview, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce, Preview: &AttackPreview{
 		TokenID: req.cmd.TokenID, TargetID: req.cmd.TargetID, AttackNo: p.no, Name: p.with.Name,
-		HitChance: attack.HitChanceDice(p.with.ToHit+p.bonus, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
+		HitChance: attack.HitChanceDice(p.with.ToHit+p.bonus-p.prof.Penalty, joinDice("", p.prof.AttackDice), r.st.armor(p.target)+p.cover, p.mode), Mode: p.mode.String(),
 		DamageMin: least, DamageMax: most, CritMax: critMost, Reasons: p.reasons,
 	}})
 }
@@ -190,7 +192,7 @@ func (r *runtime) planAttack(m domain.Member, cmd Command) (Write, string) {
 	}
 	notation := strings.Join(append([]string{attack.D20(p.mode)}, p.prof.AttackDice...), "+")
 	roll := r.request(m, p.attacker, p.with.Name+" attack against "+p.target.Label, notation, domain.Modifier{Label: p.with.Name, Value: p.with.ToHit},
-		domain.Modifier{Label: "High ground", Value: p.bonus})
+		domain.Modifier{Label: "High ground", Value: p.bonus}, domain.Modifier{Label: "Exhaustion", Value: -p.prof.Penalty})
 	x, _ := r.st.combatantOf(p.attacker.ID)
 	pending := &domain.PendingAttack{
 		ID: uuid.New(), Attacker: p.attacker.ID, Target: p.target.ID, AttackNo: p.no, Mode: p.mode, CoverBonus: p.cover,
@@ -240,12 +242,22 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 		r.commit(request{}, Write{Kind: domain.ActionAttackMissed, Token: a}, roll.Roller, sys)
 		return
 	}
+	if result == attack.Hit && r.st.closeCrit(a, t) {
+		result = attack.Critical
+	}
 	if pr := r.shieldPrompt(a, t, p, roll.Total); pr != nil && result == attack.Hit {
 		p.Stage, p.Total = domain.StageReaction, roll.Total
 		r.commit(request{}, Write{Kind: domain.ActionReactionOffered, Token: t, attack: &p, prompt: pr}, roll.Roller, sys)
 		return
 	}
 	r.commit(request{}, r.hit(a, t, p, result == attack.Critical, roll), roll.Roller, sys)
+}
+
+// closeCrit reports whether the target's effects turn a hit from where the attacker stands into a
+// Critical Hit (paralysed or unconscious, struck from within 5 feet).
+func (s *state) closeCrit(a, t domain.Token) bool {
+	near := hex.Distance(hex.Coord{Q: a.Q, R: a.R}, hex.Coord{Q: t.Q, R: t.R}) <= 1
+	return s.catalog.ForAttack(nil, s.actives(t.ID), "", near).Crit
 }
 
 // hit opens the damage roll of an attack that hit, every die doubled on a critical; flat damage lands at once.

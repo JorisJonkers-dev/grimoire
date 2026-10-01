@@ -965,7 +965,8 @@ export const zLiveEffect = z.object({
     name: z.string().max(80),
     sourceId: zId.optional(),
     concentration: z.boolean(),
-    roundsLeft: z.int().gte(1).lte(100).optional()
+    roundsLeft: z.int().gte(1).lte(100).optional(),
+    level: z.int().gte(1).lte(10).optional()
 });
 
 /**

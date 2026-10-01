@@ -231,6 +231,8 @@ type EffectView struct {
 	SourceID      string `json:"sourceId,omitempty"`
 	Concentration bool   `json:"concentration"`
 	RoundsLeft    int    `json:"roundsLeft,omitempty"`
+	// Level is how many levels of a stacking Effect (exhaustion) the token has.
+	Level int `json:"level,omitempty"`
 }
 
 // ManualView is part of an Effect the DM resolves by hand.

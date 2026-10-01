@@ -357,6 +357,13 @@ type CompendiumEffectComponent struct {
 	Kind     string
 }
 
+type CompendiumEffectCrit struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Feet     int32
+}
+
 type CompendiumEffectDefinition struct {
 	ID            int64
 	Slug          string
@@ -373,6 +380,15 @@ type CompendiumEffectEdge struct {
 	Against   bool
 	Advantage bool
 	Reach     string
+}
+
+type CompendiumEffectExhaustion struct {
+	EffectID        int64
+	Ordinal         int32
+	Kind            string
+	D20PerLevel     int32
+	SpeedFtPerLevel int32
+	DeathAt         int32
 }
 
 type CompendiumEffectExtraDamage struct {
@@ -412,6 +428,14 @@ type CompendiumEffectSaveDamage struct {
 	Dice       string
 	DamageType string
 	Half       bool
+}
+
+type CompendiumEffectSaveEdge struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ability  string
+	Mode     string
 }
 
 type CompendiumEffectSurface struct {
@@ -762,6 +786,7 @@ type PlayActiveEffect struct {
 	RoundsLeft    pgtype.Int4
 	SaveAbility   pgtype.Text
 	SaveDc        pgtype.Int4
+	Level         int32
 }
 
 type PlayAreaCast struct {

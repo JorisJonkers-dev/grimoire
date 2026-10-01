@@ -67,11 +67,11 @@ func TestManualFallback(t *testing.T) {
 	if got := srd().Instructions("bless", "Bless"); got != nil {
 		t.Fatalf("fully modelled = %v", got)
 	}
-	want := []string{"bless", "burning-hands", "cone-of-cold", "faerie-fire", "fireball", "grease", "hunters-mark", "lightning-bolt", "prone", "shatter"}
+	want := []string{"bless", "burning-hands", "cone-of-cold", "exhaustion", "faerie-fire", "fireball", "grease", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "shatter", "stunned"}
 	if got := srd().Automated(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("automated = %v", got)
 	}
-	if got := srd().Partial(); !reflect.DeepEqual(got, []string{"poisoned", "thunderwave"}) {
+	if got := srd().Partial(); !reflect.DeepEqual(got, []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "petrified", "poisoned", "thunderwave", "unconscious"}) {
 		t.Fatalf("partial = %v", got)
 	}
 	d, ok := srd().Lookup("bless")
@@ -107,6 +107,107 @@ func TestAreaSpells(t *testing.T) {
 	}
 	if p := srd().ForAttack([]effects.Active{{Slug: "fireball"}}, []effects.Active{{Slug: "grease"}}, "", true); !reflect.DeepEqual(p, effects.AttackProfile{}) {
 		t.Fatalf("areas do nothing to attacks = %+v", p)
+	}
+}
+
+func TestEveryConditionDoesWhatTheRulesSay(t *testing.T) {
+	t.Parallel()
+	cat := srd()
+	on := func(slugs ...string) []effects.Active {
+		var out []effects.Active
+		for _, s := range slugs {
+			out = append(out, effects.Active{Slug: s})
+		}
+		return out
+	}
+	mode := func(p effects.AttackProfile) string {
+		return map[[2]bool]string{{true, false}: "advantage", {false, true}: "disadvantage", {false, false}: "normal", {true, true}: "normal"}[[2]bool{len(p.Advantages) > 0, len(p.Disadvantages) > 0}]
+	}
+	for slug, want := range map[string][2]string{
+		"blinded": {"disadvantage", "advantage"}, "invisible": {"advantage", "disadvantage"}, "frightened": {"disadvantage", "normal"},
+		"poisoned": {"disadvantage", "normal"}, "restrained": {"disadvantage", "advantage"}, "paralyzed": {"normal", "advantage"},
+		"petrified": {"normal", "advantage"}, "stunned": {"normal", "advantage"}, "unconscious": {"normal", "advantage"},
+		"charmed": {"normal", "normal"}, "deafened": {"normal", "normal"}, "grappled": {"normal", "normal"}, "incapacitated": {"normal", "normal"},
+	} {
+		if got := mode(cat.ForAttack(on(slug), nil, "x", true)); got != want[0] {
+			t.Errorf("%s attacking = %s, want %s", slug, got, want[0])
+		}
+		if got := mode(cat.ForAttack(nil, on(slug), "x", false)); got != want[1] {
+			t.Errorf("%s attacked = %s, want %s", slug, got, want[1])
+		}
+	}
+	for _, slug := range []string{"incapacitated", "paralyzed", "petrified", "stunned", "unconscious"} {
+		if !cat.Incapacitated(on(slug)) {
+			t.Errorf("%s incapacitates", slug)
+		}
+	}
+	for _, slug := range []string{"grappled", "paralyzed", "petrified", "restrained", "unconscious"} {
+		if !cat.Immobile(on(slug)) {
+			t.Errorf("%s holds speed at zero", slug)
+		}
+	}
+	if cat.Incapacitated(on("prone", "grappled")) || cat.Immobile(on("prone", "stunned")) {
+		t.Error("prone is neither")
+	}
+	for _, slug := range []string{"paralyzed", "petrified", "stunned", "unconscious"} {
+		for _, ability := range []string{"strength", "dexterity"} {
+			if !cat.ForSave(on(slug), ability).Fails {
+				t.Errorf("%s fails %s saves", slug, ability)
+			}
+		}
+		if cat.ForSave(on(slug), "wisdom").Fails {
+			t.Errorf("%s keeps its Wisdom saves", slug)
+		}
+	}
+	if p := cat.ForSave(on("restrained", "bless"), "dexterity"); p.Fails || !reflect.DeepEqual(p.Disadvantages, []string{"Restrained: disadvantage"}) || !reflect.DeepEqual(p.Dice, []string{"1d4"}) {
+		t.Errorf("restrained Dexterity save = %+v", p)
+	}
+	resolve := effects.Catalog{"resolve": {Name: "Resolve", Components: []effects.Component{effects.SaveEdge{Ability: "wisdom", Mode: effects.SaveAdvantage}}}}
+	if p := resolve.ForSave([]effects.Active{{Slug: "resolve"}}, "wisdom"); !reflect.DeepEqual(p.Advantages, []string{"Resolve: advantage"}) || p.Disadvantages != nil || p.Fails {
+		t.Errorf("a homebrew advantage on Wisdom saves = %+v", p)
+	}
+	if p := cat.ForAttack(nil, on("unconscious"), "x", true); !p.Crit || len(p.Notes) != 1 {
+		t.Errorf("a hit from 5 ft on the unconscious = %+v", p)
+	}
+	if p := cat.ForAttack(nil, on("paralyzed", "unconscious"), "x", true); !p.Crit || len(p.Notes) != 1 {
+		t.Errorf("one Critical Hit note however many conditions = %+v", p)
+	}
+	if p := cat.ForAttack(nil, on("unconscious"), "x", false); p.Crit {
+		t.Error("a hit from afar is no Critical Hit")
+	}
+	near := effects.Catalog{"near": {Name: "Near", Components: []effects.Component{effects.CritWithin{Feet: 0}}}}
+	if p := near.ForAttack(nil, []effects.Active{{Slug: "near"}}, "x", true); p.Crit {
+		t.Error("a zero-foot reach makes no Critical Hit")
+	}
+}
+
+func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
+	t.Parallel()
+	cat := srd()
+	tired := []effects.Active{{Slug: "exhaustion", Level: 3}}
+	if p := cat.ForAttack(tired, nil, "x", true); p.Penalty != 6 || !reflect.DeepEqual(p.Notes, []string{"Exhaustion 3: -6 to hit"}) {
+		t.Errorf("attacking while exhausted = %+v", p)
+	}
+	if p := cat.ForSave(tired, "wisdom"); p.Penalty != 6 || p.Fails {
+		t.Errorf("saving while exhausted = %+v", p)
+	}
+	if got := cat.SpeedPenaltyFt(tired); got != 15 {
+		t.Errorf("speed penalty = %d", got)
+	}
+	if got := cat.SpeedPenaltyFt([]effects.Active{{Slug: "exhaustion"}}); got != 5 {
+		t.Errorf("a level-less exhaustion counts once = %d", got)
+	}
+	if _, dead := cat.Fatal(tired); dead {
+		t.Error("three levels are not fatal")
+	}
+	if name, dead := cat.Fatal([]effects.Active{{Slug: "exhaustion", Level: 6}}); !dead || name != "Exhaustion" {
+		t.Errorf("six levels kill = %q %v", name, dead)
+	}
+	if _, dead := (effects.Catalog{"e": {Name: "E", Components: []effects.Component{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 0, DeathAt: 0}}}}).Fatal([]effects.Active{{Slug: "e", Level: 9}}); dead {
+		t.Error("an exhaustion without a death level never kills")
+	}
+	if !cat.Stacks("exhaustion") || cat.Stacks("prone") {
+		t.Error("only exhaustion stacks")
 	}
 }
 
@@ -152,6 +253,68 @@ func srd() effects.Catalog {
 			effects.Edge{Against: true, Advantage: true, Range: effects.WithinFive},
 			effects.Edge{Against: true, Advantage: false, Range: effects.BeyondFive},
 			effects.MoveCost{Multiplier: 2},
+		}},
+		"blinded": {Slug: "blinded", Name: "Blinded", Components: []effects.Component{
+			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
+			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
+			effects.Manual{Instruction: "Blinded: can't see, and fails any ability check that needs sight."},
+		}},
+		"charmed": {Slug: "charmed", Name: "Charmed", Components: []effects.Component{
+			effects.Manual{Instruction: "Charmed: can't attack the charmer or target them with harmful effects; the charmer has advantage on social checks against them."},
+		}},
+		"deafened": {Slug: "deafened", Name: "Deafened", Components: []effects.Component{
+			effects.Manual{Instruction: "Deafened: can't hear, and fails any ability check that needs hearing."},
+		}},
+		"exhaustion": {Slug: "exhaustion", Name: "Exhaustion", Components: []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6}}},
+		"frightened": {Slug: "frightened", Name: "Frightened", Components: []effects.Component{
+			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
+			effects.Manual{Instruction: "Frightened: can't willingly move closer to the source of its fear, and the disadvantage holds only while it can see that source."},
+		}},
+		"grappled": {Slug: "grappled", Name: "Grappled", Components: []effects.Component{
+			effects.Immobile{}, effects.Manual{Instruction: "Grappled: has disadvantage on attacks against anyone but the grappler, who can drag it along at half speed."},
+		}},
+		"incapacitated": {Slug: "incapacitated", Name: "Incapacitated", Components: []effects.Component{
+			effects.Incapacitated{}, effects.Manual{Instruction: "Incapacitated: can't speak, and rolls Initiative with disadvantage."},
+		}},
+		"invisible": {Slug: "invisible", Name: "Invisible", Components: []effects.Component{
+			effects.Edge{Against: true, Advantage: false, Range: effects.AnyRange}, effects.Edge{Against: false, Advantage: true, Range: effects.AnyRange},
+		}},
+		"paralyzed": {Slug: "paralyzed", Name: "Paralyzed", Components: []effects.Component{
+			effects.Incapacitated{},
+			effects.Immobile{},
+			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
+			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
+			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
+			effects.CritWithin{Feet: 5},
+		}},
+		"petrified": {Slug: "petrified", Name: "Petrified", Components: []effects.Component{
+			effects.Incapacitated{},
+			effects.Immobile{},
+			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
+			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
+			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
+			effects.Manual{Instruction: "Petrified: turned to stone with what it wears and carries; it resists all damage and is immune to poison."},
+		}},
+		"restrained": {Slug: "restrained", Name: "Restrained", Components: []effects.Component{
+			effects.Immobile{},
+			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
+			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
+			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveDisadvantage},
+		}},
+		"stunned": {Slug: "stunned", Name: "Stunned", Components: []effects.Component{
+			effects.Incapacitated{},
+			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
+			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
+			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
+		}},
+		"unconscious": {Slug: "unconscious", Name: "Unconscious", Components: []effects.Component{
+			effects.Incapacitated{},
+			effects.Immobile{},
+			effects.SaveEdge{Ability: "strength", Mode: effects.SaveFails},
+			effects.SaveEdge{Ability: "dexterity", Mode: effects.SaveFails},
+			effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange},
+			effects.CritWithin{Feet: 5},
+			effects.Manual{Instruction: "Unconscious: drops what it holds, falls Prone and knows nothing of its surroundings."},
 		}},
 		"poisoned": {Slug: "poisoned", Name: "Poisoned", Concentration: false, Components: []effects.Component{
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},

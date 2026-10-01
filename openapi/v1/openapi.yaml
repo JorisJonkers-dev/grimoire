@@ -4956,6 +4956,7 @@ components:
         sourceId: { $ref: "#/components/schemas/Id" }
         concentration: { type: boolean }
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
+        level: { type: integer, format: int32, minimum: 1, maximum: 10, description: "Levels of a stacking Effect, such as exhaustion." }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.

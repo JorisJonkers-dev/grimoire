@@ -259,9 +259,14 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
 	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
+	case domain.ActionEffectApplied:
+		if w.HP == nil {
+			return nil
+		}
+		return s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)})
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
-		domain.ActionReactionDeclined, domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
+		domain.ActionReactionDeclined, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
 		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet,
 		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
@@ -578,6 +583,7 @@ func (s *Store) saveEffects(ctx context.Context, sid uuid.UUID, fx *domain.Effec
 func (s *Store) insertEffect(ctx context.Context, sid uuid.UUID, e domain.Effect) error {
 	p := queries.InsertEffectParams{
 		ID: uuid.UUID(e.ID), SessionID: sid, TargetTokenID: uuid.UUID(e.Target), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration,
+		Level: int32(max(1, e.Level)), //nolint:gosec // at most ten levels
 	}
 	if e.Source != nil {
 		p.SourceTokenID = pgtype.UUID{Bytes: *e.Source, Valid: true}
@@ -602,7 +608,7 @@ func (s *Store) LoadEffects(ctx context.Context, id domain.SessionID) (domain.Ef
 	for _, r := range rows {
 		e := domain.Effect{
 			ID: domain.EffectID(r.ID), Target: domain.TokenID(r.TargetTokenID), Slug: r.Slug, Name: r.Name, Concentration: r.Concentration,
-			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32),
+			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32), Level: int(r.Level),
 		}
 		if r.SourceTokenID.Valid {
 			src := domain.TokenID(r.SourceTokenID.Bytes)

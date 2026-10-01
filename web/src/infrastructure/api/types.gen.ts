@@ -1511,6 +1511,10 @@ export type LiveEffect = {
     sourceId?: Id;
     concentration: boolean;
     roundsLeft?: number;
+    /**
+     * Levels of a stacking Effect, such as exhaustion.
+     */
+    level?: number;
 };
 
 /**

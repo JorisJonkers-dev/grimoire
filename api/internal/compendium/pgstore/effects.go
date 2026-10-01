@@ -106,6 +106,24 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return "create_surface", func() error {
 			return q.InsertEffectSurface(ctx, queries.InsertEffectSurfaceParams{EffectID: id, Ordinal: ord, Surface: string(c.Kind), Rounds: int32(c.Rounds)}) //nolint:gosec // bounded by a check
 		}
+	case effects.Incapacitated:
+		return "incapacitated", func() error { return nil }
+	case effects.Immobile:
+		return "immobile", func() error { return nil }
+	case effects.SaveEdge:
+		return "save_edge", func() error {
+			return q.InsertEffectSaveEdge(ctx, queries.InsertEffectSaveEdgeParams{EffectID: id, Ordinal: ord, Ability: c.Ability, Mode: string(c.Mode)})
+		}
+	case effects.CritWithin:
+		return "crit_within", func() error {
+			return q.InsertEffectCrit(ctx, queries.InsertEffectCritParams{EffectID: id, Ordinal: ord, Feet: int32(c.Feet)}) //nolint:gosec // bounded by a check
+		}
+	case effects.Exhausting:
+		return "exhausting", func() error {
+			return q.InsertEffectExhaustion(ctx, queries.InsertEffectExhaustionParams{
+				EffectID: id, Ordinal: ord, D20PerLevel: int32(c.D20PerLevel), SpeedFtPerLevel: int32(c.SpeedFtPerLevel), DeathAt: int32(c.DeathAt), //nolint:gosec // bounded by checks
+			})
+		}
 	}
 	return "", func() error { return nil }
 }
@@ -146,12 +164,23 @@ func (s *Store) Effects(ctx context.Context) (effects.Catalog, error) {
 	}
 	for _, o := range order {
 		d := byID[o.EffectID]
-		d.Components = append(d.Components, parts[slot{o.EffectID, o.Ordinal}])
+		d.Components = append(d.Components, componentOf(o.Kind, parts[slot{o.EffectID, o.Ordinal}]))
 	}
 	for _, d := range byID {
 		out[d.Slug] = *d
 	}
 	return out, nil
+}
+
+// componentOf is a component read from its typed row, or made from its kind when it carries no data.
+func componentOf(kind string, typed effects.Component) effects.Component {
+	switch kind {
+	case "incapacitated":
+		return effects.Incapacitated{}
+	case "immobile":
+		return effects.Immobile{}
+	}
+	return typed
 }
 
 // componentsBySlot reads every typed component row.
@@ -231,6 +260,32 @@ func (s *Store) areaComponents(ctx context.Context, out map[slot]effects.Compone
 	}
 	for _, r := range surfaces {
 		out[slot{r.EffectID, r.Ordinal}] = effects.CreateSurface{Kind: surface.Kind(r.Surface), Rounds: int(r.Rounds)}
+	}
+	return s.conditionComponents(ctx, out)
+}
+
+// conditionComponents reads the components conditions are made of.
+func (s *Store) conditionComponents(ctx context.Context, out map[slot]effects.Component) (map[slot]effects.Component, error) {
+	edges, err := s.q.ListEffectSaveEdges(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range edges {
+		out[slot{r.EffectID, r.Ordinal}] = effects.SaveEdge{Ability: r.Ability, Mode: effects.SaveMode(r.Mode)}
+	}
+	crits, err := s.q.ListEffectCrits(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range crits {
+		out[slot{r.EffectID, r.Ordinal}] = effects.CritWithin{Feet: int(r.Feet)}
+	}
+	tired, err := s.q.ListEffectExhaustion(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range tired {
+		out[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt)}
 	}
 	return out, nil
 }

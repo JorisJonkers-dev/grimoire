@@ -323,8 +323,11 @@ describe('combat', () => {
         fighter('Lurker', { initiative: 5, rank: 3, done: true }),
       ],
     }
-    s.receive({ kind: 'view', seq: 3, view: { tokens: [goblin, lurker], fog: false, visible: [], remembered: [], combat: active } })
+    const tired = { ...goblin, effects: [{ id: '0190c7a8-0000-7000-8000-000000000301', slug: 'exhaustion', name: 'Exhaustion', concentration: false, level: 2 },
+      { id: '0190c7a8-0000-7000-8000-000000000302', slug: 'homebrew-hex', name: 'Hex', concentration: false }] }
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [tired, lurker], fog: false, visible: [], remembered: [], combat: active } })
     await flushPromises()
+    expect(wrapper.get('[data-testid="rail-Goblin Boss"] [data-testid="statuses"]').findAll('[role="img"]').map((i) => i.attributes('aria-label'))).toEqual(['Exhaustion 2', 'Hex'])
     expect(wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Round 1')
     expect(wrapper.get('[data-testid="rail-Goblin Boss"]').text()).toContain('17 · tied')
     expect(wrapper.get('[data-testid="rail-Goblin Boss"]').attributes('aria-current')).toBe('step')

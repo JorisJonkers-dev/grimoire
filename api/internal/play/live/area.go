@@ -43,6 +43,8 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 		return areaPlan{}, "That is not an area spell the rules know."
 	case r.st.cast != nil:
 		return areaPlan{}, "An area spell is still waiting on its rolls."
+	case r.st.catalog.Incapacitated(r.st.actives(caster.ID)):
+		return areaPlan{}, caster.Label + " can't act while Incapacitated."
 	}
 	if c := r.st.combat; c == nil || c.Status != domain.CombatActive {
 		return areaPlan{}, "Spells happen in combat, once initiative is rolled."
@@ -120,11 +122,7 @@ func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
 	ability := p.spell.Save
 	for _, t := range p.targets {
 		target := domain.AreaTarget{Token: t.ID}
-		if ability != "" {
-			name := strings.ToUpper(ability[:1]) + ability[1:]
-			roll := r.request(m, t, fmt.Sprintf("%s save against %s (DC %d)", name, p.spell.Name, cast.DC),
-				strings.Join(append([]string{"1d20"}, r.st.catalog.SaveDice(r.st.actives(t.ID))...), "+"),
-				domain.Modifier{Label: name + " save", Value: t.Stats.Saves[ability]})
+		if roll, ok := r.saveRoll(m, t, ability, fmt.Sprintf("save against %s (DC %d)", p.spell.Name, cast.DC)); ok {
 			target.SaveRoll = &roll.ID
 			w.Rolls = append(w.Rolls, roll)
 		}

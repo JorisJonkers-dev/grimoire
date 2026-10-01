@@ -17,6 +17,8 @@ type Effect struct {
 	RoundsLeft    int
 	SaveAbility   string
 	SaveDC        int
+	// Level is how many levels of a stacking Effect (exhaustion) the bearer has.
+	Level int
 }
 
 // Holder is whose turns count an Effect down: its source's, or the bearer's when it has none.

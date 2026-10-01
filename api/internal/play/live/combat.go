@@ -49,6 +49,8 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "It is not " + t.Label + "'s turn."
 	case c.Status != domain.CombatActive:
 		return Write{}, "Roll initiative first."
+	case r.st.catalog.Incapacitated(r.st.actives(t.ID)):
+		return Write{}, t.Label + " can't act while Incapacitated."
 	}
 	if _, ok := x.Economy.Spend(res); !ok {
 		return Write{}, "That is already spent this turn."
@@ -257,13 +259,13 @@ func applyCombat(s *state, w *Write) {
 	default:
 		x.Economy, _ = x.Economy.Spend(w.resource)
 	}
-	settle(c)
+	settle(c, s.speedOf)
 	w.Combat = c
 }
 
 // settle starts the fight once everyone has rolled, and moves to the next initiative count once
 // everyone on the current one has ended their turn.
-func settle(c *domain.Combat) {
+func settle(c *domain.Combat, speed func(domain.Combatant) int) {
 	totals := c.Totals()
 	if c.Status == domain.CombatRolling {
 		if len(totals) < len(c.Combatants) {
@@ -273,7 +275,7 @@ func settle(c *domain.Combat) {
 		for i := range c.Combatants {
 			c.Combatants[i].Economy.Reaction = true
 		}
-		startTurn(c)
+		startTurn(c, speed)
 		return
 	}
 	for range len(totals) + 1 {
@@ -288,16 +290,26 @@ func settle(c *domain.Combat) {
 			}
 		}
 		c.Turn = next
-		startTurn(c)
+		startTurn(c, speed)
 	}
 }
 
-func startTurn(c *domain.Combat) {
+func startTurn(c *domain.Combat, speed func(domain.Combatant) int) {
 	for i, x := range c.Combatants {
 		if c.Acting(x) {
-			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(x.SpeedFt), false
+			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(speed(x)), false
 		}
 	}
+}
+
+// speedOf is how far a combatant can move this turn: none while Immobile, and less for each level of
+// exhaustion.
+func (s *state) speedOf(x domain.Combatant) int {
+	bearer := s.actives(x.TokenID)
+	if s.catalog.Immobile(bearer) {
+		return 0
+	}
+	return max(0, x.SpeedFt-s.catalog.SpeedPenaltyFt(bearer))
 }
 
 // dropCombatant takes a removed token out of the Combat.
@@ -315,7 +327,7 @@ func dropCombatant(s *state, w *Write) {
 	if r := s.combat.Resume; r != nil && r.Token == w.Token.ID {
 		s.combat.Resume = nil
 	}
-	settle(s.combat)
+	settle(s.combat, s.speedOf)
 	w.Combat = s.combat
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -66,9 +67,14 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	}
 	e := domain.Effect{
 		ID: domain.EffectID(uuid.New()), Target: target.ID, Source: source, Slug: slug, Name: name, Concentration: def.Concentration && source != nil,
-		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC,
+		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC, Level: 1,
+	}
+	if i := r.st.stacked(target.ID, slug); i >= 0 {
+		e = r.st.fx.Active[i]
+		e.Level++
 	}
 	w := Write{Kind: domain.ActionEffectApplied, Token: target, effect: &e}
+	r.st.afflict(&w, e, target)
 	for _, old := range r.st.fx.Active {
 		if e.Concentration && old.Concentration && old.Source != nil && *old.Source == *source {
 			w.ended = append(w.ended, old.ID)
@@ -78,6 +84,31 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + ": " + text})
 	}
 	return w, ""
+}
+
+// stacked finds the Effect a stacking Effect adds a level to, or -1.
+func (s *state) stacked(target domain.TokenID, slug string) int {
+	if !s.catalog.Stacks(slug) {
+		return -1
+	}
+	return slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.Target == target && e.Slug == slug })
+}
+
+// afflict adds what an Effect does the moment it lands: an incapacitated creature loses its
+// concentration, and a fatal level of exhaustion drops it to 0 hit points.
+func (s *state) afflict(w *Write, e domain.Effect, target domain.Token) {
+	one := []effects.Active{{Slug: e.Slug, Source: "", Level: e.Level}}
+	if s.catalog.Incapacitated(one) {
+		for _, old := range s.fx.Active {
+			if old.Concentration && old.Source != nil && *old.Source == target.ID {
+				w.ended = append(w.ended, old.ID)
+			}
+		}
+	}
+	if name, dead := s.catalog.Fatal(one); dead && target.Stats != nil {
+		w.HP = &HPChange{Token: target.ID, Before: target.Stats.HP, After: 0}
+		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + " dies of " + name + "."})
+	}
 }
 
 // checkEffect validates an Effect's target, name, duration, ending save and source.
@@ -111,7 +142,7 @@ func (s *state) actives(id domain.TokenID) []effects.Active {
 	var out []effects.Active
 	for _, e := range s.fx.Active {
 		if e.Target == id {
-			a := effects.Active{Slug: e.Slug, Source: ""}
+			a := effects.Active{Slug: e.Slug, Source: "", Level: e.Level}
 			if e.Source != nil {
 				a.Source = uuid.UUID(*e.Source).String()
 			}
@@ -125,22 +156,37 @@ func (s *state) actives(id domain.TokenID) []effects.Active {
 func (r *runtime) saves(dm domain.Member, t domain.Token) ([]domain.Roll, []domain.PendingSave) {
 	var rolls []domain.Roll
 	var pending []domain.PendingSave
-	extra := r.st.catalog.SaveDice(r.st.actives(t.ID))
 	for _, e := range r.st.fx.Active {
 		if e.Target != t.ID || e.SaveAbility == "" || slices.ContainsFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.Effect == e.ID }) {
 			continue
 		}
-		bonus := 0
-		if t.Stats != nil {
-			bonus = t.Stats.Saves[e.SaveAbility]
+		roll, ok := r.saveRoll(dm, t, e.SaveAbility, fmt.Sprintf("save to end %s (DC %d)", e.Name, e.SaveDC))
+		if !ok {
+			continue
 		}
-		ability := strings.ToUpper(e.SaveAbility[:1]) + e.SaveAbility[1:]
-		roll := r.request(dm, t, fmt.Sprintf("%s save to end %s (DC %d)", ability, e.Name, e.SaveDC), strings.Join(append([]string{"1d20"}, extra...), "+"),
-			domain.Modifier{Label: ability + " save", Value: bonus})
 		rolls = append(rolls, roll)
 		pending = append(pending, domain.PendingSave{RollID: roll.ID, Effect: e.ID, DC: e.SaveDC})
 	}
 	return rolls, pending
+}
+
+// saveRoll opens a saving throw folded with the bearer's effects: advantage, disadvantage, added dice
+// and penalties. A save its effects make fail is never rolled.
+func (r *runtime) saveRoll(m domain.Member, t domain.Token, ability, purpose string) (domain.Roll, bool) {
+	if ability == "" {
+		return domain.Roll{}, false
+	}
+	p := r.st.catalog.ForSave(r.st.actives(t.ID), ability)
+	if p.Fails {
+		return domain.Roll{}, false
+	}
+	bonus := 0
+	if t.Stats != nil {
+		bonus = t.Stats.Saves[ability]
+	}
+	name := strings.ToUpper(ability[:1]) + ability[1:]
+	notation := strings.Join(append([]string{attack.D20(attack.ModeOf(len(p.Advantages), len(p.Disadvantages)))}, p.Dice...), "+")
+	return r.request(m, t, name+" "+purpose, notation, domain.Modifier{Label: name + " save", Value: bonus}, domain.Modifier{Label: "Exhaustion", Value: -p.Penalty}), true
 }
 
 // saveRolled ends an Effect whose saving throw met its DC.
@@ -161,7 +207,18 @@ func (r *runtime) saveRolled(p domain.PendingSave) {
 func applyEffects(s *state, w *Write) {
 	fx := &s.fx
 	if w.effect != nil {
-		fx.Active = append(fx.Active, *w.effect)
+		if i := slices.IndexFunc(fx.Active, func(e domain.Effect) bool { return e.ID == w.effect.ID }); i >= 0 {
+			fx.Active[i] = *w.effect
+		} else {
+			fx.Active = append(fx.Active, *w.effect)
+		}
+	}
+	if w.Kind == domain.ActionEffectApplied && w.HP != nil {
+		t := s.tokens[w.HP.Token]
+		stats := *t.Stats
+		stats.HP = w.HP.After
+		t.Stats = &stats
+		s.tokens[t.ID] = t
 	}
 	fx.Manual = append(fx.Manual, w.manuals...)
 	fx.Saves = append(fx.Saves, w.newSaves...)
@@ -256,6 +313,9 @@ func (s *state) effectViews(id domain.TokenID) []EffectView {
 			continue
 		}
 		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft}
+		if s.catalog.Stacks(e.Slug) {
+			v.Level = max(1, e.Level)
+		}
 		if e.Source != nil {
 			v.SourceID = uuid.UUID(*e.Source).String()
 		}

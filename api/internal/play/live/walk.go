@@ -28,6 +28,9 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 	if start == to {
 		return domain.Token{}, nil, 0, "The token is already there."
 	}
+	if r.st.catalog.Immobile(r.st.actives(t.ID)) {
+		return domain.Token{}, nil, 0, t.Label + " can't move."
+	}
 	reach := hex.Reachable(r.st.walkGrid(m.DM, t, seen), start, hex.MoveOptions{SpeedFt: MaxWalkFt, ClimbSpeed: false})
 	path, ok := reach.Path(to)
 	if !ok {

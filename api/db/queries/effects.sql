@@ -76,3 +76,22 @@ SELECT effect_id, ordinal, ability, condition_slug FROM compendium.effect_save_c
 
 -- name: ListEffectSurfaces :many
 SELECT effect_id, ordinal, surface, rounds FROM compendium.effect_surfaces;
+
+-- name: InsertEffectSaveEdge :exec
+INSERT INTO compendium.effect_save_edges (effect_id, ordinal, ability, mode) VALUES (@effect_id, @ordinal, @ability, @mode);
+
+-- name: InsertEffectCrit :exec
+INSERT INTO compendium.effect_crits (effect_id, ordinal, feet) VALUES (@effect_id, @ordinal, @feet);
+
+-- name: InsertEffectExhaustion :exec
+INSERT INTO compendium.effect_exhaustion (effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at)
+VALUES (@effect_id, @ordinal, @d20_per_level, @speed_ft_per_level, @death_at);
+
+-- name: ListEffectSaveEdges :many
+SELECT effect_id, ordinal, ability, mode FROM compendium.effect_save_edges;
+
+-- name: ListEffectCrits :many
+SELECT effect_id, ordinal, feet FROM compendium.effect_crits;
+
+-- name: ListEffectExhaustion :many
+SELECT effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at FROM compendium.effect_exhaustion;

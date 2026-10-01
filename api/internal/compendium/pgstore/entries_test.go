@@ -148,8 +148,8 @@ func TestAutomationCoverageCountsEveryKind(t *testing.T) {
 	if byKind["class"].Total != 3 || byKind["spell"].Total != 4 || byKind["armor"].Manual != 3 || byKind["monster"].Full != 0 {
 		t.Fatalf("coverage = %+v", counts)
 	}
-	if c := byKind["condition"]; c.Full != 1 || c.Manual != c.Total-1 || c.Partial != 0 {
-		t.Fatalf("prone is modelled, paralysis is not = %+v", c)
+	if c := byKind["condition"]; c.Total != 2 || c.Full != 2 || c.Manual != 0 || c.Partial != 0 {
+		t.Fatalf("prone and paralysis are both modelled = %+v", c)
 	}
 }
 

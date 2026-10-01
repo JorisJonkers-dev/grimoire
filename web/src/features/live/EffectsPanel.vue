@@ -1,20 +1,15 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import type { Ability, LiveToken } from '@/infrastructure/api/types.gen'
-import { GButton } from '@/shared/ui'
+import { GButton, StatusIcon } from '@/shared/ui'
+import { effectLabel, knownEffects } from './conditions'
 
 const props = defineProps<{ token: LiveToken; tokens: LiveToken[] }>()
 const emit = defineEmits<{
   apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number }]
   end: [effectId: string]
 }>()
-const known = [
-  { slug: 'bless', name: 'Bless' },
-  { slug: 'faerie-fire', name: 'Faerie Fire' },
-  { slug: 'hunters-mark', name: "Hunter's Mark" },
-  { slug: 'prone', name: 'Prone' },
-  { slug: 'poisoned', name: 'Poisoned' },
-]
+const known = knownEffects
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
 const form = reactive({ effect: '', source: '', rounds: 0, dc: 0 })
 const saveWith = ref<Ability | ''>('')
@@ -37,8 +32,9 @@ function apply() {
     <h2>Effects on {{ token.label }}</h2>
     <ul v-if="token.effects?.length" class="g-list">
       <li v-for="e in token.effects" :key="e.id" class="effect">
-        <span>
-          {{ e.name }}<template v-if="e.roundsLeft"> · {{ e.roundsLeft }} rounds</template><template v-if="e.concentration"> · concentration</template>
+        <span class="what">
+          <StatusIcon :slug="e.slug" :label="effectLabel(e)" />
+          {{ effectLabel(e, true) }}
         </span>
         <GButton variant="danger" :data-testid="`end-effect-${e.slug}`" @click="emit('end', e.id)">End</GButton>
       </li>
@@ -73,6 +69,11 @@ function apply() {
 </template>
 
 <style scoped>
+.what {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .effects {
   display: flex;
   flex-direction: column;

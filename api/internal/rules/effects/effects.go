@@ -5,6 +5,7 @@ package effects
 import (
 	"slices"
 	"sort"
+	"strconv"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
@@ -89,7 +90,47 @@ type CreateSurface struct {
 	Rounds int
 }
 
+// Incapacitated takes away the bearer's actions, bonus actions and reactions.
+type Incapacitated struct{}
+
+// Immobile holds the bearer's speed at zero.
+type Immobile struct{}
+
+// SaveMode is what a SaveEdge does to a saving throw.
+type SaveMode string
+
+// Save modes.
+const (
+	SaveAdvantage    SaveMode = "advantage"
+	SaveDisadvantage SaveMode = "disadvantage"
+	SaveFails        SaveMode = "fail"
+)
+
+// SaveEdge changes the bearer's saving throws of one ability: advantage, disadvantage or a sure failure.
+type SaveEdge struct {
+	Ability string
+	Mode    SaveMode
+}
+
+// CritWithin makes every hit on the bearer from within Feet a Critical Hit.
+type CritWithin struct {
+	Feet int
+}
+
+// Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
+// speed, and at DeathAt levels the bearer dies.
+type Exhausting struct {
+	D20PerLevel     int
+	SpeedFtPerLevel int
+	DeathAt         int
+}
+
 func (BonusDie) isComponent()      {}
+func (Incapacitated) isComponent() {}
+func (Immobile) isComponent()      {}
+func (SaveEdge) isComponent()      {}
+func (CritWithin) isComponent()    {}
+func (Exhausting) isComponent()    {}
 func (Edge) isComponent()          {}
 func (ExtraDamage) isComponent()   {}
 func (MoveCost) isComponent()      {}
@@ -142,10 +183,16 @@ type Owner struct {
 	Slug string
 }
 
-// Active is an Effect on a creature, and who put it there.
+// Active is an Effect on a creature, who put it there, and how many levels of it the creature has.
 type Active struct {
 	Slug   string
 	Source string
+	Level  int
+}
+
+// levels is how many times an Active Effect counts; one unless it stacks.
+func (a Active) levels() int {
+	return max(1, a.Level)
 }
 
 // AttackProfile is what effects do to one attack: every advantage and disadvantage with its reason,
@@ -156,13 +203,16 @@ type AttackProfile struct {
 	AttackDice    []string
 	DamageDice    []string
 	Notes         []string
+	// Penalty comes off the attack roll; Crit turns a hit into a Critical Hit.
+	Penalty int
+	Crit    bool
 }
 
 // ForAttack folds the attacker's and the target's effects into one attack's profile.
 func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
 	var p AttackProfile
 	for _, a := range attacker {
-		p.attacking(cat[a.Slug])
+		p.attacking(cat[a.Slug], a.levels())
 	}
 	for _, a := range target {
 		p.attacked(cat[a.Slug], a.Source == attackerID, withinFive)
@@ -171,7 +221,7 @@ func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withi
 }
 
 // attacking applies an effect on the attacker.
-func (p *AttackProfile) attacking(d Definition) {
+func (p *AttackProfile) attacking(d Definition, levels int) {
 	for _, c := range d.Components {
 		switch c := c.(type) {
 		case BonusDie:
@@ -183,7 +233,10 @@ func (p *AttackProfile) attacking(d Definition) {
 			if !c.Against {
 				p.add(d.Name, c)
 			}
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface:
+		case Exhausting:
+			p.Penalty += c.D20PerLevel * levels
+			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin:
 		}
 	}
 }
@@ -201,7 +254,12 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 				p.DamageDice = append(p.DamageDice, c.Dice)
 				p.Notes = append(p.Notes, d.Name+": +"+c.Dice+" damage")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface:
+		case CritWithin:
+			if withinFive && c.Feet >= 5 && !p.Crit {
+				p.Crit = true
+				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
+			}
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting:
 		}
 	}
 }
@@ -251,6 +309,95 @@ func (cat Catalog) MoveMultiplier(bearer []Active) int {
 	return most
 }
 
+// has reports whether any of the bearer's effects has a component that passes the test.
+func (cat Catalog) has(bearer []Active, test func(Component) bool) bool {
+	for _, a := range bearer {
+		if slices.ContainsFunc(cat[a.Slug].Components, test) {
+			return true
+		}
+	}
+	return false
+}
+
+// Incapacitated reports whether the bearer can take no action, bonus action or reaction.
+func (cat Catalog) Incapacitated(bearer []Active) bool {
+	return cat.has(bearer, func(c Component) bool { _, ok := c.(Incapacitated); return ok })
+}
+
+// Immobile reports whether the bearer's speed is held at zero.
+func (cat Catalog) Immobile(bearer []Active) bool {
+	return cat.has(bearer, func(c Component) bool { _, ok := c.(Immobile); return ok })
+}
+
+// SaveProfile is what effects do to one saving throw: a sure failure, advantage and disadvantage with
+// their reasons, dice added, and a penalty.
+type SaveProfile struct {
+	Fails         bool
+	Advantages    []string
+	Disadvantages []string
+	Dice          []string
+	Penalty       int
+}
+
+// ForSave folds the bearer's effects into one saving throw of an ability.
+func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
+	p := SaveProfile{Fails: false, Advantages: nil, Disadvantages: nil, Dice: cat.SaveDice(bearer), Penalty: 0}
+	for _, a := range bearer {
+		d := cat[a.Slug]
+		for _, c := range d.Components {
+			switch c := c.(type) {
+			case SaveEdge:
+				if c.Ability != ability {
+					continue
+				}
+				switch c.Mode {
+				case SaveFails:
+					p.Fails = true
+				case SaveAdvantage:
+					p.Advantages = append(p.Advantages, d.Name+": advantage")
+				case SaveDisadvantage:
+					p.Disadvantages = append(p.Disadvantages, d.Name+": disadvantage")
+				}
+			case Exhausting:
+				p.Penalty += c.D20PerLevel * a.levels()
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin:
+			}
+		}
+	}
+	return p
+}
+
+// SpeedPenaltyFt is how many feet the bearer's effects take off its speed.
+func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
+	ft := 0
+	for _, a := range bearer {
+		for _, c := range cat[a.Slug].Components {
+			if e, ok := c.(Exhausting); ok {
+				ft += e.SpeedFtPerLevel * a.levels()
+			}
+		}
+	}
+	return ft
+}
+
+// Fatal names the effect that kills the bearer at its level, if any (six levels of exhaustion).
+func (cat Catalog) Fatal(bearer []Active) (string, bool) {
+	for _, a := range bearer {
+		d := cat[a.Slug]
+		for _, c := range d.Components {
+			if e, ok := c.(Exhausting); ok && e.DeathAt > 0 && a.levels() >= e.DeathAt {
+				return d.Name, true
+			}
+		}
+	}
+	return "", false
+}
+
+// Stacks reports whether applying the Effect again adds a level instead of a second copy.
+func (cat Catalog) Stacks(slug string) bool {
+	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Exhausting); return ok })
+}
+
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
 // instruction, so nothing is ever skipped silently.
 func (cat Catalog) Instructions(slug, name string) []string {
@@ -296,7 +443,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Surface = c
 		case Manual:
 			out.Instructions = append(out.Instructions, c.Instruction)
-		case BonusDie, Edge, ExtraDamage, MoveCost:
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting:
 		}
 	}
 	return out, known && found

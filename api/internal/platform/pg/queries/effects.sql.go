@@ -81,6 +81,21 @@ func (q *Queries) InsertEffectComponent(ctx context.Context, arg InsertEffectCom
 	return err
 }
 
+const insertEffectCrit = `-- name: InsertEffectCrit :exec
+INSERT INTO compendium.effect_crits (effect_id, ordinal, feet) VALUES ($1, $2, $3)
+`
+
+type InsertEffectCritParams struct {
+	EffectID int64
+	Ordinal  int32
+	Feet     int32
+}
+
+func (q *Queries) InsertEffectCrit(ctx context.Context, arg InsertEffectCritParams) error {
+	_, err := q.db.Exec(ctx, insertEffectCrit, arg.EffectID, arg.Ordinal, arg.Feet)
+	return err
+}
+
 const insertEffectEdge = `-- name: InsertEffectEdge :exec
 INSERT INTO compendium.effect_edges (effect_id, ordinal, against, advantage, reach)
 VALUES ($1, $2, $3, $4, $5)
@@ -101,6 +116,30 @@ func (q *Queries) InsertEffectEdge(ctx context.Context, arg InsertEffectEdgePara
 		arg.Against,
 		arg.Advantage,
 		arg.Reach,
+	)
+	return err
+}
+
+const insertEffectExhaustion = `-- name: InsertEffectExhaustion :exec
+INSERT INTO compendium.effect_exhaustion (effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertEffectExhaustionParams struct {
+	EffectID        int64
+	Ordinal         int32
+	D20PerLevel     int32
+	SpeedFtPerLevel int32
+	DeathAt         int32
+}
+
+func (q *Queries) InsertEffectExhaustion(ctx context.Context, arg InsertEffectExhaustionParams) error {
+	_, err := q.db.Exec(ctx, insertEffectExhaustion,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.D20PerLevel,
+		arg.SpeedFtPerLevel,
+		arg.DeathAt,
 	)
 	return err
 }
@@ -194,6 +233,27 @@ func (q *Queries) InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSa
 		arg.Dice,
 		arg.DamageType,
 		arg.Half,
+	)
+	return err
+}
+
+const insertEffectSaveEdge = `-- name: InsertEffectSaveEdge :exec
+INSERT INTO compendium.effect_save_edges (effect_id, ordinal, ability, mode) VALUES ($1, $2, $3, $4)
+`
+
+type InsertEffectSaveEdgeParams struct {
+	EffectID int64
+	Ordinal  int32
+	Ability  string
+	Mode     string
+}
+
+func (q *Queries) InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error {
+	_, err := q.db.Exec(ctx, insertEffectSaveEdge,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.Ability,
+		arg.Mode,
 	)
 	return err
 }
@@ -319,6 +379,36 @@ func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectC
 	return items, nil
 }
 
+const listEffectCrits = `-- name: ListEffectCrits :many
+SELECT effect_id, ordinal, feet FROM compendium.effect_crits
+`
+
+type ListEffectCritsRow struct {
+	EffectID int64
+	Ordinal  int32
+	Feet     int32
+}
+
+func (q *Queries) ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectCrits)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectCritsRow{}
+	for rows.Next() {
+		var i ListEffectCritsRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Feet); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectDefinitions = `-- name: ListEffectDefinitions :many
 SELECT id, slug, name, concentration FROM compendium.effect_definitions ORDER BY slug
 `
@@ -382,6 +472,44 @@ func (q *Queries) ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, er
 			&i.Against,
 			&i.Advantage,
 			&i.Reach,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectExhaustion = `-- name: ListEffectExhaustion :many
+SELECT effect_id, ordinal, d20_per_level, speed_ft_per_level, death_at FROM compendium.effect_exhaustion
+`
+
+type ListEffectExhaustionRow struct {
+	EffectID        int64
+	Ordinal         int32
+	D20PerLevel     int32
+	SpeedFtPerLevel int32
+	DeathAt         int32
+}
+
+func (q *Queries) ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaustionRow, error) {
+	rows, err := q.db.Query(ctx, listEffectExhaustion)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectExhaustionRow{}
+	for rows.Next() {
+		var i ListEffectExhaustionRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.D20PerLevel,
+			&i.SpeedFtPerLevel,
+			&i.DeathAt,
 		); err != nil {
 			return nil, err
 		}
@@ -548,6 +676,42 @@ func (q *Queries) ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDam
 			&i.Dice,
 			&i.DamageType,
 			&i.Half,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectSaveEdges = `-- name: ListEffectSaveEdges :many
+SELECT effect_id, ordinal, ability, mode FROM compendium.effect_save_edges
+`
+
+type ListEffectSaveEdgesRow struct {
+	EffectID int64
+	Ordinal  int32
+	Ability  string
+	Mode     string
+}
+
+func (q *Queries) ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error) {
+	rows, err := q.db.Query(ctx, listEffectSaveEdges)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectSaveEdgesRow{}
+	for rows.Next() {
+		var i ListEffectSaveEdgesRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.Ability,
+			&i.Mode,
 		); err != nil {
 			return nil, err
 		}

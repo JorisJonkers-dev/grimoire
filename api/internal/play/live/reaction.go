@@ -91,7 +91,7 @@ func (s *state) opportunity(mover domain.Token, path []hex.Coord, first int) (in
 			h := s.tokens[domain.TokenID(uuid.MustParse(id))]
 			x, fighting := s.fighter(h.ID)
 			no := slices.IndexFunc(attacksOf(h), func(a domain.Attack) bool { return a.ReachFt > 0 })
-			if !fighting || !x.Economy.Reaction || !standing(h) || no < 0 || (h.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) {
+			if !fighting || !x.Economy.Reaction || !standing(h) || no < 0 || (h.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) || s.catalog.Incapacitated(s.actives(h.ID)) {
 				continue
 			}
 			at := hex.Coord{Q: h.Q, R: h.R}
@@ -135,7 +135,7 @@ func (s *state) armor(t domain.Token) int {
 func (r *runtime) shieldPrompt(a, t domain.Token, p domain.PendingAttack, total int) *domain.ReactionPrompt {
 	x, ok := r.st.fighter(t.ID)
 	ac := r.st.armor(t) + p.CoverBonus
-	if !t.CanShield || !ok || !x.Economy.Reaction || x.Shielded || total >= ac+5 {
+	if !t.CanShield || !ok || !x.Economy.Reaction || x.Shielded || total >= ac+5 || r.st.catalog.Incapacitated(r.st.actives(t.ID)) {
 		return nil
 	}
 	return r.prompt(domain.PromptShield, t, a, p.AttackNo, fmt.Sprintf("Shield: AC %d → %d, so the attack (%d) would miss.", ac, ac+5, total))
