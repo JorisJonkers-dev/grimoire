@@ -1,6 +1,17 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import MovementSandbox from '@/shared/map/MovementSandbox.vue'
-import { ConditionChip, DieFace, EconomyPips, GButton, HitChance, HotbarSlot, ReactionTimer, TokenBadge } from '@/shared/ui'
+import { ConditionChip, DieFace, EconomyPips, GAvatar, GButton, GField, GPicker, GRow, GTabs, HitChance, HotbarSlot, ReactionTimer, TokenBadge } from '@/shared/ui'
+
+const name = ref('')
+const spell = ref('')
+const tab = ref('spells')
+const spells = [
+  { value: 'bless', label: 'Bless', hint: '1st level' },
+  { value: 'fireball', label: 'Fireball', hint: '3rd level' },
+  { value: 'fire-bolt', label: 'Fire Bolt', hint: 'Cantrip' },
+]
+const short = (v: string) => (v.length < 2 ? 'Use at least two letters.' : undefined)
 </script>
 
 <template>
@@ -14,6 +25,31 @@ import { ConditionChip, DieFace, EconomyPips, GButton, HitChance, HotbarSlot, Re
         <GButton variant="danger">Blackout TV</GButton>
         <GButton disabled>Unavailable</GButton>
       </div>
+    </section>
+    <section aria-labelledby="g-forms">
+      <h2 id="g-forms">Fields and pickers</h2>
+      <div class="grid">
+        <GField v-model="name" label="Character name" required :rules="[short]" hint="Judged when you leave the field." />
+        <GPicker v-model="spell" label="Spell" :options="spells" />
+      </div>
+    </section>
+    <section aria-labelledby="g-tabs">
+      <h2 id="g-tabs">Tabs and rows</h2>
+      <GTabs
+        v-model="tab"
+        label="Library"
+        :tabs="[
+          { value: 'spells', label: 'Spells', count: 3 },
+          { value: 'monsters', label: 'Monsters' },
+        ]"
+      >
+        <GRow title="Aria Vale" subtitle="Level 3 ranger">
+          <template #leading><GAvatar name="Aria Vale" /></template>
+        </GRow>
+        <GRow title="Brom" subtitle="Level 3 fighter">
+          <template #leading><GAvatar name="Brom" /></template>
+        </GRow>
+      </GTabs>
     </section>
     <section aria-labelledby="g-hotbar">
       <h2 id="g-hotbar">Hotbar</h2>
@@ -65,9 +101,9 @@ import { ConditionChip, DieFace, EconomyPips, GButton, HitChance, HotbarSlot, Re
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 16px;
+  padding: 24px var(--gutter);
+  box-sizing: border-box;
+  width: 100%;
 }
 h1 {
   margin: 0;
@@ -87,6 +123,11 @@ h2 {
   gap: 12px;
   align-items: center;
   margin-bottom: 12px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
 }
 .tray {
   padding: 12px;

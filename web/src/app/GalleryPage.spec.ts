@@ -7,7 +7,7 @@ describe('GalleryPage', () => {
   it('renders every component family accessibly', async () => {
     const w = mountWithQuery(GalleryPage, () => Promise.reject(new Error('offline')))
     document.body.appendChild(w.element)
-    for (const heading of ['Buttons', 'Hotbar', 'Tokens', 'Conditions and odds', 'Dice', 'Movement and sight']) {
+    for (const heading of ['Buttons', 'Fields and pickers', 'Tabs and rows', 'Hotbar', 'Tokens', 'Conditions and odds', 'Dice', 'Movement and sight']) {
       expect(w.text()).toContain(heading)
     }
     await expectAccessible(w.element as Element)

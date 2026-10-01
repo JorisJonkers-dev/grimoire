@@ -41,9 +41,7 @@ const coverage = useQuery(getAutomationCoverageOptions())
 <style scoped>
 .automation {
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 16px;
+  padding: 24px var(--gutter);
   box-sizing: border-box;
 }
 h1 {

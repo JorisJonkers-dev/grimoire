@@ -17,9 +17,9 @@ import StatusPanel from '@/features/status/StatusPanel.vue'
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 24px 16px;
+  padding: 24px var(--gutter);
+  box-sizing: border-box;
+  width: 100%;
 }
 h1 {
   margin: 0;

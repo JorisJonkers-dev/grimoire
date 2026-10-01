@@ -24,9 +24,9 @@ const sources = useQuery({ ...listSourcesOptions(), retry: false })
 
 <style scoped>
 .attribution {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 16px;
+  padding: 24px var(--gutter);
+  box-sizing: border-box;
+  width: 100%;
 }
 h1,
 h2 {

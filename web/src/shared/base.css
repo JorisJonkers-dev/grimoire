@@ -25,42 +25,72 @@ body {
   }
 }
 
+/* Pages fill the width between the shell's gutters: 48px, 16px on a phone. */
+:root {
+  --gutter: 48px;
+}
+@media (max-width: 600px) {
+  :root {
+    --gutter: 16px;
+  }
+}
 .g-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 16px;
+  padding: 24px var(--gutter);
   box-sizing: border-box;
 }
 .g-page h1 {
   margin: 0;
   font-family: var(--font-display);
 }
+/* A labelled native control, drawn like GField with its label floated inside the box. */
 .g-field {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--color-text-2);
 }
-.g-field input,
-.g-field select {
-  min-height: 44px;
-  padding: 0 12px;
+.g-field > span:first-child {
+  position: absolute;
+  top: 6px;
+  left: 13px;
+  z-index: 1;
+  font-size: 12px;
+  color: var(--color-gold-high);
+  pointer-events: none;
+}
+.g-field input:not([type='range'], [type='file'], [type='checkbox'], [type='radio']),
+.g-field select,
+.g-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: 20px 12px 4px;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
   font: inherit;
   font-size: 16px;
 }
+.g-field input:not([type='range'], [type='file'], [type='checkbox'], [type='radio']):focus,
+.g-field select:focus,
+.g-field textarea:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+/* A slider or file chooser keeps its label above it. */
+.g-field:has(input[type='range'], input[type='file']) > span:first-child {
+  position: static;
+}
 .g-card {
   padding: 14px 16px;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
 .g-list {

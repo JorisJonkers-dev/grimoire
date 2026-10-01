@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { createCampaignMutation, listCampaignsInfiniteOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { CampaignPage } from '@/infrastructure/api/types.gen'
-import { GButton } from '@/shared/ui'
+import { GAvatar, GButton, GField, GRow } from '@/shared/ui'
 
 const router = useRouter()
 const campaigns = useInfiniteQuery(
@@ -37,11 +37,10 @@ function submit() {
       <p v-if="items.length === 0" data-testid="campaign-empty">You are not in any campaign yet. Start one, or ask your DM for an invite link.</p>
       <ul class="g-list" data-testid="campaign-list">
         <li v-for="c in items" :key="c.id">
-          <RouterLink :to="{ name: 'campaign', params: { id: c.id } }" class="row">
-            <span class="name">{{ c.name }}</span>
-            <span class="meta">{{ c.memberCount }} {{ c.memberCount === 1 ? 'member' : 'members' }}</span>
-            <span class="g-tag role">{{ c.myRole === 'dm' ? 'DM' : 'Player' }}</span>
-          </RouterLink>
+          <GRow :to="{ name: 'campaign', params: { id: c.id } }" :title="c.name" :subtitle="`${c.memberCount} ${c.memberCount === 1 ? 'member' : 'members'}`">
+            <template #leading><GAvatar :name="c.name" /></template>
+            <template #trailing><span class="g-tag">{{ c.myRole === 'dm' ? 'DM' : 'Player' }}</span></template>
+          </GRow>
         </li>
       </ul>
       <GButton v-if="campaigns.hasNextPage.value" :disabled="campaigns.isFetchingNextPage.value" @click="campaigns.fetchNextPage()">
@@ -51,14 +50,8 @@ function submit() {
 
     <form class="g-card create" data-testid="campaign-create" @submit.prevent="submit">
       <h2>Start a campaign</h2>
-      <label class="g-field">
-        <span>Campaign name</span>
-        <input v-model="name" maxlength="80" required data-testid="campaign-name" />
-      </label>
-      <label class="g-field">
-        <span>Your name at this table</span>
-        <input v-model="displayName" maxlength="60" required data-testid="campaign-display-name" />
-      </label>
+      <GField v-model="name" label="Campaign name" :maxlength="80" required data-testid="campaign-name" />
+      <GField v-model="displayName" label="Your name at this table" :maxlength="60" required data-testid="campaign-display-name" />
       <p v-if="create.isError.value" role="alert" class="g-alert">The campaign could not be created. Check the names and try again.</p>
       <GButton type="submit" variant="primary" :disabled="!canCreate">Start as DM</GButton>
     </form>
@@ -66,33 +59,8 @@ function submit() {
 </template>
 
 <style scoped>
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 12px;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  text-decoration: none;
-}
-.row:hover,
-.row:focus-visible {
-  border-color: var(--color-gold);
-}
-.name {
-  font-weight: 700;
-}
-.meta {
-  font-size: 14px;
-  color: var(--color-text-2);
-}
-.role {
-  grid-row: 1 / span 2;
-  grid-column: 2;
-  align-self: center;
+.g-list {
+  gap: 0;
 }
 .create {
   display: flex;

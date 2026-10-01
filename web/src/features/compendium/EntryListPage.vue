@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { listEntriesInfiniteOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { EntryPage, ListEntriesData, Ruleset } from '@/infrastructure/api/types.gen'
-import { GButton } from '@/shared/ui'
+import { GButton, GField, GRow } from '@/shared/ui'
 import CompendiumTabs from './CompendiumTabs.vue'
 import { isEntryKind, kindLabel } from './kinds'
 
@@ -45,17 +45,14 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
 </script>
 
 <template>
-  <main class="entries">
+  <main class="g-page">
     <CompendiumTabs :current="kind" />
     <p v-if="!known" role="alert" data-testid="entry-kind-missing">There is no such section in this grimoire.</p>
     <template v-else>
       <h1>{{ kindLabel(kind) }}</h1>
       <form class="filters" role="search" @submit.prevent>
-        <label class="field grow">
-          <span>Name</span>
-          <input v-model="search" type="search" placeholder="Search by name" data-testid="entry-search" />
-        </label>
-        <label class="field">
+        <GField v-model="search" type="search" label="Search by name" data-testid="entry-search" />
+        <label class="g-field">
           <span>Rules</span>
           <select v-model="ruleset" data-testid="entry-ruleset">
             <option value="">2024 leads</option>
@@ -68,13 +65,18 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
       <p v-else-if="entries.isError.value" role="alert">This list could not be loaded. Try again shortly.</p>
       <template v-else>
         <p v-if="items.length === 0" data-testid="entry-empty">Nothing matches.</p>
-        <ul class="list" data-testid="entry-list">
+        <ul class="g-list rows" data-testid="entry-list">
           <li v-for="entry in items" :key="entry.slug">
-            <RouterLink :to="{ name: 'entry', params: { kind, slug: entry.slug }, query: ruleset ? { ruleset } : {} }" class="row" :data-testid="`entry-${entry.slug}`">
-              <span class="name">{{ entry.name }}</span>
-              <span class="meta">{{ entry.subtitle }}</span>
-              <span class="tag">{{ entry.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>
-            </RouterLink>
+            <GRow
+              :to="{ name: 'entry', params: { kind, slug: entry.slug }, query: ruleset ? { ruleset } : {} }"
+              :title="entry.name"
+              :subtitle="entry.subtitle"
+              :data-testid="`entry-${entry.slug}`"
+            >
+              <template #trailing>
+                <span class="g-tag">{{ entry.ruleset === 'srd-2024' ? '2024' : '2014' }}</span>
+              </template>
+            </GRow>
           </li>
         </ul>
         <GButton v-if="entries.hasNextPage.value" :disabled="entries.isFetchingNextPage.value" @click="entries.fetchNextPage()">
@@ -86,83 +88,13 @@ const items = computed(() => entries.data.value?.pages.flatMap((p) => p.items) ?
 </template>
 
 <style scoped>
-.entries {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 16px;
-  box-sizing: border-box;
-}
-h1 {
-  margin: 0;
-  font-family: var(--font-display);
-}
 .filters {
   display: grid;
   grid-template-columns: 1fr minmax(140px, auto);
   gap: 10px;
+  align-items: start;
 }
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: var(--color-text-2);
-}
-input,
-select {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
-  font-size: 16px;
-}
-.list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 12px;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  text-decoration: none;
-}
-.row:hover,
-.row:focus-visible {
-  border-color: var(--color-gold);
-}
-.name {
-  font-weight: 700;
-}
-.meta {
-  grid-column: 1;
-  font-size: 14px;
-  color: var(--color-text-2);
-}
-.tag {
-  grid-row: 1 / span 2;
-  grid-column: 2;
-  align-self: center;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-bronze);
-  font-size: 12px;
-  color: var(--color-text-2);
+.rows {
+  gap: 0;
 }
 </style>
