@@ -32,6 +32,8 @@ import (
 	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	prepapp "github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
+	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
 
@@ -179,7 +181,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
 		Blobs: blobs(cfg, logger),
 	}
-	hub := &live.Hub{Store: playpg.New(store.Pool()), Stats: playpg.Statblocks{Store: playpg.New(store.Pool()), Characters: characters}, Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger}
+	hub := &live.Hub{
+		Store: playpg.New(store.Pool()), Stats: playpg.Statblocks{Store: playpg.New(store.Pool()), Characters: characters}, Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger,
+		Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) },
+	}
 	defer hub.Shutdown()
 	handler, err := httpapi.New(httpapi.Options{
 		Handler: &httpapi.Handler{
@@ -191,6 +196,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},
 			Hub: hub, LiveMembers: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
+			Prep: &prepapp.Service{Repo: preppg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now},
 			Maps: &playapp.Maps{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
 				Blobs: blobs(cfg, logger), Now: time.Now,

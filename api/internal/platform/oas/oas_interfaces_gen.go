@@ -17,6 +17,14 @@ type CreateCharacterRes interface {
 	createCharacterRes()
 }
 
+type CreateEncounterPoolRes interface {
+	createEncounterPoolRes()
+}
+
+type CreateEncounterTableRes interface {
+	createEncounterTableRes()
+}
+
 type CreateInviteRes interface {
 	createInviteRes()
 }
@@ -31,6 +39,14 @@ type CreateRollRes interface {
 
 type DeleteCharacterRes interface {
 	deleteCharacterRes()
+}
+
+type DeleteEncounterPoolRes interface {
+	deleteEncounterPoolRes()
+}
+
+type DeleteEncounterTableRes interface {
+	deleteEncounterTableRes()
 }
 
 type DeleteNpcRes interface {
@@ -129,12 +145,36 @@ type ListDeletedNpcsRes interface {
 	listDeletedNpcsRes()
 }
 
+type ListEncounterChecksRes interface {
+	listEncounterChecksRes()
+}
+
+type ListEncounterPoolRevisionsRes interface {
+	listEncounterPoolRevisionsRes()
+}
+
+type ListEncounterPoolsRes interface {
+	listEncounterPoolsRes()
+}
+
+type ListEncounterTableRevisionsRes interface {
+	listEncounterTableRevisionsRes()
+}
+
+type ListEncounterTablesRes interface {
+	listEncounterTablesRes()
+}
+
 type ListEntriesRes interface {
 	listEntriesRes()
 }
 
 type ListInvitesRes interface {
 	listInvitesRes()
+}
+
+type ListLocationsRes interface {
+	listLocationsRes()
 }
 
 type ListMapsRes interface {
@@ -185,6 +225,14 @@ type RemoveMemberRes interface {
 	removeMemberRes()
 }
 
+type RestoreEncounterPoolRevisionRes interface {
+	restoreEncounterPoolRevisionRes()
+}
+
+type RestoreEncounterTableRevisionRes interface {
+	restoreEncounterTableRevisionRes()
+}
+
 type RestoreNpcRevisionRes interface {
 	restoreNpcRevisionRes()
 }
@@ -219,6 +267,14 @@ type UpdateCampaignRes interface {
 
 type UpdateCharacterRes interface {
 	updateCharacterRes()
+}
+
+type UpdateEncounterPoolRes interface {
+	updateEncounterPoolRes()
+}
+
+type UpdateEncounterTableRes interface {
+	updateEncounterTableRes()
 }
 
 type UpdateMapRes interface {

@@ -7,6 +7,8 @@ import { gridBox } from '@/shared/map/grid'
 import HexGrid from '@/shared/map/HexGrid.vue'
 import { board } from './board'
 import CameraView from './CameraView.vue'
+import { checkLine } from './checks'
+import LiveRoll from './LiveRoll.vue'
 import { focus } from './camera'
 import { layoutOf } from './geometry'
 import InitiativeRail from './InitiativeRail.vue'
@@ -15,7 +17,8 @@ import WorldOverlay from './WorldOverlay.vue'
 
 const HEX = 36
 const route = useRoute()
-const { view: state } = useLiveSession(String(route.params.id), String(route.params.sid), 'table')
+const campaignId = String(route.params.id)
+const { view: state } = useLiveSession(campaignId, String(route.params.sid), 'table')
 const table = computed(() => state.view?.table)
 const cells = computed(() =>
   state.session && state.view
@@ -31,6 +34,8 @@ const px = (c: Coord) => {
 }
 const centre = computed(() => (state.view ? px(focus(state.view)) : { x: 0, y: 0 }))
 const ping = computed(() => (state.ping ? { ...px(state.ping), n: state.ping.n } : null))
+// The latest Encounter Check: an open one shows its roll here while it waits.
+const latest = computed(() => state.view?.checks?.at(-1))
 // The world scene shows the party's travels when it is the map they travel; any other map shows bare.
 const world = computed(() => (state.view?.world && state.view.world.map.id === table.value?.worldMap?.id ? state.view.world : null))
 const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visible: world.value?.revealed ?? [], remembered: [] }))
@@ -39,6 +44,10 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
 <template>
   <main class="table" data-testid="table-display">
     <h1 class="sr-only">Table display</h1>
+    <aside v-if="latest && !table?.blackout" class="check" aria-label="Encounter check" data-testid="table-check">
+      <LiveRoll v-if="latest.status === 'pending' && latest.rollId" :key="latest.rollId" :campaign-id="campaignId" :roll-id="latest.rollId" />
+      <p v-else>{{ checkLine(latest) }}</p>
+    </aside>
     <p v-if="state.connection === 'ended'" class="ended" role="status" data-testid="session-ended">The session has ended.</p>
     <p v-else-if="!state.session || !state.view" class="ended" role="status">Waiting for the table…</p>
     <div v-else-if="table?.blackout" class="blackout" role="img" aria-label="The table is dark" data-testid="blackout"></div>
@@ -79,6 +88,14 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
   width: 100%;
   max-width: 100%;
   padding: 12px;
+}
+.check {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  max-width: 420px;
+  font-size: 20px;
 }
 .blackout {
   position: fixed;

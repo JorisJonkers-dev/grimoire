@@ -12,7 +12,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -63,6 +65,12 @@ type Write struct {
 	// Zone is the Encounter Zone after the change; Revealed the hidden creatures it showed everyone.
 	Zone     *domain.Zone
 	Revealed []domain.Token
+	// Rest is the rest a rest_taken took; Check the Encounter Check a write ran or resolved; Schedule a
+	// check the DM asked for later, and Unschedule the scheduled check this one used up.
+	Rest       string
+	Check      *prep.Check
+	Schedule   *prep.Scheduled
+	Unschedule uuid.UUID
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -93,6 +101,9 @@ type Store interface {
 	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
 	LoadWorld(ctx context.Context, campaign uuid.UUID, sid domain.SessionID, id domain.MapID) (*domain.World, error)
 	LoadZones(ctx context.Context, id domain.SessionID) ([]domain.Zone, error)
+	// LoadPrep reads the Campaign's Encounter Tables, Pools, creature XP, party levels and scheduled checks.
+	LoadPrep(ctx context.Context, campaign uuid.UUID) (prep.Prep, error)
+	LoadChecks(ctx context.Context, campaign uuid.UUID, sid domain.SessionID) ([]prep.Check, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -153,6 +164,8 @@ type runtime struct {
 	log      *slog.Logger
 	release  func()
 	st       *state
+	seed     func() uint64
+	source   func(seed uint64) dice.Source
 	// dm is the DM last seen on this Session; an ambush opens its creatures' rolls for them.
 	dm    *domain.Member
 	subs  map[*Subscriber]struct{}
@@ -171,6 +184,9 @@ type Hub struct {
 	Owner   Owner
 	Now     func() time.Time
 	Log     *slog.Logger
+	// Seed and Source drive Encounter Checks: each check keeps its seed so its draw can be replayed.
+	Seed   func() uint64
+	Source func(seed uint64) dice.Source
 
 	mu       sync.Mutex
 	runtimes map[domain.SessionID]*runtime
@@ -242,14 +258,19 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap, zones: zones}
+	checks, err := h.Store.LoadChecks(ctx, s.CampaignID, id)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	st := &state{session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table, tableMap: tableMap, zones: zones, checks: checks}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
 	}
 	st.setBoard(board)
 	st.setWorld(world)
 	rt := &runtime{
-		store: h.Store, campaign: s.CampaignID, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {
@@ -575,7 +596,11 @@ func change(s *state, w *Write) {
 	case domain.ActionTableSet:
 		s.table, s.tableMap = *w.Table, w.tableMap
 		return
-	case domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled:
+	case domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
+		domain.ActionRestTaken, domain.ActionCheckScheduled:
+		return
+	case domain.ActionEncounterChecked, domain.ActionEncounterResolved:
+		applyCheck(s, *w.Check)
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:

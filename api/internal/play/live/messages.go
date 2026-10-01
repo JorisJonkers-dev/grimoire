@@ -21,50 +21,53 @@ const (
 
 // Command kinds.
 const (
-	CmdResync        = "resync"
-	CmdPlace         = "place_token"
-	CmdMove          = "move_token"
-	CmdSetHidden     = "set_token_hidden"
-	CmdRemove        = "remove_token"
-	CmdSetMap        = "set_map"
-	CmdRevealHexes   = "reveal_hexes"
-	CmdSetWalls      = "set_walls"
-	CmdPlaceLight    = "place_light"
-	CmdRemoveLight   = "remove_light"
-	CmdSetAmbient    = "set_ambient"
-	CmdPlanWalk      = "plan_walk"
-	CmdWalk          = "walk"
-	CmdStartCombat   = "start_combat"
-	CmdEndTurn       = "end_turn"
-	CmdSpend         = "spend"
-	CmdEndCombat     = "end_combat"
-	CmdPreviewAttack = "preview_attack"
-	CmdAttack        = "attack"
-	CmdUndoDamage    = "undo_damage"
-	CmdSetTactics    = "set_tactics"
-	CmdReact         = "react"
-	CmdApplyEffect   = "apply_effect"
-	CmdEndEffect     = "end_effect"
-	CmdResolveManual = "resolve_manual"
-	CmdPreviewArea   = "preview_area"
-	CmdCastArea      = "cast_area"
-	CmdPaintSurface  = "paint_surface"
-	CmdSetElevation  = "set_elevation"
-	CmdTableCamera   = "table_camera"
-	CmdTableScene    = "table_scene"
-	CmdTableBlackout = "table_blackout"
-	CmdPing          = "ping"
-	CmdSetWorld      = "set_world"
-	CmdAddNode       = "add_node"
-	CmdAddRoute      = "add_route"
-	CmdRemoveNode    = "remove_node"
-	CmdRemoveRoute   = "remove_route"
-	CmdPlaceParty    = "place_party"
-	CmdTravel        = "travel"
-	CmdAddZone       = "add_zone"
-	CmdRemoveZone    = "remove_zone"
-	CmdHoldZone      = "hold_zone"
-	CmdSpringZone    = "spring_zone"
+	CmdResync         = "resync"
+	CmdPlace          = "place_token"
+	CmdMove           = "move_token"
+	CmdSetHidden      = "set_token_hidden"
+	CmdRemove         = "remove_token"
+	CmdSetMap         = "set_map"
+	CmdRevealHexes    = "reveal_hexes"
+	CmdSetWalls       = "set_walls"
+	CmdPlaceLight     = "place_light"
+	CmdRemoveLight    = "remove_light"
+	CmdSetAmbient     = "set_ambient"
+	CmdPlanWalk       = "plan_walk"
+	CmdWalk           = "walk"
+	CmdStartCombat    = "start_combat"
+	CmdEndTurn        = "end_turn"
+	CmdSpend          = "spend"
+	CmdEndCombat      = "end_combat"
+	CmdPreviewAttack  = "preview_attack"
+	CmdAttack         = "attack"
+	CmdUndoDamage     = "undo_damage"
+	CmdSetTactics     = "set_tactics"
+	CmdReact          = "react"
+	CmdApplyEffect    = "apply_effect"
+	CmdEndEffect      = "end_effect"
+	CmdResolveManual  = "resolve_manual"
+	CmdPreviewArea    = "preview_area"
+	CmdCastArea       = "cast_area"
+	CmdPaintSurface   = "paint_surface"
+	CmdSetElevation   = "set_elevation"
+	CmdTableCamera    = "table_camera"
+	CmdTableScene     = "table_scene"
+	CmdTableBlackout  = "table_blackout"
+	CmdPing           = "ping"
+	CmdSetWorld       = "set_world"
+	CmdAddNode        = "add_node"
+	CmdAddRoute       = "add_route"
+	CmdRemoveNode     = "remove_node"
+	CmdRemoveRoute    = "remove_route"
+	CmdPlaceParty     = "place_party"
+	CmdTravel         = "travel"
+	CmdAddZone        = "add_zone"
+	CmdRemoveZone     = "remove_zone"
+	CmdHoldZone       = "hold_zone"
+	CmdSpringZone     = "spring_zone"
+	CmdRest           = "rest"
+	CmdEncounterCheck = "encounter_check"
+	CmdScheduleCheck  = "schedule_check"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -143,6 +146,11 @@ type Command struct {
 	ZoneID       string           `json:"zoneId,omitempty"`
 	RadiusHexes  int              `json:"radiusHexes,omitempty"`
 	DMOnly       bool             `json:"dmOnly,omitempty"`
+	Rest         string           `json:"rest,omitempty"`
+	TableID      string           `json:"tableId,omitempty"`
+	Mode         string           `json:"mode,omitempty"`
+	Entry        int              `json:"entry,omitempty"`
+	Due          string           `json:"due,omitempty"`
 	promptID     uuid.UUID
 	rollID       domain.RollID
 }
@@ -293,6 +301,31 @@ type View struct {
 	// Zones go to the DM only; Perception lists the party's Perception Roll Cards, never the DC.
 	Zones      []ZoneView       `json:"zones,omitempty"`
 	Perception []PerceptionView `json:"perception,omitempty"`
+	Checks     []CheckView      `json:"checks,omitempty"`
+}
+
+// CheckView is an Encounter Check. Everyone sees what set it off and its outcome, and an open check's
+// roll; only the DM sees its table, mode, seed, entry and creatures.
+type CheckView struct {
+	ID         string             `json:"id"`
+	Trigger    string             `json:"trigger"`
+	Visibility string             `json:"visibility"`
+	Status     string             `json:"status"`
+	Outcome    string             `json:"outcome,omitempty"`
+	ChancePct  int                `json:"chancePct,omitempty"`
+	ChanceRoll int                `json:"chanceRoll,omitempty"`
+	RollID     string             `json:"rollId,omitempty"`
+	TableName  string             `json:"tableName,omitempty"`
+	Mode       string             `json:"mode,omitempty"`
+	Seed       string             `json:"seed,omitempty"`
+	EntryLabel string             `json:"entryLabel,omitempty"`
+	Monsters   []CheckMonsterView `json:"monsters,omitempty"`
+}
+
+// CheckMonsterView is how many of one creature a check produced.
+type CheckMonsterView struct {
+	Slug  string `json:"slug"`
+	Count int    `json:"count"`
 }
 
 // ZoneView is an Encounter Zone as the DM sees it.

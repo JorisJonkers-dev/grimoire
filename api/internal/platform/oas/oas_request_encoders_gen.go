@@ -52,6 +52,34 @@ func encodeCreateCharacterRequest(
 	return nil
 }
 
+func encodeCreateEncounterPoolRequest(
+	req *EncounterPoolInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCreateEncounterTableRequest(
+	req *EncounterTableInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateNpcRequest(
 	req *NpcInput,
 	r *http.Request,
@@ -186,6 +214,34 @@ func encodeUpdateCampaignRequest(
 
 func encodeUpdateCharacterRequest(
 	req *CharacterEdit,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateEncounterPoolRequest(
+	req *EncounterPoolInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateEncounterTableRequest(
+	req *EncounterTableInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

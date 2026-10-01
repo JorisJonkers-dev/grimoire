@@ -25,7 +25,7 @@ describe('npc list', () => {
   it('lists, adds and shows deleted NPCs', async () => {
     const posted: unknown[] = []
     const { wrapper, router } = await mountApp(`/campaigns/${ID}/npcs`, {
-      [`${base}/deleted`]: () => [{ id: '0190c7a8-0000-7000-8000-000000000008', name: 'Rahadin', deletedAt: '2026-09-30T20:00:00Z' }],
+      [`${base}/deleted`]: () => [{ id: '0190c7a8-0000-7000-8000-000000000008', name: 'Corwyn', deletedAt: '2026-09-30T20:00:00Z' }],
       [`${base}/${NPC}/revisions`]: () => revisions,
       [`${base}/${NPC}`]: () => npc(),
       [base]: async (_u, req) => {
@@ -37,7 +37,7 @@ describe('npc list', () => {
       },
     })
     expect(wrapper.get('[data-testid="npc-list"]').text()).toContain('No title')
-    expect(wrapper.get('[data-testid="npc-deleted"]').text()).toContain('Rahadin')
+    expect(wrapper.get('[data-testid="npc-deleted"]').text()).toContain('Corwyn')
     await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="npc-name"]').setValue(' Ismark ')
     await wrapper.get('[data-testid="npc-create"] select').setValue('friendly')

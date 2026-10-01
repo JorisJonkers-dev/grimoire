@@ -68,8 +68,14 @@ func samples() contract {
 		Legs:        []live.LegView{{From: "Mill", To: "Oakford", Pace: "normal", DistanceMi: 12, Minutes: 240, Days: 1}},
 	}
 	view.Perception = []live.PerceptionView{{RollID: "0190c7a8-0000-7000-8000-000000000026", TokenID: token.ID}}
+	view.Checks = []live.CheckView{{ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12}}
 	dmView := *view
 	noticed, target := true, "0190c7a8-0000-7000-8000-000000000013"
+	dmView.Checks = []live.CheckView{{
+		ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12,
+		RollID: "0190c7a8-0000-7000-8000-000000000028", TableName: "Road", Mode: "normal", Seed: "42", EntryLabel: "Ambush",
+		Monsters: []live.CheckMonsterView{{Slug: "goblin", Count: 3}},
+	}}
 	dmView.Zones = []live.ZoneView{{
 		ID: "0190c7a8-0000-7000-8000-000000000025", Name: "Ambush", Q: 3, R: 0, RadiusHexes: 2, Status: "spotting", DC: 16, Creatures: 2,
 		Checks: []live.ZoneCheckView{{TokenID: token.ID}, {TokenID: target, Noticed: &noticed}},
@@ -127,6 +133,9 @@ func samples() contract {
 			{Nonce: "n46", Kind: live.CmdHoldZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025", On: true},
 			{Nonce: "n47", Kind: live.CmdSpringZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025"},
 			{Nonce: "n48", Kind: live.CmdRemoveZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025"},
+			{Nonce: "n49", Kind: live.CmdRest, Rest: "long"},
+			{Nonce: "n50", Kind: live.CmdEncounterCheck, TableID: "0190c7a8-0000-7000-8000-000000000029", Mode: "pick", Entry: 2},
+			{Nonce: "n51", Kind: live.CmdScheduleCheck, TableID: "0190c7a8-0000-7000-8000-000000000029", Due: "next_travel"},
 		},
 		Updates: []live.Update{
 			{

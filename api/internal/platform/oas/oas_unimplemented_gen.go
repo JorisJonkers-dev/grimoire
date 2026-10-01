@@ -49,6 +49,24 @@ func (UnimplementedHandler) CreateCharacter(ctx context.Context, req *CharacterB
 	return r, ht.ErrNotImplemented
 }
 
+// CreateEncounterPool implements createEncounterPool operation.
+//
+// Adds an Encounter Pool and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/encounter-pools
+func (UnimplementedHandler) CreateEncounterPool(ctx context.Context, req *EncounterPoolInput, params CreateEncounterPoolParams) (r CreateEncounterPoolRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateEncounterTable implements createEncounterTable operation.
+//
+// Adds an Encounter Table and records its first Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/encounter-tables
+func (UnimplementedHandler) CreateEncounterTable(ctx context.Context, req *EncounterTableInput, params CreateEncounterTableParams) (r CreateEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateInvite implements createInvite operation.
 //
 // Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
@@ -82,6 +100,24 @@ func (UnimplementedHandler) CreateRoll(ctx context.Context, req *RollCreate, par
 //
 // DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (r DeleteCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteEncounterPool implements deleteEncounterPool operation.
+//
+// Removes the Encounter Pool; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}
+func (UnimplementedHandler) DeleteEncounterPool(ctx context.Context, params DeleteEncounterPoolParams) (r DeleteEncounterPoolRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteEncounterTable implements deleteEncounterTable operation.
+//
+// Removes the Encounter Table; its Revisions keep it restorable. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
+func (UnimplementedHandler) DeleteEncounterTable(ctx context.Context, params DeleteEncounterTableParams) (r DeleteEncounterTableRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -303,6 +339,51 @@ func (UnimplementedHandler) ListDeletedNpcs(ctx context.Context, params ListDele
 	return r, ht.ErrNotImplemented
 }
 
+// ListEncounterChecks implements listEncounterChecks operation.
+//
+// The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/encounter-checks
+func (UnimplementedHandler) ListEncounterChecks(ctx context.Context, params ListEncounterChecksParams) (r ListEncounterChecksRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListEncounterPoolRevisions implements listEncounterPoolRevisions operation.
+//
+// Every Revision of the Encounter Pool, newest first. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions
+func (UnimplementedHandler) ListEncounterPoolRevisions(ctx context.Context, params ListEncounterPoolRevisionsParams) (r ListEncounterPoolRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListEncounterPools implements listEncounterPools operation.
+//
+// The Campaign's Encounter Pools. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/encounter-pools
+func (UnimplementedHandler) ListEncounterPools(ctx context.Context, params ListEncounterPoolsParams) (r ListEncounterPoolsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListEncounterTableRevisions implements listEncounterTableRevisions operation.
+//
+// Every Revision of the Encounter Table, newest first. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions
+func (UnimplementedHandler) ListEncounterTableRevisions(ctx context.Context, params ListEncounterTableRevisionsParams) (r ListEncounterTableRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListEncounterTables implements listEncounterTables operation.
+//
+// The Campaign's Encounter Tables. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/encounter-tables
+func (UnimplementedHandler) ListEncounterTables(ctx context.Context, params ListEncounterTablesParams) (r ListEncounterTablesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListEntries implements listEntries operation.
 //
 // Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
@@ -319,6 +400,15 @@ func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesP
 //
 // GET /api/v1/campaigns/{campaignId}/invites
 func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesParams) (r ListInvitesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListLocations implements listLocations operation.
+//
+// The places on the Campaign's world maps an Encounter Table can belong to. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/locations
+func (UnimplementedHandler) ListLocations(ctx context.Context, params ListLocationsParams) (r ListLocationsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -430,6 +520,26 @@ func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMembe
 	return r, ht.ErrNotImplemented
 }
 
+// RestoreEncounterPoolRevision implements restoreEncounterPoolRevision operation.
+//
+// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
+// Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore
+func (UnimplementedHandler) RestoreEncounterPoolRevision(ctx context.Context, params RestoreEncounterPoolRevisionParams) (r RestoreEncounterPoolRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RestoreEncounterTableRevision implements restoreEncounterTableRevision operation.
+//
+// Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a
+// Revision. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
+func (UnimplementedHandler) RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (r RestoreEncounterTableRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RestoreNpcRevision implements restoreNpcRevision operation.
 //
 // Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
@@ -512,6 +622,24 @@ func (UnimplementedHandler) UpdateCampaign(ctx context.Context, req *CampaignUpd
 //
 // PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) UpdateCharacter(ctx context.Context, req *CharacterEdit, params UpdateCharacterParams) (r UpdateCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateEncounterPool implements updateEncounterPool operation.
+//
+// Replaces the Encounter Pool and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}
+func (UnimplementedHandler) UpdateEncounterPool(ctx context.Context, req *EncounterPoolInput, params UpdateEncounterPoolParams) (r UpdateEncounterPoolRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateEncounterTable implements updateEncounterTable operation.
+//
+// Replaces the Encounter Table and records a Revision. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
+func (UnimplementedHandler) UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (r UpdateEncounterTableRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

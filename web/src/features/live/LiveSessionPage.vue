@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, listCharactersOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listMapsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -14,6 +14,7 @@ import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
+import EncounterChecks from './EncounterChecks.vue'
 import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
@@ -37,6 +38,7 @@ const maps = useQuery(computed(() => ({ ...listMapsOptions({ path: { campaignId 
 const localMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'local') ?? [])
 const worldMaps = computed(() => maps.data.value?.filter((m) => m.kind === 'world') ?? [])
 const scope = ref<'local' | 'world'>('local')
+const encounterTables = useQuery(computed(() => ({ ...listEncounterTablesOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
 const characters = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId } }), enabled: isDM.value })))
 const live = shallowRef<ReturnType<typeof useLiveSession> | null>(null)
 const state = computed(() => live.value?.view)
@@ -146,6 +148,7 @@ const zoneCells = computed(() => {
   const all = m ? cellsFor(layoutOf(m), m.width, m.height) : hexes(state.value?.session?.gridRadius ?? 0)
   return zoneHexes(view.value?.zones ?? [], all)
 })
+const checkRolls = computed(() => (isDM.value ? (view.value?.checks ?? []).filter((c) => c.status === 'pending' && c.rollId).map((c) => c.rollId ?? '') : []))
 const myChecks = computed(() =>
   (view.value?.perception ?? []).filter((p) => {
     const owner = tokenById(p.tokenId)?.controllerId
@@ -345,6 +348,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       <LiveRoll v-if="attackRoll" :key="attackRoll" :campaign-id="campaignId" :roll-id="attackRoll" />
       <LiveRoll v-for="s in mySaves" :key="s.rollId" :campaign-id="campaignId" :roll-id="s.rollId" />
       <LiveRoll v-for="p in myChecks" :key="p.rollId" :campaign-id="campaignId" :roll-id="p.rollId" />
+      <LiveRoll v-for="id in checkRolls" :key="id" :campaign-id="campaignId" :roll-id="id" />
       <p v-if="view?.resolving" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
       <section v-if="view?.manual?.length" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
         <h2>Resolve by hand</h2>
@@ -482,6 +486,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         />
         <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
       </section>
+      <EncounterChecks
+        v-if="isDM || (view?.checks?.length ?? 0) > 0"
+        :checks="view?.checks ?? []"
+        :dm="isDM"
+        :tables="encounterTables.data.value ?? []"
+        @send="(cmd) => live?.send(cmd)"
+      />
       <ul class="g-list tokens" aria-label="Tokens in view">
         <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
       </ul>

@@ -2657,6 +2657,84 @@ func (s *DeleteCharacterNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteCharacterNoContent) deleteCharacterRes() {}
 
+// DeleteEncounterPoolNoContent is response for DeleteEncounterPool operation.
+type DeleteEncounterPoolNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteEncounterPoolNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteEncounterPoolNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteEncounterPoolNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteEncounterPoolNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteEncounterPoolNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteEncounterPoolNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteEncounterPoolNoContent) deleteEncounterPoolRes() {}
+
+// DeleteEncounterTableNoContent is response for DeleteEncounterTable operation.
+type DeleteEncounterTableNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteEncounterTableNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteEncounterTableNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteEncounterTableNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteEncounterTableNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteEncounterTableNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteEncounterTableNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteEncounterTableNoContent) deleteEncounterTableRes() {}
+
 // DeleteNpcNoContent is response for DeleteNpc operation.
 type DeleteNpcNoContent struct {
 	RateLimitLimit     OptInt32
@@ -3021,6 +3099,1024 @@ func (s *Disposition) UnmarshalText(data []byte) error {
 		return nil
 	case DispositionHostile:
 		*s = DispositionHostile
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One Encounter Check, with the seed its draw used and what it produced.
+// Ref: #/components/schemas/EncounterCheck
+type EncounterCheck struct {
+	ID         ID                  `json:"id"`
+	SessionId  OptID               `json:"sessionId"`
+	TableName  string              `json:"tableName"`
+	Trigger    EncounterTrigger    `json:"trigger"`
+	Mode       EncounterMode       `json:"mode"`
+	Visibility EncounterVisibility `json:"visibility"`
+	// The draw's seed, as a decimal string.
+	Seed       string                   `json:"seed"`
+	ChancePct  int32                    `json:"chancePct"`
+	ChanceRoll OptInt32                 `json:"chanceRoll"`
+	Status     EncounterCheckStatus     `json:"status"`
+	Outcome    OptEncounterCheckOutcome `json:"outcome"`
+	EntryLabel string                   `json:"entryLabel"`
+	Monsters   []EncounterMonster       `json:"monsters"`
+	CreatedAt  time.Time                `json:"createdAt"`
+}
+
+// GetID returns the value of ID.
+func (s *EncounterCheck) GetID() ID {
+	return s.ID
+}
+
+// GetSessionId returns the value of SessionId.
+func (s *EncounterCheck) GetSessionId() OptID {
+	return s.SessionId
+}
+
+// GetTableName returns the value of TableName.
+func (s *EncounterCheck) GetTableName() string {
+	return s.TableName
+}
+
+// GetTrigger returns the value of Trigger.
+func (s *EncounterCheck) GetTrigger() EncounterTrigger {
+	return s.Trigger
+}
+
+// GetMode returns the value of Mode.
+func (s *EncounterCheck) GetMode() EncounterMode {
+	return s.Mode
+}
+
+// GetVisibility returns the value of Visibility.
+func (s *EncounterCheck) GetVisibility() EncounterVisibility {
+	return s.Visibility
+}
+
+// GetSeed returns the value of Seed.
+func (s *EncounterCheck) GetSeed() string {
+	return s.Seed
+}
+
+// GetChancePct returns the value of ChancePct.
+func (s *EncounterCheck) GetChancePct() int32 {
+	return s.ChancePct
+}
+
+// GetChanceRoll returns the value of ChanceRoll.
+func (s *EncounterCheck) GetChanceRoll() OptInt32 {
+	return s.ChanceRoll
+}
+
+// GetStatus returns the value of Status.
+func (s *EncounterCheck) GetStatus() EncounterCheckStatus {
+	return s.Status
+}
+
+// GetOutcome returns the value of Outcome.
+func (s *EncounterCheck) GetOutcome() OptEncounterCheckOutcome {
+	return s.Outcome
+}
+
+// GetEntryLabel returns the value of EntryLabel.
+func (s *EncounterCheck) GetEntryLabel() string {
+	return s.EntryLabel
+}
+
+// GetMonsters returns the value of Monsters.
+func (s *EncounterCheck) GetMonsters() []EncounterMonster {
+	return s.Monsters
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *EncounterCheck) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *EncounterCheck) SetID(val ID) {
+	s.ID = val
+}
+
+// SetSessionId sets the value of SessionId.
+func (s *EncounterCheck) SetSessionId(val OptID) {
+	s.SessionId = val
+}
+
+// SetTableName sets the value of TableName.
+func (s *EncounterCheck) SetTableName(val string) {
+	s.TableName = val
+}
+
+// SetTrigger sets the value of Trigger.
+func (s *EncounterCheck) SetTrigger(val EncounterTrigger) {
+	s.Trigger = val
+}
+
+// SetMode sets the value of Mode.
+func (s *EncounterCheck) SetMode(val EncounterMode) {
+	s.Mode = val
+}
+
+// SetVisibility sets the value of Visibility.
+func (s *EncounterCheck) SetVisibility(val EncounterVisibility) {
+	s.Visibility = val
+}
+
+// SetSeed sets the value of Seed.
+func (s *EncounterCheck) SetSeed(val string) {
+	s.Seed = val
+}
+
+// SetChancePct sets the value of ChancePct.
+func (s *EncounterCheck) SetChancePct(val int32) {
+	s.ChancePct = val
+}
+
+// SetChanceRoll sets the value of ChanceRoll.
+func (s *EncounterCheck) SetChanceRoll(val OptInt32) {
+	s.ChanceRoll = val
+}
+
+// SetStatus sets the value of Status.
+func (s *EncounterCheck) SetStatus(val EncounterCheckStatus) {
+	s.Status = val
+}
+
+// SetOutcome sets the value of Outcome.
+func (s *EncounterCheck) SetOutcome(val OptEncounterCheckOutcome) {
+	s.Outcome = val
+}
+
+// SetEntryLabel sets the value of EntryLabel.
+func (s *EncounterCheck) SetEntryLabel(val string) {
+	s.EntryLabel = val
+}
+
+// SetMonsters sets the value of Monsters.
+func (s *EncounterCheck) SetMonsters(val []EncounterMonster) {
+	s.Monsters = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *EncounterCheck) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+type EncounterCheckOutcome string
+
+const (
+	EncounterCheckOutcomeEncounter EncounterCheckOutcome = "encounter"
+	EncounterCheckOutcomeNothing   EncounterCheckOutcome = "nothing"
+)
+
+// AllValues returns all EncounterCheckOutcome values.
+func (EncounterCheckOutcome) AllValues() []EncounterCheckOutcome {
+	return []EncounterCheckOutcome{
+		EncounterCheckOutcomeEncounter,
+		EncounterCheckOutcomeNothing,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterCheckOutcome) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterCheckOutcomeEncounter:
+		return []byte(s), nil
+	case EncounterCheckOutcomeNothing:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterCheckOutcome) UnmarshalText(data []byte) error {
+	switch EncounterCheckOutcome(data) {
+	case EncounterCheckOutcomeEncounter:
+		*s = EncounterCheckOutcomeEncounter
+		return nil
+	case EncounterCheckOutcomeNothing:
+		*s = EncounterCheckOutcomeNothing
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type EncounterCheckStatus string
+
+const (
+	EncounterCheckStatusPending  EncounterCheckStatus = "pending"
+	EncounterCheckStatusResolved EncounterCheckStatus = "resolved"
+)
+
+// AllValues returns all EncounterCheckStatus values.
+func (EncounterCheckStatus) AllValues() []EncounterCheckStatus {
+	return []EncounterCheckStatus{
+		EncounterCheckStatusPending,
+		EncounterCheckStatusResolved,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterCheckStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterCheckStatusPending:
+		return []byte(s), nil
+	case EncounterCheckStatusResolved:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterCheckStatus) UnmarshalText(data []byte) error {
+	switch EncounterCheckStatus(data) {
+	case EncounterCheckStatusPending:
+		*s = EncounterCheckStatusPending
+		return nil
+	case EncounterCheckStatusResolved:
+		*s = EncounterCheckStatusResolved
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// How hard a generated encounter aims to be, by the 2024 XP budget.
+// Ref: #/components/schemas/EncounterDifficulty
+type EncounterDifficulty string
+
+const (
+	EncounterDifficultyLow      EncounterDifficulty = "low"
+	EncounterDifficultyModerate EncounterDifficulty = "moderate"
+	EncounterDifficultyHigh     EncounterDifficulty = "high"
+)
+
+// AllValues returns all EncounterDifficulty values.
+func (EncounterDifficulty) AllValues() []EncounterDifficulty {
+	return []EncounterDifficulty{
+		EncounterDifficultyLow,
+		EncounterDifficultyModerate,
+		EncounterDifficultyHigh,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterDifficulty) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterDifficultyLow:
+		return []byte(s), nil
+	case EncounterDifficultyModerate:
+		return []byte(s), nil
+	case EncounterDifficultyHigh:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterDifficulty) UnmarshalText(data []byte) error {
+	switch EncounterDifficulty(data) {
+	case EncounterDifficultyLow:
+		*s = EncounterDifficultyLow
+		return nil
+	case EncounterDifficultyModerate:
+		*s = EncounterDifficultyModerate
+		return nil
+	case EncounterDifficultyHigh:
+		*s = EncounterDifficultyHigh
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId,
+// nothing has neither.
+// Ref: #/components/schemas/EncounterEntry
+type EncounterEntry struct {
+	Weight   int32              `json:"weight"`
+	Kind     EncounterEntryKind `json:"kind"`
+	Label    string             `json:"label"`
+	PoolId   OptID              `json:"poolId"`
+	Monsters []EncounterMonster `json:"monsters"`
+}
+
+// GetWeight returns the value of Weight.
+func (s *EncounterEntry) GetWeight() int32 {
+	return s.Weight
+}
+
+// GetKind returns the value of Kind.
+func (s *EncounterEntry) GetKind() EncounterEntryKind {
+	return s.Kind
+}
+
+// GetLabel returns the value of Label.
+func (s *EncounterEntry) GetLabel() string {
+	return s.Label
+}
+
+// GetPoolId returns the value of PoolId.
+func (s *EncounterEntry) GetPoolId() OptID {
+	return s.PoolId
+}
+
+// GetMonsters returns the value of Monsters.
+func (s *EncounterEntry) GetMonsters() []EncounterMonster {
+	return s.Monsters
+}
+
+// SetWeight sets the value of Weight.
+func (s *EncounterEntry) SetWeight(val int32) {
+	s.Weight = val
+}
+
+// SetKind sets the value of Kind.
+func (s *EncounterEntry) SetKind(val EncounterEntryKind) {
+	s.Kind = val
+}
+
+// SetLabel sets the value of Label.
+func (s *EncounterEntry) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetPoolId sets the value of PoolId.
+func (s *EncounterEntry) SetPoolId(val OptID) {
+	s.PoolId = val
+}
+
+// SetMonsters sets the value of Monsters.
+func (s *EncounterEntry) SetMonsters(val []EncounterMonster) {
+	s.Monsters = val
+}
+
+type EncounterEntryKind string
+
+const (
+	EncounterEntryKindEncounter EncounterEntryKind = "encounter"
+	EncounterEntryKindPool      EncounterEntryKind = "pool"
+	EncounterEntryKindNothing   EncounterEntryKind = "nothing"
+)
+
+// AllValues returns all EncounterEntryKind values.
+func (EncounterEntryKind) AllValues() []EncounterEntryKind {
+	return []EncounterEntryKind{
+		EncounterEntryKindEncounter,
+		EncounterEntryKindPool,
+		EncounterEntryKindNothing,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterEntryKind) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterEntryKindEncounter:
+		return []byte(s), nil
+	case EncounterEntryKindPool:
+		return []byte(s), nil
+	case EncounterEntryKindNothing:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterEntryKind) UnmarshalText(data []byte) error {
+	switch EncounterEntryKind(data) {
+	case EncounterEntryKindEncounter:
+		*s = EncounterEntryKindEncounter
+		return nil
+	case EncounterEntryKindPool:
+		*s = EncounterEntryKindPool
+		return nil
+	case EncounterEntryKindNothing:
+		*s = EncounterEntryKindNothing
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A normal check rolls the chance; force_encounter skips it and never draws Nothing; pick takes the
+// entry the DM chose.
+// Ref: #/components/schemas/EncounterMode
+type EncounterMode string
+
+const (
+	EncounterModeNormal         EncounterMode = "normal"
+	EncounterModeForceEncounter EncounterMode = "force_encounter"
+	EncounterModePick           EncounterMode = "pick"
+)
+
+// AllValues returns all EncounterMode values.
+func (EncounterMode) AllValues() []EncounterMode {
+	return []EncounterMode{
+		EncounterModeNormal,
+		EncounterModeForceEncounter,
+		EncounterModePick,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterMode) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterModeNormal:
+		return []byte(s), nil
+	case EncounterModeForceEncounter:
+		return []byte(s), nil
+	case EncounterModePick:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterMode) UnmarshalText(data []byte) error {
+	switch EncounterMode(data) {
+	case EncounterModeNormal:
+		*s = EncounterModeNormal
+		return nil
+	case EncounterModeForceEncounter:
+		*s = EncounterModeForceEncounter
+		return nil
+	case EncounterModePick:
+		*s = EncounterModePick
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// How many of one creature an encounter holds.
+// Ref: #/components/schemas/EncounterMonster
+type EncounterMonster struct {
+	MonsterSlug Slug  `json:"monsterSlug"`
+	Count       int32 `json:"count"`
+}
+
+// GetMonsterSlug returns the value of MonsterSlug.
+func (s *EncounterMonster) GetMonsterSlug() Slug {
+	return s.MonsterSlug
+}
+
+// GetCount returns the value of Count.
+func (s *EncounterMonster) GetCount() int32 {
+	return s.Count
+}
+
+// SetMonsterSlug sets the value of MonsterSlug.
+func (s *EncounterMonster) SetMonsterSlug(val Slug) {
+	s.MonsterSlug = val
+}
+
+// SetCount sets the value of Count.
+func (s *EncounterMonster) SetCount(val int32) {
+	s.Count = val
+}
+
+// A weighted set of creatures for a band of party levels, filled to its difficulty's XP budget when
+// drawn.
+// Ref: #/components/schemas/EncounterPool
+type EncounterPool struct {
+	ID         ID                    `json:"id"`
+	Name       string                `json:"name"`
+	LevelMin   int32                 `json:"levelMin"`
+	LevelMax   int32                 `json:"levelMax"`
+	Difficulty EncounterDifficulty   `json:"difficulty"`
+	Members    []EncounterPoolMember `json:"members"`
+	UpdatedAt  time.Time             `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *EncounterPool) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *EncounterPool) GetName() string {
+	return s.Name
+}
+
+// GetLevelMin returns the value of LevelMin.
+func (s *EncounterPool) GetLevelMin() int32 {
+	return s.LevelMin
+}
+
+// GetLevelMax returns the value of LevelMax.
+func (s *EncounterPool) GetLevelMax() int32 {
+	return s.LevelMax
+}
+
+// GetDifficulty returns the value of Difficulty.
+func (s *EncounterPool) GetDifficulty() EncounterDifficulty {
+	return s.Difficulty
+}
+
+// GetMembers returns the value of Members.
+func (s *EncounterPool) GetMembers() []EncounterPoolMember {
+	return s.Members
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *EncounterPool) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *EncounterPool) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *EncounterPool) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevelMin sets the value of LevelMin.
+func (s *EncounterPool) SetLevelMin(val int32) {
+	s.LevelMin = val
+}
+
+// SetLevelMax sets the value of LevelMax.
+func (s *EncounterPool) SetLevelMax(val int32) {
+	s.LevelMax = val
+}
+
+// SetDifficulty sets the value of Difficulty.
+func (s *EncounterPool) SetDifficulty(val EncounterDifficulty) {
+	s.Difficulty = val
+}
+
+// SetMembers sets the value of Members.
+func (s *EncounterPool) SetMembers(val []EncounterPoolMember) {
+	s.Members = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *EncounterPool) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// EncounterPoolHeaders wraps EncounterPool with response headers.
+type EncounterPoolHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           EncounterPool
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *EncounterPoolHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *EncounterPoolHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *EncounterPoolHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *EncounterPoolHeaders) GetResponse() EncounterPool {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *EncounterPoolHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *EncounterPoolHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *EncounterPoolHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *EncounterPoolHeaders) SetResponse(val EncounterPool) {
+	s.Response = val
+}
+
+func (*EncounterPoolHeaders) createEncounterPoolRes()          {}
+func (*EncounterPoolHeaders) restoreEncounterPoolRevisionRes() {}
+func (*EncounterPoolHeaders) updateEncounterPoolRes()          {}
+
+// An Encounter Pool as the DM writes it.
+// Ref: #/components/schemas/EncounterPoolInput
+type EncounterPoolInput struct {
+	Name       string                `json:"name"`
+	LevelMin   int32                 `json:"levelMin"`
+	LevelMax   int32                 `json:"levelMax"`
+	Difficulty EncounterDifficulty   `json:"difficulty"`
+	Members    []EncounterPoolMember `json:"members"`
+}
+
+// GetName returns the value of Name.
+func (s *EncounterPoolInput) GetName() string {
+	return s.Name
+}
+
+// GetLevelMin returns the value of LevelMin.
+func (s *EncounterPoolInput) GetLevelMin() int32 {
+	return s.LevelMin
+}
+
+// GetLevelMax returns the value of LevelMax.
+func (s *EncounterPoolInput) GetLevelMax() int32 {
+	return s.LevelMax
+}
+
+// GetDifficulty returns the value of Difficulty.
+func (s *EncounterPoolInput) GetDifficulty() EncounterDifficulty {
+	return s.Difficulty
+}
+
+// GetMembers returns the value of Members.
+func (s *EncounterPoolInput) GetMembers() []EncounterPoolMember {
+	return s.Members
+}
+
+// SetName sets the value of Name.
+func (s *EncounterPoolInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevelMin sets the value of LevelMin.
+func (s *EncounterPoolInput) SetLevelMin(val int32) {
+	s.LevelMin = val
+}
+
+// SetLevelMax sets the value of LevelMax.
+func (s *EncounterPoolInput) SetLevelMax(val int32) {
+	s.LevelMax = val
+}
+
+// SetDifficulty sets the value of Difficulty.
+func (s *EncounterPoolInput) SetDifficulty(val EncounterDifficulty) {
+	s.Difficulty = val
+}
+
+// SetMembers sets the value of Members.
+func (s *EncounterPoolInput) SetMembers(val []EncounterPoolMember) {
+	s.Members = val
+}
+
+// A creature a Pool can field, how often it is drawn, and how many an encounter holds at least and at
+// most.
+// Ref: #/components/schemas/EncounterPoolMember
+type EncounterPoolMember struct {
+	MonsterSlug Slug  `json:"monsterSlug"`
+	Weight      int32 `json:"weight"`
+	Min         int32 `json:"min"`
+	Max         int32 `json:"max"`
+}
+
+// GetMonsterSlug returns the value of MonsterSlug.
+func (s *EncounterPoolMember) GetMonsterSlug() Slug {
+	return s.MonsterSlug
+}
+
+// GetWeight returns the value of Weight.
+func (s *EncounterPoolMember) GetWeight() int32 {
+	return s.Weight
+}
+
+// GetMin returns the value of Min.
+func (s *EncounterPoolMember) GetMin() int32 {
+	return s.Min
+}
+
+// GetMax returns the value of Max.
+func (s *EncounterPoolMember) GetMax() int32 {
+	return s.Max
+}
+
+// SetMonsterSlug sets the value of MonsterSlug.
+func (s *EncounterPoolMember) SetMonsterSlug(val Slug) {
+	s.MonsterSlug = val
+}
+
+// SetWeight sets the value of Weight.
+func (s *EncounterPoolMember) SetWeight(val int32) {
+	s.Weight = val
+}
+
+// SetMin sets the value of Min.
+func (s *EncounterPoolMember) SetMin(val int32) {
+	s.Min = val
+}
+
+// SetMax sets the value of Max.
+func (s *EncounterPoolMember) SetMax(val int32) {
+	s.Max = val
+}
+
+// A Region's chance of an encounter and its weighted entries.
+// Ref: #/components/schemas/EncounterTable
+type EncounterTable struct {
+	ID         ID                  `json:"id"`
+	Name       string              `json:"name"`
+	RegionId   OptID               `json:"regionId"`
+	ChancePct  int32               `json:"chancePct"`
+	Visibility EncounterVisibility `json:"visibility"`
+	Entries    []EncounterEntry    `json:"entries"`
+	UpdatedAt  time.Time           `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *EncounterTable) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *EncounterTable) GetName() string {
+	return s.Name
+}
+
+// GetRegionId returns the value of RegionId.
+func (s *EncounterTable) GetRegionId() OptID {
+	return s.RegionId
+}
+
+// GetChancePct returns the value of ChancePct.
+func (s *EncounterTable) GetChancePct() int32 {
+	return s.ChancePct
+}
+
+// GetVisibility returns the value of Visibility.
+func (s *EncounterTable) GetVisibility() EncounterVisibility {
+	return s.Visibility
+}
+
+// GetEntries returns the value of Entries.
+func (s *EncounterTable) GetEntries() []EncounterEntry {
+	return s.Entries
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *EncounterTable) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *EncounterTable) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *EncounterTable) SetName(val string) {
+	s.Name = val
+}
+
+// SetRegionId sets the value of RegionId.
+func (s *EncounterTable) SetRegionId(val OptID) {
+	s.RegionId = val
+}
+
+// SetChancePct sets the value of ChancePct.
+func (s *EncounterTable) SetChancePct(val int32) {
+	s.ChancePct = val
+}
+
+// SetVisibility sets the value of Visibility.
+func (s *EncounterTable) SetVisibility(val EncounterVisibility) {
+	s.Visibility = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *EncounterTable) SetEntries(val []EncounterEntry) {
+	s.Entries = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *EncounterTable) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// EncounterTableHeaders wraps EncounterTable with response headers.
+type EncounterTableHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           EncounterTable
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *EncounterTableHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *EncounterTableHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *EncounterTableHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *EncounterTableHeaders) GetResponse() EncounterTable {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *EncounterTableHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *EncounterTableHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *EncounterTableHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *EncounterTableHeaders) SetResponse(val EncounterTable) {
+	s.Response = val
+}
+
+func (*EncounterTableHeaders) createEncounterTableRes()          {}
+func (*EncounterTableHeaders) restoreEncounterTableRevisionRes() {}
+func (*EncounterTableHeaders) updateEncounterTableRes()          {}
+
+// An Encounter Table as the DM writes it. Without a regionId it applies everywhere.
+// Ref: #/components/schemas/EncounterTableInput
+type EncounterTableInput struct {
+	Name       string              `json:"name"`
+	RegionId   OptID               `json:"regionId"`
+	ChancePct  int32               `json:"chancePct"`
+	Visibility EncounterVisibility `json:"visibility"`
+	Entries    []EncounterEntry    `json:"entries"`
+}
+
+// GetName returns the value of Name.
+func (s *EncounterTableInput) GetName() string {
+	return s.Name
+}
+
+// GetRegionId returns the value of RegionId.
+func (s *EncounterTableInput) GetRegionId() OptID {
+	return s.RegionId
+}
+
+// GetChancePct returns the value of ChancePct.
+func (s *EncounterTableInput) GetChancePct() int32 {
+	return s.ChancePct
+}
+
+// GetVisibility returns the value of Visibility.
+func (s *EncounterTableInput) GetVisibility() EncounterVisibility {
+	return s.Visibility
+}
+
+// GetEntries returns the value of Entries.
+func (s *EncounterTableInput) GetEntries() []EncounterEntry {
+	return s.Entries
+}
+
+// SetName sets the value of Name.
+func (s *EncounterTableInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetRegionId sets the value of RegionId.
+func (s *EncounterTableInput) SetRegionId(val OptID) {
+	s.RegionId = val
+}
+
+// SetChancePct sets the value of ChancePct.
+func (s *EncounterTableInput) SetChancePct(val int32) {
+	s.ChancePct = val
+}
+
+// SetVisibility sets the value of Visibility.
+func (s *EncounterTableInput) SetVisibility(val EncounterVisibility) {
+	s.Visibility = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *EncounterTableInput) SetEntries(val []EncounterEntry) {
+	s.Entries = val
+}
+
+// What set off an Encounter Check.
+// Ref: #/components/schemas/EncounterTrigger
+type EncounterTrigger string
+
+const (
+	EncounterTriggerShortRest EncounterTrigger = "short_rest"
+	EncounterTriggerLongRest  EncounterTrigger = "long_rest"
+	EncounterTriggerTravelLeg EncounterTrigger = "travel_leg"
+	EncounterTriggerDm        EncounterTrigger = "dm"
+)
+
+// AllValues returns all EncounterTrigger values.
+func (EncounterTrigger) AllValues() []EncounterTrigger {
+	return []EncounterTrigger{
+		EncounterTriggerShortRest,
+		EncounterTriggerLongRest,
+		EncounterTriggerTravelLeg,
+		EncounterTriggerDm,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterTrigger) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterTriggerShortRest:
+		return []byte(s), nil
+	case EncounterTriggerLongRest:
+		return []byte(s), nil
+	case EncounterTriggerTravelLeg:
+		return []byte(s), nil
+	case EncounterTriggerDm:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterTrigger) UnmarshalText(data []byte) error {
+	switch EncounterTrigger(data) {
+	case EncounterTriggerShortRest:
+		*s = EncounterTriggerShortRest
+		return nil
+	case EncounterTriggerLongRest:
+		*s = EncounterTriggerLongRest
+		return nil
+	case EncounterTriggerTravelLeg:
+		*s = EncounterTriggerTravelLeg
+		return nil
+	case EncounterTriggerDm:
+		*s = EncounterTriggerDm
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Secret checks show only the outcome; open checks show their roll on the Table Display.
+// Ref: #/components/schemas/EncounterVisibility
+type EncounterVisibility string
+
+const (
+	EncounterVisibilitySecret EncounterVisibility = "secret"
+	EncounterVisibilityOpen   EncounterVisibility = "open"
+)
+
+// AllValues returns all EncounterVisibility values.
+func (EncounterVisibility) AllValues() []EncounterVisibility {
+	return []EncounterVisibility{
+		EncounterVisibilitySecret,
+		EncounterVisibilityOpen,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EncounterVisibility) MarshalText() ([]byte, error) {
+	switch s {
+	case EncounterVisibilitySecret:
+		return []byte(s), nil
+	case EncounterVisibilityOpen:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EncounterVisibility) UnmarshalText(data []byte) error {
+	switch EncounterVisibility(data) {
+	case EncounterVisibilitySecret:
+		*s = EncounterVisibilitySecret
+		return nil
+	case EncounterVisibilityOpen:
+		*s = EncounterVisibilityOpen
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -4904,6 +6000,256 @@ func (s *ListDeletedNpcsOKHeaders) SetResponse(val []DeletedNpc) {
 
 func (*ListDeletedNpcsOKHeaders) listDeletedNpcsRes() {}
 
+// ListEncounterChecksOKHeaders wraps []EncounterCheck with response headers.
+type ListEncounterChecksOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []EncounterCheck
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListEncounterChecksOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListEncounterChecksOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListEncounterChecksOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListEncounterChecksOKHeaders) GetResponse() []EncounterCheck {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListEncounterChecksOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListEncounterChecksOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListEncounterChecksOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListEncounterChecksOKHeaders) SetResponse(val []EncounterCheck) {
+	s.Response = val
+}
+
+func (*ListEncounterChecksOKHeaders) listEncounterChecksRes() {}
+
+// ListEncounterPoolRevisionsOKHeaders wraps []Revision with response headers.
+type ListEncounterPoolRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Revision
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListEncounterPoolRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListEncounterPoolRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListEncounterPoolRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListEncounterPoolRevisionsOKHeaders) GetResponse() []Revision {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListEncounterPoolRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListEncounterPoolRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListEncounterPoolRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListEncounterPoolRevisionsOKHeaders) SetResponse(val []Revision) {
+	s.Response = val
+}
+
+func (*ListEncounterPoolRevisionsOKHeaders) listEncounterPoolRevisionsRes() {}
+
+// ListEncounterPoolsOKHeaders wraps []EncounterPool with response headers.
+type ListEncounterPoolsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []EncounterPool
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListEncounterPoolsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListEncounterPoolsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListEncounterPoolsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListEncounterPoolsOKHeaders) GetResponse() []EncounterPool {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListEncounterPoolsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListEncounterPoolsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListEncounterPoolsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListEncounterPoolsOKHeaders) SetResponse(val []EncounterPool) {
+	s.Response = val
+}
+
+func (*ListEncounterPoolsOKHeaders) listEncounterPoolsRes() {}
+
+// ListEncounterTableRevisionsOKHeaders wraps []Revision with response headers.
+type ListEncounterTableRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Revision
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListEncounterTableRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListEncounterTableRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListEncounterTableRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListEncounterTableRevisionsOKHeaders) GetResponse() []Revision {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListEncounterTableRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListEncounterTableRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListEncounterTableRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListEncounterTableRevisionsOKHeaders) SetResponse(val []Revision) {
+	s.Response = val
+}
+
+func (*ListEncounterTableRevisionsOKHeaders) listEncounterTableRevisionsRes() {}
+
+// ListEncounterTablesOKHeaders wraps []EncounterTable with response headers.
+type ListEncounterTablesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []EncounterTable
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListEncounterTablesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListEncounterTablesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListEncounterTablesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListEncounterTablesOKHeaders) GetResponse() []EncounterTable {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListEncounterTablesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListEncounterTablesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListEncounterTablesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListEncounterTablesOKHeaders) SetResponse(val []EncounterTable) {
+	s.Response = val
+}
+
+func (*ListEncounterTablesOKHeaders) listEncounterTablesRes() {}
+
 // ListEntriesNotModified is response for ListEntries operation.
 type ListEntriesNotModified struct {
 	ETag OptString
@@ -4970,6 +6316,56 @@ func (s *ListInvitesOKHeaders) SetResponse(val []Invite) {
 }
 
 func (*ListInvitesOKHeaders) listInvitesRes() {}
+
+// ListLocationsOKHeaders wraps []Location with response headers.
+type ListLocationsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Location
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLocationsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLocationsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLocationsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLocationsOKHeaders) GetResponse() []Location {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLocationsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLocationsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLocationsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLocationsOKHeaders) SetResponse(val []Location) {
+	s.Response = val
+}
+
+func (*ListLocationsOKHeaders) listLocationsRes() {}
 
 // ListMapsOKHeaders wraps []LocalMap with response headers.
 type ListMapsOKHeaders struct {
@@ -5741,6 +7137,264 @@ func (s *LiveAttackPreviewMode) UnmarshalText(data []byte) error {
 	}
 }
 
+// An Encounter Check. Everyone sees what set it off and its outcome, and an open check's roll; only
+// the DM sees its table, mode, seed, entry and creatures.
+// Ref: #/components/schemas/LiveCheck
+type LiveCheck struct {
+	ID         ID                  `json:"id"`
+	Trigger    EncounterTrigger    `json:"trigger"`
+	Visibility EncounterVisibility `json:"visibility"`
+	Status     LiveCheckStatus     `json:"status"`
+	Outcome    OptLiveCheckOutcome `json:"outcome"`
+	ChancePct  OptInt32            `json:"chancePct"`
+	ChanceRoll OptInt32            `json:"chanceRoll"`
+	RollId     OptID               `json:"rollId"`
+	TableName  OptString           `json:"tableName"`
+	Mode       OptEncounterMode    `json:"mode"`
+	Seed       OptString           `json:"seed"`
+	EntryLabel OptString           `json:"entryLabel"`
+	Monsters   []LiveCheckMonster  `json:"monsters"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveCheck) GetID() ID {
+	return s.ID
+}
+
+// GetTrigger returns the value of Trigger.
+func (s *LiveCheck) GetTrigger() EncounterTrigger {
+	return s.Trigger
+}
+
+// GetVisibility returns the value of Visibility.
+func (s *LiveCheck) GetVisibility() EncounterVisibility {
+	return s.Visibility
+}
+
+// GetStatus returns the value of Status.
+func (s *LiveCheck) GetStatus() LiveCheckStatus {
+	return s.Status
+}
+
+// GetOutcome returns the value of Outcome.
+func (s *LiveCheck) GetOutcome() OptLiveCheckOutcome {
+	return s.Outcome
+}
+
+// GetChancePct returns the value of ChancePct.
+func (s *LiveCheck) GetChancePct() OptInt32 {
+	return s.ChancePct
+}
+
+// GetChanceRoll returns the value of ChanceRoll.
+func (s *LiveCheck) GetChanceRoll() OptInt32 {
+	return s.ChanceRoll
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveCheck) GetRollId() OptID {
+	return s.RollId
+}
+
+// GetTableName returns the value of TableName.
+func (s *LiveCheck) GetTableName() OptString {
+	return s.TableName
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveCheck) GetMode() OptEncounterMode {
+	return s.Mode
+}
+
+// GetSeed returns the value of Seed.
+func (s *LiveCheck) GetSeed() OptString {
+	return s.Seed
+}
+
+// GetEntryLabel returns the value of EntryLabel.
+func (s *LiveCheck) GetEntryLabel() OptString {
+	return s.EntryLabel
+}
+
+// GetMonsters returns the value of Monsters.
+func (s *LiveCheck) GetMonsters() []LiveCheckMonster {
+	return s.Monsters
+}
+
+// SetID sets the value of ID.
+func (s *LiveCheck) SetID(val ID) {
+	s.ID = val
+}
+
+// SetTrigger sets the value of Trigger.
+func (s *LiveCheck) SetTrigger(val EncounterTrigger) {
+	s.Trigger = val
+}
+
+// SetVisibility sets the value of Visibility.
+func (s *LiveCheck) SetVisibility(val EncounterVisibility) {
+	s.Visibility = val
+}
+
+// SetStatus sets the value of Status.
+func (s *LiveCheck) SetStatus(val LiveCheckStatus) {
+	s.Status = val
+}
+
+// SetOutcome sets the value of Outcome.
+func (s *LiveCheck) SetOutcome(val OptLiveCheckOutcome) {
+	s.Outcome = val
+}
+
+// SetChancePct sets the value of ChancePct.
+func (s *LiveCheck) SetChancePct(val OptInt32) {
+	s.ChancePct = val
+}
+
+// SetChanceRoll sets the value of ChanceRoll.
+func (s *LiveCheck) SetChanceRoll(val OptInt32) {
+	s.ChanceRoll = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveCheck) SetRollId(val OptID) {
+	s.RollId = val
+}
+
+// SetTableName sets the value of TableName.
+func (s *LiveCheck) SetTableName(val OptString) {
+	s.TableName = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveCheck) SetMode(val OptEncounterMode) {
+	s.Mode = val
+}
+
+// SetSeed sets the value of Seed.
+func (s *LiveCheck) SetSeed(val OptString) {
+	s.Seed = val
+}
+
+// SetEntryLabel sets the value of EntryLabel.
+func (s *LiveCheck) SetEntryLabel(val OptString) {
+	s.EntryLabel = val
+}
+
+// SetMonsters sets the value of Monsters.
+func (s *LiveCheck) SetMonsters(val []LiveCheckMonster) {
+	s.Monsters = val
+}
+
+// How many of one creature a check produced.
+// Ref: #/components/schemas/LiveCheckMonster
+type LiveCheckMonster struct {
+	Slug  Slug  `json:"slug"`
+	Count int32 `json:"count"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveCheckMonster) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetCount returns the value of Count.
+func (s *LiveCheckMonster) GetCount() int32 {
+	return s.Count
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveCheckMonster) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveCheckMonster) SetCount(val int32) {
+	s.Count = val
+}
+
+type LiveCheckOutcome string
+
+const (
+	LiveCheckOutcomeEncounter LiveCheckOutcome = "encounter"
+	LiveCheckOutcomeNothing   LiveCheckOutcome = "nothing"
+)
+
+// AllValues returns all LiveCheckOutcome values.
+func (LiveCheckOutcome) AllValues() []LiveCheckOutcome {
+	return []LiveCheckOutcome{
+		LiveCheckOutcomeEncounter,
+		LiveCheckOutcomeNothing,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCheckOutcome) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCheckOutcomeEncounter:
+		return []byte(s), nil
+	case LiveCheckOutcomeNothing:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCheckOutcome) UnmarshalText(data []byte) error {
+	switch LiveCheckOutcome(data) {
+	case LiveCheckOutcomeEncounter:
+		*s = LiveCheckOutcomeEncounter
+		return nil
+	case LiveCheckOutcomeNothing:
+		*s = LiveCheckOutcomeNothing
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCheckStatus string
+
+const (
+	LiveCheckStatusPending  LiveCheckStatus = "pending"
+	LiveCheckStatusResolved LiveCheckStatus = "resolved"
+)
+
+// AllValues returns all LiveCheckStatus values.
+func (LiveCheckStatus) AllValues() []LiveCheckStatus {
+	return []LiveCheckStatus{
+		LiveCheckStatusPending,
+		LiveCheckStatusResolved,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCheckStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCheckStatusPending:
+		return []byte(s), nil
+	case LiveCheckStatusResolved:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCheckStatus) UnmarshalText(data []byte) error {
+	switch LiveCheckStatus(data) {
+	case LiveCheckStatusPending:
+		*s = LiveCheckStatusPending
+		return nil
+	case LiveCheckStatusResolved:
+		*s = LiveCheckStatusResolved
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // The running Combat, with every Combatant the audience can see in turn order. Tied initiatives share
 // a rank and act at the same time.
 // Ref: #/components/schemas/LiveCombat
@@ -6142,7 +7796,13 @@ type LiveCommand struct {
 	ZoneId      OptID                 `json:"zoneId"`
 	RadiusHexes OptInt32              `json:"radiusHexes"`
 	// With add_zone, the zone springs only when the DM springs it.
-	DmOnly OptBool `json:"dmOnly"`
+	DmOnly  OptBool            `json:"dmOnly"`
+	Rest    OptLiveCommandRest `json:"rest"`
+	TableId OptID              `json:"tableId"`
+	Mode    OptEncounterMode   `json:"mode"`
+	// With a pick check, the index of the table entry.
+	Entry OptInt32          `json:"entry"`
+	Due   OptLiveCommandDue `json:"due"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -6395,6 +8055,31 @@ func (s *LiveCommand) GetDmOnly() OptBool {
 	return s.DmOnly
 }
 
+// GetRest returns the value of Rest.
+func (s *LiveCommand) GetRest() OptLiveCommandRest {
+	return s.Rest
+}
+
+// GetTableId returns the value of TableId.
+func (s *LiveCommand) GetTableId() OptID {
+	return s.TableId
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveCommand) GetMode() OptEncounterMode {
+	return s.Mode
+}
+
+// GetEntry returns the value of Entry.
+func (s *LiveCommand) GetEntry() OptInt32 {
+	return s.Entry
+}
+
+// GetDue returns the value of Due.
+func (s *LiveCommand) GetDue() OptLiveCommandDue {
+	return s.Due
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -6645,6 +8330,72 @@ func (s *LiveCommand) SetDmOnly(val OptBool) {
 	s.DmOnly = val
 }
 
+// SetRest sets the value of Rest.
+func (s *LiveCommand) SetRest(val OptLiveCommandRest) {
+	s.Rest = val
+}
+
+// SetTableId sets the value of TableId.
+func (s *LiveCommand) SetTableId(val OptID) {
+	s.TableId = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveCommand) SetMode(val OptEncounterMode) {
+	s.Mode = val
+}
+
+// SetEntry sets the value of Entry.
+func (s *LiveCommand) SetEntry(val OptInt32) {
+	s.Entry = val
+}
+
+// SetDue sets the value of Due.
+func (s *LiveCommand) SetDue(val OptLiveCommandDue) {
+	s.Due = val
+}
+
+type LiveCommandDue string
+
+const (
+	LiveCommandDueNextRest   LiveCommandDue = "next_rest"
+	LiveCommandDueNextTravel LiveCommandDue = "next_travel"
+)
+
+// AllValues returns all LiveCommandDue values.
+func (LiveCommandDue) AllValues() []LiveCommandDue {
+	return []LiveCommandDue{
+		LiveCommandDueNextRest,
+		LiveCommandDueNextTravel,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandDue) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandDueNextRest:
+		return []byte(s), nil
+	case LiveCommandDueNextTravel:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandDue) UnmarshalText(data []byte) error {
+	switch LiveCommandDue(data) {
+	case LiveCommandDueNextRest:
+		*s = LiveCommandDueNextRest
+		return nil
+	case LiveCommandDueNextTravel:
+		*s = LiveCommandDueNextTravel
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 type LiveCommandKind string
 
 const (
@@ -6692,6 +8443,9 @@ const (
 	LiveCommandKindRemoveZone     LiveCommandKind = "remove_zone"
 	LiveCommandKindHoldZone       LiveCommandKind = "hold_zone"
 	LiveCommandKindSpringZone     LiveCommandKind = "spring_zone"
+	LiveCommandKindRest           LiveCommandKind = "rest"
+	LiveCommandKindEncounterCheck LiveCommandKind = "encounter_check"
+	LiveCommandKindScheduleCheck  LiveCommandKind = "schedule_check"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -6741,6 +8495,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindRemoveZone,
 		LiveCommandKindHoldZone,
 		LiveCommandKindSpringZone,
+		LiveCommandKindRest,
+		LiveCommandKindEncounterCheck,
+		LiveCommandKindScheduleCheck,
 	}
 }
 
@@ -6834,6 +8591,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindHoldZone:
 		return []byte(s), nil
 	case LiveCommandKindSpringZone:
+		return []byte(s), nil
+	case LiveCommandKindRest:
+		return []byte(s), nil
+	case LiveCommandKindEncounterCheck:
+		return []byte(s), nil
+	case LiveCommandKindScheduleCheck:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -6975,6 +8738,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindSpringZone:
 		*s = LiveCommandKindSpringZone
 		return nil
+	case LiveCommandKindRest:
+		*s = LiveCommandKindRest
+		return nil
+	case LiveCommandKindEncounterCheck:
+		*s = LiveCommandKindEncounterCheck
+		return nil
+	case LiveCommandKindScheduleCheck:
+		*s = LiveCommandKindScheduleCheck
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -7025,6 +8797,47 @@ func (s *LiveCommandResource) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandResourceReaction:
 		*s = LiveCommandResourceReaction
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandRest string
+
+const (
+	LiveCommandRestShort LiveCommandRest = "short"
+	LiveCommandRestLong  LiveCommandRest = "long"
+)
+
+// AllValues returns all LiveCommandRest values.
+func (LiveCommandRest) AllValues() []LiveCommandRest {
+	return []LiveCommandRest{
+		LiveCommandRestShort,
+		LiveCommandRestLong,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandRest) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandRestShort:
+		return []byte(s), nil
+	case LiveCommandRestLong:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandRest) UnmarshalText(data []byte) error {
+	switch LiveCommandRest(data) {
+	case LiveCommandRestShort:
+		*s = LiveCommandRestShort
+		return nil
+	case LiveCommandRestLong:
+		*s = LiveCommandRestLong
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -8677,6 +10490,7 @@ type LiveView struct {
 	World      OptLiveWorld     `json:"world"`
 	Zones      []LiveZone       `json:"zones"`
 	Perception []LivePerception `json:"perception"`
+	Checks     []LiveCheck      `json:"checks"`
 	Walls      []HexCoord       `json:"walls"`
 	Lights     []LiveLight      `json:"lights"`
 	Ambient    OptAmbientLight  `json:"ambient"`
@@ -8760,6 +10574,11 @@ func (s *LiveView) GetZones() []LiveZone {
 // GetPerception returns the value of Perception.
 func (s *LiveView) GetPerception() []LivePerception {
 	return s.Perception
+}
+
+// GetChecks returns the value of Checks.
+func (s *LiveView) GetChecks() []LiveCheck {
+	return s.Checks
 }
 
 // GetWalls returns the value of Walls.
@@ -8855,6 +10674,11 @@ func (s *LiveView) SetZones(val []LiveZone) {
 // SetPerception sets the value of Perception.
 func (s *LiveView) SetPerception(val []LivePerception) {
 	s.Perception = val
+}
+
+// SetChecks sets the value of Checks.
+func (s *LiveView) SetChecks(val []LiveCheck) {
+	s.Checks = val
 }
 
 // SetWalls sets the value of Walls.
@@ -9421,6 +11245,44 @@ func (s *LocalMapHeaders) SetResponse(val LocalMap) {
 func (*LocalMapHeaders) getMapRes()    {}
 func (*LocalMapHeaders) updateMapRes() {}
 func (*LocalMapHeaders) uploadMapRes() {}
+
+// A place on one of the Campaign's world maps.
+// Ref: #/components/schemas/Location
+type Location struct {
+	ID      ID     `json:"id"`
+	Name    string `json:"name"`
+	MapName string `json:"mapName"`
+}
+
+// GetID returns the value of ID.
+func (s *Location) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Location) GetName() string {
+	return s.Name
+}
+
+// GetMapName returns the value of MapName.
+func (s *Location) GetMapName() string {
+	return s.MapName
+}
+
+// SetID sets the value of ID.
+func (s *Location) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Location) SetName(val string) {
+	s.Name = val
+}
+
+// SetMapName sets the value of MapName.
+func (s *Location) SetMapName(val string) {
+	s.MapName = val
+}
 
 // A Map's name, calibration and ambient light.
 // Ref: #/components/schemas/MapEdit
@@ -10537,6 +12399,98 @@ func (o OptDiceGroupKeep) Or(d DiceGroupKeep) DiceGroupKeep {
 	return d
 }
 
+// NewOptEncounterCheckOutcome returns new OptEncounterCheckOutcome with value set to v.
+func NewOptEncounterCheckOutcome(v EncounterCheckOutcome) OptEncounterCheckOutcome {
+	return OptEncounterCheckOutcome{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptEncounterCheckOutcome is optional EncounterCheckOutcome.
+type OptEncounterCheckOutcome struct {
+	Value EncounterCheckOutcome
+	Set   bool
+}
+
+// IsSet returns true if OptEncounterCheckOutcome was set.
+func (o OptEncounterCheckOutcome) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptEncounterCheckOutcome) Reset() {
+	var v EncounterCheckOutcome
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptEncounterCheckOutcome) SetTo(v EncounterCheckOutcome) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptEncounterCheckOutcome) Get() (v EncounterCheckOutcome, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptEncounterCheckOutcome) Or(d EncounterCheckOutcome) EncounterCheckOutcome {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptEncounterMode returns new OptEncounterMode with value set to v.
+func NewOptEncounterMode(v EncounterMode) OptEncounterMode {
+	return OptEncounterMode{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptEncounterMode is optional EncounterMode.
+type OptEncounterMode struct {
+	Value EncounterMode
+	Set   bool
+}
+
+// IsSet returns true if OptEncounterMode was set.
+func (o OptEncounterMode) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptEncounterMode) Reset() {
+	var v EncounterMode
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptEncounterMode) SetTo(v EncounterMode) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptEncounterMode) Get() (v EncounterMode, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptEncounterMode) Or(d EncounterMode) EncounterMode {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptHexCoord returns new OptHexCoord with value set to v.
 func NewOptHexCoord(v HexCoord) OptHexCoord {
 	return OptHexCoord{
@@ -10813,6 +12767,52 @@ func (o OptLiveAttackPreview) Or(d LiveAttackPreview) LiveAttackPreview {
 	return d
 }
 
+// NewOptLiveCheckOutcome returns new OptLiveCheckOutcome with value set to v.
+func NewOptLiveCheckOutcome(v LiveCheckOutcome) OptLiveCheckOutcome {
+	return OptLiveCheckOutcome{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCheckOutcome is optional LiveCheckOutcome.
+type OptLiveCheckOutcome struct {
+	Value LiveCheckOutcome
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCheckOutcome was set.
+func (o OptLiveCheckOutcome) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCheckOutcome) Reset() {
+	var v LiveCheckOutcome
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCheckOutcome) SetTo(v LiveCheckOutcome) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCheckOutcome) Get() (v LiveCheckOutcome, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCheckOutcome) Or(d LiveCheckOutcome) LiveCheckOutcome {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveCombat returns new OptLiveCombat with value set to v.
 func NewOptLiveCombat(v LiveCombat) OptLiveCombat {
 	return OptLiveCombat{
@@ -10859,6 +12859,52 @@ func (o OptLiveCombat) Or(d LiveCombat) LiveCombat {
 	return d
 }
 
+// NewOptLiveCommandDue returns new OptLiveCommandDue with value set to v.
+func NewOptLiveCommandDue(v LiveCommandDue) OptLiveCommandDue {
+	return OptLiveCommandDue{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandDue is optional LiveCommandDue.
+type OptLiveCommandDue struct {
+	Value LiveCommandDue
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandDue was set.
+func (o OptLiveCommandDue) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandDue) Reset() {
+	var v LiveCommandDue
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandDue) SetTo(v LiveCommandDue) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandDue) Get() (v LiveCommandDue, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandDue) Or(d LiveCommandDue) LiveCommandDue {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveCommandResource returns new OptLiveCommandResource with value set to v.
 func NewOptLiveCommandResource(v LiveCommandResource) OptLiveCommandResource {
 	return OptLiveCommandResource{
@@ -10899,6 +12945,52 @@ func (o OptLiveCommandResource) Get() (v LiveCommandResource, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandResource) Or(d LiveCommandResource) LiveCommandResource {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandRest returns new OptLiveCommandRest with value set to v.
+func NewOptLiveCommandRest(v LiveCommandRest) OptLiveCommandRest {
+	return OptLiveCommandRest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandRest is optional LiveCommandRest.
+type OptLiveCommandRest struct {
+	Value LiveCommandRest
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandRest was set.
+func (o OptLiveCommandRest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandRest) Reset() {
+	var v LiveCommandRest
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandRest) SetTo(v LiveCommandRest) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandRest) Get() (v LiveCommandRest, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandRest) Or(d LiveCommandRest) LiveCommandRest {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -12257,65 +14349,79 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 	s.Response = val
 }
 
-func (*ProblemStatusCodeWithHeaders) acceptInviteRes()          {}
-func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()        {}
-func (*ProblemStatusCodeWithHeaders) createCampaignRes()        {}
-func (*ProblemStatusCodeWithHeaders) createCharacterRes()       {}
-func (*ProblemStatusCodeWithHeaders) createInviteRes()          {}
-func (*ProblemStatusCodeWithHeaders) createNpcRes()             {}
-func (*ProblemStatusCodeWithHeaders) createRollRes()            {}
-func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()       {}
-func (*ProblemStatusCodeWithHeaders) deleteNpcRes()             {}
-func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()      {}
-func (*ProblemStatusCodeWithHeaders) endSessionRes()            {}
-func (*ProblemStatusCodeWithHeaders) getActionLogRes()          {}
-func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes() {}
-func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()     {}
-func (*ProblemStatusCodeWithHeaders) getCampaignRes()           {}
-func (*ProblemStatusCodeWithHeaders) getCharacterRes()          {}
-func (*ProblemStatusCodeWithHeaders) getEntryRes()              {}
-func (*ProblemStatusCodeWithHeaders) getHealthRes()             {}
-func (*ProblemStatusCodeWithHeaders) getMapImageRes()           {}
-func (*ProblemStatusCodeWithHeaders) getMapRes()                {}
-func (*ProblemStatusCodeWithHeaders) getMeRes()                 {}
-func (*ProblemStatusCodeWithHeaders) getNpcRes()                {}
-func (*ProblemStatusCodeWithHeaders) getPortraitRes()           {}
-func (*ProblemStatusCodeWithHeaders) getReadinessRes()          {}
-func (*ProblemStatusCodeWithHeaders) getRollRes()               {}
-func (*ProblemStatusCodeWithHeaders) getSessionRes()            {}
-func (*ProblemStatusCodeWithHeaders) getSpellRes()              {}
-func (*ProblemStatusCodeWithHeaders) getStatusRes()             {}
-func (*ProblemStatusCodeWithHeaders) getTokenIconRes()          {}
-func (*ProblemStatusCodeWithHeaders) listCampaignsRes()         {}
-func (*ProblemStatusCodeWithHeaders) listCharactersRes()        {}
-func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()       {}
-func (*ProblemStatusCodeWithHeaders) listEntriesRes()           {}
-func (*ProblemStatusCodeWithHeaders) listInvitesRes()           {}
-func (*ProblemStatusCodeWithHeaders) listMapsRes()              {}
-func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()      {}
-func (*ProblemStatusCodeWithHeaders) listNpcsRes()              {}
-func (*ProblemStatusCodeWithHeaders) listRollsRes()             {}
-func (*ProblemStatusCodeWithHeaders) listSessionsRes()          {}
-func (*ProblemStatusCodeWithHeaders) listSourcesRes()           {}
-func (*ProblemStatusCodeWithHeaders) listSpellsRes()            {}
-func (*ProblemStatusCodeWithHeaders) previewCharacterRes()      {}
-func (*ProblemStatusCodeWithHeaders) previewInviteRes()         {}
-func (*ProblemStatusCodeWithHeaders) previewReachRes()          {}
-func (*ProblemStatusCodeWithHeaders) previewSightRes()          {}
-func (*ProblemStatusCodeWithHeaders) removeMemberRes()          {}
-func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()    {}
-func (*ProblemStatusCodeWithHeaders) revokeInviteRes()          {}
-func (*ProblemStatusCodeWithHeaders) rollRestRes()              {}
-func (*ProblemStatusCodeWithHeaders) setDieRes()                {}
-func (*ProblemStatusCodeWithHeaders) setPortraitRes()           {}
-func (*ProblemStatusCodeWithHeaders) setTokenIconRes()          {}
-func (*ProblemStatusCodeWithHeaders) startSessionRes()          {}
-func (*ProblemStatusCodeWithHeaders) updateCampaignRes()        {}
-func (*ProblemStatusCodeWithHeaders) updateCharacterRes()       {}
-func (*ProblemStatusCodeWithHeaders) updateMapRes()             {}
-func (*ProblemStatusCodeWithHeaders) updateMemberRes()          {}
-func (*ProblemStatusCodeWithHeaders) updateNpcRes()             {}
-func (*ProblemStatusCodeWithHeaders) uploadMapRes()             {}
+func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
+func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
+func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
+func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
+func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
+func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
+func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
+func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
+func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
+func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
+func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
+func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
+func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
+func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getReadinessRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
+func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
+func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
+func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
+func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
+func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
+func (*ProblemStatusCodeWithHeaders) listEncounterChecksRes()           {}
+func (*ProblemStatusCodeWithHeaders) listEncounterPoolRevisionsRes()    {}
+func (*ProblemStatusCodeWithHeaders) listEncounterPoolsRes()            {}
+func (*ProblemStatusCodeWithHeaders) listEncounterTableRevisionsRes()   {}
+func (*ProblemStatusCodeWithHeaders) listEncounterTablesRes()           {}
+func (*ProblemStatusCodeWithHeaders) listEntriesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listInvitesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
+func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
+func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
+func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
+func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
+func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
+func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
+func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
+func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
+func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
+func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
+func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
+func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
+func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
+func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
+func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
+func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
+func (*ProblemStatusCodeWithHeaders) updateMemberRes()                  {}
+func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
 
 // A reachable hex with its cost and where it is reached from.
 // Ref: #/components/schemas/ReachHex
