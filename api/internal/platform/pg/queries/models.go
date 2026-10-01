@@ -257,6 +257,18 @@ type CompendiumBackgroundBenefit struct {
 	Description  string
 }
 
+type CompendiumChoice struct {
+	ID        int64
+	OwnerKind string
+	OwnerSlug string
+	Slug      string
+	Name      string
+	Level     int32
+	Count     int32
+	Pool      string
+	PoolFrom  string
+}
+
 type CompendiumClass struct {
 	ID          int64
 	DocumentID  int64
@@ -514,6 +526,63 @@ type CompendiumMonsterTrait struct {
 	Ordering    int32
 	Name        string
 	Description string
+}
+
+type CompendiumPrerequisite struct {
+	OwnerKind string
+	OwnerSlug string
+	GroupNo   int32
+	Ordinal   int32
+	Kind      string
+	Ability   pgtype.Text
+	Minimum   int32
+	RefSlug   pgtype.Text
+}
+
+type CompendiumResource struct {
+	ID         int64
+	Slug       string
+	Name       string
+	OwnerKind  string
+	OwnerSlug  string
+	Basis      string
+	Multiplier int32
+	Ability    pgtype.Text
+	FromLevel  int32
+}
+
+type CompendiumResourceDice struct {
+	ResourceID int64
+	Level      int32
+	Die        string
+}
+
+type CompendiumResourceMaxima struct {
+	ResourceID int64
+	Level      int32
+	Maximum    int32
+}
+
+type CompendiumResourceRecharge struct {
+	ResourceID  int64
+	Event       string
+	FromLevel   int32
+	Amount      pgtype.Int4
+	RollAtLeast pgtype.Int4
+}
+
+type CompendiumScale struct {
+	ID        int64
+	Slug      string
+	Name      string
+	OwnerKind string
+	OwnerSlug string
+}
+
+type CompendiumScaleStep struct {
+	ScaleID int64
+	Level   int32
+	Value   string
 }
 
 type CompendiumSpeciesTrait struct {
