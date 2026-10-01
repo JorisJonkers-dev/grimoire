@@ -57,7 +57,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	if reason != "" {
 		return Write{}, reason
 	}
-	land := r.st.catalog.LandingOf(slug)
+	land := r.st.catalog.LandingOf(slug, cmd.EffectMode)
 	if land.Dispels {
 		return r.st.dispel(target)
 	}
@@ -69,10 +69,14 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 			name = slug
 		}
 	}
+	if modes := def.Modes(); len(modes) > 0 && !slices.Contains(modes, cmd.EffectMode) {
+		return Write{}, "Choose " + strings.Join(modes, " or ") + "."
+	}
 	e := domain.Effect{
 		ID: domain.EffectID(uuid.New()), Target: target.ID, Source: source, Slug: slug, Name: name, Concentration: def.Concentration && source != nil,
-		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC, Level: 1,
+		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC, Level: 1, Mode: cmd.EffectMode,
 	}
+	r.st.lasting(&e, def.Duration)
 	if i := r.st.stacked(target.ID, slug); i >= 0 {
 		e = r.st.fx.Active[i]
 		e.Level++
@@ -85,7 +89,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 			w.ended = append(w.ended, old.ID)
 		}
 	}
-	for _, text := range r.st.catalog.Instructions(slug, name) {
+	for _, text := range r.st.catalog.Instructions(slug, name, e.Mode) {
 		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + ": " + text})
 	}
 	return w, ""
@@ -137,6 +141,31 @@ func (s *state) dispel(target domain.Token) (Write, string) {
 		return Write{}, "No spell on " + target.Label + " to dispel."
 	}
 	return Write{Kind: domain.ActionEffectEnded, Token: target, ended: ended}, ""
+}
+
+// lasting fills in what an Effect's Duration says when whoever applied it left it out: how many rounds
+// it lasts, and the save its bearer repeats against its source's spell DC.
+func (s *state) lasting(e *domain.Effect, d effects.Duration) {
+	if e.RoundsLeft == 0 {
+		e.RoundsLeft = d.Rounds()
+	}
+	if e.SaveAbility != "" || d.RepeatSave == "" || e.Source == nil {
+		return
+	}
+	if src, ok := s.tokens[*e.Source]; ok && src.Stats != nil {
+		e.SaveAbility, e.SaveDC = d.RepeatSave, spellDC(src)
+	}
+}
+
+// restEnded lists the Effects that end when a rest finishes.
+func (s *state) restEnded() []domain.EffectID {
+	var out []domain.EffectID
+	for _, e := range s.fx.Active {
+		if def, ok := s.catalog.Lookup(e.Slug); ok && def.Duration.EndsOnRest() {
+			out = append(out, e.ID)
+		}
+	}
+	return out
 }
 
 // stacked finds the Effect a stacking Effect adds a level to, or -1.
@@ -195,7 +224,7 @@ func (s *state) actives(id domain.TokenID) []effects.Active {
 	var out []effects.Active
 	for _, e := range s.fx.Active {
 		if e.Target == id {
-			a := effects.Active{Slug: e.Slug, Source: "", Level: e.Level}
+			a := effects.Active{Slug: e.Slug, Source: "", Level: e.Level, Mode: e.Mode}
 			if e.Source != nil {
 				a.Source = uuid.UUID(*e.Source).String()
 			}
@@ -399,7 +428,7 @@ func (s *state) effectViews(id domain.TokenID) []EffectView {
 		if e.Target != id {
 			continue
 		}
-		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft}
+		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft, Mode: e.Mode}
 		if s.catalog.Stacks(e.Slug) {
 			v.Level = max(1, e.Level)
 		}

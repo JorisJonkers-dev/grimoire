@@ -6,12 +6,12 @@ import { effectLabel, knownEffects } from './conditions'
 
 const props = defineProps<{ token: LiveToken; tokens: LiveToken[] }>()
 const emit = defineEmits<{
-  apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number }]
+  apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number; effectMode?: string }]
   end: [effectId: string]
 }>()
 const known = knownEffects
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
-const form = reactive({ effect: '', source: '', rounds: 0, dc: 0 })
+const form = reactive({ effect: '', source: '', rounds: 0, dc: 0, mode: '' })
 const saveWith = ref<Ability | ''>('')
 // ends names the concentration the chosen source would lose by putting on a concentration Effect.
 const ends = computed(() => {
@@ -29,8 +29,10 @@ function apply() {
     ...(form.source ? { sourceId: form.source } : {}),
     ...(form.rounds ? { rounds: form.rounds } : {}),
     ...(ability && form.dc ? { saveAbility: ability, saveDc: form.dc } : {}),
+    ...(form.mode.trim() ? { effectMode: form.mode.trim() } : {}),
   })
   form.effect = ''
+  form.mode = ''
 }
 </script>
 
@@ -61,6 +63,7 @@ function apply() {
           <option v-for="t in tokens" :key="t.id" :value="t.id">{{ t.label }}</option>
         </select>
       </label>
+      <label class="g-field"><span>Mode</span><input v-model="form.mode" maxlength="80" placeholder="Enlarge" data-testid="effect-mode" /></label>
       <label class="g-field"><span>Rounds</span><input v-model.number="form.rounds" type="number" min="0" max="100" data-testid="effect-rounds" /></label>
       <label class="g-field">
         <span>Ends on a save</span>

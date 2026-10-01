@@ -1138,6 +1138,14 @@ export type LiveCommand = {
     effectName?: string;
     sourceId?: Id;
     rounds?: number;
+    /**
+     * The spell slot level an area spell is cast with; left out, it is cast at its lowest.
+     */
+    slot?: number;
+    /**
+     * The option an Effect that offers a choice is applied in.
+     */
+    effectMode?: string;
     saveAbility?: Ability;
     saveDc?: number;
     effectId?: Id;
@@ -1568,6 +1576,10 @@ export type LiveEffect = {
      * Levels of a stacking Effect, such as exhaustion.
      */
     level?: number;
+    /**
+     * The option chosen when the Effect offers a choice.
+     */
+    mode?: string;
     /**
      * The hexes an emanation covers around the token where it stands now; it moves with the token.
      */

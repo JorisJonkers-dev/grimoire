@@ -12697,6 +12697,18 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Slot.Set {
+			e.FieldStart("slot")
+			s.Slot.Encode(e)
+		}
+	}
+	{
+		if s.EffectMode.Set {
+			e.FieldStart("effectMode")
+			s.EffectMode.Encode(e)
+		}
+	}
+	{
 		if s.SaveAbility.Set {
 			e.FieldStart("saveAbility")
 			s.SaveAbility.Encode(e)
@@ -12966,7 +12978,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [75]string{
+var jsonFieldsNameOfLiveCommand = [77]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -12998,50 +13010,52 @@ var jsonFieldsNameOfLiveCommand = [75]string{
 	28: "effectName",
 	29: "sourceId",
 	30: "rounds",
-	31: "saveAbility",
-	32: "saveDc",
-	33: "effectId",
-	34: "manualId",
-	35: "surface",
-	36: "elevationFt",
-	37: "camera",
-	38: "zoomPct",
-	39: "scene",
-	40: "title",
-	41: "body",
-	42: "nodeId",
-	43: "toNodeId",
-	44: "routeId",
-	45: "distanceMi",
-	46: "pace",
-	47: "zoneId",
-	48: "radiusHexes",
-	49: "dmOnly",
-	50: "rest",
-	51: "tableId",
-	52: "mode",
-	53: "entry",
-	54: "due",
-	55: "lootTableId",
-	56: "fromId",
-	57: "instanceId",
-	58: "action",
-	59: "detail",
-	60: "trigger",
-	61: "option",
-	62: "offHand",
-	63: "cleave",
-	64: "reactionKind",
-	65: "reactionMode",
-	66: "condition",
-	67: "toId",
-	68: "itemSlug",
-	69: "coin",
-	70: "count",
-	71: "shopId",
-	72: "monsters",
-	73: "hpDelta",
-	74: "seq",
+	31: "slot",
+	32: "effectMode",
+	33: "saveAbility",
+	34: "saveDc",
+	35: "effectId",
+	36: "manualId",
+	37: "surface",
+	38: "elevationFt",
+	39: "camera",
+	40: "zoomPct",
+	41: "scene",
+	42: "title",
+	43: "body",
+	44: "nodeId",
+	45: "toNodeId",
+	46: "routeId",
+	47: "distanceMi",
+	48: "pace",
+	49: "zoneId",
+	50: "radiusHexes",
+	51: "dmOnly",
+	52: "rest",
+	53: "tableId",
+	54: "mode",
+	55: "entry",
+	56: "due",
+	57: "lootTableId",
+	58: "fromId",
+	59: "instanceId",
+	60: "action",
+	61: "detail",
+	62: "trigger",
+	63: "option",
+	64: "offHand",
+	65: "cleave",
+	66: "reactionKind",
+	67: "reactionMode",
+	68: "condition",
+	69: "toId",
+	70: "itemSlug",
+	71: "coin",
+	72: "count",
+	73: "shopId",
+	74: "monsters",
+	75: "hpDelta",
+	76: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13384,6 +13398,26 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"rounds\"")
+			}
+		case "slot":
+			if err := func() error {
+				s.Slot.Reset()
+				if err := s.Slot.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"slot\"")
+			}
+		case "effectMode":
+			if err := func() error {
+				s.EffectMode.Reset()
+				if err := s.EffectMode.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"effectMode\"")
 			}
 		case "saveAbility":
 			if err := func() error {
@@ -15243,6 +15277,12 @@ func (s *LiveEffect) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Mode.Set {
+			e.FieldStart("mode")
+			s.Mode.Encode(e)
+		}
+	}
+	{
 		if s.Hexes != nil {
 			e.FieldStart("hexes")
 			e.ArrStart()
@@ -15254,7 +15294,7 @@ func (s *LiveEffect) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveEffect = [8]string{
+var jsonFieldsNameOfLiveEffect = [9]string{
 	0: "id",
 	1: "slug",
 	2: "name",
@@ -15262,7 +15302,8 @@ var jsonFieldsNameOfLiveEffect = [8]string{
 	4: "concentration",
 	5: "roundsLeft",
 	6: "level",
-	7: "hexes",
+	7: "mode",
+	8: "hexes",
 }
 
 // Decode decodes LiveEffect from json.
@@ -15270,7 +15311,7 @@ func (s *LiveEffect) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveEffect to nil")
 	}
-	var requiredBitSet [1]uint8
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -15350,6 +15391,16 @@ func (s *LiveEffect) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"level\"")
 			}
+		case "mode":
+			if err := func() error {
+				s.Mode.Reset()
+				if err := s.Mode.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"mode\"")
+			}
 		case "hexes":
 			if err := func() error {
 				s.Hexes = make([]HexCoord, 0)
@@ -15376,8 +15427,9 @@ func (s *LiveEffect) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
+	for i, mask := range [2]uint8{
 		0b00010111,
+		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

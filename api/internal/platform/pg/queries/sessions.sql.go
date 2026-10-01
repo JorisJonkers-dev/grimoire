@@ -495,9 +495,9 @@ func (q *Queries) InsertCastTarget(ctx context.Context, arg InsertCastTargetPara
 }
 
 const insertEffect = `-- name: InsertEffect :exec
-INSERT INTO play.active_effects (id, session_id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level)
+INSERT INTO play.active_effects (id, session_id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level, mode)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
-    $9, $10, $11)
+    $9, $10, $11, $12)
 `
 
 type InsertEffectParams struct {
@@ -512,6 +512,7 @@ type InsertEffectParams struct {
 	SaveAbility   pgtype.Text
 	SaveDc        pgtype.Int4
 	Level         int32
+	Mode          pgtype.Text
 }
 
 func (q *Queries) InsertEffect(ctx context.Context, arg InsertEffectParams) error {
@@ -527,6 +528,7 @@ func (q *Queries) InsertEffect(ctx context.Context, arg InsertEffectParams) erro
 		arg.SaveAbility,
 		arg.SaveDc,
 		arg.Level,
+		arg.Mode,
 	)
 	return err
 }
@@ -1608,7 +1610,7 @@ func (q *Queries) SessionDying(ctx context.Context, sessionID uuid.UUID) ([]Sess
 }
 
 const sessionEffects = `-- name: SessionEffects :many
-SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level
+SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level, mode
 FROM play.active_effects WHERE session_id = $1 ORDER BY id
 `
 
@@ -1623,6 +1625,7 @@ type SessionEffectsRow struct {
 	SaveAbility   pgtype.Text
 	SaveDc        pgtype.Int4
 	Level         int32
+	Mode          pgtype.Text
 }
 
 func (q *Queries) SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error) {
@@ -1645,6 +1648,7 @@ func (q *Queries) SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]Se
 			&i.SaveAbility,
 			&i.SaveDc,
 			&i.Level,
+			&i.Mode,
 		); err != nil {
 			return nil, err
 		}

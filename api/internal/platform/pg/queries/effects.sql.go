@@ -7,6 +7,8 @@ package queries
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const clearEffectComponents = `-- name: ClearEffectComponents :exec
@@ -15,6 +17,15 @@ DELETE FROM compendium.effect_components WHERE effect_id = $1
 
 func (q *Queries) ClearEffectComponents(ctx context.Context, effectID int64) error {
 	_, err := q.db.Exec(ctx, clearEffectComponents, effectID)
+	return err
+}
+
+const clearEffectScaling = `-- name: ClearEffectScaling :exec
+DELETE FROM compendium.effect_scalings WHERE effect_id = $1
+`
+
+func (q *Queries) ClearEffectScaling(ctx context.Context, effectID int64) error {
+	_, err := q.db.Exec(ctx, clearEffectScaling, effectID)
 	return err
 }
 
@@ -66,18 +77,47 @@ func (q *Queries) InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonu
 	return err
 }
 
+const insertEffectBranch = `-- name: InsertEffectBranch :exec
+INSERT INTO compendium.effect_branches (effect_id, ordinal, condition, n, creature_type) VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertEffectBranchParams struct {
+	EffectID     int64
+	Ordinal      int32
+	Condition    string
+	N            int32
+	CreatureType string
+}
+
+func (q *Queries) InsertEffectBranch(ctx context.Context, arg InsertEffectBranchParams) error {
+	_, err := q.db.Exec(ctx, insertEffectBranch,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.Condition,
+		arg.N,
+		arg.CreatureType,
+	)
+	return err
+}
+
 const insertEffectComponent = `-- name: InsertEffectComponent :exec
-INSERT INTO compendium.effect_components (effect_id, ordinal, kind) VALUES ($1, $2, $3)
+INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES ($1, $2, $3, $4)
 `
 
 type InsertEffectComponentParams struct {
 	EffectID int64
 	Ordinal  int32
 	Kind     string
+	Parent   pgtype.Int4
 }
 
 func (q *Queries) InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error {
-	_, err := q.db.Exec(ctx, insertEffectComponent, arg.EffectID, arg.Ordinal, arg.Kind)
+	_, err := q.db.Exec(ctx, insertEffectComponent,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.Kind,
+		arg.Parent,
+	)
 	return err
 }
 
@@ -227,6 +267,21 @@ func (q *Queries) InsertEffectManual(ctx context.Context, arg InsertEffectManual
 	return err
 }
 
+const insertEffectMode = `-- name: InsertEffectMode :exec
+INSERT INTO compendium.effect_modes (effect_id, ordinal, name) VALUES ($1, $2, $3)
+`
+
+type InsertEffectModeParams struct {
+	EffectID int64
+	Ordinal  int32
+	Name     string
+}
+
+func (q *Queries) InsertEffectMode(ctx context.Context, arg InsertEffectModeParams) error {
+	_, err := q.db.Exec(ctx, insertEffectMode, arg.EffectID, arg.Ordinal, arg.Name)
+	return err
+}
+
 const insertEffectMoveCost = `-- name: InsertEffectMoveCost :exec
 INSERT INTO compendium.effect_move_costs (effect_id, ordinal, multiplier) VALUES ($1, $2, $3)
 `
@@ -350,6 +405,47 @@ func (q *Queries) InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSave
 		arg.Ability,
 		arg.Mode,
 	)
+	return err
+}
+
+const insertEffectScaling = `-- name: InsertEffectScaling :exec
+INSERT INTO compendium.effect_scalings (effect_id, axis, class_slug, column_name, base_level, dice)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertEffectScalingParams struct {
+	EffectID   int64
+	Axis       string
+	ClassSlug  string
+	ColumnName string
+	BaseLevel  int32
+	Dice       string
+}
+
+func (q *Queries) InsertEffectScaling(ctx context.Context, arg InsertEffectScalingParams) error {
+	_, err := q.db.Exec(ctx, insertEffectScaling,
+		arg.EffectID,
+		arg.Axis,
+		arg.ClassSlug,
+		arg.ColumnName,
+		arg.BaseLevel,
+		arg.Dice,
+	)
+	return err
+}
+
+const insertEffectScalingStep = `-- name: InsertEffectScalingStep :exec
+INSERT INTO compendium.effect_scaling_steps (effect_id, at_level, dice) VALUES ($1, $2, $3)
+`
+
+type InsertEffectScalingStepParams struct {
+	EffectID int64
+	AtLevel  int32
+	Dice     string
+}
+
+func (q *Queries) InsertEffectScalingStep(ctx context.Context, arg InsertEffectScalingStepParams) error {
+	_, err := q.db.Exec(ctx, insertEffectScalingStep, arg.EffectID, arg.AtLevel, arg.Dice)
 	return err
 }
 
@@ -495,8 +591,46 @@ func (q *Queries) ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDic
 	return items, nil
 }
 
+const listEffectBranches = `-- name: ListEffectBranches :many
+SELECT effect_id, ordinal, condition, n, creature_type FROM compendium.effect_branches
+`
+
+type ListEffectBranchesRow struct {
+	EffectID     int64
+	Ordinal      int32
+	Condition    string
+	N            int32
+	CreatureType string
+}
+
+func (q *Queries) ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error) {
+	rows, err := q.db.Query(ctx, listEffectBranches)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectBranchesRow{}
+	for rows.Next() {
+		var i ListEffectBranchesRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.Condition,
+			&i.N,
+			&i.CreatureType,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectComponents = `-- name: ListEffectComponents :many
-SELECT effect_id, ordinal, kind FROM compendium.effect_components ORDER BY effect_id, ordinal
+SELECT effect_id, ordinal, kind, parent FROM compendium.effect_components ORDER BY effect_id, ordinal
 `
 
 func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error) {
@@ -508,7 +642,12 @@ func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectC
 	items := []CompendiumEffectComponent{}
 	for rows.Next() {
 		var i CompendiumEffectComponent
-		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Kind); err != nil {
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.Kind,
+			&i.Parent,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -580,15 +719,18 @@ func (q *Queries) ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, er
 }
 
 const listEffectDefinitions = `-- name: ListEffectDefinitions :many
-SELECT id, slug, name, concentration, owner_kind FROM compendium.effect_definitions ORDER BY slug
+SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount, repeat_save FROM compendium.effect_definitions ORDER BY slug
 `
 
 type ListEffectDefinitionsRow struct {
-	ID            int64
-	Slug          string
-	Name          string
-	Concentration bool
-	OwnerKind     string
+	ID             int64
+	Slug           string
+	Name           string
+	Concentration  bool
+	OwnerKind      string
+	DurationKind   pgtype.Text
+	DurationAmount int32
+	RepeatSave     pgtype.Text
 }
 
 func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error) {
@@ -606,6 +748,9 @@ func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefini
 			&i.Name,
 			&i.Concentration,
 			&i.OwnerKind,
+			&i.DurationKind,
+			&i.DurationAmount,
+			&i.RepeatSave,
 		); err != nil {
 			return nil, err
 		}
@@ -811,6 +956,36 @@ func (q *Queries) ListEffectManual(ctx context.Context) ([]ListEffectManualRow, 
 	for rows.Next() {
 		var i ListEffectManualRow
 		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Instruction); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectModes = `-- name: ListEffectModes :many
+SELECT effect_id, ordinal, name FROM compendium.effect_modes
+`
+
+type ListEffectModesRow struct {
+	EffectID int64
+	Ordinal  int32
+	Name     string
+}
+
+func (q *Queries) ListEffectModes(ctx context.Context) ([]ListEffectModesRow, error) {
+	rows, err := q.db.Query(ctx, listEffectModes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectModesRow{}
+	for rows.Next() {
+		var i ListEffectModesRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1035,6 +1210,61 @@ func (q *Queries) ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdge
 	return items, nil
 }
 
+const listEffectScalingSteps = `-- name: ListEffectScalingSteps :many
+SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level
+`
+
+func (q *Queries) ListEffectScalingSteps(ctx context.Context) ([]CompendiumEffectScalingStep, error) {
+	rows, err := q.db.Query(ctx, listEffectScalingSteps)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumEffectScalingStep{}
+	for rows.Next() {
+		var i CompendiumEffectScalingStep
+		if err := rows.Scan(&i.EffectID, &i.AtLevel, &i.Dice); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectScalings = `-- name: ListEffectScalings :many
+SELECT effect_id, axis, class_slug, column_name, base_level, dice FROM compendium.effect_scalings
+`
+
+func (q *Queries) ListEffectScalings(ctx context.Context) ([]CompendiumEffectScaling, error) {
+	rows, err := q.db.Query(ctx, listEffectScalings)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumEffectScaling{}
+	for rows.Next() {
+		var i CompendiumEffectScaling
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Axis,
+			&i.ClassSlug,
+			&i.ColumnName,
+			&i.BaseLevel,
+			&i.Dice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectSpeedPenalties = `-- name: ListEffectSpeedPenalties :many
 SELECT effect_id, ordinal, ft FROM compendium.effect_speed_penalties
 `
@@ -1162,20 +1392,24 @@ func (q *Queries) ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow
 }
 
 const upsertEffectDefinition = `-- name: UpsertEffectDefinition :one
-INSERT INTO compendium.effect_definitions (slug, name, concentration, owner_kind, owner_slug)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO compendium.effect_definitions (slug, name, concentration, owner_kind, owner_slug, duration_kind, duration_amount, repeat_save)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (slug) DO UPDATE SET
     name = EXCLUDED.name, concentration = EXCLUDED.concentration,
-    owner_kind = EXCLUDED.owner_kind, owner_slug = EXCLUDED.owner_slug
+    owner_kind = EXCLUDED.owner_kind, owner_slug = EXCLUDED.owner_slug,
+    duration_kind = EXCLUDED.duration_kind, duration_amount = EXCLUDED.duration_amount, repeat_save = EXCLUDED.repeat_save
 RETURNING id
 `
 
 type UpsertEffectDefinitionParams struct {
-	Slug          string
-	Name          string
-	Concentration bool
-	OwnerKind     string
-	OwnerSlug     string
+	Slug           string
+	Name           string
+	Concentration  bool
+	OwnerKind      string
+	OwnerSlug      string
+	DurationKind   pgtype.Text
+	DurationAmount int32
+	RepeatSave     pgtype.Text
 }
 
 func (q *Queries) UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDefinitionParams) (int64, error) {
@@ -1185,6 +1419,9 @@ func (q *Queries) UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDe
 		arg.Concentration,
 		arg.OwnerKind,
 		arg.OwnerSlug,
+		arg.DurationKind,
+		arg.DurationAmount,
+		arg.RepeatSave,
 	)
 	var id int64
 	err := row.Scan(&id)

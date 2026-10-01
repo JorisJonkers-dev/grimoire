@@ -599,7 +599,8 @@ describe('effects', () => {
     const s = FakeSocket.last()
     const manual = [{ id: '0190c7a8-0000-7000-8000-000000000062', text: 'Goblin Boss: Resolve Hold Person by hand.' }]
     const saves = [{ rollId: '0190c7a8-0000-7000-8000-000000000063', tokenId: goblin.id, effect: 'Hold Person', dc: 13 }]
-    s.receive(snapshot([aria, goblin], 'dm', { manual, saves }))
+    const reduced = { id: '0190c7a8-0000-7000-8000-000000000066', slug: 'enlarge-reduce', name: 'Enlarge/Reduce', concentration: false, mode: 'Reduce' }
+    s.receive(snapshot([{ ...aria, effects: [...(aria.effects ?? []), reduced] }, goblin], 'dm', { manual, saves }))
     await flushPromises()
     expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (12/12 HP) · Bless')
     expect(wrapper.get('[data-testid="manual"]').text()).toContain('Resolve Hold Person by hand.')
@@ -609,6 +610,7 @@ describe('effects', () => {
     await wrapper.get('[data-hex="0,0"]').trigger('click')
     const panel = wrapper.get('[data-testid="effects-panel"]')
     expect(panel.text()).toContain('Bless · 9 rounds · concentration')
+    expect(panel.text()).toContain('Enlarge/Reduce (Reduce)')
     await panel.get('[data-testid="end-effect-bless"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'end_effect', effectId: aria.effects?.[0]?.id })
     const sent = s.sent.length
@@ -634,6 +636,11 @@ describe('effects', () => {
     await panel.get('[data-testid="effect-save"]').setValue('')
     await panel.get('form').trigger('submit')
     expect(s.sent.at(-1)).toEqual({ kind: 'apply_effect', targetId: aria.id, effect: 'prone', q: 0, r: 0, hidden: false, nonce: String(sent + 2) })
+    await panel.get('[data-testid="effect-name"]').setValue('enlarge-reduce')
+    await panel.get('[data-testid="effect-mode"]').setValue(' Reduce ')
+    await panel.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'apply_effect', effect: 'enlarge-reduce', effectMode: 'Reduce' })
+    expect((panel.get('[data-testid="effect-mode"]').element as HTMLInputElement).value).toBe('')
   })
 
   it('tells players the DM is resolving and hands them their own saves', async () => {
@@ -724,14 +731,16 @@ describe('areas and terrain', () => {
     expect(wrapper.find('[data-testid="area-preview"]').exists()).toBe(false)
     await wrapper.get('[data-testid="area-spell"]').setValue('')
     expect(wrapper.find('[data-testid="area-aiming"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="area-slot"]').setValue(5)
     await wrapper.get('[data-testid="area-spell"]').setValue('fireball')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'preview_area', effect: 'fireball', slot: 5 })
     s.receive({ kind: 'area_preview', seq: 1, area: { ...preview, allies: 2, targets: [] } })
     await flushPromises()
     expect(wrapper.get('[data-testid="ally-warning"]').text()).toBe('This catches 2 allies.')
     expect(wrapper.find('[data-testid="area-empty"]').exists()).toBe(true)
     await wrapper.get('[data-testid="confirm-area"]').trigger('click')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'cast_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0 })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'cast_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0, slot: 5 })
     s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat, area } })
     await flushPromises()
     expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(2)

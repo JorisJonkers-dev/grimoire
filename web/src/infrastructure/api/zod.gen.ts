@@ -1008,6 +1008,7 @@ export const zLiveEffect = z.object({
     concentration: z.boolean(),
     roundsLeft: z.int().gte(1).lte(100).optional(),
     level: z.int().gte(1).lte(10).optional(),
+    mode: z.string().max(80).optional(),
     hexes: z.array(zHexCoord).max(2000).optional()
 });
 
@@ -1689,6 +1690,8 @@ export const zLiveCommand = z.object({
     effectName: z.string().max(80).optional(),
     sourceId: zId.optional(),
     rounds: z.int().gte(0).lte(100).optional(),
+    slot: z.int().gte(1).lte(9).optional(),
+    effectMode: z.string().max(80).optional(),
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),

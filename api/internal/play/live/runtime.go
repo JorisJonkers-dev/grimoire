@@ -673,6 +673,9 @@ func apply(s *state, w *Write) {
 		s.day = *w.Day
 	}
 	applyZones(s, w)
+	if w.Kind == domain.ActionRestTaken {
+		w.ended = append(w.ended, s.restEnded()...)
+	}
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
 	started := map[domain.TokenID]bool{}

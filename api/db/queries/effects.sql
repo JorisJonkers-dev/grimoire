@@ -1,16 +1,17 @@
 -- name: UpsertEffectDefinition :one
-INSERT INTO compendium.effect_definitions (slug, name, concentration, owner_kind, owner_slug)
-VALUES (@slug, @name, @concentration, @owner_kind, @owner_slug)
+INSERT INTO compendium.effect_definitions (slug, name, concentration, owner_kind, owner_slug, duration_kind, duration_amount, repeat_save)
+VALUES (@slug, @name, @concentration, @owner_kind, @owner_slug, sqlc.narg(duration_kind), @duration_amount, sqlc.narg(repeat_save))
 ON CONFLICT (slug) DO UPDATE SET
     name = EXCLUDED.name, concentration = EXCLUDED.concentration,
-    owner_kind = EXCLUDED.owner_kind, owner_slug = EXCLUDED.owner_slug
+    owner_kind = EXCLUDED.owner_kind, owner_slug = EXCLUDED.owner_slug,
+    duration_kind = EXCLUDED.duration_kind, duration_amount = EXCLUDED.duration_amount, repeat_save = EXCLUDED.repeat_save
 RETURNING id;
 
 -- name: ClearEffectComponents :exec
 DELETE FROM compendium.effect_components WHERE effect_id = @effect_id;
 
 -- name: InsertEffectComponent :exec
-INSERT INTO compendium.effect_components (effect_id, ordinal, kind) VALUES (@effect_id, @ordinal, @kind);
+INSERT INTO compendium.effect_components (effect_id, ordinal, kind, parent) VALUES (@effect_id, @ordinal, @kind, sqlc.narg(parent));
 
 -- name: InsertEffectBonusDie :exec
 INSERT INTO compendium.effect_bonus_dice (effect_id, ordinal, dice, on_attacks, on_saves)
@@ -45,10 +46,10 @@ VALUES (@effect_id, @ordinal, @ability, @condition_slug);
 INSERT INTO compendium.effect_surfaces (effect_id, ordinal, surface, rounds) VALUES (@effect_id, @ordinal, @surface, @rounds);
 
 -- name: ListEffectDefinitions :many
-SELECT id, slug, name, concentration, owner_kind FROM compendium.effect_definitions ORDER BY slug;
+SELECT id, slug, name, concentration, owner_kind, duration_kind, duration_amount, repeat_save FROM compendium.effect_definitions ORDER BY slug;
 
 -- name: ListEffectComponents :many
-SELECT effect_id, ordinal, kind FROM compendium.effect_components ORDER BY effect_id, ordinal;
+SELECT effect_id, ordinal, kind, parent FROM compendium.effect_components ORDER BY effect_id, ordinal;
 
 -- name: ListEffectBonusDice :many
 SELECT effect_id, ordinal, dice, on_attacks, on_saves FROM compendium.effect_bonus_dice;
@@ -143,3 +144,31 @@ INSERT INTO compendium.effect_resource_changes (effect_id, ordinal, resource_slu
 
 -- name: ListEffectResourceChanges :many
 SELECT effect_id, ordinal, resource_slug, delta FROM compendium.effect_resource_changes;
+
+-- name: InsertEffectMode :exec
+INSERT INTO compendium.effect_modes (effect_id, ordinal, name) VALUES (@effect_id, @ordinal, @name);
+
+-- name: ListEffectModes :many
+SELECT effect_id, ordinal, name FROM compendium.effect_modes;
+
+-- name: InsertEffectBranch :exec
+INSERT INTO compendium.effect_branches (effect_id, ordinal, condition, n, creature_type) VALUES (@effect_id, @ordinal, @condition, @n, @creature_type);
+
+-- name: ListEffectBranches :many
+SELECT effect_id, ordinal, condition, n, creature_type FROM compendium.effect_branches;
+
+-- name: ClearEffectScaling :exec
+DELETE FROM compendium.effect_scalings WHERE effect_id = @effect_id;
+
+-- name: InsertEffectScaling :exec
+INSERT INTO compendium.effect_scalings (effect_id, axis, class_slug, column_name, base_level, dice)
+VALUES (@effect_id, @axis, @class_slug, @column_name, @base_level, @dice);
+
+-- name: InsertEffectScalingStep :exec
+INSERT INTO compendium.effect_scaling_steps (effect_id, at_level, dice) VALUES (@effect_id, @at_level, @dice);
+
+-- name: ListEffectScalings :many
+SELECT effect_id, axis, class_slug, column_name, base_level, dice FROM compendium.effect_scalings;
+
+-- name: ListEffectScalingSteps :many
+SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level;

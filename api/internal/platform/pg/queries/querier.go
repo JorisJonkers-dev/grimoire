@@ -85,6 +85,7 @@ type Querier interface {
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
 	ClearEffectComponents(ctx context.Context, effectID int64) error
+	ClearEffectScaling(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
@@ -179,6 +180,7 @@ type Querier interface {
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
 	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
+	InsertEffectBranch(ctx context.Context, arg InsertEffectBranchParams) error
 	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
 	InsertEffectCounter(ctx context.Context, arg InsertEffectCounterParams) error
 	InsertEffectCrit(ctx context.Context, arg InsertEffectCritParams) error
@@ -189,12 +191,15 @@ type Querier interface {
 	InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error
 	InsertEffectGrant(ctx context.Context, arg InsertEffectGrantParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
+	InsertEffectMode(ctx context.Context, arg InsertEffectModeParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
 	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
 	InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
 	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
+	InsertEffectScaling(ctx context.Context, arg InsertEffectScalingParams) error
+	InsertEffectScalingStep(ctx context.Context, arg InsertEffectScalingStepParams) error
 	InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffectSpeedPenaltyParams) error
 	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
 	InsertEffectTeleport(ctx context.Context, arg InsertEffectTeleportParams) error
@@ -251,6 +256,7 @@ type Querier interface {
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
+	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
 	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
 	ListEffectCounters(ctx context.Context) ([]ListEffectCountersRow, error)
 	ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error)
@@ -261,12 +267,15 @@ type Querier interface {
 	ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error)
 	ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
+	ListEffectModes(ctx context.Context) ([]ListEffectModesRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
 	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
 	ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error)
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
 	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
+	ListEffectScalingSteps(ctx context.Context) ([]CompendiumEffectScalingStep, error)
+	ListEffectScalings(ctx context.Context) ([]CompendiumEffectScaling, error)
 	ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
 	ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error)

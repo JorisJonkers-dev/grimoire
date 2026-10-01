@@ -81,6 +81,21 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 	return p, ""
 }
 
+// upcast scales an area spell's damage to the slot it is cast with: no lower than the spell's own
+// level, no higher than 9.
+func (p *areaPlan) upcast(cat effects.Catalog, slot int) string {
+	def, _ := cat.Lookup(p.slug)
+	sc := def.Scaling
+	if slot == 0 || sc == nil || sc.Axis != effects.SlotLevel {
+		return ""
+	}
+	if slot < sc.Base || slot > 9 {
+		return fmt.Sprintf("Cast %s with a slot of level %d to 9.", p.spell.Name, sc.Base)
+	}
+	p.spell.Damage.Dice = sc.Apply(p.spell.Damage.Dice, effects.Level{Slot: slot})
+	return ""
+}
+
 func spellDC(t domain.Token) int {
 	if t.Stats.SpellDC > 0 {
 		return t.Stats.SpellDC
@@ -88,8 +103,17 @@ func spellDC(t domain.Token) int {
 	return DefaultSpellDC
 }
 
+// aimCast aims an area spell and scales it to the slot it is cast with.
+func (r *runtime) aimCast(m domain.Member, cmd Command) (areaPlan, string) {
+	p, reason := r.aimArea(m, cmd)
+	if reason == "" {
+		reason = p.upcast(r.st.catalog, cmd.Slot)
+	}
+	return p, reason
+}
+
 func (r *runtime) previewArea(req request) {
-	p, reason := r.aimArea(req.from.Member, req.cmd)
+	p, reason := r.aimCast(req.from.Member, req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
@@ -115,7 +139,7 @@ func (r *runtime) previewArea(req request) {
 
 // planCast spends the caster's action and opens the damage roll and every target's saving throw.
 func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
-	p, reason := r.aimArea(m, cmd)
+	p, reason := r.aimCast(m, cmd)
 	if reason != "" {
 		return Write{}, reason
 	}
@@ -169,7 +193,8 @@ func (r *runtime) areaRolled() {
 	sys := caller.Caller{Subject: actor.Subject, Origin: caller.OriginSystem, Client: ""}
 	caster := r.st.tokens[c.Caster]
 	failed, hits := r.st.outcomes(&c, spell, totals)
-	w := Write{Kind: domain.ActionAreaResolved, Token: caster, terrain: true, Hexes: c.Hexes, damageType: spell.Damage.Type, created: spell.Surface, manuals: notes(spell, failed)}
+	extra, branchNotes := r.st.branched(&c, totals)
+	w := Write{Kind: domain.ActionAreaResolved, Token: caster, terrain: true, Hexes: c.Hexes, damageType: spell.Damage.Type, created: spell.Surface, manuals: append(notes(spell, failed), branchNotes...)}
 	r.commit(request{}, w, actor, sys)
 	for _, h := range hits {
 		r.commit(request{}, Write{Kind: domain.ActionDamageDealt, Token: caster, HP: &h}, actor, sys)
@@ -181,6 +206,9 @@ func (r *runtime) areaRolled() {
 	}
 	if w := r.st.sustained(r.st.tokens[caster.ID], c.Spell); w != nil {
 		r.commit(request{}, *w, actor, sys)
+	}
+	for _, e := range extra {
+		r.commit(request{}, Write{Kind: domain.ActionEffectApplied, Token: r.st.tokens[e.Target], effect: &e}, actor, sys)
 	}
 	if spell.Condition == "" {
 		return
@@ -236,6 +264,36 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 		}
 	}
 	return failed, hits
+}
+
+// branched works out what an area spell's branches add for each target as the save came out and the
+// target's hit points stood before the damage: conditions to put on, and parts the DM resolves.
+func (s *state) branched(c *domain.AreaCast, totals map[domain.RollID]int) ([]domain.Effect, []domain.ManualPrompt) {
+	def, _ := s.catalog.Lookup(c.Spell)
+	var fx []domain.Effect
+	var out []domain.ManualPrompt
+	for _, target := range c.Targets {
+		t, ok := s.tokens[target.Token]
+		if !ok || t.Stats == nil {
+			continue
+		}
+		at := effects.Situation{Saved: true, Margin: 0, HP: t.Stats.HP, First: true, Type: ""}
+		if target.SaveRoll != nil {
+			total := totals[*target.SaveRoll]
+			at.Saved, at.Margin = total >= c.DC, c.DC-total
+		}
+		for _, part := range def.Branches("", at) {
+			switch part := part.(type) {
+			case effects.SaveCondition:
+				cond, _ := s.catalog.Lookup(part.Slug)
+				fx = append(fx, domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: part.Slug, Name: cond.Name, Level: 1})
+			case effects.Manual:
+				out = append(out, domain.ManualPrompt{ID: uuid.New(), Text: t.Label + ": " + part.Instruction})
+			default:
+			}
+		}
+	}
+	return fx, out
 }
 
 // notes hands the DM a spell's unmodelled parts, naming who failed the save.

@@ -4535,6 +4535,8 @@ components:
         effectName: { type: string, maxLength: 80 }
         sourceId: { $ref: "#/components/schemas/Id" }
         rounds: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        slot: { type: integer, format: int32, minimum: 1, maximum: 9, description: "The spell slot level an area spell is cast with; left out, it is cast at its lowest." }
+        effectMode: { type: string, maxLength: 80, description: "The option an Effect that offers a choice is applied in." }
         saveAbility: { $ref: "#/components/schemas/Ability" }
         saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
         effectId: { $ref: "#/components/schemas/Id" }
@@ -4999,6 +5001,7 @@ components:
         concentration: { type: boolean }
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
         level: { type: integer, format: int32, minimum: 1, maximum: 10, description: "Levels of a stacking Effect, such as exhaustion." }
+        mode: { type: string, maxLength: 80, description: "The option chosen when the Effect offers a choice." }
         hexes:
           type: array
           description: The hexes an emanation covers around the token where it stands now; it moves with the token.

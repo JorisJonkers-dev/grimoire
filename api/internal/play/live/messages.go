@@ -150,35 +150,39 @@ type Command struct {
 	EffectName   string           `json:"effectName,omitempty"`
 	SourceID     string           `json:"sourceId,omitempty"`
 	Rounds       int              `json:"rounds,omitempty"`
-	SaveAbility  string           `json:"saveAbility,omitempty"`
-	SaveDC       int              `json:"saveDc,omitempty"`
-	EffectID     string           `json:"effectId,omitempty"`
-	ManualID     string           `json:"manualId,omitempty"`
-	Surface      string           `json:"surface,omitempty"`
-	ElevationFt  int              `json:"elevationFt,omitempty"`
-	Camera       string           `json:"camera,omitempty"`
-	ZoomPct      int              `json:"zoomPct,omitempty"`
-	Scene        string           `json:"scene,omitempty"`
-	Title        string           `json:"title,omitempty"`
-	Body         string           `json:"body,omitempty"`
-	NodeID       string           `json:"nodeId,omitempty"`
-	ToNodeID     string           `json:"toNodeId,omitempty"`
-	RouteID      string           `json:"routeId,omitempty"`
-	DistanceMi   int              `json:"distanceMi,omitempty"`
-	Pace         string           `json:"pace,omitempty"`
-	ZoneID       string           `json:"zoneId,omitempty"`
-	RadiusHexes  int              `json:"radiusHexes,omitempty"`
-	DMOnly       bool             `json:"dmOnly,omitempty"`
-	Rest         string           `json:"rest,omitempty"`
-	TableID      string           `json:"tableId,omitempty"`
-	Mode         string           `json:"mode,omitempty"`
-	Entry        int              `json:"entry,omitempty"`
-	Due          string           `json:"due,omitempty"`
-	LootTableID  string           `json:"lootTableId,omitempty"`
-	FromID       string           `json:"fromId,omitempty"`
-	ToID         string           `json:"toId,omitempty"`
-	ItemSlug     string           `json:"itemSlug,omitempty"`
-	InstanceID   string           `json:"instanceId,omitempty"`
+	// Slot is the spell slot level an area spell is cast with; 0 casts it at its lowest.
+	Slot int `json:"slot,omitempty"`
+	// EffectMode is the option an Effect that offers a choice is applied in.
+	EffectMode  string `json:"effectMode,omitempty"`
+	SaveAbility string `json:"saveAbility,omitempty"`
+	SaveDC      int    `json:"saveDc,omitempty"`
+	EffectID    string `json:"effectId,omitempty"`
+	ManualID    string `json:"manualId,omitempty"`
+	Surface     string `json:"surface,omitempty"`
+	ElevationFt int    `json:"elevationFt,omitempty"`
+	Camera      string `json:"camera,omitempty"`
+	ZoomPct     int    `json:"zoomPct,omitempty"`
+	Scene       string `json:"scene,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Body        string `json:"body,omitempty"`
+	NodeID      string `json:"nodeId,omitempty"`
+	ToNodeID    string `json:"toNodeId,omitempty"`
+	RouteID     string `json:"routeId,omitempty"`
+	DistanceMi  int    `json:"distanceMi,omitempty"`
+	Pace        string `json:"pace,omitempty"`
+	ZoneID      string `json:"zoneId,omitempty"`
+	RadiusHexes int    `json:"radiusHexes,omitempty"`
+	DMOnly      bool   `json:"dmOnly,omitempty"`
+	Rest        string `json:"rest,omitempty"`
+	TableID     string `json:"tableId,omitempty"`
+	Mode        string `json:"mode,omitempty"`
+	Entry       int    `json:"entry,omitempty"`
+	Due         string `json:"due,omitempty"`
+	LootTableID string `json:"lootTableId,omitempty"`
+	FromID      string `json:"fromId,omitempty"`
+	ToID        string `json:"toId,omitempty"`
+	ItemSlug    string `json:"itemSlug,omitempty"`
+	InstanceID  string `json:"instanceId,omitempty"`
 	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
 	// Trigger sets off a readied attack; Option is a Grapple or Shove.
 	Action  string `json:"action,omitempty"`
@@ -259,8 +263,9 @@ type EffectView struct {
 	RoundsLeft    int    `json:"roundsLeft,omitempty"`
 	// Level is how many levels of a stacking Effect (exhaustion) the token has; Hexes the area an
 	// emanation covers around the token where it stands.
-	Level int   `json:"level,omitempty"`
-	Hexes []Hex `json:"hexes,omitempty"`
+	Level int    `json:"level,omitempty"`
+	Mode  string `json:"mode,omitempty"`
+	Hexes []Hex  `json:"hexes,omitempty"`
 }
 
 // ManualView is part of an Effect the DM resolves by hand.

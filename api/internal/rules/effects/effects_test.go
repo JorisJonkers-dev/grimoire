@@ -58,13 +58,13 @@ func TestSavesAndMovement(t *testing.T) {
 
 func TestManualFallback(t *testing.T) {
 	t.Parallel()
-	if got := srd().Instructions("poisoned", "Poisoned"); !reflect.DeepEqual(got, []string{"Poisoned: ability checks are made with disadvantage."}) {
+	if got := srd().Instructions("poisoned", "Poisoned", ""); !reflect.DeepEqual(got, []string{"Poisoned: ability checks are made with disadvantage."}) {
 		t.Fatalf("partly modelled = %v", got)
 	}
-	if got := srd().Instructions("hold-person", "Hold Person"); !reflect.DeepEqual(got, []string{"Resolve Hold Person by hand."}) {
+	if got := srd().Instructions("hold-person", "Hold Person", ""); !reflect.DeepEqual(got, []string{"Resolve Hold Person by hand."}) {
 		t.Fatalf("not modelled = %v", got)
 	}
-	if got := srd().Instructions("bless", "Bless"); got != nil {
+	if got := srd().Instructions("bless", "Bless", ""); got != nil {
 		t.Fatalf("fully modelled = %v", got)
 	}
 	want := []string{"bless", "burning-hands", "cone-of-cold", "exhaustion", "faerie-fire", "fireball", "grease", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "stunned", "vexed"}
@@ -228,19 +228,19 @@ func TestTheWiderComponents(t *testing.T) {
 			effects.ForcedMove{Ft: 10, Toward: false},
 		}},
 	}
-	if got := cat.LandingOf("false-life"); got.TempHP != 8 || got.Dispels || got.Grants != nil {
+	if got := cat.LandingOf("false-life", ""); got.TempHP != 8 || got.Dispels || got.Grants != nil {
 		t.Errorf("temporary hit points keep the highest = %+v", got)
 	}
-	if got := cat.LandingOf("dispel"); !got.Dispels {
+	if got := cat.LandingOf("dispel", ""); !got.Dispels {
 		t.Errorf("dispel = %+v", got)
 	}
-	if got := cat.LandingOf("darkvision"); !reflect.DeepEqual(got.Grants, []string{"Darkvision 60 ft"}) {
+	if got := cat.LandingOf("darkvision", ""); !reflect.DeepEqual(got.Grants, []string{"Darkvision 60 ft"}) {
 		t.Errorf("grants = %+v", got)
 	}
-	if got := cat.LandingOf("second"); !reflect.DeepEqual(got.Resources, []effects.ResourceChange{{Resource: "rage", Delta: 1}}) {
+	if got := cat.LandingOf("second", ""); !reflect.DeepEqual(got.Resources, []effects.ResourceChange{{Resource: "rage", Delta: 1}}) {
 		t.Errorf("resources = %+v", got)
 	}
-	if got := cat.LandingOf("wave"); !reflect.DeepEqual(got, effects.Landing{}) {
+	if got := cat.LandingOf("wave", ""); !reflect.DeepEqual(got, effects.Landing{}) {
 		t.Errorf("an area lands nothing on its own = %+v", got)
 	}
 	if ft, ok := cat.TeleportOf("misty-step"); !ok || ft != 30 {

@@ -351,10 +351,20 @@ type CompendiumEffectBonusDice struct {
 	OnSaves   bool
 }
 
+type CompendiumEffectBranch struct {
+	EffectID     int64
+	Ordinal      int32
+	Kind         string
+	Condition    string
+	N            int32
+	CreatureType string
+}
+
 type CompendiumEffectComponent struct {
 	EffectID int64
 	Ordinal  int32
 	Kind     string
+	Parent   pgtype.Int4
 }
 
 type CompendiumEffectCounter struct {
@@ -372,12 +382,15 @@ type CompendiumEffectCrit struct {
 }
 
 type CompendiumEffectDefinition struct {
-	ID            int64
-	Slug          string
-	Name          string
-	Concentration bool
-	OwnerKind     string
-	OwnerSlug     string
+	ID             int64
+	Slug           string
+	Name           string
+	Concentration  bool
+	OwnerKind      string
+	OwnerSlug      string
+	DurationKind   pgtype.Text
+	DurationAmount int32
+	RepeatSave     pgtype.Text
 }
 
 type CompendiumEffectEdge struct {
@@ -428,6 +441,13 @@ type CompendiumEffectManual struct {
 	Instruction string
 }
 
+type CompendiumEffectMode struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Name     string
+}
+
 type CompendiumEffectMoveCost struct {
 	EffectID   int64
 	Ordinal    int32
@@ -475,6 +495,21 @@ type CompendiumEffectSaveEdge struct {
 	Kind     string
 	Ability  string
 	Mode     string
+}
+
+type CompendiumEffectScaling struct {
+	EffectID   int64
+	Axis       string
+	ClassSlug  string
+	ColumnName string
+	BaseLevel  int32
+	Dice       string
+}
+
+type CompendiumEffectScalingStep struct {
+	EffectID int64
+	AtLevel  int32
+	Dice     string
 }
 
 type CompendiumEffectSpeedPenalty struct {
@@ -847,6 +882,7 @@ type PlayActiveEffect struct {
 	SaveAbility   pgtype.Text
 	SaveDc        pgtype.Int4
 	Level         int32
+	Mode          pgtype.Text
 }
 
 type PlayAreaCast struct {

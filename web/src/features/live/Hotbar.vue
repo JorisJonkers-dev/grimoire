@@ -22,7 +22,7 @@ const emit = defineEmits<{
   arm: [attackNo: number]
   use: []
   tactics: [value: Tactics]
-  area: [effect: string]
+  area: [effect: string, slot: number]
   action: [action: string]
   ready: [attackNo: number]
   unarmed: [option: string]
@@ -32,6 +32,7 @@ const emit = defineEmits<{
   teleport: []
 }>()
 const what = ref('')
+const slot = ref(0)
 // What each mastery does, for the hotbar's tooltips.
 const masteries: Record<string, string> = {
   cleave: 'Cleave: on a hit, attack a second creature next to the first, once a turn.',
@@ -166,9 +167,16 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
     <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
     <label class="g-field tactics">
       <span>Area spell</span>
-      <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value)">
+      <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value, slot)">
         <option value="">Choose to aim…</option>
         <option v-for="s in spells" :key="s.slug" :value="s.slug">{{ s.name }}</option>
+      </select>
+    </label>
+    <label class="g-field tactics">
+      <span>Spell slot</span>
+      <select v-model.number="slot" data-testid="area-slot">
+        <option :value="0">Lowest</option>
+        <option v-for="n in 9" :key="n" :value="n">Level {{ n }}</option>
       </select>
     </label>
     <label v-if="tactics" class="g-field tactics">

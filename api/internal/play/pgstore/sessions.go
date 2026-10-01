@@ -650,6 +650,7 @@ func (s *Store) insertEffect(ctx context.Context, sid uuid.UUID, e domain.Effect
 	if e.SaveAbility != "" {
 		p.SaveAbility, p.SaveDc = pgtype.Text{String: e.SaveAbility, Valid: true}, pgInt(e.SaveDC)
 	}
+	p.Mode = pgtype.Text{String: e.Mode, Valid: e.Mode != ""}
 	return s.q.InsertEffect(ctx, p)
 }
 
@@ -665,6 +666,7 @@ func (s *Store) LoadEffects(ctx context.Context, id domain.SessionID) (domain.Ef
 		e := domain.Effect{
 			ID: domain.EffectID(r.ID), Target: domain.TokenID(r.TargetTokenID), Slug: r.Slug, Name: r.Name, Concentration: r.Concentration,
 			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32), Level: int(r.Level),
+			Mode: r.Mode.String,
 		}
 		if r.SourceTokenID.Valid {
 			src := domain.TokenID(r.SourceTokenID.Bytes)

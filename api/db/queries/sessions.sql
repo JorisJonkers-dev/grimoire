@@ -175,16 +175,16 @@ DELETE FROM play.reaction_prompts WHERE combat_id = $1;
 SELECT reaction_timeout_s FROM campaign.campaigns WHERE id = $1;
 
 -- name: SessionEffects :many
-SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level
+SELECT id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level, mode
 FROM play.active_effects WHERE session_id = $1 ORDER BY id;
 
 -- name: ClearEffects :exec
 DELETE FROM play.active_effects WHERE session_id = $1;
 
 -- name: InsertEffect :exec
-INSERT INTO play.active_effects (id, session_id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level)
+INSERT INTO play.active_effects (id, session_id, target_token_id, source_token_id, slug, name, concentration, rounds_left, save_ability, save_dc, level, mode)
 VALUES (@id, @session_id, @target_token_id, sqlc.narg(source_token_id), @slug, @name, @concentration, sqlc.narg(rounds_left),
-    sqlc.narg(save_ability), sqlc.narg(save_dc), @level);
+    sqlc.narg(save_ability), sqlc.narg(save_dc), @level, sqlc.narg(mode));
 
 -- name: SessionManuals :many
 SELECT id, text FROM play.manual_prompts WHERE session_id = $1 ORDER BY ordering;

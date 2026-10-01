@@ -9047,10 +9047,14 @@ type LiveCommand struct {
 	// With place_token, the token can cast Shield.
 	Shield OptBool `json:"shield"`
 	// With apply_effect, the Effect's compendium slug.
-	Effect      OptString  `json:"effect"`
-	EffectName  OptString  `json:"effectName"`
-	SourceId    OptID      `json:"sourceId"`
-	Rounds      OptInt32   `json:"rounds"`
+	Effect     OptString `json:"effect"`
+	EffectName OptString `json:"effectName"`
+	SourceId   OptID     `json:"sourceId"`
+	Rounds     OptInt32  `json:"rounds"`
+	// The spell slot level an area spell is cast with; left out, it is cast at its lowest.
+	Slot OptInt32 `json:"slot"`
+	// The option an Effect that offers a choice is applied in.
+	EffectMode  OptString  `json:"effectMode"`
 	SaveAbility OptAbility `json:"saveAbility"`
 	SaveDc      OptInt32   `json:"saveDc"`
 	EffectId    OptID      `json:"effectId"`
@@ -9257,6 +9261,16 @@ func (s *LiveCommand) GetSourceId() OptID {
 // GetRounds returns the value of Rounds.
 func (s *LiveCommand) GetRounds() OptInt32 {
 	return s.Rounds
+}
+
+// GetSlot returns the value of Slot.
+func (s *LiveCommand) GetSlot() OptInt32 {
+	return s.Slot
+}
+
+// GetEffectMode returns the value of EffectMode.
+func (s *LiveCommand) GetEffectMode() OptString {
+	return s.EffectMode
 }
 
 // GetSaveAbility returns the value of SaveAbility.
@@ -9632,6 +9646,16 @@ func (s *LiveCommand) SetSourceId(val OptID) {
 // SetRounds sets the value of Rounds.
 func (s *LiveCommand) SetRounds(val OptInt32) {
 	s.Rounds = val
+}
+
+// SetSlot sets the value of Slot.
+func (s *LiveCommand) SetSlot(val OptInt32) {
+	s.Slot = val
+}
+
+// SetEffectMode sets the value of EffectMode.
+func (s *LiveCommand) SetEffectMode(val OptString) {
+	s.EffectMode = val
 }
 
 // SetSaveAbility sets the value of SaveAbility.
@@ -11315,6 +11339,8 @@ type LiveEffect struct {
 	RoundsLeft    OptInt32 `json:"roundsLeft"`
 	// Levels of a stacking Effect, such as exhaustion.
 	Level OptInt32 `json:"level"`
+	// The option chosen when the Effect offers a choice.
+	Mode OptString `json:"mode"`
 	// The hexes an emanation covers around the token where it stands now; it moves with the token.
 	Hexes []HexCoord `json:"hexes"`
 }
@@ -11352,6 +11378,11 @@ func (s *LiveEffect) GetRoundsLeft() OptInt32 {
 // GetLevel returns the value of Level.
 func (s *LiveEffect) GetLevel() OptInt32 {
 	return s.Level
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveEffect) GetMode() OptString {
+	return s.Mode
 }
 
 // GetHexes returns the value of Hexes.
@@ -11392,6 +11423,11 @@ func (s *LiveEffect) SetRoundsLeft(val OptInt32) {
 // SetLevel sets the value of Level.
 func (s *LiveEffect) SetLevel(val OptInt32) {
 	s.Level = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveEffect) SetMode(val OptString) {
+	s.Mode = val
 }
 
 // SetHexes sets the value of Hexes.

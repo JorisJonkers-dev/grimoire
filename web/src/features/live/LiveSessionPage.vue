@@ -151,10 +151,10 @@ const mySaves = computed(() =>
     return isDM.value ? !owner : owner === campaign.data.value?.me.id
   }),
 )
-const areaAiming = ref<{ tokenId: string; effect: string; q?: number; r?: number } | null>(null)
-function aimArea(token: LiveToken, effect: string) {
+const areaAiming = ref<{ tokenId: string; effect: string; slot?: number; q?: number; r?: number } | null>(null)
+function aimArea(token: LiveToken, effect: string, slot = 0) {
   aiming.value = null
-  areaAiming.value = effect ? { tokenId: token.id, effect } : null
+  areaAiming.value = effect ? { tokenId: token.id, effect, ...(slot ? { slot } : {}) } : null
 }
 const areaPreview = computed(() => {
   const p = state.value?.areaPreview
@@ -181,7 +181,7 @@ const names = computed(() => Object.fromEntries((view.value?.tokens ?? []).map((
 function castArea() {
   const a = areaAiming.value
   if (!a) return
-  live.value?.send({ kind: 'cast_area', tokenId: a.tokenId, effect: a.effect, q: a.q ?? 0, r: a.r ?? 0 })
+  live.value?.send({ kind: 'cast_area', tokenId: a.tokenId, effect: a.effect, q: a.q ?? 0, r: a.r ?? 0, ...(a.slot ? { slot: a.slot } : {}) })
   areaAiming.value = null
 }
 // Whoever rolls a creature's dice sees the Roll Cards of an area spell: its damage and each save.
@@ -248,7 +248,8 @@ function pick(c: Coord) {
   }
   if (areaAiming.value) {
     areaAiming.value = { ...areaAiming.value, q: c.q, r: c.r }
-    live.value.send({ kind: 'preview_area', tokenId: areaAiming.value.tokenId, effect: areaAiming.value.effect, q: c.q, r: c.r })
+    const { tokenId, effect, slot } = areaAiming.value
+    live.value.send({ kind: 'preview_area', tokenId, effect, q: c.q, r: c.r, ...(slot ? { slot } : {}) })
     return
   }
   const target = tokenAt(c)
@@ -360,7 +361,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @arm="(n) => arm(b.token, n)"
         @use="useSuggestion(b.token.id, b.c.suggestion)"
         @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
-        @area="(e) => aimArea(b.token, e)"
+        @area="(e, n) => aimArea(b.token, e, n)"
         @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash' })"
         @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
         @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"

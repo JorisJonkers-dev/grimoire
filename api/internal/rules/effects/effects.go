@@ -205,17 +205,20 @@ type Definition struct {
 	Name          string
 	Owner         OwnerKind
 	Concentration bool
+	Duration      Duration
+	Scaling       *Scaling
 	Components    []Component
 }
 
 // Automated reports whether the engine computes every part of an Effect.
 func (d Definition) Automated() bool {
-	for _, c := range d.Components {
+	automated := true
+	walk(d.Components, func(c Component) {
 		if _, manual := c.(Manual); manual {
-			return false
+			automated = false
 		}
-	}
-	return true
+	})
+	return automated
 }
 
 // Catalog is every Effect the engine knows, keyed by slug.
@@ -243,11 +246,13 @@ type Owner struct {
 	Slug string
 }
 
-// Active is an Effect on a creature, who put it there, and how many levels of it the creature has.
+// Active is an Effect on a creature, who put it there, how many levels of it the creature has, and the
+// mode it was applied in.
 type Active struct {
 	Slug   string
 	Source string
 	Level  int
+	Mode   string
 }
 
 // levels is how many times an Active Effect counts; one unless it stacks.
@@ -272,17 +277,18 @@ type AttackProfile struct {
 func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
 	var p AttackProfile
 	for _, a := range attacker {
-		p.attacking(cat[a.Slug], a.levels())
+		p.attacking(cat[a.Slug], a)
 	}
 	for _, a := range target {
-		p.attacked(cat[a.Slug], a.Source == attackerID, withinFive)
+		p.attacked(cat[a.Slug], a, a.Source == attackerID, withinFive)
 	}
 	return p
 }
 
 // attacking applies an effect on the attacker.
-func (p *AttackProfile) attacking(d Definition, levels int) {
-	for _, c := range d.Components {
+func (p *AttackProfile) attacking(d Definition, a Active) {
+	levels := a.levels()
+	for _, c := range d.Parts(a.Mode) {
 		switch c := c.(type) {
 		case BonusDie:
 			if slices.Contains(c.On, AttackRolls) {
@@ -296,14 +302,14 @@ func (p *AttackProfile) attacking(d Definition, levels int) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
 		}
 	}
 }
 
 // attacked applies an effect on the target; extra damage only counts for the effect's own source.
-func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
-	for _, c := range d.Components {
+func (p *AttackProfile) attacked(d Definition, a Active, bySource, withinFive bool) {
+	for _, c := range d.Parts(a.Mode) {
 		switch c := c.(type) {
 		case Edge:
 			if c.Against && c.Range.covers(withinFive) && (!c.SourceOnly || bySource) {
@@ -319,7 +325,7 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
 		}
 	}
 }
@@ -347,7 +353,7 @@ func (p *AttackProfile) add(name string, e Edge) {
 func (cat Catalog) SaveDice(bearer []Active) []string {
 	var out []string
 	for _, a := range bearer {
-		for _, c := range cat[a.Slug].Components {
+		for _, c := range cat[a.Slug].Parts(a.Mode) {
 			if b, ok := c.(BonusDie); ok && slices.Contains(b.On, SavingThrows) {
 				out = append(out, b.Dice)
 			}
@@ -360,7 +366,7 @@ func (cat Catalog) SaveDice(bearer []Active) []string {
 func (cat Catalog) MoveMultiplier(bearer []Active) int {
 	most := 1
 	for _, a := range bearer {
-		for _, c := range cat[a.Slug].Components {
+		for _, c := range cat[a.Slug].Parts(a.Mode) {
 			if m, ok := c.(MoveCost); ok {
 				most = max(most, m.Multiplier)
 			}
@@ -372,7 +378,7 @@ func (cat Catalog) MoveMultiplier(bearer []Active) int {
 // has reports whether any of the bearer's effects has a component that passes the test.
 func (cat Catalog) has(bearer []Active, test func(Component) bool) bool {
 	for _, a := range bearer {
-		if slices.ContainsFunc(cat[a.Slug].Components, test) {
+		if slices.ContainsFunc(cat[a.Slug].Parts(a.Mode), test) {
 			return true
 		}
 	}
@@ -404,7 +410,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 	p := SaveProfile{Fails: false, Advantages: nil, Disadvantages: nil, Dice: cat.SaveDice(bearer), Penalty: 0}
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Components {
+		for _, c := range d.Parts(a.Mode) {
 			switch c := c.(type) {
 			case SaveEdge:
 				if c.Ability != ability {
@@ -420,7 +426,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
 			}
 		}
 	}
@@ -432,13 +438,13 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 	ft, worst := 0, 0
 	for _, a := range bearer {
-		for _, c := range cat[a.Slug].Components {
+		for _, c := range cat[a.Slug].Parts(a.Mode) {
 			switch c := c.(type) {
 			case Exhausting:
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
 			}
 		}
 	}
@@ -449,7 +455,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 func (cat Catalog) Fatal(bearer []Active) (string, bool) {
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Components {
+		for _, c := range d.Parts(a.Mode) {
 			if e, ok := c.(Exhausting); ok && e.DeathAt > 0 && a.levels() >= e.DeathAt {
 				return d.Name, true
 			}
@@ -469,7 +475,7 @@ func (cat Catalog) ReactionsTo(bearer []Active, trigger string) []Reaction {
 	var out []Reaction
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Components {
+		for _, c := range d.Parts(a.Mode) {
 			if r, ok := c.(Reacts); ok && r.Trigger == trigger {
 				out = append(out, Reaction{Name: d.Name, Instruction: r.Instruction})
 			}
@@ -487,9 +493,9 @@ type Landing struct {
 }
 
 // LandingOf is what an Effect does as it lands.
-func (cat Catalog) LandingOf(slug string) Landing {
+func (cat Catalog) LandingOf(slug, mode string) Landing {
 	var out Landing
-	for _, c := range cat[slug].Components {
+	for _, c := range cat[slug].Parts(mode) {
 		switch c := c.(type) {
 		case TempHP:
 			out.TempHP = max(out.TempHP, c.Amount)
@@ -500,7 +506,7 @@ func (cat Catalog) LandingOf(slug string) Landing {
 		case ResourceChange:
 			out.Resources = append(out.Resources, c)
 		case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
-			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter:
+			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Branch:
 		}
 	}
 	return out
@@ -521,7 +527,7 @@ func (cat Catalog) CounterOf(bearer []Active) (int, string, bool) {
 	best, name := 0, ""
 	for _, a := range bearer {
 		d := cat[a.Slug]
-		for _, c := range d.Components {
+		for _, c := range d.Parts(a.Mode) {
 			if k, ok := c.(Counter); ok && k.RangeFt > best {
 				best, name = k.RangeFt, d.Name
 			}
@@ -542,13 +548,13 @@ func (cat Catalog) Stacks(slug string) bool {
 
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
 // instruction, so nothing is ever skipped silently.
-func (cat Catalog) Instructions(slug, name string) []string {
+func (cat Catalog) Instructions(slug, name, mode string) []string {
 	d, known := cat[slug]
 	if !known {
 		return []string{"Resolve " + name + " by hand."}
 	}
 	var out []string
-	for _, c := range d.Components {
+	for _, c := range d.Parts(mode) {
 		if m, ok := c.(Manual); ok {
 			out = append(out, m.Instruction)
 		}
@@ -588,7 +594,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Instructions = append(out.Instructions, c.Instruction)
 		case ForcedMove:
 			out.Push = c
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange:
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
 		}
 	}
 	return out, known && found
