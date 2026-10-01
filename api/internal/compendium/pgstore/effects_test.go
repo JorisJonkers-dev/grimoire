@@ -14,21 +14,53 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
-func builtinOwner(slug string) effects.Owner {
+func seedOwner(slug string) effects.Owner {
 	if slug == "prone" || slug == "poisoned" {
 		return effects.Owner{Kind: effects.OwnedByCondition, Slug: slug}
 	}
 	return effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}
 }
 
-// Every built-in Effect survives a trip through the database unchanged, so reading Effects as data
-// resolves exactly as the catalogue in code did.
-func TestBuiltinEffectsRoundTripThroughTheDatabase(t *testing.T) {
+// The migrations seed the SRD Effects the engine resolves: whole Effects, areas and the parts left to
+// the DM all come back from rows.
+func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
+	t.Parallel()
+	got, err := pgstore.New(openPool(t)).Effects(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"bless", "burning-hands", "cone-of-cold", "faerie-fire", "fireball", "grease", "hunters-mark", "lightning-bolt", "prone", "shatter"}; !reflect.DeepEqual(got.Automated(), want) {
+		t.Fatalf("automated = %v", got.Automated())
+	}
+	if !reflect.DeepEqual(got.Partial(), []string{"poisoned", "thunderwave"}) {
+		t.Fatalf("partial = %v", got.Partial())
+	}
+	blessed := []effects.Active{{Slug: "bless", Source: "cleric"}}
+	if p := got.ForAttack(blessed, []effects.Active{{Slug: "prone"}}, "cleric", true); !reflect.DeepEqual(p.AttackDice, []string{"1d4"}) || !reflect.DeepEqual(p.Advantages, []string{"Prone: advantage"}) {
+		t.Fatalf("Bless against a prone target = %+v", p)
+	}
+	if fb, ok := got.AreaOf("fireball"); !ok || fb.Area != (effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}) || fb.Damage.Dice != "8d6" || fb.Save != "dexterity" {
+		t.Fatalf("fireball = %+v", fb)
+	}
+	if g, _ := got.AreaOf("grease"); g.Condition != "prone" || g.Surface.Rounds != 10 {
+		t.Fatalf("grease = %+v", g)
+	}
+	if !reflect.DeepEqual(got.Instructions("poisoned", "Poisoned"), []string{"Poisoned: ability checks are made with disadvantage."}) {
+		t.Fatalf("poisoned = %v", got.Instructions("poisoned", "Poisoned"))
+	}
+}
+
+// Every seeded Effect survives being saved again unchanged, so the editor can write back what it read.
+func TestSeededEffectsRoundTripThroughTheDatabase(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	s := pgstore.New(openPool(t))
-	for slug, d := range effects.Builtin() {
-		if err := s.SaveEffect(ctx, builtinOwner(slug), d); err != nil {
+	seeded, err := s.Effects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for slug, d := range seeded {
+		if err := s.SaveEffect(ctx, seedOwner(slug), d); err != nil {
 			t.Fatalf("save %s: %v", slug, err)
 		}
 	}
@@ -36,25 +68,8 @@ func TestBuiltinEffectsRoundTripThroughTheDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(got, effects.Builtin()) {
-		t.Fatalf("loaded catalogue differs:\n got %+v\nwant %+v", got, effects.Builtin())
-	}
-	blessed := []effects.Active{{Slug: "bless", Source: "cleric"}}
-	if p := got.ForAttack(blessed, nil, "cleric", true); !reflect.DeepEqual(p.AttackDice, []string{"1d4"}) {
-		t.Fatalf("Bless from the database = %+v", p)
-	}
-}
-
-// The migrations seed every Effect the engine shipped with, so a fresh database plays exactly as the
-// catalogue in code did.
-func TestFreshDatabasesHoldTheBuiltinEffects(t *testing.T) {
-	t.Parallel()
-	got, err := pgstore.New(openPool(t)).Effects(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(got, effects.Builtin()) {
-		t.Fatalf("seeded catalogue differs:\n got %+v\nwant %+v", got, effects.Builtin())
+	if !reflect.DeepEqual(got, seeded) {
+		t.Fatalf("saved again differs:\n got %+v\nwant %+v", got, seeded)
 	}
 }
 

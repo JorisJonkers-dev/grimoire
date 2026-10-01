@@ -95,16 +95,15 @@ func TestEveryEffectFaultSurfaces(t *testing.T) {
 	}
 	t.Cleanup(store.Close)
 	s := New(store.Pool())
+	seeded, err := s.Effects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
 	every := func(f func(slug string, d effects.Definition)) {
-		for slug, d := range effects.Builtin() {
+		for slug, d := range seeded {
 			f(slug, d)
 		}
 	}
-	every(func(slug string, d effects.Definition) {
-		if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}, d); err != nil {
-			t.Fatal(err)
-		}
-	})
 	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
 		f.DB = store.Pool()
 		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).Effects(ctx)

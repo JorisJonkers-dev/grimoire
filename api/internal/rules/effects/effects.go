@@ -159,11 +159,6 @@ type AttackProfile struct {
 }
 
 // ForAttack folds the attacker's and the target's effects into one attack's profile.
-func ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
-	return Builtin().ForAttack(attacker, target, attackerID, withinFive)
-}
-
-// ForAttack folds the attacker's and the target's effects into one attack's profile.
 func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
 	var p AttackProfile
 	for _, a := range attacker {
@@ -231,11 +226,6 @@ func (p *AttackProfile) add(name string, e Edge) {
 }
 
 // SaveDice are the dice a creature's effects add to its saving throws.
-func SaveDice(bearer []Active) []string {
-	return Builtin().SaveDice(bearer)
-}
-
-// SaveDice are the dice a creature's effects add to its saving throws.
 func (cat Catalog) SaveDice(bearer []Active) []string {
 	var out []string
 	for _, a := range bearer {
@@ -249,11 +239,6 @@ func (cat Catalog) SaveDice(bearer []Active) []string {
 }
 
 // MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
-func MoveMultiplier(bearer []Active) int {
-	return Builtin().MoveMultiplier(bearer)
-}
-
-// MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
 func (cat Catalog) MoveMultiplier(bearer []Active) int {
 	most := 1
 	for _, a := range bearer {
@@ -264,12 +249,6 @@ func (cat Catalog) MoveMultiplier(bearer []Active) int {
 		}
 	}
 	return most
-}
-
-// Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
-// instruction, so nothing is ever skipped silently.
-func Instructions(slug, name string) []string {
-	return Builtin().Instructions(slug, name)
 }
 
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
@@ -300,11 +279,6 @@ type AreaSpell struct {
 }
 
 // AreaOf finds a modelled area Effect.
-func AreaOf(slug string) (AreaSpell, bool) {
-	return Builtin().AreaOf(slug)
-}
-
-// AreaOf finds a modelled area Effect.
 func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 	d, known := cat[slug]
 	var out AreaSpell
@@ -329,24 +303,9 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 }
 
 // Lookup finds a modelled Effect.
-func Lookup(slug string) (Definition, bool) {
-	return Builtin().Lookup(slug)
-}
-
-// Lookup finds a modelled Effect.
 func (cat Catalog) Lookup(slug string) (Definition, bool) {
 	d, ok := cat[slug]
 	return d, ok
-}
-
-// Automated lists the slugs of every Effect the engine computes in full.
-func Automated() []string {
-	return Builtin().Automated()
-}
-
-// Partial lists the slugs of Effects the engine computes in part, leaving the rest to the DM.
-func Partial() []string {
-	return Builtin().Partial()
 }
 
 // Automated lists the slugs of every Effect the engine computes in full.
@@ -368,55 +327,4 @@ func (cat Catalog) slugs(automated bool) []string {
 	}
 	sort.Strings(out)
 	return out
-}
-
-// Builtin is the Effects the engine shipped with before they moved into the database; it seeds the
-// compendium and backs the package-level functions until every caller reads a Catalog.
-func Builtin() Catalog {
-	return Catalog{
-		"bless": {Slug: "bless", Name: "Bless", Concentration: true, Components: []Component{
-			BonusDie{On: []Roll{AttackRolls, SavingThrows}, Dice: "1d4"},
-		}},
-		"faerie-fire": {Slug: "faerie-fire", Name: "Faerie Fire", Concentration: true, Components: []Component{
-			Edge{Against: true, Advantage: true, Range: AnyRange},
-		}},
-		"hunters-mark": {Slug: "hunters-mark", Name: "Hunter's Mark", Concentration: true, Components: []Component{
-			ExtraDamage{Dice: "1d6"},
-		}},
-		"fireball": {Slug: "fireball", Name: "Fireball", Concentration: false, Components: []Component{
-			Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
-		}},
-		"burning-hands": {Slug: "burning-hands", Name: "Burning Hands", Concentration: false, Components: []Component{
-			Area{Shape: hex.ConeArea, SizeFt: 15, RangeFt: 0}, SaveDamage{Ability: "dexterity", Dice: "3d6", Type: "fire", Half: true},
-		}},
-		"lightning-bolt": {Slug: "lightning-bolt", Name: "Lightning Bolt", Concentration: false, Components: []Component{
-			Area{Shape: hex.LineArea, SizeFt: 100, RangeFt: 0}, SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "lightning", Half: true},
-		}},
-		"cone-of-cold": {Slug: "cone-of-cold", Name: "Cone of Cold", Concentration: false, Components: []Component{
-			Area{Shape: hex.ConeArea, SizeFt: 60, RangeFt: 0}, SaveDamage{Ability: "constitution", Dice: "8d8", Type: "cold", Half: true},
-		}},
-		"shatter": {Slug: "shatter", Name: "Shatter", Concentration: false, Components: []Component{
-			Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60}, SaveDamage{Ability: "constitution", Dice: "3d8", Type: "thunder", Half: true},
-		}},
-		"thunderwave": {Slug: "thunderwave", Name: "Thunderwave", Concentration: false, Components: []Component{
-			Area{Shape: hex.CubeArea, SizeFt: 15, RangeFt: 0},
-			SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder", Half: true},
-			Manual{Instruction: "Thunderwave: creatures that failed their save are pushed 10 feet away."},
-		}},
-		"grease": {Slug: "grease", Name: "Grease", Concentration: false, Components: []Component{
-			Area{Shape: hex.CylinderArea, SizeFt: 5, RangeFt: 60},
-			CreateSurface{Kind: surface.Grease, Rounds: 10},
-			SaveCondition{Ability: "dexterity", Slug: "prone"},
-		}},
-		"prone": {Slug: "prone", Name: "Prone", Concentration: false, Components: []Component{
-			Edge{Against: false, Advantage: false, Range: AnyRange},
-			Edge{Against: true, Advantage: true, Range: WithinFive},
-			Edge{Against: true, Advantage: false, Range: BeyondFive},
-			MoveCost{Multiplier: 2},
-		}},
-		"poisoned": {Slug: "poisoned", Name: "Poisoned", Concentration: false, Components: []Component{
-			Edge{Against: false, Advantage: false, Range: AnyRange},
-			Manual{Instruction: "Poisoned: ability checks are made with disadvantage."},
-		}},
-	}
 }
