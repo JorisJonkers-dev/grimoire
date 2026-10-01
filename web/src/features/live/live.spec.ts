@@ -672,6 +672,25 @@ describe('areas and terrain', () => {
     saves: [{ tokenId: aria.id, rollId: '0190c7a8-0000-7000-8000-000000000072' }, { tokenId: boss.id, rollId: '0190c7a8-0000-7000-8000-000000000073' }],
   }
 
+  it('teleports with Misty Step and shows temporary hit points and emanations that follow their bearer', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const combat = { status: 'active', round: 1, combatants: [fighter(boss, { acting: true }), fighter(aria)] }
+    const guarded: LiveToken = { ...boss, effects: [{ id: '0190c7a8-0000-7000-8000-000000000091', slug: 'spirit-guardians', name: 'Spirit Guardians', concentration: true, hexes: [{ q: 1, r: 0 }] }] }
+    s.receive(snapshot([{ ...aria, tempHp: 3 }, guarded], 'dm', { combat }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (12/12 HP +3 temp)')
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in the area')
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="misty-step"]').trigger('click')
+    expect(wrapper.get('[data-testid="teleporting"]').text()).toBe('Tap a free hex within 30 feet.')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'teleport', tokenId: boss.id, effect: 'misty-step', q: 2, r: 0 })
+    expect(wrapper.find('[data-testid="teleporting"]').exists()).toBe(false)
+  })
+
   it('lets the DM aim an area spell, see who it catches and cast it', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pending(u.pathname.split('/')[6] ?? ''),

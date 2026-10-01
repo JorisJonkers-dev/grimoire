@@ -24,7 +24,7 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
@@ -330,3 +330,6 @@ ON CONFLICT (token_id) DO UPDATE SET successes = excluded.successes, failures = 
 
 -- name: DeleteDying :exec
 DELETE FROM play.dying WHERE token_id = $1;
+
+-- name: SetTokenTempHP :exec
+UPDATE play.tokens SET temp_hp = @temp_hp WHERE session_id = @session_id AND id = @id;

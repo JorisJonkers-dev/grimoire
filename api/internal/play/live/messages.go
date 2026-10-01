@@ -87,6 +87,7 @@ const (
 	CmdTakeAction     = "take_action"
 	CmdUnarmed        = "unarmed"
 	CmdInteract       = "interact"
+	CmdTeleport       = "teleport"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -237,6 +238,7 @@ type TokenView struct {
 	AC      *int         `json:"ac,omitempty"`
 	HP      *int         `json:"hp,omitempty"`
 	HPMax   *int         `json:"hpMax,omitempty"`
+	TempHP  int          `json:"tempHp,omitempty"`
 	Health  string       `json:"health,omitempty"`
 	Attacks []AttackView `json:"attacks,omitempty"`
 	Shield  bool         `json:"shield,omitempty"`
@@ -255,8 +257,10 @@ type EffectView struct {
 	SourceID      string `json:"sourceId,omitempty"`
 	Concentration bool   `json:"concentration"`
 	RoundsLeft    int    `json:"roundsLeft,omitempty"`
-	// Level is how many levels of a stacking Effect (exhaustion) the token has.
-	Level int `json:"level,omitempty"`
+	// Level is how many levels of a stacking Effect (exhaustion) the token has; Hexes the area an
+	// emanation covers around the token where it stands.
+	Level int   `json:"level,omitempty"`
+	Hexes []Hex `json:"hexes,omitempty"`
 }
 
 // ManualView is part of an Effect the DM resolves by hand.
@@ -686,7 +690,7 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	switch {
 	case s == nil:
 	case a == AudienceDM || t.Kind == domain.TokenParty:
-		v.AC, v.HP, v.HPMax, v.Attacks, v.Shield, v.Reactions = &s.AC, &s.HP, &s.HPMax, []AttackView{}, t.CanShield, reactionViews(t)
+		v.AC, v.HP, v.HPMax, v.TempHP, v.Attacks, v.Shield, v.Reactions = &s.AC, &s.HP, &s.HPMax, s.TempHP, []AttackView{}, t.CanShield, reactionViews(t)
 		for _, x := range s.Attacks {
 			v.Attacks = append(v.Attacks, AttackView{
 				Name: x.Name, ToHit: x.ToHit, ReachFt: x.ReachFt, RangeFt: x.RangeFt, LongRangeFt: x.LongRangeFt, Damage: x.Damage,

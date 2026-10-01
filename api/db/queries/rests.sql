@@ -50,3 +50,8 @@ WHERE id = @id;
 -- name: SetResourceUsed :exec
 INSERT INTO campaign.character_resources (character_id, resource_slug, used) VALUES (@character_id, @resource_slug, @used)
 ON CONFLICT (character_id, resource_slug) DO UPDATE SET used = excluded.used;
+
+-- name: ChangeResourceUsed :exec
+INSERT INTO campaign.character_resources (character_id, resource_slug, used)
+SELECT c.id, @resource_slug::text, LEAST(100, GREATEST(0, 0 - @delta::integer)) FROM campaign.characters c WHERE c.id = @character_id
+ON CONFLICT (character_id, resource_slug) DO UPDATE SET used = LEAST(100, GREATEST(0, campaign.character_resources.used - @delta::integer));

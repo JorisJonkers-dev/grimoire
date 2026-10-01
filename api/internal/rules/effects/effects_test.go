@@ -211,6 +211,68 @@ func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
 	}
 }
 
+func TestTheWiderComponents(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{
+		"false-life": {Name: "False Life", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.TempHP{Amount: 8}, effects.TempHP{Amount: 3}}},
+		"misty-step": {Name: "Misty Step", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.Teleport{RangeFt: 30}}},
+		"dispel":     {Name: "Dispel Magic", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.Dispel{}}},
+		"counter":    {Name: "Counterspell", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.Counter{RangeFt: 60}}},
+		"short":      {Name: "Short", Components: []effects.Component{effects.Counter{RangeFt: 30}}},
+		"echo":       {Name: "Echo", Components: []effects.Component{effects.Counter{RangeFt: 60}}},
+		"darkvision": {Name: "Darkvision", Owner: effects.OwnedBySpell, Components: []effects.Component{effects.GrantFeature{Name: "Darkvision 60 ft"}}},
+		"second":     {Name: "Second Wind", Owner: effects.OwnedByFeature, Components: []effects.Component{effects.ResourceChange{Resource: "rage", Delta: 1}}},
+		"wave": {Name: "Wave", Components: []effects.Component{
+			effects.Area{Shape: hex.CubeArea, SizeFt: 15, RangeFt: 0},
+			effects.SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder", Half: true},
+			effects.ForcedMove{Ft: 10, Toward: false},
+		}},
+	}
+	if got := cat.LandingOf("false-life"); got.TempHP != 8 || got.Dispels || got.Grants != nil {
+		t.Errorf("temporary hit points keep the highest = %+v", got)
+	}
+	if got := cat.LandingOf("dispel"); !got.Dispels {
+		t.Errorf("dispel = %+v", got)
+	}
+	if got := cat.LandingOf("darkvision"); !reflect.DeepEqual(got.Grants, []string{"Darkvision 60 ft"}) {
+		t.Errorf("grants = %+v", got)
+	}
+	if got := cat.LandingOf("second"); !reflect.DeepEqual(got.Resources, []effects.ResourceChange{{Resource: "rage", Delta: 1}}) {
+		t.Errorf("resources = %+v", got)
+	}
+	if got := cat.LandingOf("wave"); !reflect.DeepEqual(got, effects.Landing{}) {
+		t.Errorf("an area lands nothing on its own = %+v", got)
+	}
+	if ft, ok := cat.TeleportOf("misty-step"); !ok || ft != 30 {
+		t.Errorf("misty step = %d %v", ft, ok)
+	}
+	if _, ok := cat.TeleportOf("dispel"); ok {
+		t.Error("dispel teleports nobody")
+	}
+	if ft, name, ok := cat.CounterOf([]effects.Active{{Slug: "short"}, {Slug: "counter"}, {Slug: "echo"}, {Slug: "dispel"}}); !ok || ft != 60 || name != "Counterspell" {
+		t.Errorf("the longest counter = %d %s %v", ft, name, ok)
+	}
+	if _, _, ok := cat.CounterOf([]effects.Active{{Slug: "dispel"}}); ok {
+		t.Error("no counter")
+	}
+	if !cat.Spell("dispel") || cat.Spell("second") {
+		t.Error("only spells are spells")
+	}
+	if a, ok := cat.AreaOf("wave"); !ok || a.Push != (effects.ForcedMove{Ft: 10, Toward: false}) {
+		t.Errorf("an area that pushes = %+v", a)
+	}
+	every := []effects.Active{{Slug: "false-life"}, {Slug: "misty-step"}, {Slug: "dispel"}, {Slug: "counter"}, {Slug: "darkvision"}, {Slug: "second"}, {Slug: "wave"}}
+	if p := cat.ForAttack(every, every, "x", true); !reflect.DeepEqual(p, effects.AttackProfile{}) {
+		t.Errorf("none of them touch attacks = %+v", p)
+	}
+	if p := cat.ForSave(every, "dexterity"); p.Fails || p.Penalty != 0 || cat.SpeedPenaltyFt(every) != 0 || cat.ReactionsTo(every, "damaged") != nil {
+		t.Errorf("nor saves, speed or reactions = %+v", p)
+	}
+	if _, ok := cat.AreaOf("dispel"); ok {
+		t.Error("dispel has no area")
+	}
+}
+
 func TestEffectsThatReact(t *testing.T) {
 	t.Parallel()
 	cat := effects.Catalog{"rebuke": {Name: "Hellish Rebuke", Components: []effects.Component{

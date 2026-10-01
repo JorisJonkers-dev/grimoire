@@ -60,15 +60,18 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 		return areaPlan{}, "That hex is off the map."
 	case spell.Area.RangeFt > 0 && hex.Distance(from, point)*hex.FeetPerHex > spell.Area.RangeFt:
 		return areaPlan{}, "The point is out of range."
-	case spell.Area.RangeFt == 0 && point == from:
+	case spell.Area.RangeFt == 0 && point == from && spell.Area.Shape != hex.EmanationArea:
 		return areaPlan{}, "Aim away from the caster."
 	}
-	origin := point
-	if spell.Area.RangeFt == 0 {
+	origin, aim := point, point
+	switch {
+	case spell.Area.RangeFt == 0:
 		origin = from
+	case spell.Area.Shape == hex.WallArea:
+		aim = hex.Coord{Q: 2*point.Q - from.Q, R: 2*point.R - from.R}
 	}
 	p := areaPlan{caster: caster, slug: strings.ToLower(strings.TrimSpace(cmd.Effect)), spell: spell}
-	p.hexes = slices.DeleteFunc(hex.Area(spell.Area.Shape, origin, point, spell.Area.SizeFt), func(c hex.Coord) bool { return !r.st.onBoard(c) })
+	p.hexes = slices.DeleteFunc(hex.Area(spell.Area.Shape, origin, aim, spell.Area.SizeFt), func(c hex.Coord) bool { return !r.st.onBoard(c) })
 	for _, t := range r.st.tokens {
 		if standing(t) && slices.Contains(p.hexes, hex.Coord{Q: t.Q, R: t.R}) {
 			p.targets = append(p.targets, t)
@@ -150,9 +153,13 @@ func castRolls(c *domain.AreaCast) []domain.RollID {
 	return out
 }
 
-// areaRolled resolves an area spell once its last roll is in: the ground reacts to the damage and takes
-// any new Surface, then every target takes full or half damage and those who failed get its condition.
+// areaRolled resolves an area spell once its last roll is in and no Counterspell is pending: the ground
+// reacts to the damage and takes any new Surface, every target takes full or half damage, those who
+// failed are pushed and get its condition, and a concentration spell stays on its caster.
 func (r *runtime) areaRolled() {
+	if r.st.cast == nil || r.st.awaitingCounter() {
+		return
+	}
 	c := *r.st.cast
 	totals, actor, ok := r.castTotals(&c)
 	if !ok {
@@ -166,6 +173,14 @@ func (r *runtime) areaRolled() {
 	r.commit(request{}, w, actor, sys)
 	for _, h := range hits {
 		r.commit(request{}, Write{Kind: domain.ActionDamageDealt, Token: caster, HP: &h}, actor, sys)
+	}
+	for _, t := range failed {
+		if moved := r.st.forced(caster, r.st.tokens[t.ID], spell.Push); spell.Push.Ft > 0 && moved != nil {
+			r.commit(request{}, Write{Kind: domain.ActionTokenMoved, Token: *moved}, actor, sys)
+		}
+	}
+	if w := r.st.sustained(r.st.tokens[caster.ID], c.Spell); w != nil {
+		r.commit(request{}, *w, actor, sys)
 	}
 	if spell.Condition == "" {
 		return
@@ -217,7 +232,7 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 			amount = map[bool]int{true: amount / 2, false: 0}[spell.Damage.Half]
 		}
 		if amount > 0 {
-			hits = append(hits, HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount, 0), Raw: amount})
+			hits = append(hits, damage(t, amount, false))
 		}
 	}
 	return failed, hits

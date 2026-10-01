@@ -4396,6 +4396,7 @@ components:
         ac: { type: integer, format: int32, minimum: 0, maximum: 40 }
         hp: { type: integer, format: int32, minimum: 0, maximum: 10000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 10000 }
+        tempHp: { type: integer, format: int32, minimum: 1, maximum: 999, description: "Temporary hit points, lost before hit points." }
         health:
           type: string
           description: What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -4498,7 +4499,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive, teleport] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4998,6 +4999,11 @@ components:
         concentration: { type: boolean }
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
         level: { type: integer, format: int32, minimum: 1, maximum: 10, description: "Levels of a stacking Effect, such as exhaustion." }
+        hexes:
+          type: array
+          description: The hexes an emanation covers around the token where it stands now; it moves with the token.
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/HexCoord" }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.

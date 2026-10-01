@@ -11,7 +11,7 @@ import HexGrid from '@/shared/map/HexGrid.vue'
 import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
-import { board, describe, hexes, zoneHexes } from './board'
+import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
@@ -160,7 +160,8 @@ const areaPreview = computed(() => {
   const p = state.value?.areaPreview
   return p && p.tokenId === areaAiming.value?.tokenId && p.effect === areaAiming.value.effect ? p : null
 })
-const areaHexes = computed(() => areaPreview.value?.hexes ?? view.value?.area?.hexes ?? [])
+const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
+const teleporting = ref<string | null>(null)
 const zoneName = ref('')
 const zoneRadius = ref(3)
 const zoneDMOnly = ref(false)
@@ -240,6 +241,11 @@ function explore(c: Coord) {
 }
 function pick(c: Coord) {
   if (!live.value) return
+  if (teleporting.value) {
+    live.value.send({ kind: 'teleport', tokenId: teleporting.value, effect: 'misty-step', q: c.q, r: c.r })
+    teleporting.value = null
+    return
+  }
   if (areaAiming.value) {
     areaAiming.value = { ...areaAiming.value, q: c.q, r: c.r }
     live.value.send({ kind: 'preview_area', tokenId: areaAiming.value.tokenId, effect: areaAiming.value.effect, q: c.q, r: c.r })
@@ -361,7 +367,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @off-hand="(n) => armOffHand(b.token, n)"
         @cleave="(n) => armCleave(b.token, n)"
         @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
+        @teleport="teleporting = b.token.id"
       />
+      <p v-if="teleporting" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
       <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
       <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
       <AreaPreviewCard v-if="areaPreview" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />

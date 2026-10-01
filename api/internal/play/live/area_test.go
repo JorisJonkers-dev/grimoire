@@ -265,17 +265,18 @@ func TestElevationHighGroundAndAreaEdges(t *testing.T) {
 	fill(d.View.Area.DamageRollID, 1, 1)
 	fill(d.View.Area.Saves[0].RollID, 1)
 	var last live.Update
-	for range 2 {
+	for range 3 {
 		next(t, tb.player)
 		last = next(t, tb.dm)
 	}
-	if !strings.Contains(last.View.Manual[0].Text, "pushed 10 feet away. (Aria)") || *token(last.View, "Aria").HP != 10 {
-		t.Fatalf("thunderwave = %+v %+v", last.View.Manual, token(last.View, "Aria"))
+	if aria := token(last.View, "Aria"); len(last.View.Manual) != 0 || *aria.HP != 10 || aria.Q != 0 || aria.R != 0 {
+		t.Fatalf("thunderwave pushes Aria straight away from the goblin = %+v %+v", last.View.Manual, aria)
 	}
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Goblin").ID})
 	if surfaceAt(d.View, 0, 1) != "ice" {
 		t.Fatalf("two-round ice lasts into round two = %+v", d.View.Surfaces)
 	}
+	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Aria"], Q: 1, R: 0})
 	u = tb.playerSays(live.Command{Kind: live.CmdCastArea, TokenID: ids["Aria"], Effect: "burning-hands", Q: 2, R: 0})
 	if len(u.View.Area.Saves) != 1 {
 		t.Fatalf("burning hands on the goblin = %+v", u.View.Area)

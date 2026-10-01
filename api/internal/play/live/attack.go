@@ -26,6 +26,32 @@ type HPChange struct {
 	// damage from a Critical Hit.
 	Raw      int
 	Critical bool
+	// Temp is the temporary hit points left after the change, nil when it leaves them alone.
+	Temp *int
+}
+
+// damage takes an amount off a token's temporary hit points first, then its hit points.
+func damage(t domain.Token, amount int, critical bool) HPChange {
+	amount = max(amount, 0)
+	soaked := min(t.Stats.TempHP, amount)
+	h := HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount+soaked, 0), Raw: amount - soaked, Critical: critical}
+	if soaked > 0 {
+		left := t.Stats.TempHP - soaked
+		h.Temp = &left
+	}
+	return h
+}
+
+// setHP puts a change of hit points, and of temporary hit points, on its token.
+func (s *state) setHP(h HPChange) {
+	t := s.tokens[h.Token]
+	stats := *t.Stats
+	stats.HP = h.After
+	if h.Temp != nil {
+		stats.TempHP = *h.Temp
+	}
+	t.Stats = &stats
+	s.tokens[t.ID] = t
 }
 
 // aim is an attack worked out against the rules, before anything is rolled.
@@ -320,7 +346,8 @@ func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
 	before := t.Stats.HP
 	ranged, critical := w.attack.Ranged, w.attack.Critical
 	w.Kind, w.attack = domain.ActionDamageDealt, nil
-	w.HP = &HPChange{Token: t.ID, Before: before, After: max(before-max(amount, 0), 0), Raw: max(amount, 0), Critical: critical}
+	h := damage(t, amount, critical)
+	w.HP = &h
 	if ranged && w.HP.After < before {
 		w.Observers = r.st.witnesses(w.Token)
 	}

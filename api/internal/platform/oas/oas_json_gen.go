@@ -14189,6 +14189,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindStabilise
 	case LiveCommandKindRevive:
 		*s = LiveCommandKindRevive
+	case LiveCommandKindTeleport:
+		*s = LiveCommandKindTeleport
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -15240,9 +15242,19 @@ func (s *LiveEffect) encodeFields(e *jx.Encoder) {
 			s.Level.Encode(e)
 		}
 	}
+	{
+		if s.Hexes != nil {
+			e.FieldStart("hexes")
+			e.ArrStart()
+			for _, elem := range s.Hexes {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveEffect = [7]string{
+var jsonFieldsNameOfLiveEffect = [8]string{
 	0: "id",
 	1: "slug",
 	2: "name",
@@ -15250,6 +15262,7 @@ var jsonFieldsNameOfLiveEffect = [7]string{
 	4: "concentration",
 	5: "roundsLeft",
 	6: "level",
+	7: "hexes",
 }
 
 // Decode decodes LiveEffect from json.
@@ -15336,6 +15349,23 @@ func (s *LiveEffect) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"level\"")
+			}
+		case "hexes":
+			if err := func() error {
+				s.Hexes = make([]HexCoord, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem HexCoord
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Hexes = append(s.Hexes, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"hexes\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -19355,6 +19385,12 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.TempHp.Set {
+			e.FieldStart("tempHp")
+			s.TempHp.Encode(e)
+		}
+	}
+	{
 		if s.Health.Set {
 			e.FieldStart("health")
 			s.Health.Encode(e)
@@ -19404,7 +19440,7 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveToken = [17]string{
+var jsonFieldsNameOfLiveToken = [18]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
@@ -19416,12 +19452,13 @@ var jsonFieldsNameOfLiveToken = [17]string{
 	8:  "ac",
 	9:  "hp",
 	10: "hpMax",
-	11: "health",
-	12: "attacks",
-	13: "shield",
-	14: "effects",
-	15: "reactions",
-	16: "dying",
+	11: "tempHp",
+	12: "health",
+	13: "attacks",
+	14: "shield",
+	15: "effects",
+	16: "reactions",
+	17: "dying",
 }
 
 // Decode decodes LiveToken from json.
@@ -19552,6 +19589,16 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"hpMax\"")
+			}
+		case "tempHp":
+			if err := func() error {
+				s.TempHp.Reset()
+				if err := s.TempHp.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tempHp\"")
 			}
 		case "health":
 			if err := func() error {

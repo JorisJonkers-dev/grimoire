@@ -67,10 +67,12 @@ type Token struct {
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.
 type Stats struct {
-	Source  string
-	AC      int
-	HP      int
-	HPMax   int
+	Source string
+	AC     int
+	HP     int
+	HPMax  int
+	// TempHP is temporary hit points, lost before hit points.
+	TempHP  int
 	Attacks []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int

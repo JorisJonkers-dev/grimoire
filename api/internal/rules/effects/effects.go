@@ -131,6 +131,42 @@ type Reacts struct {
 	Instruction string
 }
 
+// TempHP gives the bearer temporary hit points when the Effect lands (False Life, Heroism).
+type TempHP struct {
+	Amount int
+}
+
+// Teleport moves its caster up to RangeFt to an open hex (Misty Step).
+type Teleport struct {
+	RangeFt int
+}
+
+// ForcedMove pushes creatures that fail the save Ft feet straight away from the origin, or pulls them
+// toward it (Thunderwave).
+type ForcedMove struct {
+	Ft     int
+	Toward bool
+}
+
+// Dispel ends every spell on the bearer when the Effect lands (Dispel Magic).
+type Dispel struct{}
+
+// Counter lets the bearer counter, with its reaction, a spell cast within RangeFt (Counterspell).
+type Counter struct {
+	RangeFt int
+}
+
+// GrantFeature gives the bearer a feature while the Effect lasts.
+type GrantFeature struct {
+	Name string
+}
+
+// ResourceChange gives back (Delta above 0) or takes uses of a Resource when the Effect lands.
+type ResourceChange struct {
+	Resource string
+	Delta    int
+}
+
 // Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
 // speed, and at DeathAt levels the bearer dies.
 type Exhausting struct {
@@ -139,27 +175,35 @@ type Exhausting struct {
 	DeathAt         int
 }
 
-func (BonusDie) isComponent()      {}
-func (Incapacitated) isComponent() {}
-func (Immobile) isComponent()      {}
-func (SaveEdge) isComponent()      {}
-func (CritWithin) isComponent()    {}
-func (Exhausting) isComponent()    {}
-func (SpeedPenalty) isComponent()  {}
-func (Reacts) isComponent()        {}
-func (Edge) isComponent()          {}
-func (ExtraDamage) isComponent()   {}
-func (MoveCost) isComponent()      {}
-func (Manual) isComponent()        {}
-func (Area) isComponent()          {}
-func (SaveDamage) isComponent()    {}
-func (SaveCondition) isComponent() {}
-func (CreateSurface) isComponent() {}
+func (BonusDie) isComponent()       {}
+func (Incapacitated) isComponent()  {}
+func (Immobile) isComponent()       {}
+func (SaveEdge) isComponent()       {}
+func (CritWithin) isComponent()     {}
+func (Exhausting) isComponent()     {}
+func (SpeedPenalty) isComponent()   {}
+func (Reacts) isComponent()         {}
+func (TempHP) isComponent()         {}
+func (Teleport) isComponent()       {}
+func (ForcedMove) isComponent()     {}
+func (Dispel) isComponent()         {}
+func (Counter) isComponent()        {}
+func (GrantFeature) isComponent()   {}
+func (ResourceChange) isComponent() {}
+func (Edge) isComponent()           {}
+func (ExtraDamage) isComponent()    {}
+func (MoveCost) isComponent()       {}
+func (Manual) isComponent()         {}
+func (Area) isComponent()           {}
+func (SaveDamage) isComponent()     {}
+func (SaveCondition) isComponent()  {}
+func (CreateSurface) isComponent()  {}
 
-// Definition is an Effect: what it is called, whether it needs concentration, and what it does.
+// Definition is an Effect: what it is called, what owns it, whether it needs concentration, and what it does.
 type Definition struct {
 	Slug          string
 	Name          string
+	Owner         OwnerKind
 	Concentration bool
 	Components    []Component
 }
@@ -252,7 +296,7 @@ func (p *AttackProfile) attacking(d Definition, levels int) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
 		}
 	}
 }
@@ -275,7 +319,7 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
 		}
 	}
 }
@@ -376,7 +420,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
 			}
 		}
 	}
@@ -394,7 +438,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange:
 			}
 		}
 	}
@@ -434,6 +478,63 @@ func (cat Catalog) ReactionsTo(bearer []Active, trigger string) []Reaction {
 	return out
 }
 
+// Landing is what an Effect does the moment it lands on its bearer.
+type Landing struct {
+	TempHP    int
+	Dispels   bool
+	Grants    []string
+	Resources []ResourceChange
+}
+
+// LandingOf is what an Effect does as it lands.
+func (cat Catalog) LandingOf(slug string) Landing {
+	var out Landing
+	for _, c := range cat[slug].Components {
+		switch c := c.(type) {
+		case TempHP:
+			out.TempHP = max(out.TempHP, c.Amount)
+		case Dispel:
+			out.Dispels = true
+		case GrantFeature:
+			out.Grants = append(out.Grants, c.Name)
+		case ResourceChange:
+			out.Resources = append(out.Resources, c)
+		case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
+			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter:
+		}
+	}
+	return out
+}
+
+// TeleportOf is how far an Effect teleports its caster, if it does.
+func (cat Catalog) TeleportOf(slug string) (int, bool) {
+	for _, c := range cat[slug].Components {
+		if t, ok := c.(Teleport); ok {
+			return t.RangeFt, true
+		}
+	}
+	return 0, false
+}
+
+// CounterOf is the longest counter among the bearer's effects, with its Effect's name.
+func (cat Catalog) CounterOf(bearer []Active) (int, string, bool) {
+	best, name := 0, ""
+	for _, a := range bearer {
+		d := cat[a.Slug]
+		for _, c := range d.Components {
+			if k, ok := c.(Counter); ok && k.RangeFt > best {
+				best, name = k.RangeFt, d.Name
+			}
+		}
+	}
+	return best, name, best > 0
+}
+
+// Spell reports whether an Effect belongs to a spell, the kind Dispel ends.
+func (cat Catalog) Spell(slug string) bool {
+	return cat[slug].Owner == OwnedBySpell
+}
+
 // Stacks reports whether applying the Effect again adds a level instead of a second copy.
 func (cat Catalog) Stacks(slug string) bool {
 	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Exhausting); return ok })
@@ -463,6 +564,7 @@ type AreaSpell struct {
 	Damage       SaveDamage
 	Condition    string
 	Surface      CreateSurface
+	Push         ForcedMove
 	Instructions []string
 }
 
@@ -484,7 +586,9 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Surface = c
 		case Manual:
 			out.Instructions = append(out.Instructions, c.Instruction)
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts:
+		case ForcedMove:
+			out.Push = c
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange:
 		}
 	}
 	return out, known && found

@@ -10112,6 +10112,7 @@ const (
 	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
 	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
 	LiveCommandKindRevive         LiveCommandKind = "revive"
+	LiveCommandKindTeleport       LiveCommandKind = "teleport"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10186,6 +10187,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSetReaction,
 		LiveCommandKindStabilise,
 		LiveCommandKindRevive,
+		LiveCommandKindTeleport,
 	}
 }
 
@@ -10329,6 +10331,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindStabilise:
 		return []byte(s), nil
 	case LiveCommandKindRevive:
+		return []byte(s), nil
+	case LiveCommandKindTeleport:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10544,6 +10548,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindRevive:
 		*s = LiveCommandKindRevive
+		return nil
+	case LiveCommandKindTeleport:
+		*s = LiveCommandKindTeleport
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11308,6 +11315,8 @@ type LiveEffect struct {
 	RoundsLeft    OptInt32 `json:"roundsLeft"`
 	// Levels of a stacking Effect, such as exhaustion.
 	Level OptInt32 `json:"level"`
+	// The hexes an emanation covers around the token where it stands now; it moves with the token.
+	Hexes []HexCoord `json:"hexes"`
 }
 
 // GetID returns the value of ID.
@@ -11345,6 +11354,11 @@ func (s *LiveEffect) GetLevel() OptInt32 {
 	return s.Level
 }
 
+// GetHexes returns the value of Hexes.
+func (s *LiveEffect) GetHexes() []HexCoord {
+	return s.Hexes
+}
+
 // SetID sets the value of ID.
 func (s *LiveEffect) SetID(val ID) {
 	s.ID = val
@@ -11378,6 +11392,11 @@ func (s *LiveEffect) SetRoundsLeft(val OptInt32) {
 // SetLevel sets the value of Level.
 func (s *LiveEffect) SetLevel(val OptInt32) {
 	s.Level = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LiveEffect) SetHexes(val []HexCoord) {
+	s.Hexes = val
 }
 
 // A raised or sunken hex.
@@ -13255,6 +13274,8 @@ type LiveToken struct {
 	Ac           OptInt32  `json:"ac"`
 	Hp           OptInt32  `json:"hp"`
 	HpMax        OptInt32  `json:"hpMax"`
+	// Temporary hit points, lost before hit points.
+	TempHp OptInt32 `json:"tempHp"`
 	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
 	Health    OptLiveTokenHealth    `json:"health"`
 	Attacks   []LiveAttack          `json:"attacks"`
@@ -13317,6 +13338,11 @@ func (s *LiveToken) GetHp() OptInt32 {
 // GetHpMax returns the value of HpMax.
 func (s *LiveToken) GetHpMax() OptInt32 {
 	return s.HpMax
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *LiveToken) GetTempHp() OptInt32 {
+	return s.TempHp
 }
 
 // GetHealth returns the value of Health.
@@ -13402,6 +13428,11 @@ func (s *LiveToken) SetHp(val OptInt32) {
 // SetHpMax sets the value of HpMax.
 func (s *LiveToken) SetHpMax(val OptInt32) {
 	s.HpMax = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *LiveToken) SetTempHp(val OptInt32) {
+	s.TempHp = val
 }
 
 // SetHealth sets the value of Health.

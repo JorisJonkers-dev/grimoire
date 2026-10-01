@@ -45,7 +45,7 @@ VALUES (@effect_id, @ordinal, @ability, @condition_slug);
 INSERT INTO compendium.effect_surfaces (effect_id, ordinal, surface, rounds) VALUES (@effect_id, @ordinal, @surface, @rounds);
 
 -- name: ListEffectDefinitions :many
-SELECT id, slug, name, concentration FROM compendium.effect_definitions ORDER BY slug;
+SELECT id, slug, name, concentration, owner_kind FROM compendium.effect_definitions ORDER BY slug;
 
 -- name: ListEffectComponents :many
 SELECT effect_id, ordinal, kind FROM compendium.effect_components ORDER BY effect_id, ordinal;
@@ -107,3 +107,39 @@ INSERT INTO compendium.effect_reactions (effect_id, ordinal, trigger, instructio
 
 -- name: ListEffectReactions :many
 SELECT effect_id, ordinal, trigger, instruction FROM compendium.effect_reactions;
+
+-- name: InsertEffectTempHP :exec
+INSERT INTO compendium.effect_temp_hp (effect_id, ordinal, amount) VALUES (@effect_id, @ordinal, @amount);
+
+-- name: ListEffectTempHPs :many
+SELECT effect_id, ordinal, amount FROM compendium.effect_temp_hp;
+
+-- name: InsertEffectTeleport :exec
+INSERT INTO compendium.effect_teleports (effect_id, ordinal, range_ft) VALUES (@effect_id, @ordinal, @range_ft);
+
+-- name: ListEffectTeleports :many
+SELECT effect_id, ordinal, range_ft FROM compendium.effect_teleports;
+
+-- name: InsertEffectForcedMove :exec
+INSERT INTO compendium.effect_forced_moves (effect_id, ordinal, ft, toward) VALUES (@effect_id, @ordinal, @ft, @toward);
+
+-- name: ListEffectForcedMoves :many
+SELECT effect_id, ordinal, ft, toward FROM compendium.effect_forced_moves;
+
+-- name: InsertEffectCounter :exec
+INSERT INTO compendium.effect_counters (effect_id, ordinal, range_ft) VALUES (@effect_id, @ordinal, @range_ft);
+
+-- name: ListEffectCounters :many
+SELECT effect_id, ordinal, range_ft FROM compendium.effect_counters;
+
+-- name: InsertEffectGrant :exec
+INSERT INTO compendium.effect_grants (effect_id, ordinal, name) VALUES (@effect_id, @ordinal, @name);
+
+-- name: ListEffectGrants :many
+SELECT effect_id, ordinal, name FROM compendium.effect_grants;
+
+-- name: InsertEffectResourceChange :exec
+INSERT INTO compendium.effect_resource_changes (effect_id, ordinal, resource_slug, delta) VALUES (@effect_id, @ordinal, @resource_slug, @delta);
+
+-- name: ListEffectResourceChanges :many
+SELECT effect_id, ordinal, resource_slug, delta FROM compendium.effect_resource_changes;

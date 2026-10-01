@@ -357,6 +357,13 @@ type CompendiumEffectComponent struct {
 	Kind     string
 }
 
+type CompendiumEffectCounter struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	RangeFt  int32
+}
+
 type CompendiumEffectCrit struct {
 	EffectID int64
 	Ordinal  int32
@@ -399,6 +406,21 @@ type CompendiumEffectExtraDamage struct {
 	Dice     string
 }
 
+type CompendiumEffectForcedMove struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ft       int32
+	Toward   bool
+}
+
+type CompendiumEffectGrant struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Name     string
+}
+
 type CompendiumEffectManual struct {
 	EffectID    int64
 	Ordinal     int32
@@ -419,6 +441,14 @@ type CompendiumEffectReaction struct {
 	Kind        string
 	Trigger     string
 	Instruction string
+}
+
+type CompendiumEffectResourceChange struct {
+	EffectID     int64
+	Ordinal      int32
+	Kind         string
+	ResourceSlug string
+	Delta        int32
 }
 
 type CompendiumEffectSaveCondition struct {
@@ -460,6 +490,20 @@ type CompendiumEffectSurface struct {
 	Kind     string
 	Surface  string
 	Rounds   int32
+}
+
+type CompendiumEffectTeleport struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	RangeFt  int32
+}
+
+type CompendiumEffectTempHp struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Amount   int32
 }
 
 type CompendiumEntry struct {
@@ -1085,6 +1129,7 @@ type PlayToken struct {
 	SpeedFt            int32
 	UnarmedDc          int32
 	AttacksPerAction   int32
+	TempHp             int32
 }
 
 type PlayTokenAttack struct {

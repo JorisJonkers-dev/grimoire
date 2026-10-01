@@ -1943,7 +1943,7 @@ func (q *Queries) SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -1969,6 +1969,7 @@ type SessionTokensRow struct {
 	SpeedFt            int32
 	UnarmedDc          int32
 	AttacksPerAction   int32
+	TempHp             int32
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2003,6 +2004,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.SpeedFt,
 			&i.UnarmedDc,
 			&i.AttacksPerAction,
+			&i.TempHp,
 		); err != nil {
 			return nil, err
 		}
@@ -2188,6 +2190,21 @@ type SetTokenTacticsParams struct {
 
 func (q *Queries) SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error {
 	_, err := q.db.Exec(ctx, setTokenTactics, arg.Tactics, arg.SessionID, arg.ID)
+	return err
+}
+
+const setTokenTempHP = `-- name: SetTokenTempHP :exec
+UPDATE play.tokens SET temp_hp = $1 WHERE session_id = $2 AND id = $3
+`
+
+type SetTokenTempHPParams struct {
+	TempHp    int32
+	SessionID uuid.UUID
+	ID        uuid.UUID
+}
+
+func (q *Queries) SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error {
+	_, err := q.db.Exec(ctx, setTokenTempHP, arg.TempHp, arg.SessionID, arg.ID)
 	return err
 }
 

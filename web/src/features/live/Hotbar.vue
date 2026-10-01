@@ -29,6 +29,7 @@ const emit = defineEmits<{
   offHand: [attackNo: number]
   cleave: [attackNo: number]
   interact: [what: string]
+  teleport: []
 }>()
 const what = ref('')
 // What each mastery does, for the hotbar's tooltips.
@@ -68,6 +69,8 @@ const spells = [
   { slug: 'fireball', name: 'Fireball' },
   { slug: 'lightning-bolt', name: 'Lightning Bolt' },
   { slug: 'cone-of-cold', name: 'Cone of Cold' },
+  { slug: 'spirit-guardians', name: 'Spirit Guardians' },
+  { slug: 'wall-of-fire', name: 'Wall of Fire' },
 ]
 const styles: { value: Tactics; label: string }[] = [
   { value: 'auto', label: 'From Intelligence' },
@@ -160,6 +163,7 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
         <option v-for="(a, i) in token.attacks ?? []" v-show="a.reachFt > 0" :key="a.name + String(i)" :value="i">{{ a.name }}</option>
       </select>
     </label>
+    <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
     <label class="g-field tactics">
       <span>Area spell</span>
       <select :disabled="blocked !== ''" data-testid="area-spell" @change="emit('area', ($event.target as HTMLSelectElement).value)">

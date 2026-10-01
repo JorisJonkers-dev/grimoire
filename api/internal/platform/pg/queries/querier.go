@@ -70,6 +70,7 @@ type Querier interface {
 	CampaignTableEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepTableEntry, error)
 	CastHexes(ctx context.Context, castID uuid.UUID) ([]CastHexesRow, error)
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
+	ChangeResourceUsed(ctx context.Context, arg ChangeResourceUsedParams) error
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
 	CharacterTrade(ctx context.Context, campaignID uuid.UUID) ([]CharacterTradeRow, error)
@@ -179,19 +180,25 @@ type Querier interface {
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
 	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
 	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
+	InsertEffectCounter(ctx context.Context, arg InsertEffectCounterParams) error
 	InsertEffectCrit(ctx context.Context, arg InsertEffectCritParams) error
 	InsertEffectEdge(ctx context.Context, arg InsertEffectEdgeParams) error
 	InsertEffectEvent(ctx context.Context, arg InsertEffectEventParams) error
 	InsertEffectExhaustion(ctx context.Context, arg InsertEffectExhaustionParams) error
 	InsertEffectExtraDamage(ctx context.Context, arg InsertEffectExtraDamageParams) error
+	InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error
+	InsertEffectGrant(ctx context.Context, arg InsertEffectGrantParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
 	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
+	InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
 	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
 	InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffectSpeedPenaltyParams) error
 	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
+	InsertEffectTeleport(ctx context.Context, arg InsertEffectTeleportParams) error
+	InsertEffectTempHP(ctx context.Context, arg InsertEffectTempHPParams) error
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
@@ -245,19 +252,25 @@ type Querier interface {
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
+	ListEffectCounters(ctx context.Context) ([]ListEffectCountersRow, error)
 	ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error)
 	ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error)
 	ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, error)
 	ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaustionRow, error)
 	ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraDamageRow, error)
+	ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error)
+	ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
 	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
+	ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error)
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
 	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
 	ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
+	ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error)
+	ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
 	ListLootTables(ctx context.Context, campaignID uuid.UUID) ([]ListLootTablesRow, error)
@@ -389,6 +402,7 @@ type Querier interface {
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
+	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)

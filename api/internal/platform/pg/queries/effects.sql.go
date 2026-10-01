@@ -81,6 +81,21 @@ func (q *Queries) InsertEffectComponent(ctx context.Context, arg InsertEffectCom
 	return err
 }
 
+const insertEffectCounter = `-- name: InsertEffectCounter :exec
+INSERT INTO compendium.effect_counters (effect_id, ordinal, range_ft) VALUES ($1, $2, $3)
+`
+
+type InsertEffectCounterParams struct {
+	EffectID int64
+	Ordinal  int32
+	RangeFt  int32
+}
+
+func (q *Queries) InsertEffectCounter(ctx context.Context, arg InsertEffectCounterParams) error {
+	_, err := q.db.Exec(ctx, insertEffectCounter, arg.EffectID, arg.Ordinal, arg.RangeFt)
+	return err
+}
+
 const insertEffectCrit = `-- name: InsertEffectCrit :exec
 INSERT INTO compendium.effect_crits (effect_id, ordinal, feet) VALUES ($1, $2, $3)
 `
@@ -161,6 +176,42 @@ func (q *Queries) InsertEffectExtraDamage(ctx context.Context, arg InsertEffectE
 	return err
 }
 
+const insertEffectForcedMove = `-- name: InsertEffectForcedMove :exec
+INSERT INTO compendium.effect_forced_moves (effect_id, ordinal, ft, toward) VALUES ($1, $2, $3, $4)
+`
+
+type InsertEffectForcedMoveParams struct {
+	EffectID int64
+	Ordinal  int32
+	Ft       int32
+	Toward   bool
+}
+
+func (q *Queries) InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error {
+	_, err := q.db.Exec(ctx, insertEffectForcedMove,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.Ft,
+		arg.Toward,
+	)
+	return err
+}
+
+const insertEffectGrant = `-- name: InsertEffectGrant :exec
+INSERT INTO compendium.effect_grants (effect_id, ordinal, name) VALUES ($1, $2, $3)
+`
+
+type InsertEffectGrantParams struct {
+	EffectID int64
+	Ordinal  int32
+	Name     string
+}
+
+func (q *Queries) InsertEffectGrant(ctx context.Context, arg InsertEffectGrantParams) error {
+	_, err := q.db.Exec(ctx, insertEffectGrant, arg.EffectID, arg.Ordinal, arg.Name)
+	return err
+}
+
 const insertEffectManual = `-- name: InsertEffectManual :exec
 INSERT INTO compendium.effect_manual (effect_id, ordinal, instruction) VALUES ($1, $2, $3)
 `
@@ -208,6 +259,27 @@ func (q *Queries) InsertEffectReaction(ctx context.Context, arg InsertEffectReac
 		arg.Ordinal,
 		arg.Trigger,
 		arg.Instruction,
+	)
+	return err
+}
+
+const insertEffectResourceChange = `-- name: InsertEffectResourceChange :exec
+INSERT INTO compendium.effect_resource_changes (effect_id, ordinal, resource_slug, delta) VALUES ($1, $2, $3, $4)
+`
+
+type InsertEffectResourceChangeParams struct {
+	EffectID     int64
+	Ordinal      int32
+	ResourceSlug string
+	Delta        int32
+}
+
+func (q *Queries) InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error {
+	_, err := q.db.Exec(ctx, insertEffectResourceChange,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.ResourceSlug,
+		arg.Delta,
 	)
 	return err
 }
@@ -317,6 +389,36 @@ func (q *Queries) InsertEffectSurface(ctx context.Context, arg InsertEffectSurfa
 	return err
 }
 
+const insertEffectTeleport = `-- name: InsertEffectTeleport :exec
+INSERT INTO compendium.effect_teleports (effect_id, ordinal, range_ft) VALUES ($1, $2, $3)
+`
+
+type InsertEffectTeleportParams struct {
+	EffectID int64
+	Ordinal  int32
+	RangeFt  int32
+}
+
+func (q *Queries) InsertEffectTeleport(ctx context.Context, arg InsertEffectTeleportParams) error {
+	_, err := q.db.Exec(ctx, insertEffectTeleport, arg.EffectID, arg.Ordinal, arg.RangeFt)
+	return err
+}
+
+const insertEffectTempHP = `-- name: InsertEffectTempHP :exec
+INSERT INTO compendium.effect_temp_hp (effect_id, ordinal, amount) VALUES ($1, $2, $3)
+`
+
+type InsertEffectTempHPParams struct {
+	EffectID int64
+	Ordinal  int32
+	Amount   int32
+}
+
+func (q *Queries) InsertEffectTempHP(ctx context.Context, arg InsertEffectTempHPParams) error {
+	_, err := q.db.Exec(ctx, insertEffectTempHP, arg.EffectID, arg.Ordinal, arg.Amount)
+	return err
+}
+
 const listEffectAreas = `-- name: ListEffectAreas :many
 SELECT effect_id, ordinal, shape, size_ft, range_ft FROM compendium.effect_areas
 `
@@ -417,6 +519,36 @@ func (q *Queries) ListEffectComponents(ctx context.Context) ([]CompendiumEffectC
 	return items, nil
 }
 
+const listEffectCounters = `-- name: ListEffectCounters :many
+SELECT effect_id, ordinal, range_ft FROM compendium.effect_counters
+`
+
+type ListEffectCountersRow struct {
+	EffectID int64
+	Ordinal  int32
+	RangeFt  int32
+}
+
+func (q *Queries) ListEffectCounters(ctx context.Context) ([]ListEffectCountersRow, error) {
+	rows, err := q.db.Query(ctx, listEffectCounters)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectCountersRow{}
+	for rows.Next() {
+		var i ListEffectCountersRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.RangeFt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectCrits = `-- name: ListEffectCrits :many
 SELECT effect_id, ordinal, feet FROM compendium.effect_crits
 `
@@ -448,7 +580,7 @@ func (q *Queries) ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, er
 }
 
 const listEffectDefinitions = `-- name: ListEffectDefinitions :many
-SELECT id, slug, name, concentration FROM compendium.effect_definitions ORDER BY slug
+SELECT id, slug, name, concentration, owner_kind FROM compendium.effect_definitions ORDER BY slug
 `
 
 type ListEffectDefinitionsRow struct {
@@ -456,6 +588,7 @@ type ListEffectDefinitionsRow struct {
 	Slug          string
 	Name          string
 	Concentration bool
+	OwnerKind     string
 }
 
 func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error) {
@@ -472,6 +605,7 @@ func (q *Queries) ListEffectDefinitions(ctx context.Context) ([]ListEffectDefini
 			&i.Slug,
 			&i.Name,
 			&i.Concentration,
+			&i.OwnerKind,
 		); err != nil {
 			return nil, err
 		}
@@ -591,6 +725,72 @@ func (q *Queries) ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraD
 	return items, nil
 }
 
+const listEffectForcedMoves = `-- name: ListEffectForcedMoves :many
+SELECT effect_id, ordinal, ft, toward FROM compendium.effect_forced_moves
+`
+
+type ListEffectForcedMovesRow struct {
+	EffectID int64
+	Ordinal  int32
+	Ft       int32
+	Toward   bool
+}
+
+func (q *Queries) ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error) {
+	rows, err := q.db.Query(ctx, listEffectForcedMoves)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectForcedMovesRow{}
+	for rows.Next() {
+		var i ListEffectForcedMovesRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.Ft,
+			&i.Toward,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectGrants = `-- name: ListEffectGrants :many
+SELECT effect_id, ordinal, name FROM compendium.effect_grants
+`
+
+type ListEffectGrantsRow struct {
+	EffectID int64
+	Ordinal  int32
+	Name     string
+}
+
+func (q *Queries) ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectGrants)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectGrantsRow{}
+	for rows.Next() {
+		var i ListEffectGrantsRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectManual = `-- name: ListEffectManual :many
 SELECT effect_id, ordinal, instruction FROM compendium.effect_manual
 `
@@ -676,6 +876,42 @@ func (q *Queries) ListEffectReactions(ctx context.Context) ([]ListEffectReaction
 			&i.Ordinal,
 			&i.Trigger,
 			&i.Instruction,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectResourceChanges = `-- name: ListEffectResourceChanges :many
+SELECT effect_id, ordinal, resource_slug, delta FROM compendium.effect_resource_changes
+`
+
+type ListEffectResourceChangesRow struct {
+	EffectID     int64
+	Ordinal      int32
+	ResourceSlug string
+	Delta        int32
+}
+
+func (q *Queries) ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error) {
+	rows, err := q.db.Query(ctx, listEffectResourceChanges)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectResourceChangesRow{}
+	for rows.Next() {
+		var i ListEffectResourceChangesRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.ResourceSlug,
+			&i.Delta,
 		); err != nil {
 			return nil, err
 		}
@@ -855,6 +1091,66 @@ func (q *Queries) ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesR
 			&i.Surface,
 			&i.Rounds,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectTeleports = `-- name: ListEffectTeleports :many
+SELECT effect_id, ordinal, range_ft FROM compendium.effect_teleports
+`
+
+type ListEffectTeleportsRow struct {
+	EffectID int64
+	Ordinal  int32
+	RangeFt  int32
+}
+
+func (q *Queries) ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectTeleports)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectTeleportsRow{}
+	for rows.Next() {
+		var i ListEffectTeleportsRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.RangeFt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectTempHPs = `-- name: ListEffectTempHPs :many
+SELECT effect_id, ordinal, amount FROM compendium.effect_temp_hp
+`
+
+type ListEffectTempHPsRow struct {
+	EffectID int64
+	Ordinal  int32
+	Amount   int32
+}
+
+func (q *Queries) ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectTempHPs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectTempHPsRow{}
+	for rows.Next() {
+		var i ListEffectTempHPsRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Amount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

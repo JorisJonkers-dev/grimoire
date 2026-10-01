@@ -152,7 +152,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 			tok.Stats = &domain.Stats{
 				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
 				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
-				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction),
+				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
 			}
 		}
 		tokens = append(tokens, tok)
@@ -264,13 +264,10 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.insertToken(ctx, sid, t)
 	case domain.ActionTokenRemoved:
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
-	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
+	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTeleported:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
 	case domain.ActionEffectApplied:
-		if w.HP == nil {
-			return nil
-		}
-		return s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)})
+		return s.writeLanding(ctx, sid, w)
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
 		domain.ActionReactionDeclined, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
@@ -281,13 +278,13 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
-		domain.ActionConcentrationChecked, domain.ActionDowned:
+		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered:
 		return nil
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {
 			return nil
 		}
-		return s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)})
+		return s.setHP(ctx, sid, *w.HP)
 	case domain.ActionReactionSet:
 		return s.saveReactionSettings(ctx, w.Token)
 	case domain.ActionEncounterSpawned:
@@ -363,11 +360,36 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	return nil
 }
 
+// writeLanding writes what an Effect changed as it landed: hit points and Resources.
+//
+//nolint:gosec // deltas are bounded by a check
+func (s *Store) writeLanding(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if w.HP != nil {
+		if err := s.setHP(ctx, sid, *w.HP); err != nil {
+			return err
+		}
+	}
+	for _, r := range w.Resources {
+		if err := s.q.ChangeResourceUsed(ctx, queries.ChangeResourceUsedParams{CharacterID: r.Character, ResourceSlug: r.Resource, Delta: int32(r.Delta)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// setHP writes a token's hit points, and its temporary hit points when the change touches them.
+func (s *Store) setHP(ctx context.Context, sid uuid.UUID, h live.HPChange) error {
+	if err := s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(h.Token), Hp: pgInt(h.After)}); err != nil || h.Temp == nil {
+		return err
+	}
+	return s.q.SetTokenTempHP(ctx, queries.SetTokenTempHPParams{SessionID: sid, ID: uuid.UUID(h.Token), TempHp: int32(*h.Temp)}) //nolint:gosec // bounded by a check
+}
+
 // writeHP sets a token's hit points and records who watched a ranged attacker deal the damage.
 //
 //nolint:gosec // hit points are bounded by the rules
 func (s *Store) writeHP(ctx context.Context, sid uuid.UUID, w live.Write) error {
-	if err := s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)}); err != nil {
+	if err := s.setHP(ctx, sid, *w.HP); err != nil {
 		return err
 	}
 	for _, o := range w.Observers {
@@ -431,7 +453,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
 		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet, domain.ActionConcentrationChecked,
-		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived:
+		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,

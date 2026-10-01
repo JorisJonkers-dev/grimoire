@@ -14,11 +14,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
-func seedOwner(slug string) effects.Owner {
-	if slug == "prone" || slug == "poisoned" {
-		return effects.Owner{Kind: effects.OwnedByCondition, Slug: slug}
-	}
-	return effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}
+func seedOwner(d effects.Definition) effects.Owner {
+	return effects.Owner{Kind: d.Owner, Slug: d.Slug}
 }
 
 // The migrations seed the SRD Effects the engine resolves: whole Effects, areas and the parts left to
@@ -29,11 +26,11 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"bless", "burning-hands", "cone-of-cold", "dodging", "exhaustion", "faerie-fire", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "stunned", "vexed"}
+	want := []string{"bless", "burning-hands", "cone-of-cold", "counterspell", "dispel-magic", "dodging", "exhaustion", "faerie-fire", "false-life", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "misty-step", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "spirit-guardians", "stunned", "thunderwave", "vexed", "wall-of-fire"}
 	if !reflect.DeepEqual(got.Automated(), want) {
 		t.Fatalf("automated = %v", got.Automated())
 	}
-	partial := []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "petrified", "poisoned", "thunderwave", "unconscious"}
+	partial := []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "petrified", "poisoned", "unconscious"}
 	if !reflect.DeepEqual(got.Partial(), partial) {
 		t.Fatalf("partial = %v", got.Partial())
 	}
@@ -54,6 +51,18 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if g, _ := got.AreaOf("grease"); g.Condition != "prone" || g.Surface.Rounds != 10 {
 		t.Fatalf("grease = %+v", g)
 	}
+	if tw, _ := got.AreaOf("thunderwave"); tw.Push != (effects.ForcedMove{Ft: 10, Toward: false}) || got["thunderwave"].Owner != effects.OwnedBySpell {
+		t.Fatalf("thunderwave = %+v", got["thunderwave"])
+	}
+	if ft, ok := got.TeleportOf("misty-step"); !ok || ft != 30 {
+		t.Fatalf("misty step = %d %v", ft, ok)
+	}
+	if l := got.LandingOf("false-life"); l.TempHP != 9 || !got.LandingOf("dispel-magic").Dispels {
+		t.Fatalf("false life = %+v", l)
+	}
+	if wall, _ := got.AreaOf("wall-of-fire"); wall.Area.Shape != hex.WallArea || !got["wall-of-fire"].Concentration {
+		t.Fatalf("wall of fire = %+v", wall)
+	}
 	if !reflect.DeepEqual(got.Instructions("poisoned", "Poisoned"), []string{"Poisoned: ability checks are made with disadvantage."}) {
 		t.Fatalf("poisoned = %v", got.Instructions("poisoned", "Poisoned"))
 	}
@@ -69,7 +78,7 @@ func TestSeededEffectsRoundTripThroughTheDatabase(t *testing.T) {
 		t.Fatal(err)
 	}
 	for slug, d := range seeded {
-		if err := s.SaveEffect(ctx, seedOwner(slug), d); err != nil {
+		if err := s.SaveEffect(ctx, seedOwner(d), d); err != nil {
 			t.Fatalf("save %s: %v", slug, err)
 		}
 	}
@@ -96,8 +105,15 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 	if err := s.SaveEffect(ctx, owner, first); err != nil {
 		t.Fatal(err)
 	}
-	second := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Concentration: true, Components: []effects.Component{
+	second := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Owner: effects.OwnedBySpell, Concentration: true, Components: []effects.Component{
 		effects.MoveCost{Multiplier: 2},
+		effects.TempHP{Amount: 5},
+		effects.Teleport{RangeFt: 30},
+		effects.ForcedMove{Ft: 10, Toward: true},
+		effects.Dispel{},
+		effects.Counter{RangeFt: 60},
+		effects.GrantFeature{Name: "Darkvision"},
+		effects.ResourceChange{Resource: "rage", Delta: -1},
 	}}
 	if err := s.SaveEffect(ctx, owner, second); err != nil {
 		t.Fatal(err)

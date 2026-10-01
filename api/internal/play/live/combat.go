@@ -404,11 +404,7 @@ func applyAttack(s *state, w *Write) {
 		s.observed[o][w.Token.ID] += w.HP.Before - w.HP.After
 	}
 	if h := w.HP; h != nil {
-		t := s.tokens[h.Token]
-		stats := *t.Stats
-		stats.HP = h.After
-		t.Stats = &stats
-		s.tokens[t.ID] = t
+		s.setHP(*h)
 	}
 	if s.combat == nil || w.Kind == domain.ActionDamageUndone {
 		return

@@ -1007,7 +1007,8 @@ export const zLiveEffect = z.object({
     sourceId: zId.optional(),
     concentration: z.boolean(),
     roundsLeft: z.int().gte(1).lte(100).optional(),
-    level: z.int().gte(1).lte(10).optional()
+    level: z.int().gte(1).lte(10).optional(),
+    hexes: z.array(zHexCoord).max(2000).optional()
 });
 
 /**
@@ -1025,6 +1026,7 @@ export const zLiveToken = z.object({
     ac: z.int().gte(0).lte(40).optional(),
     hp: z.int().gte(0).lte(10000).optional(),
     hpMax: z.int().gte(1).lte(10000).optional(),
+    tempHp: z.int().gte(1).lte(999).optional(),
     health: z.enum([
         'unhurt',
         'hurt',
@@ -1651,7 +1653,8 @@ export const zLiveCommand = z.object({
         'interact',
         'set_reaction',
         'stabilise',
-        'revive'
+        'revive',
+        'teleport'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),

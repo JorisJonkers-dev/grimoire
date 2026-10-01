@@ -58,6 +58,23 @@ func (q *Queries) CampaignRestSupplies(ctx context.Context, id uuid.UUID) (bool,
 	return rest_supplies, err
 }
 
+const changeResourceUsed = `-- name: ChangeResourceUsed :exec
+INSERT INTO campaign.character_resources (character_id, resource_slug, used)
+SELECT c.id, $1::text, LEAST(100, GREATEST(0, 0 - $2::integer)) FROM campaign.characters c WHERE c.id = $3
+ON CONFLICT (character_id, resource_slug) DO UPDATE SET used = LEAST(100, GREATEST(0, campaign.character_resources.used - $2::integer))
+`
+
+type ChangeResourceUsedParams struct {
+	ResourceSlug string
+	Delta        int32
+	CharacterID  uuid.UUID
+}
+
+func (q *Queries) ChangeResourceUsed(ctx context.Context, arg ChangeResourceUsedParams) error {
+	_, err := q.db.Exec(ctx, changeResourceUsed, arg.ResourceSlug, arg.Delta, arg.CharacterID)
+	return err
+}
+
 const clearRest = `-- name: ClearRest :exec
 DELETE FROM play.rests WHERE session_id = $1
 `

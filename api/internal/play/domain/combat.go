@@ -96,6 +96,10 @@ const (
 	ActionReactionSet = "reaction_set"
 	// ActionConcentrationChecked is damage opening a concentration save.
 	ActionConcentrationChecked = "concentration_checked"
+	// ActionTeleported is a creature moved by magic, without walking (Misty Step).
+	ActionTeleported = "teleported"
+	// ActionCountered is a reaction that stops a spell being cast (Counterspell).
+	ActionCountered = "countered"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.

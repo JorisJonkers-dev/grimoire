@@ -57,6 +57,10 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	if reason != "" {
 		return Write{}, reason
 	}
+	land := r.st.catalog.LandingOf(slug)
+	if land.Dispels {
+		return r.st.dispel(target)
+	}
 	def, known := r.st.catalog.Lookup(slug)
 	name := def.Name
 	if !known {
@@ -74,6 +78,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 		e.Level++
 	}
 	w := Write{Kind: domain.ActionEffectApplied, Token: target, effect: &e}
+	r.st.land(&w, land, target)
 	r.st.afflict(&w, e, target)
 	for _, old := range r.st.fx.Active {
 		if e.Concentration && old.Concentration && old.Source != nil && *old.Source == *source {
@@ -84,6 +89,54 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + ": " + text})
 	}
 	return w, ""
+}
+
+// land adds what an Effect gives the moment it lands: temporary hit points, which replace smaller ones
+// rather than adding to them, features the DM notes down, and Resources spent or regained.
+func (s *state) land(w *Write, land effects.Landing, target domain.Token) {
+	if target.Stats != nil && land.TempHP > target.Stats.TempHP {
+		temp := land.TempHP
+		w.HP = &HPChange{Token: target.ID, Before: target.Stats.HP, After: target.Stats.HP, Temp: &temp}
+	}
+	for _, name := range land.Grants {
+		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + " gains " + name + "."})
+	}
+	character, ok := characterOf(target)
+	for _, c := range land.Resources {
+		if ok {
+			w.Resources = append(w.Resources, ResourceDelta{Character: character, Resource: c.Resource, Delta: c.Delta})
+		}
+	}
+}
+
+// ResourceDelta is a Character's Resource an Effect spends (negative) or gives back (positive).
+type ResourceDelta struct {
+	Character uuid.UUID
+	Resource  string
+	Delta     int
+}
+
+// characterOf is the Character a token was placed from.
+func characterOf(t domain.Token) (uuid.UUID, bool) {
+	if t.Stats == nil || !strings.HasPrefix(t.Stats.Source, "character:") {
+		return uuid.Nil, false
+	}
+	id, err := uuid.Parse(strings.TrimPrefix(t.Stats.Source, "character:"))
+	return id, err == nil
+}
+
+// dispel ends every spell's Effect on a target.
+func (s *state) dispel(target domain.Token) (Write, string) {
+	var ended []domain.EffectID
+	for _, e := range s.fx.Active {
+		if e.Target == target.ID && s.catalog.Spell(e.Slug) {
+			ended = append(ended, e.ID)
+		}
+	}
+	if len(ended) == 0 {
+		return Write{}, "No spell on " + target.Label + " to dispel."
+	}
+	return Write{Kind: domain.ActionEffectEnded, Token: target, ended: ended}, ""
 }
 
 // stacked finds the Effect a stacking Effect adds a level to, or -1.
@@ -214,11 +267,7 @@ func applyEffects(s *state, w *Write) {
 		}
 	}
 	if w.Kind == domain.ActionEffectApplied && w.HP != nil {
-		t := s.tokens[w.HP.Token]
-		stats := *t.Stats
-		stats.HP = w.HP.After
-		t.Stats = &stats
-		s.tokens[t.ID] = t
+		s.setHP(*w.HP)
 	}
 	fx.Manual = append(fx.Manual, w.manuals...)
 	fx.Saves = append(fx.Saves, w.newSaves...)
@@ -357,6 +406,7 @@ func (s *state) effectViews(id domain.TokenID) []EffectView {
 		if e.Source != nil {
 			v.SourceID = uuid.UUID(*e.Source).String()
 		}
+		v.Hexes = s.emanation(e)
 		out = append(out, v)
 	}
 	return out

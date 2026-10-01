@@ -38,6 +38,8 @@ type Write struct {
 	Rolls     []domain.Roll
 	Combatant domain.CombatantID
 	HP        *HPChange
+	// Resources are Character Resources an Effect spent or gave back as it landed.
+	Resources []ResourceDelta
 	// Observers saw a ranged attack's damage; each remembers it against the attacker.
 	Observers []domain.TokenID
 	attack    *domain.PendingAttack
@@ -609,7 +611,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport:
 		return true
 	}
 	return false
@@ -707,7 +709,7 @@ func settleTerrain(s *state, w *Write, round int) {
 		}
 	}
 	switch w.Kind {
-	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionTokenRemoved:
+	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionTokenRemoved, domain.ActionCountered:
 		w.Cast, w.SaveCast = s.cast, true
 	}
 	if w.terrain {
@@ -731,6 +733,8 @@ func change(s *state, w *Write) {
 	case domain.ActionObjectUsed:
 		applyInteraction(s, w)
 		return
+	case domain.ActionTeleported:
+		applyTeleport(s, w)
 	case domain.ActionMasteryUsed:
 		applyMastery(s, w)
 		return
@@ -753,7 +757,7 @@ func change(s *state, w *Write) {
 	case domain.ActionTacticsSet:
 		s.tokens[w.Token.ID] = w.Token
 		return
-	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined:
+	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined, domain.ActionCountered:
 		applyReaction(s, w)
 		return
 	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
@@ -786,11 +790,7 @@ func change(s *state, w *Write) {
 		applyWorld(s, w)
 		return
 	case domain.ActionHPAdjusted:
-		t := s.tokens[w.HP.Token]
-		stats := *t.Stats
-		stats.HP = w.HP.After
-		t.Stats = &stats
-		s.tokens[t.ID] = t
+		s.setHP(*w.HP)
 		return
 	case domain.ActionEncounterSpawned:
 		for _, t := range w.Spawned {

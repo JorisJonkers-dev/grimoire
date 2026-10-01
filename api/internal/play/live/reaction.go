@@ -216,6 +216,9 @@ func (r *runtime) answer(p *domain.ReactionPrompt, use bool, m domain.Member) Wr
 	case domain.PromptShield:
 		return w
 	case domain.PromptEffect:
+		if r.st.countering(p) {
+			w.Kind = domain.ActionCountered
+		}
 		w.manuals = []domain.ManualPrompt{{ID: uuid.New(), Text: reactor.Label + ": " + p.Effect}}
 		return w
 	}
@@ -230,6 +233,18 @@ func (r *runtime) answer(p *domain.ReactionPrompt, use bool, m domain.Member) Wr
 		ID: uuid.New(), Attacker: reactor.ID, Target: trigger.ID, AttackNo: p.AttackNo, Stage: domain.StageToHit, RollID: roll.ID, Opportunity: true,
 	}
 	return w
+}
+
+// unready drops the readied attack an answered readied prompt was for.
+func unready(c *domain.Combat, answered *domain.ReactionPrompt) {
+	if answered == nil || answered.Kind != domain.PromptReadied {
+		return
+	}
+	for i := range c.Combatants {
+		if c.Combatants[i].TokenID == answered.Reactor {
+			c.Combatants[i].Readied = nil
+		}
+	}
 }
 
 // applyReaction records a prompt, its answer, and what the answer changes.
@@ -247,14 +262,11 @@ func applyReaction(s *state, w *Write) {
 		return
 	}
 	c.Prompt = nil
-	if w.answered != nil && w.answered.Kind == domain.PromptReadied {
-		for i := range c.Combatants {
-			if c.Combatants[i].TokenID == w.answered.Reactor {
-				c.Combatants[i].Readied = nil
-			}
-		}
+	unready(c, w.answered)
+	if w.Kind == domain.ActionCountered {
+		s.cast = nil
 	}
-	if w.Kind == domain.ActionReactionUsed {
+	if w.Kind == domain.ActionReactionUsed || w.Kind == domain.ActionCountered {
 		i := slices.IndexFunc(c.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
 		c.Combatants[i].Economy, _ = c.Combatants[i].Economy.Spend(combat.Reaction)
 		c.Combatants[i].Shielded = w.answered.Kind == domain.PromptShield
@@ -280,6 +292,9 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 		r.deathSaves(actor, c)
 	}
 	r.lootAfterFight(w, actor, c)
+	if w.Kind == domain.ActionAreaCast {
+		r.offerCounter(w.Token, actor, c)
+	}
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
 		r.encounterChecks(prep.TriggerLongRest, prep.DueNextRest, actor, c)
@@ -298,7 +313,9 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	switch {
 	case w.answered != nil && w.answered.Kind == domain.PromptShield && f.Attack != nil:
 		r.shieldAnswered(w.Kind == domain.ActionReactionUsed, actor, c)
-	case w.answered != nil && w.Kind == domain.ActionReactionDeclined, f.Attack == nil && f.Prompt == nil && f.Resume != nil:
+	case w.answered != nil && w.Kind == domain.ActionReactionDeclined && r.st.countering(w.answered):
+		r.areaRolled()
+	case w.answered != nil && w.Kind == domain.ActionReactionDeclined && f.Resume != nil, f.Attack == nil && f.Prompt == nil && f.Resume != nil:
 		r.resumeWalk(actor, c)
 	}
 }
