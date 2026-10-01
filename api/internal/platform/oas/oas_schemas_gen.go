@@ -535,6 +535,368 @@ func (s *ActiveEffect) SetDetail(val string) {
 	s.Detail = val
 }
 
+// One prep change as a Revision, with what it changed and whether it is still the entity's latest.
+// Ref: #/components/schemas/Activity
+type Activity struct {
+	RevisionId ID                 `json:"revisionId"`
+	EntityType ActivityEntityType `json:"entityType"`
+	EntityId   ID                 `json:"entityId"`
+	Name       string             `json:"name"`
+	No         int32              `json:"no"`
+	Action     ActivityAction     `json:"action"`
+	Author     DisplayName        `json:"author"`
+	Origin     ActivityOrigin     `json:"origin"`
+	Client     OptString          `json:"client"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	Undoable   bool               `json:"undoable"`
+}
+
+// GetRevisionId returns the value of RevisionId.
+func (s *Activity) GetRevisionId() ID {
+	return s.RevisionId
+}
+
+// GetEntityType returns the value of EntityType.
+func (s *Activity) GetEntityType() ActivityEntityType {
+	return s.EntityType
+}
+
+// GetEntityId returns the value of EntityId.
+func (s *Activity) GetEntityId() ID {
+	return s.EntityId
+}
+
+// GetName returns the value of Name.
+func (s *Activity) GetName() string {
+	return s.Name
+}
+
+// GetNo returns the value of No.
+func (s *Activity) GetNo() int32 {
+	return s.No
+}
+
+// GetAction returns the value of Action.
+func (s *Activity) GetAction() ActivityAction {
+	return s.Action
+}
+
+// GetAuthor returns the value of Author.
+func (s *Activity) GetAuthor() DisplayName {
+	return s.Author
+}
+
+// GetOrigin returns the value of Origin.
+func (s *Activity) GetOrigin() ActivityOrigin {
+	return s.Origin
+}
+
+// GetClient returns the value of Client.
+func (s *Activity) GetClient() OptString {
+	return s.Client
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Activity) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUndoable returns the value of Undoable.
+func (s *Activity) GetUndoable() bool {
+	return s.Undoable
+}
+
+// SetRevisionId sets the value of RevisionId.
+func (s *Activity) SetRevisionId(val ID) {
+	s.RevisionId = val
+}
+
+// SetEntityType sets the value of EntityType.
+func (s *Activity) SetEntityType(val ActivityEntityType) {
+	s.EntityType = val
+}
+
+// SetEntityId sets the value of EntityId.
+func (s *Activity) SetEntityId(val ID) {
+	s.EntityId = val
+}
+
+// SetName sets the value of Name.
+func (s *Activity) SetName(val string) {
+	s.Name = val
+}
+
+// SetNo sets the value of No.
+func (s *Activity) SetNo(val int32) {
+	s.No = val
+}
+
+// SetAction sets the value of Action.
+func (s *Activity) SetAction(val ActivityAction) {
+	s.Action = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *Activity) SetAuthor(val DisplayName) {
+	s.Author = val
+}
+
+// SetOrigin sets the value of Origin.
+func (s *Activity) SetOrigin(val ActivityOrigin) {
+	s.Origin = val
+}
+
+// SetClient sets the value of Client.
+func (s *Activity) SetClient(val OptString) {
+	s.Client = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Activity) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUndoable sets the value of Undoable.
+func (s *Activity) SetUndoable(val bool) {
+	s.Undoable = val
+}
+
+type ActivityAction string
+
+const (
+	ActivityActionCreate  ActivityAction = "create"
+	ActivityActionUpdate  ActivityAction = "update"
+	ActivityActionDelete  ActivityAction = "delete"
+	ActivityActionRestore ActivityAction = "restore"
+)
+
+// AllValues returns all ActivityAction values.
+func (ActivityAction) AllValues() []ActivityAction {
+	return []ActivityAction{
+		ActivityActionCreate,
+		ActivityActionUpdate,
+		ActivityActionDelete,
+		ActivityActionRestore,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ActivityAction) MarshalText() ([]byte, error) {
+	switch s {
+	case ActivityActionCreate:
+		return []byte(s), nil
+	case ActivityActionUpdate:
+		return []byte(s), nil
+	case ActivityActionDelete:
+		return []byte(s), nil
+	case ActivityActionRestore:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ActivityAction) UnmarshalText(data []byte) error {
+	switch ActivityAction(data) {
+	case ActivityActionCreate:
+		*s = ActivityActionCreate
+		return nil
+	case ActivityActionUpdate:
+		*s = ActivityActionUpdate
+		return nil
+	case ActivityActionDelete:
+		*s = ActivityActionDelete
+		return nil
+	case ActivityActionRestore:
+		*s = ActivityActionRestore
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type ActivityEntityType string
+
+const (
+	ActivityEntityTypeNpc            ActivityEntityType = "npc"
+	ActivityEntityTypeEncounterPool  ActivityEntityType = "encounter_pool"
+	ActivityEntityTypeEncounterTable ActivityEntityType = "encounter_table"
+	ActivityEntityTypeEncounterCheck ActivityEntityType = "encounter_check"
+	ActivityEntityTypeLootTable      ActivityEntityType = "loot_table"
+	ActivityEntityTypeSettlement     ActivityEntityType = "settlement"
+	ActivityEntityTypeShop           ActivityEntityType = "shop"
+)
+
+// AllValues returns all ActivityEntityType values.
+func (ActivityEntityType) AllValues() []ActivityEntityType {
+	return []ActivityEntityType{
+		ActivityEntityTypeNpc,
+		ActivityEntityTypeEncounterPool,
+		ActivityEntityTypeEncounterTable,
+		ActivityEntityTypeEncounterCheck,
+		ActivityEntityTypeLootTable,
+		ActivityEntityTypeSettlement,
+		ActivityEntityTypeShop,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ActivityEntityType) MarshalText() ([]byte, error) {
+	switch s {
+	case ActivityEntityTypeNpc:
+		return []byte(s), nil
+	case ActivityEntityTypeEncounterPool:
+		return []byte(s), nil
+	case ActivityEntityTypeEncounterTable:
+		return []byte(s), nil
+	case ActivityEntityTypeEncounterCheck:
+		return []byte(s), nil
+	case ActivityEntityTypeLootTable:
+		return []byte(s), nil
+	case ActivityEntityTypeSettlement:
+		return []byte(s), nil
+	case ActivityEntityTypeShop:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ActivityEntityType) UnmarshalText(data []byte) error {
+	switch ActivityEntityType(data) {
+	case ActivityEntityTypeNpc:
+		*s = ActivityEntityTypeNpc
+		return nil
+	case ActivityEntityTypeEncounterPool:
+		*s = ActivityEntityTypeEncounterPool
+		return nil
+	case ActivityEntityTypeEncounterTable:
+		*s = ActivityEntityTypeEncounterTable
+		return nil
+	case ActivityEntityTypeEncounterCheck:
+		*s = ActivityEntityTypeEncounterCheck
+		return nil
+	case ActivityEntityTypeLootTable:
+		*s = ActivityEntityTypeLootTable
+		return nil
+	case ActivityEntityTypeSettlement:
+		*s = ActivityEntityTypeSettlement
+		return nil
+	case ActivityEntityTypeShop:
+		*s = ActivityEntityTypeShop
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// ActivityHeaders wraps Activity with response headers.
+type ActivityHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Activity
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ActivityHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ActivityHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ActivityHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ActivityHeaders) GetResponse() Activity {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ActivityHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ActivityHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ActivityHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ActivityHeaders) SetResponse(val Activity) {
+	s.Response = val
+}
+
+func (*ActivityHeaders) undoChangeRes() {}
+
+type ActivityOrigin string
+
+const (
+	ActivityOriginUI        ActivityOrigin = "ui"
+	ActivityOriginMcp       ActivityOrigin = "mcp"
+	ActivityOriginGenerator ActivityOrigin = "generator"
+	ActivityOriginSystem    ActivityOrigin = "system"
+)
+
+// AllValues returns all ActivityOrigin values.
+func (ActivityOrigin) AllValues() []ActivityOrigin {
+	return []ActivityOrigin{
+		ActivityOriginUI,
+		ActivityOriginMcp,
+		ActivityOriginGenerator,
+		ActivityOriginSystem,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ActivityOrigin) MarshalText() ([]byte, error) {
+	switch s {
+	case ActivityOriginUI:
+		return []byte(s), nil
+	case ActivityOriginMcp:
+		return []byte(s), nil
+	case ActivityOriginGenerator:
+		return []byte(s), nil
+	case ActivityOriginSystem:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ActivityOrigin) UnmarshalText(data []byte) error {
+	switch ActivityOrigin(data) {
+	case ActivityOriginUI:
+		*s = ActivityOriginUI
+		return nil
+	case ActivityOriginMcp:
+		*s = ActivityOriginMcp
+		return nil
+	case ActivityOriginGenerator:
+		*s = ActivityOriginGenerator
+		return nil
+	case ActivityOriginSystem:
+		*s = ActivityOriginSystem
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // The light that fills a Map everywhere.
 // Ref: #/components/schemas/AmbientLight
 type AmbientLight string
@@ -6080,6 +6442,56 @@ func (s *InviteToken) GetToken() Token {
 func (s *InviteToken) SetToken(val Token) {
 	s.Token = val
 }
+
+// ListActivityOKHeaders wraps []Activity with response headers.
+type ListActivityOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Activity
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListActivityOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListActivityOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListActivityOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListActivityOKHeaders) GetResponse() []Activity {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListActivityOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListActivityOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListActivityOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListActivityOKHeaders) SetResponse(val []Activity) {
+	s.Response = val
+}
+
+func (*ListActivityOKHeaders) listActivityRes() {}
 
 // ListCharactersOKHeaders wraps []CharacterSummary with response headers.
 type ListCharactersOKHeaders struct {
@@ -15872,6 +16284,7 @@ func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
@@ -15914,6 +16327,7 @@ func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
+func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}

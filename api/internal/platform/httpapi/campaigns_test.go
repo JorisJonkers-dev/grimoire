@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
@@ -310,6 +311,18 @@ func (b brokenCampaigns) AcceptInvite(context.Context, caller.Caller, string, st
 	return domain.CampaignID{}, b.err
 }
 
+func (b brokenCampaigns) Activity(context.Context, caller.Caller, domain.CampaignID) ([]domain.Edit, error) {
+	return nil, b.err
+}
+
+func (b brokenCampaigns) LatestEdit(context.Context, caller.Caller, domain.CampaignID, domain.EntityType, uuid.UUID) (domain.Edit, error) {
+	return domain.Edit{}, b.err
+}
+
+func (b brokenCampaigns) UndoPlan(context.Context, caller.Caller, domain.CampaignID, uuid.UUID) (domain.Edit, int, error) {
+	return domain.Edit{}, 0, b.err
+}
+
 func TestUnexpectedCampaignErrorsAreHidden(t *testing.T) {
 	t.Parallel()
 	h := campaignServer(t, brokenCampaigns{err: errors.New("database on fire")})
@@ -327,6 +340,8 @@ func TestUnexpectedCampaignErrorsAreHidden(t *testing.T) {
 		{http.MethodDelete, id + "/invites/0190c7a8-0000-7000-8000-000000000003", ""},
 		{http.MethodPost, "/api/v1/invites/preview", "{" + token + "}"},
 		{http.MethodPost, "/api/v1/invites/accept", "{" + token + `,"displayName":"C"}`},
+		{http.MethodGet, id + "/activity", ""},
+		{http.MethodPost, id + "/activity/0190c7a8-0000-7000-8000-000000000004/undo", ""},
 	}
 	for _, c := range cases {
 		rec := call(h, c.method, c.path, "u", c.body)
@@ -357,6 +372,8 @@ func TestCampaignHandlersNeedAnIdentity(t *testing.T) {
 	add(h.RevokeInvite(ctx, oas.RevokeInviteParams{}))
 	add(h.PreviewInvite(ctx, &oas.InviteToken{}))
 	add(h.AcceptInvite(ctx, &oas.InviteAccept{}))
+	add(h.ListActivity(ctx, oas.ListActivityParams{}))
+	add(h.UndoChange(ctx, oas.UndoChangeParams{}))
 	for i, r := range results {
 		p, ok := r.(*oas.ProblemStatusCodeWithHeaders)
 		if !ok || p.StatusCode != http.StatusUnauthorized {

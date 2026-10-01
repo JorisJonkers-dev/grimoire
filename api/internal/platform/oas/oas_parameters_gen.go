@@ -4268,6 +4268,79 @@ func decodeGetTokenIconParams(args [2]string, argsEscaped bool, r *http.Request)
 	return params, nil
 }
 
+// ListActivityParams is parameters of listActivity operation.
+type ListActivityParams struct {
+	// Campaign id.
+	CampaignId ID
+}
+
+func unpackListActivityParams(packed middleware.Parameters) (params ListActivityParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeListActivityParams(args [1]string, argsEscaped bool, r *http.Request) (params ListActivityParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ListCampaignsParams is parameters of listCampaigns operation.
 type ListCampaignsParams struct {
 	// Opaque cursor from the previous page.
@@ -9810,6 +9883,140 @@ func decodeStartSessionParams(args [1]string, argsEscaped bool, r *http.Request)
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// UndoChangeParams is parameters of undoChange operation.
+type UndoChangeParams struct {
+	// Campaign id.
+	CampaignId ID
+	// The Revision to undo.
+	RevisionId ID
+}
+
+func unpackUndoChangeParams(packed middleware.Parameters) (params UndoChangeParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "revisionId",
+			In:   "path",
+		}
+		params.RevisionId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeUndoChangeParams(args [2]string, argsEscaped bool, r *http.Request) (params UndoChangeParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: revisionId.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "revisionId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotRevisionIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotRevisionIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.RevisionId = ID(paramsDotRevisionIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "revisionId",
 			In:   "path",
 			Err:  err,
 		}

@@ -50,6 +50,7 @@ type Repository interface {
 	RecordNPCRevision(ctx context.Context, id domain.CampaignID, r domain.Revision, c caller.Caller, n domain.NPC) (int, error)
 	Revisions(ctx context.Context, id domain.CampaignID, t domain.EntityType, entity uuid.UUID) ([]domain.Revision, error)
 	NPCRevision(ctx context.Context, id domain.CampaignID, npcID domain.NPCID, no int) (domain.NPC, error)
+	Edits(ctx context.Context, id domain.CampaignID, f domain.EditFilter) ([]domain.Edit, error)
 }
 
 // DefaultInviteTTL is how long an invite link stays valid.

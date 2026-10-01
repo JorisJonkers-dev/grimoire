@@ -37,6 +37,7 @@ paths:
   /api/v1/compendium/spells:
     get:
       operationId: listSpells
+      x-mcp: { tool: search_spells }
       summary: List spells
       description: Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
       tags: [Compendium]
@@ -95,6 +96,7 @@ paths:
   /api/v1/compendium/spells/{slug}:
     get:
       operationId: getSpell
+      x-mcp: { tool: get_spell }
       summary: Get a spell
       description: One spell with its rules text and the conditions it mentions.
       tags: [Compendium]
@@ -134,6 +136,7 @@ paths:
   /api/v1/compendium/entries:
     get:
       operationId: listEntries
+      x-mcp: { tool: search_compendium }
       summary: List compendium entries
       description: Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
       tags: [Compendium]
@@ -185,6 +188,7 @@ paths:
   /api/v1/compendium/entries/{kind}/{slug}:
     get:
       operationId: getEntry
+      x-mcp: { tool: get_compendium_entry }
       summary: Get a compendium entry
       description: One entry rendered for reading, with the conditions its text mentions.
       tags: [Compendium]
@@ -229,6 +233,7 @@ paths:
   /api/v1/compendium/automation:
     get:
       operationId: getAutomationCoverage
+      x-mcp: { tool: get_automation_coverage }
       summary: Get automation coverage
       description: How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
       tags: [Compendium]
@@ -330,6 +335,7 @@ paths:
   /api/v1/campaigns:
     get:
       operationId: listCampaigns
+      x-mcp: { tool: list_campaigns }
       summary: List my campaigns
       description: The Campaigns the caller is a Member of, newest first.
       tags: [Campaign]
@@ -392,6 +398,7 @@ paths:
   /api/v1/campaigns/{campaignId}:
     get:
       operationId: getCampaign
+      x-mcp: { tool: get_campaign }
       summary: Get a campaign
       description: A Campaign's home with its settings, the caller's role and every Member. Members only.
       tags: [Campaign]
@@ -581,6 +588,7 @@ paths:
   /api/v1/campaigns/{campaignId}/characters:
     get:
       operationId: listCharacters
+      x-mcp: { tool: list_characters }
       summary: List characters
       description: The party's Characters. Members only.
       tags: [Campaign]
@@ -902,6 +910,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools:
     get:
       operationId: listEncounterPools
+      x-mcp: { tool: list_encounter_pools }
       summary: List Encounter Pools
       description: The Campaign's Encounter Pools. DM only.
       tags: [Prep]
@@ -930,6 +939,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createEncounterPool
+      x-mcp: { tool: create_encounter_pool, entity: encounter_pool }
       summary: Create an Encounter Pool
       description: Adds an Encounter Pool and records its first Revision. DM only.
       tags: [Prep]
@@ -962,6 +972,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}:
     put:
       operationId: updateEncounterPool
+      x-mcp: { tool: update_encounter_pool, entity: encounter_pool, id: poolId }
       summary: Update an Encounter Pool
       description: Replaces the Encounter Pool and records a Revision. DM only.
       tags: [Prep]
@@ -994,6 +1005,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteEncounterPool
+      x-mcp: { tool: delete_encounter_pool, entity: encounter_pool, id: poolId }
       summary: Delete an Encounter Pool
       description: Removes the Encounter Pool; its Revisions keep it restorable. DM only.
       tags: [Prep]
@@ -1017,6 +1029,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions:
     get:
       operationId: listEncounterPoolRevisions
+      x-mcp: { tool: list_encounter_pool_revisions }
       summary: List Encounter Pool revisions
       description: Every Revision of the Encounter Pool, newest first. DM only.
       tags: [Prep]
@@ -1047,6 +1060,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreEncounterPoolRevision
+      x-mcp: { tool: restore_encounter_pool_revision, entity: encounter_pool, id: poolId }
       summary: Restore an Encounter Pool revision
       description: Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
       tags: [Prep]
@@ -1075,6 +1089,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables:
     get:
       operationId: listEncounterTables
+      x-mcp: { tool: list_encounter_tables }
       summary: List Encounter Tables
       description: The Campaign's Encounter Tables. DM only.
       tags: [Prep]
@@ -1103,6 +1118,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createEncounterTable
+      x-mcp: { tool: create_encounter_table, entity: encounter_table }
       summary: Create an Encounter Table
       description: Adds an Encounter Table and records its first Revision. DM only.
       tags: [Prep]
@@ -1135,6 +1151,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}:
     put:
       operationId: updateEncounterTable
+      x-mcp: { tool: update_encounter_table, entity: encounter_table, id: tableId }
       summary: Update an Encounter Table
       description: Replaces the Encounter Table and records a Revision. DM only.
       tags: [Prep]
@@ -1167,6 +1184,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteEncounterTable
+      x-mcp: { tool: delete_encounter_table, entity: encounter_table, id: tableId }
       summary: Delete an Encounter Table
       description: Removes the Encounter Table; its Revisions keep it restorable. DM only.
       tags: [Prep]
@@ -1190,6 +1208,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions:
     get:
       operationId: listEncounterTableRevisions
+      x-mcp: { tool: list_encounter_table_revisions }
       summary: List Encounter Table revisions
       description: Every Revision of the Encounter Table, newest first. DM only.
       tags: [Prep]
@@ -1220,6 +1239,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreEncounterTableRevision
+      x-mcp: { tool: restore_encounter_table_revision, entity: encounter_table, id: tableId }
       summary: Restore an Encounter Table revision
       description: Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
       tags: [Prep]
@@ -1248,6 +1268,7 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables:
     get:
       operationId: listLootTables
+      x-mcp: { tool: list_loot_tables }
       summary: List Loot Tables
       description: The Campaign's Loot Tables. DM only.
       tags: [Prep]
@@ -1276,8 +1297,9 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createLootTable
-      summary: Create an Loot Table
-      description: Adds an Loot Table and records its first Revision. DM only.
+      x-mcp: { tool: create_loot_table, entity: loot_table }
+      summary: Create a Loot Table
+      description: Adds a Loot Table and records its first Revision. DM only.
       tags: [Prep]
       parameters:
         - $ref: "#/components/parameters/CampaignId"
@@ -1308,7 +1330,8 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}:
     put:
       operationId: updateLootTable
-      summary: Update an Loot Table
+      x-mcp: { tool: update_loot_table, entity: loot_table, id: lootTableId }
+      summary: Update a Loot Table
       description: Replaces the Loot Table and records a Revision. DM only.
       tags: [Prep]
       parameters:
@@ -1340,7 +1363,8 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteLootTable
-      summary: Delete an Loot Table
+      x-mcp: { tool: delete_loot_table, entity: loot_table, id: lootTableId }
+      summary: Delete a Loot Table
       description: Removes the Loot Table; its Revisions keep it restorable. DM only.
       tags: [Prep]
       parameters:
@@ -1363,6 +1387,7 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions:
     get:
       operationId: listLootTableRevisions
+      x-mcp: { tool: list_loot_table_revisions }
       summary: List Loot Table revisions
       description: Every Revision of the Loot Table, newest first. DM only.
       tags: [Prep]
@@ -1393,7 +1418,8 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreLootTableRevision
-      summary: Restore an Loot Table revision
+      x-mcp: { tool: restore_loot_table_revision, entity: loot_table, id: lootTableId }
+      summary: Restore a Loot Table revision
       description: Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
       tags: [Prep]
       parameters:
@@ -1421,6 +1447,7 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements:
     get:
       operationId: listSettlements
+      x-mcp: { tool: list_settlements }
       summary: List Settlements
       description: The Campaign's Settlements. DM only.
       tags: [Prep]
@@ -1449,8 +1476,9 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createSettlement
-      summary: Create an Settlement
-      description: Adds an Settlement and records its first Revision. DM only.
+      x-mcp: { tool: create_settlement, entity: settlement }
+      summary: Create a Settlement
+      description: Adds a Settlement and records its first Revision. DM only.
       tags: [Prep]
       parameters:
         - $ref: "#/components/parameters/CampaignId"
@@ -1481,7 +1509,8 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements/{settlementId}:
     put:
       operationId: updateSettlement
-      summary: Update an Settlement
+      x-mcp: { tool: update_settlement, entity: settlement, id: settlementId }
+      summary: Update a Settlement
       description: Replaces the Settlement and records a Revision. DM only.
       tags: [Prep]
       parameters:
@@ -1513,7 +1542,8 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteSettlement
-      summary: Delete an Settlement
+      x-mcp: { tool: delete_settlement, entity: settlement, id: settlementId }
+      summary: Delete a Settlement
       description: Removes the Settlement; its Revisions keep it restorable. DM only.
       tags: [Prep]
       parameters:
@@ -1536,6 +1566,7 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions:
     get:
       operationId: listSettlementRevisions
+      x-mcp: { tool: list_settlement_revisions }
       summary: List Settlement revisions
       description: Every Revision of the Settlement, newest first. DM only.
       tags: [Prep]
@@ -1566,7 +1597,8 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreSettlementRevision
-      summary: Restore an Settlement revision
+      x-mcp: { tool: restore_settlement_revision, entity: settlement, id: settlementId }
+      summary: Restore a Settlement revision
       description: Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
       tags: [Prep]
       parameters:
@@ -1594,6 +1626,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops:
     get:
       operationId: listShops
+      x-mcp: { tool: list_shops }
       summary: List Shops
       description: The Campaign's Shops. DM only.
       tags: [Prep]
@@ -1622,8 +1655,9 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createShop
-      summary: Create an Shop
-      description: Adds an Shop and records its first Revision. DM only.
+      x-mcp: { tool: create_shop, entity: shop }
+      summary: Create a Shop
+      description: Adds a Shop and records its first Revision. DM only.
       tags: [Prep]
       parameters:
         - $ref: "#/components/parameters/CampaignId"
@@ -1654,7 +1688,8 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}:
     put:
       operationId: updateShop
-      summary: Update an Shop
+      x-mcp: { tool: update_shop, entity: shop, id: shopId }
+      summary: Update a Shop
       description: Replaces the Shop and records a Revision. DM only.
       tags: [Prep]
       parameters:
@@ -1686,7 +1721,8 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteShop
-      summary: Delete an Shop
+      x-mcp: { tool: delete_shop, entity: shop, id: shopId }
+      summary: Delete a Shop
       description: Removes the Shop; its Revisions keep it restorable. DM only.
       tags: [Prep]
       parameters:
@@ -1709,6 +1745,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions:
     get:
       operationId: listShopRevisions
+      x-mcp: { tool: list_shop_revisions }
       summary: List Shop revisions
       description: Every Revision of the Shop, newest first. DM only.
       tags: [Prep]
@@ -1739,7 +1776,8 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreShopRevision
-      summary: Restore an Shop revision
+      x-mcp: { tool: restore_shop_revision, entity: shop, id: shopId }
+      summary: Restore a Shop revision
       description: Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
       tags: [Prep]
       parameters:
@@ -1767,6 +1805,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}/stock:
     post:
       operationId: rerollStock
+      x-mcp: { tool: reroll_stock, entity: shop, id: shopId }
       summary: Reroll Stock
       description: Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a Revision. DM only.
       tags: [Prep]
@@ -1794,6 +1833,7 @@ paths:
   /api/v1/campaigns/{campaignId}/locations:
     get:
       operationId: listLocations
+      x-mcp: { tool: list_locations }
       summary: List locations
       description: The places on the Campaign's world maps an Encounter Table can belong to. DM only.
       tags: [Prep]
@@ -1823,6 +1863,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-checks:
     get:
       operationId: listEncounterChecks
+      x-mcp: { tool: list_encounter_checks }
       summary: List Encounter Checks
       description: The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
       tags: [Prep]
@@ -1852,6 +1893,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs:
     get:
       operationId: listNpcs
+      x-mcp: { tool: list_npcs }
       summary: List NPCs
       description: The Campaign's NPCs. DM only.
       tags: [Prep]
@@ -1880,6 +1922,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createNpc
+      x-mcp: { tool: create_npc, entity: npc }
       summary: Create an NPC
       description: Adds an NPC and records its first Revision. DM only.
       tags: [Prep]
@@ -1941,6 +1984,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}:
     get:
       operationId: getNpc
+      x-mcp: { tool: get_npc }
       summary: Get an NPC
       description: One NPC. DM only.
       tags: [Prep]
@@ -1967,6 +2011,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: updateNpc
+      x-mcp: { tool: update_npc, entity: npc, id: npcId }
       summary: Update an NPC
       description: Replaces the NPC and records a Revision. DM only.
       tags: [Prep]
@@ -1999,6 +2044,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteNpc
+      x-mcp: { tool: delete_npc, entity: npc, id: npcId }
       summary: Delete an NPC
       description: Removes the NPC; its Revisions keep it restorable. DM only.
       tags: [Prep]
@@ -2022,6 +2068,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions:
     get:
       operationId: listNpcRevisions
+      x-mcp: { tool: list_npc_revisions }
       summary: List NPC revisions
       description: Every Revision of the NPC, newest first, with its author and origin. DM only.
       tags: [Prep]
@@ -2092,6 +2139,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreNpcRevision
+      x-mcp: { tool: restore_npc_revision, entity: npc, id: npcId }
       summary: Restore an NPC revision
       description: Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
       tags: [Prep]
@@ -2113,6 +2161,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Npc"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/activity:
+    get:
+      operationId: listActivity
+      x-mcp: { tool: list_activity }
+      summary: List AI activity
+      description: The latest prep changes made through MCP, newest first, and whether each can still be undone. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The changes.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/Activity"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo:
+    post:
+      operationId: undoChange
+      x-mcp: { tool: undo_change }
+      summary: Undo a change
+      description: Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: revisionId
+          in: path
+          required: true
+          description: The Revision to undo.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The Revision the undo recorded.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -3741,6 +3851,23 @@ components:
         client: { type: string, maxLength: 80 }
         restoredFrom: { type: integer, format: int32, minimum: 1, maximum: 100000 }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+    Activity:
+      type: object
+      description: One prep change as a Revision, with what it changed and whether it is still the entity's latest.
+      additionalProperties: false
+      required: [revisionId, entityType, entityId, name, no, action, author, origin, createdAt, undoable]
+      properties:
+        revisionId: { $ref: "#/components/schemas/Id" }
+        entityType: { type: string, enum: [npc, encounter_pool, encounter_table, encounter_check, loot_table, settlement, shop] }
+        entityId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 120 }
+        no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        action: { type: string, enum: [create, update, delete, restore] }
+        author: { $ref: "#/components/schemas/DisplayName" }
+        origin: { type: string, enum: [ui, mcp, generator, system] }
+        client: { type: string, maxLength: 80 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        undoable: { type: boolean }
     FieldChange:
       type: object
       description: A field whose value differs between two Revisions.

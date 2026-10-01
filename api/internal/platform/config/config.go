@@ -16,6 +16,8 @@ type Config struct {
 	AutoImport  bool
 	RateLimit   int
 	AssetDir    string
+	// OAuthIssuer is the authorization server MCP agents sign in with; empty leaves discovery out.
+	OAuthIssuer string
 	S3          *S3
 }
 
@@ -44,6 +46,7 @@ func Load(getenv func(string) string) (Config, error) {
 		AutoImport:  getenv("GRIMOIRE_AUTO_IMPORT") == "true",
 		RateLimit:   600,
 		AssetDir:    getenv("GRIMOIRE_ASSET_DIR"),
+		OAuthIssuer: getenv("GRIMOIRE_OAUTH_ISSUER"),
 	}
 	if c.AssetDir == "" {
 		c.AssetDir = "/tmp/grimoire-assets"

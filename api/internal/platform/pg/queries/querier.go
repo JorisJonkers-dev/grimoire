@@ -120,6 +120,7 @@ type Querier interface {
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
+	Edits(ctx context.Context, arg EditsParams) ([]EditsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
 	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)

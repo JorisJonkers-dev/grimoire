@@ -357,6 +357,41 @@ export const zRevision = z.object({
 });
 
 /**
+ * One prep change as a Revision, with what it changed and whether it is still the entity's latest.
+ */
+export const zActivity = z.object({
+    revisionId: zId,
+    entityType: z.enum([
+        'npc',
+        'encounter_pool',
+        'encounter_table',
+        'encounter_check',
+        'loot_table',
+        'settlement',
+        'shop'
+    ]),
+    entityId: zId,
+    name: z.string().max(120),
+    no: z.int().gte(1).lte(100000),
+    action: z.enum([
+        'create',
+        'update',
+        'delete',
+        'restore'
+    ]),
+    author: zDisplayName,
+    origin: z.enum([
+        'ui',
+        'mcp',
+        'generator',
+        'system'
+    ]),
+    client: z.string().max(80).optional(),
+    createdAt: z.iso.datetime().max(40),
+    undoable: z.boolean()
+});
+
+/**
  * A field whose value differs between two Revisions.
  */
 export const zFieldChange = z.object({
@@ -2809,6 +2844,25 @@ export const zRestoreNpcRevisionPath = z.object({
  * The restored NPC.
  */
 export const zRestoreNpcRevisionResponse = zNpc;
+
+export const zListActivityPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The changes.
+ */
+export const zListActivityResponse = z.array(zActivity).max(100);
+
+export const zUndoChangePath = z.object({
+    campaignId: zId,
+    revisionId: zId
+});
+
+/**
+ * The Revision the undo recorded.
+ */
+export const zUndoChangeResponse = zActivity;
 
 export const zListRollsPath = z.object({
     campaignId: zId

@@ -74,7 +74,7 @@ type Invoker interface {
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
 	// CreateLootTable invokes createLootTable operation.
 	//
-	// Adds an Loot Table and records its first Revision. DM only.
+	// Adds a Loot Table and records its first Revision. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/loot-tables
 	CreateLootTable(ctx context.Context, request *LootTableInput, params CreateLootTableParams) (CreateLootTableRes, error)
@@ -92,13 +92,13 @@ type Invoker interface {
 	CreateRoll(ctx context.Context, request *RollCreate, params CreateRollParams) (CreateRollRes, error)
 	// CreateSettlement invokes createSettlement operation.
 	//
-	// Adds an Settlement and records its first Revision. DM only.
+	// Adds a Settlement and records its first Revision. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/settlements
 	CreateSettlement(ctx context.Context, request *SettlementInput, params CreateSettlementParams) (CreateSettlementRes, error)
 	// CreateShop invokes createShop operation.
 	//
-	// Adds an Shop and records its first Revision. DM only.
+	// Adds a Shop and records its first Revision. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops
 	CreateShop(ctx context.Context, request *ShopInput, params CreateShopParams) (CreateShopRes, error)
@@ -266,6 +266,13 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
+	// ListActivity invokes listActivity operation.
+	//
+	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
+	// only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/activity
+	ListActivity(ctx context.Context, params ListActivityParams) (ListActivityRes, error)
 	// ListCampaigns invokes listCampaigns operation.
 	//
 	// The Campaigns the caller is a Member of, newest first.
@@ -529,6 +536,14 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions
 	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
+	// UndoChange invokes undoChange operation.
+	//
+	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
+	// Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
+	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
 	// UpdateCampaign invokes updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
@@ -1579,7 +1594,7 @@ func (c *Client) sendCreateInvite(ctx context.Context, params CreateInviteParams
 
 // CreateLootTable invokes createLootTable operation.
 //
-// Adds an Loot Table and records its first Revision. DM only.
+// Adds a Loot Table and records its first Revision. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/loot-tables
 func (c *Client) CreateLootTable(ctx context.Context, request *LootTableInput, params CreateLootTableParams) (CreateLootTableRes, error) {
@@ -1993,7 +2008,7 @@ func (c *Client) sendCreateRoll(ctx context.Context, request *RollCreate, params
 
 // CreateSettlement invokes createSettlement operation.
 //
-// Adds an Settlement and records its first Revision. DM only.
+// Adds a Settlement and records its first Revision. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/settlements
 func (c *Client) CreateSettlement(ctx context.Context, request *SettlementInput, params CreateSettlementParams) (CreateSettlementRes, error) {
@@ -2131,7 +2146,7 @@ func (c *Client) sendCreateSettlement(ctx context.Context, request *SettlementIn
 
 // CreateShop invokes createShop operation.
 //
-// Adds an Shop and records its first Revision. DM only.
+// Adds a Shop and records its first Revision. DM only.
 //
 // POST /api/v1/campaigns/{campaignId}/shops
 func (c *Client) CreateShop(ctx context.Context, request *ShopInput, params CreateShopParams) (CreateShopRes, error) {
@@ -6289,6 +6304,142 @@ func (c *Client) sendGetTokenIcon(ctx context.Context, params GetTokenIconParams
 
 	stage = "DecodeResponse"
 	result, err := decodeGetTokenIconResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ListActivity invokes listActivity operation.
+//
+// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
+// only.
+//
+// GET /api/v1/campaigns/{campaignId}/activity
+func (c *Client) ListActivity(ctx context.Context, params ListActivityParams) (ListActivityRes, error) {
+	res, err := c.sendListActivity(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendListActivity(ctx context.Context, params ListActivityParams) (res ListActivityRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listActivity"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/activity"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListActivityOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/activity"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListActivityOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListActivityResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -12693,6 +12844,165 @@ func (c *Client) sendStartSession(ctx context.Context, params StartSessionParams
 
 	stage = "DecodeResponse"
 	result, err := decodeStartSessionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// UndoChange invokes undoChange operation.
+//
+// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
+// Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
+func (c *Client) UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error) {
+	res, err := c.sendUndoChange(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendUndoChange(ctx context.Context, params UndoChangeParams) (res UndoChangeRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("undoChange"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/activity/{revisionId}/undo"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UndoChangeOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/activity/"
+	{
+		// Encode "revisionId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "revisionId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.RevisionId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/undo"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, UndoChangeOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeUndoChangeResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

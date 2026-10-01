@@ -31,6 +31,9 @@ type Campaigns interface {
 	RevokeInvite(ctx context.Context, c caller.Caller, id domain.CampaignID, invite domain.InviteID) error
 	PreviewInvite(ctx context.Context, token string) (domain.InvitePreview, error)
 	AcceptInvite(ctx context.Context, c caller.Caller, token, displayName string) (domain.CampaignID, error)
+	Activity(ctx context.Context, c caller.Caller, id domain.CampaignID) ([]domain.Edit, error)
+	LatestEdit(ctx context.Context, c caller.Caller, id domain.CampaignID, t domain.EntityType, entity uuid.UUID) (domain.Edit, error)
+	UndoPlan(ctx context.Context, c caller.Caller, id domain.CampaignID, revision uuid.UUID) (domain.Edit, int, error)
 }
 
 // campaignProblem maps a use-case error to a problem; anything unexpected is logged and hidden.
@@ -61,6 +64,9 @@ func uiCaller(ctx context.Context) (caller.Caller, bool) {
 	id, ok := auth.FromContext(ctx)
 	if !ok {
 		return caller.Caller{}, false
+	}
+	if client, ok := caller.MCPClient(ctx); ok {
+		return caller.MCP(id.Subject, client), true
 	}
 	return caller.UI(id.Subject), true
 }
