@@ -24,6 +24,7 @@ type SessionService interface {
 	Get(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.SessionID) (playdomain.Session, error)
 	List(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]playdomain.Session, error)
 	End(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.SessionID) (playdomain.Session, error)
+	Log(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.SessionID, limit int) ([]playdomain.LoggedAction, error)
 }
 
 // LiveHub is what the live socket needs from the runtime.

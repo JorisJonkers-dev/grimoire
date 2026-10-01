@@ -50,3 +50,31 @@ test('an agent preps an NPC through MCP and the DM undoes it from the activity p
   const listed = await call('list_npcs', { campaignId })
   expect(listed).toEqual({ failed: false, text: '{"result":[]}' })
 })
+
+test('an agent spawns an encounter in a live session and the DM undoes it from the Action Log', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one run is enough')
+  const stamp = String(Date.now())
+  await page.goto('/campaigns')
+  await page.getByTestId('campaign-name').fill(`Live agent ${stamp}`)
+  await page.getByTestId('campaign-display-name').fill('DM')
+  await page.getByRole('button', { name: 'Start as DM' }).click()
+  await page.getByTestId('start-session').click()
+  await expect(page.getByTestId('connection')).toHaveText('Live')
+  const [, , campaignId, , sessionId] = new URL(page.url()).pathname.split('/')
+
+  const call = await connect(page.request)
+  const spawned = await call('spawn_encounter', { campaignId, sessionId, body: { monsters: [{ monsterSlug: 'goblin-warrior', count: 2 }], q: 0, r: 0 } })
+  expect(spawned.failed).toBe(false)
+  const actionSeq = (JSON.parse(spawned.text) as { result: { actionSeq: number } }).result.actionSeq
+  await expect(page.locator('[data-hex="0,0"]')).toHaveAttribute('aria-label', /Goblin Warrior 1/)
+  const entry = page.getByTestId(`log-${String(actionSeq)}`)
+  await expect(entry).toContainText('encounter spawned: Goblin Warrior 1, Goblin Warrior 2')
+  await expect(entry).toContainText('via e2e-agent')
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+
+  await page.getByTestId(`undo-${String(actionSeq)}`).click()
+  await expect(page.locator('[data-hex="0,0"]')).not.toHaveAttribute('aria-label', /Goblin/)
+  await expect(page.getByTestId(`undo-${String(actionSeq)}`)).toHaveCount(0)
+  const again = await call('undo_action', { campaignId, sessionId, body: { seq: actionSeq } })
+  expect(again).toEqual({ failed: true, text: 'That action is already undone.' })
+})

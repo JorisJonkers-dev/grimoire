@@ -41,6 +41,14 @@ func (r *runtime) planEffect(cmd Command) (Write, string) {
 	return r.planApply(cmd)
 }
 
+// Applied is the Effect an effect_applied write puts on.
+func (w Write) Applied() domain.EffectID {
+	if w.effect == nil {
+		return domain.EffectID{}
+	}
+	return w.effect.ID
+}
+
 // planApply puts an Effect on a token. A new concentration effect ends the source's previous ones, and
 // every part the engine cannot compute becomes a Manual prompt for the DM.
 func (r *runtime) planApply(cmd Command) (Write, string) {

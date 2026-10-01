@@ -23,6 +23,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planAttack(m, cmd)
 	case CmdUndoDamage:
 		return r.planUndo()
+	case CmdSpawnEncounter:
+		return r.planSpawn(cmd)
+	case CmdAdjustHP:
+		return r.planAdjustHP(cmd)
 	case CmdSetTactics:
 		return r.planTactics(cmd)
 	case CmdApplyEffect, CmdEndEffect, CmdResolveManual:

@@ -116,3 +116,30 @@ const (
 	ActionTokenRemoved   = "token_removed"
 	ActionTokenWalked    = "token_walked"
 )
+
+// Kinds the DM's tools record: a whole encounter placed at once, and a hand-set hit point change.
+const (
+	ActionEncounterSpawned = "encounter_spawned"
+	ActionHPAdjusted       = "hp_adjusted"
+)
+
+// LoggedAction is one Action of a Session as its log shows it: what it touched and whether it was undone.
+type LoggedAction struct {
+	Seq    int64
+	Kind   string
+	Actor  string
+	Origin string
+	Client string
+	Label  string
+	Undone bool
+	At     time.Time
+}
+
+// Undoable reports whether the Action is one Grimoire can still revert.
+func (a LoggedAction) Undoable() bool {
+	switch a.Kind {
+	case ActionTokenPlaced, ActionEncounterSpawned, ActionHexesRevealed, ActionHexesConcealed, ActionEffectApplied, ActionDamageDealt, ActionHPAdjusted:
+		return !a.Undone
+	}
+	return false
+}

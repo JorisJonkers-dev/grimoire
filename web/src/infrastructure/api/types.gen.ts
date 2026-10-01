@@ -1028,7 +1028,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1107,6 +1107,48 @@ export type LiveCommand = {
     coin?: Coin;
     count?: number;
     shopId?: Id;
+    monsters?: Array<SpawnMonster>;
+    /**
+     * With adjust_hp, hit points to add; negative takes them away.
+     */
+    hpDelta?: number;
+    /**
+     * With undo, the Action Log sequence of the Action to undo.
+     */
+    seq?: number;
+};
+
+/**
+ * One kind of monster an encounter spawns, and how many.
+ */
+export type SpawnMonster = {
+    monsterSlug: Slug;
+    count: number;
+};
+
+/**
+ * How a live Session answered a command. actionSeq is the Action Log sequence of the change it made, for undo; previews answer with what they would do.
+ */
+export type LiveCommandResult = {
+    seq: number;
+    actionSeq?: number;
+    path?: LivePath;
+    preview?: LiveAttackPreview;
+    area?: LiveAreaPreview;
+};
+
+/**
+ * One Action of a live Session, what it touched, and whether it can still be undone.
+ */
+export type SessionAction = {
+    seq: number;
+    kind: string;
+    actor: DisplayName;
+    origin: 'ui' | 'mcp' | 'generator' | 'system';
+    client?: string;
+    label: string;
+    undoable: boolean;
+    createdAt: string;
 };
 
 /**
@@ -1489,6 +1531,7 @@ export type LiveUpdate = {
     kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview' | 'ping';
     seq: number;
     nonce?: string;
+    actionSeq?: number;
     reason?: string;
     session?: LiveSessionView;
     view?: LiveView;
@@ -4897,6 +4940,125 @@ export type GetSessionResponses = {
 };
 
 export type GetSessionResponse = GetSessionResponses[keyof GetSessionResponses];
+
+export type GetSessionViewData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Session id.
+         */
+        sessionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/sessions/{sessionId}/view';
+};
+
+export type GetSessionViewErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSessionViewError = GetSessionViewErrors[keyof GetSessionViewErrors];
+
+export type GetSessionViewResponses = {
+    /**
+     * The view.
+     */
+    200: LiveView;
+};
+
+export type GetSessionViewResponse = GetSessionViewResponses[keyof GetSessionViewResponses];
+
+export type GetSessionLogData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Session id.
+         */
+        sessionId: Id;
+    };
+    query?: {
+        /**
+         * How many to return, newest first.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/campaigns/{campaignId}/sessions/{sessionId}/log';
+};
+
+export type GetSessionLogErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSessionLogError = GetSessionLogErrors[keyof GetSessionLogErrors];
+
+export type GetSessionLogResponses = {
+    /**
+     * The actions.
+     */
+    200: Array<SessionAction>;
+};
+
+export type GetSessionLogResponse = GetSessionLogResponses[keyof GetSessionLogResponses];
+
+export type SendLiveCommandData = {
+    body: LiveCommand;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Session id.
+         */
+        sessionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands';
+};
+
+export type SendLiveCommandErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendLiveCommandError = SendLiveCommandErrors[keyof SendLiveCommandErrors];
+
+export type SendLiveCommandResponses = {
+    /**
+     * How the Session answered.
+     */
+    200: LiveCommandResult;
+};
+
+export type SendLiveCommandResponse = SendLiveCommandResponses[keyof SendLiveCommandResponses];
 
 export type EndSessionData = {
     body?: never;

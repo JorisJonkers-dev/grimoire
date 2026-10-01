@@ -41,6 +41,9 @@ const (
 	CmdPreviewAttack  = "preview_attack"
 	CmdAttack         = "attack"
 	CmdUndoDamage     = "undo_damage"
+	CmdSpawnEncounter = "spawn_encounter"
+	CmdAdjustHP       = "adjust_hp"
+	CmdUndo           = "undo"
 	CmdSetTactics     = "set_tactics"
 	CmdReact          = "react"
 	CmdApplyEffect    = "apply_effect"
@@ -166,8 +169,12 @@ type Command struct {
 	Coin         string           `json:"coin,omitempty"`
 	Count        int              `json:"count,omitempty"`
 	ShopID       string           `json:"shopId,omitempty"`
-	promptID     uuid.UUID
-	rollID       domain.RollID
+	// Monsters are what spawn_encounter places; HPDelta is what adjust_hp adds; Seq is the Action undo reverts.
+	Monsters []SpawnMonster `json:"monsters,omitempty"`
+	HPDelta  int            `json:"hpDelta,omitempty"`
+	Seq      int64          `json:"seq,omitempty"`
+	promptID uuid.UUID
+	rollID   domain.RollID
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -507,12 +514,14 @@ type SuggestionView struct {
 // Update is what the server sends. Every Update carries the Session sequence; a view whose sequence is
 // not the next one means the client missed something and must resync.
 type Update struct {
-	Kind    string       `json:"kind"`
-	Seq     int64        `json:"seq"`
-	Nonce   string       `json:"nonce,omitempty"`
-	Reason  string       `json:"reason,omitempty"`
-	Session *SessionView `json:"session,omitempty"`
-	View    *View        `json:"view,omitempty"`
+	Kind  string `json:"kind"`
+	Seq   int64  `json:"seq"`
+	Nonce string `json:"nonce,omitempty"`
+	// ActionSeq is the Action Log sequence of the change that answers the sender's command.
+	ActionSeq int64        `json:"actionSeq,omitempty"`
+	Reason    string       `json:"reason,omitempty"`
+	Session   *SessionView `json:"session,omitempty"`
+	View      *View        `json:"view,omitempty"`
 	// Steps are the views along a walk before its final View, for clients to play back at walking pace.
 	Steps   []View         `json:"steps,omitempty"`
 	Path    *PathView      `json:"path,omitempty"`

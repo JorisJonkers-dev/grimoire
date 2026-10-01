@@ -14,6 +14,7 @@ import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
+import ActionLog from './ActionLog.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
 import Hotbar from './Hotbar.vue'
@@ -526,6 +527,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :tables="encounterTables.data.value ?? []"
         @send="(cmd) => live?.send(cmd)"
       />
+      <ActionLog v-if="isDM" :campaign-id="campaignId" :session-id="sessionId" :view="view" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
       <ul class="g-list tokens" aria-label="Tokens in view">
         <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
       </ul>

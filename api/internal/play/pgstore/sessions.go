@@ -45,17 +45,24 @@ func session(s queries.PlaySession) domain.Session {
 
 // sessionAction appends a Session Action with the next campaign sequence; call it inside a transaction.
 func (s *Store) sessionAction(ctx context.Context, campaign uuid.UUID, sid domain.SessionID, kind string, actor domain.Member, c caller.Caller, now time.Time) (uuid.UUID, error) {
+	id, _, err := s.loggedAction(ctx, campaign, sid, kind, actor, c, now)
+	return id, err
+}
+
+// loggedAction appends an Action to the Campaign's log and returns its id and sequence.
+func (s *Store) loggedAction(ctx context.Context, campaign uuid.UUID, sid domain.SessionID, kind string, actor domain.Member, c caller.Caller, now time.Time) (uuid.UUID, int64, error) {
 	if err := s.q.LockCampaignLog(ctx, "log:"+campaign.String()); err != nil {
-		return uuid.UUID{}, err
+		return uuid.UUID{}, 0, err
 	}
 	seq, err := s.q.NextActionSeq(ctx, campaign)
 	if err != nil {
-		return uuid.UUID{}, err
+		return uuid.UUID{}, 0, err
 	}
-	return s.q.InsertSessionAction(ctx, queries.InsertSessionActionParams{
+	id, err := s.q.InsertSessionAction(ctx, queries.InsertSessionActionParams{
 		CampaignID: campaign, SessionID: pgtype.UUID{Bytes: sid, Valid: true}, Seq: int64(seq), Kind: kind,
 		ActorMemberID: actor.ID, ActorName: actor.Name, Origin: string(c.Origin), Client: c.Client, Now: now,
 	})
+	return id, int64(seq), err
 }
 
 // CreateSession opens the Campaign's next Session.
@@ -179,13 +186,13 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 }
 
 // Commit writes one change, the hexes it reveals, the next Session sequence and its Action in one transaction.
-func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.MapState, w live.Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error) {
-	var seq int64
+func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.MapState, w live.Write, actor domain.Member, c caller.Caller, now time.Time) (live.Committed, error) {
+	var done live.Committed
 	err := s.InTx(ctx, func(r app.Repository) error {
 		tx := r.(*Store) //nolint:forcetypeassert // InTx always hands back a *Store
 		sid := uuid.UUID(sess.ID)
 		var err error
-		if seq, err = tx.q.BumpSessionSeq(ctx, sid); err != nil {
+		if done.Seq, err = tx.q.BumpSessionSeq(ctx, sid); err != nil {
 			return err
 		}
 		steps := []func() error{
@@ -210,15 +217,24 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 				return err
 			}
 		}
-		return tx.record(ctx, sess, w, actor, c, now)
+		done.Action, err = tx.record(ctx, sess, w, actor, c, now)
+		return err
 	})
-	return seq, err
+	return done, err
 }
 
-// record appends the change's Action with what it touched.
-func (s *Store) record(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
-	actionID, err := s.sessionAction(ctx, sess.CampaignID, sess.ID, w.Kind, actor, c, now)
+// record appends the change's Action with what it touched, and returns its sequence.
+func (s *Store) record(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) (int64, error) {
+	actionID, seq, err := s.loggedAction(ctx, sess.CampaignID, sess.ID, w.Kind, actor, c, now)
 	if err != nil {
+		return 0, err
+	}
+	return seq, s.logged(ctx, actionID, sess, w)
+}
+
+// logged records what an Action touched.
+func (s *Store) logged(ctx context.Context, actionID uuid.UUID, sess domain.Session, w live.Write) error {
+	if err := s.logTools(ctx, actionID, w); err != nil {
 		return err
 	}
 	if w.Leg != nil {
@@ -251,7 +267,14 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled:
 		return nil
-	case domain.ActionDamageDealt, domain.ActionDamageUndone:
+	case domain.ActionEncounterSpawned:
+		for _, t := range w.Spawned {
+			if err := s.insertToken(ctx, sid, t); err != nil {
+				return err
+			}
+		}
+		return nil
+	case domain.ActionDamageDealt, domain.ActionDamageUndone, domain.ActionHPAdjusted:
 		return s.writeHP(ctx, sid, w)
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:

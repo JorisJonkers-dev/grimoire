@@ -53,6 +53,7 @@ Grimoire serves MCP over Streamable HTTP at `/mcp`.
 - **Identity:** requests are authenticated the same way as the web app. The platform's forward-auth puts the account in `X-User-Id`. Set `GRIMOIRE_OAUTH_ISSUER` to publish `/.well-known/oauth-protected-resource`, so a connector can find the authorization server to sign in with.
 - **Access:** every tool that takes a `campaignId` works only for that campaign's DM.
 - **Writes:** writes apply at once and return the Revision they recorded. The campaign's **AI activity** page lists the agent's changes, and each one can be undone.
+- **Live tools:** live tools act in a running Session with the same authority as the DM's own connection. Examples are `spawn_encounter`, `reveal_area`, `apply_effect`, `adjust_hp` and `run_encounter_check`. Each one returns the Action Log sequence it recorded. `undo_action`, or the session page's Action Log, reverts it.
 - **Adding a tool:** mark an OpenAPI operation with `x-mcp: { tool: <name>, entity: <revisioned type> }` and run `task gen`. See [ADR 0007](docs/adr/0007-mcp-tools-run-through-the-rest-router.md).
 
 ## Layout
