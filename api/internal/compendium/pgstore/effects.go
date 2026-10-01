@@ -112,6 +112,10 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return "speed_penalty", func() error {
 			return q.InsertEffectSpeedPenalty(ctx, queries.InsertEffectSpeedPenaltyParams{EffectID: id, Ordinal: ord, Ft: int32(c.Ft)}) //nolint:gosec // bounded by a check
 		}
+	case effects.Reacts:
+		return "reacts", func() error {
+			return q.InsertEffectReaction(ctx, queries.InsertEffectReactionParams{EffectID: id, Ordinal: ord, Trigger: c.Trigger, Instruction: c.Instruction})
+		}
 	case effects.Incapacitated:
 		return "incapacitated", func() error { return nil }
 	case effects.Immobile:
@@ -299,6 +303,13 @@ func (s *Store) conditionComponents(ctx context.Context, out map[slot]effects.Co
 	}
 	for _, r := range slow {
 		out[slot{r.EffectID, r.Ordinal}] = effects.SpeedPenalty{Ft: int(r.Ft)}
+	}
+	reacts, err := s.q.ListEffectReactions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range reacts {
+		out[slot{r.EffectID, r.Ordinal}] = effects.Reacts{Trigger: r.Trigger, Instruction: r.Instruction}
 	}
 	return out, nil
 }

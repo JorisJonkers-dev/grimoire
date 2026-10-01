@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/reactions"
 )
 
 // SessionID identifies a Session.
@@ -59,6 +61,8 @@ type Token struct {
 	Tactics string
 	// CanShield offers the Shield reaction when the token is hit.
 	CanShield bool
+	// Reactions are the Controller's settings, by kind of reaction prompt.
+	Reactions map[string]reactions.Setting
 }
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.

@@ -148,7 +148,8 @@ func (s *state) provokes(mover domain.Token) bool {
 // canReactTo reports whether a creature can take a reaction against a mover of the other side: it is
 // standing, has its reaction left and is not Incapacitated.
 func (s *state) canReactTo(h domain.Token, x domain.Combatant, mover domain.Token) bool {
-	return x.Economy.Reaction && standing(h) && (h.Kind == domain.TokenParty) != (mover.Kind == domain.TokenParty) && !s.catalog.Incapacitated(s.actives(h.ID))
+	return x.Economy.Reaction && standing(h) && (h.Kind == domain.TokenParty) != (mover.Kind == domain.TokenParty) && !s.catalog.Incapacitated(s.actives(h.ID)) &&
+		s.offers(h, domain.PromptOpportunity)
 }
 
 func attacksOf(t domain.Token) []domain.Attack {
@@ -181,7 +182,7 @@ func (s *state) armor(t domain.Token) int {
 func (r *runtime) shieldPrompt(a, t domain.Token, p domain.PendingAttack, total int) *domain.ReactionPrompt {
 	x, ok := r.st.fighter(t.ID)
 	ac := r.st.armor(t) + p.CoverBonus
-	if !t.CanShield || !ok || !x.Economy.Reaction || x.Shielded || total >= ac+5 || r.st.catalog.Incapacitated(r.st.actives(t.ID)) {
+	if !t.CanShield || !ok || !x.Economy.Reaction || x.Shielded || total >= ac+5 || r.st.catalog.Incapacitated(r.st.actives(t.ID)) || !r.st.offers(t, domain.PromptShield) {
 		return nil
 	}
 	return r.prompt(domain.PromptShield, t, a, p.AttackNo, fmt.Sprintf("Shield: AC %d → %d, so the attack (%d) would miss.", ac, ac+5, total))
@@ -211,7 +212,11 @@ func (r *runtime) answer(p *domain.ReactionPrompt, use bool, m domain.Member) Wr
 		return w
 	}
 	w.Kind = domain.ActionReactionUsed
-	if p.Kind == domain.PromptShield {
+	switch p.Kind {
+	case domain.PromptShield:
+		return w
+	case domain.PromptEffect:
+		w.manuals = []domain.ManualPrompt{{ID: uuid.New(), Text: reactor.Label + ": " + p.Effect}}
 		return w
 	}
 	trigger, with := r.st.tokens[p.Trigger], reactor.Stats.Attacks[p.AttackNo]
@@ -265,6 +270,9 @@ func applyReaction(s *state, w *Write) {
 func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	if actor.DM {
 		r.dm = &actor
+	}
+	if r.autoReact(w, actor, c) {
+		return
 	}
 	r.lootAfterFight(w, actor, c)
 	switch {

@@ -87,6 +87,7 @@ const (
 	CmdTakeAction     = "take_action"
 	CmdUnarmed        = "unarmed"
 	CmdInteract       = "interact"
+	CmdSetReaction    = "set_reaction"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -184,10 +185,14 @@ type Command struct {
 	// OffHand makes an attack the off-hand attack of a Light weapon.
 	OffHand bool `json:"offHand,omitempty"`
 	// Cleave makes an attack the second attack of a Cleave hit.
-	Cleave bool   `json:"cleave,omitempty"`
-	Coin   string `json:"coin,omitempty"`
-	Count  int    `json:"count,omitempty"`
-	ShopID string `json:"shopId,omitempty"`
+	Cleave bool `json:"cleave,omitempty"`
+	// ReactionKind, ReactionMode and Condition are a reaction setting set_reaction stores.
+	ReactionKind string `json:"reactionKind,omitempty"`
+	ReactionMode string `json:"reactionMode,omitempty"`
+	Condition    string `json:"condition,omitempty"`
+	Coin         string `json:"coin,omitempty"`
+	Count        int    `json:"count,omitempty"`
+	ShopID       string `json:"shopId,omitempty"`
 	// Monsters are what spawn_encounter places; HPDelta is what adjust_hp adds; Seq is the Action undo reverts.
 	Monsters []SpawnMonster `json:"monsters,omitempty"`
 	HPDelta  int            `json:"hpDelta,omitempty"`
@@ -234,6 +239,8 @@ type TokenView struct {
 	Attacks []AttackView `json:"attacks,omitempty"`
 	Shield  bool         `json:"shield,omitempty"`
 	Effects []EffectView `json:"effects,omitempty"`
+	// Reactions are the Controller's reaction settings, shown to the DM and for the party's tokens.
+	Reactions []ReactionSettingView `json:"reactions,omitempty"`
 }
 
 // EffectView is an Effect on a token, which everyone who sees the token sees.
@@ -673,7 +680,7 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	switch {
 	case s == nil:
 	case a == AudienceDM || t.Kind == domain.TokenParty:
-		v.AC, v.HP, v.HPMax, v.Attacks, v.Shield = &s.AC, &s.HP, &s.HPMax, []AttackView{}, t.CanShield
+		v.AC, v.HP, v.HPMax, v.Attacks, v.Shield, v.Reactions = &s.AC, &s.HP, &s.HPMax, []AttackView{}, t.CanShield, reactionViews(t)
 		for _, x := range s.Attacks {
 			v.Attacks = append(v.Attacks, AttackView{
 				Name: x.Name, ToHit: x.ToHit, ReachFt: x.ReachFt, RangeFt: x.RangeFt, LongRangeFt: x.LongRangeFt, Damage: x.Damage,

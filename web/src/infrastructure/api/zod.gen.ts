@@ -654,6 +654,24 @@ export const zTokenKind = z.enum([
 ]);
 
 /**
+ * A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
+ */
+export const zLiveReactionSetting = z.object({
+    kind: z.enum([
+        'opportunity_attack',
+        'shield',
+        'readied',
+        'effect'
+    ]),
+    mode: z.enum([
+        'ask',
+        'always',
+        'never'
+    ]),
+    condition: z.enum(['target_bloodied']).optional()
+});
+
+/**
  * One attack on a token's hotbar.
  */
 export const zLiveAttack = z.object({
@@ -1003,7 +1021,8 @@ export const zLiveToken = z.object({
     ]).optional(),
     attacks: z.array(zLiveAttack).max(50).optional(),
     shield: z.boolean().optional(),
-    effects: z.array(zLiveEffect).max(50).optional()
+    effects: z.array(zLiveEffect).max(50).optional(),
+    reactions: z.array(zLiveReactionSetting).max(4).optional()
 });
 
 /**
@@ -1057,7 +1076,12 @@ export const zLiveCombatantSetup = z.object({
  */
 export const zLivePrompt = z.object({
     id: zId,
-    kind: z.enum(['opportunity_attack', 'shield']),
+    kind: z.enum([
+        'opportunity_attack',
+        'shield',
+        'readied',
+        'effect'
+    ]),
     reactorId: zId,
     triggerId: zId,
     effect: z.string().max(300),
@@ -1611,7 +1635,8 @@ export const zLiveCommand = z.object({
         'interrupt_rest',
         'take_action',
         'unarmed',
-        'interact'
+        'interact',
+        'set_reaction'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1702,6 +1727,18 @@ export const zLiveCommand = z.object({
     ]).optional(),
     offHand: z.boolean().optional(),
     cleave: z.boolean().optional(),
+    reactionKind: z.enum([
+        'opportunity_attack',
+        'shield',
+        'readied',
+        'effect'
+    ]).optional(),
+    reactionMode: z.enum([
+        'ask',
+        'always',
+        'never'
+    ]).optional(),
+    condition: z.enum(['', 'target_bloodied']).optional(),
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),

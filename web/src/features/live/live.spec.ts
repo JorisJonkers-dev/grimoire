@@ -1626,3 +1626,26 @@ describe('hotbar', () => {
     expect(w.find('form.interact').exists()).toBe(false)
   })
 })
+
+describe('reaction settings', () => {
+  it('asks, always takes or never takes each kind of reaction', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const ReactionSettings = (await import('./ReactionSettings.vue')).default
+    const token: LiveToken = { ...goblin, label: 'Aria', reactions: [{ kind: 'opportunity_attack', mode: 'always', condition: 'target_bloodied' }] }
+    const w = mount(ReactionSettings, { props: { token }, attachTo: document.body })
+    expect((w.get('[data-testid="reaction-opportunity_attack"]').element as HTMLSelectElement).value).toBe('always')
+    expect((w.get('[data-testid="reaction-opportunity_attack-bloodied"]').element as HTMLInputElement).checked).toBe(true)
+    expect((w.get('[data-testid="reaction-shield"]').element as HTMLSelectElement).value).toBe('ask')
+    await w.get('[data-testid="reaction-shield"]').setValue('always')
+    expect(w.emitted('set')?.at(-1)).toEqual(['shield', 'always', ''])
+    await w.get('[data-testid="reaction-opportunity_attack-bloodied"]').setValue(false)
+    expect(w.emitted('set')?.at(-1)).toEqual(['opportunity_attack', 'always', ''])
+    await w.get('[data-testid="reaction-readied"]').setValue('never')
+    expect(w.emitted('set')?.at(-1)).toEqual(['readied', 'never', ''])
+    await w.get('[data-testid="reaction-opportunity_attack"]').setValue('always')
+    expect(w.emitted('set')?.at(-1)).toEqual(['opportunity_attack', 'always', 'target_bloodied'])
+    expect(w.find('[data-testid="reaction-shield-bloodied"]').exists()).toBe(false)
+    await expectAccessible(w.element as Element)
+    w.unmount()
+  })
+})

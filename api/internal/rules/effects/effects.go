@@ -124,6 +124,13 @@ type SpeedPenalty struct {
 	Ft int
 }
 
+// Reacts lets the bearer take a reaction when Trigger happens (damaged: a creature it can see damages
+// it); the DM resolves what it does from Instruction.
+type Reacts struct {
+	Trigger     string
+	Instruction string
+}
+
 // Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
 // speed, and at DeathAt levels the bearer dies.
 type Exhausting struct {
@@ -139,6 +146,7 @@ func (SaveEdge) isComponent()      {}
 func (CritWithin) isComponent()    {}
 func (Exhausting) isComponent()    {}
 func (SpeedPenalty) isComponent()  {}
+func (Reacts) isComponent()        {}
 func (Edge) isComponent()          {}
 func (ExtraDamage) isComponent()   {}
 func (MoveCost) isComponent()      {}
@@ -244,7 +252,7 @@ func (p *AttackProfile) attacking(d Definition, levels int) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts:
 		}
 	}
 }
@@ -267,7 +275,7 @@ func (p *AttackProfile) attacked(d Definition, bySource, withinFive bool) {
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts:
 		}
 	}
 }
@@ -368,7 +376,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts:
 			}
 		}
 	}
@@ -386,7 +394,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts:
 			}
 		}
 	}
@@ -404,6 +412,26 @@ func (cat Catalog) Fatal(bearer []Active) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// Reaction is a reaction an Effect gives: the Effect's name and what the DM resolves.
+type Reaction struct {
+	Name        string
+	Instruction string
+}
+
+// ReactionsTo lists the reactions the bearer's effects give it when a trigger happens.
+func (cat Catalog) ReactionsTo(bearer []Active, trigger string) []Reaction {
+	var out []Reaction
+	for _, a := range bearer {
+		d := cat[a.Slug]
+		for _, c := range d.Components {
+			if r, ok := c.(Reacts); ok && r.Trigger == trigger {
+				out = append(out, Reaction{Name: d.Name, Instruction: r.Instruction})
+			}
+		}
+	}
+	return out
 }
 
 // Stacks reports whether applying the Effect again adds a level instead of a second copy.
@@ -456,7 +484,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Surface = c
 		case Manual:
 			out.Instructions = append(out.Instructions, c.Instruction)
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty:
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts:
 		}
 	}
 	return out, known && found

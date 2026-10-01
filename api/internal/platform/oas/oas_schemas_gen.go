@@ -9076,13 +9076,16 @@ type LiveCommand struct {
 	// Makes the attack the off-hand attack of a Light weapon.
 	OffHand OptBool `json:"offHand"`
 	// Makes the attack the second attack a Cleave hit allows.
-	Cleave   OptBool        `json:"cleave"`
-	ToId     OptID          `json:"toId"`
-	ItemSlug OptSlug        `json:"itemSlug"`
-	Coin     OptCoin        `json:"coin"`
-	Count    OptInt32       `json:"count"`
-	ShopId   OptID          `json:"shopId"`
-	Monsters []SpawnMonster `json:"monsters"`
+	Cleave       OptBool                    `json:"cleave"`
+	ReactionKind OptLiveCommandReactionKind `json:"reactionKind"`
+	ReactionMode OptLiveCommandReactionMode `json:"reactionMode"`
+	Condition    OptLiveCommandCondition    `json:"condition"`
+	ToId         OptID                      `json:"toId"`
+	ItemSlug     OptSlug                    `json:"itemSlug"`
+	Coin         OptCoin                    `json:"coin"`
+	Count        OptInt32                   `json:"count"`
+	ShopId       OptID                      `json:"shopId"`
+	Monsters     []SpawnMonster             `json:"monsters"`
 	// With adjust_hp, hit points to add; negative takes them away.
 	HpDelta OptInt32 `json:"hpDelta"`
 	// With undo, the Action Log sequence of the Action to undo.
@@ -9407,6 +9410,21 @@ func (s *LiveCommand) GetOffHand() OptBool {
 // GetCleave returns the value of Cleave.
 func (s *LiveCommand) GetCleave() OptBool {
 	return s.Cleave
+}
+
+// GetReactionKind returns the value of ReactionKind.
+func (s *LiveCommand) GetReactionKind() OptLiveCommandReactionKind {
+	return s.ReactionKind
+}
+
+// GetReactionMode returns the value of ReactionMode.
+func (s *LiveCommand) GetReactionMode() OptLiveCommandReactionMode {
+	return s.ReactionMode
+}
+
+// GetCondition returns the value of Condition.
+func (s *LiveCommand) GetCondition() OptLiveCommandCondition {
+	return s.Condition
 }
 
 // GetToId returns the value of ToId.
@@ -9769,6 +9787,21 @@ func (s *LiveCommand) SetCleave(val OptBool) {
 	s.Cleave = val
 }
 
+// SetReactionKind sets the value of ReactionKind.
+func (s *LiveCommand) SetReactionKind(val OptLiveCommandReactionKind) {
+	s.ReactionKind = val
+}
+
+// SetReactionMode sets the value of ReactionMode.
+func (s *LiveCommand) SetReactionMode(val OptLiveCommandReactionMode) {
+	s.ReactionMode = val
+}
+
+// SetCondition sets the value of Condition.
+func (s *LiveCommand) SetCondition(val OptLiveCommandCondition) {
+	s.Condition = val
+}
+
 // SetToId sets the value of ToId.
 func (s *LiveCommand) SetToId(val OptID) {
 	s.ToId = val
@@ -9913,6 +9946,47 @@ func (s *LiveCommandAction) UnmarshalText(data []byte) error {
 	}
 }
 
+type LiveCommandCondition string
+
+const (
+	LiveCommandConditionEmpty          LiveCommandCondition = ""
+	LiveCommandConditionTargetBloodied LiveCommandCondition = "target_bloodied"
+)
+
+// AllValues returns all LiveCommandCondition values.
+func (LiveCommandCondition) AllValues() []LiveCommandCondition {
+	return []LiveCommandCondition{
+		LiveCommandConditionEmpty,
+		LiveCommandConditionTargetBloodied,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandCondition) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandConditionEmpty:
+		return []byte(s), nil
+	case LiveCommandConditionTargetBloodied:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandCondition) UnmarshalText(data []byte) error {
+	switch LiveCommandCondition(data) {
+	case LiveCommandConditionEmpty:
+		*s = LiveCommandConditionEmpty
+		return nil
+	case LiveCommandConditionTargetBloodied:
+		*s = LiveCommandConditionTargetBloodied
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 type LiveCommandDue string
 
 const (
@@ -10023,6 +10097,7 @@ const (
 	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
 	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
 	LiveCommandKindInteract       LiveCommandKind = "interact"
+	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10094,6 +10169,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindTakeAction,
 		LiveCommandKindUnarmed,
 		LiveCommandKindInteract,
+		LiveCommandKindSetReaction,
 	}
 }
 
@@ -10231,6 +10307,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindUnarmed:
 		return []byte(s), nil
 	case LiveCommandKindInteract:
+		return []byte(s), nil
+	case LiveCommandKindSetReaction:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10438,6 +10516,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindInteract:
 		*s = LiveCommandKindInteract
 		return nil
+	case LiveCommandKindSetReaction:
+		*s = LiveCommandKindSetReaction
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -10488,6 +10569,109 @@ func (s *LiveCommandOption) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandOptionShoveProne:
 		*s = LiveCommandOptionShoveProne
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandReactionKind string
+
+const (
+	LiveCommandReactionKindOpportunityAttack LiveCommandReactionKind = "opportunity_attack"
+	LiveCommandReactionKindShield            LiveCommandReactionKind = "shield"
+	LiveCommandReactionKindReadied           LiveCommandReactionKind = "readied"
+	LiveCommandReactionKindEffect            LiveCommandReactionKind = "effect"
+)
+
+// AllValues returns all LiveCommandReactionKind values.
+func (LiveCommandReactionKind) AllValues() []LiveCommandReactionKind {
+	return []LiveCommandReactionKind{
+		LiveCommandReactionKindOpportunityAttack,
+		LiveCommandReactionKindShield,
+		LiveCommandReactionKindReadied,
+		LiveCommandReactionKindEffect,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandReactionKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandReactionKindOpportunityAttack:
+		return []byte(s), nil
+	case LiveCommandReactionKindShield:
+		return []byte(s), nil
+	case LiveCommandReactionKindReadied:
+		return []byte(s), nil
+	case LiveCommandReactionKindEffect:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandReactionKind) UnmarshalText(data []byte) error {
+	switch LiveCommandReactionKind(data) {
+	case LiveCommandReactionKindOpportunityAttack:
+		*s = LiveCommandReactionKindOpportunityAttack
+		return nil
+	case LiveCommandReactionKindShield:
+		*s = LiveCommandReactionKindShield
+		return nil
+	case LiveCommandReactionKindReadied:
+		*s = LiveCommandReactionKindReadied
+		return nil
+	case LiveCommandReactionKindEffect:
+		*s = LiveCommandReactionKindEffect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandReactionMode string
+
+const (
+	LiveCommandReactionModeAsk    LiveCommandReactionMode = "ask"
+	LiveCommandReactionModeAlways LiveCommandReactionMode = "always"
+	LiveCommandReactionModeNever  LiveCommandReactionMode = "never"
+)
+
+// AllValues returns all LiveCommandReactionMode values.
+func (LiveCommandReactionMode) AllValues() []LiveCommandReactionMode {
+	return []LiveCommandReactionMode{
+		LiveCommandReactionModeAsk,
+		LiveCommandReactionModeAlways,
+		LiveCommandReactionModeNever,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandReactionMode) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandReactionModeAsk:
+		return []byte(s), nil
+	case LiveCommandReactionModeAlways:
+		return []byte(s), nil
+	case LiveCommandReactionModeNever:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandReactionMode) UnmarshalText(data []byte) error {
+	switch LiveCommandReactionMode(data) {
+	case LiveCommandReactionModeAsk:
+		*s = LiveCommandReactionModeAsk
+		return nil
+	case LiveCommandReactionModeAlways:
+		*s = LiveCommandReactionModeAlways
+		return nil
+	case LiveCommandReactionModeNever:
+		*s = LiveCommandReactionModeNever
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11868,6 +12052,8 @@ type LivePromptKind string
 const (
 	LivePromptKindOpportunityAttack LivePromptKind = "opportunity_attack"
 	LivePromptKindShield            LivePromptKind = "shield"
+	LivePromptKindReadied           LivePromptKind = "readied"
+	LivePromptKindEffect            LivePromptKind = "effect"
 )
 
 // AllValues returns all LivePromptKind values.
@@ -11875,6 +12061,8 @@ func (LivePromptKind) AllValues() []LivePromptKind {
 	return []LivePromptKind{
 		LivePromptKindOpportunityAttack,
 		LivePromptKindShield,
+		LivePromptKindReadied,
+		LivePromptKindEffect,
 	}
 }
 
@@ -11884,6 +12072,10 @@ func (s LivePromptKind) MarshalText() ([]byte, error) {
 	case LivePromptKindOpportunityAttack:
 		return []byte(s), nil
 	case LivePromptKindShield:
+		return []byte(s), nil
+	case LivePromptKindReadied:
+		return []byte(s), nil
+	case LivePromptKindEffect:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -11898,6 +12090,188 @@ func (s *LivePromptKind) UnmarshalText(data []byte) error {
 		return nil
 	case LivePromptKindShield:
 		*s = LivePromptKindShield
+		return nil
+	case LivePromptKindReadied:
+		*s = LivePromptKindReadied
+		return nil
+	case LivePromptKindEffect:
+		*s = LivePromptKindEffect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Controller's choice for one kind of reaction. Always takes it without asking while its condition
+// holds, and asks otherwise.
+// Ref: #/components/schemas/LiveReactionSetting
+type LiveReactionSetting struct {
+	Kind      LiveReactionSettingKind         `json:"kind"`
+	Mode      LiveReactionSettingMode         `json:"mode"`
+	Condition OptLiveReactionSettingCondition `json:"condition"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveReactionSetting) GetKind() LiveReactionSettingKind {
+	return s.Kind
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveReactionSetting) GetMode() LiveReactionSettingMode {
+	return s.Mode
+}
+
+// GetCondition returns the value of Condition.
+func (s *LiveReactionSetting) GetCondition() OptLiveReactionSettingCondition {
+	return s.Condition
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveReactionSetting) SetKind(val LiveReactionSettingKind) {
+	s.Kind = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveReactionSetting) SetMode(val LiveReactionSettingMode) {
+	s.Mode = val
+}
+
+// SetCondition sets the value of Condition.
+func (s *LiveReactionSetting) SetCondition(val OptLiveReactionSettingCondition) {
+	s.Condition = val
+}
+
+type LiveReactionSettingCondition string
+
+const (
+	LiveReactionSettingConditionTargetBloodied LiveReactionSettingCondition = "target_bloodied"
+)
+
+// AllValues returns all LiveReactionSettingCondition values.
+func (LiveReactionSettingCondition) AllValues() []LiveReactionSettingCondition {
+	return []LiveReactionSettingCondition{
+		LiveReactionSettingConditionTargetBloodied,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveReactionSettingCondition) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveReactionSettingConditionTargetBloodied:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveReactionSettingCondition) UnmarshalText(data []byte) error {
+	switch LiveReactionSettingCondition(data) {
+	case LiveReactionSettingConditionTargetBloodied:
+		*s = LiveReactionSettingConditionTargetBloodied
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveReactionSettingKind string
+
+const (
+	LiveReactionSettingKindOpportunityAttack LiveReactionSettingKind = "opportunity_attack"
+	LiveReactionSettingKindShield            LiveReactionSettingKind = "shield"
+	LiveReactionSettingKindReadied           LiveReactionSettingKind = "readied"
+	LiveReactionSettingKindEffect            LiveReactionSettingKind = "effect"
+)
+
+// AllValues returns all LiveReactionSettingKind values.
+func (LiveReactionSettingKind) AllValues() []LiveReactionSettingKind {
+	return []LiveReactionSettingKind{
+		LiveReactionSettingKindOpportunityAttack,
+		LiveReactionSettingKindShield,
+		LiveReactionSettingKindReadied,
+		LiveReactionSettingKindEffect,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveReactionSettingKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveReactionSettingKindOpportunityAttack:
+		return []byte(s), nil
+	case LiveReactionSettingKindShield:
+		return []byte(s), nil
+	case LiveReactionSettingKindReadied:
+		return []byte(s), nil
+	case LiveReactionSettingKindEffect:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveReactionSettingKind) UnmarshalText(data []byte) error {
+	switch LiveReactionSettingKind(data) {
+	case LiveReactionSettingKindOpportunityAttack:
+		*s = LiveReactionSettingKindOpportunityAttack
+		return nil
+	case LiveReactionSettingKindShield:
+		*s = LiveReactionSettingKindShield
+		return nil
+	case LiveReactionSettingKindReadied:
+		*s = LiveReactionSettingKindReadied
+		return nil
+	case LiveReactionSettingKindEffect:
+		*s = LiveReactionSettingKindEffect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveReactionSettingMode string
+
+const (
+	LiveReactionSettingModeAsk    LiveReactionSettingMode = "ask"
+	LiveReactionSettingModeAlways LiveReactionSettingMode = "always"
+	LiveReactionSettingModeNever  LiveReactionSettingMode = "never"
+)
+
+// AllValues returns all LiveReactionSettingMode values.
+func (LiveReactionSettingMode) AllValues() []LiveReactionSettingMode {
+	return []LiveReactionSettingMode{
+		LiveReactionSettingModeAsk,
+		LiveReactionSettingModeAlways,
+		LiveReactionSettingModeNever,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveReactionSettingMode) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveReactionSettingModeAsk:
+		return []byte(s), nil
+	case LiveReactionSettingModeAlways:
+		return []byte(s), nil
+	case LiveReactionSettingModeNever:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveReactionSettingMode) UnmarshalText(data []byte) error {
+	switch LiveReactionSettingMode(data) {
+	case LiveReactionSettingModeAsk:
+		*s = LiveReactionSettingModeAsk
+		return nil
+	case LiveReactionSettingModeAlways:
+		*s = LiveReactionSettingModeAlways
+		return nil
+	case LiveReactionSettingModeNever:
+		*s = LiveReactionSettingModeNever
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -12760,10 +13134,11 @@ type LiveToken struct {
 	Hp           OptInt32  `json:"hp"`
 	HpMax        OptInt32  `json:"hpMax"`
 	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
-	Health  OptLiveTokenHealth `json:"health"`
-	Attacks []LiveAttack       `json:"attacks"`
-	Shield  OptBool            `json:"shield"`
-	Effects []LiveEffect       `json:"effects"`
+	Health    OptLiveTokenHealth    `json:"health"`
+	Attacks   []LiveAttack          `json:"attacks"`
+	Shield    OptBool               `json:"shield"`
+	Effects   []LiveEffect          `json:"effects"`
+	Reactions []LiveReactionSetting `json:"reactions"`
 }
 
 // GetID returns the value of ID.
@@ -12841,6 +13216,11 @@ func (s *LiveToken) GetEffects() []LiveEffect {
 	return s.Effects
 }
 
+// GetReactions returns the value of Reactions.
+func (s *LiveToken) GetReactions() []LiveReactionSetting {
+	return s.Reactions
+}
+
 // SetID sets the value of ID.
 func (s *LiveToken) SetID(val ID) {
 	s.ID = val
@@ -12914,6 +13294,11 @@ func (s *LiveToken) SetShield(val OptBool) {
 // SetEffects sets the value of Effects.
 func (s *LiveToken) SetEffects(val []LiveEffect) {
 	s.Effects = val
+}
+
+// SetReactions sets the value of Reactions.
+func (s *LiveToken) SetReactions(val []LiveReactionSetting) {
+	s.Reactions = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -16298,6 +16683,52 @@ func (o OptLiveCommandAction) Or(d LiveCommandAction) LiveCommandAction {
 	return d
 }
 
+// NewOptLiveCommandCondition returns new OptLiveCommandCondition with value set to v.
+func NewOptLiveCommandCondition(v LiveCommandCondition) OptLiveCommandCondition {
+	return OptLiveCommandCondition{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandCondition is optional LiveCommandCondition.
+type OptLiveCommandCondition struct {
+	Value LiveCommandCondition
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandCondition was set.
+func (o OptLiveCommandCondition) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandCondition) Reset() {
+	var v LiveCommandCondition
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandCondition) SetTo(v LiveCommandCondition) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandCondition) Get() (v LiveCommandCondition, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandCondition) Or(d LiveCommandCondition) LiveCommandCondition {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveCommandDue returns new OptLiveCommandDue with value set to v.
 func NewOptLiveCommandDue(v LiveCommandDue) OptLiveCommandDue {
 	return OptLiveCommandDue{
@@ -16384,6 +16815,98 @@ func (o OptLiveCommandOption) Get() (v LiveCommandOption, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandOption) Or(d LiveCommandOption) LiveCommandOption {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandReactionKind returns new OptLiveCommandReactionKind with value set to v.
+func NewOptLiveCommandReactionKind(v LiveCommandReactionKind) OptLiveCommandReactionKind {
+	return OptLiveCommandReactionKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandReactionKind is optional LiveCommandReactionKind.
+type OptLiveCommandReactionKind struct {
+	Value LiveCommandReactionKind
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandReactionKind was set.
+func (o OptLiveCommandReactionKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandReactionKind) Reset() {
+	var v LiveCommandReactionKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandReactionKind) SetTo(v LiveCommandReactionKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandReactionKind) Get() (v LiveCommandReactionKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandReactionKind) Or(d LiveCommandReactionKind) LiveCommandReactionKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandReactionMode returns new OptLiveCommandReactionMode with value set to v.
+func NewOptLiveCommandReactionMode(v LiveCommandReactionMode) OptLiveCommandReactionMode {
+	return OptLiveCommandReactionMode{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandReactionMode is optional LiveCommandReactionMode.
+type OptLiveCommandReactionMode struct {
+	Value LiveCommandReactionMode
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandReactionMode was set.
+func (o OptLiveCommandReactionMode) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandReactionMode) Reset() {
+	var v LiveCommandReactionMode
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandReactionMode) SetTo(v LiveCommandReactionMode) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandReactionMode) Get() (v LiveCommandReactionMode, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandReactionMode) Or(d LiveCommandReactionMode) LiveCommandReactionMode {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -16798,6 +17321,52 @@ func (o OptLivePrompt) Get() (v LivePrompt, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLivePrompt) Or(d LivePrompt) LivePrompt {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveReactionSettingCondition returns new OptLiveReactionSettingCondition with value set to v.
+func NewOptLiveReactionSettingCondition(v LiveReactionSettingCondition) OptLiveReactionSettingCondition {
+	return OptLiveReactionSettingCondition{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveReactionSettingCondition is optional LiveReactionSettingCondition.
+type OptLiveReactionSettingCondition struct {
+	Value LiveReactionSettingCondition
+	Set   bool
+}
+
+// IsSet returns true if OptLiveReactionSettingCondition was set.
+func (o OptLiveReactionSettingCondition) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveReactionSettingCondition) Reset() {
+	var v LiveReactionSettingCondition
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveReactionSettingCondition) SetTo(v LiveReactionSettingCondition) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveReactionSettingCondition) Get() (v LiveReactionSettingCondition, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveReactionSettingCondition) Or(d LiveReactionSettingCondition) LiveReactionSettingCondition {
 	if v, ok := o.Get(); ok {
 		return v
 	}

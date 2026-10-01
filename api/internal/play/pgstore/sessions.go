@@ -19,6 +19,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/reactions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -179,6 +180,9 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 			Mastery: a.Mastery.String,
 		})
 	}
+	if err := s.loadReactionSettings(ctx, row.ID, tokens); err != nil {
+		return domain.Session{}, nil, nil, err
+	}
 	sess := session(row)
 	if sess.MapID == nil {
 		return sess, tokens, nil, nil
@@ -278,6 +282,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed:
 		return nil
+	case domain.ActionReactionSet:
+		return s.saveReactionSettings(ctx, w.Token)
 	case domain.ActionEncounterSpawned:
 		for _, t := range w.Spawned {
 			if err := s.insertToken(ctx, sid, t); err != nil {
@@ -418,7 +424,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
-		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed:
+		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -836,4 +842,31 @@ func combatantFrom(x queries.PlayCombatant) domain.Combatant {
 		}
 	}
 	return c
+}
+
+// loadReactionSettings reads every token's reaction settings.
+func (s *Store) loadReactionSettings(ctx context.Context, sid uuid.UUID, tokens []domain.Token) error {
+	rows, err := s.q.SessionTokenReactions(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, r := range rows {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == r.TokenID })
+		if tokens[i].Reactions == nil {
+			tokens[i].Reactions = map[string]reactions.Setting{}
+		}
+		tokens[i].Reactions[r.Kind] = reactions.Setting{Mode: reactions.Mode(r.Mode), Condition: reactions.Condition(r.Condition)}
+	}
+	return nil
+}
+
+// saveReactionSettings writes a token's reaction settings.
+func (s *Store) saveReactionSettings(ctx context.Context, t domain.Token) error {
+	for kind, set := range t.Reactions {
+		p := queries.SetTokenReactionParams{TokenID: uuid.UUID(t.ID), Kind: kind, Mode: string(set.Mode), Condition: string(set.Condition)}
+		if err := s.q.SetTokenReaction(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
 }

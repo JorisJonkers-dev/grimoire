@@ -1006,6 +1006,16 @@ export type LiveToken = {
     attacks?: Array<LiveAttack>;
     shield?: boolean;
     effects?: Array<LiveEffect>;
+    reactions?: Array<LiveReactionSetting>;
+};
+
+/**
+ * A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
+ */
+export type LiveReactionSetting = {
+    kind: 'opportunity_attack' | 'shield' | 'readied' | 'effect';
+    mode: 'ask' | 'always' | 'never';
+    condition?: 'target_bloodied';
 };
 
 /**
@@ -1073,7 +1083,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1160,6 +1170,9 @@ export type LiveCommand = {
      * Makes the attack the second attack a Cleave hit allows.
      */
     cleave?: boolean;
+    reactionKind?: 'opportunity_attack' | 'shield' | 'readied' | 'effect';
+    reactionMode?: 'ask' | 'always' | 'never';
+    condition?: '' | 'target_bloodied';
     toId?: Id;
     itemSlug?: Slug;
     coin?: Coin;
@@ -1594,7 +1607,7 @@ export type LiveCombat = {
  */
 export type LivePrompt = {
     id: Id;
-    kind: 'opportunity_attack' | 'shield';
+    kind: 'opportunity_attack' | 'shield' | 'readied' | 'effect';
     reactorId: Id;
     triggerId: Id;
     effect: string;

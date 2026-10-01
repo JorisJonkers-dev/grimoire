@@ -307,3 +307,11 @@ VALUES (@roll_id, @session_id, @actor_token_id, sqlc.narg(target_token_id), @act
 
 -- name: DeletePendingAction :exec
 DELETE FROM play.pending_actions WHERE roll_id = $1;
+
+-- name: SessionTokenReactions :many
+SELECT r.token_id, r.kind, r.mode, r.condition FROM play.token_reactions r JOIN play.tokens t ON t.id = r.token_id
+WHERE t.session_id = $1 ORDER BY r.token_id, r.kind;
+
+-- name: SetTokenReaction :exec
+INSERT INTO play.token_reactions (token_id, kind, mode, condition) VALUES (@token_id, @kind, @mode, @condition)
+ON CONFLICT (token_id, kind) DO UPDATE SET mode = excluded.mode, condition = excluded.condition;

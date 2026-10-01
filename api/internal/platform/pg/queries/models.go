@@ -413,6 +413,14 @@ type CompendiumEffectMoveCost struct {
 	Multiplier int32
 }
 
+type CompendiumEffectReaction struct {
+	EffectID    int64
+	Ordinal     int32
+	Kind        string
+	Trigger     string
+	Instruction string
+}
+
 type CompendiumEffectSaveCondition struct {
 	EffectID      int64
 	Ordinal       int32
@@ -1079,6 +1087,13 @@ type PlayTokenAttack struct {
 	Light       bool
 	DamageMod   int32
 	Mastery     pgtype.Text
+}
+
+type PlayTokenReaction struct {
+	TokenID   uuid.UUID
+	Kind      string
+	Mode      string
+	Condition string
 }
 
 type PlayTokenSafe struct {

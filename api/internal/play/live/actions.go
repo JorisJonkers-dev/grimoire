@@ -271,7 +271,8 @@ func (s *state) readied(mover domain.Token, path []hex.Coord) (int, domain.Token
 	for k := 1; k < len(path); k++ {
 		for _, x := range s.combat.Combatants {
 			h, ok := s.tokens[x.TokenID]
-			if x.Readied == nil || !ok || h.ID == mover.ID || !x.Economy.Reaction || !standing(h) || s.catalog.Incapacitated(s.actives(h.ID)) {
+			if x.Readied == nil || !ok || h.ID == mover.ID || !x.Economy.Reaction || !standing(h) || s.catalog.Incapacitated(s.actives(h.ID)) ||
+				!s.offers(h, domain.PromptReadied) {
 				continue
 			}
 			at := hex.Coord{Q: h.Q, R: h.R}

@@ -92,6 +92,8 @@ const (
 	ActionObjectUsed = "object_used"
 	// ActionMasteryUsed is what a Weapon Mastery did after an attack.
 	ActionMasteryUsed = "mastery_used"
+	// ActionReactionSet is a Controller changing a token's reaction settings.
+	ActionReactionSet = "reaction_set"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.
@@ -99,7 +101,9 @@ const (
 	PromptOpportunity = "opportunity_attack"
 	PromptShield      = "shield"
 	PromptReadied     = "readied"
-	StageReaction     = "reaction"
+	// PromptEffect is a reaction an Effect gives, resolved by the DM.
+	PromptEffect  = "effect"
+	StageReaction = "reaction"
 )
 
 // ReactionPrompt asks a Controller, or the DM, whether a creature uses its reaction before the

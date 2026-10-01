@@ -191,6 +191,27 @@ func (q *Queries) InsertEffectMoveCost(ctx context.Context, arg InsertEffectMove
 	return err
 }
 
+const insertEffectReaction = `-- name: InsertEffectReaction :exec
+INSERT INTO compendium.effect_reactions (effect_id, ordinal, trigger, instruction) VALUES ($1, $2, $3, $4)
+`
+
+type InsertEffectReactionParams struct {
+	EffectID    int64
+	Ordinal     int32
+	Trigger     string
+	Instruction string
+}
+
+func (q *Queries) InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error {
+	_, err := q.db.Exec(ctx, insertEffectReaction,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.Trigger,
+		arg.Instruction,
+	)
+	return err
+}
+
 const insertEffectSaveCondition = `-- name: InsertEffectSaveCondition :exec
 INSERT INTO compendium.effect_save_conditions (effect_id, ordinal, ability, condition_slug)
 VALUES ($1, $2, $3, $4)
@@ -620,6 +641,42 @@ func (q *Queries) ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCost
 	for rows.Next() {
 		var i ListEffectMoveCostsRow
 		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Multiplier); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectReactions = `-- name: ListEffectReactions :many
+SELECT effect_id, ordinal, trigger, instruction FROM compendium.effect_reactions
+`
+
+type ListEffectReactionsRow struct {
+	EffectID    int64
+	Ordinal     int32
+	Trigger     string
+	Instruction string
+}
+
+func (q *Queries) ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectReactions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectReactionsRow{}
+	for rows.Next() {
+		var i ListEffectReactionsRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.Trigger,
+			&i.Instruction,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

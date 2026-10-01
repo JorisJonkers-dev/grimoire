@@ -19,6 +19,7 @@ import EffectsPanel from './EffectsPanel.vue'
 import ActionLog from './ActionLog.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
+import ReactionSettings from './ReactionSettings.vue'
 import RestPanel from './RestPanel.vue'
 import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
@@ -549,6 +550,11 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :campaign-id="campaignId"
         :game-day="view?.gameDay ?? 0"
         @send="(cmd) => live?.send(cmd)"
+      />
+      <ReactionSettings
+        v-if="walker?.attacks"
+        :token="walker"
+        @set="(kind, mode, condition) => live?.send({ kind: 'set_reaction', tokenId: walker?.id ?? '', reactionKind: kind, reactionMode: mode, condition })"
       />
       <RestPanel
         v-if="view"

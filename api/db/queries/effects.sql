@@ -101,3 +101,9 @@ INSERT INTO compendium.effect_speed_penalties (effect_id, ordinal, ft) VALUES (@
 
 -- name: ListEffectSpeedPenalties :many
 SELECT effect_id, ordinal, ft FROM compendium.effect_speed_penalties;
+
+-- name: InsertEffectReaction :exec
+INSERT INTO compendium.effect_reactions (effect_id, ordinal, trigger, instruction) VALUES (@effect_id, @ordinal, @trigger, @instruction);
+
+-- name: ListEffectReactions :many
+SELECT effect_id, ordinal, trigger, instruction FROM compendium.effect_reactions;

@@ -34,6 +34,7 @@ func samples() contract {
 	view.Tokens = append(view.Tokens, live.TokenView{
 		ID: "0190c7a8-0000-7000-8000-000000000013", Label: "Aria", Kind: "party", AC: &ac, HP: &hp, HPMax: &most,
 		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing", Mastery: "sap"}}, Shield: true,
+		Reactions: []live.ReactionSettingView{{Kind: "shield", Mode: "always"}},
 	}, live.TokenView{ID: "0190c7a8-0000-7000-8000-000000000014", Label: "Orc", Kind: "enemy", Health: "bloodied"})
 	seventeen, zero := 17, 0
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
@@ -186,6 +187,7 @@ func samples() contract {
 			{Nonce: "n72", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 1, TargetID: token.ID, OffHand: true},
 			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
 			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
+			{Nonce: "n75", Kind: live.CmdSetReaction, TokenID: token.ID, ReactionKind: "opportunity_attack", ReactionMode: "always", Condition: "target_bloodied"},
 		},
 		Updates: []live.Update{
 			{

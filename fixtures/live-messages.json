@@ -676,6 +676,17 @@
       "hidden": false,
       "targetId": "0190c7a8-0000-7000-8000-00000000000a",
       "cleave": true
+    },
+    {
+      "nonce": "n75",
+      "kind": "set_reaction",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "reactionKind": "opportunity_attack",
+      "reactionMode": "always",
+      "condition": "target_bloodied"
     }
   ],
   "updates": [
@@ -741,7 +752,13 @@
                 "mastery": "sap"
               }
             ],
-            "shield": true
+            "shield": true,
+            "reactions": [
+              {
+                "kind": "shield",
+                "mode": "always"
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1139,7 +1156,13 @@
                 "mastery": "sap"
               }
             ],
-            "shield": true
+            "shield": true,
+            "reactions": [
+              {
+                "kind": "shield",
+                "mode": "always"
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1631,7 +1654,13 @@
                 "mastery": "sap"
               }
             ],
-            "shield": true
+            "shield": true,
+            "reactions": [
+              {
+                "kind": "shield",
+                "mode": "always"
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -2024,7 +2053,13 @@
                   "mastery": "sap"
                 }
               ],
-              "shield": true
+              "shield": true,
+              "reactions": [
+                {
+                  "kind": "shield",
+                  "mode": "always"
+                }
+              ]
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000014",

@@ -4409,6 +4409,19 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveEffect" }
+        reactions:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/LiveReactionSetting" }
+    LiveReactionSetting:
+      type: object
+      description: A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
+      additionalProperties: false
+      required: [kind, mode]
+      properties:
+        kind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
+        mode: { type: string, enum: [ask, always, never] }
+        condition: { type: string, enum: [target_bloodied] }
     LiveAttack:
       type: object
       description: One attack on a token's hotbar.
@@ -4473,7 +4486,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4542,6 +4555,9 @@ components:
         option: { type: string, enum: [grapple, shove_push, shove_prone] }
         offHand: { type: boolean, description: "Makes the attack the off-hand attack of a Light weapon." }
         cleave: { type: boolean, description: "Makes the attack the second attack a Cleave hit allows." }
+        reactionKind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
+        reactionMode: { type: string, enum: [ask, always, never] }
+        condition: { type: string, enum: ["", target_bloodied] }
         toId: { $ref: "#/components/schemas/Id" }
         itemSlug: { $ref: "#/components/schemas/Slug" }
         coin: { $ref: "#/components/schemas/Coin" }
@@ -5026,7 +5042,7 @@ components:
       required: [id, kind, reactorId, triggerId, effect, secondsLeft]
       properties:
         id: { $ref: "#/components/schemas/Id" }
-        kind: { type: string, enum: [opportunity_attack, shield] }
+        kind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
         reactorId: { $ref: "#/components/schemas/Id" }
         triggerId: { $ref: "#/components/schemas/Id" }
         effect: { type: string, maxLength: 300 }

@@ -593,7 +593,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction:
 		return true
 	}
 	return false
@@ -713,6 +713,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionMasteryUsed:
 		applyMastery(s, w)
+		return
+	case domain.ActionReactionSet:
+		s.tokens[w.Token.ID] = w.Token
 		return
 	case domain.ActionUnarmed:
 		applyAction(s, w)

@@ -211,6 +211,29 @@ func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
 	}
 }
 
+func TestEffectsThatReact(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{"rebuke": {Name: "Hellish Rebuke", Components: []effects.Component{
+		effects.Reacts{Trigger: "damaged", Instruction: "Hellish Rebuke: the attacker makes a Dexterity save or takes 2d10 fire damage."},
+	}}}
+	got := cat.ReactionsTo([]effects.Active{{Slug: "rebuke"}, {Slug: "bless"}}, "damaged")
+	if len(got) != 1 || got[0].Name != "Hellish Rebuke" || got[0].Instruction == "" {
+		t.Errorf("reactions = %+v", got)
+	}
+	if cat.ReactionsTo([]effects.Active{{Slug: "rebuke"}}, "hit") != nil {
+		t.Error("another trigger")
+	}
+	if p := cat.ForAttack([]effects.Active{{Slug: "rebuke"}}, []effects.Active{{Slug: "rebuke"}}, "x", true); !reflect.DeepEqual(p, effects.AttackProfile{}) {
+		t.Errorf("a reaction does nothing to attacks = %+v", p)
+	}
+	if p := cat.ForSave([]effects.Active{{Slug: "rebuke"}}, "dexterity"); p.Fails || p.Penalty != 0 || cat.SpeedPenaltyFt([]effects.Active{{Slug: "rebuke"}}) != 0 {
+		t.Errorf("nor to saves = %+v", p)
+	}
+	if _, ok := cat.AreaOf("rebuke"); ok {
+		t.Error("nor is it an area")
+	}
+}
+
 func TestMasteryEffects(t *testing.T) {
 	t.Parallel()
 	cat := srd()

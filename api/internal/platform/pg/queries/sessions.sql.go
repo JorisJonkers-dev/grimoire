@@ -1789,6 +1789,36 @@ func (q *Queries) SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) 
 	return items, nil
 }
 
+const sessionTokenReactions = `-- name: SessionTokenReactions :many
+SELECT r.token_id, r.kind, r.mode, r.condition FROM play.token_reactions r JOIN play.tokens t ON t.id = r.token_id
+WHERE t.session_id = $1 ORDER BY r.token_id, r.kind
+`
+
+func (q *Queries) SessionTokenReactions(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenReaction, error) {
+	rows, err := q.db.Query(ctx, sessionTokenReactions, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PlayTokenReaction{}
+	for rows.Next() {
+		var i PlayTokenReaction
+		if err := rows.Scan(
+			&i.TokenID,
+			&i.Kind,
+			&i.Mode,
+			&i.Condition,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionTokenSaves = `-- name: SessionTokenSaves :many
 SELECT s.token_id, s.ability, s.bonus FROM play.token_saves s JOIN play.tokens t ON t.id = s.token_id WHERE t.session_id = $1
 `
@@ -2023,6 +2053,28 @@ type SetTokenHPParams struct {
 
 func (q *Queries) SetTokenHP(ctx context.Context, arg SetTokenHPParams) error {
 	_, err := q.db.Exec(ctx, setTokenHP, arg.Hp, arg.SessionID, arg.ID)
+	return err
+}
+
+const setTokenReaction = `-- name: SetTokenReaction :exec
+INSERT INTO play.token_reactions (token_id, kind, mode, condition) VALUES ($1, $2, $3, $4)
+ON CONFLICT (token_id, kind) DO UPDATE SET mode = excluded.mode, condition = excluded.condition
+`
+
+type SetTokenReactionParams struct {
+	TokenID   uuid.UUID
+	Kind      string
+	Mode      string
+	Condition string
+}
+
+func (q *Queries) SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error {
+	_, err := q.db.Exec(ctx, setTokenReaction,
+		arg.TokenID,
+		arg.Kind,
+		arg.Mode,
+		arg.Condition,
+	)
 	return err
 }
 

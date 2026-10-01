@@ -185,6 +185,7 @@ type Querier interface {
 	InsertEffectExtraDamage(ctx context.Context, arg InsertEffectExtraDamageParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
+	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
 	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
@@ -250,6 +251,7 @@ type Querier interface {
 	ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraDamageRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
+	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
 	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
@@ -357,6 +359,7 @@ type Querier interface {
 	SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error)
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
+	SessionTokenReactions(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenReaction, error)
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error)
@@ -381,6 +384,7 @@ type Querier interface {
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
 	SetStack(ctx context.Context, arg SetStackParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
+	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)

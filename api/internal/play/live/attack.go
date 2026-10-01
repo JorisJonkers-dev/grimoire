@@ -257,6 +257,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 		w := r.hurt(t, roll.Total, Write{Token: a, attack: &p})
 		r.commit(request{}, w, roll.Roller, sys)
 		r.masteryAfterHit(a, t, p, w.HP.Before-w.HP.After, roll.Roller, sys)
+		r.reactToDamage(t, a, w.HP.Before-w.HP.After, roll.Roller, sys)
 		return
 	}
 	result := attack.Outcome(natural(roll), roll.Total-natural(roll), r.st.armor(t)+p.CoverBonus)
@@ -277,6 +278,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 	r.commit(request{}, w, roll.Roller, sys)
 	if w.Kind == domain.ActionDamageDealt {
 		r.masteryAfterHit(a, t, p, w.HP.Before-w.HP.After, roll.Roller, sys)
+		r.reactToDamage(t, a, w.HP.Before-w.HP.After, roll.Roller, sys)
 	}
 }
 
