@@ -177,3 +177,13 @@ UPDATE campaign.characters SET heroic_inspiration = false WHERE campaign_id = @c
 
 -- name: TakeInspiration :execrows
 UPDATE campaign.characters SET heroic_inspiration = true WHERE campaign_id = @campaign_id AND id = @id AND NOT heroic_inspiration;
+
+-- name: CharacterCarried :one
+-- What a Character carries: every item in its own Container and the bags inside it, and its coins.
+SELECT (coalesce((SELECT sum(i.quantity * coalesce((SELECT w.weight_lb FROM compendium.items w WHERE w.slug = i.item_slug ORDER BY w.id LIMIT 1), 0))
+        FROM campaign.item_instances i JOIN campaign.containers ic ON ic.id = i.container_id
+        LEFT JOIN campaign.containers ip ON ip.id = ic.parent_id
+        WHERE ic.character_id = @owner OR ip.character_id = @owner), 0)
+    + coalesce((SELECT sum(k.amount) FROM campaign.container_coins k JOIN campaign.containers kc ON kc.id = k.container_id
+        LEFT JOIN campaign.containers kp ON kp.id = kc.parent_id
+        WHERE kc.character_id = @owner OR kp.character_id = @owner), 0) / 50.0)::float8 AS weight_lb;

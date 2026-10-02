@@ -153,6 +153,24 @@ func (q *Queries) CharacterAbilities(ctx context.Context, characterID uuid.UUID)
 	return items, nil
 }
 
+const characterCarried = `-- name: CharacterCarried :one
+SELECT (coalesce((SELECT sum(i.quantity * coalesce((SELECT w.weight_lb FROM compendium.items w WHERE w.slug = i.item_slug ORDER BY w.id LIMIT 1), 0))
+        FROM campaign.item_instances i JOIN campaign.containers ic ON ic.id = i.container_id
+        LEFT JOIN campaign.containers ip ON ip.id = ic.parent_id
+        WHERE ic.character_id = $1 OR ip.character_id = $1), 0)
+    + coalesce((SELECT sum(k.amount) FROM campaign.container_coins k JOIN campaign.containers kc ON kc.id = k.container_id
+        LEFT JOIN campaign.containers kp ON kp.id = kc.parent_id
+        WHERE kc.character_id = $1 OR kp.character_id = $1), 0) / 50.0)::float8 AS weight_lb
+`
+
+// What a Character carries: every item in its own Container and the bags inside it, and its coins.
+func (q *Queries) CharacterCarried(ctx context.Context, owner pgtype.UUID) (float64, error) {
+	row := q.db.QueryRow(ctx, characterCarried, owner)
+	var weight_lb float64
+	err := row.Scan(&weight_lb)
+	return weight_lb, err
+}
+
 const characterClasses = `-- name: CharacterClasses :many
 SELECT class_slug, subclass_slug, level FROM campaign.character_classes WHERE character_id = $1 ORDER BY position
 `

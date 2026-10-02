@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
@@ -30,7 +31,7 @@ func (s *Store) Items(ctx context.Context, campaign uuid.UUID, slugs []string) (
 		return nil, err
 	}
 	for _, r := range rows {
-		out[r.Slug] = domain.ItemInfo{Name: r.Name, WeightLb: r.WeightLb}
+		out[r.Slug] = domain.ItemInfo{Name: r.Name, WeightLb: r.WeightLb, Category: r.Category}
 	}
 	return out, nil
 }
@@ -213,6 +214,67 @@ func (s *Store) logItems(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		p.ItemSlug = pgtype.Text{String: l.item, Valid: l.item != ""}
 		p.Coin = pgtype.Text{String: l.coin, Valid: l.coin != ""}
 		if err := s.q.InsertItemEvent(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// LiveSession reports whether the Campaign has a Session running.
+func (s *Store) LiveSession(ctx context.Context, campaign uuid.UUID) (bool, error) {
+	return s.q.CampaignHasLiveSession(ctx, campaign)
+}
+
+// WriteInventory runs Inventory changes in one transaction.
+func (s *Store) WriteInventory(ctx context.Context, fn func(app.InventoryWriter) error) error {
+	return s.InTx(ctx, func(r app.Repository) error { return fn(r.(*Store)) })
+}
+
+// SetSlot puts an Item Instance in an equipment slot, or none.
+func (s *Store) SetSlot(ctx context.Context, id domain.InstanceID, slot string) error {
+	return s.q.SetInstanceSlot(ctx, queries.SetInstanceSlotParams{ID: uuid.UUID(id), EquippedSlot: pgtype.Text{String: slot, Valid: slot != ""}})
+}
+
+// AddInstance adds one item as its own Instance, in a slot or none.
+func (s *Store) AddInstance(ctx context.Context, to domain.ContainerID, slug, slot string) error {
+	return s.q.InsertInstance(ctx, queries.InsertInstanceParams{
+		ID: uuid.New(), ContainerID: uuid.UUID(to), ItemSlug: slug, EquippedSlot: pgtype.Text{String: slot, Valid: slot != ""}, Now: time.Now(),
+	})
+}
+
+// SetQuantity sets how many an Instance holds; none removes it.
+func (s *Store) SetQuantity(ctx context.Context, id domain.InstanceID, n int) error {
+	if n < 1 {
+		return s.q.DeleteInstance(ctx, uuid.UUID(id))
+	}
+	return s.q.SetInstanceQuantity(ctx, queries.SetInstanceQuantityParams{ID: uuid.UUID(id), Quantity: int32(n)}) //nolint:gosec // bounded by the constraint
+}
+
+// MoveInstance moves an Item Instance to another Container, out of any slot.
+func (s *Store) MoveInstance(ctx context.Context, id domain.InstanceID, to domain.ContainerID) error {
+	return s.q.MoveInstance(ctx, queries.MoveInstanceParams{ID: uuid.UUID(id), ContainerID: uuid.UUID(to)})
+}
+
+// SetStack sets how many of a plain item a Container holds.
+func (s *Store) SetStack(ctx context.Context, in domain.ContainerID, slug string, n int) error {
+	return s.setCount(ctx, in, slug, "", n)
+}
+
+// Heal restores a Character's hit points, up to its maximum.
+func (s *Store) Heal(ctx context.Context, character uuid.UUID, hp int) error {
+	return s.q.HealCharacter(ctx, queries.HealCharacterParams{ID: character, Amount: int32(hp)}) //nolint:gosec // potion dice are small
+}
+
+// SyncEquipment sets the armor, shield and weapons a Character's sheet is built with.
+func (s *Store) SyncEquipment(ctx context.Context, character uuid.UUID, armor string, shield bool, weapons []string) error {
+	if err := s.q.SetCharacterArmor(ctx, queries.SetCharacterArmorParams{ID: character, ArmorSlug: pgtype.Text{String: armor, Valid: armor != ""}, Shield: shield}); err != nil {
+		return err
+	}
+	if err := s.q.ClearCharacterWeapons(ctx, character); err != nil {
+		return err
+	}
+	for i, w := range weapons {
+		if err := s.q.AddCharacterWeapon(ctx, queries.AddCharacterWeaponParams{CharacterID: character, WeaponSlug: w, Ordering: int32(i)}); err != nil { //nolint:gosec // a handful
 			return err
 		}
 	}

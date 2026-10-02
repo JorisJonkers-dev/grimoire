@@ -26,6 +26,7 @@ type Handler struct {
 	Characters CharacterService
 	NPCs       NPCService
 	Rolls      RollService
+	Inventory  InventoryService
 	Sessions   SessionService
 	Maps       MapService
 	Prep       PrepService

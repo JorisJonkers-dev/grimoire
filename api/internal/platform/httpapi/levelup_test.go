@@ -15,9 +15,12 @@ import (
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
+	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
+	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 )
 
 // srdCampaigns is the Campaign API over the real SRD 5.2 compendium, with a Hit Die that always rolls 1.
@@ -53,7 +56,11 @@ func srdStack(t *testing.T) (http.Handler, *pgxpool.Pool) {
 		Repo: repo, Compendium: compendium, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
 		Die: func(int) int { return 1 },
 	}
-	return campaignServer(t, app.NewService(repo), chars), store.Pool()
+	inv := &playapp.Inventories{
+		Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo},
+		Roll: func(count, _ int) int { return count },
+	}
+	return campaignServer(t, app.NewService(repo), chars, httpapi.InventoryService(inv)), store.Pool()
 }
 
 const srdFighter = `{"name":"Kara","species":"human","class":"fighter","background":"soldier","method":"point-buy",

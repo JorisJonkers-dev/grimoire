@@ -122,6 +122,7 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
             </GButton>
             <GButton v-else-if="!s.mine && s.level < 20" data-testid="unlock-level" @click="unlock()">Grant level {{ s.level + 1 }}</GButton>
             <RouterLink class="spells-link" :to="{ name: 'character-spells', params: { id: path.path.campaignId, characterId: path.path.characterId } }" data-testid="open-spells">Spells</RouterLink>
+            <RouterLink class="spells-link" :to="{ name: 'character-inventory', params: { id: path.path.campaignId, characterId: path.path.characterId } }" data-testid="open-inventory">Inventory</RouterLink>
             <RouterLink v-if="s.mine" class="spells-link" :to="{ name: 'character-retrain', params: { id: path.path.campaignId, characterId: path.path.characterId } }" data-testid="open-retrain">Retrain</RouterLink>
           </p>
         </div>

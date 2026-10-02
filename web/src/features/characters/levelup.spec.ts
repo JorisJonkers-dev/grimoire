@@ -224,3 +224,40 @@ describe('heroic inspiration on the sheet', () => {
     expect(passed).toEqual([{ to: '0190c7a8-0000-7000-8000-0000000000a1' }])
   })
 })
+
+describe('sheet actions that fail', () => {
+  it('reports when granting, passing, unlocking or deciding is refused', async () => {
+    const refused = () => jsonResponse({ type: 'about:blank', title: 'Conflict', status: 409 }, 409)
+    const RT = '0190c7a8-0000-7000-8000-0000000000c1'
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`/api/v1/campaigns/${ID}/retrains/${RT}`]: refused,
+      [`${base}/retrains`]: () => [{
+        id: RT, characterId: CH, status: 'pending', reason: '', requestedBy: 'Tamsin', createdAt: '2026-10-02T10:00:00Z',
+        proposed: { species: 'human', background: 'sage', method: 'standard-array', base: { strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8 }, bonus: {}, increase: {}, skills: [], picks: [] },
+      }],
+      [base]: (_u, req) => (req.method === 'GET' ? sheet({ mine: false }) : refused()),
+    })
+    for (const button of ['grant-inspiration', 'unlock-level']) {
+      await wrapper.get(`[data-testid="${button}"]`).trigger('click')
+      await flushPromises()
+      expect(wrapper.text()).toContain('was not saved')
+    }
+    const panel = await vi.waitFor(() => wrapper.get('[data-testid="retrain-waiting"]'))
+    expect(panel.text()).toContain('no level choices')
+    await panel.get('[data-testid="approve-retrain"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('was not saved')
+    unmountAll()
+    const holder = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`${base}/inspiration/pass`]: refused,
+      [base]: () => sheet({ heroicInspiration: true }),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [{ id: '0190c7a8-0000-7000-8000-0000000000a1', name: 'Ines', ownerName: 'T', mine: false, species: 'human', class: 'fighter', level: 1, hpCurrent: 1, hpMax: 1 }],
+    })
+    const select = await vi.waitFor(() => holder.wrapper.get('[data-testid="pass-to"]'))
+    await select.setValue('0190c7a8-0000-7000-8000-0000000000a1')
+    await holder.wrapper.get('[data-testid="pass-inspiration"]').trigger('click')
+    await flushPromises()
+    expect(holder.wrapper.text()).toContain('was not saved')
+    await holder.wrapper.find('form.controls').trigger('submit')
+  })
+})

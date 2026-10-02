@@ -1316,6 +1316,103 @@ export type CharacterRevisionLine = {
 };
 
 /**
+ * An equipment slot around a Character's figure.
+ */
+export type EquipmentSlot = 'head' | 'cloak' | 'neck' | 'armor' | 'hands' | 'ring_1' | 'ring_2' | 'feet' | 'main_hand' | 'off_hand' | 'ranged_main' | 'ammunition' | 'instrument';
+
+/**
+ * An item in an Inventory, with the slots it fits.
+ */
+export type ItemCard = {
+    instanceId?: Id;
+    slug: Slug;
+    name: string;
+    customName?: string;
+    category: string;
+    quantity: number;
+    weightLb: number;
+    slot?: EquipmentSlot;
+    charges?: number;
+    identified: boolean;
+    attuned: boolean;
+    fits: Array<EquipmentSlot>;
+};
+
+/**
+ * An equipment slot and what is in it.
+ */
+export type SlotLine = {
+    slot: EquipmentSlot;
+    item?: ItemCard;
+};
+
+/**
+ * Another Character in the Campaign, to give items to.
+ */
+export type PartyBearer = {
+    characterId: Id;
+    name: string;
+};
+
+/**
+ * A Character's equipment slots, bag and weight, and the Party Stash.
+ */
+export type InventoryView = {
+    characterId: Id;
+    name: string;
+    slots: Array<SlotLine>;
+    bag: Array<ItemCard>;
+    coins: Array<LiveCoins>;
+    weightLb: number;
+    capacityLb: number;
+    /**
+     * Past capacity a Character moves 5 feet; past twice it, not at all.
+     */
+    load: 'none' | 'encumbered' | 'immobile';
+    stash: Array<ItemCard>;
+    stashCoins: Array<LiveCoins>;
+    party: Array<PartyBearer>;
+};
+
+/**
+ * An item to move: an Item Instance by id, or some of a plain stack by slug.
+ */
+export type InventoryMove = {
+    instanceId?: Id;
+    slug?: Slug;
+    to: 'bag' | 'slot' | 'character' | 'stash';
+    slot?: EquipmentSlot;
+    characterId?: Id;
+    count?: number;
+};
+
+/**
+ * An item to take from the Party Stash.
+ */
+export type InventoryTake = {
+    instanceId?: Id;
+    slug?: Slug;
+    count?: number;
+};
+
+/**
+ * An item to drink or throw.
+ */
+export type InventoryUse = {
+    instanceId?: Id;
+    slug?: Slug;
+    use: 'drink' | 'throw';
+};
+
+/**
+ * The Inventory after using an item, and the hit points it restored.
+ */
+export type InventoryUseResult = {
+    inventory: InventoryView;
+    healed: number;
+};
+
+/**
  * What the next level offers in one class.
  */
 export type LevelUpPlan = {
@@ -4653,6 +4750,158 @@ export type DeclineRetrainResponses = {
 };
 
 export type DeclineRetrainResponse = DeclineRetrainResponses[keyof DeclineRetrainResponses];
+
+export type GetInventoryData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory';
+};
+
+export type GetInventoryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetInventoryError = GetInventoryErrors[keyof GetInventoryErrors];
+
+export type GetInventoryResponses = {
+    /**
+     * The Inventory.
+     */
+    200: InventoryView;
+};
+
+export type GetInventoryResponse = GetInventoryResponses[keyof GetInventoryResponses];
+
+export type MoveItemData = {
+    body: InventoryMove;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/move';
+};
+
+export type MoveItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type MoveItemError = MoveItemErrors[keyof MoveItemErrors];
+
+export type MoveItemResponses = {
+    /**
+     * The Inventory after the move.
+     */
+    200: InventoryView;
+};
+
+export type MoveItemResponse = MoveItemResponses[keyof MoveItemResponses];
+
+export type TakeFromStashData = {
+    body: InventoryTake;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/take';
+};
+
+export type TakeFromStashErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type TakeFromStashError = TakeFromStashErrors[keyof TakeFromStashErrors];
+
+export type TakeFromStashResponses = {
+    /**
+     * The Inventory after taking it.
+     */
+    200: InventoryView;
+};
+
+export type TakeFromStashResponse = TakeFromStashResponses[keyof TakeFromStashResponses];
+
+export type UseItemData = {
+    body: InventoryUse;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use';
+};
+
+export type UseItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UseItemError = UseItemErrors[keyof UseItemErrors];
+
+export type UseItemResponses = {
+    /**
+     * The Inventory, and the hit points restored.
+     */
+    200: InventoryUseResult;
+};
+
+export type UseItemResponse = UseItemResponses[keyof UseItemResponses];
 
 export type GetPortraitData = {
     body?: never;

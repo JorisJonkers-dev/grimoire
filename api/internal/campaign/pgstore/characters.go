@@ -41,7 +41,10 @@ func (s *Store) InsertCharacter(ctx context.Context, c domain.Character, now tim
 		if err := q.AdoptCharacterIdentity(ctx, id); err != nil {
 			return err
 		}
-		return addBuild(ctx, q, id, c)
+		if err := addBuild(ctx, q, id, c); err != nil {
+			return err
+		}
+		return addGear(ctx, q, id, c, now)
 	})
 	return domain.CharacterID(id), err
 }
@@ -62,6 +65,35 @@ func addBuild(ctx context.Context, q *queries.Queries, id uuid.UUID, c domain.Ch
 		}
 	}
 	return addWeapons(ctx, q, id, c.Weapons)
+}
+
+// addGear puts a new Character's starting equipment in its Inventory as Item Instances: armor on its
+// body, a shield in the off hand, the first weapon in the main hand and the rest in its bag.
+func addGear(ctx context.Context, q *queries.Queries, id uuid.UUID, c domain.Character, now time.Time) error {
+	container := uuid.New()
+	if err := q.InsertContainer(ctx, queries.InsertContainerParams{
+		ID: container, CampaignID: uuid.UUID(c.CampaignID), Kind: "character", CharacterID: pgtype.UUID{Bytes: id, Valid: true}, Label: c.Name, Now: now,
+	}); err != nil {
+		return err
+	}
+	type piece struct{ slug, slot string }
+	var gear []piece
+	if c.Armor != "" {
+		gear = append(gear, piece{c.Armor, "armor"})
+	}
+	if c.Shield {
+		gear = append(gear, piece{"shield", "off_hand"})
+	}
+	for i, w := range c.Weapons {
+		gear = append(gear, piece{w, map[bool]string{true: "main_hand", false: ""}[i == 0]})
+	}
+	for _, g := range gear {
+		p := queries.InsertInstanceParams{ID: uuid.New(), ContainerID: container, ItemSlug: g.slug, EquippedSlot: optSlug(g.slot), Now: now}
+		if err := q.InsertInstance(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func addWeapons(ctx context.Context, q *queries.Queries, id uuid.UUID, weapons []string) error {
@@ -124,6 +156,10 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 // levelled has every level in its starting class.
 func (s *Store) progress(ctx context.Context, c domain.Character) (domain.Character, error) {
 	id := uuid.UUID(c.ID)
+	var err error
+	if c.CarriedLb, err = s.q.CharacterCarried(ctx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
+		return domain.Character{}, err
+	}
 	classes, err := s.q.CharacterClasses(ctx, id)
 	if err != nil {
 		return domain.Character{}, err

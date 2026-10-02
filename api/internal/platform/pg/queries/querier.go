@@ -75,6 +75,7 @@ type Querier interface {
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
+	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
@@ -93,6 +94,8 @@ type Querier interface {
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
 	ChangeResourceUsed(ctx context.Context, arg ChangeResourceUsedParams) error
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
+	// What a Character carries: every item in its own Container and the bags inside it, and its coins.
+	CharacterCarried(ctx context.Context, owner pgtype.UUID) (float64, error)
 	CharacterClasses(ctx context.Context, characterID uuid.UUID) ([]CharacterClassesRow, error)
 	CharacterPicks(ctx context.Context, characterID uuid.UUID) ([]CharacterPicksRow, error)
 	// The coins in a Character's own container; none when it has never held any.
@@ -169,6 +172,7 @@ type Querier interface {
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
 	DeleteFriendRequest(ctx context.Context, id uuid.UUID) error
 	DeleteFriendship(ctx context.Context, arg DeleteFriendshipParams) (int64, error)
+	DeleteInstance(ctx context.Context, id uuid.UUID) error
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
 	DeleteLootTable(ctx context.Context, arg DeleteLootTableParams) (int64, error)
 	DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error
@@ -234,6 +238,7 @@ type Querier interface {
 	GetTableRevision(ctx context.Context, arg GetTableRevisionParams) (GetTableRevisionRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	GiveUpInspiration(ctx context.Context, arg GiveUpInspirationParams) (int64, error)
+	HealCharacter(ctx context.Context, arg HealCharacterParams) error
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
 	InsertAccountCharacter(ctx context.Context, arg InsertAccountCharacterParams) error
@@ -288,6 +293,7 @@ type Querier interface {
 	InsertFriendship(ctx context.Context, arg InsertFriendshipParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
+	InsertInstance(ctx context.Context, arg InsertInstanceParams) error
 	InsertInvite(ctx context.Context, arg InsertInviteParams) error
 	InsertItemEvent(ctx context.Context, arg InsertItemEventParams) error
 	InsertLight(ctx context.Context, arg InsertLightParams) error
@@ -570,12 +576,15 @@ type Querier interface {
 	SetCampaignClock(ctx context.Context, arg SetCampaignClockParams) error
 	SetCanPrepare(ctx context.Context, arg SetCanPrepareParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
+	SetCharacterArmor(ctx context.Context, arg SetCharacterArmorParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
+	SetInstanceQuantity(ctx context.Context, arg SetInstanceQuantityParams) error
+	SetInstanceSlot(ctx context.Context, arg SetInstanceSlotParams) error
 	SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error

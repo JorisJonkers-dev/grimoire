@@ -1,5 +1,5 @@
 -- name: ItemsBySlug :many
-SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb
+SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb, i.category
 FROM compendium.items i
 JOIN compendium.documents d ON d.id = i.document_id
 WHERE i.slug = ANY(@slugs::text[])
@@ -94,3 +94,25 @@ WHERE container_id = @container_id AND item_slug = @item_slug
 
 -- name: MoveInstance :exec
 UPDATE campaign.item_instances SET container_id = @container_id, equipped_slot = NULL WHERE id = @id;
+
+-- name: CampaignHasLiveSession :one
+SELECT EXISTS (SELECT 1 FROM play.sessions WHERE campaign_id = $1 AND status = 'live')::boolean;
+
+-- name: InsertInstance :exec
+INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, equipped_slot, created_at)
+VALUES (@id, @container_id, @item_slug, 1, true, false, sqlc.narg(equipped_slot), @now);
+
+-- name: SetInstanceQuantity :exec
+UPDATE campaign.item_instances SET quantity = @quantity WHERE id = @id;
+
+-- name: DeleteInstance :exec
+DELETE FROM campaign.item_instances WHERE id = $1;
+
+-- name: SetInstanceSlot :exec
+UPDATE campaign.item_instances SET equipped_slot = sqlc.narg(equipped_slot) WHERE id = @id;
+
+-- name: HealCharacter :exec
+UPDATE campaign.characters SET hp_current = LEAST(hp_max, hp_current + @amount) WHERE id = @id;
+
+-- name: SetCharacterArmor :exec
+UPDATE campaign.characters SET armor_slug = sqlc.narg(armor_slug), shield = @shield WHERE id = @id;

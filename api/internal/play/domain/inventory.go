@@ -73,6 +73,8 @@ type Bearer struct {
 type ItemInfo struct {
 	Name     string
 	WeightLb float64
+	// Category is the compendium's kind of item: weapon, armor, potion, ring, wondrous-item and so on.
+	Category string
 }
 
 // Inventory is every Container of a Campaign, who carries them, and what their items are.

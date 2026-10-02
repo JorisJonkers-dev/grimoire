@@ -8720,6 +8720,126 @@ func (s *EntrySummary) SetRuleset(val Ruleset) {
 	s.Ruleset = val
 }
 
+// An equipment slot around a Character's figure.
+// Ref: #/components/schemas/EquipmentSlot
+type EquipmentSlot string
+
+const (
+	EquipmentSlotHead       EquipmentSlot = "head"
+	EquipmentSlotCloak      EquipmentSlot = "cloak"
+	EquipmentSlotNeck       EquipmentSlot = "neck"
+	EquipmentSlotArmor      EquipmentSlot = "armor"
+	EquipmentSlotHands      EquipmentSlot = "hands"
+	EquipmentSlotRing1      EquipmentSlot = "ring_1"
+	EquipmentSlotRing2      EquipmentSlot = "ring_2"
+	EquipmentSlotFeet       EquipmentSlot = "feet"
+	EquipmentSlotMainHand   EquipmentSlot = "main_hand"
+	EquipmentSlotOffHand    EquipmentSlot = "off_hand"
+	EquipmentSlotRangedMain EquipmentSlot = "ranged_main"
+	EquipmentSlotAmmunition EquipmentSlot = "ammunition"
+	EquipmentSlotInstrument EquipmentSlot = "instrument"
+)
+
+// AllValues returns all EquipmentSlot values.
+func (EquipmentSlot) AllValues() []EquipmentSlot {
+	return []EquipmentSlot{
+		EquipmentSlotHead,
+		EquipmentSlotCloak,
+		EquipmentSlotNeck,
+		EquipmentSlotArmor,
+		EquipmentSlotHands,
+		EquipmentSlotRing1,
+		EquipmentSlotRing2,
+		EquipmentSlotFeet,
+		EquipmentSlotMainHand,
+		EquipmentSlotOffHand,
+		EquipmentSlotRangedMain,
+		EquipmentSlotAmmunition,
+		EquipmentSlotInstrument,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EquipmentSlot) MarshalText() ([]byte, error) {
+	switch s {
+	case EquipmentSlotHead:
+		return []byte(s), nil
+	case EquipmentSlotCloak:
+		return []byte(s), nil
+	case EquipmentSlotNeck:
+		return []byte(s), nil
+	case EquipmentSlotArmor:
+		return []byte(s), nil
+	case EquipmentSlotHands:
+		return []byte(s), nil
+	case EquipmentSlotRing1:
+		return []byte(s), nil
+	case EquipmentSlotRing2:
+		return []byte(s), nil
+	case EquipmentSlotFeet:
+		return []byte(s), nil
+	case EquipmentSlotMainHand:
+		return []byte(s), nil
+	case EquipmentSlotOffHand:
+		return []byte(s), nil
+	case EquipmentSlotRangedMain:
+		return []byte(s), nil
+	case EquipmentSlotAmmunition:
+		return []byte(s), nil
+	case EquipmentSlotInstrument:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EquipmentSlot) UnmarshalText(data []byte) error {
+	switch EquipmentSlot(data) {
+	case EquipmentSlotHead:
+		*s = EquipmentSlotHead
+		return nil
+	case EquipmentSlotCloak:
+		*s = EquipmentSlotCloak
+		return nil
+	case EquipmentSlotNeck:
+		*s = EquipmentSlotNeck
+		return nil
+	case EquipmentSlotArmor:
+		*s = EquipmentSlotArmor
+		return nil
+	case EquipmentSlotHands:
+		*s = EquipmentSlotHands
+		return nil
+	case EquipmentSlotRing1:
+		*s = EquipmentSlotRing1
+		return nil
+	case EquipmentSlotRing2:
+		*s = EquipmentSlotRing2
+		return nil
+	case EquipmentSlotFeet:
+		*s = EquipmentSlotFeet
+		return nil
+	case EquipmentSlotMainHand:
+		*s = EquipmentSlotMainHand
+		return nil
+	case EquipmentSlotOffHand:
+		*s = EquipmentSlotOffHand
+		return nil
+	case EquipmentSlotRangedMain:
+		*s = EquipmentSlotRangedMain
+		return nil
+	case EquipmentSlotAmmunition:
+		*s = EquipmentSlotAmmunition
+		return nil
+	case EquipmentSlotInstrument:
+		*s = EquipmentSlotInstrument
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A field whose value differs between two Revisions.
 // Ref: #/components/schemas/FieldChange
 type FieldChange struct {
@@ -10206,6 +10326,554 @@ func (s *InspirationPass) SetTo(val ID) {
 	s.To = val
 }
 
+// An item to move: an Item Instance by id, or some of a plain stack by slug.
+// Ref: #/components/schemas/InventoryMove
+type InventoryMove struct {
+	InstanceId  OptID            `json:"instanceId"`
+	Slug        OptSlug          `json:"slug"`
+	To          InventoryMoveTo  `json:"to"`
+	Slot        OptEquipmentSlot `json:"slot"`
+	CharacterId OptID            `json:"characterId"`
+	Count       OptInt32         `json:"count"`
+}
+
+// GetInstanceId returns the value of InstanceId.
+func (s *InventoryMove) GetInstanceId() OptID {
+	return s.InstanceId
+}
+
+// GetSlug returns the value of Slug.
+func (s *InventoryMove) GetSlug() OptSlug {
+	return s.Slug
+}
+
+// GetTo returns the value of To.
+func (s *InventoryMove) GetTo() InventoryMoveTo {
+	return s.To
+}
+
+// GetSlot returns the value of Slot.
+func (s *InventoryMove) GetSlot() OptEquipmentSlot {
+	return s.Slot
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *InventoryMove) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetCount returns the value of Count.
+func (s *InventoryMove) GetCount() OptInt32 {
+	return s.Count
+}
+
+// SetInstanceId sets the value of InstanceId.
+func (s *InventoryMove) SetInstanceId(val OptID) {
+	s.InstanceId = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *InventoryMove) SetSlug(val OptSlug) {
+	s.Slug = val
+}
+
+// SetTo sets the value of To.
+func (s *InventoryMove) SetTo(val InventoryMoveTo) {
+	s.To = val
+}
+
+// SetSlot sets the value of Slot.
+func (s *InventoryMove) SetSlot(val OptEquipmentSlot) {
+	s.Slot = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *InventoryMove) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetCount sets the value of Count.
+func (s *InventoryMove) SetCount(val OptInt32) {
+	s.Count = val
+}
+
+type InventoryMoveTo string
+
+const (
+	InventoryMoveToBag       InventoryMoveTo = "bag"
+	InventoryMoveToSlot      InventoryMoveTo = "slot"
+	InventoryMoveToCharacter InventoryMoveTo = "character"
+	InventoryMoveToStash     InventoryMoveTo = "stash"
+)
+
+// AllValues returns all InventoryMoveTo values.
+func (InventoryMoveTo) AllValues() []InventoryMoveTo {
+	return []InventoryMoveTo{
+		InventoryMoveToBag,
+		InventoryMoveToSlot,
+		InventoryMoveToCharacter,
+		InventoryMoveToStash,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s InventoryMoveTo) MarshalText() ([]byte, error) {
+	switch s {
+	case InventoryMoveToBag:
+		return []byte(s), nil
+	case InventoryMoveToSlot:
+		return []byte(s), nil
+	case InventoryMoveToCharacter:
+		return []byte(s), nil
+	case InventoryMoveToStash:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *InventoryMoveTo) UnmarshalText(data []byte) error {
+	switch InventoryMoveTo(data) {
+	case InventoryMoveToBag:
+		*s = InventoryMoveToBag
+		return nil
+	case InventoryMoveToSlot:
+		*s = InventoryMoveToSlot
+		return nil
+	case InventoryMoveToCharacter:
+		*s = InventoryMoveToCharacter
+		return nil
+	case InventoryMoveToStash:
+		*s = InventoryMoveToStash
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// An item to take from the Party Stash.
+// Ref: #/components/schemas/InventoryTake
+type InventoryTake struct {
+	InstanceId OptID    `json:"instanceId"`
+	Slug       OptSlug  `json:"slug"`
+	Count      OptInt32 `json:"count"`
+}
+
+// GetInstanceId returns the value of InstanceId.
+func (s *InventoryTake) GetInstanceId() OptID {
+	return s.InstanceId
+}
+
+// GetSlug returns the value of Slug.
+func (s *InventoryTake) GetSlug() OptSlug {
+	return s.Slug
+}
+
+// GetCount returns the value of Count.
+func (s *InventoryTake) GetCount() OptInt32 {
+	return s.Count
+}
+
+// SetInstanceId sets the value of InstanceId.
+func (s *InventoryTake) SetInstanceId(val OptID) {
+	s.InstanceId = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *InventoryTake) SetSlug(val OptSlug) {
+	s.Slug = val
+}
+
+// SetCount sets the value of Count.
+func (s *InventoryTake) SetCount(val OptInt32) {
+	s.Count = val
+}
+
+// An item to drink or throw.
+// Ref: #/components/schemas/InventoryUse
+type InventoryUse struct {
+	InstanceId OptID           `json:"instanceId"`
+	Slug       OptSlug         `json:"slug"`
+	Use        InventoryUseUse `json:"use"`
+}
+
+// GetInstanceId returns the value of InstanceId.
+func (s *InventoryUse) GetInstanceId() OptID {
+	return s.InstanceId
+}
+
+// GetSlug returns the value of Slug.
+func (s *InventoryUse) GetSlug() OptSlug {
+	return s.Slug
+}
+
+// GetUse returns the value of Use.
+func (s *InventoryUse) GetUse() InventoryUseUse {
+	return s.Use
+}
+
+// SetInstanceId sets the value of InstanceId.
+func (s *InventoryUse) SetInstanceId(val OptID) {
+	s.InstanceId = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *InventoryUse) SetSlug(val OptSlug) {
+	s.Slug = val
+}
+
+// SetUse sets the value of Use.
+func (s *InventoryUse) SetUse(val InventoryUseUse) {
+	s.Use = val
+}
+
+// The Inventory after using an item, and the hit points it restored.
+// Ref: #/components/schemas/InventoryUseResult
+type InventoryUseResult struct {
+	Inventory InventoryView `json:"inventory"`
+	Healed    int32         `json:"healed"`
+}
+
+// GetInventory returns the value of Inventory.
+func (s *InventoryUseResult) GetInventory() InventoryView {
+	return s.Inventory
+}
+
+// GetHealed returns the value of Healed.
+func (s *InventoryUseResult) GetHealed() int32 {
+	return s.Healed
+}
+
+// SetInventory sets the value of Inventory.
+func (s *InventoryUseResult) SetInventory(val InventoryView) {
+	s.Inventory = val
+}
+
+// SetHealed sets the value of Healed.
+func (s *InventoryUseResult) SetHealed(val int32) {
+	s.Healed = val
+}
+
+// InventoryUseResultHeaders wraps InventoryUseResult with response headers.
+type InventoryUseResultHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           InventoryUseResult
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *InventoryUseResultHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *InventoryUseResultHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *InventoryUseResultHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *InventoryUseResultHeaders) GetResponse() InventoryUseResult {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *InventoryUseResultHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *InventoryUseResultHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *InventoryUseResultHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *InventoryUseResultHeaders) SetResponse(val InventoryUseResult) {
+	s.Response = val
+}
+
+func (*InventoryUseResultHeaders) useItemRes() {}
+
+type InventoryUseUse string
+
+const (
+	InventoryUseUseDrink InventoryUseUse = "drink"
+	InventoryUseUseThrow InventoryUseUse = "throw"
+)
+
+// AllValues returns all InventoryUseUse values.
+func (InventoryUseUse) AllValues() []InventoryUseUse {
+	return []InventoryUseUse{
+		InventoryUseUseDrink,
+		InventoryUseUseThrow,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s InventoryUseUse) MarshalText() ([]byte, error) {
+	switch s {
+	case InventoryUseUseDrink:
+		return []byte(s), nil
+	case InventoryUseUseThrow:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *InventoryUseUse) UnmarshalText(data []byte) error {
+	switch InventoryUseUse(data) {
+	case InventoryUseUseDrink:
+		*s = InventoryUseUseDrink
+		return nil
+	case InventoryUseUseThrow:
+		*s = InventoryUseUseThrow
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Character's equipment slots, bag and weight, and the Party Stash.
+// Ref: #/components/schemas/InventoryView
+type InventoryView struct {
+	CharacterId ID          `json:"characterId"`
+	Name        string      `json:"name"`
+	Slots       []SlotLine  `json:"slots"`
+	Bag         []ItemCard  `json:"bag"`
+	Coins       []LiveCoins `json:"coins"`
+	WeightLb    float64     `json:"weightLb"`
+	CapacityLb  float64     `json:"capacityLb"`
+	// Past capacity a Character moves 5 feet; past twice it, not at all.
+	Load       InventoryViewLoad `json:"load"`
+	Stash      []ItemCard        `json:"stash"`
+	StashCoins []LiveCoins       `json:"stashCoins"`
+	Party      []PartyBearer     `json:"party"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *InventoryView) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetName returns the value of Name.
+func (s *InventoryView) GetName() string {
+	return s.Name
+}
+
+// GetSlots returns the value of Slots.
+func (s *InventoryView) GetSlots() []SlotLine {
+	return s.Slots
+}
+
+// GetBag returns the value of Bag.
+func (s *InventoryView) GetBag() []ItemCard {
+	return s.Bag
+}
+
+// GetCoins returns the value of Coins.
+func (s *InventoryView) GetCoins() []LiveCoins {
+	return s.Coins
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *InventoryView) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// GetCapacityLb returns the value of CapacityLb.
+func (s *InventoryView) GetCapacityLb() float64 {
+	return s.CapacityLb
+}
+
+// GetLoad returns the value of Load.
+func (s *InventoryView) GetLoad() InventoryViewLoad {
+	return s.Load
+}
+
+// GetStash returns the value of Stash.
+func (s *InventoryView) GetStash() []ItemCard {
+	return s.Stash
+}
+
+// GetStashCoins returns the value of StashCoins.
+func (s *InventoryView) GetStashCoins() []LiveCoins {
+	return s.StashCoins
+}
+
+// GetParty returns the value of Party.
+func (s *InventoryView) GetParty() []PartyBearer {
+	return s.Party
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *InventoryView) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetName sets the value of Name.
+func (s *InventoryView) SetName(val string) {
+	s.Name = val
+}
+
+// SetSlots sets the value of Slots.
+func (s *InventoryView) SetSlots(val []SlotLine) {
+	s.Slots = val
+}
+
+// SetBag sets the value of Bag.
+func (s *InventoryView) SetBag(val []ItemCard) {
+	s.Bag = val
+}
+
+// SetCoins sets the value of Coins.
+func (s *InventoryView) SetCoins(val []LiveCoins) {
+	s.Coins = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *InventoryView) SetWeightLb(val float64) {
+	s.WeightLb = val
+}
+
+// SetCapacityLb sets the value of CapacityLb.
+func (s *InventoryView) SetCapacityLb(val float64) {
+	s.CapacityLb = val
+}
+
+// SetLoad sets the value of Load.
+func (s *InventoryView) SetLoad(val InventoryViewLoad) {
+	s.Load = val
+}
+
+// SetStash sets the value of Stash.
+func (s *InventoryView) SetStash(val []ItemCard) {
+	s.Stash = val
+}
+
+// SetStashCoins sets the value of StashCoins.
+func (s *InventoryView) SetStashCoins(val []LiveCoins) {
+	s.StashCoins = val
+}
+
+// SetParty sets the value of Party.
+func (s *InventoryView) SetParty(val []PartyBearer) {
+	s.Party = val
+}
+
+// InventoryViewHeaders wraps InventoryView with response headers.
+type InventoryViewHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           InventoryView
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *InventoryViewHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *InventoryViewHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *InventoryViewHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *InventoryViewHeaders) GetResponse() InventoryView {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *InventoryViewHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *InventoryViewHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *InventoryViewHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *InventoryViewHeaders) SetResponse(val InventoryView) {
+	s.Response = val
+}
+
+func (*InventoryViewHeaders) getInventoryRes()  {}
+func (*InventoryViewHeaders) moveItemRes()      {}
+func (*InventoryViewHeaders) takeFromStashRes() {}
+
+// Past capacity a Character moves 5 feet; past twice it, not at all.
+type InventoryViewLoad string
+
+const (
+	InventoryViewLoadNone       InventoryViewLoad = "none"
+	InventoryViewLoadEncumbered InventoryViewLoad = "encumbered"
+	InventoryViewLoadImmobile   InventoryViewLoad = "immobile"
+)
+
+// AllValues returns all InventoryViewLoad values.
+func (InventoryViewLoad) AllValues() []InventoryViewLoad {
+	return []InventoryViewLoad{
+		InventoryViewLoadNone,
+		InventoryViewLoadEncumbered,
+		InventoryViewLoadImmobile,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s InventoryViewLoad) MarshalText() ([]byte, error) {
+	switch s {
+	case InventoryViewLoadNone:
+		return []byte(s), nil
+	case InventoryViewLoadEncumbered:
+		return []byte(s), nil
+	case InventoryViewLoadImmobile:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *InventoryViewLoad) UnmarshalText(data []byte) error {
+	switch InventoryViewLoad(data) {
+	case InventoryViewLoadNone:
+		*s = InventoryViewLoadNone
+		return nil
+	case InventoryViewLoadEncumbered:
+		*s = InventoryViewLoadEncumbered
+		return nil
+	case InventoryViewLoadImmobile:
+		*s = InventoryViewLoadImmobile
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // An open invite link.
 // Ref: #/components/schemas/Invite
 type Invite struct {
@@ -10373,6 +11041,143 @@ func (s *InviteToken) GetToken() Token {
 // SetToken sets the value of Token.
 func (s *InviteToken) SetToken(val Token) {
 	s.Token = val
+}
+
+// An item in an Inventory, with the slots it fits.
+// Ref: #/components/schemas/ItemCard
+type ItemCard struct {
+	InstanceId OptID            `json:"instanceId"`
+	Slug       Slug             `json:"slug"`
+	Name       string           `json:"name"`
+	CustomName OptString        `json:"customName"`
+	Category   string           `json:"category"`
+	Quantity   int32            `json:"quantity"`
+	WeightLb   float64          `json:"weightLb"`
+	Slot       OptEquipmentSlot `json:"slot"`
+	Charges    OptInt32         `json:"charges"`
+	Identified bool             `json:"identified"`
+	Attuned    bool             `json:"attuned"`
+	Fits       []EquipmentSlot  `json:"fits"`
+}
+
+// GetInstanceId returns the value of InstanceId.
+func (s *ItemCard) GetInstanceId() OptID {
+	return s.InstanceId
+}
+
+// GetSlug returns the value of Slug.
+func (s *ItemCard) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ItemCard) GetName() string {
+	return s.Name
+}
+
+// GetCustomName returns the value of CustomName.
+func (s *ItemCard) GetCustomName() OptString {
+	return s.CustomName
+}
+
+// GetCategory returns the value of Category.
+func (s *ItemCard) GetCategory() string {
+	return s.Category
+}
+
+// GetQuantity returns the value of Quantity.
+func (s *ItemCard) GetQuantity() int32 {
+	return s.Quantity
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *ItemCard) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// GetSlot returns the value of Slot.
+func (s *ItemCard) GetSlot() OptEquipmentSlot {
+	return s.Slot
+}
+
+// GetCharges returns the value of Charges.
+func (s *ItemCard) GetCharges() OptInt32 {
+	return s.Charges
+}
+
+// GetIdentified returns the value of Identified.
+func (s *ItemCard) GetIdentified() bool {
+	return s.Identified
+}
+
+// GetAttuned returns the value of Attuned.
+func (s *ItemCard) GetAttuned() bool {
+	return s.Attuned
+}
+
+// GetFits returns the value of Fits.
+func (s *ItemCard) GetFits() []EquipmentSlot {
+	return s.Fits
+}
+
+// SetInstanceId sets the value of InstanceId.
+func (s *ItemCard) SetInstanceId(val OptID) {
+	s.InstanceId = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *ItemCard) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ItemCard) SetName(val string) {
+	s.Name = val
+}
+
+// SetCustomName sets the value of CustomName.
+func (s *ItemCard) SetCustomName(val OptString) {
+	s.CustomName = val
+}
+
+// SetCategory sets the value of Category.
+func (s *ItemCard) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetQuantity sets the value of Quantity.
+func (s *ItemCard) SetQuantity(val int32) {
+	s.Quantity = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *ItemCard) SetWeightLb(val float64) {
+	s.WeightLb = val
+}
+
+// SetSlot sets the value of Slot.
+func (s *ItemCard) SetSlot(val OptEquipmentSlot) {
+	s.Slot = val
+}
+
+// SetCharges sets the value of Charges.
+func (s *ItemCard) SetCharges(val OptInt32) {
+	s.Charges = val
+}
+
+// SetIdentified sets the value of Identified.
+func (s *ItemCard) SetIdentified(val bool) {
+	s.Identified = val
+}
+
+// SetAttuned sets the value of Attuned.
+func (s *ItemCard) SetAttuned(val bool) {
+	s.Attuned = val
+}
+
+// SetFits sets the value of Fits.
+func (s *ItemCard) SetFits(val []EquipmentSlot) {
+	s.Fits = val
 }
 
 // A cantrip or spell a Character learned through a class.
@@ -23273,6 +24078,52 @@ func (o OptEncounterMode) Or(d EncounterMode) EncounterMode {
 	return d
 }
 
+// NewOptEquipmentSlot returns new OptEquipmentSlot with value set to v.
+func NewOptEquipmentSlot(v EquipmentSlot) OptEquipmentSlot {
+	return OptEquipmentSlot{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptEquipmentSlot is optional EquipmentSlot.
+type OptEquipmentSlot struct {
+	Value EquipmentSlot
+	Set   bool
+}
+
+// IsSet returns true if OptEquipmentSlot was set.
+func (o OptEquipmentSlot) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptEquipmentSlot) Reset() {
+	var v EquipmentSlot
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptEquipmentSlot) SetTo(v EquipmentSlot) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptEquipmentSlot) Get() (v EquipmentSlot, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptEquipmentSlot) Or(d EquipmentSlot) EquipmentSlot {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptFloat64 returns new OptFloat64 with value set to v.
 func NewOptFloat64(v float64) OptFloat64 {
 	return OptFloat64{
@@ -23497,6 +24348,52 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptItemCard returns new OptItemCard with value set to v.
+func NewOptItemCard(v ItemCard) OptItemCard {
+	return OptItemCard{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptItemCard is optional ItemCard.
+type OptItemCard struct {
+	Value ItemCard
+	Set   bool
+}
+
+// IsSet returns true if OptItemCard was set.
+func (o OptItemCard) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptItemCard) Reset() {
+	var v ItemCard
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptItemCard) SetTo(v ItemCard) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptItemCard) Get() (v ItemCard, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptItemCard) Or(d ItemCard) ItemCard {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -26143,6 +27040,33 @@ func (s *OwnedCharacterListHeaders) SetResponse(val OwnedCharacterList) {
 
 func (*OwnedCharacterListHeaders) listMyCharactersRes() {}
 
+// Another Character in the Campaign, to give items to.
+// Ref: #/components/schemas/PartyBearer
+type PartyBearer struct {
+	CharacterId ID     `json:"characterId"`
+	Name        string `json:"name"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *PartyBearer) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetName returns the value of Name.
+func (s *PartyBearer) GetName() string {
+	return s.Name
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *PartyBearer) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetName sets the value of Name.
+func (s *PartyBearer) SetName(val string) {
+	s.Name = val
+}
+
 // A new password.
 // Ref: #/components/schemas/PasswordChange
 type PasswordChange struct {
@@ -26581,6 +27505,7 @@ func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
+func (*ProblemStatusCodeWithHeaders) getInventoryRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
@@ -26641,6 +27566,7 @@ func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) moveItemRes()                      {}
 func (*ProblemStatusCodeWithHeaders) passInspirationRes()               {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
@@ -26689,6 +27615,7 @@ func (*ProblemStatusCodeWithHeaders) startConversationRes()             {}
 func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
+func (*ProblemStatusCodeWithHeaders) takeFromStashRes()                 {}
 func (*ProblemStatusCodeWithHeaders) unblockRes()                       {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
 func (*ProblemStatusCodeWithHeaders) unfriendRes()                      {}
@@ -26706,6 +27633,7 @@ func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
+func (*ProblemStatusCodeWithHeaders) useItemRes()                       {}
 func (*ProblemStatusCodeWithHeaders) useSignInLinkRes()                 {}
 
 // The armor and weapons a Character is trained with.
@@ -30637,6 +31565,33 @@ func (s *SkillLine) SetProficient(val bool) {
 // SetExpertise sets the value of Expertise.
 func (s *SkillLine) SetExpertise(val bool) {
 	s.Expertise = val
+}
+
+// An equipment slot and what is in it.
+// Ref: #/components/schemas/SlotLine
+type SlotLine struct {
+	Slot EquipmentSlot `json:"slot"`
+	Item OptItemCard   `json:"item"`
+}
+
+// GetSlot returns the value of Slot.
+func (s *SlotLine) GetSlot() EquipmentSlot {
+	return s.Slot
+}
+
+// GetItem returns the value of Item.
+func (s *SlotLine) GetItem() OptItemCard {
+	return s.Item
+}
+
+// SetSlot sets the value of Slot.
+func (s *SlotLine) SetSlot(val EquipmentSlot) {
+	s.Slot = val
+}
+
+// SetItem sets the value of Item.
+func (s *SlotLine) SetItem(val OptItemCard) {
+	s.Item = val
 }
 
 type Slug string

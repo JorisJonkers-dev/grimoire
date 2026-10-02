@@ -169,7 +169,7 @@ func TestRetrainedIncreasesMatchTheImprovementsTaken(t *testing.T) {
 		asis int
 	}{
 		{map[rules.Ability]int{}, 0},
-		{map[rules.Ability]int{rules.Strength: 2}, 1},
+		{map[rules.Ability]int{rules.Strength: 2, rules.Dexterity: 0}, 1},
 		{map[rules.Ability]int{rules.Strength: 3, rules.Constitution: 1}, 2},
 		{map[rules.Ability]int{rules.Strength: 5, rules.Dexterity: 1}, 3},
 	}

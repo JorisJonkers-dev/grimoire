@@ -889,6 +889,33 @@ export const zAbilityIncrease = z.object({
 });
 
 /**
+ * An equipment slot around a Character's figure.
+ */
+export const zEquipmentSlot = z.enum([
+    'head',
+    'cloak',
+    'neck',
+    'armor',
+    'hands',
+    'ring_1',
+    'ring_2',
+    'feet',
+    'main_hand',
+    'off_hand',
+    'ranged_main',
+    'ammunition',
+    'instrument'
+]);
+
+/**
+ * Another Character in the Campaign, to give items to.
+ */
+export const zPartyBearer = z.object({
+    characterId: zId,
+    name: z.string().max(120)
+});
+
+/**
  * Same-origin path of a stored picture; it changes when the picture does.
  */
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
@@ -2265,6 +2292,96 @@ export const zCharacterRevisionLine = z.object({
     createdAt: z.iso.datetime().max(40),
     build: zBuildSnapshot,
     retrainId: zId.optional()
+});
+
+/**
+ * An item in an Inventory, with the slots it fits.
+ */
+export const zItemCard = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug,
+    name: z.string().max(120),
+    customName: z.string().max(80).optional(),
+    category: z.string().max(40),
+    quantity: z.int().gte(1).lte(100000),
+    weightLb: z.number().gte(0).lte(1000000),
+    slot: zEquipmentSlot.optional(),
+    charges: z.int().gte(0).lte(100).optional(),
+    identified: z.boolean(),
+    attuned: z.boolean(),
+    fits: z.array(zEquipmentSlot).max(13)
+});
+
+/**
+ * An equipment slot and what is in it.
+ */
+export const zSlotLine = z.object({
+    slot: zEquipmentSlot,
+    item: zItemCard.optional()
+});
+
+/**
+ * A Character's equipment slots, bag and weight, and the Party Stash.
+ */
+export const zInventoryView = z.object({
+    characterId: zId,
+    name: z.string().max(120),
+    slots: z.array(zSlotLine).max(13),
+    bag: z.array(zItemCard).max(1000),
+    coins: z.array(zLiveCoins).max(5),
+    weightLb: z.number().gte(0).lte(1000000),
+    capacityLb: z.number().gte(0).lte(100000),
+    load: z.enum([
+        'none',
+        'encumbered',
+        'immobile'
+    ]),
+    stash: z.array(zItemCard).max(1000),
+    stashCoins: z.array(zLiveCoins).max(5),
+    party: z.array(zPartyBearer).max(50)
+});
+
+/**
+ * An item to move: an Item Instance by id, or some of a plain stack by slug.
+ */
+export const zInventoryMove = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug.optional(),
+    to: z.enum([
+        'bag',
+        'slot',
+        'character',
+        'stash'
+    ]),
+    slot: zEquipmentSlot.optional(),
+    characterId: zId.optional(),
+    count: z.int().gte(1).lte(100000).optional()
+});
+
+/**
+ * An item to take from the Party Stash.
+ */
+export const zInventoryTake = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug.optional(),
+    count: z.int().gte(1).lte(100000).optional()
+});
+
+/**
+ * An item to drink or throw.
+ */
+export const zInventoryUse = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug.optional(),
+    use: z.enum(['drink', 'throw'])
+});
+
+/**
+ * The Inventory after using an item, and the hit points it restored.
+ */
+export const zInventoryUseResult = z.object({
+    inventory: zInventoryView,
+    healed: z.int().gte(0).lte(1000)
 });
 
 /**
@@ -3908,6 +4025,52 @@ export const zDeclineRetrainPath = z.object({
  * The declined retrain.
  */
 export const zDeclineRetrainResponse = zRetrain;
+
+export const zGetInventoryPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory.
+ */
+export const zGetInventoryResponse = zInventoryView;
+
+export const zMoveItemBody = zInventoryMove;
+
+export const zMoveItemPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory after the move.
+ */
+export const zMoveItemResponse = zInventoryView;
+
+export const zTakeFromStashBody = zInventoryTake;
+
+export const zTakeFromStashPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory after taking it.
+ */
+export const zTakeFromStashResponse = zInventoryView;
+
+export const zUseItemBody = zInventoryUse;
+
+export const zUseItemPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory, and the hit points restored.
+ */
+export const zUseItemResponse = zInventoryUseResult;
 
 export const zGetPortraitPath = z.object({
     campaignId: zId,
