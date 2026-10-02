@@ -27,6 +27,10 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 			t := domain.TokenID(r.TargetTokenID.Bytes)
 			p.Target = &t
 		}
+		if r.ObjectID.Valid {
+			o := domain.ObjectID(r.ObjectID.Bytes)
+			p.Object = &o
+		}
 		out = append(out, p)
 	}
 	return out, nil
@@ -68,6 +72,9 @@ func (s *Store) savePending(ctx context.Context, sid uuid.UUID, w live.Write) er
 		row := queries.InsertPendingActionParams{RollID: uuid.UUID(p.RollID), SessionID: sid, ActorTokenID: uuid.UUID(p.Actor), Action: p.Action, Dc: int32(p.DC)}
 		if p.Target != nil {
 			row.TargetTokenID = pgtype.UUID{Bytes: *p.Target, Valid: true}
+		}
+		if p.Object != nil {
+			row.ObjectID = pgtype.UUID{Bytes: *p.Object, Valid: true}
 		}
 		if err := s.q.InsertPendingAction(ctx, row); err != nil {
 			return err

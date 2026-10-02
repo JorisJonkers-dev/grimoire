@@ -206,6 +206,12 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 	}
 	a := r.st.tokens[p.Actor]
 	w := Write{Kind: domain.ActionResolved, Token: a, Settled: p.RollID}
+	if p.Object != nil {
+		sys := caller.Caller{Subject: roll.Roller.Subject, Origin: caller.OriginSystem, Client: ""}
+		r.commit(request{}, w, roll.Roller, sys)
+		r.objectChecked(p, roll.Total, roll.Roller, sys)
+		return
+	}
 	switch {
 	case p.Action == stabilising:
 		if d, down := r.st.dying[*p.Target]; down && roll.Total >= p.DC && d.State.Rolls() {

@@ -177,6 +177,13 @@ type CampaignMapObject struct {
 	Secret     bool
 	EffectSlug pgtype.Text
 	RadiusFt   int32
+	DetectDc   int32
+	DisarmDc   int32
+	TriggerFt  int32
+	Armed      bool
+	Locked     bool
+	LockDc     int32
+	KeySlug    pgtype.Text
 }
 
 type CampaignMapObjectLink struct {
@@ -1074,6 +1081,7 @@ type PlayPendingAction struct {
 	TargetTokenID pgtype.UUID
 	Action        string
 	Dc            int32
+	ObjectID      pgtype.UUID
 }
 
 type PlayPendingSafe struct {

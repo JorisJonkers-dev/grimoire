@@ -12828,6 +12828,42 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.DetectDc.Set {
+			e.FieldStart("detectDc")
+			s.DetectDc.Encode(e)
+		}
+	}
+	{
+		if s.DisarmDc.Set {
+			e.FieldStart("disarmDc")
+			s.DisarmDc.Encode(e)
+		}
+	}
+	{
+		if s.TriggerFt.Set {
+			e.FieldStart("triggerFt")
+			s.TriggerFt.Encode(e)
+		}
+	}
+	{
+		if s.LockDc.Set {
+			e.FieldStart("lockDc")
+			s.LockDc.Encode(e)
+		}
+	}
+	{
+		if s.Key.Set {
+			e.FieldStart("key")
+			s.Key.Encode(e)
+		}
+	}
+	{
+		if s.Method.Set {
+			e.FieldStart("method")
+			s.Method.Encode(e)
+		}
+	}
+	{
 		if s.SaveAbility.Set {
 			e.FieldStart("saveAbility")
 			s.SaveAbility.Encode(e)
@@ -13097,7 +13133,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [89]string{
+var jsonFieldsNameOfLiveCommand = [95]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -13143,50 +13179,56 @@ var jsonFieldsNameOfLiveCommand = [89]string{
 	42: "secret",
 	43: "radiusFt",
 	44: "links",
-	45: "saveAbility",
-	46: "saveDc",
-	47: "effectId",
-	48: "manualId",
-	49: "surface",
-	50: "elevationFt",
-	51: "camera",
-	52: "zoomPct",
-	53: "scene",
-	54: "title",
-	55: "body",
-	56: "nodeId",
-	57: "toNodeId",
-	58: "routeId",
-	59: "distanceMi",
-	60: "pace",
-	61: "zoneId",
-	62: "radiusHexes",
-	63: "dmOnly",
-	64: "rest",
-	65: "tableId",
-	66: "mode",
-	67: "entry",
-	68: "due",
-	69: "lootTableId",
-	70: "fromId",
-	71: "instanceId",
-	72: "action",
-	73: "detail",
-	74: "trigger",
-	75: "option",
-	76: "offHand",
-	77: "cleave",
-	78: "reactionKind",
-	79: "reactionMode",
-	80: "condition",
-	81: "toId",
-	82: "itemSlug",
-	83: "coin",
-	84: "count",
-	85: "shopId",
-	86: "monsters",
-	87: "hpDelta",
-	88: "seq",
+	45: "detectDc",
+	46: "disarmDc",
+	47: "triggerFt",
+	48: "lockDc",
+	49: "key",
+	50: "method",
+	51: "saveAbility",
+	52: "saveDc",
+	53: "effectId",
+	54: "manualId",
+	55: "surface",
+	56: "elevationFt",
+	57: "camera",
+	58: "zoomPct",
+	59: "scene",
+	60: "title",
+	61: "body",
+	62: "nodeId",
+	63: "toNodeId",
+	64: "routeId",
+	65: "distanceMi",
+	66: "pace",
+	67: "zoneId",
+	68: "radiusHexes",
+	69: "dmOnly",
+	70: "rest",
+	71: "tableId",
+	72: "mode",
+	73: "entry",
+	74: "due",
+	75: "lootTableId",
+	76: "fromId",
+	77: "instanceId",
+	78: "action",
+	79: "detail",
+	80: "trigger",
+	81: "option",
+	82: "offHand",
+	83: "cleave",
+	84: "reactionKind",
+	85: "reactionMode",
+	86: "condition",
+	87: "toId",
+	88: "itemSlug",
+	89: "coin",
+	90: "count",
+	91: "shopId",
+	92: "monsters",
+	93: "hpDelta",
+	94: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13690,6 +13732,66 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"links\"")
+			}
+		case "detectDc":
+			if err := func() error {
+				s.DetectDc.Reset()
+				if err := s.DetectDc.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"detectDc\"")
+			}
+		case "disarmDc":
+			if err := func() error {
+				s.DisarmDc.Reset()
+				if err := s.DisarmDc.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"disarmDc\"")
+			}
+		case "triggerFt":
+			if err := func() error {
+				s.TriggerFt.Reset()
+				if err := s.TriggerFt.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"triggerFt\"")
+			}
+		case "lockDc":
+			if err := func() error {
+				s.LockDc.Reset()
+				if err := s.LockDc.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"lockDc\"")
+			}
+		case "key":
+			if err := func() error {
+				s.Key.Reset()
+				if err := s.Key.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"key\"")
+			}
+		case "method":
+			if err := func() error {
+				s.Method.Reset()
+				if err := s.Method.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"method\"")
 			}
 		case "saveAbility":
 			if err := func() error {
@@ -14515,6 +14617,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindDamageObject
 	case LiveCommandKindFindObject:
 		*s = LiveCommandKindFindObject
+	case LiveCommandKindUnlock:
+		*s = LiveCommandKindUnlock
+	case LiveCommandKindDisarm:
+		*s = LiveCommandKindDisarm
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -14531,6 +14637,50 @@ func (s LiveCommandKind) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveCommandKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandMethod as json.
+func (s LiveCommandMethod) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveCommandMethod from json.
+func (s *LiveCommandMethod) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveCommandMethod to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveCommandMethod(v) {
+	case LiveCommandMethodKey:
+		*s = LiveCommandMethodKey
+	case LiveCommandMethodTools:
+		*s = LiveCommandMethodTools
+	case LiveCommandMethodForce:
+		*s = LiveCommandMethodForce
+	case LiveCommandMethodKnock:
+		*s = LiveCommandMethodKnock
+	default:
+		*s = LiveCommandMethod(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveCommandMethod) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveCommandMethod) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -17032,9 +17182,51 @@ func (s *LiveObject) encodeFields(e *jx.Encoder) {
 			s.RadiusFt.Encode(e)
 		}
 	}
+	{
+		if s.Locked.Set {
+			e.FieldStart("locked")
+			s.Locked.Encode(e)
+		}
+	}
+	{
+		if s.Armed.Set {
+			e.FieldStart("armed")
+			s.Armed.Encode(e)
+		}
+	}
+	{
+		if s.DetectDc.Set {
+			e.FieldStart("detectDc")
+			s.DetectDc.Encode(e)
+		}
+	}
+	{
+		if s.DisarmDc.Set {
+			e.FieldStart("disarmDc")
+			s.DisarmDc.Encode(e)
+		}
+	}
+	{
+		if s.TriggerFt.Set {
+			e.FieldStart("triggerFt")
+			s.TriggerFt.Encode(e)
+		}
+	}
+	{
+		if s.LockDc.Set {
+			e.FieldStart("lockDc")
+			s.LockDc.Encode(e)
+		}
+	}
+	{
+		if s.Key.Set {
+			e.FieldStart("key")
+			s.Key.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveObject = [13]string{
+var jsonFieldsNameOfLiveObject = [20]string{
 	0:  "id",
 	1:  "kind",
 	2:  "name",
@@ -17048,6 +17240,13 @@ var jsonFieldsNameOfLiveObject = [13]string{
 	10: "hpMax",
 	11: "effect",
 	12: "radiusFt",
+	13: "locked",
+	14: "armed",
+	15: "detectDc",
+	16: "disarmDc",
+	17: "triggerFt",
+	18: "lockDc",
+	19: "key",
 }
 
 // Decode decodes LiveObject from json.
@@ -17055,7 +17254,7 @@ func (s *LiveObject) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveObject to nil")
 	}
-	var requiredBitSet [2]uint8
+	var requiredBitSet [3]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -17199,6 +17398,76 @@ func (s *LiveObject) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"radiusFt\"")
 			}
+		case "locked":
+			if err := func() error {
+				s.Locked.Reset()
+				if err := s.Locked.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"locked\"")
+			}
+		case "armed":
+			if err := func() error {
+				s.Armed.Reset()
+				if err := s.Armed.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"armed\"")
+			}
+		case "detectDc":
+			if err := func() error {
+				s.DetectDc.Reset()
+				if err := s.DetectDc.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"detectDc\"")
+			}
+		case "disarmDc":
+			if err := func() error {
+				s.DisarmDc.Reset()
+				if err := s.DisarmDc.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"disarmDc\"")
+			}
+		case "triggerFt":
+			if err := func() error {
+				s.TriggerFt.Reset()
+				if err := s.TriggerFt.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"triggerFt\"")
+			}
+		case "lockDc":
+			if err := func() error {
+				s.LockDc.Reset()
+				if err := s.LockDc.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"lockDc\"")
+			}
+		case "key":
+			if err := func() error {
+				s.Key.Reset()
+				if err := s.Key.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"key\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -17208,8 +17477,9 @@ func (s *LiveObject) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [2]uint8{
+	for i, mask := range [3]uint8{
 		0b01111111,
+		0b00000000,
 		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
@@ -23998,6 +24268,8 @@ func (s *MapObjectKind) Decode(d *jx.Decoder) error {
 		*s = MapObjectKindCurtain
 	case MapObjectKindDestructible:
 		*s = MapObjectKindDestructible
+	case MapObjectKindTrap:
+		*s = MapObjectKindTrap
 	default:
 		*s = MapObjectKind(v)
 	}
@@ -25995,6 +26267,39 @@ func (s OptLiveCommandDue) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveCommandDue) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCommandMethod as json.
+func (o OptLiveCommandMethod) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes LiveCommandMethod from json.
+func (o *OptLiveCommandMethod) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveCommandMethod to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveCommandMethod) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveCommandMethod) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

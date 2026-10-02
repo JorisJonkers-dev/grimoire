@@ -1003,7 +1003,8 @@ export const zMapObjectKind = z.enum([
     'chest',
     'barrel',
     'curtain',
-    'destructible'
+    'destructible',
+    'trap'
 ]);
 
 /**
@@ -1022,7 +1023,14 @@ export const zLiveObject = z.object({
     hp: z.int().gte(0).lte(1000).optional(),
     hpMax: z.int().gte(1).lte(1000).optional(),
     effect: z.string().max(80).optional(),
-    radiusFt: z.int().gte(0).lte(60).optional()
+    radiusFt: z.int().gte(0).lte(60).optional(),
+    locked: z.boolean().optional(),
+    armed: z.boolean().optional(),
+    detectDc: z.int().gte(1).lte(40).optional(),
+    disarmDc: z.int().gte(1).lte(40).optional(),
+    triggerFt: z.int().gte(1).lte(60).optional(),
+    lockDc: z.int().gte(1).lte(40).optional(),
+    key: z.string().max(80).optional()
 });
 
 /**
@@ -1718,7 +1726,9 @@ export const zLiveCommand = z.object({
         'remove_object',
         'use_object',
         'damage_object',
-        'find_object'
+        'find_object',
+        'unlock',
+        'disarm'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1767,6 +1777,17 @@ export const zLiveCommand = z.object({
     secret: z.boolean().optional(),
     radiusFt: z.int().gte(0).lte(60).optional(),
     links: z.array(zId).max(20).optional(),
+    detectDc: z.int().gte(1).lte(40).optional(),
+    disarmDc: z.int().gte(1).lte(40).optional(),
+    triggerFt: z.int().gte(1).lte(60).optional(),
+    lockDc: z.int().gte(1).lte(40).optional(),
+    key: z.string().max(80).optional(),
+    method: z.enum([
+        'key',
+        'tools',
+        'force',
+        'knock'
+    ]).optional(),
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),

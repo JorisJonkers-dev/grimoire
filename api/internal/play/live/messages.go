@@ -99,6 +99,8 @@ const (
 	CmdUseObject      = "use_object"
 	CmdDamageObject   = "damage_object"
 	CmdFindObject     = "find_object"
+	CmdUnlock         = "unlock"
+	CmdDisarm         = "disarm"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -174,43 +176,51 @@ type Command struct {
 	Disguise    string   `json:"disguise,omitempty"`
 	// ObjectID, ObjectKind, ObjectName, ArmorClass, HPMax, Secret, RadiusFt and Links place or work a Map
 	// Object; Effect names what it triggers.
-	ObjectID    string   `json:"objectId,omitempty"`
-	ObjectKind  string   `json:"objectKind,omitempty"`
-	ObjectName  string   `json:"objectName,omitempty"`
-	ArmorClass  int      `json:"armorClass,omitempty"`
-	HPMax       int      `json:"hpMax,omitempty"`
-	Secret      bool     `json:"secret,omitempty"`
-	RadiusFt    int      `json:"radiusFt,omitempty"`
-	Links       []string `json:"links,omitempty"`
-	SaveAbility string   `json:"saveAbility,omitempty"`
-	SaveDC      int      `json:"saveDc,omitempty"`
-	EffectID    string   `json:"effectId,omitempty"`
-	ManualID    string   `json:"manualId,omitempty"`
-	Surface     string   `json:"surface,omitempty"`
-	ElevationFt int      `json:"elevationFt,omitempty"`
-	Camera      string   `json:"camera,omitempty"`
-	ZoomPct     int      `json:"zoomPct,omitempty"`
-	Scene       string   `json:"scene,omitempty"`
-	Title       string   `json:"title,omitempty"`
-	Body        string   `json:"body,omitempty"`
-	NodeID      string   `json:"nodeId,omitempty"`
-	ToNodeID    string   `json:"toNodeId,omitempty"`
-	RouteID     string   `json:"routeId,omitempty"`
-	DistanceMi  int      `json:"distanceMi,omitempty"`
-	Pace        string   `json:"pace,omitempty"`
-	ZoneID      string   `json:"zoneId,omitempty"`
-	RadiusHexes int      `json:"radiusHexes,omitempty"`
-	DMOnly      bool     `json:"dmOnly,omitempty"`
-	Rest        string   `json:"rest,omitempty"`
-	TableID     string   `json:"tableId,omitempty"`
-	Mode        string   `json:"mode,omitempty"`
-	Entry       int      `json:"entry,omitempty"`
-	Due         string   `json:"due,omitempty"`
-	LootTableID string   `json:"lootTableId,omitempty"`
-	FromID      string   `json:"fromId,omitempty"`
-	ToID        string   `json:"toId,omitempty"`
-	ItemSlug    string   `json:"itemSlug,omitempty"`
-	InstanceID  string   `json:"instanceId,omitempty"`
+	ObjectID   string   `json:"objectId,omitempty"`
+	ObjectKind string   `json:"objectKind,omitempty"`
+	ObjectName string   `json:"objectName,omitempty"`
+	ArmorClass int      `json:"armorClass,omitempty"`
+	HPMax      int      `json:"hpMax,omitempty"`
+	Secret     bool     `json:"secret,omitempty"`
+	RadiusFt   int      `json:"radiusFt,omitempty"`
+	Links      []string `json:"links,omitempty"`
+	// DetectDC, DisarmDC and TriggerFt make a trap; LockDC and Key lock an object; Method is how unlock
+	// gets through: key, tools, force or knock.
+	DetectDC    int    `json:"detectDc,omitempty"`
+	DisarmDC    int    `json:"disarmDc,omitempty"`
+	TriggerFt   int    `json:"triggerFt,omitempty"`
+	LockDC      int    `json:"lockDc,omitempty"`
+	Key         string `json:"key,omitempty"`
+	Method      string `json:"method,omitempty"`
+	SaveAbility string `json:"saveAbility,omitempty"`
+	SaveDC      int    `json:"saveDc,omitempty"`
+	EffectID    string `json:"effectId,omitempty"`
+	ManualID    string `json:"manualId,omitempty"`
+	Surface     string `json:"surface,omitempty"`
+	ElevationFt int    `json:"elevationFt,omitempty"`
+	Camera      string `json:"camera,omitempty"`
+	ZoomPct     int    `json:"zoomPct,omitempty"`
+	Scene       string `json:"scene,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Body        string `json:"body,omitempty"`
+	NodeID      string `json:"nodeId,omitempty"`
+	ToNodeID    string `json:"toNodeId,omitempty"`
+	RouteID     string `json:"routeId,omitempty"`
+	DistanceMi  int    `json:"distanceMi,omitempty"`
+	Pace        string `json:"pace,omitempty"`
+	ZoneID      string `json:"zoneId,omitempty"`
+	RadiusHexes int    `json:"radiusHexes,omitempty"`
+	DMOnly      bool   `json:"dmOnly,omitempty"`
+	Rest        string `json:"rest,omitempty"`
+	TableID     string `json:"tableId,omitempty"`
+	Mode        string `json:"mode,omitempty"`
+	Entry       int    `json:"entry,omitempty"`
+	Due         string `json:"due,omitempty"`
+	LootTableID string `json:"lootTableId,omitempty"`
+	FromID      string `json:"fromId,omitempty"`
+	ToID        string `json:"toId,omitempty"`
+	ItemSlug    string `json:"itemSlug,omitempty"`
+	InstanceID  string `json:"instanceId,omitempty"`
 	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
 	// Trigger sets off a readied attack; Option is a Grapple or Shove.
 	Action  string `json:"action,omitempty"`

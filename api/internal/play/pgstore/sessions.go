@@ -274,7 +274,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
 		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded,
-		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound:
+		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
+		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung:
 		return nil
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {
@@ -954,6 +955,7 @@ func (s *Store) loadObjects(ctx context.Context, mapID uuid.UUID, out *domain.Ma
 		out.Objects[o.ID] = domain.MapObject{
 			ID: o.ID, Kind: o.Kind, Name: o.Name, At: hex.Coord{Q: int(o.Q), R: int(o.R)}, AC: int(o.ArmorClass), HP: int(o.Hp), HPMax: int(o.HpMax),
 			Open: o.Open, Broken: o.Broken, Secret: o.Secret, Effect: o.EffectSlug.String, RadiusFt: int(o.RadiusFt),
+			Armed: o.Armed, DetectDC: int(o.DetectDc), DisarmDC: int(o.DisarmDc), TriggerFt: int(o.TriggerFt), Locked: o.Locked, LockDC: int(o.LockDc), Key: o.KeySlug.String,
 		}
 	}
 	links, err := s.q.MapObjectLinks(ctx, mapID)
@@ -984,6 +986,8 @@ func (s *Store) saveObjects(ctx context.Context, board *domain.MapState, w live.
 		p := queries.SaveMapObjectParams{
 			ID: o.ID, MapID: mapID, Kind: o.Kind, Name: o.Name, Q: int32(o.At.Q), R: int32(o.At.R), ArmorClass: int32(o.AC), Hp: int32(o.HP), HpMax: int32(o.HPMax),
 			Open: o.Open, Broken: o.Broken, Secret: o.Secret, EffectSlug: pgtype.Text{String: o.Effect, Valid: o.Effect != ""}, RadiusFt: int32(o.RadiusFt),
+			DetectDc: int32(o.DetectDC), DisarmDc: int32(o.DisarmDC), TriggerFt: int32(o.TriggerFt), Armed: o.Armed, Locked: o.Locked, LockDc: int32(o.LockDC),
+			KeySlug: pgtype.Text{String: o.Key, Valid: o.Key != ""},
 		}
 		if err := s.q.SaveMapObject(ctx, p); err != nil {
 			return err

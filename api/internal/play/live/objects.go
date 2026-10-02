@@ -82,17 +82,21 @@ func (r *runtime) placeObject(cmd Command) (Write, string) {
 	}
 	switch {
 	case !objects.Valid(kind):
-		return Write{}, "Choose a door, lever, chest, barrel, curtain or destructible object."
+		return Write{}, "Choose a door, lever, chest, barrel, curtain, destructible object or trap."
 	case !r.st.onBoard(at):
 		return Write{}, "That hex is off the map."
 	case len([]rune(name)) > 40 || ac > 30 || hp > 1000:
 		return Write{}, "Name it in 40 characters; Armor Class goes up to 30, hit points to 1000."
-	case cmd.RadiusFt < 0 || cmd.RadiusFt > 60 || len(cmd.Effect) > 80:
+	case cmd.RadiusFt < 0 || cmd.RadiusFt > 60 || len(cmd.Effect) > 80 || cmd.TriggerFt < 0 || cmd.TriggerFt > 60:
 		return Write{}, "A trigger reaches up to 60 feet."
+	case min(cmd.DetectDC, cmd.DisarmDC, cmd.LockDC) < 0 || max(cmd.DetectDC, cmd.DisarmDC, cmd.LockDC) > 40 || len(cmd.Key) > 80:
+		return Write{}, "DCs run from 1 to 40."
 	}
 	o := domain.MapObject{
 		ID: uuid.New(), Kind: string(kind), Name: name, At: at, AC: ac, HP: hp, HPMax: hp, Secret: cmd.Secret,
 		Effect: strings.ToLower(strings.TrimSpace(cmd.Effect)), RadiusFt: cmd.RadiusFt,
+		Armed: kind == objects.Trap, DetectDC: cmd.DetectDC, DisarmDC: cmd.DisarmDC, TriggerFt: cmd.TriggerFt,
+		Locked: cmd.LockDC > 0, LockDC: cmd.LockDC, Key: strings.ToLower(strings.TrimSpace(cmd.Key)),
 	}
 	for _, l := range cmd.Links {
 		id, _ := uuid.Parse(l)
@@ -144,6 +148,8 @@ func (r *runtime) planUse(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "No such object."
 	case !(objects.State{Kind: objects.Kind(o.Kind), Open: o.Open, Broken: o.Broken}).Usable():
 		return Write{}, "The " + strings.ToLower(o.Name) + " cannot be used."
+	case o.Locked:
+		return Write{}, "The " + strings.ToLower(o.Name) + " is locked."
 	case hex.Distance(hex.Coord{Q: t.Q, R: t.R}, o.At) > 1:
 		return Write{}, t.Label + " must stand next to the " + strings.ToLower(o.Name) + "."
 	case r.st.catalog.Incapacitated(r.st.actives(t.ID)):
@@ -201,6 +207,9 @@ func applyObject(s *state, w *Write) {
 	for id, o := range w.changedObjects {
 		s.board.Objects[id] = o
 	}
+	if w.taken != nil {
+		applyAction(s, w)
+	}
 	if w.Kind == domain.ActionObjectToggled && w.Combatant != (domain.CombatantID{}) {
 		applyInteraction(s, w)
 	}
@@ -250,6 +259,14 @@ type ObjectView struct {
 	HPMax    *int   `json:"hpMax,omitempty"`
 	Effect   string `json:"effect,omitempty"`
 	RadiusFt int    `json:"radiusFt,omitempty"`
+	// Locked shows to everyone who knows the object; the trap and lock numbers go to the DM only.
+	Locked    bool   `json:"locked,omitempty"`
+	Armed     bool   `json:"armed,omitempty"`
+	DetectDC  int    `json:"detectDc,omitempty"`
+	DisarmDC  int    `json:"disarmDc,omitempty"`
+	TriggerFt int    `json:"triggerFt,omitempty"`
+	LockDC    int    `json:"lockDc,omitempty"`
+	Key       string `json:"key,omitempty"`
 }
 
 // objectViews lists the Map Objects an audience knows.
@@ -259,10 +276,11 @@ func (s *state) objectViews(a Audience, seen map[hex.Coord]bool) []ObjectView {
 		if a != AudienceDM && !s.objectShown(o, seen) {
 			continue
 		}
-		v := ObjectView{ID: o.ID.String(), Kind: o.Kind, Name: o.Name, Q: o.At.Q, R: o.At.R, Open: o.Open, Broken: o.Broken}
+		v := ObjectView{ID: o.ID.String(), Kind: o.Kind, Name: o.Name, Q: o.At.Q, R: o.At.R, Open: o.Open, Broken: o.Broken, Locked: o.Locked}
 		if a == AudienceDM {
 			ac, hp, most := o.AC, o.HP, o.HPMax
 			v.AC, v.HP, v.HPMax, v.Secret, v.Effect, v.RadiusFt = &ac, &hp, &most, o.Secret, o.Effect, o.RadiusFt
+			v.Armed, v.DetectDC, v.DisarmDC, v.TriggerFt, v.LockDC, v.Key = o.Armed, o.DetectDC, o.DisarmDC, o.TriggerFt, o.LockDC, o.Key
 		}
 		out = append(out, v)
 	}

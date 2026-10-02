@@ -667,8 +667,8 @@ func (q *Queries) InsertManual(ctx context.Context, arg InsertManualParams) erro
 }
 
 const insertPendingAction = `-- name: InsertPendingAction :exec
-INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc, object_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertPendingActionParams struct {
@@ -678,6 +678,7 @@ type InsertPendingActionParams struct {
 	TargetTokenID pgtype.UUID
 	Action        string
 	Dc            int32
+	ObjectID      pgtype.UUID
 }
 
 func (q *Queries) InsertPendingAction(ctx context.Context, arg InsertPendingActionParams) error {
@@ -688,6 +689,7 @@ func (q *Queries) InsertPendingAction(ctx context.Context, arg InsertPendingActi
 		arg.TargetTokenID,
 		arg.Action,
 		arg.Dc,
+		arg.ObjectID,
 	)
 	return err
 }
@@ -1074,7 +1076,9 @@ func (q *Queries) MapObjectLinks(ctx context.Context, mapID uuid.UUID) ([]Campai
 }
 
 const mapObjects = `-- name: MapObjects :many
-SELECT id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft FROM campaign.map_objects WHERE map_id = $1 ORDER BY name, id
+SELECT id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft, detect_dc, disarm_dc, trigger_ft, armed,
+    locked, lock_dc, key_slug
+FROM campaign.map_objects WHERE map_id = $1 ORDER BY name, id
 `
 
 type MapObjectsRow struct {
@@ -1091,6 +1095,13 @@ type MapObjectsRow struct {
 	Secret     bool
 	EffectSlug pgtype.Text
 	RadiusFt   int32
+	DetectDc   int32
+	DisarmDc   int32
+	TriggerFt  int32
+	Armed      bool
+	Locked     bool
+	LockDc     int32
+	KeySlug    pgtype.Text
 }
 
 func (q *Queries) MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjectsRow, error) {
@@ -1116,6 +1127,13 @@ func (q *Queries) MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjects
 			&i.Secret,
 			&i.EffectSlug,
 			&i.RadiusFt,
+			&i.DetectDc,
+			&i.DisarmDc,
+			&i.TriggerFt,
+			&i.Armed,
+			&i.Locked,
+			&i.LockDc,
+			&i.KeySlug,
 		); err != nil {
 			return nil, err
 		}
@@ -1563,11 +1581,14 @@ func (q *Queries) SaveDying(ctx context.Context, arg SaveDyingParams) error {
 }
 
 const saveMapObject = `-- name: SaveMapObject :exec
-INSERT INTO campaign.map_objects (id, map_id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+INSERT INTO campaign.map_objects (id, map_id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft,
+    detect_dc, disarm_dc, trigger_ft, armed, locked, lock_dc, key_slug)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+    $15, $16, $17, $18, $19, $20, $21)
 ON CONFLICT (id) DO UPDATE SET name = excluded.name, q = excluded.q, r = excluded.r, armor_class = excluded.armor_class, hp = excluded.hp,
     hp_max = excluded.hp_max, open = excluded.open, broken = excluded.broken, secret = excluded.secret, effect_slug = excluded.effect_slug,
-    radius_ft = excluded.radius_ft
+    radius_ft = excluded.radius_ft, detect_dc = excluded.detect_dc, disarm_dc = excluded.disarm_dc, trigger_ft = excluded.trigger_ft,
+    armed = excluded.armed, locked = excluded.locked, lock_dc = excluded.lock_dc, key_slug = excluded.key_slug
 `
 
 type SaveMapObjectParams struct {
@@ -1585,6 +1606,13 @@ type SaveMapObjectParams struct {
 	Secret     bool
 	EffectSlug pgtype.Text
 	RadiusFt   int32
+	DetectDc   int32
+	DisarmDc   int32
+	TriggerFt  int32
+	Armed      bool
+	Locked     bool
+	LockDc     int32
+	KeySlug    pgtype.Text
 }
 
 func (q *Queries) SaveMapObject(ctx context.Context, arg SaveMapObjectParams) error {
@@ -1603,6 +1631,13 @@ func (q *Queries) SaveMapObject(ctx context.Context, arg SaveMapObjectParams) er
 		arg.Secret,
 		arg.EffectSlug,
 		arg.RadiusFt,
+		arg.DetectDc,
+		arg.DisarmDc,
+		arg.TriggerFt,
+		arg.Armed,
+		arg.Locked,
+		arg.LockDc,
+		arg.KeySlug,
 	)
 	return err
 }
@@ -1955,7 +1990,7 @@ func (q *Queries) SessionObservations(ctx context.Context, sessionID uuid.UUID) 
 }
 
 const sessionPendingActions = `-- name: SessionPendingActions :many
-SELECT roll_id, actor_token_id, target_token_id, action, dc FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id
+SELECT roll_id, actor_token_id, target_token_id, action, dc, object_id FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id
 `
 
 type SessionPendingActionsRow struct {
@@ -1964,6 +1999,7 @@ type SessionPendingActionsRow struct {
 	TargetTokenID pgtype.UUID
 	Action        string
 	Dc            int32
+	ObjectID      pgtype.UUID
 }
 
 func (q *Queries) SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error) {
@@ -1981,6 +2017,7 @@ func (q *Queries) SessionPendingActions(ctx context.Context, sessionID uuid.UUID
 			&i.TargetTokenID,
 			&i.Action,
 			&i.Dc,
+			&i.ObjectID,
 		); err != nil {
 			return nil, err
 		}

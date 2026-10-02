@@ -83,6 +83,16 @@ type MapObject struct {
 	Effect   string
 	RadiusFt int
 	Links    []ObjectID
+	// A trap is Armed until disarmed or sprung; DetectDC is what a passive Perception must reach to find
+	// it, DisarmDC what thieves' tools must beat, and TriggerFt how close a creature comes to set it off.
+	Armed     bool
+	DetectDC  int
+	DisarmDC  int
+	TriggerFt int
+	// A Locked object opens only by its Key, thieves' tools or force against LockDC, Knock, or breaking.
+	Locked bool
+	LockDC int
+	Key    string
 }
 
 // Map action kinds in the Action Log.
@@ -96,9 +106,12 @@ const (
 	ActionLightRemoved   = "light_removed"
 	ActionAmbientSet     = "ambient_set"
 	// Map Object action kinds.
-	ActionObjectPlaced  = "object_placed"
-	ActionObjectRemoved = "object_removed"
-	ActionObjectToggled = "object_toggled"
-	ActionObjectDamaged = "object_damaged"
-	ActionObjectFound   = "object_found"
+	ActionObjectPlaced   = "object_placed"
+	ActionObjectRemoved  = "object_removed"
+	ActionObjectToggled  = "object_toggled"
+	ActionObjectDamaged  = "object_damaged"
+	ActionObjectFound    = "object_found"
+	ActionObjectUnlocked = "object_unlocked"
+	ActionTrapDisarmed   = "trap_disarmed"
+	ActionTrapSprung     = "trap_sprung"
 )

@@ -22,6 +22,7 @@ func TestWhatObjectsBlock(t *testing.T) {
 		{objects.State{Kind: objects.Barrel, Broken: true}, false, false},
 		{objects.State{Kind: objects.Destructible, Open: true}, true, true},
 		{objects.State{Kind: objects.Lever}, false, false},
+		{objects.State{Kind: objects.Trap}, false, false},
 		{objects.State{Kind: "statue"}, false, false},
 	} {
 		if sight, move := c.state.Blocks(); sight != c.sight || move != c.move {
@@ -43,11 +44,11 @@ func TestUsingAndBreaking(t *testing.T) {
 			t.Errorf("%s is a kind", k)
 		}
 	}
-	if objects.Valid("statue") || len(objects.Kinds()) != 6 {
+	if objects.Valid("statue") || len(objects.Kinds()) != 7 || !objects.Valid(objects.Trap) || (objects.State{Kind: objects.Trap}).Usable() {
 		t.Error("kinds")
 	}
 	for k, want := range map[objects.Kind][2]int{
-		objects.Door: {15, 18}, objects.Destructible: {15, 18}, objects.Chest: {15, 13}, objects.Barrel: {15, 9}, objects.Curtain: {11, 2}, objects.Lever: {19, 5},
+		objects.Door: {15, 18}, objects.Destructible: {15, 18}, objects.Chest: {15, 13}, objects.Barrel: {15, 9}, objects.Curtain: {11, 2}, objects.Lever: {19, 5}, objects.Trap: {19, 5},
 	} {
 		if ac, hp := objects.Defaults(k); ac != want[0] || hp != want[1] {
 			t.Errorf("%s defaults %d %d", k, ac, hp)
@@ -60,5 +61,37 @@ func TestUsingAndBreaking(t *testing.T) {
 		if left, broken := objects.Hit(c.hp, c.amount); left != c.left || broken != c.broken {
 			t.Errorf("hit %d for %d = %d %v", c.hp, c.amount, left, broken)
 		}
+	}
+}
+
+func TestTrapsAndLocks(t *testing.T) {
+	t.Parallel()
+	if objects.Passive(3) != 13 {
+		t.Error("passive")
+	}
+	for _, c := range []struct {
+		passive, dc int
+		want        bool
+	}{{15, 15, true}, {14, 15, false}, {20, 0, false}} {
+		if got := objects.Notices(c.passive, c.dc); got != c.want {
+			t.Errorf("passive %d against %d = %v", c.passive, c.dc, got)
+		}
+	}
+	if !objects.Springs(5, 5) || objects.Springs(10, 5) || !objects.Springs(0, 0) {
+		t.Error("springs within its trigger reach")
+	}
+	for _, c := range []struct {
+		total, dc        int
+		disarmed, sprung bool
+	}{{15, 15, true, false}, {11, 15, false, false}, {10, 15, false, true}, {2, 15, false, true}} {
+		if d, s := objects.Disarm(c.total, c.dc); d != c.disarmed || s != c.sprung {
+			t.Errorf("disarm %d against %d = %v %v", c.total, c.dc, d, s)
+		}
+	}
+	if !objects.Opens(15, 15) || objects.Opens(14, 15) {
+		t.Error("opens")
+	}
+	if objects.ApproachFt != 30 || objects.KnockRangeFt != 60 || objects.SpringMargin != 5 {
+		t.Error("constants")
 	}
 }

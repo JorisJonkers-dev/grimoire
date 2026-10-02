@@ -301,11 +301,11 @@ WHERE z.session_id = $1 ORDER BY c.zone_id, c.token_id;
 INSERT INTO play.zone_creatures (zone_id, token_id) VALUES (@zone_id, @token_id) ON CONFLICT DO NOTHING;
 
 -- name: SessionPendingActions :many
-SELECT roll_id, actor_token_id, target_token_id, action, dc FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id;
+SELECT roll_id, actor_token_id, target_token_id, action, dc, object_id FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id;
 
 -- name: InsertPendingAction :exec
-INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc)
-VALUES (@roll_id, @session_id, @actor_token_id, sqlc.narg(target_token_id), @action, @dc);
+INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc, object_id)
+VALUES (@roll_id, @session_id, @actor_token_id, sqlc.narg(target_token_id), @action, @dc, sqlc.narg(object_id));
 
 -- name: DeletePendingAction :exec
 DELETE FROM play.pending_actions WHERE roll_id = $1;
@@ -365,17 +365,22 @@ INSERT INTO play.token_senses (token_id, sense, range_ft) VALUES (@token_id, @se
 SELECT s.token_id, s.sense, s.range_ft FROM play.token_senses s JOIN play.tokens t ON t.id = s.token_id WHERE t.session_id = $1;
 
 -- name: MapObjects :many
-SELECT id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft FROM campaign.map_objects WHERE map_id = $1 ORDER BY name, id;
+SELECT id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft, detect_dc, disarm_dc, trigger_ft, armed,
+    locked, lock_dc, key_slug
+FROM campaign.map_objects WHERE map_id = $1 ORDER BY name, id;
 
 -- name: MapObjectLinks :many
 SELECT l.object_id, l.target_id FROM campaign.map_object_links l JOIN campaign.map_objects o ON o.id = l.object_id WHERE o.map_id = $1;
 
 -- name: SaveMapObject :exec
-INSERT INTO campaign.map_objects (id, map_id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft)
-VALUES (@id, @map_id, @kind, @name, @q, @r, @armor_class, @hp, @hp_max, @open, @broken, @secret, sqlc.narg(effect_slug), @radius_ft)
+INSERT INTO campaign.map_objects (id, map_id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft,
+    detect_dc, disarm_dc, trigger_ft, armed, locked, lock_dc, key_slug)
+VALUES (@id, @map_id, @kind, @name, @q, @r, @armor_class, @hp, @hp_max, @open, @broken, @secret, sqlc.narg(effect_slug), @radius_ft,
+    @detect_dc, @disarm_dc, @trigger_ft, @armed, @locked, @lock_dc, sqlc.narg(key_slug))
 ON CONFLICT (id) DO UPDATE SET name = excluded.name, q = excluded.q, r = excluded.r, armor_class = excluded.armor_class, hp = excluded.hp,
     hp_max = excluded.hp_max, open = excluded.open, broken = excluded.broken, secret = excluded.secret, effect_slug = excluded.effect_slug,
-    radius_ft = excluded.radius_ft;
+    radius_ft = excluded.radius_ft, detect_dc = excluded.detect_dc, disarm_dc = excluded.disarm_dc, trigger_ft = excluded.trigger_ft,
+    armed = excluded.armed, locked = excluded.locked, lock_dc = excluded.lock_dc, key_slug = excluded.key_slug;
 
 -- name: DeleteMapObject :exec
 DELETE FROM campaign.map_objects WHERE id = @id AND map_id = @map_id;

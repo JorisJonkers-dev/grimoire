@@ -164,7 +164,9 @@ const areaPreview = computed(() => {
 })
 const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
 const teleporting = ref<string | null>(null)
-const objectForm = ref<{ kind: MapObjectKind; name: string; secret: boolean; effect: string; radiusFt: number }>({ kind: 'door', name: '', secret: false, effect: '', radiusFt: 0 })
+const objectForm = ref<{ kind: MapObjectKind; name: string; secret: boolean; effect: string; radiusFt: number; detectDc: number; disarmDc: number; triggerFt: number; lockDc: number; key: string }>({
+  kind: 'door', name: '', secret: false, effect: '', radiusFt: 0, detectDc: 0, disarmDc: 0, triggerFt: 0, lockDc: 0, key: '',
+})
 const summoning = ref<{ tokenId: string; effect: string } | null>(null)
 // The creatures a Combatant summoned that wait for its command this round.
 const awaitingOrders = (owner: string) =>
@@ -307,6 +309,8 @@ function pick(c: Coord) {
       live.value.send({
         kind: 'place_object', objectKind: f.kind, q: c.q, r: c.r, ...(f.name.trim() ? { objectName: f.name.trim() } : {}), ...(f.secret ? { secret: true } : {}),
         ...(f.effect.trim() ? { effect: f.effect.trim() } : {}), ...(f.radiusFt ? { radiusFt: f.radiusFt } : {}),
+        ...(f.detectDc ? { detectDc: f.detectDc } : {}), ...(f.disarmDc ? { disarmDc: f.disarmDc } : {}), ...(f.triggerFt ? { triggerFt: f.triggerFt } : {}),
+        ...(f.lockDc ? { lockDc: f.lockDc } : {}), ...(f.key.trim() ? { key: f.key.trim() } : {}),
       })
       return
     }
@@ -489,13 +493,18 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <label class="g-field">
             <span>Object</span>
             <select v-model="objectForm.kind" data-testid="object-kind">
-              <option v-for="k in ['door', 'lever', 'chest', 'barrel', 'curtain', 'destructible'] as const" :key="k" :value="k">{{ k }}</option>
+              <option v-for="k in ['door', 'lever', 'chest', 'barrel', 'curtain', 'destructible', 'trap'] as const" :key="k" :value="k">{{ k }}</option>
             </select>
           </label>
           <label class="g-field"><span>Name</span><input v-model="objectForm.name" maxlength="40" data-testid="object-name" /></label>
           <label class="g-field"><span>Triggers</span><input v-model="objectForm.effect" maxlength="80" placeholder="prone" data-testid="object-effect" /></label>
           <label class="g-field"><span>Reach (ft)</span><input v-model.number="objectForm.radiusFt" type="number" min="0" max="60" step="5" data-testid="object-radius" /></label>
           <label class="check"><input v-model="objectForm.secret" type="checkbox" data-testid="object-secret" /><span>Secret</span></label>
+          <label class="g-field"><span>Spot DC</span><input v-model.number="objectForm.detectDc" type="number" min="0" max="40" data-testid="object-detect" /></label>
+          <label class="g-field"><span>Disarm DC</span><input v-model.number="objectForm.disarmDc" type="number" min="0" max="40" data-testid="object-disarm" /></label>
+          <label class="g-field"><span>Sets off within (ft)</span><input v-model.number="objectForm.triggerFt" type="number" min="0" max="60" step="5" data-testid="object-trigger" /></label>
+          <label class="g-field"><span>Lock DC</span><input v-model.number="objectForm.lockDc" type="number" min="0" max="40" data-testid="object-lock" /></label>
+          <label class="g-field"><span>Key</span><input v-model="objectForm.key" maxlength="80" placeholder="iron-key" data-testid="object-key" /></label>
         </div>
         <div v-if="tool === 'elevation'" class="row">
           <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>

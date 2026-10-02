@@ -59,6 +59,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planObject(cmd)
 	case CmdUseObject:
 		return r.planUse(m, cmd)
+	case CmdUnlock:
+		return r.planUnlock(m, cmd)
+	case CmdDisarm:
+		return r.planDisarm(m, cmd)
 	case CmdCommand:
 		return r.planCommand(m, cmd)
 	case CmdSetReaction:

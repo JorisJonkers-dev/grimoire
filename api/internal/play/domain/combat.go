@@ -85,6 +85,8 @@ type PendingAction struct {
 	Target *TokenID
 	Action string
 	DC     int
+	// Object is the Map Object a disarm, pick or force check works on.
+	Object *ObjectID
 }
 
 // Action kinds for the 2024 actions in the Action Log.

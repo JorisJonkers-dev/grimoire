@@ -9079,22 +9079,28 @@ type LiveCommand struct {
 	// The option an Effect that offers a choice is applied in.
 	EffectMode OptString `json:"effectMode"`
 	// Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
-	TempHp      OptInt32            `json:"tempHp"`
-	Qualities   []VisibilityQuality `json:"qualities"`
-	SeenThrough []VisibilityQuality `json:"seenThrough"`
-	Disguise    OptString           `json:"disguise"`
-	ObjectId    OptID               `json:"objectId"`
-	ObjectKind  OptMapObjectKind    `json:"objectKind"`
-	ObjectName  OptString           `json:"objectName"`
-	ArmorClass  OptInt32            `json:"armorClass"`
-	HpMax       OptInt32            `json:"hpMax"`
-	Secret      OptBool             `json:"secret"`
-	RadiusFt    OptInt32            `json:"radiusFt"`
-	Links       []ID                `json:"links"`
-	SaveAbility OptAbility          `json:"saveAbility"`
-	SaveDc      OptInt32            `json:"saveDc"`
-	EffectId    OptID               `json:"effectId"`
-	ManualId    OptID               `json:"manualId"`
+	TempHp      OptInt32             `json:"tempHp"`
+	Qualities   []VisibilityQuality  `json:"qualities"`
+	SeenThrough []VisibilityQuality  `json:"seenThrough"`
+	Disguise    OptString            `json:"disguise"`
+	ObjectId    OptID                `json:"objectId"`
+	ObjectKind  OptMapObjectKind     `json:"objectKind"`
+	ObjectName  OptString            `json:"objectName"`
+	ArmorClass  OptInt32             `json:"armorClass"`
+	HpMax       OptInt32             `json:"hpMax"`
+	Secret      OptBool              `json:"secret"`
+	RadiusFt    OptInt32             `json:"radiusFt"`
+	Links       []ID                 `json:"links"`
+	DetectDc    OptInt32             `json:"detectDc"`
+	DisarmDc    OptInt32             `json:"disarmDc"`
+	TriggerFt   OptInt32             `json:"triggerFt"`
+	LockDc      OptInt32             `json:"lockDc"`
+	Key         OptString            `json:"key"`
+	Method      OptLiveCommandMethod `json:"method"`
+	SaveAbility OptAbility           `json:"saveAbility"`
+	SaveDc      OptInt32             `json:"saveDc"`
+	EffectId    OptID                `json:"effectId"`
+	ManualId    OptID                `json:"manualId"`
 	// With paint_surface; leave it out to clear.
 	Surface     OptLiveCommandSurface `json:"surface"`
 	ElevationFt OptInt32              `json:"elevationFt"`
@@ -9367,6 +9373,36 @@ func (s *LiveCommand) GetRadiusFt() OptInt32 {
 // GetLinks returns the value of Links.
 func (s *LiveCommand) GetLinks() []ID {
 	return s.Links
+}
+
+// GetDetectDc returns the value of DetectDc.
+func (s *LiveCommand) GetDetectDc() OptInt32 {
+	return s.DetectDc
+}
+
+// GetDisarmDc returns the value of DisarmDc.
+func (s *LiveCommand) GetDisarmDc() OptInt32 {
+	return s.DisarmDc
+}
+
+// GetTriggerFt returns the value of TriggerFt.
+func (s *LiveCommand) GetTriggerFt() OptInt32 {
+	return s.TriggerFt
+}
+
+// GetLockDc returns the value of LockDc.
+func (s *LiveCommand) GetLockDc() OptInt32 {
+	return s.LockDc
+}
+
+// GetKey returns the value of Key.
+func (s *LiveCommand) GetKey() OptString {
+	return s.Key
+}
+
+// GetMethod returns the value of Method.
+func (s *LiveCommand) GetMethod() OptLiveCommandMethod {
+	return s.Method
 }
 
 // GetSaveAbility returns the value of SaveAbility.
@@ -9812,6 +9848,36 @@ func (s *LiveCommand) SetRadiusFt(val OptInt32) {
 // SetLinks sets the value of Links.
 func (s *LiveCommand) SetLinks(val []ID) {
 	s.Links = val
+}
+
+// SetDetectDc sets the value of DetectDc.
+func (s *LiveCommand) SetDetectDc(val OptInt32) {
+	s.DetectDc = val
+}
+
+// SetDisarmDc sets the value of DisarmDc.
+func (s *LiveCommand) SetDisarmDc(val OptInt32) {
+	s.DisarmDc = val
+}
+
+// SetTriggerFt sets the value of TriggerFt.
+func (s *LiveCommand) SetTriggerFt(val OptInt32) {
+	s.TriggerFt = val
+}
+
+// SetLockDc sets the value of LockDc.
+func (s *LiveCommand) SetLockDc(val OptInt32) {
+	s.LockDc = val
+}
+
+// SetKey sets the value of Key.
+func (s *LiveCommand) SetKey(val OptString) {
+	s.Key = val
+}
+
+// SetMethod sets the value of Method.
+func (s *LiveCommand) SetMethod(val OptLiveCommandMethod) {
+	s.Method = val
 }
 
 // SetSaveAbility sets the value of SaveAbility.
@@ -10301,6 +10367,8 @@ const (
 	LiveCommandKindUseObject      LiveCommandKind = "use_object"
 	LiveCommandKindDamageObject   LiveCommandKind = "damage_object"
 	LiveCommandKindFindObject     LiveCommandKind = "find_object"
+	LiveCommandKindUnlock         LiveCommandKind = "unlock"
+	LiveCommandKindDisarm         LiveCommandKind = "disarm"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10384,6 +10452,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindUseObject,
 		LiveCommandKindDamageObject,
 		LiveCommandKindFindObject,
+		LiveCommandKindUnlock,
+		LiveCommandKindDisarm,
 	}
 }
 
@@ -10545,6 +10615,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindDamageObject:
 		return []byte(s), nil
 	case LiveCommandKindFindObject:
+		return []byte(s), nil
+	case LiveCommandKindUnlock:
+		return []byte(s), nil
+	case LiveCommandKindDisarm:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10787,6 +10861,67 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindFindObject:
 		*s = LiveCommandKindFindObject
+		return nil
+	case LiveCommandKindUnlock:
+		*s = LiveCommandKindUnlock
+		return nil
+	case LiveCommandKindDisarm:
+		*s = LiveCommandKindDisarm
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandMethod string
+
+const (
+	LiveCommandMethodKey   LiveCommandMethod = "key"
+	LiveCommandMethodTools LiveCommandMethod = "tools"
+	LiveCommandMethodForce LiveCommandMethod = "force"
+	LiveCommandMethodKnock LiveCommandMethod = "knock"
+)
+
+// AllValues returns all LiveCommandMethod values.
+func (LiveCommandMethod) AllValues() []LiveCommandMethod {
+	return []LiveCommandMethod{
+		LiveCommandMethodKey,
+		LiveCommandMethodTools,
+		LiveCommandMethodForce,
+		LiveCommandMethodKnock,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandMethodKey:
+		return []byte(s), nil
+	case LiveCommandMethodTools:
+		return []byte(s), nil
+	case LiveCommandMethodForce:
+		return []byte(s), nil
+	case LiveCommandMethodKnock:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandMethod) UnmarshalText(data []byte) error {
+	switch LiveCommandMethod(data) {
+	case LiveCommandMethodKey:
+		*s = LiveCommandMethodKey
+		return nil
+	case LiveCommandMethodTools:
+		*s = LiveCommandMethodTools
+		return nil
+	case LiveCommandMethodForce:
+		*s = LiveCommandMethodForce
+		return nil
+	case LiveCommandMethodKnock:
+		*s = LiveCommandMethodKnock
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -12189,14 +12324,21 @@ type LiveObject struct {
 	Q    int32         `json:"q"`
 	R    int32         `json:"r"`
 	// Open, or pulled for a lever.
-	Open     bool      `json:"open"`
-	Broken   bool      `json:"broken"`
-	Secret   OptBool   `json:"secret"`
-	Ac       OptInt32  `json:"ac"`
-	Hp       OptInt32  `json:"hp"`
-	HpMax    OptInt32  `json:"hpMax"`
-	Effect   OptString `json:"effect"`
-	RadiusFt OptInt32  `json:"radiusFt"`
+	Open      bool      `json:"open"`
+	Broken    bool      `json:"broken"`
+	Secret    OptBool   `json:"secret"`
+	Ac        OptInt32  `json:"ac"`
+	Hp        OptInt32  `json:"hp"`
+	HpMax     OptInt32  `json:"hpMax"`
+	Effect    OptString `json:"effect"`
+	RadiusFt  OptInt32  `json:"radiusFt"`
+	Locked    OptBool   `json:"locked"`
+	Armed     OptBool   `json:"armed"`
+	DetectDc  OptInt32  `json:"detectDc"`
+	DisarmDc  OptInt32  `json:"disarmDc"`
+	TriggerFt OptInt32  `json:"triggerFt"`
+	LockDc    OptInt32  `json:"lockDc"`
+	Key       OptString `json:"key"`
 }
 
 // GetID returns the value of ID.
@@ -12264,6 +12406,41 @@ func (s *LiveObject) GetRadiusFt() OptInt32 {
 	return s.RadiusFt
 }
 
+// GetLocked returns the value of Locked.
+func (s *LiveObject) GetLocked() OptBool {
+	return s.Locked
+}
+
+// GetArmed returns the value of Armed.
+func (s *LiveObject) GetArmed() OptBool {
+	return s.Armed
+}
+
+// GetDetectDc returns the value of DetectDc.
+func (s *LiveObject) GetDetectDc() OptInt32 {
+	return s.DetectDc
+}
+
+// GetDisarmDc returns the value of DisarmDc.
+func (s *LiveObject) GetDisarmDc() OptInt32 {
+	return s.DisarmDc
+}
+
+// GetTriggerFt returns the value of TriggerFt.
+func (s *LiveObject) GetTriggerFt() OptInt32 {
+	return s.TriggerFt
+}
+
+// GetLockDc returns the value of LockDc.
+func (s *LiveObject) GetLockDc() OptInt32 {
+	return s.LockDc
+}
+
+// GetKey returns the value of Key.
+func (s *LiveObject) GetKey() OptString {
+	return s.Key
+}
+
 // SetID sets the value of ID.
 func (s *LiveObject) SetID(val ID) {
 	s.ID = val
@@ -12327,6 +12504,41 @@ func (s *LiveObject) SetEffect(val OptString) {
 // SetRadiusFt sets the value of RadiusFt.
 func (s *LiveObject) SetRadiusFt(val OptInt32) {
 	s.RadiusFt = val
+}
+
+// SetLocked sets the value of Locked.
+func (s *LiveObject) SetLocked(val OptBool) {
+	s.Locked = val
+}
+
+// SetArmed sets the value of Armed.
+func (s *LiveObject) SetArmed(val OptBool) {
+	s.Armed = val
+}
+
+// SetDetectDc sets the value of DetectDc.
+func (s *LiveObject) SetDetectDc(val OptInt32) {
+	s.DetectDc = val
+}
+
+// SetDisarmDc sets the value of DisarmDc.
+func (s *LiveObject) SetDisarmDc(val OptInt32) {
+	s.DisarmDc = val
+}
+
+// SetTriggerFt sets the value of TriggerFt.
+func (s *LiveObject) SetTriggerFt(val OptInt32) {
+	s.TriggerFt = val
+}
+
+// SetLockDc sets the value of LockDc.
+func (s *LiveObject) SetLockDc(val OptInt32) {
+	s.LockDc = val
+}
+
+// SetKey sets the value of Key.
+func (s *LiveObject) SetKey(val OptString) {
+	s.Key = val
 }
 
 // The route a walk would take, start first, and the movement it costs.
@@ -15628,6 +15840,7 @@ const (
 	MapObjectKindBarrel       MapObjectKind = "barrel"
 	MapObjectKindCurtain      MapObjectKind = "curtain"
 	MapObjectKindDestructible MapObjectKind = "destructible"
+	MapObjectKindTrap         MapObjectKind = "trap"
 )
 
 // AllValues returns all MapObjectKind values.
@@ -15639,6 +15852,7 @@ func (MapObjectKind) AllValues() []MapObjectKind {
 		MapObjectKindBarrel,
 		MapObjectKindCurtain,
 		MapObjectKindDestructible,
+		MapObjectKindTrap,
 	}
 }
 
@@ -15656,6 +15870,8 @@ func (s MapObjectKind) MarshalText() ([]byte, error) {
 	case MapObjectKindCurtain:
 		return []byte(s), nil
 	case MapObjectKindDestructible:
+		return []byte(s), nil
+	case MapObjectKindTrap:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -15682,6 +15898,9 @@ func (s *MapObjectKind) UnmarshalText(data []byte) error {
 		return nil
 	case MapObjectKindDestructible:
 		*s = MapObjectKindDestructible
+		return nil
+	case MapObjectKindTrap:
+		*s = MapObjectKindTrap
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -17476,6 +17695,52 @@ func (o OptLiveCommandDue) Get() (v LiveCommandDue, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandDue) Or(d LiveCommandDue) LiveCommandDue {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandMethod returns new OptLiveCommandMethod with value set to v.
+func NewOptLiveCommandMethod(v LiveCommandMethod) OptLiveCommandMethod {
+	return OptLiveCommandMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandMethod is optional LiveCommandMethod.
+type OptLiveCommandMethod struct {
+	Value LiveCommandMethod
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandMethod was set.
+func (o OptLiveCommandMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandMethod) Reset() {
+	var v LiveCommandMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandMethod) SetTo(v LiveCommandMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandMethod) Get() (v LiveCommandMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandMethod) Or(d LiveCommandMethod) LiveCommandMethod {
 	if v, ok := o.Get(); ok {
 		return v
 	}
