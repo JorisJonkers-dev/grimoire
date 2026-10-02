@@ -275,7 +275,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
 		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded,
 		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
-		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung, domain.ActionThrown:
+		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung, domain.ActionThrown,
+		domain.ActionSneakStarted, domain.ActionSneakEnded, domain.ActionStealthRolled, domain.ActionPartyNoticed:
 		return s.writeThrown(ctx, sid, w)
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {

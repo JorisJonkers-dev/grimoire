@@ -27,8 +27,9 @@ type state struct {
 	// surfaces is terrain on hexes this Session; cast is the area spell waiting on its rolls.
 	surfaces map[hex.Coord]domain.Surface
 	cast     *domain.AreaCast
-	// terrainKinds is the Surface catalogue.
+	// terrainKinds is the Surface catalogue; sneak the party's sneaking, nil when it is not.
 	terrainKinds surface.Catalog
+	sneak        *domain.Sneak
 	// table is what the Table Display shows; tableMap is the map of its world scene.
 	table    domain.TableDisplay
 	tableMap *domain.Map
@@ -76,6 +77,9 @@ func (s *state) clone() *state {
 	next.checks = slices.Clone(s.checks)
 	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
 	next.inventory, next.day = cloneInventory(s.inventory), s.day
+	if s.sneak != nil {
+		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
+	}
 	if s.shop != nil {
 		next.shop = s.shop.Clone()
 	}
@@ -178,7 +182,7 @@ func (s *state) project(a Audience) View {
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
-	v.Shop, v.Rest, v.GameDay = s.shopView(), s.restView(a), s.day
+	v.Shop, v.Rest, v.GameDay, v.Sneak = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen)
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds = s.zoneViews(), s.surfaceKindViews()
 	}

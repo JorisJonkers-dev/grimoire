@@ -1187,11 +1187,19 @@ type PlaySession struct {
 	EndedAt    pgtype.Timestamptz
 	MapID      pgtype.UUID
 	WorldMapID pgtype.UUID
+	Sneaking   bool
 }
 
 type PlaySessionShop struct {
 	SessionID uuid.UUID
 	ShopID    uuid.UUID
+}
+
+type PlaySneakRoll struct {
+	SessionID uuid.UUID
+	TokenID   uuid.UUID
+	RollID    uuid.UUID
+	Total     pgtype.Int4
 }
 
 type PlaySurface struct {

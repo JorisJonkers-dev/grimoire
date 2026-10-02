@@ -936,6 +936,31 @@ describe('map objects', () => {
   })
 })
 
+describe('sneaking', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
+
+  it('lets the party sneak and tints the hexes watched creatures can notice it in', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria], 'party'))
+    await flushPromises()
+    await wrapper.get('[data-testid="start-sneaking"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'sneak', on: true })
+    s.receive(snapshot([aria], 'party', { sneak: { waiting: true, reach: [{ q: 1, r: 0 }] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="sneak-status"]').text()).toBe('Sneaking: roll Stealth.')
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('watched')
+    s.receive(snapshot([aria], 'party', { sneak: { waiting: false, reach: [] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="sneak-status"]').text()).toBe('Sneaking. Tinted hexes are watched.')
+    await wrapper.get('[data-testid="stop-sneaking"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'sneak', on: false })
+    s.receive(snapshot([aria], 'party', { map: liveMap, sneak: { waiting: false, reach: [{ q: 0, r: 0 }] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('watched')
+  })
+})
+
 describe('table remote', () => {
   const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 2 }
   const brom: LiveToken = { ...aria, id: '0190c7a8-0000-7000-8000-00000000000f', label: 'Brom', q: 2, r: 0 }

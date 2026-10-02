@@ -38,6 +38,7 @@ type Querier interface {
 	AddRestRester(ctx context.Context, arg AddRestResterParams) error
 	AddResumeHex(ctx context.Context, arg AddResumeHexParams) error
 	AddReveal(ctx context.Context, arg AddRevealParams) error
+	AddSneakRoll(ctx context.Context, arg AddSneakRollParams) error
 	AddSpeciesTrait(ctx context.Context, arg AddSpeciesTraitParams) error
 	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
 	AddSpellDamageType(ctx context.Context, arg AddSpellDamageTypeParams) error
@@ -105,6 +106,7 @@ type Querier interface {
 	ClearSessionHaggles(ctx context.Context, sessionID uuid.UUID) error
 	ClearSessionShop(ctx context.Context, sessionID uuid.UUID) error
 	ClearShopStock(ctx context.Context, shopID uuid.UUID) error
+	ClearSneakRolls(ctx context.Context, sessionID uuid.UUID) error
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
 	ClearSurfaceReactions(ctx context.Context, surface string) error
@@ -402,6 +404,8 @@ type Querier interface {
 	SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error)
 	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)
 	SessionShop(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
+	SessionSneakRolls(ctx context.Context, sessionID uuid.UUID) ([]SessionSneakRollsRow, error)
+	SessionSneaking(ctx context.Context, id uuid.UUID) (bool, error)
 	SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error)
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
@@ -428,6 +432,7 @@ type Querier interface {
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error
+	SetSessionSneaking(ctx context.Context, arg SetSessionSneakingParams) error
 	SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error

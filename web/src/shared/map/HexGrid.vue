@@ -93,6 +93,9 @@ const box = computed(() => gridBox(props.cells, props.size))
   stroke: var(--color-gold-high);
   stroke-width: 3;
 }
+.hex--watched polygon {
+  fill: rgb(220 60 60 / 18%);
+}
 .hex--reach polygon {
   fill: #2c4a38;
 }

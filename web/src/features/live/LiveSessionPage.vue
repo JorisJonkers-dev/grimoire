@@ -92,6 +92,7 @@ const cells = computed(() =>
     surfaces: view.value?.surfaces,
     area: areaHexes.value,
     zone: zoneCells.value,
+    reach: view.value?.sneak?.reach,
   }),
 )
 const chosen = computed(() => view.value?.tokens.find((t) => t.id === selected.value) ?? null)
@@ -381,6 +382,14 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
       <InitiativeRail v-if="combat" :combat="combat" :tokens="view?.tokens ?? []" />
       <p v-if="!isDM && turns.length > 0" role="status" class="banner" data-testid="your-turn">Your turn</p>
+      <div v-if="view && !combat" class="row" data-testid="sneak">
+        <GButton :data-testid="view.sneak ? 'stop-sneaking' : 'start-sneaking'" @click="live?.send({ kind: 'sneak', on: !view.sneak })">
+          {{ view.sneak ? 'Stop sneaking' : 'Sneak' }}
+        </GButton>
+        <span v-if="view.sneak" role="status" data-testid="sneak-status">
+          {{ view.sneak.waiting ? 'Sneaking: roll Stealth.' : 'Sneaking. Tinted hexes are watched.' }}
+        </span>
+      </div>
       <section v-if="toRoll.length > 0" class="rolls" aria-label="Initiative to roll">
         <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
         <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
@@ -471,7 +480,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </label>
       </fieldset>
       <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
-      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :zone="zoneCells" :title="view.map.name" @select="pick" />
+      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
         Walk {{ state.path.costFt }} ft. Tap the same hex again to go.

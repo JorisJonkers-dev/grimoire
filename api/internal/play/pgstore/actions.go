@@ -42,12 +42,17 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 //nolint:gosec // coordinates are bounded by the map
 func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
-	if (w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed || w.Kind == domain.ActionConcentrationChecked || w.Kind == domain.ActionDyingChanged) && w.Combat == nil {
+	opens := w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed || w.Kind == domain.ActionConcentrationChecked ||
+		w.Kind == domain.ActionDyingChanged || w.Kind == domain.ActionSneakStarted
+	if opens && w.Combat == nil {
 		if err := s.openRolls(ctx, sess, w.Rolls, actor, c, now); err != nil {
 			return err
 		}
 	}
 	if err := s.savePending(ctx, sid, w); err != nil {
+		return err
+	}
+	if err := s.saveSneak(ctx, sid, w); err != nil {
 		return err
 	}
 	if err := s.saveDying(ctx, sid, w); err != nil {
@@ -134,4 +139,51 @@ func (s *Store) saveDying(ctx context.Context, sid uuid.UUID, w live.Write) erro
 		p.RollID = pgtype.UUID{Bytes: *d.RollID, Valid: true}
 	}
 	return s.q.SaveDying(ctx, p)
+}
+
+// saveSneak writes whether the party sneaks and its Stealth rolls.
+//
+//nolint:gosec // totals are bounded by the dice
+func (s *Store) saveSneak(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if !w.SaveSneak {
+		return nil
+	}
+	if err := s.q.SetSessionSneaking(ctx, queries.SetSessionSneakingParams{ID: sid, Sneaking: w.Sneak != nil}); err != nil {
+		return err
+	}
+	if err := s.q.ClearSneakRolls(ctx, sid); err != nil || w.Sneak == nil {
+		return err
+	}
+	for _, r := range w.Sneak.Rolls {
+		p := queries.AddSneakRollParams{SessionID: sid, TokenID: uuid.UUID(r.Token), RollID: uuid.UUID(r.RollID)}
+		if r.Total != nil {
+			p.Total = pgtype.Int4{Int32: int32(*r.Total), Valid: true}
+		}
+		if err := s.q.AddSneakRoll(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// LoadSneak reads the party's sneaking, nil when it is not.
+func (s *Store) LoadSneak(ctx context.Context, id domain.SessionID) (*domain.Sneak, error) {
+	sneaking, err := s.q.SessionSneaking(ctx, uuid.UUID(id))
+	if err != nil || !sneaking {
+		return nil, err
+	}
+	rows, err := s.q.SessionSneakRolls(ctx, uuid.UUID(id))
+	if err != nil {
+		return nil, err
+	}
+	out := &domain.Sneak{Rolls: nil}
+	for _, r := range rows {
+		sr := domain.SneakRoll{Token: domain.TokenID(r.TokenID), RollID: domain.RollID(r.RollID), Total: nil}
+		if r.Total.Valid {
+			total := int(r.Total.Int32)
+			sr.Total = &total
+		}
+		out.Rolls = append(out.Rolls, sr)
+	}
+	return out, nil
 }

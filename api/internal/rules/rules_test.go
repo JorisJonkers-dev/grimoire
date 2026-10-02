@@ -230,3 +230,25 @@ func TestProficiencyByChallenge(t *testing.T) {
 		}
 	}
 }
+
+func TestGroupChecks(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct {
+		totals []int
+		dc     int
+		want   bool
+	}{
+		{[]int{15, 9}, 12, true},
+		{[]int{15, 9, 8}, 12, false},
+		{[]int{12, 12, 1, 1}, 12, true},
+		{[]int{11}, 12, false},
+		{nil, 1, false},
+	} {
+		if got := rules.GroupCheck(c.totals, c.dc); got != c.want {
+			t.Errorf("%v against %d = %v", c.totals, c.dc, got)
+		}
+	}
+	if rules.PassivePerception(3) != 13 {
+		t.Error("passive Perception")
+	}
+}

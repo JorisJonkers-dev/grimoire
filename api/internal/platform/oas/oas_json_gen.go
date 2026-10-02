@@ -14642,6 +14642,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindJump
 	case LiveCommandKindThrow:
 		*s = LiveCommandKindThrow
+	case LiveCommandKindSneak:
+		*s = LiveCommandKindSneak
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -21558,6 +21560,12 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Sneak.Set {
+			e.FieldStart("sneak")
+			s.Sneak.Encode(e)
+		}
+	}
+	{
 		if s.SurfaceKinds != nil {
 			e.FieldStart("surfaceKinds")
 			e.ArrStart()
@@ -21663,7 +21671,7 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveView = [26]string{
+var jsonFieldsNameOfLiveView = [27]string{
 	0:  "tokens",
 	1:  "map",
 	2:  "fog",
@@ -21678,18 +21686,19 @@ var jsonFieldsNameOfLiveView = [26]string{
 	11: "area",
 	12: "table",
 	13: "world",
-	14: "surfaceKinds",
-	15: "objects",
-	16: "zones",
-	17: "perception",
-	18: "checks",
-	19: "inventory",
-	20: "shop",
-	21: "rest",
-	22: "gameDay",
-	23: "walls",
-	24: "lights",
-	25: "ambient",
+	14: "sneak",
+	15: "surfaceKinds",
+	16: "objects",
+	17: "zones",
+	18: "perception",
+	19: "checks",
+	20: "inventory",
+	21: "shop",
+	22: "rest",
+	23: "gameDay",
+	24: "walls",
+	25: "lights",
+	26: "ambient",
 }
 
 // Decode decodes LiveView from json.
@@ -21894,6 +21903,16 @@ func (s *LiveView) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"world\"")
+			}
+		case "sneak":
+			if err := func() error {
+				s.Sneak.Reset()
+				if err := s.Sneak.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"sneak\"")
 			}
 		case "surfaceKinds":
 			if err := func() error {
@@ -22126,6 +22145,213 @@ func (s *LiveView) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveView) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveViewSneak) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveViewSneak) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("waiting")
+		e.Bool(s.Waiting)
+	}
+	{
+		e.FieldStart("reach")
+		e.ArrStart()
+		for _, elem := range s.Reach {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
+		if s.Totals.Set {
+			e.FieldStart("totals")
+			s.Totals.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfLiveViewSneak = [3]string{
+	0: "waiting",
+	1: "reach",
+	2: "totals",
+}
+
+// Decode decodes LiveViewSneak from json.
+func (s *LiveViewSneak) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveViewSneak to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "waiting":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Bool()
+				s.Waiting = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"waiting\"")
+			}
+		case "reach":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				s.Reach = make([]HexCoord, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem HexCoord
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Reach = append(s.Reach, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"reach\"")
+			}
+		case "totals":
+			if err := func() error {
+				s.Totals.Reset()
+				if err := s.Totals.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"totals\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveViewSneak")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveViewSneak) {
+					name = jsonFieldsNameOfLiveViewSneak[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveViewSneak) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveViewSneak) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s LiveViewSneakTotals) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields implements json.Marshaler.
+func (s LiveViewSneakTotals) encodeFields(e *jx.Encoder) {
+	for k, elem := range s {
+		e.FieldStart(k)
+
+		e.Int32(elem)
+	}
+}
+
+// Decode decodes LiveViewSneakTotals from json.
+func (s *LiveViewSneakTotals) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveViewSneakTotals to nil")
+	}
+	m := s.init()
+	var propertiesCount int
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		propertiesCount++
+		var elem int32
+		if err := func() error {
+			v, err := d.Int32()
+			elem = int32(v)
+			if err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			return errors.Wrapf(err, "decode field %q", k)
+		}
+		m[string(k)] = elem
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveViewSneakTotals")
+	}
+	// Validate properties count.
+	if err := (validate.Object{
+		MinProperties:    0,
+		MinPropertiesSet: false,
+		MaxProperties:    50,
+		MaxPropertiesSet: true,
+	}).ValidateProperties(propertiesCount); err != nil {
+		return errors.Wrap(err, "object")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveViewSneakTotals) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveViewSneakTotals) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -27028,6 +27254,73 @@ func (s OptLiveView) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveView) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveViewSneak as json.
+func (o OptLiveViewSneak) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveViewSneak from json.
+func (o *OptLiveViewSneak) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveViewSneak to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveViewSneak) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveViewSneak) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveViewSneakTotals as json.
+func (o OptLiveViewSneakTotals) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveViewSneakTotals from json.
+func (o *OptLiveViewSneakTotals) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveViewSneakTotals to nil")
+	}
+	o.Set = true
+	o.Value = make(LiveViewSneakTotals)
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveViewSneakTotals) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveViewSneakTotals) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

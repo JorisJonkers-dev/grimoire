@@ -1724,7 +1724,8 @@ export const zLiveCommand = z.object({
         'unlock',
         'disarm',
         'jump',
-        'throw'
+        'throw',
+        'sneak'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1990,6 +1991,11 @@ export const zLiveView = z.object({
     area: zLiveArea.optional(),
     table: zLiveTable.optional(),
     world: zLiveWorld.optional(),
+    sneak: z.object({
+        waiting: z.boolean(),
+        reach: z.array(zHexCoord).max(4000),
+        totals: z.record(z.string(), z.int().gte(-20).lte(80)).optional()
+    }).optional(),
     surfaceKinds: z.array(z.object({
         kind: z.string().max(40),
         name: z.string().max(40)

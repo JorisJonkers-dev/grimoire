@@ -6,8 +6,8 @@ import { describe, groundNotes, initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const props = withDefaults(
-  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; area?: Coord[]; zone?: Coord[]; title: string }>(),
-  { dm: false, selected: null, path: () => [], area: () => [], zone: () => [] },
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; title: string }>(),
+  { dm: false, selected: null, path: () => [], area: () => [], zone: () => [], reach: () => [] },
 )
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
@@ -24,6 +24,7 @@ const heights = computed(() => new Map((props.view.elevation ?? []).map((e) => [
 const shade = (ft: number) => Math.min(0.6, 0.12 + Math.abs(ft) / 50).toFixed(2)
 const area = computed(() => new Set(props.area.map(key)))
 const zone = computed(() => new Set(props.zone.map(key)))
+const reach = computed(() => new Set(props.reach.map(key)))
 const points = (c: Coord) =>
   corners(layout.value, c)
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
@@ -47,7 +48,7 @@ const cells = computed(() =>
       lights.value.has(k) ? 'light' : '',
       objectNote(k),
       route.value.has(k) ? 'on the path' : '',
-      ...groundNotes(k, surfaces.value, area.value, zone.value),
+      ...groundNotes(k, surfaces.value, area.value, zone.value, reach.value),
       heights.value.has(k) ? `${String(heights.value.get(k))} ft high` : '',
     ]
       .filter(Boolean)
@@ -72,7 +73,7 @@ const cells = computed(() =>
       <g
         v-for="c in cells"
         :key="c.k"
-        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
+        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k), 'cell--watched': reach.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
         role="button"
         tabindex="0"
         :aria-label="c.label"
@@ -117,6 +118,9 @@ const cells = computed(() =>
 }
 .cell .height--down {
   fill: #000;
+}
+.cell--watched polygon {
+  fill: rgb(220 60 60 / 18%);
 }
 .cell--remembered polygon {
   fill: rgb(0 0 0 / 55%);

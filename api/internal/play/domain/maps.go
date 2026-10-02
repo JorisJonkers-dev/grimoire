@@ -117,4 +117,22 @@ const (
 	// ActionJumped is a creature leaping; ActionThrown one throwing a creature or an object.
 	ActionJumped = "jumped"
 	ActionThrown = "thrown"
+	// Sneaking action kinds.
+	ActionSneakStarted  = "sneak_started"
+	ActionSneakEnded    = "sneak_ended"
+	ActionStealthRolled = "stealth_rolled"
+	ActionPartyNoticed  = "party_noticed"
 )
+
+// Sneak is the party moving quietly with a group Stealth check: each member's roll and, once rolled,
+// its total.
+type Sneak struct {
+	Rolls []SneakRoll
+}
+
+// SneakRoll is one member's Stealth roll for a Sneak.
+type SneakRoll struct {
+	Token  TokenID
+	RollID RollID
+	Total  *int
+}

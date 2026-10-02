@@ -10382,6 +10382,7 @@ const (
 	LiveCommandKindDisarm         LiveCommandKind = "disarm"
 	LiveCommandKindJump           LiveCommandKind = "jump"
 	LiveCommandKindThrow          LiveCommandKind = "throw"
+	LiveCommandKindSneak          LiveCommandKind = "sneak"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10469,6 +10470,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindDisarm,
 		LiveCommandKindJump,
 		LiveCommandKindThrow,
+		LiveCommandKindSneak,
 	}
 }
 
@@ -10638,6 +10640,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindJump:
 		return []byte(s), nil
 	case LiveCommandKindThrow:
+		return []byte(s), nil
+	case LiveCommandKindSneak:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10892,6 +10896,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindThrow:
 		*s = LiveCommandKindThrow
+		return nil
+	case LiveCommandKindSneak:
+		*s = LiveCommandKindSneak
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -14433,6 +14440,9 @@ type LiveView struct {
 	Area      OptLiveArea     `json:"area"`
 	Table     OptLiveTable    `json:"table"`
 	World     OptLiveWorld    `json:"world"`
+	// The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would
+	// notice it.
+	Sneak OptLiveViewSneak `json:"sneak"`
 	// The Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
@@ -14519,6 +14529,11 @@ func (s *LiveView) GetTable() OptLiveTable {
 // GetWorld returns the value of World.
 func (s *LiveView) GetWorld() OptLiveWorld {
 	return s.World
+}
+
+// GetSneak returns the value of Sneak.
+func (s *LiveView) GetSneak() OptLiveViewSneak {
+	return s.Sneak
 }
 
 // GetSurfaceKinds returns the value of SurfaceKinds.
@@ -14651,6 +14666,11 @@ func (s *LiveView) SetWorld(val OptLiveWorld) {
 	s.World = val
 }
 
+// SetSneak sets the value of Sneak.
+func (s *LiveView) SetSneak(val OptLiveViewSneak) {
+	s.Sneak = val
+}
+
 // SetSurfaceKinds sets the value of SurfaceKinds.
 func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
 	s.SurfaceKinds = val
@@ -14760,6 +14780,58 @@ func (s *LiveViewHeaders) SetResponse(val LiveView) {
 }
 
 func (*LiveViewHeaders) getSessionViewRes() {}
+
+// The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would
+// notice it.
+type LiveViewSneak struct {
+	// Stealth rolls are still out.
+	Waiting bool       `json:"waiting"`
+	Reach   []HexCoord `json:"reach"`
+	// Each member's Stealth total by token id, for the DM only.
+	Totals OptLiveViewSneakTotals `json:"totals"`
+}
+
+// GetWaiting returns the value of Waiting.
+func (s *LiveViewSneak) GetWaiting() bool {
+	return s.Waiting
+}
+
+// GetReach returns the value of Reach.
+func (s *LiveViewSneak) GetReach() []HexCoord {
+	return s.Reach
+}
+
+// GetTotals returns the value of Totals.
+func (s *LiveViewSneak) GetTotals() OptLiveViewSneakTotals {
+	return s.Totals
+}
+
+// SetWaiting sets the value of Waiting.
+func (s *LiveViewSneak) SetWaiting(val bool) {
+	s.Waiting = val
+}
+
+// SetReach sets the value of Reach.
+func (s *LiveViewSneak) SetReach(val []HexCoord) {
+	s.Reach = val
+}
+
+// SetTotals sets the value of Totals.
+func (s *LiveViewSneak) SetTotals(val OptLiveViewSneakTotals) {
+	s.Totals = val
+}
+
+// Each member's Stealth total by token id, for the DM only.
+type LiveViewSneakTotals map[string]int32
+
+func (s *LiveViewSneakTotals) init() LiveViewSneakTotals {
+	m := *s
+	if m == nil {
+		m = map[string]int32{}
+		*s = m
+	}
+	return m
+}
 
 type LiveViewSurfaceKindsItem struct {
 	Kind string `json:"kind"`
@@ -18585,6 +18657,98 @@ func (o OptLiveView) Get() (v LiveView, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveView) Or(d LiveView) LiveView {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveViewSneak returns new OptLiveViewSneak with value set to v.
+func NewOptLiveViewSneak(v LiveViewSneak) OptLiveViewSneak {
+	return OptLiveViewSneak{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveViewSneak is optional LiveViewSneak.
+type OptLiveViewSneak struct {
+	Value LiveViewSneak
+	Set   bool
+}
+
+// IsSet returns true if OptLiveViewSneak was set.
+func (o OptLiveViewSneak) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveViewSneak) Reset() {
+	var v LiveViewSneak
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveViewSneak) SetTo(v LiveViewSneak) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveViewSneak) Get() (v LiveViewSneak, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveViewSneak) Or(d LiveViewSneak) LiveViewSneak {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveViewSneakTotals returns new OptLiveViewSneakTotals with value set to v.
+func NewOptLiveViewSneakTotals(v LiveViewSneakTotals) OptLiveViewSneakTotals {
+	return OptLiveViewSneakTotals{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveViewSneakTotals is optional LiveViewSneakTotals.
+type OptLiveViewSneakTotals struct {
+	Value LiveViewSneakTotals
+	Set   bool
+}
+
+// IsSet returns true if OptLiveViewSneakTotals was set.
+func (o OptLiveViewSneakTotals) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveViewSneakTotals) Reset() {
+	var v LiveViewSneakTotals
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveViewSneakTotals) SetTo(v LiveViewSneakTotals) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveViewSneakTotals) Get() (v LiveViewSneakTotals, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveViewSneakTotals) Or(d LiveViewSneakTotals) LiveViewSneakTotals {
 	if v, ok := o.Get(); ok {
 		return v
 	}

@@ -48,6 +48,27 @@ func (q *Queries) AddResumeHex(ctx context.Context, arg AddResumeHexParams) erro
 	return err
 }
 
+const addSneakRoll = `-- name: AddSneakRoll :exec
+INSERT INTO play.sneak_rolls (session_id, token_id, roll_id, total) VALUES ($1, $2, $3, $4)
+`
+
+type AddSneakRollParams struct {
+	SessionID uuid.UUID
+	TokenID   uuid.UUID
+	RollID    uuid.UUID
+	Total     pgtype.Int4
+}
+
+func (q *Queries) AddSneakRoll(ctx context.Context, arg AddSneakRollParams) error {
+	_, err := q.db.Exec(ctx, addSneakRoll,
+		arg.SessionID,
+		arg.TokenID,
+		arg.RollID,
+		arg.Total,
+	)
+	return err
+}
+
 const addTokenQuality = `-- name: AddTokenQuality :exec
 INSERT INTO play.token_qualities (token_id, quality, seen_through) VALUES ($1, $2, $3)
 `
@@ -281,6 +302,15 @@ func (q *Queries) ClearResumePath(ctx context.Context, combatID uuid.UUID) error
 	return err
 }
 
+const clearSneakRolls = `-- name: ClearSneakRolls :exec
+DELETE FROM play.sneak_rolls WHERE session_id = $1
+`
+
+func (q *Queries) ClearSneakRolls(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearSneakRolls, sessionID)
+	return err
+}
+
 const clearSurfaces = `-- name: ClearSurfaces :exec
 DELETE FROM play.surfaces WHERE session_id = $1
 `
@@ -499,7 +529,7 @@ func (q *Queries) EndSession(ctx context.Context, arg EndSessionParams) (int64, 
 }
 
 const getSession = `-- name: GetSession :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
 FROM play.sessions WHERE campaign_id = $1 AND id = $2
 `
 
@@ -522,6 +552,7 @@ func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (PlaySes
 		&i.EndedAt,
 		&i.MapID,
 		&i.WorldMapID,
+		&i.Sneaking,
 	)
 	return i, err
 }
@@ -717,7 +748,7 @@ func (q *Queries) InsertPendingSave(ctx context.Context, arg InsertPendingSavePa
 
 const insertSession = `-- name: InsertSession :one
 INSERT INTO play.sessions (campaign_id, number, status, started_at) VALUES ($1, $2, 'live', $3)
-RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
+RETURNING id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
 `
 
 type InsertSessionParams struct {
@@ -740,6 +771,7 @@ func (q *Queries) InsertSession(ctx context.Context, arg InsertSessionParams) (P
 		&i.EndedAt,
 		&i.MapID,
 		&i.WorldMapID,
+		&i.Sneaking,
 	)
 	return i, err
 }
@@ -977,7 +1009,7 @@ func (q *Queries) LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDa
 }
 
 const listSessions = `-- name: ListSessions :many
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking
 FROM play.sessions WHERE campaign_id = $1 ORDER BY number DESC LIMIT 50
 `
 
@@ -1001,6 +1033,7 @@ func (q *Queries) ListSessions(ctx context.Context, campaignID uuid.UUID) ([]Pla
 			&i.EndedAt,
 			&i.MapID,
 			&i.WorldMapID,
+			&i.Sneaking,
 		); err != nil {
 			return nil, err
 		}
@@ -1791,7 +1824,7 @@ func (q *Queries) SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) er
 }
 
 const sessionByID = `-- name: SessionByID :one
-SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id FROM play.sessions WHERE id = $1
+SELECT id, campaign_id, number, status, seq, grid_radius, started_at, ended_at, map_id, world_map_id, sneaking FROM play.sessions WHERE id = $1
 `
 
 func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error) {
@@ -1808,6 +1841,7 @@ func (q *Queries) SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, e
 		&i.EndedAt,
 		&i.MapID,
 		&i.WorldMapID,
+		&i.Sneaking,
 	)
 	return i, err
 }
@@ -2059,6 +2093,47 @@ func (q *Queries) SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const sessionSneakRolls = `-- name: SessionSneakRolls :many
+SELECT token_id, roll_id, total FROM play.sneak_rolls WHERE session_id = $1 ORDER BY token_id
+`
+
+type SessionSneakRollsRow struct {
+	TokenID uuid.UUID
+	RollID  uuid.UUID
+	Total   pgtype.Int4
+}
+
+func (q *Queries) SessionSneakRolls(ctx context.Context, sessionID uuid.UUID) ([]SessionSneakRollsRow, error) {
+	rows, err := q.db.Query(ctx, sessionSneakRolls, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SessionSneakRollsRow{}
+	for rows.Next() {
+		var i SessionSneakRollsRow
+		if err := rows.Scan(&i.TokenID, &i.RollID, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sessionSneaking = `-- name: SessionSneaking :one
+SELECT sneaking FROM play.sessions WHERE id = $1
+`
+
+func (q *Queries) SessionSneaking(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, sessionSneaking, id)
+	var sneaking bool
+	err := row.Scan(&sneaking)
+	return sneaking, err
 }
 
 const sessionSurfaces = `-- name: SessionSurfaces :many
@@ -2504,6 +2579,20 @@ func (q *Queries) SetElevation(ctx context.Context, arg SetElevationParams) erro
 		arg.R,
 		arg.ElevationFt,
 	)
+	return err
+}
+
+const setSessionSneaking = `-- name: SetSessionSneaking :exec
+UPDATE play.sessions SET sneaking = $1 WHERE id = $2
+`
+
+type SetSessionSneakingParams struct {
+	Sneaking bool
+	ID       uuid.UUID
+}
+
+func (q *Queries) SetSessionSneaking(ctx context.Context, arg SetSessionSneakingParams) error {
+	_, err := q.db.Exec(ctx, setSessionSneaking, arg.Sneaking, arg.ID)
 	return err
 }
 

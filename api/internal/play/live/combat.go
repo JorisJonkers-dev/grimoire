@@ -181,6 +181,10 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.actionRolled(p)
 		return true
 	}
+	if t, ok := r.st.sneakRoll(id); ok {
+		r.stealthRolled(t, id)
+		return true
+	}
 	if i, ok := r.st.pendingHitDie(id); ok {
 		r.hitDieRolled(i, id)
 		return true
@@ -250,6 +254,9 @@ func applyCombat(s *state, w *Write) {
 	switch w.Kind {
 	case domain.ActionCombatStarted:
 		s.combat = w.Combat
+		if s.sneak != nil {
+			s.sneak, w.Sneak, w.SaveSneak = nil, nil, true
+		}
 		return
 	case domain.ActionCombatEnded:
 		s.combat = nil
