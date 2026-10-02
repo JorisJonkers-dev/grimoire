@@ -124,3 +124,33 @@ func TestOIDCErrorPaths(t *testing.T) {
 		t.Error("OIDCEnabled")
 	}
 }
+
+// A Member who came in through forward-auth already has an Account on their subject; their login links
+// to it on the first sign-in instead of asking them to set one up.
+func TestOIDCClaimsMigratedMembers(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	login := fakeProvider{claims: domain.Claims{Subject: "estate", Email: "a@b.c", Roles: []string{"grimoire"}, Nonce: "n"}}
+	migrated := func(fail string) *fakeRepo {
+		return &fakeRepo{fail: fail, nonce: "n", unlinked: true, noLink: true, account: domain.Account{ID: uuid.New(), Subject: "estate", Username: "member-1"}}
+	}
+	out, err := oidcService(migrated(""), login).FinishOIDC(ctx, "c", "s", "ua")
+	if err != nil || out.Session == "" || out.Pending != nil {
+		t.Fatalf("a migrated Member = %+v %v", out, err)
+	}
+	for _, call := range []string{"by subject", "has password", "insert oidc link", "update profile", "insert event"} {
+		if _, err := oidcService(migrated(call), login).FinishOIDC(ctx, "c", "s", "ua"); !errors.Is(err, errBoom) {
+			t.Errorf("claiming failing at %s = %v", call, err)
+		}
+	}
+	linked := migrated("")
+	linked.noLink = false
+	if out, err := oidcService(linked, login).FinishOIDC(ctx, "c", "s", "ua"); err != nil || out.Pending == nil {
+		t.Errorf("an Account with another link is not claimed = %+v %v", out, err)
+	}
+	withPassword := migrated("")
+	withPassword.hash = "x"
+	if out, err := oidcService(withPassword, login).FinishOIDC(ctx, "c", "s", "ua"); err != nil || out.Pending == nil {
+		t.Errorf("an Account with a password is not claimed = %+v %v", out, err)
+	}
+}

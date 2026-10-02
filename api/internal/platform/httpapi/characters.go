@@ -22,6 +22,10 @@ type CharacterService interface {
 	SetImage(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, data []byte) error
 	ClearToken(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) error
 	Image(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind) (domain.Image, []byte, error)
+	Mine(ctx context.Context, c caller.Caller) ([]domain.OwnedCharacter, error)
+	Owned(ctx context.Context, c caller.Caller, id domain.OwnedID) (domain.OwnedCharacter, error)
+	UpdateOwned(ctx context.Context, c caller.Caller, id domain.OwnedID, name, backstory string) (domain.OwnedCharacter, error)
+	Join(ctx context.Context, c caller.Caller, id domain.OwnedID, campaign domain.CampaignID) (app.Sheet, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {

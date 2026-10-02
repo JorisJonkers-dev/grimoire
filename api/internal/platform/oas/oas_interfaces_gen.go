@@ -177,6 +177,10 @@ type GetMeRes interface {
 	getMeRes()
 }
 
+type GetMyCharacterRes interface {
+	getMyCharacterRes()
+}
+
 type GetNpcRes interface {
 	getNpcRes()
 }
@@ -223,6 +227,10 @@ type GetStatusRes interface {
 
 type GetTokenIconRes interface {
 	getTokenIconRes()
+}
+
+type JoinCampaignRes interface {
+	joinCampaignRes()
 }
 
 type LinkOidcAccountRes interface {
@@ -295,6 +303,10 @@ type ListLootTablesRes interface {
 
 type ListMapsRes interface {
 	listMapsRes()
+}
+
+type ListMyCharactersRes interface {
+	listMyCharactersRes()
 }
 
 type ListNpcRevisionsRes interface {
@@ -507,6 +519,10 @@ type UpdateMapRes interface {
 
 type UpdateMemberRes interface {
 	updateMemberRes()
+}
+
+type UpdateMyCharacterRes interface {
+	updateMyCharacterRes()
 }
 
 type UpdateNpcRes interface {

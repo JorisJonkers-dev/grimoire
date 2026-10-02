@@ -29,8 +29,10 @@ func dungeonTable(t *testing.T) (world, *table, map[string]string) {
 		sql  string
 		args []any
 	}{
-		{`INSERT INTO campaign.characters (id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug, ability_method, hp_max, hp_current)
-			VALUES ($1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 12, 12)`, []any{aria, w.session.CampaignID, w.player.ID}},
+		{`WITH hero AS (INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+			SELECT $1, m.auth_subject, 'Hero', 'srd-2024', 'human', 'fighter', 'soldier', now(), now() FROM campaign.members m WHERE m.id = $3)
+		INSERT INTO campaign.characters (character_id, id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug, ability_method, hp_max, hp_current)
+			VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 12, 12)`, []any{aria, w.session.CampaignID, w.player.ID}},
 		{`INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at) VALUES ($1, $2, 'character', $3, 'Aria', now())`, []any{bag, w.session.CampaignID, aria}},
 		{`INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at) VALUES ($1, $2, 'iron-key', 1, true, false, now())`, []any{uuid.New(), bag}},
 	} {

@@ -18,7 +18,7 @@ func (h *Handler) adminError(ctx context.Context, op string, err error) *oas.Pro
 	case errors.Is(err, domain.ErrNotFound):
 		return problem(http.StatusNotFound, "Not found", "There is no such Account.")
 	case errors.Is(err, domain.ErrConflict):
-		return problem(http.StatusConflict, "Not allowed", "You cannot do that to your own Account, or to a disabled one.")
+		return problem(http.StatusConflict, "Not allowed", "You cannot do that to your own Account, to a disabled one, or email one without an email.")
 	}
 	return h.identityError(ctx, op, err)
 }

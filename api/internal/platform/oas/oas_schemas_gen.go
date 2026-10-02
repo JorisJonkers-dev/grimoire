@@ -3190,6 +3190,77 @@ func (s *CampaignCreate) SetDisplayName(val DisplayName) {
 	s.DisplayName = val
 }
 
+// A Character's progress in one Campaign.
+// Ref: #/components/schemas/CampaignEntry
+type CampaignEntry struct {
+	CampaignId   ID     `json:"campaignId"`
+	CampaignName string `json:"campaignName"`
+	CharacterId  ID     `json:"characterId"`
+	Level        int32  `json:"level"`
+	HpCurrent    int32  `json:"hpCurrent"`
+	HpMax        int32  `json:"hpMax"`
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *CampaignEntry) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// GetCampaignName returns the value of CampaignName.
+func (s *CampaignEntry) GetCampaignName() string {
+	return s.CampaignName
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *CampaignEntry) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetLevel returns the value of Level.
+func (s *CampaignEntry) GetLevel() int32 {
+	return s.Level
+}
+
+// GetHpCurrent returns the value of HpCurrent.
+func (s *CampaignEntry) GetHpCurrent() int32 {
+	return s.HpCurrent
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *CampaignEntry) GetHpMax() int32 {
+	return s.HpMax
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *CampaignEntry) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
+// SetCampaignName sets the value of CampaignName.
+func (s *CampaignEntry) SetCampaignName(val string) {
+	s.CampaignName = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *CampaignEntry) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetLevel sets the value of Level.
+func (s *CampaignEntry) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetHpCurrent sets the value of HpCurrent.
+func (s *CampaignEntry) SetHpCurrent(val int32) {
+	s.HpCurrent = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *CampaignEntry) SetHpMax(val int32) {
+	s.HpMax = val
+}
+
 // CampaignHeaders wraps Campaign with response headers.
 type CampaignHeaders struct {
 	RateLimitLimit     OptInt32
@@ -3921,6 +3992,22 @@ func (s *CharacterEdit) SetWeapons(val []Slug) {
 	s.Weapons = val
 }
 
+// The Campaign a Character joins.
+// Ref: #/components/schemas/CharacterJoin
+type CharacterJoin struct {
+	CampaignId ID `json:"campaignId"`
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *CharacterJoin) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *CharacterJoin) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
 type CharacterName string
 
 // A Character's sheet with every value derived by the rules.
@@ -4330,6 +4417,7 @@ func (s *CharacterSheetHeaders) SetResponse(val CharacterSheet) {
 
 func (*CharacterSheetHeaders) createCharacterRes()  {}
 func (*CharacterSheetHeaders) getCharacterRes()     {}
+func (*CharacterSheetHeaders) joinCampaignRes()     {}
 func (*CharacterSheetHeaders) previewCharacterRes() {}
 func (*CharacterSheetHeaders) updateCharacterRes()  {}
 
@@ -21853,6 +21941,254 @@ func (o OptTravelPace) Or(d TravelPace) TravelPace {
 	return d
 }
 
+// A Character an Account owns (ADR-0010), with its progress in each Campaign.
+// Ref: #/components/schemas/OwnedCharacter
+type OwnedCharacter struct {
+	ID          ID              `json:"id"`
+	Name        string          `json:"name"`
+	Ruleset     string          `json:"ruleset"`
+	Species     string          `json:"species"`
+	Class       string          `json:"class"`
+	Background  string          `json:"background"`
+	Backstory   string          `json:"backstory"`
+	HasPortrait bool            `json:"hasPortrait"`
+	Campaigns   []CampaignEntry `json:"campaigns"`
+}
+
+// GetID returns the value of ID.
+func (s *OwnedCharacter) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *OwnedCharacter) GetName() string {
+	return s.Name
+}
+
+// GetRuleset returns the value of Ruleset.
+func (s *OwnedCharacter) GetRuleset() string {
+	return s.Ruleset
+}
+
+// GetSpecies returns the value of Species.
+func (s *OwnedCharacter) GetSpecies() string {
+	return s.Species
+}
+
+// GetClass returns the value of Class.
+func (s *OwnedCharacter) GetClass() string {
+	return s.Class
+}
+
+// GetBackground returns the value of Background.
+func (s *OwnedCharacter) GetBackground() string {
+	return s.Background
+}
+
+// GetBackstory returns the value of Backstory.
+func (s *OwnedCharacter) GetBackstory() string {
+	return s.Backstory
+}
+
+// GetHasPortrait returns the value of HasPortrait.
+func (s *OwnedCharacter) GetHasPortrait() bool {
+	return s.HasPortrait
+}
+
+// GetCampaigns returns the value of Campaigns.
+func (s *OwnedCharacter) GetCampaigns() []CampaignEntry {
+	return s.Campaigns
+}
+
+// SetID sets the value of ID.
+func (s *OwnedCharacter) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *OwnedCharacter) SetName(val string) {
+	s.Name = val
+}
+
+// SetRuleset sets the value of Ruleset.
+func (s *OwnedCharacter) SetRuleset(val string) {
+	s.Ruleset = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *OwnedCharacter) SetSpecies(val string) {
+	s.Species = val
+}
+
+// SetClass sets the value of Class.
+func (s *OwnedCharacter) SetClass(val string) {
+	s.Class = val
+}
+
+// SetBackground sets the value of Background.
+func (s *OwnedCharacter) SetBackground(val string) {
+	s.Background = val
+}
+
+// SetBackstory sets the value of Backstory.
+func (s *OwnedCharacter) SetBackstory(val string) {
+	s.Backstory = val
+}
+
+// SetHasPortrait sets the value of HasPortrait.
+func (s *OwnedCharacter) SetHasPortrait(val bool) {
+	s.HasPortrait = val
+}
+
+// SetCampaigns sets the value of Campaigns.
+func (s *OwnedCharacter) SetCampaigns(val []CampaignEntry) {
+	s.Campaigns = val
+}
+
+// A Character's new name and Backstory.
+// Ref: #/components/schemas/OwnedCharacterChange
+type OwnedCharacterChange struct {
+	Name      string `json:"name"`
+	Backstory string `json:"backstory"`
+}
+
+// GetName returns the value of Name.
+func (s *OwnedCharacterChange) GetName() string {
+	return s.Name
+}
+
+// GetBackstory returns the value of Backstory.
+func (s *OwnedCharacterChange) GetBackstory() string {
+	return s.Backstory
+}
+
+// SetName sets the value of Name.
+func (s *OwnedCharacterChange) SetName(val string) {
+	s.Name = val
+}
+
+// SetBackstory sets the value of Backstory.
+func (s *OwnedCharacterChange) SetBackstory(val string) {
+	s.Backstory = val
+}
+
+// OwnedCharacterHeaders wraps OwnedCharacter with response headers.
+type OwnedCharacterHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           OwnedCharacter
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *OwnedCharacterHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *OwnedCharacterHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *OwnedCharacterHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *OwnedCharacterHeaders) GetResponse() OwnedCharacter {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *OwnedCharacterHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *OwnedCharacterHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *OwnedCharacterHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *OwnedCharacterHeaders) SetResponse(val OwnedCharacter) {
+	s.Response = val
+}
+
+func (*OwnedCharacterHeaders) getMyCharacterRes()    {}
+func (*OwnedCharacterHeaders) updateMyCharacterRes() {}
+
+// The Characters an Account owns.
+// Ref: #/components/schemas/OwnedCharacterList
+type OwnedCharacterList struct {
+	Items []OwnedCharacter `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *OwnedCharacterList) GetItems() []OwnedCharacter {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *OwnedCharacterList) SetItems(val []OwnedCharacter) {
+	s.Items = val
+}
+
+// OwnedCharacterListHeaders wraps OwnedCharacterList with response headers.
+type OwnedCharacterListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           OwnedCharacterList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *OwnedCharacterListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *OwnedCharacterListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *OwnedCharacterListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *OwnedCharacterListHeaders) GetResponse() OwnedCharacterList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *OwnedCharacterListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *OwnedCharacterListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *OwnedCharacterListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *OwnedCharacterListHeaders) SetResponse(val OwnedCharacterList) {
+	s.Response = val
+}
+
+func (*OwnedCharacterListHeaders) listMyCharactersRes() {}
+
 // A new password.
 // Ref: #/components/schemas/PasswordChange
 type PasswordChange struct {
@@ -22207,6 +22543,7 @@ func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
+func (*ProblemStatusCodeWithHeaders) getMyCharacterRes()                {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getPushKeyRes()                    {}
@@ -22219,6 +22556,7 @@ func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
@@ -22237,6 +22575,7 @@ func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listLootTableRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listLootTablesRes()                {}
 func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
@@ -22290,6 +22629,7 @@ func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateMemberRes()                  {}
+func (*ProblemStatusCodeWithHeaders) updateMyCharacterRes()             {}
 func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}

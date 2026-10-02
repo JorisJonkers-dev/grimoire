@@ -18,7 +18,7 @@ func (s *Store) ListAccounts(ctx context.Context) ([]domain.Listed, error) {
 	}
 	out := make([]domain.Listed, 0, len(rows))
 	for _, r := range rows {
-		l := domain.Listed{Account: account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), LastSeenAt: nil}
+		l := domain.Listed{Account: account(r.ID, r.Subject, r.Username, r.Nickname, r.Email.String, r.Admin, r.Disabled, r.CreatedAt), LastSeenAt: nil}
 		if seen, ok := r.LastSeenAt.(time.Time); ok {
 			l.LastSeenAt = &seen
 		}

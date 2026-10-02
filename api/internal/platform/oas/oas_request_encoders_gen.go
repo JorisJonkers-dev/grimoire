@@ -262,6 +262,20 @@ func encodeFinishOidcRequest(
 	return nil
 }
 
+func encodeJoinCampaignRequest(
+	req *CharacterJoin,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeLinkOidcAccountRequest(
 	req *OidcAccountLink,
 	r *http.Request,
@@ -592,6 +606,20 @@ func encodeUpdateMapRequest(
 
 func encodeUpdateMemberRequest(
 	req *MemberUpdate,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateMyCharacterRequest(
+	req *OwnedCharacterChange,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

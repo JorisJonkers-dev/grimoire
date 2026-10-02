@@ -53,7 +53,7 @@ type AccountByEmailRow struct {
 	Subject   string
 	Username  string
 	Nickname  string
-	Email     string
+	Email     pgtype.Text
 	Admin     bool
 	Disabled  bool
 	CreatedAt time.Time
@@ -84,7 +84,7 @@ type AccountByIDRow struct {
 	Subject   string
 	Username  string
 	Nickname  string
-	Email     string
+	Email     pgtype.Text
 	Admin     bool
 	Disabled  bool
 	CreatedAt time.Time
@@ -115,7 +115,7 @@ type AccountBySubjectRow struct {
 	Subject   string
 	Username  string
 	Nickname  string
-	Email     string
+	Email     pgtype.Text
 	Admin     bool
 	Disabled  bool
 	CreatedAt time.Time
@@ -288,7 +288,7 @@ type InsertAccountParams struct {
 	Subject      string
 	Username     string
 	Nickname     string
-	Email        string
+	Email        pgtype.Text
 	PasswordHash pgtype.Text
 	Admin        bool
 	Now          time.Time
@@ -299,7 +299,7 @@ type InsertAccountRow struct {
 	Subject   string
 	Username  string
 	Nickname  string
-	Email     string
+	Email     pgtype.Text
 	Admin     bool
 	Disabled  bool
 	CreatedAt time.Time
@@ -674,7 +674,7 @@ type ListAccountsRow struct {
 	Subject    string
 	Username   string
 	Nickname   string
-	Email      string
+	Email      pgtype.Text
 	Admin      bool
 	Disabled   bool
 	CreatedAt  time.Time
@@ -1041,7 +1041,7 @@ UPDATE identity.accounts SET username = $1, nickname = $2, email = $3 WHERE id =
 type UpdateAccountProfileParams struct {
 	Username string
 	Nickname string
-	Email    string
+	Email    pgtype.Text
 	ID       uuid.UUID
 }
 

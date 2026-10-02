@@ -238,7 +238,11 @@ func (s *Characters) Create(ctx context.Context, c caller.Caller, id domain.Camp
 	if err != nil {
 		return Sheet{}, err
 	}
-	sheet.ID = cid
+	stored, err := s.Repo.Character(ctx, id, cid)
+	if err != nil {
+		return Sheet{}, err
+	}
+	sheet.ID, sheet.Owned = cid, stored.Owned
 	return sheet, nil
 }
 

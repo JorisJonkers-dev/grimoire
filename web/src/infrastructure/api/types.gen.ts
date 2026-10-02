@@ -662,6 +662,55 @@ export type ActiveEffect = {
 };
 
 /**
+ * A Character's progress in one Campaign.
+ */
+export type CampaignEntry = {
+    campaignId: Id;
+    campaignName: string;
+    characterId: Id;
+    level: number;
+    hpCurrent: number;
+    hpMax: number;
+};
+
+/**
+ * A Character an Account owns (ADR-0010), with its progress in each Campaign.
+ */
+export type OwnedCharacter = {
+    id: Id;
+    name: string;
+    ruleset: string;
+    species: string;
+    class: string;
+    background: string;
+    backstory: string;
+    hasPortrait: boolean;
+    campaigns: Array<CampaignEntry>;
+};
+
+/**
+ * The Characters an Account owns.
+ */
+export type OwnedCharacterList = {
+    items: Array<OwnedCharacter>;
+};
+
+/**
+ * A Character's new name and Backstory.
+ */
+export type OwnedCharacterChange = {
+    name: string;
+    backstory: string;
+};
+
+/**
+ * The Campaign a Character joins.
+ */
+export type CharacterJoin = {
+    campaignId: Id;
+};
+
+/**
  * A Character's sheet with every value derived by the rules.
  */
 export type CharacterSheet = {
@@ -7177,6 +7226,137 @@ export type GetAccountHistoryResponses = {
 };
 
 export type GetAccountHistoryResponse = GetAccountHistoryResponses[keyof GetAccountHistoryResponses];
+
+export type ListMyCharactersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/characters';
+};
+
+export type ListMyCharactersErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMyCharactersError = ListMyCharactersErrors[keyof ListMyCharactersErrors];
+
+export type ListMyCharactersResponses = {
+    /**
+     * The Characters.
+     */
+    200: OwnedCharacterList;
+};
+
+export type ListMyCharactersResponse = ListMyCharactersResponses[keyof ListMyCharactersResponses];
+
+export type GetMyCharacterData = {
+    body?: never;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}';
+};
+
+export type GetMyCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMyCharacterError = GetMyCharacterErrors[keyof GetMyCharacterErrors];
+
+export type GetMyCharacterResponses = {
+    /**
+     * The Character.
+     */
+    200: OwnedCharacter;
+};
+
+export type GetMyCharacterResponse = GetMyCharacterResponses[keyof GetMyCharacterResponses];
+
+export type UpdateMyCharacterData = {
+    body: OwnedCharacterChange;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}';
+};
+
+export type UpdateMyCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateMyCharacterError = UpdateMyCharacterErrors[keyof UpdateMyCharacterErrors];
+
+export type UpdateMyCharacterResponses = {
+    /**
+     * The Character.
+     */
+    200: OwnedCharacter;
+};
+
+export type UpdateMyCharacterResponse = UpdateMyCharacterResponses[keyof UpdateMyCharacterResponses];
+
+export type JoinCampaignData = {
+    body: CharacterJoin;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}/campaigns';
+};
+
+export type JoinCampaignErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type JoinCampaignError = JoinCampaignErrors[keyof JoinCampaignErrors];
+
+export type JoinCampaignResponses = {
+    /**
+     * The new Campaign Character.
+     */
+    201: CharacterSheet;
+};
+
+export type JoinCampaignResponse = JoinCampaignResponses[keyof JoinCampaignResponses];
 
 export type GetHealthData = {
     body?: never;

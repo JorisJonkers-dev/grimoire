@@ -513,6 +513,55 @@ export const zActiveEffect = z.object({
 });
 
 /**
+ * A Character's progress in one Campaign.
+ */
+export const zCampaignEntry = z.object({
+    campaignId: zId,
+    campaignName: z.string().max(80),
+    characterId: zId,
+    level: z.int().gte(1).lte(20),
+    hpCurrent: z.int().gte(0).lte(1000),
+    hpMax: z.int().gte(1).lte(1000)
+});
+
+/**
+ * A Character an Account owns (ADR-0010), with its progress in each Campaign.
+ */
+export const zOwnedCharacter = z.object({
+    id: zId,
+    name: z.string().min(1).max(60),
+    ruleset: z.string().max(20),
+    species: z.string().max(80),
+    class: z.string().max(80),
+    background: z.string().max(80),
+    backstory: z.string().max(4000),
+    hasPortrait: z.boolean(),
+    campaigns: z.array(zCampaignEntry).max(200)
+});
+
+/**
+ * The Characters an Account owns.
+ */
+export const zOwnedCharacterList = z.object({
+    items: z.array(zOwnedCharacter).max(500)
+});
+
+/**
+ * A Character's new name and Backstory.
+ */
+export const zOwnedCharacterChange = z.object({
+    name: z.string().min(1).max(60),
+    backstory: z.string().max(4000)
+});
+
+/**
+ * The Campaign a Character joins.
+ */
+export const zCharacterJoin = z.object({
+    campaignId: zId
+});
+
+/**
  * Same-origin path of a stored picture; it changes when the picture does.
  */
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
@@ -4044,6 +4093,42 @@ export const zResetAccountTwoStepResponse = z.void();
  * The history.
  */
 export const zGetAccountHistoryResponse = zAccountEventList;
+
+/**
+ * The Characters.
+ */
+export const zListMyCharactersResponse = zOwnedCharacterList;
+
+export const zGetMyCharacterPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The Character.
+ */
+export const zGetMyCharacterResponse = zOwnedCharacter;
+
+export const zUpdateMyCharacterBody = zOwnedCharacterChange;
+
+export const zUpdateMyCharacterPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The Character.
+ */
+export const zUpdateMyCharacterResponse = zOwnedCharacter;
+
+export const zJoinCampaignBody = zCharacterJoin;
+
+export const zJoinCampaignPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The new Campaign Character.
+ */
+export const zJoinCampaignResponse = zCharacterSheet;
 
 /**
  * The process is alive.

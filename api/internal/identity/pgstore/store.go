@@ -50,13 +50,13 @@ func account(id uuid.UUID, subject, username, nickname, email string, admin, dis
 // InsertAccount stores a new Account; a taken Username, email or subject is ErrConflict.
 func (s *Store) InsertAccount(ctx context.Context, a domain.Account, passwordHash string) (domain.Account, error) {
 	r, err := s.q.InsertAccount(ctx, queries.InsertAccountParams{
-		ID: a.ID, Subject: a.Subject, Username: a.Username, Nickname: a.Nickname, Email: a.Email,
+		ID: a.ID, Subject: a.Subject, Username: a.Username, Nickname: a.Nickname, Email: optional(a.Email),
 		PasswordHash: pgtype.Text{String: passwordHash, Valid: passwordHash != ""}, Admin: a.Admin, Now: a.CreatedAt,
 	})
 	if err != nil {
 		return domain.Account{}, conflict(err)
 	}
-	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), nil
+	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email.String, r.Admin, r.Disabled, r.CreatedAt), nil
 }
 
 // AccountByUsername reads an Account and its password hash.
@@ -65,7 +65,7 @@ func (s *Store) AccountByUsername(ctx context.Context, username string) (domain.
 	if err != nil {
 		return domain.Account{}, "", notFound(err)
 	}
-	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), r.PasswordHash.String, nil
+	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email.String, r.Admin, r.Disabled, r.CreatedAt), r.PasswordHash.String, nil
 }
 
 // AccountByEmail reads an Account by its email, ignoring case.
@@ -74,7 +74,7 @@ func (s *Store) AccountByEmail(ctx context.Context, email string) (domain.Accoun
 	if err != nil {
 		return domain.Account{}, notFound(err)
 	}
-	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), nil
+	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email.String, r.Admin, r.Disabled, r.CreatedAt), nil
 }
 
 // AccountBySubject reads the Account a subject signs in as.
@@ -83,7 +83,7 @@ func (s *Store) AccountBySubject(ctx context.Context, subject string) (domain.Ac
 	if err != nil {
 		return domain.Account{}, notFound(err)
 	}
-	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), nil
+	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email.String, r.Admin, r.Disabled, r.CreatedAt), nil
 }
 
 // AccountByID reads an Account.
@@ -92,7 +92,7 @@ func (s *Store) AccountByID(ctx context.Context, id domain.AccountID) (domain.Ac
 	if err != nil {
 		return domain.Account{}, notFound(err)
 	}
-	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), nil
+	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email.String, r.Admin, r.Disabled, r.CreatedAt), nil
 }
 
 // SetPassword replaces an Account's password hash.
@@ -161,4 +161,9 @@ func (s *Store) InsertSignInLink(ctx context.Context, tokenHash []byte, account 
 func (s *Store) UseSignInLink(ctx context.Context, tokenHash []byte, now time.Time) (domain.AccountID, error) {
 	id, err := s.q.UseSignInLink(ctx, queries.UseSignInLinkParams{TokenHash: tokenHash, Now: pgtype.Timestamptz{Time: now, Valid: true}})
 	return id, notFound(err)
+}
+
+// optional stores an empty string as NULL.
+func optional(s string) pgtype.Text {
+	return pgtype.Text{String: s, Valid: s != ""}
 }

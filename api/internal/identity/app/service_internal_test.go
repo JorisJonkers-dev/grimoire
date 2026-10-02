@@ -26,6 +26,7 @@ type fakeRepo struct {
 	unlinked  bool
 	secret    string
 	confirmed bool
+	noLink    bool
 }
 
 func (f *fakeRepo) err(call string) error {
@@ -110,6 +111,9 @@ func (f *fakeRepo) UseOIDCRequest(context.Context, []byte, time.Time) (string, s
 }
 
 func (f *fakeRepo) LinkOf(context.Context, domain.AccountID) (domain.Link, error) {
+	if f.noLink {
+		return domain.Link{}, domain.ErrNotFound
+	}
 	return domain.Link{}, f.err("link of")
 }
 

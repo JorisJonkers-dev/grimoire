@@ -19,6 +19,7 @@ type Querier interface {
 	AccountByID(ctx context.Context, id uuid.UUID) (AccountByIDRow, error)
 	AccountBySubject(ctx context.Context, subject string) (AccountBySubjectRow, error)
 	AccountByUsername(ctx context.Context, username string) (IdentityAccount, error)
+	AccountCharacterCampaigns(ctx context.Context, ids []uuid.UUID) ([]AccountCharacterCampaignsRow, error)
 	AccountHasPassword(ctx context.Context, id uuid.UUID) (bool, error)
 	ActionEffectEvent(ctx context.Context, actionID uuid.UUID) (uuid.UUID, error)
 	ActionHPEvent(ctx context.Context, actionID uuid.UUID) (ActionHPEventRow, error)
@@ -54,6 +55,8 @@ type Querier interface {
 	AddWall(ctx context.Context, arg AddWallParams) error
 	AddWeaponProperty(ctx context.Context, arg AddWeaponPropertyParams) error
 	AddZoneCreature(ctx context.Context, arg AddZoneCreatureParams) error
+	// A new Campaign Character takes its Character's name, Portrait and token.
+	AdoptCharacterIdentity(ctx context.Context, id uuid.UUID) error
 	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
 	BuilderArmor(ctx context.Context, key string) ([]BuilderArmorRow, error)
 	BuilderBackgrounds(ctx context.Context, key string) ([]BuilderBackgroundsRow, error)
@@ -166,7 +169,10 @@ type Querier interface {
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
 	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)
 	FindInvite(ctx context.Context, arg FindInviteParams) (FindInviteRow, error)
+	// A Campaign Character's name, Portrait and token become its Character's, and every other Campaign's.
+	FlowCharacterIdentity(ctx context.Context, arg FlowCharacterIdentityParams) error
 	GameDay(ctx context.Context, id uuid.UUID) (int32, error)
+	GetAccountCharacter(ctx context.Context, id uuid.UUID) (GetAccountCharacterRow, error)
 	GetArmorDetail(ctx context.Context, id int64) (GetArmorDetailRow, error)
 	GetBackgroundDetail(ctx context.Context, id int64) (string, error)
 	GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow, error)
@@ -195,6 +201,7 @@ type Querier interface {
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
+	InsertAccountCharacter(ctx context.Context, arg InsertAccountCharacterParams) error
 	InsertAccountEvent(ctx context.Context, arg InsertAccountEventParams) error
 	InsertAccountSession(ctx context.Context, arg InsertAccountSessionParams) error
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
@@ -292,6 +299,7 @@ type Querier interface {
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
+	ListAccountCharacters(ctx context.Context, ownerSubject string) ([]ListAccountCharactersRow, error)
 	ListAccountEvents(ctx context.Context, accountID uuid.UUID) ([]ListAccountEventsRow, error)
 	ListAccounts(ctx context.Context) ([]ListAccountsRow, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
@@ -393,6 +401,7 @@ type Querier interface {
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
 	RemoveWall(ctx context.Context, arg RemoveWallParams) error
+	RenameCampaignCharacters(ctx context.Context, arg RenameCampaignCharactersParams) error
 	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
 	RestAbilities(ctx context.Context, ids []uuid.UUID) ([]RestAbilitiesRow, error)
 	RestCharacters(ctx context.Context, arg RestCharactersParams) ([]RestCharactersRow, error)
@@ -500,6 +509,7 @@ type Querier interface {
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
+	UpdateAccountCharacter(ctx context.Context, arg UpdateAccountCharacterParams) error
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error

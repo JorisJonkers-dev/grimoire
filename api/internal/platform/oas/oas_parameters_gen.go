@@ -3697,6 +3697,79 @@ func decodeGetMapImageParams(args [2]string, argsEscaped bool, r *http.Request) 
 	return params, nil
 }
 
+// GetMyCharacterParams is parameters of getMyCharacter operation.
+type GetMyCharacterParams struct {
+	// Character id.
+	CharacterId ID
+}
+
+func unpackGetMyCharacterParams(packed middleware.Parameters) (params GetMyCharacterParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "characterId",
+			In:   "path",
+		}
+		params.CharacterId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetMyCharacterParams(args [1]string, argsEscaped bool, r *http.Request) (params GetMyCharacterParams, _ error) {
+	// Decode path: characterId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "characterId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCharacterIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCharacterIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CharacterId = ID(paramsDotCharacterIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "characterId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetNpcParams is parameters of getNpc operation.
 type GetNpcParams struct {
 	// Campaign id.
@@ -4895,6 +4968,79 @@ func decodeGetTokenIconParams(args [2]string, argsEscaped bool, r *http.Request)
 		param := args[1]
 		if argsEscaped {
 			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "characterId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCharacterIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCharacterIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CharacterId = ID(paramsDotCharacterIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "characterId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// JoinCampaignParams is parameters of joinCampaign operation.
+type JoinCampaignParams struct {
+	// Character id.
+	CharacterId ID
+}
+
+func unpackJoinCampaignParams(packed middleware.Parameters) (params JoinCampaignParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "characterId",
+			In:   "path",
+		}
+		params.CharacterId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeJoinCampaignParams(args [1]string, argsEscaped bool, r *http.Request) (params JoinCampaignParams, _ error) {
+	// Decode path: characterId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
 			if err != nil {
 				return errors.Wrap(err, "unescape path")
 			}
@@ -12160,6 +12306,79 @@ func decodeUpdateMemberParams(args [2]string, argsEscaped bool, r *http.Request)
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "memberId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// UpdateMyCharacterParams is parameters of updateMyCharacter operation.
+type UpdateMyCharacterParams struct {
+	// Character id.
+	CharacterId ID
+}
+
+func unpackUpdateMyCharacterParams(packed middleware.Parameters) (params UpdateMyCharacterParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "characterId",
+			In:   "path",
+		}
+		params.CharacterId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeUpdateMyCharacterParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateMyCharacterParams, _ error) {
+	// Decode path: characterId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "characterId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCharacterIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCharacterIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CharacterId = ID(paramsDotCharacterIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "characterId",
 			In:   "path",
 			Err:  err,
 		}

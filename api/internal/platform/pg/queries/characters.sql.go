@@ -13,6 +13,52 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const accountCharacterCampaigns = `-- name: AccountCharacterCampaigns :many
+SELECT c.character_id, c.id, c.campaign_id, cp.name AS campaign_name, c.level, c.hp_current, c.hp_max, c.updated_at
+FROM campaign.characters c JOIN campaign.campaigns cp ON cp.id = c.campaign_id
+WHERE c.character_id = ANY($1::uuid[]) ORDER BY c.updated_at DESC, c.id
+`
+
+type AccountCharacterCampaignsRow struct {
+	CharacterID  pgtype.UUID
+	ID           uuid.UUID
+	CampaignID   uuid.UUID
+	CampaignName string
+	Level        int32
+	HpCurrent    int32
+	HpMax        int32
+	UpdatedAt    time.Time
+}
+
+func (q *Queries) AccountCharacterCampaigns(ctx context.Context, ids []uuid.UUID) ([]AccountCharacterCampaignsRow, error) {
+	rows, err := q.db.Query(ctx, accountCharacterCampaigns, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AccountCharacterCampaignsRow{}
+	for rows.Next() {
+		var i AccountCharacterCampaignsRow
+		if err := rows.Scan(
+			&i.CharacterID,
+			&i.ID,
+			&i.CampaignID,
+			&i.CampaignName,
+			&i.Level,
+			&i.HpCurrent,
+			&i.HpMax,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const addCharacterSkill = `-- name: AddCharacterSkill :exec
 INSERT INTO campaign.character_skills (character_id, skill, source) VALUES ($1, $2, $3)
 `
@@ -40,6 +86,18 @@ type AddCharacterWeaponParams struct {
 
 func (q *Queries) AddCharacterWeapon(ctx context.Context, arg AddCharacterWeaponParams) error {
 	_, err := q.db.Exec(ctx, addCharacterWeapon, arg.CharacterID, arg.WeaponSlug, arg.Ordering)
+	return err
+}
+
+const adoptCharacterIdentity = `-- name: AdoptCharacterIdentity :exec
+UPDATE campaign.characters c
+SET name = a.name, portrait_key = a.portrait_key, portrait_type = a.portrait_type, token_key = a.token_key, token_type = a.token_type
+FROM campaign.account_characters a WHERE c.id = $1 AND a.id = c.character_id
+`
+
+// A new Campaign Character takes its Character's name, Portrait and token.
+func (q *Queries) AdoptCharacterIdentity(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, adoptCharacterIdentity, id)
 	return err
 }
 
@@ -149,8 +207,72 @@ func (q *Queries) DeleteCharacter(ctx context.Context, arg DeleteCharacterParams
 	return err
 }
 
+const flowCharacterIdentity = `-- name: FlowCharacterIdentity :exec
+WITH source AS (
+    SELECT character_id, name, portrait_key, portrait_type, token_key, token_type FROM campaign.characters WHERE id = $1
+), owned AS (
+    UPDATE campaign.account_characters a
+    SET name = source.name, portrait_key = source.portrait_key, portrait_type = source.portrait_type,
+        token_key = source.token_key, token_type = source.token_type, updated_at = $2
+    FROM source WHERE a.id = source.character_id
+)
+UPDATE campaign.characters c
+SET name = source.name, portrait_key = source.portrait_key, portrait_type = source.portrait_type,
+    token_key = source.token_key, token_type = source.token_type
+FROM source WHERE c.character_id = source.character_id AND c.id <> $1
+`
+
+type FlowCharacterIdentityParams struct {
+	ID  uuid.UUID
+	Now time.Time
+}
+
+// A Campaign Character's name, Portrait and token become its Character's, and every other Campaign's.
+func (q *Queries) FlowCharacterIdentity(ctx context.Context, arg FlowCharacterIdentityParams) error {
+	_, err := q.db.Exec(ctx, flowCharacterIdentity, arg.ID, arg.Now)
+	return err
+}
+
+const getAccountCharacter = `-- name: GetAccountCharacter :one
+SELECT id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, backstory, portrait_key, created_at, updated_at
+FROM campaign.account_characters WHERE id = $1
+`
+
+type GetAccountCharacterRow struct {
+	ID             uuid.UUID
+	OwnerSubject   string
+	Name           string
+	Ruleset        string
+	SpeciesSlug    string
+	ClassSlug      string
+	BackgroundSlug string
+	Backstory      string
+	PortraitKey    pgtype.Text
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+func (q *Queries) GetAccountCharacter(ctx context.Context, id uuid.UUID) (GetAccountCharacterRow, error) {
+	row := q.db.QueryRow(ctx, getAccountCharacter, id)
+	var i GetAccountCharacterRow
+	err := row.Scan(
+		&i.ID,
+		&i.OwnerSubject,
+		&i.Name,
+		&i.Ruleset,
+		&i.SpeciesSlug,
+		&i.ClassSlug,
+		&i.BackgroundSlug,
+		&i.Backstory,
+		&i.PortraitKey,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getCharacter = `-- name: GetCharacter :one
-SELECT c.id, c.campaign_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
+SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
        c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
@@ -165,6 +287,7 @@ type GetCharacterParams struct {
 type GetCharacterRow struct {
 	ID             uuid.UUID
 	CampaignID     uuid.UUID
+	CharacterID    pgtype.UUID
 	OwnerMemberID  uuid.UUID
 	OwnerName      string
 	OwnerSubject   string
@@ -193,6 +316,7 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 	err := row.Scan(
 		&i.ID,
 		&i.CampaignID,
+		&i.CharacterID,
 		&i.OwnerMemberID,
 		&i.OwnerName,
 		&i.OwnerSubject,
@@ -217,17 +341,48 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 	return i, err
 }
 
+const insertAccountCharacter = `-- name: InsertAccountCharacter :exec
+INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
+`
+
+type InsertAccountCharacterParams struct {
+	ID             uuid.UUID
+	OwnerSubject   string
+	Name           string
+	Ruleset        string
+	SpeciesSlug    string
+	ClassSlug      string
+	BackgroundSlug string
+	Now            time.Time
+}
+
+func (q *Queries) InsertAccountCharacter(ctx context.Context, arg InsertAccountCharacterParams) error {
+	_, err := q.db.Exec(ctx, insertAccountCharacter,
+		arg.ID,
+		arg.OwnerSubject,
+		arg.Name,
+		arg.Ruleset,
+		arg.SpeciesSlug,
+		arg.ClassSlug,
+		arg.BackgroundSlug,
+		arg.Now,
+	)
+	return err
+}
+
 const insertCharacter = `-- name: InsertCharacter :one
-INSERT INTO campaign.characters (campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
+INSERT INTO campaign.characters (campaign_id, owner_member_id, character_id, name, ruleset, species_slug, class_slug, background_slug,
     ability_method, hp_max, hp_current, armor_slug, shield, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7,
-    $8, $9, $9, $10, $11, $12, $12)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+    $9, $10, $10, $11, $12, $13, $13)
 RETURNING id
 `
 
 type InsertCharacterParams struct {
 	CampaignID     uuid.UUID
 	OwnerMemberID  uuid.UUID
+	CharacterID    pgtype.UUID
 	Name           string
 	Ruleset        string
 	SpeciesSlug    string
@@ -244,6 +399,7 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 	row := q.db.QueryRow(ctx, insertCharacter,
 		arg.CampaignID,
 		arg.OwnerMemberID,
+		arg.CharacterID,
 		arg.Name,
 		arg.Ruleset,
 		arg.SpeciesSlug,
@@ -260,8 +416,57 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 	return id, err
 }
 
+const listAccountCharacters = `-- name: ListAccountCharacters :many
+SELECT id, name, ruleset, species_slug, class_slug, background_slug, backstory, portrait_key, created_at, updated_at
+FROM campaign.account_characters WHERE owner_subject = $1 ORDER BY lower(name), id
+`
+
+type ListAccountCharactersRow struct {
+	ID             uuid.UUID
+	Name           string
+	Ruleset        string
+	SpeciesSlug    string
+	ClassSlug      string
+	BackgroundSlug string
+	Backstory      string
+	PortraitKey    pgtype.Text
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+func (q *Queries) ListAccountCharacters(ctx context.Context, ownerSubject string) ([]ListAccountCharactersRow, error) {
+	rows, err := q.db.Query(ctx, listAccountCharacters, ownerSubject)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccountCharactersRow{}
+	for rows.Next() {
+		var i ListAccountCharactersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Ruleset,
+			&i.SpeciesSlug,
+			&i.ClassSlug,
+			&i.BackgroundSlug,
+			&i.Backstory,
+			&i.PortraitKey,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCharacters = `-- name: ListCharacters :many
-SELECT c.id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name, c.ruleset,
+SELECT c.id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name, c.ruleset,
        c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1
@@ -270,6 +475,7 @@ ORDER BY c.name, c.id
 
 type ListCharactersRow struct {
 	ID            uuid.UUID
+	CharacterID   pgtype.UUID
 	OwnerMemberID uuid.UUID
 	OwnerName     string
 	OwnerSubject  string
@@ -294,6 +500,7 @@ func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]L
 		var i ListCharactersRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.CharacterID,
 			&i.OwnerMemberID,
 			&i.OwnerName,
 			&i.OwnerSubject,
@@ -314,6 +521,20 @@ func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]L
 		return nil, err
 	}
 	return items, nil
+}
+
+const renameCampaignCharacters = `-- name: RenameCampaignCharacters :exec
+UPDATE campaign.characters SET name = $1 WHERE character_id = $2
+`
+
+type RenameCampaignCharactersParams struct {
+	Name        string
+	CharacterID pgtype.UUID
+}
+
+func (q *Queries) RenameCampaignCharacters(ctx context.Context, arg RenameCampaignCharactersParams) error {
+	_, err := q.db.Exec(ctx, renameCampaignCharacters, arg.Name, arg.CharacterID)
+	return err
 }
 
 const setCharacterAbility = `-- name: SetCharacterAbility :exec
@@ -380,6 +601,27 @@ func (q *Queries) SetCharacterToken(ctx context.Context, arg SetCharacterTokenPa
 		arg.ContentType,
 		arg.Now,
 		arg.CampaignID,
+		arg.ID,
+	)
+	return err
+}
+
+const updateAccountCharacter = `-- name: UpdateAccountCharacter :exec
+UPDATE campaign.account_characters SET name = $1, backstory = $2, updated_at = $3 WHERE id = $4
+`
+
+type UpdateAccountCharacterParams struct {
+	Name      string
+	Backstory string
+	Now       time.Time
+	ID        uuid.UUID
+}
+
+func (q *Queries) UpdateAccountCharacter(ctx context.Context, arg UpdateAccountCharacterParams) error {
+	_, err := q.db.Exec(ctx, updateAccountCharacter,
+		arg.Name,
+		arg.Backstory,
+		arg.Now,
 		arg.ID,
 	)
 	return err

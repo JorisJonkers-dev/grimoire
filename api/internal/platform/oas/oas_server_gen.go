@@ -307,6 +307,13 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
+	// JoinCampaign implements joinCampaign operation.
+	//
+	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
+	// that Campaign's rules and its own progress from first level.
+	//
+	// POST /api/v1/characters/{characterId}/campaigns
+	JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (JoinCampaignRes, error)
 	// PreviewCharacter implements previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -454,6 +461,12 @@ type BuildHandler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
 	UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
+	// UpdateMyCharacter implements updateMyCharacter operation.
+	//
+	// Sets a Character's name and Backstory; the name shows in every Campaign it plays in.
+	//
+	// PUT /api/v1/characters/{characterId}
+	UpdateMyCharacter(ctx context.Context, req *OwnedCharacterChange, params UpdateMyCharacterParams) (UpdateMyCharacterRes, error)
 	// UpdateNpc implements updateNpc operation.
 	//
 	// Replaces the NPC and records a Revision. DM only.
@@ -617,6 +630,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/me
 	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetMyCharacter implements getMyCharacter operation.
+	//
+	// A Character the signed-in Account owns; anyone else's is not found.
+	//
+	// GET /api/v1/characters/{characterId}
+	GetMyCharacter(ctx context.Context, params GetMyCharacterParams) (GetMyCharacterRes, error)
 	// GetNpc implements getNpc operation.
 	//
 	// One NPC. DM only.
@@ -794,6 +813,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/maps
 	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)
+	// ListMyCharacters implements listMyCharacters operation.
+	//
+	// The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.
+	//
+	// GET /api/v1/characters
+	ListMyCharacters(ctx context.Context) (ListMyCharactersRes, error)
 	// ListNpcRevisions implements listNpcRevisions operation.
 	//
 	// Every Revision of the NPC, newest first, with its author and origin. DM only.

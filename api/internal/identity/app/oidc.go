@@ -105,6 +105,12 @@ func (s *Service) FinishOIDC(ctx context.Context, code, state, userAgent string)
 	}
 	id, err := s.Repo.LinkedAccount(ctx, c.Issuer, c.Subject)
 	if errors.Is(err, domain.ErrNotFound) {
+		if migrated, ok, err := s.claimMigrated(ctx, c, now); err != nil || ok {
+			if err != nil {
+				return out, err
+			}
+			return s.signInLinked(ctx, migrated, c, userAgent, now)
+		}
 		out.Pending, err = s.pend(ctx, c, now)
 		return out, err
 	}
@@ -112,6 +118,35 @@ func (s *Service) FinishOIDC(ctx context.Context, code, state, userAgent string)
 		return out, err
 	}
 	return s.signInLinked(ctx, id, c, userAgent, now)
+}
+
+// claimMigrated links a login to the Account that already carries its subject, no password and no
+// link: a Member who came in through forward-auth before Grimoire had Accounts. An Account that unlinked
+// its login has a password, so it is never claimed back. Its email fills in from the login.
+func (s *Service) claimMigrated(ctx context.Context, c domain.Claims, now time.Time) (domain.AccountID, bool, error) {
+	a, err := s.Repo.AccountBySubject(ctx, c.Subject)
+	if errors.Is(err, domain.ErrNotFound) {
+		return domain.AccountID{}, false, nil
+	}
+	if err != nil {
+		return domain.AccountID{}, false, err
+	}
+	if has, err := s.Repo.HasPassword(ctx, a.ID); err != nil || has {
+		return domain.AccountID{}, false, err
+	}
+	if _, err := s.Repo.LinkOf(ctx, a.ID); !errors.Is(err, domain.ErrNotFound) {
+		return domain.AccountID{}, false, err
+	}
+	if err := s.Repo.InsertLink(ctx, a.ID, linkOf(c, now)); err != nil {
+		return domain.AccountID{}, false, err
+	}
+	if a.Email == "" && c.Email != "" {
+		p := domain.ProfileChange{Username: a.Username, Nickname: a.Nickname, Email: c.Email}
+		if err := s.Repo.UpdateProfile(ctx, a.ID, p); err != nil && !errors.Is(err, domain.ErrConflict) {
+			return domain.AccountID{}, false, err
+		}
+	}
+	return a.ID, true, s.record(ctx, s.Repo, a.ID, a.Subject, domain.EventLinked, "on the first external sign-in")
 }
 
 func (s *Service) granted(c domain.Claims) bool {

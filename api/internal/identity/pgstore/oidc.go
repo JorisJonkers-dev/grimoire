@@ -28,7 +28,7 @@ func (s *Store) HasPassword(ctx context.Context, id domain.AccountID) (bool, err
 
 // UpdateProfile sets an Account's Username, Nickname and email; a taken one is ErrConflict.
 func (s *Store) UpdateProfile(ctx context.Context, id domain.AccountID, p domain.ProfileChange) error {
-	return conflict(s.q.UpdateAccountProfile(ctx, queries.UpdateAccountProfileParams{Username: p.Username, Nickname: p.Nickname, Email: p.Email, ID: id}))
+	return conflict(s.q.UpdateAccountProfile(ctx, queries.UpdateAccountProfileParams{Username: p.Username, Nickname: p.Nickname, Email: optional(p.Email), ID: id}))
 }
 
 // SetAdmin makes an Account an Admin or not.

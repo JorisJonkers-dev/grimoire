@@ -21,8 +21,10 @@ func TestRestsAreStored(t *testing.T) {
 	tb := setup(t)
 	s, _ := sessions(tb, pgstore.New(tb.pool), &closed{}).Start(ctx, dm, tb.campaign)
 	char := uuid.New()
-	if _, err := tb.pool.Exec(ctx, `INSERT INTO campaign.characters (id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
-		ability_method, hp_max, hp_current, level) VALUES ($1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 5, 4)`, char, tb.campaign, tb.playerID); err != nil {
+	if _, err := tb.pool.Exec(ctx, `WITH hero AS (INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+			SELECT $1, m.auth_subject, 'Hero', 'srd-2024', 'human', 'fighter', 'soldier', now(), now() FROM campaign.members m WHERE m.id = $3)
+		INSERT INTO campaign.characters (character_id, id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
+		ability_method, hp_max, hp_current, level) VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 5, 4)`, char, tb.campaign, tb.playerID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := tb.pool.Exec(ctx, "INSERT INTO campaign.character_resources (character_id, resource_slug, used) VALUES ($1, 'second-wind', 1)", char); err != nil {

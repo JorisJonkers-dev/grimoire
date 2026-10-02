@@ -161,8 +161,12 @@ func firstErr(err, otherwise error) error {
 	return otherwise
 }
 
-// clean checks and tidies what an invitee chose: a profile and a password of 10 to 200 characters.
+// clean checks and tidies what an invitee chose: a profile with an email and a password of 10 to 200
+// characters.
 func clean(in domain.Setup) (domain.Setup, error) {
+	if strings.TrimSpace(in.Email) == "" {
+		return in, domain.ErrInvalid
+	}
 	p, err := cleanProfile(domain.ProfileChange{Username: in.Username, Nickname: in.Nickname, Email: in.Email})
 	in.Username, in.Nickname, in.Email = p.Username, p.Nickname, p.Email
 	if err != nil {
@@ -175,7 +179,7 @@ func clean(in domain.Setup) (domain.Setup, error) {
 }
 
 // cleanProfile checks and tidies a profile: a lowercase Username of 3 to 32 letters, digits, dots,
-// dashes or underscores; a Nickname of up to 40 characters; an email.
+// dashes or underscores; a Nickname of up to 40 characters; an email, or none.
 func cleanProfile(in domain.ProfileChange) (domain.ProfileChange, error) {
 	in.Username = strings.ToLower(strings.TrimSpace(in.Username))
 	in.Nickname = strings.TrimSpace(in.Nickname)
@@ -185,7 +189,7 @@ func cleanProfile(in domain.ProfileChange) (domain.ProfileChange, error) {
 		return in, domain.ErrInvalid
 	case in.Nickname == "" || utf8.RuneCountInString(in.Nickname) > 40:
 		return in, domain.ErrInvalid
-	case len(in.Email) > 254 || !strings.Contains(in.Email, "@") || strings.HasPrefix(in.Email, "@") || strings.HasSuffix(in.Email, "@"):
+	case in.Email != "" && (len(in.Email) > 254 || !strings.Contains(in.Email, "@") || strings.HasPrefix(in.Email, "@") || strings.HasSuffix(in.Email, "@")):
 		return in, domain.ErrInvalid
 	}
 	return in, nil
@@ -248,8 +252,12 @@ func (s *Service) RequestLink(ctx context.Context, email string) error {
 	return s.mailLink(ctx, s.Repo, a)
 }
 
-// mailLink emails an Account's holder a sign-in link that works once, within 30 minutes.
+// mailLink emails an Account's holder a sign-in link that works once, within 30 minutes; an Account
+// without an email cannot get one.
 func (s *Service) mailLink(ctx context.Context, r Repository, a domain.Account) error {
+	if a.Email == "" {
+		return domain.ErrConflict
+	}
 	token, hash, err := newToken()
 	if err != nil {
 		return err

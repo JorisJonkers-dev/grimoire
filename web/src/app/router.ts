@@ -13,6 +13,8 @@ const CampaignHomePage = () => import('@/features/campaigns/CampaignHomePage.vue
 const JoinPage = () => import('@/features/campaigns/JoinPage.vue')
 const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilderPage.vue')
 const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
+const MyCharactersPage = () => import('@/features/characters/MyCharactersPage.vue')
+const MyCharacterPage = () => import('@/features/characters/MyCharacterPage.vue')
 const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
 const EncountersPage = () => import('@/features/prep/EncountersPage.vue')
@@ -70,6 +72,8 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/account', name: 'account', component: AccountPage },
       { path: '/oidc/callback', name: 'oidc-callback', component: OidcCallbackPage },
       { path: '/admin', name: 'admin', component: AdminPage },
+      { path: '/characters', name: 'my-characters', component: MyCharactersPage },
+      { path: '/characters/:characterId', name: 'my-character', component: MyCharacterPage },
       { path: '/admin/accounts/:id', name: 'admin-account', component: AdminAccountPage },
     ],
   })

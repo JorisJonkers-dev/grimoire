@@ -11,6 +11,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type CampaignAccountCharacter struct {
+	ID             uuid.UUID
+	OwnerSubject   string
+	Name           string
+	Ruleset        string
+	SpeciesSlug    string
+	ClassSlug      string
+	BackgroundSlug string
+	Backstory      string
+	PortraitKey    pgtype.Text
+	PortraitType   pgtype.Text
+	TokenKey       pgtype.Text
+	TokenType      pgtype.Text
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type CampaignCampaign struct {
 	ID               uuid.UUID
 	Name             string
@@ -49,6 +66,7 @@ type CampaignCharacter struct {
 	TokenType      pgtype.Text
 	HitDiceSpent   int32
 	LevelUpReady   bool
+	CharacterID    pgtype.UUID
 }
 
 type CampaignCharacterAbility struct {
@@ -879,7 +897,7 @@ type IdentityAccount struct {
 	Subject      string
 	Username     string
 	Nickname     string
-	Email        string
+	Email        pgtype.Text
 	PasswordHash pgtype.Text
 	Admin        bool
 	Disabled     bool

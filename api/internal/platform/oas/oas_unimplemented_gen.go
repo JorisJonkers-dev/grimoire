@@ -416,6 +416,15 @@ func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
+// GetMyCharacter implements getMyCharacter operation.
+//
+// A Character the signed-in Account owns; anyone else's is not found.
+//
+// GET /api/v1/characters/{characterId}
+func (UnimplementedHandler) GetMyCharacter(ctx context.Context, params GetMyCharacterParams) (r GetMyCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetNpc implements getNpc operation.
 //
 // One NPC. DM only.
@@ -522,6 +531,16 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ er
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIconParams) (r GetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// JoinCampaign implements joinCampaign operation.
+//
+// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
+// that Campaign's rules and its own progress from first level.
+//
+// POST /api/v1/characters/{characterId}/campaigns
+func (UnimplementedHandler) JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (r JoinCampaignRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -686,6 +705,15 @@ func (UnimplementedHandler) ListLootTables(ctx context.Context, params ListLootT
 //
 // GET /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) ListMaps(ctx context.Context, params ListMapsParams) (r ListMapsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListMyCharacters implements listMyCharacters operation.
+//
+// The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.
+//
+// GET /api/v1/characters
+func (UnimplementedHandler) ListMyCharacters(ctx context.Context) (r ListMyCharactersRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1178,6 +1206,15 @@ func (UnimplementedHandler) UpdateMap(ctx context.Context, req *MapEdit, params 
 //
 // PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
 func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (r UpdateMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateMyCharacter implements updateMyCharacter operation.
+//
+// Sets a Character's name and Backstory; the name shows in every Campaign it plays in.
+//
+// PUT /api/v1/characters/{characterId}
+func (UnimplementedHandler) UpdateMyCharacter(ctx context.Context, req *OwnedCharacterChange, params UpdateMyCharacterParams) (r UpdateMyCharacterRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
