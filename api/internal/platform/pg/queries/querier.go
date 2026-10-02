@@ -41,6 +41,8 @@ type Querier interface {
 	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
 	AddSpellDamageType(ctx context.Context, arg AddSpellDamageTypeParams) error
 	AddSpellScaling(ctx context.Context, arg AddSpellScalingParams) error
+	AddTokenQuality(ctx context.Context, arg AddTokenQualityParams) error
+	AddTokenSense(ctx context.Context, arg AddTokenSenseParams) error
 	AddWall(ctx context.Context, arg AddWallParams) error
 	AddWeaponProperty(ctx context.Context, arg AddWeaponPropertyParams) error
 	AddZoneCreature(ctx context.Context, arg AddZoneCreatureParams) error
@@ -105,6 +107,7 @@ type Querier interface {
 	ClearSpellChildren(ctx context.Context, spellID int64) error
 	ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error
 	ClearTableEntries(ctx context.Context, tableID uuid.UUID) error
+	ClearTokenQualities(ctx context.Context, tokenID uuid.UUID) error
 	ClearWeaponProperties(ctx context.Context, weaponID int64) error
 	CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAttack, error)
 	CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]PlayCombatant, error)
@@ -197,6 +200,7 @@ type Querier interface {
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
 	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
 	InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error
+	InsertEffectReveal(ctx context.Context, arg InsertEffectRevealParams) error
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
 	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
@@ -275,6 +279,7 @@ type Querier interface {
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
 	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
 	ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error)
+	ListEffectReveals(ctx context.Context) ([]ListEffectRevealsRow, error)
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
 	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
@@ -391,8 +396,10 @@ type Querier interface {
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
 	SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenForm, error)
+	SessionTokenQualities(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenQuality, error)
 	SessionTokenReactions(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenReaction, error)
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
+	SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSense, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error)
 	SessionZoneChecks(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCheck, error)
@@ -415,6 +422,7 @@ type Querier interface {
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
 	SetStack(ctx context.Context, arg SetStackParams) error
+	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error

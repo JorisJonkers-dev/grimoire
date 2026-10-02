@@ -8,6 +8,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/vision"
 )
 
 func presentMonster(ctx context.Context, q *queries.Queries, id int64, e *compendium.EntryDetail) error {
@@ -72,6 +73,13 @@ func monsterStats(ctx context.Context, q *queries.Queries, id int64, e *compendi
 	addFact(e, "Saving Throws", strings.Join(grouped["save"], ", "))
 	addFact(e, "Skills", strings.Join(grouped["skill"], ", "))
 	addFact(e, "Senses", strings.Join(grouped["sense"], ", "))
+	ranges := map[vision.Sense]int{}
+	for _, st := range stats {
+		if st.Kind == "sense" {
+			ranges[vision.Sense(st.Name)] = int(st.Value)
+		}
+	}
+	addSection(e, "Visibility", strings.Join(vision.Describe(ranges), ".\n")+".")
 	relations, err := q.MonsterRelations(ctx, id)
 	if err != nil {
 		return err

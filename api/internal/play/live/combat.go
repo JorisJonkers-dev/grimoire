@@ -359,7 +359,7 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 		if a != AudienceDM && !s.shows(t, seen) {
 			continue
 		}
-		cv := s.combatantView(x, t, totals, a)
+		cv := s.combatantView(x, s.masked(t, a), totals, a)
 		v.Combat.Combatants = append(v.Combat.Combatants, cv)
 	}
 	v.Combat.Attack, v.Combat.Prompt = s.pendingView(a, seen), s.promptView(a, seen, s.now())

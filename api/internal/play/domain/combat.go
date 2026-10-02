@@ -108,6 +108,8 @@ const (
 	// caster spending a Bonus Action to command one.
 	ActionSummoned  = "summoned"
 	ActionCommanded = "commanded"
+	// ActionVisibilitySet is a token's Visibility Qualities or disguise changing.
+	ActionVisibilitySet = "visibility_set"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.

@@ -203,6 +203,10 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return widerRow(ctx, q, id, ord, c)
 	case effects.Choice:
 		return "choice", func() error { return nil }
+	case effects.Reveal:
+		return "reveal", func() error {
+			return q.InsertEffectReveal(ctx, queries.InsertEffectRevealParams{EffectID: id, Ordinal: ord, Qualities: c.Qualities})
+		}
 	case effects.Form:
 		return "form", func() error {
 			return q.InsertEffectForm(ctx, queries.InsertEffectFormParams{EffectID: id, Ordinal: ord, MonsterSlug: c.Monster, TempHp: int32(c.TempHP)}) //nolint:gosec // bounded by a check
@@ -256,7 +260,7 @@ func widerRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c ef
 		}
 	case effects.BonusDie, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveDamage, effects.SaveCondition,
 		effects.CreateSurface, effects.Incapacitated, effects.Immobile, effects.SaveEdge, effects.CritWithin, effects.Exhausting, effects.SpeedPenalty, effects.Reacts,
-		effects.Choice, effects.Branch, effects.Summon, effects.Form:
+		effects.Choice, effects.Branch, effects.Summon, effects.Form, effects.Reveal:
 	}
 	return "", func() error { return nil }
 }
@@ -581,6 +585,13 @@ func (s *Store) shapeComponents(ctx context.Context, out map[slot]effects.Compon
 	}
 	for _, r := range forms {
 		out[slot{r.EffectID, r.Ordinal}] = effects.Form{Monster: r.MonsterSlug, TempHP: int(r.TempHp)}
+	}
+	reveals, err := s.q.ListEffectReveals(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range reveals {
+		out[slot{r.EffectID, r.Ordinal}] = effects.Reveal{Qualities: r.Qualities}
 	}
 	return out, nil
 }

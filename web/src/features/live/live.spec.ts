@@ -600,7 +600,7 @@ describe('effects', () => {
     const manual = [{ id: '0190c7a8-0000-7000-8000-000000000062', text: 'Goblin Boss: Resolve Hold Person by hand.' }]
     const saves = [{ rollId: '0190c7a8-0000-7000-8000-000000000063', tokenId: goblin.id, effect: 'Hold Person', dc: 13 }]
     const reduced = { id: '0190c7a8-0000-7000-8000-000000000066', slug: 'enlarge-reduce', name: 'Enlarge/Reduce', concentration: false, mode: 'Reduce' }
-    s.receive(snapshot([{ ...aria, effects: [...(aria.effects ?? []), reduced] }, goblin], 'dm', { manual, saves }))
+    s.receive(snapshot([{ ...aria, effects: [...(aria.effects ?? []), reduced], qualities: [{ quality: 'hidden', seenThrough: true }] }, goblin], 'dm', { manual, saves }))
     await flushPromises()
     expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (12/12 HP) · Bless')
     expect(wrapper.get('[data-testid="manual"]').text()).toContain('Resolve Hold Person by hand.')
@@ -645,6 +645,20 @@ describe('effects', () => {
     await panel.get('[data-testid="effect-temp"]').setValue(4)
     await panel.get('form').trigger('submit')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'apply_effect', effect: 'wild-shape', monsterSlug: 'wolf', tempHp: 4 })
+    const vis = wrapper.get('[data-testid="visibility-panel"]')
+    expect((vis.get('[data-testid="quality-hidden"]').element as HTMLInputElement).checked).toBe(true)
+    expect((vis.get('[data-testid="seen-through-hidden"]').element as HTMLInputElement).checked).toBe(true)
+    await vis.get('[data-testid="quality-hidden"]').setValue(false)
+    await vis.get('[data-testid="quality-invisible"]').setValue(true)
+    await vis.get('[data-testid="quality-disguised"]').setValue(true)
+    await vis.get('[data-testid="disguise"]').setValue(' Old woman ')
+    await vis.get('[data-testid="seen-through-disguised"]').setValue(true)
+    await vis.get('[data-testid="save-visibility"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'set_visibility', tokenId: aria.id, qualities: ['invisible', 'disguised'], seenThrough: ['disguised'], disguise: 'Old woman' })
+    await vis.get('[data-testid="quality-disguised"]').setValue(false)
+    await vis.get('[data-testid="save-visibility"]').trigger('click')
+    expect(s.sent.at(-1)).toEqual(expect.objectContaining({ qualities: ['invisible'], seenThrough: [] }))
+    expect(s.sent.at(-1)).not.toHaveProperty('disguise')
     expect((panel.get('[data-testid="effect-mode"]').element as HTMLInputElement).value).toBe('')
   })
 

@@ -9079,11 +9079,14 @@ type LiveCommand struct {
 	// The option an Effect that offers a choice is applied in.
 	EffectMode OptString `json:"effectMode"`
 	// Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
-	TempHp      OptInt32   `json:"tempHp"`
-	SaveAbility OptAbility `json:"saveAbility"`
-	SaveDc      OptInt32   `json:"saveDc"`
-	EffectId    OptID      `json:"effectId"`
-	ManualId    OptID      `json:"manualId"`
+	TempHp      OptInt32            `json:"tempHp"`
+	Qualities   []VisibilityQuality `json:"qualities"`
+	SeenThrough []VisibilityQuality `json:"seenThrough"`
+	Disguise    OptString           `json:"disguise"`
+	SaveAbility OptAbility          `json:"saveAbility"`
+	SaveDc      OptInt32            `json:"saveDc"`
+	EffectId    OptID               `json:"effectId"`
+	ManualId    OptID               `json:"manualId"`
 	// With paint_surface; leave it out to clear.
 	Surface     OptLiveCommandSurface `json:"surface"`
 	ElevationFt OptInt32              `json:"elevationFt"`
@@ -9301,6 +9304,21 @@ func (s *LiveCommand) GetEffectMode() OptString {
 // GetTempHp returns the value of TempHp.
 func (s *LiveCommand) GetTempHp() OptInt32 {
 	return s.TempHp
+}
+
+// GetQualities returns the value of Qualities.
+func (s *LiveCommand) GetQualities() []VisibilityQuality {
+	return s.Qualities
+}
+
+// GetSeenThrough returns the value of SeenThrough.
+func (s *LiveCommand) GetSeenThrough() []VisibilityQuality {
+	return s.SeenThrough
+}
+
+// GetDisguise returns the value of Disguise.
+func (s *LiveCommand) GetDisguise() OptString {
+	return s.Disguise
 }
 
 // GetSaveAbility returns the value of SaveAbility.
@@ -9691,6 +9709,21 @@ func (s *LiveCommand) SetEffectMode(val OptString) {
 // SetTempHp sets the value of TempHp.
 func (s *LiveCommand) SetTempHp(val OptInt32) {
 	s.TempHp = val
+}
+
+// SetQualities sets the value of Qualities.
+func (s *LiveCommand) SetQualities(val []VisibilityQuality) {
+	s.Qualities = val
+}
+
+// SetSeenThrough sets the value of SeenThrough.
+func (s *LiveCommand) SetSeenThrough(val []VisibilityQuality) {
+	s.SeenThrough = val
+}
+
+// SetDisguise sets the value of Disguise.
+func (s *LiveCommand) SetDisguise(val OptString) {
+	s.Disguise = val
 }
 
 // SetSaveAbility sets the value of SaveAbility.
@@ -10174,6 +10207,7 @@ const (
 	LiveCommandKindTeleport       LiveCommandKind = "teleport"
 	LiveCommandKindSummon         LiveCommandKind = "summon"
 	LiveCommandKindCommand        LiveCommandKind = "command"
+	LiveCommandKindSetVisibility  LiveCommandKind = "set_visibility"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10251,6 +10285,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindTeleport,
 		LiveCommandKindSummon,
 		LiveCommandKindCommand,
+		LiveCommandKindSetVisibility,
 	}
 }
 
@@ -10400,6 +10435,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindSummon:
 		return []byte(s), nil
 	case LiveCommandKindCommand:
+		return []byte(s), nil
+	case LiveCommandKindSetVisibility:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10624,6 +10661,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindCommand:
 		*s = LiveCommandKindCommand
+		return nil
+	case LiveCommandKindSetVisibility:
+		*s = LiveCommandKindSetVisibility
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -12328,6 +12368,33 @@ func (s *LivePromptKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// One Visibility Quality of a token, and whether the party has seen through it with a check.
+// Ref: #/components/schemas/LiveQuality
+type LiveQuality struct {
+	Quality     VisibilityQuality `json:"quality"`
+	SeenThrough OptBool           `json:"seenThrough"`
+}
+
+// GetQuality returns the value of Quality.
+func (s *LiveQuality) GetQuality() VisibilityQuality {
+	return s.Quality
+}
+
+// GetSeenThrough returns the value of SeenThrough.
+func (s *LiveQuality) GetSeenThrough() OptBool {
+	return s.SeenThrough
+}
+
+// SetQuality sets the value of Quality.
+func (s *LiveQuality) SetQuality(val VisibilityQuality) {
+	s.Quality = val
+}
+
+// SetSeenThrough sets the value of SeenThrough.
+func (s *LiveQuality) SetSeenThrough(val OptBool) {
+	s.SeenThrough = val
+}
+
 // A Controller's choice for one kind of reaction. Always takes it without asking while its condition
 // holds, and asks otherwise.
 // Ref: #/components/schemas/LiveReactionSetting
@@ -13363,6 +13430,10 @@ type LiveToken struct {
 	TempHp OptInt32 `json:"tempHp"`
 	// The creature whose shape the token has taken.
 	Form OptString `json:"form"`
+	// The token's Visibility Qualities, for the DM only.
+	Qualities []LiveQuality `json:"qualities"`
+	// The name a Disguised token shows, for the DM only.
+	Disguise OptString `json:"disguise"`
 	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
 	Health    OptLiveTokenHealth    `json:"health"`
 	Attacks   []LiveAttack          `json:"attacks"`
@@ -13435,6 +13506,16 @@ func (s *LiveToken) GetTempHp() OptInt32 {
 // GetForm returns the value of Form.
 func (s *LiveToken) GetForm() OptString {
 	return s.Form
+}
+
+// GetQualities returns the value of Qualities.
+func (s *LiveToken) GetQualities() []LiveQuality {
+	return s.Qualities
+}
+
+// GetDisguise returns the value of Disguise.
+func (s *LiveToken) GetDisguise() OptString {
+	return s.Disguise
 }
 
 // GetHealth returns the value of Health.
@@ -13530,6 +13611,16 @@ func (s *LiveToken) SetTempHp(val OptInt32) {
 // SetForm sets the value of Form.
 func (s *LiveToken) SetForm(val OptString) {
 	s.Form = val
+}
+
+// SetQualities sets the value of Qualities.
+func (s *LiveToken) SetQualities(val []LiveQuality) {
+	s.Qualities = val
+}
+
+// SetDisguise sets the value of Disguise.
+func (s *LiveToken) SetDisguise(val OptString) {
+	s.Disguise = val
 }
 
 // SetHealth sets the value of Health.
@@ -22667,6 +22758,91 @@ func (s UploadMapReq) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 	return s.Data.Read(p)
+}
+
+// Something that keeps a creature or object from being seen for what it is.
+// Ref: #/components/schemas/VisibilityQuality
+type VisibilityQuality string
+
+const (
+	VisibilityQualityHidden    VisibilityQuality = "hidden"
+	VisibilityQualityInvisible VisibilityQuality = "invisible"
+	VisibilityQualityDisguised VisibilityQuality = "disguised"
+	VisibilityQualityIllusory  VisibilityQuality = "illusory"
+	VisibilityQualityEthereal  VisibilityQuality = "ethereal"
+	VisibilityQualityDarkness  VisibilityQuality = "darkness"
+	VisibilityQualityHeavy     VisibilityQuality = "heavy"
+	VisibilityQualitySecret    VisibilityQuality = "secret"
+)
+
+// AllValues returns all VisibilityQuality values.
+func (VisibilityQuality) AllValues() []VisibilityQuality {
+	return []VisibilityQuality{
+		VisibilityQualityHidden,
+		VisibilityQualityInvisible,
+		VisibilityQualityDisguised,
+		VisibilityQualityIllusory,
+		VisibilityQualityEthereal,
+		VisibilityQualityDarkness,
+		VisibilityQualityHeavy,
+		VisibilityQualitySecret,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s VisibilityQuality) MarshalText() ([]byte, error) {
+	switch s {
+	case VisibilityQualityHidden:
+		return []byte(s), nil
+	case VisibilityQualityInvisible:
+		return []byte(s), nil
+	case VisibilityQualityDisguised:
+		return []byte(s), nil
+	case VisibilityQualityIllusory:
+		return []byte(s), nil
+	case VisibilityQualityEthereal:
+		return []byte(s), nil
+	case VisibilityQualityDarkness:
+		return []byte(s), nil
+	case VisibilityQualityHeavy:
+		return []byte(s), nil
+	case VisibilityQualitySecret:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *VisibilityQuality) UnmarshalText(data []byte) error {
+	switch VisibilityQuality(data) {
+	case VisibilityQualityHidden:
+		*s = VisibilityQualityHidden
+		return nil
+	case VisibilityQualityInvisible:
+		*s = VisibilityQualityInvisible
+		return nil
+	case VisibilityQualityDisguised:
+		*s = VisibilityQualityDisguised
+		return nil
+	case VisibilityQualityIllusory:
+		*s = VisibilityQualityIllusory
+		return nil
+	case VisibilityQualityEthereal:
+		*s = VisibilityQualityEthereal
+		return nil
+	case VisibilityQualityDarkness:
+		*s = VisibilityQualityDarkness
+		return nil
+	case VisibilityQualityHeavy:
+		*s = VisibilityQualityHeavy
+		return nil
+	case VisibilityQualitySecret:
+		*s = VisibilityQualitySecret
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // A carried weapon.

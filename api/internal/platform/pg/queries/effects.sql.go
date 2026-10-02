@@ -360,6 +360,21 @@ func (q *Queries) InsertEffectResourceChange(ctx context.Context, arg InsertEffe
 	return err
 }
 
+const insertEffectReveal = `-- name: InsertEffectReveal :exec
+INSERT INTO compendium.effect_reveals (effect_id, ordinal, qualities) VALUES ($1, $2, $3::text[])
+`
+
+type InsertEffectRevealParams struct {
+	EffectID  int64
+	Ordinal   int32
+	Qualities []string
+}
+
+func (q *Queries) InsertEffectReveal(ctx context.Context, arg InsertEffectRevealParams) error {
+	_, err := q.db.Exec(ctx, insertEffectReveal, arg.EffectID, arg.Ordinal, arg.Qualities)
+	return err
+}
+
 const insertEffectSaveCondition = `-- name: InsertEffectSaveCondition :exec
 INSERT INTO compendium.effect_save_conditions (effect_id, ordinal, ability, condition_slug)
 VALUES ($1, $2, $3, $4)
@@ -1171,6 +1186,36 @@ func (q *Queries) ListEffectResourceChanges(ctx context.Context) ([]ListEffectRe
 			&i.ResourceSlug,
 			&i.Delta,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectReveals = `-- name: ListEffectReveals :many
+SELECT effect_id, ordinal, qualities FROM compendium.effect_reveals
+`
+
+type ListEffectRevealsRow struct {
+	EffectID  int64
+	Ordinal   int32
+	Qualities []string
+}
+
+func (q *Queries) ListEffectReveals(ctx context.Context) ([]ListEffectRevealsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectReveals)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectRevealsRow{}
+	for rows.Next() {
+		var i ListEffectRevealsRow
+		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Qualities); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

@@ -60,6 +60,9 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if l := got.LandingOf("false-life", ""); l.TempHP != 9 || !got.LandingOf("dispel-magic", "").Dispels {
 		t.Fatalf("false life = %+v", l)
 	}
+	if ff, _ := got.AreaOf("faerie-fire"); !reflect.DeepEqual(ff.Reveals, []string{"invisible"}) {
+		t.Fatalf("faerie fire reveals = %+v", ff)
+	}
 	if wall, _ := got.AreaOf("wall-of-fire"); wall.Area.Shape != hex.WallArea || !got["wall-of-fire"].Concentration {
 		t.Fatalf("wall of fire = %+v", wall)
 	}
@@ -116,6 +119,7 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 		effects.ResourceChange{Resource: "rage", Delta: -1},
 		effects.Summon{Monster: "wolf", Count: 2, Shares: true, NeedsCommand: true},
 		effects.Form{Monster: "owl", TempHP: 4},
+		effects.Reveal{Qualities: []string{"invisible", "secret"}},
 	}}
 	if err := s.SaveEffect(ctx, owner, second); err != nil {
 		t.Fatal(err)
@@ -190,6 +194,7 @@ func TestInvalidEffectsAreRefused(t *testing.T) {
 		{Slug: "bad-scaling", Name: "x", Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "lots"}},
 		{Slug: "bad-step", Name: "x", Scaling: &effects.Scaling{Axis: effects.CharacterLevel, Steps: []effects.Step{{At: 30, Dice: "1d6"}}}},
 		{Slug: "bad-branch", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: "full_moon"}}}},
+		{Slug: "bad-reveal", Name: "x", Components: []effects.Component{effects.Reveal{Qualities: []string{"shiny"}}}},
 		{Slug: "bad-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: ""}}}}},
 		{Slug: "bad-nested", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{effects.ExtraDamage{Dice: "lots"}}}}},
 	}

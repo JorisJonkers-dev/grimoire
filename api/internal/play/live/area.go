@@ -210,6 +210,9 @@ func (r *runtime) areaRolled() {
 	for _, e := range extra {
 		r.commit(request{}, Write{Kind: domain.ActionEffectApplied, Token: r.st.tokens[e.Target], effect: &e}, actor, sys)
 	}
+	for _, t := range r.st.revealed(c.Hexes, spell.Reveals) {
+		r.commit(request{}, Write{Kind: domain.ActionVisibilitySet, Token: t}, actor, sys)
+	}
 	if spell.Condition == "" {
 		return
 	}

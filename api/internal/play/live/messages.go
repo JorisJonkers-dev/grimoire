@@ -3,6 +3,9 @@
 package live
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
@@ -90,6 +93,7 @@ const (
 	CmdTeleport       = "teleport"
 	CmdSummon         = "summon"
 	CmdCommand        = "command"
+	CmdSetVisibility  = "set_visibility"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -157,36 +161,41 @@ type Command struct {
 	// EffectMode is the option an Effect that offers a choice is applied in.
 	EffectMode string `json:"effectMode,omitempty"`
 	// TempHP sets the Temporary Hit Points of a form, such as a druid's level for Wild Shape.
-	TempHP      int    `json:"tempHp,omitempty"`
-	SaveAbility string `json:"saveAbility,omitempty"`
-	SaveDC      int    `json:"saveDc,omitempty"`
-	EffectID    string `json:"effectId,omitempty"`
-	ManualID    string `json:"manualId,omitempty"`
-	Surface     string `json:"surface,omitempty"`
-	ElevationFt int    `json:"elevationFt,omitempty"`
-	Camera      string `json:"camera,omitempty"`
-	ZoomPct     int    `json:"zoomPct,omitempty"`
-	Scene       string `json:"scene,omitempty"`
-	Title       string `json:"title,omitempty"`
-	Body        string `json:"body,omitempty"`
-	NodeID      string `json:"nodeId,omitempty"`
-	ToNodeID    string `json:"toNodeId,omitempty"`
-	RouteID     string `json:"routeId,omitempty"`
-	DistanceMi  int    `json:"distanceMi,omitempty"`
-	Pace        string `json:"pace,omitempty"`
-	ZoneID      string `json:"zoneId,omitempty"`
-	RadiusHexes int    `json:"radiusHexes,omitempty"`
-	DMOnly      bool   `json:"dmOnly,omitempty"`
-	Rest        string `json:"rest,omitempty"`
-	TableID     string `json:"tableId,omitempty"`
-	Mode        string `json:"mode,omitempty"`
-	Entry       int    `json:"entry,omitempty"`
-	Due         string `json:"due,omitempty"`
-	LootTableID string `json:"lootTableId,omitempty"`
-	FromID      string `json:"fromId,omitempty"`
-	ToID        string `json:"toId,omitempty"`
-	ItemSlug    string `json:"itemSlug,omitempty"`
-	InstanceID  string `json:"instanceId,omitempty"`
+	TempHP int `json:"tempHp,omitempty"`
+	// Qualities, SeenThrough and Disguise set a token's Visibility: its Qualities, the ones the party has
+	// beaten with a check, and the name a Disguised token shows.
+	Qualities   []string `json:"qualities,omitempty"`
+	SeenThrough []string `json:"seenThrough,omitempty"`
+	Disguise    string   `json:"disguise,omitempty"`
+	SaveAbility string   `json:"saveAbility,omitempty"`
+	SaveDC      int      `json:"saveDc,omitempty"`
+	EffectID    string   `json:"effectId,omitempty"`
+	ManualID    string   `json:"manualId,omitempty"`
+	Surface     string   `json:"surface,omitempty"`
+	ElevationFt int      `json:"elevationFt,omitempty"`
+	Camera      string   `json:"camera,omitempty"`
+	ZoomPct     int      `json:"zoomPct,omitempty"`
+	Scene       string   `json:"scene,omitempty"`
+	Title       string   `json:"title,omitempty"`
+	Body        string   `json:"body,omitempty"`
+	NodeID      string   `json:"nodeId,omitempty"`
+	ToNodeID    string   `json:"toNodeId,omitempty"`
+	RouteID     string   `json:"routeId,omitempty"`
+	DistanceMi  int      `json:"distanceMi,omitempty"`
+	Pace        string   `json:"pace,omitempty"`
+	ZoneID      string   `json:"zoneId,omitempty"`
+	RadiusHexes int      `json:"radiusHexes,omitempty"`
+	DMOnly      bool     `json:"dmOnly,omitempty"`
+	Rest        string   `json:"rest,omitempty"`
+	TableID     string   `json:"tableId,omitempty"`
+	Mode        string   `json:"mode,omitempty"`
+	Entry       int      `json:"entry,omitempty"`
+	Due         string   `json:"due,omitempty"`
+	LootTableID string   `json:"lootTableId,omitempty"`
+	FromID      string   `json:"fromId,omitempty"`
+	ToID        string   `json:"toId,omitempty"`
+	ItemSlug    string   `json:"itemSlug,omitempty"`
+	InstanceID  string   `json:"instanceId,omitempty"`
 	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
 	// Trigger sets off a readied attack; Option is a Grapple or Shove.
 	Action  string `json:"action,omitempty"`
@@ -243,19 +252,29 @@ type TokenView struct {
 	DarkvisionFt int    `json:"darkvisionFt"`
 	ControllerID string `json:"controllerId,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
-	AC      *int         `json:"ac,omitempty"`
-	HP      *int         `json:"hp,omitempty"`
-	HPMax   *int         `json:"hpMax,omitempty"`
-	TempHP  int          `json:"tempHp,omitempty"`
-	Form    string       `json:"form,omitempty"`
-	Health  string       `json:"health,omitempty"`
-	Attacks []AttackView `json:"attacks,omitempty"`
-	Shield  bool         `json:"shield,omitempty"`
-	Effects []EffectView `json:"effects,omitempty"`
+	AC     *int   `json:"ac,omitempty"`
+	HP     *int   `json:"hp,omitempty"`
+	HPMax  *int   `json:"hpMax,omitempty"`
+	TempHP int    `json:"tempHp,omitempty"`
+	Form   string `json:"form,omitempty"`
+	// Qualities and Disguise go to the DM only: the token's Visibility Qualities, with seen-through
+	// ones marked, and the name a Disguised token shows.
+	Qualities []QualityView `json:"qualities,omitempty"`
+	Disguise  string        `json:"disguise,omitempty"`
+	Health    string        `json:"health,omitempty"`
+	Attacks   []AttackView  `json:"attacks,omitempty"`
+	Shield    bool          `json:"shield,omitempty"`
+	Effects   []EffectView  `json:"effects,omitempty"`
 	// Reactions are the Controller's reaction settings, shown to the DM and for the party's tokens;
 	// Dying is a Character's death saves at 0 hit points.
 	Reactions []ReactionSettingView `json:"reactions,omitempty"`
 	Dying     *DyingView            `json:"dying,omitempty"`
+}
+
+// QualityView is one Visibility Quality of a token, and whether the party has seen through it.
+type QualityView struct {
+	Quality     string `json:"quality"`
+	SeenThrough bool   `json:"seenThrough,omitempty"`
 }
 
 // EffectView is an Effect on a token, which everyone who sees the token sees.
@@ -702,6 +721,12 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	}
 	if t.Form != nil {
 		v.Form = t.Form.Name
+	}
+	if a == AudienceDM {
+		v.Disguise = t.Disguise
+		for _, q := range slices.Sorted(maps.Keys(t.Qualities)) {
+			v.Qualities = append(v.Qualities, QualityView{Quality: q, SeenThrough: t.Qualities[q]})
+		}
 	}
 	s := t.Stats
 	switch {

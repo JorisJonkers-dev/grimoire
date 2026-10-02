@@ -77,11 +77,25 @@ func TestSummons(t *testing.T) {
 	}
 }
 
+func TestRevealsInAreas(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{"outline": {Slug: "outline", Components: []effects.Component{
+		effects.Area{Shape: hex.CubeArea, SizeFt: 20, RangeFt: 60}, effects.Reveal{Qualities: []string{"invisible"}}, effects.Reveal{Qualities: []string{"hidden"}},
+	}}}
+	if a, ok := cat.AreaOf("outline"); !ok || !reflect.DeepEqual(a.Reveals, []string{"invisible", "hidden"}) {
+		t.Fatalf("reveals = %+v", a)
+	}
+}
+
 func TestFormsLand(t *testing.T) {
 	t.Parallel()
 	cat := effects.Catalog{"polymorph": {Slug: "polymorph", Components: []effects.Component{effects.Form{Monster: "", TempHP: 0}}}}
 	if l := cat.LandingOf("polymorph", ""); l.Form == nil || *l.Form != (effects.Form{}) {
 		t.Fatalf("polymorph lands a form = %+v", l)
+	}
+	cat["outline"] = effects.Definition{Components: []effects.Component{effects.Reveal{Qualities: []string{"invisible"}}}}
+	if l := cat.LandingOf("outline", ""); !reflect.DeepEqual(l.Reveals, []string{"invisible"}) {
+		t.Fatalf("outline reveals = %+v", l)
 	}
 	if l := cat.LandingOf("bless", ""); l.Form != nil {
 		t.Fatalf("bless lands no form = %+v", l)
@@ -239,6 +253,7 @@ func TestRulesText(t *testing.T) {
 			effects.Summon{Monster: "zombie", Count: 1, NeedsCommand: true},
 			effects.Form{Monster: "", TempHP: 0},
 			effects.Form{Monster: "owl", TempHP: 5},
+			effects.Reveal{Qualities: []string{"invisible", "hidden"}},
 		},
 	}
 	want := []string{
@@ -286,6 +301,7 @@ func TestRulesText(t *testing.T) {
 		"The caster summons a Zombie, which rolls its own Initiative. It takes the Dodge action unless the caster commands it with a Bonus Action.",
 		"The target takes the form of a creature of the caster's choice, using its statistics and gaining Temporary Hit Points equal to that creature's Hit Point maximum; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points.",
 		"The target takes the form of an Owl, using its statistics and gaining 5 Temporary Hit Points; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points.",
+		"Every creature and object in the area loses Invisible and Hidden, whatever anyone's senses.",
 		"Duration: Concentration, up to 1 minute.",
 		"The target repeats the Wisdom saving throw at the end of each of its turns, ending the effect on a success.",
 		"Using a Higher-Level Spell Slot: the damage increases by 1d8 for each slot level above 2.",

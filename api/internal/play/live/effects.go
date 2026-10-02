@@ -76,6 +76,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	}
 	w := Write{Kind: domain.ActionEffectApplied, Token: target, effect: &e}
 	r.st.land(&w, land, target)
+	unveil(&w, land.Reveals)
 	if land.Form != nil {
 		if reason := r.shape(&w, *land.Form, cmd, target, e.ID); reason != "" {
 			return Write{}, reason
@@ -309,6 +310,9 @@ func applyEffects(s *state, w *Write) {
 	}
 	if w.Formed != nil {
 		s.tokens[w.Formed.ID] = *w.Formed
+	}
+	if w.Unveiled {
+		s.tokens[w.Token.ID] = w.Token
 	}
 	if w.Kind == domain.ActionEffectApplied && w.HP != nil {
 		s.setHP(*w.HP)

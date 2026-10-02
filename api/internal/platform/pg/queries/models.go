@@ -479,6 +479,13 @@ type CompendiumEffectResourceChange struct {
 	Delta        int32
 }
 
+type CompendiumEffectReveal struct {
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Qualities []string
+}
+
 type CompendiumEffectSaveCondition struct {
 	EffectID      int64
 	Ordinal       int32
@@ -1187,6 +1194,7 @@ type PlayToken struct {
 	AttacksPerAction   int32
 	TempHp             int32
 	SummonEffectID     pgtype.UUID
+	Disguise           pgtype.Text
 }
 
 type PlayTokenAttack struct {
@@ -1212,6 +1220,12 @@ type PlayTokenForm struct {
 	Stats    []byte
 }
 
+type PlayTokenQuality struct {
+	TokenID     uuid.UUID
+	Quality     string
+	SeenThrough bool
+}
+
 type PlayTokenReaction struct {
 	TokenID   uuid.UUID
 	Kind      string
@@ -1223,6 +1237,12 @@ type PlayTokenSafe struct {
 	TokenID uuid.UUID
 	Ability string
 	Bonus   int32
+}
+
+type PlayTokenSense struct {
+	TokenID uuid.UUID
+	Sense   string
+	RangeFt int32
 }
 
 type PlayTravelLeg struct {

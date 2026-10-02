@@ -34,6 +34,36 @@ func (q *Queries) AddResumeHex(ctx context.Context, arg AddResumeHexParams) erro
 	return err
 }
 
+const addTokenQuality = `-- name: AddTokenQuality :exec
+INSERT INTO play.token_qualities (token_id, quality, seen_through) VALUES ($1, $2, $3)
+`
+
+type AddTokenQualityParams struct {
+	TokenID     uuid.UUID
+	Quality     string
+	SeenThrough bool
+}
+
+func (q *Queries) AddTokenQuality(ctx context.Context, arg AddTokenQualityParams) error {
+	_, err := q.db.Exec(ctx, addTokenQuality, arg.TokenID, arg.Quality, arg.SeenThrough)
+	return err
+}
+
+const addTokenSense = `-- name: AddTokenSense :exec
+INSERT INTO play.token_senses (token_id, sense, range_ft) VALUES ($1, $2, $3)
+`
+
+type AddTokenSenseParams struct {
+	TokenID uuid.UUID
+	Sense   string
+	RangeFt int32
+}
+
+func (q *Queries) AddTokenSense(ctx context.Context, arg AddTokenSenseParams) error {
+	_, err := q.db.Exec(ctx, addTokenSense, arg.TokenID, arg.Sense, arg.RangeFt)
+	return err
+}
+
 const addZoneCreature = `-- name: AddZoneCreature :exec
 INSERT INTO play.zone_creatures (zone_id, token_id) VALUES ($1, $2) ON CONFLICT DO NOTHING
 `
@@ -234,6 +264,15 @@ DELETE FROM play.surfaces WHERE session_id = $1
 
 func (q *Queries) ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, clearSurfaces, sessionID)
+	return err
+}
+
+const clearTokenQualities = `-- name: ClearTokenQualities :exec
+DELETE FROM play.token_qualities WHERE token_id = $1
+`
+
+func (q *Queries) ClearTokenQualities(ctx context.Context, tokenID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearTokenQualities, tokenID)
 	return err
 }
 
@@ -1961,6 +2000,30 @@ func (q *Queries) SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([
 	return items, nil
 }
 
+const sessionTokenQualities = `-- name: SessionTokenQualities :many
+SELECT q.token_id, q.quality, q.seen_through FROM play.token_qualities q JOIN play.tokens t ON t.id = q.token_id WHERE t.session_id = $1 ORDER BY q.token_id, q.quality
+`
+
+func (q *Queries) SessionTokenQualities(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenQuality, error) {
+	rows, err := q.db.Query(ctx, sessionTokenQualities, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PlayTokenQuality{}
+	for rows.Next() {
+		var i PlayTokenQuality
+		if err := rows.Scan(&i.TokenID, &i.Quality, &i.SeenThrough); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionTokenReactions = `-- name: SessionTokenReactions :many
 SELECT r.token_id, r.kind, r.mode, r.condition FROM play.token_reactions r JOIN play.tokens t ON t.id = r.token_id
 WHERE t.session_id = $1 ORDER BY r.token_id, r.kind
@@ -2015,9 +2078,33 @@ func (q *Queries) SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([
 	return items, nil
 }
 
+const sessionTokenSenses = `-- name: SessionTokenSenses :many
+SELECT s.token_id, s.sense, s.range_ft FROM play.token_senses s JOIN play.tokens t ON t.id = s.token_id WHERE t.session_id = $1
+`
+
+func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSense, error) {
+	rows, err := q.db.Query(ctx, sessionTokenSenses, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PlayTokenSense{}
+	for rows.Next() {
+		var i PlayTokenSense
+		if err := rows.Scan(&i.TokenID, &i.Sense, &i.RangeFt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2045,6 +2132,7 @@ type SessionTokensRow struct {
 	AttacksPerAction   int32
 	TempHp             int32
 	SummonEffectID     pgtype.UUID
+	Disguise           pgtype.Text
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2081,6 +2169,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.AttacksPerAction,
 			&i.TempHp,
 			&i.SummonEffectID,
+			&i.Disguise,
 		); err != nil {
 			return nil, err
 		}
@@ -2214,6 +2303,21 @@ func (q *Queries) SetElevation(ctx context.Context, arg SetElevationParams) erro
 		arg.R,
 		arg.ElevationFt,
 	)
+	return err
+}
+
+const setTokenDisguise = `-- name: SetTokenDisguise :exec
+UPDATE play.tokens SET disguise = $1 WHERE session_id = $2 AND id = $3
+`
+
+type SetTokenDisguiseParams struct {
+	Disguise  pgtype.Text
+	SessionID uuid.UUID
+	ID        uuid.UUID
+}
+
+func (q *Queries) SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error {
+	_, err := q.db.Exec(ctx, setTokenDisguise, arg.Disguise, arg.SessionID, arg.ID)
 	return err
 }
 

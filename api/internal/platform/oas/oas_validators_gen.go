@@ -14826,6 +14826,108 @@ func (s *LiveCommand) Validate() error {
 		})
 	}
 	if err := func() error {
+		if s.Qualities == nil {
+			return nil // optional
+		}
+		if err := (validate.Array{
+			MinLength:    0,
+			MinLengthSet: false,
+			MaxLength:    8,
+			MaxLengthSet: true,
+		}).ValidateLength(len(s.Qualities)); err != nil {
+			return errors.Wrap(err, "array")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Qualities {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "qualities",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if s.SeenThrough == nil {
+			return nil // optional
+		}
+		if err := (validate.Array{
+			MinLength:    0,
+			MinLengthSet: false,
+			MaxLength:    8,
+			MaxLengthSet: true,
+		}).ValidateLength(len(s.SeenThrough)); err != nil {
+			return errors.Wrap(err, "array")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.SeenThrough {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "seenThrough",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Disguise.Get(); ok {
+			if err := func() error {
+				if err := (validate.String{
+					MinLength:     0,
+					MinLengthSet:  false,
+					MaxLength:     40,
+					MaxLengthSet:  true,
+					Email:         false,
+					Hostname:      false,
+					Regex:         nil,
+					MinNumeric:    0,
+					MinNumericSet: false,
+					MaxNumeric:    0,
+					MaxNumericSet: false,
+				}).Validate(string(value)); err != nil {
+					return errors.Wrap(err, "string")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "disguise",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if value, ok := s.SaveAbility.Get(); ok {
 			if err := func() error {
 				if err := value.Validate(); err != nil {
@@ -15693,6 +15795,8 @@ func (s LiveCommandKind) Validate() error {
 	case "summon":
 		return nil
 	case "command":
+		return nil
+	case "set_visibility":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
@@ -17357,6 +17461,29 @@ func (s LivePromptKind) Validate() error {
 	}
 }
 
+func (s *LiveQuality) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Quality.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "quality",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s *LiveReactionSetting) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -18676,6 +18803,72 @@ func (s *LiveToken) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "form",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if s.Qualities == nil {
+			return nil // optional
+		}
+		if err := (validate.Array{
+			MinLength:    0,
+			MinLengthSet: false,
+			MaxLength:    8,
+			MaxLengthSet: true,
+		}).ValidateLength(len(s.Qualities)); err != nil {
+			return errors.Wrap(err, "array")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Qualities {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "qualities",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Disguise.Get(); ok {
+			if err := func() error {
+				if err := (validate.String{
+					MinLength:     0,
+					MinLengthSet:  false,
+					MaxLength:     40,
+					MaxLengthSet:  true,
+					Email:         false,
+					Hostname:      false,
+					Regex:         nil,
+					MinNumeric:    0,
+					MinNumericSet: false,
+					MaxNumeric:    0,
+					MaxNumericSet: false,
+				}).Validate(string(value)); err != nil {
+					return errors.Wrap(err, "string")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "disguise",
 			Error: err,
 		})
 	}
@@ -27711,6 +27904,29 @@ func (s TravelPace) Validate() error {
 	case "normal":
 		return nil
 	case "fast":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s VisibilityQuality) Validate() error {
+	switch s {
+	case "hidden":
+		return nil
+	case "invisible":
+		return nil
+	case "disguised":
+		return nil
+	case "illusory":
+		return nil
+	case "ethereal":
+		return nil
+	case "darkness":
+		return nil
+	case "heavy":
+		return nil
+	case "secret":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

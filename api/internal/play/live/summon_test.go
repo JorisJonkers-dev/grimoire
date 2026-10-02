@@ -17,6 +17,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
 // summonTable stores summoning Effects before anyone joins, then puts Aria at the centre and a goblin
@@ -32,6 +33,11 @@ func summonTable(t *testing.T) (world, *table, map[string]string) {
 		}},
 		{Slug: "wolf-pack", Name: "Wolf Pack", Owner: effects.OwnedBySpell, Components: []effects.Component{
 			effects.Summon{Monster: "wolf", Count: 2, Shares: false, NeedsCommand: false},
+		}},
+		{Slug: "outlining-burst", Name: "Outlining Burst", Owner: effects.OwnedBySpell, Components: []effects.Component{
+			effects.Area{Shape: hex.SphereArea, SizeFt: 5, RangeFt: 60},
+			effects.SaveDamage{Ability: "dexterity", Dice: "1d4", Type: "radiant", Half: true},
+			effects.Reveal{Qualities: []string{"invisible", "disguised"}},
 		}},
 		{Slug: "summon-owl", Name: "Summon Owl", Owner: effects.OwnedBySpell, Components: []effects.Component{
 			effects.Summon{Monster: "owl", Count: 1, Shares: true, NeedsCommand: false},

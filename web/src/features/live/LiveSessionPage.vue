@@ -16,6 +16,7 @@ import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
+import VisibilityPanel from './VisibilityPanel.vue'
 import ActionLog from './ActionLog.vue'
 import DyingPanel from './DyingPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
@@ -521,6 +522,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :tokens="view?.tokens ?? []"
           @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
           @end="(id) => live?.send({ kind: 'end_effect', effectId: id })"
+        />
+        <VisibilityPanel
+          v-if="chosen && isDM"
+          :key="`vis-${chosen.id}`"
+          :token="chosen"
+          @set="(v) => live?.send({ kind: 'set_visibility', tokenId: chosen!.id, ...v })"
         />
         <div v-if="chosen" class="row" data-testid="selected-token">
           <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>

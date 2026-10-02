@@ -202,8 +202,10 @@ func TestTheActionsOfATurn(t *testing.T) {
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Goblin").ID})
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Archer").ID})
 	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Goblin"], Effect: "paralyzed"})
-	if u := tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: 2, R: 0}); u.View.Combat.Prompt == nil {
-		t.Fatalf("leaving the archer's reach offers an opportunity attack = %+v", u.View.Combat)
+	w.hub.Submit(tb.player, live.Command{Kind: live.CmdWalk, TokenID: ids["Aria"], Q: 2, R: 0})
+	p = next(t, tb.player)
+	if d := next(t, tb.dm); d.View.Combat.Prompt == nil || p.View.Combat.Prompt != nil || token(p.View, "Archer") != nil {
+		t.Fatalf("leaving the invisible archer's reach offers it an opportunity attack the party cannot see = %+v %+v", d.View.Combat, p.View.Combat)
 	}
 	tb.dmSays(live.Command{Kind: live.CmdReact, Use: false})
 	drain(tb.dm)

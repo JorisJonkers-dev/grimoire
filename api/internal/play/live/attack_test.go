@@ -33,6 +33,8 @@ func (bestiary) Monster(_ context.Context, _ uuid.UUID, slug string) (string, do
 		return "Wolf", domain.Stats{Source: "monster:wolf", AC: 13, HP: 11, HPMax: 11, Intelligence: 3, Attacks: []domain.Attack{
 			{Name: "Bite", ToHit: 4, ReachFt: 5, Damage: "2d4", DamageBonus: 2, DamageType: "piercing"},
 		}}, nil
+	case "bat":
+		return "Bat", domain.Stats{Source: "monster:bat", AC: 12, HP: 1, HPMax: 1, Intelligence: 2, Senses: map[string]int{"blindsight": 60}, Attacks: []domain.Attack{}}, nil
 	case "goblin":
 	default:
 		return "", domain.Stats{}, errors.New("no such monster")

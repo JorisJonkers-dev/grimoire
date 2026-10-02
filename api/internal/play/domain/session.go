@@ -67,6 +67,10 @@ type Token struct {
 	Summon *EffectID
 	// Form is the creature the token has taken the shape of, if any; Stats are then the form's.
 	Form *Form
+	// Qualities are the token's Visibility Qualities, each marked when the party has seen through it
+	// with a check; Disguise is the name a Disguised token shows until then.
+	Qualities map[string]bool
+	Disguise  string
 }
 
 // Form is a shape a token has taken: the Effect keeping it, the creature's name, and the token's own
@@ -84,7 +88,9 @@ type Stats struct {
 	HP     int
 	HPMax  int
 	// TempHP is temporary hit points, lost before hit points.
-	TempHP  int
+	TempHP int
+	// Senses are blindsight, tremorsense and truesight ranges in feet.
+	Senses  map[string]int
 	Attacks []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int

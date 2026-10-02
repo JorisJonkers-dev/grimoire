@@ -53,6 +53,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planTeleport(m, cmd)
 	case CmdSummon:
 		return r.planSummon(m, cmd)
+	case CmdSetVisibility:
+		return r.planVisibility(cmd)
 	case CmdCommand:
 		return r.planCommand(m, cmd)
 	case CmdSetReaction:

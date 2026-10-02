@@ -1008,6 +1008,14 @@ export type LiveToken = {
      */
     form?: string;
     /**
+     * The token's Visibility Qualities, for the DM only.
+     */
+    qualities?: Array<LiveQuality>;
+    /**
+     * The name a Disguised token shows, for the DM only.
+     */
+    disguise?: string;
+    /**
      * What anyone can tell by looking, for creatures whose hit points the audience may not see.
      */
     health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
@@ -1103,7 +1111,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1154,6 +1162,9 @@ export type LiveCommand = {
      * Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
      */
     tempHp?: number;
+    qualities?: Array<VisibilityQuality>;
+    seenThrough?: Array<VisibilityQuality>;
+    disguise?: string;
     saveAbility?: Ability;
     saveDc?: number;
     effectId?: Id;
@@ -1569,6 +1580,19 @@ export type LiveElevation = {
     r: number;
     elevationFt: number;
 };
+
+/**
+ * One Visibility Quality of a token, and whether the party has seen through it with a check.
+ */
+export type LiveQuality = {
+    quality: VisibilityQuality;
+    seenThrough?: boolean;
+};
+
+/**
+ * Something that keeps a creature or object from being seen for what it is.
+ */
+export type VisibilityQuality = 'hidden' | 'invisible' | 'disguised' | 'illusory' | 'ethereal' | 'darkness' | 'heavy' | 'secret';
 
 /**
  * An Effect on a token, which everyone who sees the token sees.

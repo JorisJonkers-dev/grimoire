@@ -998,6 +998,28 @@ export const zLiveElevation = z.object({
 });
 
 /**
+ * Something that keeps a creature or object from being seen for what it is.
+ */
+export const zVisibilityQuality = z.enum([
+    'hidden',
+    'invisible',
+    'disguised',
+    'illusory',
+    'ethereal',
+    'darkness',
+    'heavy',
+    'secret'
+]);
+
+/**
+ * One Visibility Quality of a token, and whether the party has seen through it with a check.
+ */
+export const zLiveQuality = z.object({
+    quality: zVisibilityQuality,
+    seenThrough: z.boolean().optional()
+});
+
+/**
  * An Effect on a token, which everyone who sees the token sees.
  */
 export const zLiveEffect = z.object({
@@ -1029,6 +1051,8 @@ export const zLiveToken = z.object({
     hpMax: z.int().gte(1).lte(10000).optional(),
     tempHp: z.int().gte(1).lte(999).optional(),
     form: z.string().max(80).optional(),
+    qualities: z.array(zLiveQuality).max(8).optional(),
+    disguise: z.string().max(40).optional(),
     health: z.enum([
         'unhurt',
         'hurt',
@@ -1660,7 +1684,8 @@ export const zLiveCommand = z.object({
         'revive',
         'teleport',
         'summon',
-        'command'
+        'command',
+        'set_visibility'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1698,6 +1723,9 @@ export const zLiveCommand = z.object({
     slot: z.int().gte(1).lte(9).optional(),
     effectMode: z.string().max(80).optional(),
     tempHp: z.int().gte(1).lte(999).optional(),
+    qualities: z.array(zVisibilityQuality).max(8).optional(),
+    seenThrough: z.array(zVisibilityQuality).max(8).optional(),
+    disguise: z.string().max(40).optional(),
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),

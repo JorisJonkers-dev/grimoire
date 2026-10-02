@@ -169,6 +169,9 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	if err := s.loadReactionSettings(ctx, row.ID, tokens); err != nil {
 		return domain.Session{}, nil, nil, err
 	}
+	if err := s.loadVisibility(ctx, row.ID, tokens); err != nil {
+		return domain.Session{}, nil, nil, err
+	}
 	if err := s.loadForms(ctx, row.ID, tokens); err != nil {
 		return domain.Session{}, nil, nil, err
 	}
@@ -278,6 +281,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.setHP(ctx, sid, *w.HP)
 	case domain.ActionReactionSet:
 		return s.saveReactionSettings(ctx, w.Token)
+	case domain.ActionVisibilitySet:
+		return s.saveVisibility(ctx, sid, w.Token)
 	case domain.ActionEncounterSpawned, domain.ActionSummoned:
 		for _, t := range w.Spawned {
 			if err := s.insertToken(ctx, sid, t); err != nil {
@@ -317,7 +322,10 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	}
 	if t.Stats == nil {
 		p.SpeedFt, p.UnarmedDc, p.AttacksPerAction = 30, 10, 1
-		return s.q.InsertToken(ctx, p)
+		if err := s.q.InsertToken(ctx, p); err != nil {
+			return err
+		}
+		return s.saveVisibility(ctx, sid, t)
 	}
 	st := t.Stats
 	p.StatSource = pgtype.Text{String: st.Source, Valid: true}
@@ -337,9 +345,19 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	if err := s.q.InsertToken(ctx, p); err != nil {
 		return err
 	}
+	if err := s.insertStatRows(ctx, t.ID, st); err != nil {
+		return err
+	}
+	return s.saveVisibility(ctx, sid, t)
+}
+
+// insertStatRows writes a token's attacks, saves and Senses.
+//
+//nolint:gosec // statblock numbers are bounded by the rules
+func (s *Store) insertStatRows(ctx context.Context, id domain.TokenID, st *domain.Stats) error {
 	for i, a := range st.Attacks {
 		if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
-			TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
+			TokenID: uuid.UUID(id), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
 			LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
 			Light: a.Light, DamageMod: int32(a.DamageMod), Mastery: pgtype.Text{String: a.Mastery, Valid: a.Mastery != ""},
 		}); err != nil {
@@ -347,9 +365,61 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		}
 	}
 	for ability, bonus := range st.Saves {
-		if err := s.q.InsertTokenSave(ctx, queries.InsertTokenSaveParams{TokenID: uuid.UUID(t.ID), Ability: ability, Bonus: int32(bonus)}); err != nil {
+		if err := s.q.InsertTokenSave(ctx, queries.InsertTokenSaveParams{TokenID: uuid.UUID(id), Ability: ability, Bonus: int32(bonus)}); err != nil {
 			return err
 		}
+	}
+	for sense, ft := range st.Senses {
+		if err := s.q.AddTokenSense(ctx, queries.AddTokenSenseParams{TokenID: uuid.UUID(id), Sense: sense, RangeFt: int32(ft)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// saveVisibility writes a token's Visibility Qualities, which the party has seen through, and its disguise.
+func (s *Store) saveVisibility(ctx context.Context, sid uuid.UUID, t domain.Token) error {
+	p := queries.SetTokenDisguiseParams{SessionID: sid, ID: uuid.UUID(t.ID), Disguise: pgtype.Text{String: t.Disguise, Valid: t.Disguise != ""}}
+	if err := s.q.SetTokenDisguise(ctx, p); err != nil {
+		return err
+	}
+	if err := s.q.ClearTokenQualities(ctx, uuid.UUID(t.ID)); err != nil {
+		return err
+	}
+	for q, through := range t.Qualities {
+		if err := s.q.AddTokenQuality(ctx, queries.AddTokenQualityParams{TokenID: uuid.UUID(t.ID), Quality: q, SeenThrough: through}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// loadVisibility reads every token's Visibility Qualities and Senses.
+func (s *Store) loadVisibility(ctx context.Context, sid uuid.UUID, tokens []domain.Token) error {
+	qualities, err := s.q.SessionTokenQualities(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, q := range qualities {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == q.TokenID })
+		if tokens[i].Qualities == nil {
+			tokens[i].Qualities = map[string]bool{}
+		}
+		tokens[i].Qualities[q.Quality] = q.SeenThrough
+	}
+	senses, err := s.q.SessionTokenSenses(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, sn := range senses {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == sn.TokenID && t.Stats != nil })
+		if i < 0 {
+			continue
+		}
+		if tokens[i].Stats.Senses == nil {
+			tokens[i].Stats.Senses = map[string]int{}
+		}
+		tokens[i].Stats.Senses[sn.Sense] = int(sn.RangeFt)
 	}
 	return nil
 }
@@ -360,6 +430,11 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 func (s *Store) writeLanding(ctx context.Context, sid uuid.UUID, w live.Write) error {
 	if w.HP != nil {
 		if err := s.setHP(ctx, sid, *w.HP); err != nil {
+			return err
+		}
+	}
+	if w.Unveiled {
+		if err := s.saveVisibility(ctx, sid, w.Token); err != nil {
 			return err
 		}
 	}
@@ -504,7 +579,7 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
 		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet, domain.ActionConcentrationChecked,
-		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered:
+		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered, domain.ActionVisibilitySet:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -906,7 +981,7 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 func tokenFrom(t queries.SessionTokensRow) domain.Token {
 	tok := domain.Token{
 		ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
-		Tactics: t.Tactics, CanShield: t.CanShield,
+		Tactics: t.Tactics, CanShield: t.CanShield, Disguise: t.Disguise.String,
 	}
 	if t.ControllerMemberID.Valid {
 		id := uuid.UUID(t.ControllerMemberID.Bytes)

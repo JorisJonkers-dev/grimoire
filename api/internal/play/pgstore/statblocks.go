@@ -67,6 +67,9 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	for _, sv := range saves {
 		stats.Saves[sv.Name] = int(sv.Value)
 	}
+	if stats.Senses, err = s.senses(ctx, m.ID); err != nil {
+		return "", domain.Stats{}, err
+	}
 	if err := s.ambush(ctx, m, &stats); err != nil {
 		return "", domain.Stats{}, err
 	}
@@ -211,4 +214,19 @@ func masteryOf(properties []string, mastered bool) string {
 		return ""
 	}
 	return string(m)
+}
+
+// senses reads the blindsight, tremorsense and truesight a monster has, in feet.
+func (s Statblocks) senses(ctx context.Context, id int64) (map[string]int, error) {
+	rows, err := s.Store.q.MonsterStats(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]int{}
+	for _, r := range rows {
+		if r.Kind == "sense" && slices.Contains([]string{"blindsight", "tremorsense", "truesight"}, r.Name) && r.Value >= 5 {
+			out[r.Name] = int(min(r.Value, 1000))
+		}
+	}
+	return out, nil
 }

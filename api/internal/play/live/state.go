@@ -160,8 +160,8 @@ func (s *state) project(a Audience) View {
 		s.projectBoard(&v, a, seen)
 	}
 	for _, t := range s.tokens {
-		if a == AudienceDM || (!t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])) {
-			tv := tokenView(t, a)
+		if a == AudienceDM || s.shows(t, seen) {
+			tv := tokenView(s.masked(t, a), a)
 			tv.Effects = s.effectViews(t.ID)
 			if a == AudienceDM || t.Kind == domain.TokenParty {
 				tv.Dying = s.dyingView(t.ID)

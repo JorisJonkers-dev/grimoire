@@ -4398,6 +4398,12 @@ components:
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 10000 }
         tempHp: { type: integer, format: int32, minimum: 1, maximum: 999, description: "Temporary hit points, lost before hit points." }
         form: { type: string, maxLength: 80, description: "The creature whose shape the token has taken." }
+        qualities:
+          type: array
+          description: The token's Visibility Qualities, for the DM only.
+          maxItems: 8
+          items: { $ref: "#/components/schemas/LiveQuality" }
+        disguise: { type: string, maxLength: 40, description: "The name a Disguised token shows, for the DM only." }
         health:
           type: string
           description: What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -4500,7 +4506,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive, teleport, summon, command] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive, teleport, summon, command, set_visibility] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4539,6 +4545,9 @@ components:
         slot: { type: integer, format: int32, minimum: 1, maximum: 9, description: "The spell slot level an area spell is cast with; left out, it is cast at its lowest." }
         effectMode: { type: string, maxLength: 80, description: "The option an Effect that offers a choice is applied in." }
         tempHp: { type: integer, format: int32, minimum: 1, maximum: 999, description: "Temporary Hit Points a form gives, such as a druid's level for Wild Shape." }
+        qualities: { type: array, maxItems: 8, items: { $ref: "#/components/schemas/VisibilityQuality" } }
+        seenThrough: { type: array, maxItems: 8, items: { $ref: "#/components/schemas/VisibilityQuality" } }
+        disguise: { type: string, maxLength: 40 }
         saveAbility: { $ref: "#/components/schemas/Ability" }
         saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
         effectId: { $ref: "#/components/schemas/Id" }
@@ -4990,6 +4999,18 @@ components:
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
+    LiveQuality:
+      type: object
+      description: One Visibility Quality of a token, and whether the party has seen through it with a check.
+      additionalProperties: false
+      required: [quality]
+      properties:
+        quality: { $ref: "#/components/schemas/VisibilityQuality" }
+        seenThrough: { type: boolean }
+    VisibilityQuality:
+      type: string
+      description: Something that keeps a creature or object from being seen for what it is.
+      enum: [hidden, invisible, disguised, illusory, ethereal, darkness, heavy, secret]
     LiveEffect:
       type: object
       description: An Effect on a token, which everyone who sees the token sees.

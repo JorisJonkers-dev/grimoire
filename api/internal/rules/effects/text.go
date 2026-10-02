@@ -103,6 +103,12 @@ func lastSentence(c Component) string {
 		return summonText(c)
 	case Form:
 		return formText(c)
+	case Reveal:
+		names := make([]string, 0, len(c.Qualities))
+		for _, q := range c.Qualities {
+			names = append(names, title(q))
+		}
+		return "Every creature and object in the area loses " + strings.Join(names, " and ") + ", whatever anyone's senses."
 	case ResourceChange:
 		if c.Delta > 0 {
 			return "The target regains " + plural(c.Delta, "use") + " of " + title(c.Resource) + "."

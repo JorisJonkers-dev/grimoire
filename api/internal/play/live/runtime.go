@@ -42,6 +42,8 @@ type Write struct {
 	// tokens that left because the Effect keeping them ended.
 	Resources []ResourceDelta
 	Dismissed []domain.TokenID
+	// Unveiled marks a write whose token lost Visibility Qualities to a Reveal.
+	Unveiled bool
 	// Formed is a token as it takes a form; Reverted are tokens whose form ended.
 	Formed   *domain.Token
 	Reverted []domain.TokenID
@@ -815,7 +817,7 @@ func change(s *state, w *Write) {
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)
 		dropCombatant(s, w)
-	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed:
+	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionVisibilitySet:
 		s.tokens[w.Token.ID] = w.Token
 	case domain.ActionMapSet:
 		s.session.MapID = w.MapID

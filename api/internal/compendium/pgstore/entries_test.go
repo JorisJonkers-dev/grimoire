@@ -3,6 +3,7 @@ package pgstore_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
@@ -107,8 +108,12 @@ func TestGetEntryFindsMentionsAndBodies(t *testing.T) {
 	ctx := context.Background()
 	s := entryStore(t)
 	goblin, _ := s.GetEntry(ctx, "monster", "goblin", "")
-	if len(goblin.Mentions) != 1 || goblin.Mentions[0].Slug != "prone" || goblin.Sections[2].Title != "Hide (bonus action)" {
+	if len(goblin.Mentions) != 1 || goblin.Mentions[0].Slug != "prone" || goblin.Sections[3].Title != "Hide (bonus action)" {
 		t.Fatalf("goblin = %+v", goblin)
+	}
+	if i := slices.IndexFunc(goblin.Sections, func(x compendium.Section) bool { return x.Title == "Visibility" }); i < 0 ||
+		goblin.Sections[i].Text != "Sight: a check against Hidden, Disguised, Illusory, Secret; never Invisible, Ethereal, Darkness, Heavy obscurement.\nDarkvision 60 ft: Darkness." {
+		t.Fatalf("the goblin's Visibility = %+v", goblin.Sections)
 	}
 	for kind, slug := range map[string]string{"species": "dwarf", "background": "sage", "condition": "prone"} {
 		got, err := s.GetEntry(ctx, kind, slug, "")

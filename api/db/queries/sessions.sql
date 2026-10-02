@@ -24,7 +24,7 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
@@ -345,3 +345,21 @@ DELETE FROM play.token_forms WHERE token_id = @token_id;
 
 -- name: SessionTokenForms :many
 SELECT f.token_id, f.effect_id, f.name, f.stats FROM play.token_forms f JOIN play.tokens t ON t.id = f.token_id WHERE t.session_id = $1;
+
+-- name: SetTokenDisguise :exec
+UPDATE play.tokens SET disguise = sqlc.narg(disguise) WHERE session_id = @session_id AND id = @id;
+
+-- name: ClearTokenQualities :exec
+DELETE FROM play.token_qualities WHERE token_id = @token_id;
+
+-- name: AddTokenQuality :exec
+INSERT INTO play.token_qualities (token_id, quality, seen_through) VALUES (@token_id, @quality, @seen_through);
+
+-- name: SessionTokenQualities :many
+SELECT q.token_id, q.quality, q.seen_through FROM play.token_qualities q JOIN play.tokens t ON t.id = q.token_id WHERE t.session_id = $1 ORDER BY q.token_id, q.quality;
+
+-- name: AddTokenSense :exec
+INSERT INTO play.token_senses (token_id, sense, range_ft) VALUES (@token_id, @sense, @range_ft);
+
+-- name: SessionTokenSenses :many
+SELECT s.token_id, s.sense, s.range_ft FROM play.token_senses s JOIN play.tokens t ON t.id = s.token_id WHERE t.session_id = $1;

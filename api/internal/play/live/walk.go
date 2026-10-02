@@ -75,7 +75,7 @@ func (s *state) moveLeft(t domain.Token, cost int) string {
 
 // shows reports whether the party sees a token right now.
 func (s *state) shows(t domain.Token, seen map[hex.Coord]bool) bool {
-	return !t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])
+	return !t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}]) && s.perceived(t).Seen
 }
 
 // walkGrid is the ground a mover walks on: every hex for the DM, the hexes the party knows for a Player.
