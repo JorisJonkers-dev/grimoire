@@ -2586,11 +2586,55 @@ export type LibraryEntryDetail = {
  */
 export type LinkedEntry = {
     entry: LibraryEntry;
+    /**
+     * The DM linked it themselves, rather than only through a Collection.
+     */
+    direct: boolean;
+    /**
+     * The switched-on Collections that bring it in.
+     */
+    via: Array<string>;
     pinnedRevision?: number;
     baseName: string;
     base: LibraryFields;
     override: LibraryFields;
     fields: LibraryFields;
+};
+
+/**
+ * A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the Campaign it was listed for; mine whether the caller owns it.
+ */
+export type LibraryCollection = {
+    id: Id;
+    name: string;
+    description: string;
+    entryIds: Array<Id>;
+    mine: boolean;
+    switchedOn?: boolean;
+};
+
+/**
+ * A new Collection.
+ */
+export type LibraryCollectionInput = {
+    name: string;
+    description?: string;
+};
+
+/**
+ * A Collection's name, description and the entries it holds.
+ */
+export type LibraryCollectionUpdate = {
+    name: string;
+    description?: string;
+    entryIds: Array<Id>;
+};
+
+/**
+ * Whether the Collection is on in the Campaign.
+ */
+export type LibrarySwitchInput = {
+    on: boolean;
 };
 
 /**
@@ -3581,6 +3625,11 @@ export type PoolId = Id;
  * Encounter Table id.
  */
 export type TableId = Id;
+
+/**
+ * Collection id.
+ */
+export type CollectionId = Id;
 
 /**
  * Library entry id.
@@ -7926,6 +7975,170 @@ export type CreateLibraryEntryResponses = {
 };
 
 export type CreateLibraryEntryResponse = CreateLibraryEntryResponses[keyof CreateLibraryEntryResponses];
+
+export type ListLibraryCollectionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library/collections';
+};
+
+export type ListLibraryCollectionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLibraryCollectionsError = ListLibraryCollectionsErrors[keyof ListLibraryCollectionsErrors];
+
+export type ListLibraryCollectionsResponses = {
+    /**
+     * The Collections.
+     */
+    200: Array<LibraryCollection>;
+};
+
+export type ListLibraryCollectionsResponse = ListLibraryCollectionsResponses[keyof ListLibraryCollectionsResponses];
+
+export type CreateLibraryCollectionData = {
+    body: LibraryCollectionInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library/collections';
+};
+
+export type CreateLibraryCollectionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateLibraryCollectionError = CreateLibraryCollectionErrors[keyof CreateLibraryCollectionErrors];
+
+export type CreateLibraryCollectionResponses = {
+    /**
+     * The new Collection.
+     */
+    201: LibraryCollection;
+};
+
+export type CreateLibraryCollectionResponse = CreateLibraryCollectionResponses[keyof CreateLibraryCollectionResponses];
+
+export type UpdateLibraryCollectionData = {
+    body: LibraryCollectionUpdate;
+    path: {
+        /**
+         * Collection id.
+         */
+        collectionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/library/collections/{collectionId}';
+};
+
+export type UpdateLibraryCollectionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateLibraryCollectionError = UpdateLibraryCollectionErrors[keyof UpdateLibraryCollectionErrors];
+
+export type UpdateLibraryCollectionResponses = {
+    /**
+     * The Collection.
+     */
+    200: LibraryCollection;
+};
+
+export type UpdateLibraryCollectionResponse = UpdateLibraryCollectionResponses[keyof UpdateLibraryCollectionResponses];
+
+export type ListCampaignCollectionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/collections';
+};
+
+export type ListCampaignCollectionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCampaignCollectionsError = ListCampaignCollectionsErrors[keyof ListCampaignCollectionsErrors];
+
+export type ListCampaignCollectionsResponses = {
+    /**
+     * The Collections.
+     */
+    200: Array<LibraryCollection>;
+};
+
+export type ListCampaignCollectionsResponse = ListCampaignCollectionsResponses[keyof ListCampaignCollectionsResponses];
+
+export type SwitchLibraryCollectionData = {
+    body: LibrarySwitchInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Collection id.
+         */
+        collectionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/collections/{collectionId}';
+};
+
+export type SwitchLibraryCollectionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SwitchLibraryCollectionError = SwitchLibraryCollectionErrors[keyof SwitchLibraryCollectionErrors];
+
+export type SwitchLibraryCollectionResponses = {
+    /**
+     * The Campaign's Collections.
+     */
+    200: Array<LibraryCollection>;
+};
+
+export type SwitchLibraryCollectionResponse = SwitchLibraryCollectionResponses[keyof SwitchLibraryCollectionResponses];
 
 export type GetLibraryEntryData = {
     body?: never;

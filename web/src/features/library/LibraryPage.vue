@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { createLibraryEntryMutation, listLibraryEntriesOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { LibraryField, LibraryKind } from '@/infrastructure/api/types.gen'
 import { GButton, GField, GRow, GTabs } from '@/shared/ui'
+import CollectionsPanel from './CollectionsPanel.vue'
 import FieldsEditor from './FieldsEditor.vue'
 import { cleanFields, kindNames } from './fields'
 
@@ -63,6 +64,7 @@ function add() {
         <p v-if="create.error.value" role="alert" class="g-alert">{{ create.error.value.detail ?? 'That entry was not saved.' }}</p>
         <GButton type="submit" variant="primary" :disabled="name.trim() === '' || create.isPending.value" data-testid="library-add">Add to the Library</GButton>
       </form>
+      <CollectionsPanel :entries="entries.data.value ?? []" />
     </template>
   </main>
 </template>

@@ -27,6 +27,11 @@ type LibraryService interface {
 	Unlink(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) error
 	Override(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, fields domain.Fields) (domain.Linked, error)
 	Pin(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, revision *int) (domain.Linked, error)
+	Collections(ctx context.Context, c caller.Caller) ([]domain.Collection, error)
+	CreateCollection(ctx context.Context, c caller.Caller, name, description string) (domain.Collection, error)
+	UpdateCollection(ctx context.Context, c caller.Caller, id uuid.UUID, name, description string, entries []uuid.UUID) (domain.Collection, error)
+	CampaignCollections(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Collection, error)
+	Switch(ctx context.Context, c caller.Caller, campaign, collection uuid.UUID, on bool) ([]domain.Collection, error)
 }
 
 var _ LibraryService = (*app.Service)(nil)
@@ -90,8 +95,27 @@ func libraryDetailOut(d domain.Detail) *oas.LibraryEntryDetailHeaders {
 func linkedOut(l domain.Linked) oas.LinkedEntry {
 	return oas.LinkedEntry{
 		Entry: libraryEntryOut(l.Entry), PinnedRevision: optRevision(l.Pinned), BaseName: l.BaseName,
-		Base: fieldsOut(l.Base), Override: fieldsOut(l.Override), Fields: fieldsOut(l.Resolved()),
+		Base: fieldsOut(l.Base), Override: fieldsOut(l.Override), Fields: fieldsOut(l.Resolved()), Direct: l.Direct, Via: append([]string{}, l.Via...),
 	}
+}
+
+func collectionOut(c domain.Collection, me string, campaign bool) oas.LibraryCollection {
+	out := oas.LibraryCollection{ID: oas.ID(c.ID), Name: c.Name, Description: c.Description, EntryIds: []oas.ID{}, Mine: c.Owner == me}
+	for _, e := range c.Entries {
+		out.EntryIds = append(out.EntryIds, oas.ID(e))
+	}
+	if campaign {
+		out.SwitchedOn = oas.NewOptBool(c.On)
+	}
+	return out
+}
+
+func collectionsOut(list []domain.Collection, me string, campaign bool) []oas.LibraryCollection {
+	out := make([]oas.LibraryCollection, 0, len(list))
+	for _, c := range list {
+		out = append(out, collectionOut(c, me, campaign))
+	}
+	return out
 }
 
 // libraryCall runs a Library use case as the caller and maps its error.
@@ -234,4 +258,73 @@ func (h *Handler) UnpinLibraryRevision(ctx context.Context, p oas.UnpinLibraryRe
 		return bad, nil
 	}
 	return out, nil
+}
+
+// collectionsCall runs a Collection use case as the caller, keeping who they are for the answer.
+func collectionsCall[T any](ctx context.Context, h *Handler, op string, run func(c caller.Caller) (T, error)) (T, string, *oas.ProblemStatusCodeWithHeaders) {
+	var me string
+	v, bad := libraryCall(ctx, h, op, func(c caller.Caller) (T, error) {
+		me = c.Subject
+		return run(c)
+	})
+	return v, me, bad
+}
+
+// ListLibraryCollections lists the caller's Collections.
+func (h *Handler) ListLibraryCollections(ctx context.Context) (oas.ListLibraryCollectionsRes, error) {
+	list, me, bad := collectionsCall(ctx, h, "list collections", func(c caller.Caller) ([]domain.Collection, error) {
+		return h.Library.Collections(ctx, c)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.ListLibraryCollectionsOKHeaders{Response: collectionsOut(list, me, false)}, nil
+}
+
+// CreateLibraryCollection starts an empty Collection.
+func (h *Handler) CreateLibraryCollection(ctx context.Context, req *oas.LibraryCollectionInput) (oas.CreateLibraryCollectionRes, error) {
+	col, me, bad := collectionsCall(ctx, h, "create collection", func(c caller.Caller) (domain.Collection, error) {
+		return h.Library.CreateCollection(ctx, c, req.Name, req.Description.Or(""))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.LibraryCollectionHeaders{Response: collectionOut(col, me, false)}, nil
+}
+
+// UpdateLibraryCollection renames a Collection and sets its entries.
+func (h *Handler) UpdateLibraryCollection(ctx context.Context, req *oas.LibraryCollectionUpdate, p oas.UpdateLibraryCollectionParams) (oas.UpdateLibraryCollectionRes, error) {
+	entries := make([]uuid.UUID, 0, len(req.EntryIds))
+	for _, e := range req.EntryIds {
+		entries = append(entries, uuid.UUID(e))
+	}
+	col, me, bad := collectionsCall(ctx, h, "update collection", func(c caller.Caller) (domain.Collection, error) {
+		return h.Library.UpdateCollection(ctx, c, uuid.UUID(p.CollectionId), req.Name, req.Description.Or(""), entries)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.LibraryCollectionHeaders{Response: collectionOut(col, me, false)}, nil
+}
+
+// ListCampaignCollections lists the Collections a DM can switch in a Campaign.
+func (h *Handler) ListCampaignCollections(ctx context.Context, p oas.ListCampaignCollectionsParams) (oas.ListCampaignCollectionsRes, error) {
+	list, me, bad := collectionsCall(ctx, h, "list campaign collections", func(c caller.Caller) ([]domain.Collection, error) {
+		return h.Library.CampaignCollections(ctx, c, uuid.UUID(p.CampaignId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.ListCampaignCollectionsOKHeaders{Response: collectionsOut(list, me, true)}, nil
+}
+
+// SwitchLibraryCollection turns a Collection on or off in a Campaign.
+func (h *Handler) SwitchLibraryCollection(ctx context.Context, req *oas.LibrarySwitchInput, p oas.SwitchLibraryCollectionParams) (oas.SwitchLibraryCollectionRes, error) {
+	list, me, bad := collectionsCall(ctx, h, "switch collection", func(c caller.Caller) ([]domain.Collection, error) {
+		return h.Library.Switch(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.CollectionId), req.On)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.SwitchLibraryCollectionOKHeaders{Response: collectionsOut(list, me, true)}, nil
 }

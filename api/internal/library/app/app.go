@@ -26,12 +26,18 @@ type Repository interface {
 	RevisionExists(ctx context.Context, entry uuid.UUID, no int) (bool, error)
 	Uses(ctx context.Context, entry uuid.UUID) ([]domain.Use, error)
 	Link(ctx context.Context, campaign, entry uuid.UUID, now time.Time) error
-	// Unlink, SetOverride and Pin report false when the entry is not linked into the Campaign.
+	// Unlink reports false when the DM had not linked the entry themselves.
 	Unlink(ctx context.Context, campaign, entry uuid.UUID) (bool, error)
-	SetOverride(ctx context.Context, campaign, entry uuid.UUID, override domain.Fields, now time.Time) (bool, error)
-	Pin(ctx context.Context, campaign, entry uuid.UUID, revision *int, now time.Time) (bool, error)
-	// Linked reads the Campaign's links, or one when entry is set.
+	SetOverride(ctx context.Context, campaign, entry uuid.UUID, override domain.Fields, now time.Time) error
+	Pin(ctx context.Context, campaign, entry uuid.UUID, revision *int, now time.Time) error
+	// Linked reads the entries a Campaign sees, linked or brought in by a Collection, or one when entry is set.
 	Linked(ctx context.Context, campaign uuid.UUID, entry *uuid.UUID) ([]domain.Linked, error)
+	InsertCollection(ctx context.Context, c domain.Collection) error
+	UpdateCollection(ctx context.Context, c domain.Collection) error
+	Collection(ctx context.Context, id uuid.UUID) (domain.Collection, error)
+	// Collections lists an owner's Collections and, with a Campaign, every other one switched on there.
+	Collections(ctx context.Context, owner string, campaign *uuid.UUID) ([]domain.Collection, error)
+	Switch(ctx context.Context, campaign, collection uuid.UUID, on bool, now time.Time) error
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
@@ -160,7 +166,8 @@ func (s *Service) Link(ctx context.Context, c caller.Caller, campaign, entry uui
 	return s.one(ctx, campaign, entry)
 }
 
-// Unlink takes an entry out of a Campaign, with its Campaign Override.
+// Unlink takes an entry the DM linked out of a Campaign, with its Campaign Override; a switched-on
+// Collection may still bring it in.
 func (s *Service) Unlink(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) error {
 	if err := s.dm(ctx, c, campaign); err != nil {
 		return err
@@ -168,16 +175,25 @@ func (s *Service) Unlink(ctx context.Context, c caller.Caller, campaign, entry u
 	return found(s.Repo.Unlink(ctx, campaign, entry))
 }
 
-// Override replaces a linked entry's Campaign Override: the fields this Campaign sees differently.
-func (s *Service) Override(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, fields domain.Fields) (domain.Linked, error) {
+// visible checks the caller runs the Campaign and it sees the entry, linked or through a Collection.
+func (s *Service) visible(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) error {
 	if err := s.dm(ctx, c, campaign); err != nil {
-		return domain.Linked{}, err
+		return err
 	}
+	_, err := s.one(ctx, campaign, entry)
+	return err
+}
+
+// Override replaces the Campaign Override of an entry the Campaign sees: the fields it sees differently.
+func (s *Service) Override(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, fields domain.Fields) (domain.Linked, error) {
 	clean, err := domain.CleanFields(fields)
-	if err != nil {
-		return domain.Linked{}, err
+	if err == nil {
+		err = s.visible(ctx, c, campaign, entry)
 	}
-	if err := found(s.Repo.SetOverride(ctx, campaign, entry, clean, s.Now())); err != nil {
+	if err == nil {
+		err = s.Repo.SetOverride(ctx, campaign, entry, clean, s.Now())
+	}
+	if err != nil {
 		return domain.Linked{}, err
 	}
 	return s.one(ctx, campaign, entry)
@@ -186,7 +202,7 @@ func (s *Service) Override(ctx context.Context, c caller.Caller, campaign, entry
 // Pin holds a Campaign to one Revision of a linked entry, so later edits to the base pass it by; nil
 // follows the latest again.
 func (s *Service) Pin(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, revision *int) (domain.Linked, error) {
-	if err := s.dm(ctx, c, campaign); err != nil {
+	if err := s.visible(ctx, c, campaign, entry); err != nil {
 		return domain.Linked{}, err
 	}
 	if revision != nil {
@@ -198,7 +214,7 @@ func (s *Service) Pin(ctx context.Context, c caller.Caller, campaign, entry uuid
 			return domain.Linked{}, apperr.Refuse("pin a Revision the entry has")
 		}
 	}
-	if err := found(s.Repo.Pin(ctx, campaign, entry, revision, s.Now())); err != nil {
+	if err := s.Repo.Pin(ctx, campaign, entry, revision, s.Now()); err != nil {
 		return domain.Linked{}, err
 	}
 	return s.one(ctx, campaign, entry)

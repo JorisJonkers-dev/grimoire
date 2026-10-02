@@ -347,6 +347,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// CreateLibraryCollection implements createLibraryCollection operation.
+	//
+	// Starts an empty Collection in the caller's Library.
+	//
+	// POST /api/v1/library/collections
+	CreateLibraryCollection(ctx context.Context, req *LibraryCollectionInput) (CreateLibraryCollectionRes, error)
 	// CreateLibraryEntry implements createLibraryEntry operation.
 	//
 	// Adds an entry to the caller's Library as its first Revision.
@@ -587,6 +593,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// SwitchLibraryCollection implements switchLibraryCollection operation.
+	//
+	// On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its
+	// owner switches it on; any DM of the Campaign switches it off.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/collections/{collectionId}
+	SwitchLibraryCollection(ctx context.Context, req *LibrarySwitchInput, params SwitchLibraryCollectionParams) (SwitchLibraryCollectionRes, error)
 	// UndoChange implements undoChange operation.
 	//
 	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
@@ -632,6 +645,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
+	// UpdateLibraryCollection implements updateLibraryCollection operation.
+	//
+	// Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it
+	// is switched on in sees the new set.
+	//
+	// PUT /api/v1/library/collections/{collectionId}
+	UpdateLibraryCollection(ctx context.Context, req *LibraryCollectionUpdate, params UpdateLibraryCollectionParams) (UpdateLibraryCollectionRes, error)
 	// UpdateLibraryEntry implements updateLibraryEntry operation.
 	//
 	// Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees
@@ -1016,6 +1036,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/admin/accounts
 	ListAdminAccounts(ctx context.Context) (ListAdminAccountsRes, error)
+	// ListCampaignCollections implements listCampaignCollections operation.
+	//
+	// The caller's Collections and any other switched on in the Campaign, each saying whether it is on
+	// there. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/collections
+	ListCampaignCollections(ctx context.Context, params ListCampaignCollectionsParams) (ListCampaignCollectionsRes, error)
 	// ListCampaigns implements listCampaigns operation.
 	//
 	// The Campaigns the caller is a Member of, newest first.
@@ -1095,6 +1122,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListLibraryCollections implements listLibraryCollections operation.
+	//
+	// The caller's Collections.
+	//
+	// GET /api/v1/library/collections
+	ListLibraryCollections(ctx context.Context) (ListLibraryCollectionsRes, error)
 	// ListLibraryEntries implements listLibraryEntries operation.
 	//
 	// The caller's Library entries in kind and name order.

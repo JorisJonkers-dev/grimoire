@@ -6821,6 +6821,79 @@ func decodeListActivityParams(args [1]string, argsEscaped bool, r *http.Request)
 	return params, nil
 }
 
+// ListCampaignCollectionsParams is parameters of listCampaignCollections operation.
+type ListCampaignCollectionsParams struct {
+	// Campaign id.
+	CampaignId ID
+}
+
+func unpackListCampaignCollectionsParams(packed middleware.Parameters) (params ListCampaignCollectionsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeListCampaignCollectionsParams(args [1]string, argsEscaped bool, r *http.Request) (params ListCampaignCollectionsParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ListCampaignsParams is parameters of listCampaigns operation.
 type ListCampaignsParams struct {
 	// Opaque cursor from the previous page.
@@ -15451,6 +15524,140 @@ func decodeSwapWeaponSetParams(args [2]string, argsEscaped bool, r *http.Request
 	return params, nil
 }
 
+// SwitchLibraryCollectionParams is parameters of switchLibraryCollection operation.
+type SwitchLibraryCollectionParams struct {
+	// Campaign id.
+	CampaignId ID
+	// Collection id.
+	CollectionId ID
+}
+
+func unpackSwitchLibraryCollectionParams(packed middleware.Parameters) (params SwitchLibraryCollectionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "collectionId",
+			In:   "path",
+		}
+		params.CollectionId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSwitchLibraryCollectionParams(args [2]string, argsEscaped bool, r *http.Request) (params SwitchLibraryCollectionParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: collectionId.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "collectionId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCollectionIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCollectionIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CollectionId = ID(paramsDotCollectionIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "collectionId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // TakeFromStashParams is parameters of takeFromStash operation.
 type TakeFromStashParams struct {
 	// Campaign id.
@@ -16601,6 +16808,79 @@ func decodeUpdateEncounterTableParams(args [2]string, argsEscaped bool, r *http.
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "tableId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// UpdateLibraryCollectionParams is parameters of updateLibraryCollection operation.
+type UpdateLibraryCollectionParams struct {
+	// Collection id.
+	CollectionId ID
+}
+
+func unpackUpdateLibraryCollectionParams(packed middleware.Parameters) (params UpdateLibraryCollectionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "collectionId",
+			In:   "path",
+		}
+		params.CollectionId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeUpdateLibraryCollectionParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateLibraryCollectionParams, _ error) {
+	// Decode path: collectionId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "collectionId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCollectionIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCollectionIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CollectionId = ID(paramsDotCollectionIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "collectionId",
 			In:   "path",
 			Err:  err,
 		}

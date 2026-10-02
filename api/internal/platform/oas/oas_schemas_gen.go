@@ -11906,6 +11906,194 @@ func (s *LevelUpRequestHitPoints) UnmarshalText(data []byte) error {
 	}
 }
 
+// A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the
+// Campaign it was listed for; mine whether the caller owns it.
+// Ref: #/components/schemas/LibraryCollection
+type LibraryCollection struct {
+	ID          ID      `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	EntryIds    []ID    `json:"entryIds"`
+	Mine        bool    `json:"mine"`
+	SwitchedOn  OptBool `json:"switchedOn"`
+}
+
+// GetID returns the value of ID.
+func (s *LibraryCollection) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LibraryCollection) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *LibraryCollection) GetDescription() string {
+	return s.Description
+}
+
+// GetEntryIds returns the value of EntryIds.
+func (s *LibraryCollection) GetEntryIds() []ID {
+	return s.EntryIds
+}
+
+// GetMine returns the value of Mine.
+func (s *LibraryCollection) GetMine() bool {
+	return s.Mine
+}
+
+// GetSwitchedOn returns the value of SwitchedOn.
+func (s *LibraryCollection) GetSwitchedOn() OptBool {
+	return s.SwitchedOn
+}
+
+// SetID sets the value of ID.
+func (s *LibraryCollection) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LibraryCollection) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *LibraryCollection) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetEntryIds sets the value of EntryIds.
+func (s *LibraryCollection) SetEntryIds(val []ID) {
+	s.EntryIds = val
+}
+
+// SetMine sets the value of Mine.
+func (s *LibraryCollection) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetSwitchedOn sets the value of SwitchedOn.
+func (s *LibraryCollection) SetSwitchedOn(val OptBool) {
+	s.SwitchedOn = val
+}
+
+// LibraryCollectionHeaders wraps LibraryCollection with response headers.
+type LibraryCollectionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LibraryCollectionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LibraryCollectionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LibraryCollectionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LibraryCollectionHeaders) GetResponse() LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LibraryCollectionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LibraryCollectionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LibraryCollectionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LibraryCollectionHeaders) SetResponse(val LibraryCollection) {
+	s.Response = val
+}
+
+func (*LibraryCollectionHeaders) createLibraryCollectionRes() {}
+func (*LibraryCollectionHeaders) updateLibraryCollectionRes() {}
+
+// A new Collection.
+// Ref: #/components/schemas/LibraryCollectionInput
+type LibraryCollectionInput struct {
+	Name        string    `json:"name"`
+	Description OptString `json:"description"`
+}
+
+// GetName returns the value of Name.
+func (s *LibraryCollectionInput) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *LibraryCollectionInput) GetDescription() OptString {
+	return s.Description
+}
+
+// SetName sets the value of Name.
+func (s *LibraryCollectionInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *LibraryCollectionInput) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// A Collection's name, description and the entries it holds.
+// Ref: #/components/schemas/LibraryCollectionUpdate
+type LibraryCollectionUpdate struct {
+	Name        string    `json:"name"`
+	Description OptString `json:"description"`
+	EntryIds    []ID      `json:"entryIds"`
+}
+
+// GetName returns the value of Name.
+func (s *LibraryCollectionUpdate) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *LibraryCollectionUpdate) GetDescription() OptString {
+	return s.Description
+}
+
+// GetEntryIds returns the value of EntryIds.
+func (s *LibraryCollectionUpdate) GetEntryIds() []ID {
+	return s.EntryIds
+}
+
+// SetName sets the value of Name.
+func (s *LibraryCollectionUpdate) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *LibraryCollectionUpdate) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetEntryIds sets the value of EntryIds.
+func (s *LibraryCollectionUpdate) SetEntryIds(val []ID) {
+	s.EntryIds = val
+}
+
 // A Library entry's base at its latest Revision.
 // Ref: #/components/schemas/LibraryEntry
 type LibraryEntry struct {
@@ -12380,6 +12568,22 @@ func (s *LibraryRevision) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
 }
 
+// Whether the Collection is on in the Campaign.
+// Ref: #/components/schemas/LibrarySwitchInput
+type LibrarySwitchInput struct {
+	On bool `json:"on"`
+}
+
+// GetOn returns the value of On.
+func (s *LibrarySwitchInput) GetOn() bool {
+	return s.On
+}
+
+// SetOn sets the value of On.
+func (s *LibrarySwitchInput) SetOn(val bool) {
+	s.On = val
+}
+
 // A Campaign an entry is linked into, and the Revision it is pinned to there.
 // Ref: #/components/schemas/LibraryUse
 type LibraryUse struct {
@@ -12438,7 +12642,11 @@ func (s *LinkToken) SetToken(val string) {
 // Campaign Override sits on top; fields are the two resolved together.
 // Ref: #/components/schemas/LinkedEntry
 type LinkedEntry struct {
-	Entry          LibraryEntry  `json:"entry"`
+	Entry LibraryEntry `json:"entry"`
+	// The DM linked it themselves, rather than only through a Collection.
+	Direct bool `json:"direct"`
+	// The switched-on Collections that bring it in.
+	Via            []string      `json:"via"`
 	PinnedRevision OptInt32      `json:"pinnedRevision"`
 	BaseName       string        `json:"baseName"`
 	Base           LibraryFields `json:"base"`
@@ -12449,6 +12657,16 @@ type LinkedEntry struct {
 // GetEntry returns the value of Entry.
 func (s *LinkedEntry) GetEntry() LibraryEntry {
 	return s.Entry
+}
+
+// GetDirect returns the value of Direct.
+func (s *LinkedEntry) GetDirect() bool {
+	return s.Direct
+}
+
+// GetVia returns the value of Via.
+func (s *LinkedEntry) GetVia() []string {
+	return s.Via
 }
 
 // GetPinnedRevision returns the value of PinnedRevision.
@@ -12479,6 +12697,16 @@ func (s *LinkedEntry) GetFields() LibraryFields {
 // SetEntry sets the value of Entry.
 func (s *LinkedEntry) SetEntry(val LibraryEntry) {
 	s.Entry = val
+}
+
+// SetDirect sets the value of Direct.
+func (s *LinkedEntry) SetDirect(val bool) {
+	s.Direct = val
+}
+
+// SetVia sets the value of Via.
+func (s *LinkedEntry) SetVia(val []string) {
+	s.Via = val
 }
 
 // SetPinnedRevision sets the value of PinnedRevision.
@@ -12608,6 +12836,56 @@ func (s *ListActivityOKHeaders) SetResponse(val []Activity) {
 }
 
 func (*ListActivityOKHeaders) listActivityRes() {}
+
+// ListCampaignCollectionsOKHeaders wraps []LibraryCollection with response headers.
+type ListCampaignCollectionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListCampaignCollectionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListCampaignCollectionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListCampaignCollectionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListCampaignCollectionsOKHeaders) GetResponse() []LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListCampaignCollectionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListCampaignCollectionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListCampaignCollectionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListCampaignCollectionsOKHeaders) SetResponse(val []LibraryCollection) {
+	s.Response = val
+}
+
+func (*ListCampaignCollectionsOKHeaders) listCampaignCollectionsRes() {}
 
 // ListCharacterRevisionsOKHeaders wraps []CharacterRevisionLine with response headers.
 type ListCharacterRevisionsOKHeaders struct {
@@ -13075,6 +13353,56 @@ func (s *ListInvitesOKHeaders) SetResponse(val []Invite) {
 }
 
 func (*ListInvitesOKHeaders) listInvitesRes() {}
+
+// ListLibraryCollectionsOKHeaders wraps []LibraryCollection with response headers.
+type ListLibraryCollectionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListLibraryCollectionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListLibraryCollectionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListLibraryCollectionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListLibraryCollectionsOKHeaders) GetResponse() []LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListLibraryCollectionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListLibraryCollectionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListLibraryCollectionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListLibraryCollectionsOKHeaders) SetResponse(val []LibraryCollection) {
+	s.Response = val
+}
+
+func (*ListLibraryCollectionsOKHeaders) listLibraryCollectionsRes() {}
 
 // ListLibraryEntriesOKHeaders wraps []LibraryEntry with response headers.
 type ListLibraryEntriesOKHeaders struct {
@@ -28680,6 +29008,7 @@ func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) createLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) createLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
@@ -28745,6 +29074,7 @@ func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listAdminAccountsRes()             {}
+func (*ProblemStatusCodeWithHeaders) listCampaignCollectionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharacterRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
@@ -28758,6 +29088,7 @@ func (*ProblemStatusCodeWithHeaders) listEncounterTablesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listFriendsRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listLibraryCollectionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listLibraryEntriesRes()            {}
 func (*ProblemStatusCodeWithHeaders) listLinkedEntriesRes()             {}
 func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
@@ -28833,6 +29164,7 @@ func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
 func (*ProblemStatusCodeWithHeaders) swapWeaponSetRes()                 {}
+func (*ProblemStatusCodeWithHeaders) switchLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) takeFromStashRes()                 {}
 func (*ProblemStatusCodeWithHeaders) unblockRes()                       {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
@@ -28845,6 +29177,7 @@ func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateMapRes()                     {}
@@ -33898,6 +34231,56 @@ func (s *StockItem) SetQuantity(val int32) {
 func (s *StockItem) SetPriceCp(val int32) {
 	s.PriceCp = val
 }
+
+// SwitchLibraryCollectionOKHeaders wraps []LibraryCollection with response headers.
+type SwitchLibraryCollectionOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryCollection
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SwitchLibraryCollectionOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SwitchLibraryCollectionOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SwitchLibraryCollectionOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SwitchLibraryCollectionOKHeaders) GetResponse() []LibraryCollection {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SwitchLibraryCollectionOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SwitchLibraryCollectionOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SwitchLibraryCollectionOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SwitchLibraryCollectionOKHeaders) SetResponse(val []LibraryCollection) {
+	s.Response = val
+}
+
+func (*SwitchLibraryCollectionOKHeaders) switchLibraryCollectionRes() {}
 
 // How the Table Display's camera moves.
 // Ref: #/components/schemas/TableCamera

@@ -164,6 +164,20 @@ func encodeCreateEncounterTableRequest(
 	return nil
 }
 
+func encodeCreateLibraryCollectionRequest(
+	req *LibraryCollectionInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateLibraryEntryRequest(
 	req *LibraryEntryInput,
 	r *http.Request,
@@ -800,6 +814,20 @@ func encodeStartConversationRequest(
 	return nil
 }
 
+func encodeSwitchLibraryCollectionRequest(
+	req *LibrarySwitchInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeTakeFromStashRequest(
 	req *InventoryTake,
 	r *http.Request,
@@ -872,6 +900,20 @@ func encodeUpdateEncounterPoolRequest(
 
 func encodeUpdateEncounterTableRequest(
 	req *EncounterTableInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateLibraryCollectionRequest(
+	req *LibraryCollectionUpdate,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

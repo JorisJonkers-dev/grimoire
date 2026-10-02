@@ -3754,6 +3754,164 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/library/collections:
+    get:
+      operationId: listLibraryCollections
+      x-ogen-operation-group: Read
+      summary: List Collections
+      description: "The caller's Collections."
+      tags: [Library]
+      responses:
+        "200":
+          description: The Collections.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createLibraryCollection
+      x-ogen-operation-group: Build
+      summary: Create a Collection
+      description: "Starts an empty Collection in the caller's Library."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryCollectionInput"
+      responses:
+        "201":
+          description: The new Collection.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/collections/{collectionId}:
+    put:
+      operationId: updateLibraryCollection
+      x-ogen-operation-group: Build
+      summary: Edit a Collection
+      description: "Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it is switched on in sees the new set."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CollectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryCollectionUpdate"
+      responses:
+        "200":
+          description: The Collection.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/collections:
+    get:
+      operationId: listCampaignCollections
+      x-ogen-operation-group: Read
+      summary: List a Campaign's Collections
+      description: "The caller's Collections and any other switched on in the Campaign, each saying whether it is on there. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Collections.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/collections/{collectionId}:
+    put:
+      operationId: switchLibraryCollection
+      x-ogen-operation-group: Build
+      summary: Switch a Collection on or off
+      description: "On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its owner switches it on; any DM of the Campaign switches it off."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CollectionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibrarySwitchInput"
+      responses:
+        "200":
+          description: The Campaign's Collections.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryCollection"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/library/{entryId}:
     get:
       operationId: getLibraryEntry
@@ -6149,6 +6307,12 @@ components:
       in: path
       required: true
       description: Encounter Table id.
+      schema: { $ref: "#/components/schemas/Id" }
+    CollectionId:
+      name: collectionId
+      in: path
+      required: true
+      description: Collection id.
       schema: { $ref: "#/components/schemas/Id" }
     LibraryEntryId:
       name: entryId
@@ -8944,14 +9108,63 @@ components:
       type: object
       description: A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
       additionalProperties: false
-      required: [entry, baseName, base, override, fields]
+      required: [entry, baseName, base, override, fields, direct, via]
       properties:
         entry: { $ref: "#/components/schemas/LibraryEntry" }
+        direct: { type: boolean, description: "The DM linked it themselves, rather than only through a Collection." }
+        via:
+          type: array
+          description: The switched-on Collections that bring it in.
+          maxItems: 100
+          items: { type: string, maxLength: 80 }
         pinnedRevision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
         baseName: { type: string, maxLength: 80 }
         base: { $ref: "#/components/schemas/LibraryFields" }
         override: { $ref: "#/components/schemas/LibraryFields" }
         fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryCollection:
+      type: object
+      description: A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the Campaign it was listed for; mine whether the caller owns it.
+      additionalProperties: false
+      required: [id, name, description, entryIds, mine]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+        entryIds:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/Id" }
+        mine: { type: boolean }
+        switchedOn: { type: boolean }
+    LibraryCollectionInput:
+      type: object
+      description: A new Collection.
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+    LibraryCollectionUpdate:
+      type: object
+      description: A Collection's name, description and the entries it holds.
+      additionalProperties: false
+      required: [name, entryIds]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+        entryIds:
+          type: array
+          maxItems: 10000
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/Id" }
+    LibrarySwitchInput:
+      type: object
+      description: Whether the Collection is on in the Campaign.
+      additionalProperties: false
+      required: ["on"]
+      properties:
+        "on": { type: boolean }
     LibraryLinkInput:
       type: object
       description: The entry to link.

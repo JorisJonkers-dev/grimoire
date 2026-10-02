@@ -1632,11 +1632,49 @@ export const zLibraryEntryDetail = z.object({
  */
 export const zLinkedEntry = z.object({
     entry: zLibraryEntry,
+    direct: z.boolean(),
+    via: z.array(z.string().max(80)).max(100),
     pinnedRevision: z.int().gte(1).lte(1000000).optional(),
     baseName: z.string().max(80),
     base: zLibraryFields,
     override: zLibraryFields,
     fields: zLibraryFields
+});
+
+/**
+ * A named group of Library entries, switched on per Campaign. switchedOn says whether it is on in the Campaign it was listed for; mine whether the caller owns it.
+ */
+export const zLibraryCollection = z.object({
+    id: zId,
+    name: z.string().max(80),
+    description: z.string().max(2000),
+    entryIds: z.array(zId).max(10000),
+    mine: z.boolean(),
+    switchedOn: z.boolean().optional()
+});
+
+/**
+ * A new Collection.
+ */
+export const zLibraryCollectionInput = z.object({
+    name: z.string().min(1).max(80),
+    description: z.string().max(2000).optional()
+});
+
+/**
+ * A Collection's name, description and the entries it holds.
+ */
+export const zLibraryCollectionUpdate = z.object({
+    name: z.string().min(1).max(80),
+    description: z.string().max(2000).optional(),
+    entryIds: z.array(zId).max(10000)
+});
+
+/**
+ * Whether the Collection is on in the Campaign.
+ */
+export const zLibrarySwitchInput = z.object({
+    on: z.boolean()
 });
 
 /**
@@ -3790,6 +3828,11 @@ export const zPoolId = zId;
 export const zTableId = zId;
 
 /**
+ * Collection id.
+ */
+export const zCollectionId = zId;
+
+/**
  * Library entry id.
  */
 export const zLibraryEntryId = zId;
@@ -5052,6 +5095,50 @@ export const zCreateLibraryEntryBody = zLibraryEntryInput;
  * The new entry.
  */
 export const zCreateLibraryEntryResponse = zLibraryEntry;
+
+/**
+ * The Collections.
+ */
+export const zListLibraryCollectionsResponse = z.array(zLibraryCollection).max(1000);
+
+export const zCreateLibraryCollectionBody = zLibraryCollectionInput;
+
+/**
+ * The new Collection.
+ */
+export const zCreateLibraryCollectionResponse = zLibraryCollection;
+
+export const zUpdateLibraryCollectionBody = zLibraryCollectionUpdate;
+
+export const zUpdateLibraryCollectionPath = z.object({
+    collectionId: zId
+});
+
+/**
+ * The Collection.
+ */
+export const zUpdateLibraryCollectionResponse = zLibraryCollection;
+
+export const zListCampaignCollectionsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Collections.
+ */
+export const zListCampaignCollectionsResponse = z.array(zLibraryCollection).max(1000);
+
+export const zSwitchLibraryCollectionBody = zLibrarySwitchInput;
+
+export const zSwitchLibraryCollectionPath = z.object({
+    campaignId: zId,
+    collectionId: zId
+});
+
+/**
+ * The Campaign's Collections.
+ */
+export const zSwitchLibraryCollectionResponse = z.array(zLibraryCollection).max(1000);
 
 export const zGetLibraryEntryPath = z.object({
     entryId: zId

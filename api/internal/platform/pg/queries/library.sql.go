@@ -13,13 +13,94 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addToLibraryCollection = `-- name: AddToLibraryCollection :exec
+INSERT INTO library.collection_entries (collection_id, entry_id) VALUES ($1, $2) ON CONFLICT DO NOTHING
+`
+
+type AddToLibraryCollectionParams struct {
+	CollectionID uuid.UUID
+	EntryID      uuid.UUID
+}
+
+func (q *Queries) AddToLibraryCollection(ctx context.Context, arg AddToLibraryCollectionParams) error {
+	_, err := q.db.Exec(ctx, addToLibraryCollection, arg.CollectionID, arg.EntryID)
+	return err
+}
+
+const campaignLibraryCollections = `-- name: CampaignLibraryCollections :many
+SELECT c.id, c.owner_subject, c.name, c.description, c.created_at, c.updated_at,
+    ARRAY(SELECT ce.entry_id FROM library.collection_entries ce WHERE ce.collection_id = c.id ORDER BY ce.entry_id)::uuid[] AS entry_ids,
+    (cc.campaign_id IS NOT NULL)::boolean AS switched_on
+FROM library.collections c
+LEFT JOIN library.campaign_collections cc ON cc.collection_id = c.id AND cc.campaign_id = $1::uuid
+WHERE c.owner_subject = $2 OR cc.campaign_id IS NOT NULL
+ORDER BY lower(c.name), c.id
+`
+
+type CampaignLibraryCollectionsParams struct {
+	CampaignID   pgtype.UUID
+	OwnerSubject string
+}
+
+type CampaignLibraryCollectionsRow struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Name         string
+	Description  string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	EntryIds     []uuid.UUID
+	SwitchedOn   bool
+}
+
+func (q *Queries) CampaignLibraryCollections(ctx context.Context, arg CampaignLibraryCollectionsParams) ([]CampaignLibraryCollectionsRow, error) {
+	rows, err := q.db.Query(ctx, campaignLibraryCollections, arg.CampaignID, arg.OwnerSubject)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignLibraryCollectionsRow{}
+	for rows.Next() {
+		var i CampaignLibraryCollectionsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.OwnerSubject,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EntryIds,
+			&i.SwitchedOn,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const campaignLibraryLinks = `-- name: CampaignLibraryLinks :many
+WITH visible AS (
+    SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = $1 AND l.direct
+    UNION
+    SELECT ce.entry_id FROM library.collection_entries ce
+    JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
+)
 SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at,
-    l.pinned_revision, l.override, l.linked_at, r.name AS pinned_name, r.fields AS pinned_fields
-FROM library.campaign_links l
-JOIN library.entries e ON e.id = l.entry_id
-LEFT JOIN library.entry_revisions r ON r.entry_id = l.entry_id AND r.no = l.pinned_revision
-WHERE l.campaign_id = $1 AND ($2::uuid IS NULL OR l.entry_id = $2::uuid)
+    l.pinned_revision, coalesce(l.override, '{}'::jsonb)::jsonb AS override, coalesce(l.direct, false)::boolean AS direct,
+    r.name AS pinned_name, r.fields AS pinned_fields,
+    ARRAY(SELECT c.name FROM library.collection_entries ce
+        JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id AND cc.campaign_id = $1
+        JOIN library.collections c ON c.id = ce.collection_id
+        WHERE ce.entry_id = e.id ORDER BY c.name)::text[] AS via
+FROM visible v
+JOIN library.entries e ON e.id = v.entry_id
+LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = $1
+LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
+WHERE $2::uuid IS NULL OR e.id = $2::uuid
 ORDER BY e.kind, lower(e.name), e.id
 `
 
@@ -39,9 +120,10 @@ type CampaignLibraryLinksRow struct {
 	UpdatedAt      time.Time
 	PinnedRevision pgtype.Int4
 	Override       []byte
-	LinkedAt       time.Time
+	Direct         bool
 	PinnedName     pgtype.Text
 	PinnedFields   []byte
+	Via            []string
 }
 
 func (q *Queries) CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryLinksParams) ([]CampaignLibraryLinksRow, error) {
@@ -64,9 +146,10 @@ func (q *Queries) CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryL
 			&i.UpdatedAt,
 			&i.PinnedRevision,
 			&i.Override,
-			&i.LinkedAt,
+			&i.Direct,
 			&i.PinnedName,
 			&i.PinnedFields,
+			&i.Via,
 		); err != nil {
 			return nil, err
 		}
@@ -76,6 +159,39 @@ func (q *Queries) CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryL
 		return nil, err
 	}
 	return items, nil
+}
+
+const clearLibraryCollection = `-- name: ClearLibraryCollection :exec
+DELETE FROM library.collection_entries WHERE collection_id = $1
+`
+
+func (q *Queries) ClearLibraryCollection(ctx context.Context, collectionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearLibraryCollection, collectionID)
+	return err
+}
+
+const insertLibraryCollection = `-- name: InsertLibraryCollection :exec
+INSERT INTO library.collections (id, owner_subject, name, description, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $5)
+`
+
+type InsertLibraryCollectionParams struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Name         string
+	Description  string
+	Now          time.Time
+}
+
+func (q *Queries) InsertLibraryCollection(ctx context.Context, arg InsertLibraryCollectionParams) error {
+	_, err := q.db.Exec(ctx, insertLibraryCollection,
+		arg.ID,
+		arg.OwnerSubject,
+		arg.Name,
+		arg.Description,
+		arg.Now,
+	)
+	return err
 }
 
 const insertLibraryEntry = `-- name: InsertLibraryEntry :exec
@@ -128,6 +244,37 @@ func (q *Queries) InsertLibraryRevision(ctx context.Context, arg InsertLibraryRe
 		arg.Now,
 	)
 	return err
+}
+
+const libraryCollection = `-- name: LibraryCollection :one
+SELECT c.id, c.owner_subject, c.name, c.description, c.created_at, c.updated_at,
+    ARRAY(SELECT ce.entry_id FROM library.collection_entries ce WHERE ce.collection_id = c.id ORDER BY ce.entry_id)::uuid[] AS entry_ids
+FROM library.collections c WHERE c.id = $1
+`
+
+type LibraryCollectionRow struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Name         string
+	Description  string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	EntryIds     []uuid.UUID
+}
+
+func (q *Queries) LibraryCollection(ctx context.Context, id uuid.UUID) (LibraryCollectionRow, error) {
+	row := q.db.QueryRow(ctx, libraryCollection, id)
+	var i LibraryCollectionRow
+	err := row.Scan(
+		&i.ID,
+		&i.OwnerSubject,
+		&i.Name,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EntryIds,
+	)
+	return i, err
 }
 
 const libraryEntries = `-- name: LibraryEntries :many
@@ -191,8 +338,12 @@ func (q *Queries) LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry,
 }
 
 const libraryEntryUses = `-- name: LibraryEntryUses :many
-SELECT c.id, c.name, l.pinned_revision FROM library.campaign_links l JOIN campaign.campaigns c ON c.id = l.campaign_id
-WHERE l.entry_id = $1 ORDER BY lower(c.name), c.id
+SELECT c.id, c.name, l.pinned_revision FROM campaign.campaigns c
+LEFT JOIN library.campaign_links l ON l.campaign_id = c.id AND l.entry_id = $1
+WHERE coalesce(l.direct, false) OR EXISTS (
+    SELECT 1 FROM library.collection_entries ce JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id
+    WHERE ce.entry_id = $1 AND cc.campaign_id = c.id)
+ORDER BY lower(c.name), c.id
 `
 
 type LibraryEntryUsesRow struct {
@@ -277,7 +428,7 @@ func (q *Queries) LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]Li
 
 const linkLibraryEntry = `-- name: LinkLibraryEntry :exec
 INSERT INTO library.campaign_links (campaign_id, entry_id, linked_at, updated_at) VALUES ($1, $2, $3, $3)
-ON CONFLICT (campaign_id, entry_id) DO NOTHING
+ON CONFLICT (campaign_id, entry_id) DO UPDATE SET direct = true, updated_at = excluded.updated_at
 `
 
 type LinkLibraryEntryParams struct {
@@ -291,57 +442,84 @@ func (q *Queries) LinkLibraryEntry(ctx context.Context, arg LinkLibraryEntryPara
 	return err
 }
 
-const pinLibraryRevision = `-- name: PinLibraryRevision :execrows
-UPDATE library.campaign_links SET pinned_revision = $1, updated_at = $2
-WHERE campaign_id = $3 AND entry_id = $4
+const pinLibraryRevision = `-- name: PinLibraryRevision :exec
+INSERT INTO library.campaign_links (campaign_id, entry_id, pinned_revision, direct, linked_at, updated_at)
+VALUES ($1, $2, $3, false, $4, $4)
+ON CONFLICT (campaign_id, entry_id) DO UPDATE SET pinned_revision = excluded.pinned_revision, updated_at = excluded.updated_at
 `
 
 type PinLibraryRevisionParams struct {
-	PinnedRevision pgtype.Int4
-	Now            time.Time
 	CampaignID     uuid.UUID
 	EntryID        uuid.UUID
+	PinnedRevision pgtype.Int4
+	Now            time.Time
 }
 
-func (q *Queries) PinLibraryRevision(ctx context.Context, arg PinLibraryRevisionParams) (int64, error) {
-	result, err := q.db.Exec(ctx, pinLibraryRevision,
-		arg.PinnedRevision,
-		arg.Now,
+func (q *Queries) PinLibraryRevision(ctx context.Context, arg PinLibraryRevisionParams) error {
+	_, err := q.db.Exec(ctx, pinLibraryRevision,
 		arg.CampaignID,
 		arg.EntryID,
+		arg.PinnedRevision,
+		arg.Now,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return err
 }
 
-const setLibraryOverride = `-- name: SetLibraryOverride :execrows
-UPDATE library.campaign_links SET override = $1, updated_at = $2 WHERE campaign_id = $3 AND entry_id = $4
+const setLibraryOverride = `-- name: SetLibraryOverride :exec
+INSERT INTO library.campaign_links (campaign_id, entry_id, override, direct, linked_at, updated_at)
+VALUES ($1, $2, $3, false, $4, $4)
+ON CONFLICT (campaign_id, entry_id) DO UPDATE SET override = excluded.override, updated_at = excluded.updated_at
 `
 
 type SetLibraryOverrideParams struct {
-	Override   []byte
-	Now        time.Time
 	CampaignID uuid.UUID
 	EntryID    uuid.UUID
+	Override   []byte
+	Now        time.Time
 }
 
-func (q *Queries) SetLibraryOverride(ctx context.Context, arg SetLibraryOverrideParams) (int64, error) {
-	result, err := q.db.Exec(ctx, setLibraryOverride,
-		arg.Override,
-		arg.Now,
+func (q *Queries) SetLibraryOverride(ctx context.Context, arg SetLibraryOverrideParams) error {
+	_, err := q.db.Exec(ctx, setLibraryOverride,
 		arg.CampaignID,
 		arg.EntryID,
+		arg.Override,
+		arg.Now,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return err
+}
+
+const switchOffLibraryCollection = `-- name: SwitchOffLibraryCollection :exec
+DELETE FROM library.campaign_collections WHERE campaign_id = $1 AND collection_id = $2
+`
+
+type SwitchOffLibraryCollectionParams struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+}
+
+func (q *Queries) SwitchOffLibraryCollection(ctx context.Context, arg SwitchOffLibraryCollectionParams) error {
+	_, err := q.db.Exec(ctx, switchOffLibraryCollection, arg.CampaignID, arg.CollectionID)
+	return err
+}
+
+const switchOnLibraryCollection = `-- name: SwitchOnLibraryCollection :exec
+INSERT INTO library.campaign_collections (campaign_id, collection_id, switched_at) VALUES ($1, $2, $3)
+ON CONFLICT DO NOTHING
+`
+
+type SwitchOnLibraryCollectionParams struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+	Now          time.Time
+}
+
+func (q *Queries) SwitchOnLibraryCollection(ctx context.Context, arg SwitchOnLibraryCollectionParams) error {
+	_, err := q.db.Exec(ctx, switchOnLibraryCollection, arg.CampaignID, arg.CollectionID, arg.Now)
+	return err
 }
 
 const unlinkLibraryEntry = `-- name: UnlinkLibraryEntry :execrows
-DELETE FROM library.campaign_links WHERE campaign_id = $1 AND entry_id = $2
+DELETE FROM library.campaign_links WHERE campaign_id = $1 AND entry_id = $2 AND direct
 `
 
 type UnlinkLibraryEntryParams struct {
@@ -355,6 +533,27 @@ func (q *Queries) UnlinkLibraryEntry(ctx context.Context, arg UnlinkLibraryEntry
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const updateLibraryCollection = `-- name: UpdateLibraryCollection :exec
+UPDATE library.collections SET name = $1, description = $2, updated_at = $3 WHERE id = $4
+`
+
+type UpdateLibraryCollectionParams struct {
+	Name        string
+	Description string
+	Now         time.Time
+	ID          uuid.UUID
+}
+
+func (q *Queries) UpdateLibraryCollection(ctx context.Context, arg UpdateLibraryCollectionParams) error {
+	_, err := q.db.Exec(ctx, updateLibraryCollection,
+		arg.Name,
+		arg.Description,
+		arg.Now,
+		arg.ID,
+	)
+	return err
 }
 
 const updateLibraryEntry = `-- name: UpdateLibraryEntry :one

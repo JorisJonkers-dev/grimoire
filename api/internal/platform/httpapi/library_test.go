@@ -148,6 +148,103 @@ func TestLibraryEntriesLinkOverrideAndPin(t *testing.T) {
 	}
 }
 
+// A DM groups entries into a Collection and switches it on per Campaign: on brings its entries in with
+// their overrides, off hides them unless the DM linked one directly.
+func TestCollectionsSwitchedOnPerCampaign(t *testing.T) {
+	t.Parallel()
+	h := libraryStack(t)
+	campaign, _ := campaignWithPlayer(t, h)
+	entry := func(who, name string) string {
+		t.Helper()
+		rec := call(h, http.MethodPost, "/api/v1/library", who, `{"kind":"spell","name":"`+name+`","fields":[{"name":"Level","value":"1"}]}`)
+		return decode(t, rec)["id"].(string)
+	}
+	moon, sprite, theirs := entry("dm", "Moonbeam Ward"), entry("dm", "Sprite Call"), entry("player", "Borrowed")
+	rec := call(h, http.MethodPost, "/api/v1/library/collections", "dm", `{"name":"Feywild","description":"Fey magic"}`)
+	fey := decode(t, rec)
+	id := fey["id"].(string)
+	if rec.Code != http.StatusCreated || fey["mine"] != true || len(fey["entryIds"].([]any)) != 0 {
+		t.Fatalf("the new Collection = %d %v", rec.Code, fey)
+	}
+	if rec := call(h, http.MethodPost, "/api/v1/library/collections", "dm", `{"name":"   "}`); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("a nameless Collection: %d", rec.Code)
+	}
+	put := func(who, body string) *httptest.ResponseRecorder {
+		return call(h, http.MethodPut, "/api/v1/library/collections/"+id, who, body)
+	}
+	if rec := put("dm", `{"name":"Feywild","entryIds":["`+theirs+`"]}`); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("another account's entry in a Collection: %d", rec.Code)
+	}
+	if rec := put("player", `{"name":"Mine","entryIds":[]}`); rec.Code != http.StatusNotFound {
+		t.Fatalf("editing another account's Collection: %d", rec.Code)
+	}
+	if rec := put("dm", `{"name":"Feywild Expansion","description":"Fey","entryIds":["`+moon+`","`+sprite+`"]}`); rec.Code != http.StatusOK || len(decode(t, rec)["entryIds"].([]any)) != 2 {
+		t.Fatalf("filling the Collection: %d %s", rec.Code, rec.Body.String())
+	}
+	if list := decodeList(t, call(h, http.MethodGet, "/api/v1/library/collections", "dm", "")); len(list) != 1 || list[0]["name"] != "Feywild Expansion" {
+		t.Fatalf("my Collections = %v", list)
+	}
+
+	names := func() []string {
+		t.Helper()
+		var out []string
+		for _, l := range decodeList(t, call(h, http.MethodGet, "/api/v1/campaigns/"+campaign+"/library", "dm", "")) {
+			out = append(out, l["entry"].(map[string]any)["name"].(string))
+		}
+		return out
+	}
+	switchTo := func(who, on string) *httptest.ResponseRecorder {
+		return call(h, http.MethodPut, "/api/v1/campaigns/"+campaign+"/collections/"+id, who, `{"on":`+on+`}`)
+	}
+	if rec := switchTo("player", "true"); rec.Code != http.StatusForbidden {
+		t.Fatalf("a player switches a Collection: %d", rec.Code)
+	}
+	if len(names()) != 0 {
+		t.Fatalf("nothing shows before the Collection is on = %v", names())
+	}
+	rec = switchTo("dm", "true")
+	if list := decodeList(t, rec); rec.Code != http.StatusOK || len(list) != 1 || list[0]["switchedOn"] != true {
+		t.Fatalf("switched on: %d %v", rec.Code, list)
+	}
+	if got := names(); len(got) != 2 {
+		t.Fatalf("the Collection brings both spells in = %v", got)
+	}
+	ward := decodeList(t, call(h, http.MethodGet, "/api/v1/campaigns/"+campaign+"/library", "dm", ""))[0]
+	if ward["direct"] != false || ward["via"].([]any)[0] != "Feywild Expansion" {
+		t.Fatalf("an entry brought in by the Collection = %v", ward)
+	}
+	over := "/api/v1/campaigns/" + campaign + "/library/" + moon + "/override"
+	if rec := call(h, http.MethodPut, over, "dm", `{"fields":[{"name":"Level","value":"2"}]}`); rec.Code != http.StatusOK || fieldsOf(t, decode(t, rec)["fields"])["Level"] != "2" {
+		t.Fatalf("overriding a Collection's entry: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPut, "/api/v1/campaigns/"+campaign+"/library/"+sprite+"/pin", "dm", `{"revision":1}`); rec.Code != http.StatusOK {
+		t.Fatalf("pinning a Collection's entry: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodDelete, "/api/v1/campaigns/"+campaign+"/library/"+moon, "dm", ""); rec.Code != http.StatusNotFound {
+		t.Fatalf("unlinking what the DM never linked: %d", rec.Code)
+	}
+	call(h, http.MethodPost, "/api/v1/campaigns/"+campaign+"/library", "dm", `{"entryId":"`+sprite+`"}`)
+	if rec := switchTo("dm", "false"); rec.Code != http.StatusOK || decodeList(t, rec)[0]["switchedOn"] != false {
+		t.Fatalf("switched off: %d", rec.Code)
+	}
+	if got := names(); len(got) != 1 || got[0] != "Sprite Call" {
+		t.Fatalf("off hides the Collection's entries except one linked directly = %v", got)
+	}
+	switchTo("dm", "true")
+	if l := decodeList(t, call(h, http.MethodGet, "/api/v1/campaigns/"+campaign+"/library", "dm", ""))[0]; fieldsOf(t, l["fields"])["Level"] != "2" {
+		t.Fatalf("back on, the override is kept = %v", l)
+	}
+	if rec := call(h, http.MethodGet, "/api/v1/campaigns/"+campaign+"/collections", "player", ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("a player lists the Campaign's Collections: %d", rec.Code)
+	}
+	if list := decodeList(t, call(h, http.MethodGet, "/api/v1/campaigns/"+campaign+"/collections", "dm", "")); len(list) != 1 || list[0]["switchedOn"] != true {
+		t.Fatalf("the Campaign's Collections = %v", list)
+	}
+	if rec := call(h, http.MethodPut, "/api/v1/campaigns/"+campaign+"/collections/"+theirs, "dm", `{"on":true}`); rec.Code != http.StatusNotFound {
+		t.Fatalf("switching on no such Collection: %d", rec.Code)
+	}
+}
+
 // failingLibrary fails as a broken database would.
 type failingLibrary struct{ httpapi.LibraryService }
 

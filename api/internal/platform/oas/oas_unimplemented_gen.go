@@ -171,6 +171,15 @@ func (UnimplementedHandler) CreateInvite(ctx context.Context, params CreateInvit
 	return r, ht.ErrNotImplemented
 }
 
+// CreateLibraryCollection implements createLibraryCollection operation.
+//
+// Starts an empty Collection in the caller's Library.
+//
+// POST /api/v1/library/collections
+func (UnimplementedHandler) CreateLibraryCollection(ctx context.Context, req *LibraryCollectionInput) (r CreateLibraryCollectionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateLibraryEntry implements createLibraryEntry operation.
 //
 // Adds an entry to the caller's Library as its first Revision.
@@ -767,6 +776,16 @@ func (UnimplementedHandler) ListAdminAccounts(ctx context.Context) (r ListAdminA
 	return r, ht.ErrNotImplemented
 }
 
+// ListCampaignCollections implements listCampaignCollections operation.
+//
+// The caller's Collections and any other switched on in the Campaign, each saying whether it is on
+// there. DM only.
+//
+// GET /api/v1/campaigns/{campaignId}/collections
+func (UnimplementedHandler) ListCampaignCollections(ctx context.Context, params ListCampaignCollectionsParams) (r ListCampaignCollectionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListCampaigns implements listCampaigns operation.
 //
 // The Campaigns the caller is a Member of, newest first.
@@ -882,6 +901,15 @@ func (UnimplementedHandler) ListFriends(ctx context.Context) (r ListFriendsRes, 
 //
 // GET /api/v1/campaigns/{campaignId}/invites
 func (UnimplementedHandler) ListInvites(ctx context.Context, params ListInvitesParams) (r ListInvitesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListLibraryCollections implements listLibraryCollections operation.
+//
+// The caller's Collections.
+//
+// GET /api/v1/library/collections
+func (UnimplementedHandler) ListLibraryCollections(ctx context.Context) (r ListLibraryCollectionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1584,6 +1612,16 @@ func (UnimplementedHandler) SwapWeaponSet(ctx context.Context, params SwapWeapon
 	return r, ht.ErrNotImplemented
 }
 
+// SwitchLibraryCollection implements switchLibraryCollection operation.
+//
+// On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its
+// owner switches it on; any DM of the Campaign switches it off.
+//
+// PUT /api/v1/campaigns/{campaignId}/collections/{collectionId}
+func (UnimplementedHandler) SwitchLibraryCollection(ctx context.Context, req *LibrarySwitchInput, params SwitchLibraryCollectionParams) (r SwitchLibraryCollectionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // TakeFromStash implements takeFromStash operation.
 //
 // Moves an item from the Party Stash into the Character's bag. Not during a live Session.
@@ -1693,6 +1731,16 @@ func (UnimplementedHandler) UpdateEncounterPool(ctx context.Context, req *Encoun
 //
 // PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 func (UnimplementedHandler) UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (r UpdateEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateLibraryCollection implements updateLibraryCollection operation.
+//
+// Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it
+// is switched on in sees the new set.
+//
+// PUT /api/v1/library/collections/{collectionId}
+func (UnimplementedHandler) UpdateLibraryCollection(ctx context.Context, req *LibraryCollectionUpdate, params UpdateLibraryCollectionParams) (r UpdateLibraryCollectionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

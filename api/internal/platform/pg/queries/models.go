@@ -1122,6 +1122,12 @@ type IdentityTwoStepChallenge struct {
 	Attempts  int32
 }
 
+type LibraryCampaignCollection struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+	SwitchedAt   time.Time
+}
+
 type LibraryCampaignLink struct {
 	CampaignID     uuid.UUID
 	EntryID        uuid.UUID
@@ -1129,6 +1135,21 @@ type LibraryCampaignLink struct {
 	Override       []byte
 	LinkedAt       time.Time
 	UpdatedAt      time.Time
+	Direct         bool
+}
+
+type LibraryCollection struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Name         string
+	Description  string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type LibraryCollectionEntry struct {
+	CollectionID uuid.UUID
+	EntryID      uuid.UUID
 }
 
 type LibraryEntry struct {

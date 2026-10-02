@@ -72,6 +72,31 @@ type Linked struct {
 	Base     Fields
 	BaseName string
 	Override Fields
+	// Direct marks an entry the DM linked themselves; Via names the switched-on Collections that bring it in.
+	Direct bool
+	Via    []string
+}
+
+// Collection is a named group of an account's entries, switched on per Campaign; On says whether it is
+// on in the Campaign it was read for.
+type Collection struct {
+	ID          uuid.UUID
+	Owner       string
+	Name        string
+	Description string
+	Entries     []uuid.UUID
+	On          bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+// CleanCollection checks a Collection's name and description.
+func CleanCollection(name, description string) (string, string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" || utf8.RuneCountInString(name) > 80 || utf8.RuneCountInString(description) > 2000 {
+		return name, description, apperr.Refuse("give the Collection a name of up to 80 characters and a description of up to 2000")
+	}
+	return name, strings.TrimSpace(description), nil
 }
 
 // Resolved is the base with the Campaign Override on top.

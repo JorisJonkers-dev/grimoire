@@ -41,6 +41,7 @@ describe('library page', () => {
     const sent: Sent[] = []
     const { wrapper, router } = await mountApp('/library', {
       [`/api/v1/library/${HAG}`]: () => ({ entry: hag, revisions: [], uses: [] }),
+      '/api/v1/library/collections': () => [],
       '/api/v1/library': async (u, req) => {
         await record(sent, u, req)
         return req.method === 'POST' ? hag : [hag, odo]
@@ -72,6 +73,7 @@ describe('library page', () => {
 
   it('says when the Library cannot be opened, and when a save is refused', async () => {
     const { wrapper } = await mountApp('/library', {
+      '/api/v1/library/collections': () => [],
       '/api/v1/library': (_u, req) =>
         req.method === 'POST'
           ? jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'give it a name of up to 80 characters' }, 422)
@@ -148,6 +150,7 @@ describe('campaign library page', () => {
     entry: hag, pinnedRevision: 1, baseName: 'Hag', base: [{ name: 'AC', value: '17' }],
     override: [{ name: 'AC', value: '15' }, { name: 'Mood', value: 'wounded' }],
     fields: [{ name: 'AC', value: '15' }, { name: 'Mood', value: 'wounded' }],
+    direct: true, via: [],
   }
 
   it('links, overrides, pins and unlinks entries for the Campaign', async () => {
@@ -157,6 +160,7 @@ describe('campaign library page', () => {
         await record(sent, u, req)
         return req.method === 'GET' ? [linked] : req.method === 'DELETE' && u.pathname.endsWith(HAG) ? new Response(null, { status: 204 }) : linked
       },
+      [`/api/v1/campaigns/${CAMP}/collections`]: () => [],
       [`/api/v1/campaigns/${CAMP}`]: () => ({ id: CAMP, name: 'Morvain', ruleset: 'srd-2024', myRole: 'dm', memberCount: 1, createdAt: at }),
       '/api/v1/library': () => [hag, odo],
     })
@@ -206,5 +210,64 @@ describe('campaign library page', () => {
     await wrapper.get('[data-testid="link-entry"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-testid="links-problem"]').text()).toBe('No such Library entry, Campaign or link.')
+  })
+})
+
+describe('collections', () => {
+  const FEY = '0190c7a8-0000-7000-8000-0000000000f1'
+  const THEIRS = '0190c7a8-0000-7000-8000-0000000000f2'
+
+  it('groups entries into a Collection from the Library page', async () => {
+    const sent: Sent[] = []
+    const { wrapper } = await mountApp('/library', {
+      '/api/v1/library/collections': async (u, req) => {
+        await record(sent, u, req)
+        if (req.method === 'POST') return { id: THEIRS, name: 'Undead', description: '', entryIds: [], mine: true }
+        if (req.method === 'PUT') return jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'a Collection holds only entries from your own Library' }, 422)
+        return [{ id: FEY, name: 'Feywild', description: 'Fey', entryIds: [HAG], mine: true }]
+      },
+      '/api/v1/library': () => [hag, odo],
+    })
+    expect(wrapper.get('[data-testid="collection-Feywild"]').text()).toContain('Feywild · 1 entry')
+    await wrapper.get('[data-testid="collection-edit-Feywild"]').trigger('click')
+    expect((wrapper.get('[data-testid="collect-Bog Hag"]').element as HTMLInputElement).checked).toBe(true)
+    await wrapper.get('[data-testid="collect-Bog Hag"]').trigger('change')
+    await wrapper.get('[data-testid="collect-Odo"]').trigger('change')
+    await wrapper.get('[data-testid="collection-description"]').setValue('Fey magic')
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="collection-form"]').trigger('submit')
+    await flushPromises()
+    expect(sent.filter((x) => x.method !== 'GET').at(-1)).toEqual({
+      method: 'PUT', path: `/api/v1/library/collections/${FEY}`, body: { name: 'Feywild', description: 'Fey magic', entryIds: [ODO] },
+    })
+    expect(wrapper.get('[data-testid="collections-problem"]').text()).toBe('a Collection holds only entries from your own Library')
+    await wrapper.get('[data-testid="collection-cancel"]').trigger('click')
+    await wrapper.get('[data-testid="collection-new-name"]').setValue('Undead')
+    await wrapper.get('[data-testid="collection-create"]').trigger('submit')
+    await flushPromises()
+    expect(sent.filter((x) => x.method === 'POST').at(-1)).toEqual({ method: 'POST', path: '/api/v1/library/collections', body: { name: 'Undead' } })
+  })
+
+  it('switches Collections in a Campaign and marks what they bring in', async () => {
+    const sent: Sent[] = []
+    const brought: LinkedEntry = { entry: odo, baseName: 'Odo', base: [], override: [], fields: [], direct: false, via: ['Feywild'] }
+    const both: LinkedEntry = { ...brought, entry: hag, baseName: 'Bog Hag', direct: true }
+    const { wrapper } = await mountApp(`/campaigns/${CAMP}/library`, {
+      [`/api/v1/campaigns/${CAMP}/collections`]: async (u, req) => {
+        await record(sent, u, req)
+        return [{ id: FEY, name: 'Feywild', description: '', entryIds: [ODO, HAG], mine: true, switchedOn: true }, { id: THEIRS, name: 'Borrowed', description: '', entryIds: [], mine: false, switchedOn: false }]
+      },
+      [`/api/v1/campaigns/${CAMP}/library`]: () => [both, brought],
+      '/api/v1/library': () => [hag, odo],
+    })
+    expect(wrapper.get('[data-testid="switch-Borrowed"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="linked-Odo"] [data-testid="via"]').text()).toBe('From Feywild')
+    expect(wrapper.get('[data-testid="linked-Bog Hag"] [data-testid="via"]').text()).toBe('From Feywild and linked directly')
+    expect(wrapper.find('[data-testid="linked-Odo"] [data-testid="unlink"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="link-choice"]').findAll('option').map((o) => o.text())).toEqual(['Odo (NPC)'])
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="switch-Feywild"]').setValue(false)
+    await flushPromises()
+    expect(sent.filter((x) => x.method === 'PUT')).toEqual([{ method: 'PUT', path: `/api/v1/campaigns/${CAMP}/collections/${FEY}`, body: { on: false } }])
   })
 })

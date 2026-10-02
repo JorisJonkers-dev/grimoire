@@ -69,6 +69,10 @@ type CreateInviteRes interface {
 	createInviteRes()
 }
 
+type CreateLibraryCollectionRes interface {
+	createLibraryCollectionRes()
+}
+
 type CreateLibraryEntryRes interface {
 	createLibraryEntryRes()
 }
@@ -329,6 +333,10 @@ type ListAdminAccountsRes interface {
 	listAdminAccountsRes()
 }
 
+type ListCampaignCollectionsRes interface {
+	listCampaignCollectionsRes()
+}
+
 type ListCampaignsRes interface {
 	listCampaignsRes()
 }
@@ -379,6 +387,10 @@ type ListFriendsRes interface {
 
 type ListInvitesRes interface {
 	listInvitesRes()
+}
+
+type ListLibraryCollectionsRes interface {
+	listLibraryCollectionsRes()
 }
 
 type ListLibraryEntriesRes interface {
@@ -681,6 +693,10 @@ type SwapWeaponSetRes interface {
 	swapWeaponSetRes()
 }
 
+type SwitchLibraryCollectionRes interface {
+	switchLibraryCollectionRes()
+}
+
 type TakeFromStashRes interface {
 	takeFromStashRes()
 }
@@ -727,6 +743,10 @@ type UpdateEncounterPoolRes interface {
 
 type UpdateEncounterTableRes interface {
 	updateEncounterTableRes()
+}
+
+type UpdateLibraryCollectionRes interface {
+	updateLibraryCollectionRes()
 }
 
 type UpdateLibraryEntryRes interface {

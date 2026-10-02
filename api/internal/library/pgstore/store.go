@@ -147,20 +147,18 @@ func (s *Store) Unlink(ctx context.Context, campaign, entry uuid.UUID) (bool, er
 	return n > 0, err
 }
 
-// SetOverride replaces a link's Campaign Override.
-func (s *Store) SetOverride(ctx context.Context, campaign, entry uuid.UUID, override domain.Fields, now time.Time) (bool, error) {
-	n, err := s.q.SetLibraryOverride(ctx, queries.SetLibraryOverrideParams{CampaignID: campaign, EntryID: entry, Override: encode(override), Now: now})
-	return n > 0, err
+// SetOverride replaces the Campaign Override of an entry the Campaign sees.
+func (s *Store) SetOverride(ctx context.Context, campaign, entry uuid.UUID, override domain.Fields, now time.Time) error {
+	return s.q.SetLibraryOverride(ctx, queries.SetLibraryOverrideParams{CampaignID: campaign, EntryID: entry, Override: encode(override), Now: now})
 }
 
-// Pin holds a link to a Revision, or nil for the latest.
-func (s *Store) Pin(ctx context.Context, campaign, entry uuid.UUID, revision *int, now time.Time) (bool, error) {
+// Pin holds a Campaign to a Revision of an entry it sees, or nil for the latest.
+func (s *Store) Pin(ctx context.Context, campaign, entry uuid.UUID, revision *int, now time.Time) error {
 	p := queries.PinLibraryRevisionParams{CampaignID: campaign, EntryID: entry, Now: now}
 	if revision != nil {
 		p.PinnedRevision = pgtype.Int4{Int32: int32(*revision), Valid: true} //nolint:gosec // checked against stored numbers
 	}
-	n, err := s.q.PinLibraryRevision(ctx, p)
-	return n > 0, err
+	return s.q.PinLibraryRevision(ctx, p)
 }
 
 // Linked reads a Campaign's links as it sees them, or one when entry is set.
@@ -175,11 +173,69 @@ func (s *Store) Linked(ctx context.Context, campaign uuid.UUID, entry *uuid.UUID
 		e := entryOf(queries.LibraryEntry{
 			ID: r.ID, OwnerSubject: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: r.Fields, Revision: r.Revision, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 		})
-		l := domain.Linked{Entry: e, Pinned: pinned(r.PinnedRevision), Base: e.Fields, BaseName: e.Name, Override: decode(r.Override)}
+		l := domain.Linked{Entry: e, Pinned: pinned(r.PinnedRevision), Base: e.Fields, BaseName: e.Name, Override: decode(r.Override), Direct: r.Direct, Via: r.Via}
 		if l.Pinned != nil {
 			l.Base, l.BaseName = decode(r.PinnedFields), r.PinnedName.String
 		}
 		out = append(out, l)
 	}
 	return out, err
+}
+
+func collectionOf(id uuid.UUID, owner, name, description string, created, updated time.Time, entries []uuid.UUID, on bool) domain.Collection {
+	return domain.Collection{ID: id, Owner: owner, Name: name, Description: description, Entries: entries, On: on, CreatedAt: created, UpdatedAt: updated}
+}
+
+// InsertCollection adds an empty Collection.
+func (s *Store) InsertCollection(ctx context.Context, c domain.Collection) error {
+	return s.q.InsertLibraryCollection(ctx, queries.InsertLibraryCollectionParams{
+		ID: c.ID, OwnerSubject: c.Owner, Name: c.Name, Description: c.Description, Now: c.CreatedAt,
+	})
+}
+
+// UpdateCollection saves a Collection's name, description and entries.
+func (s *Store) UpdateCollection(ctx context.Context, c domain.Collection) error {
+	if err := s.q.UpdateLibraryCollection(ctx, queries.UpdateLibraryCollectionParams{ID: c.ID, Name: c.Name, Description: c.Description, Now: c.UpdatedAt}); err != nil {
+		return err
+	}
+	if err := s.q.ClearLibraryCollection(ctx, c.ID); err != nil {
+		return err
+	}
+	for _, e := range c.Entries {
+		if err := s.q.AddToLibraryCollection(ctx, queries.AddToLibraryCollectionParams{CollectionID: c.ID, EntryID: e}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Collection reads one Collection.
+func (s *Store) Collection(ctx context.Context, id uuid.UUID) (domain.Collection, error) {
+	r, err := s.q.LibraryCollection(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Collection{}, apperr.ErrNotFound
+	}
+	return collectionOf(r.ID, r.OwnerSubject, r.Name, r.Description, r.CreatedAt, r.UpdatedAt, r.EntryIds, false), err
+}
+
+// Collections lists an owner's Collections and, with a Campaign, every other one switched on there.
+func (s *Store) Collections(ctx context.Context, owner string, campaign *uuid.UUID) ([]domain.Collection, error) {
+	p := queries.CampaignLibraryCollectionsParams{OwnerSubject: owner}
+	if campaign != nil {
+		p.CampaignID = pgtype.UUID{Bytes: *campaign, Valid: true}
+	}
+	rows, err := s.q.CampaignLibraryCollections(ctx, p)
+	out := make([]domain.Collection, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, collectionOf(r.ID, r.OwnerSubject, r.Name, r.Description, r.CreatedAt, r.UpdatedAt, r.EntryIds, r.SwitchedOn))
+	}
+	return out, err
+}
+
+// Switch turns a Collection on or off in a Campaign.
+func (s *Store) Switch(ctx context.Context, campaign, collection uuid.UUID, on bool, now time.Time) error {
+	if on {
+		return s.q.SwitchOnLibraryCollection(ctx, queries.SwitchOnLibraryCollectionParams{CampaignID: campaign, CollectionID: collection, Now: now})
+	}
+	return s.q.SwitchOffLibraryCollection(ctx, queries.SwitchOffLibraryCollectionParams{CampaignID: campaign, CollectionID: collection})
 }
