@@ -58,7 +58,8 @@ export const zAccountEvent = z.object({
         'admin_granted',
         'admin_revoked',
         'disabled',
-        'enabled'
+        'enabled',
+        'new_sign_in'
     ]),
     detail: z.string().max(200)
 });

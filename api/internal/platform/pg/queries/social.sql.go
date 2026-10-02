@@ -171,6 +171,31 @@ func (q *Queries) DirectConversation(ctx context.Context, arg DirectConversation
 	return id, err
 }
 
+const dueDigests = `-- name: DueDigests :many
+SELECT DISTINCT q.account_id FROM social.email_queue q LEFT JOIN social.digests d ON d.account_id = q.account_id
+WHERE d.sent_at IS NULL OR d.sent_at <= $1
+`
+
+func (q *Queries) DueDigests(ctx context.Context, cutoff time.Time) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, dueDigests, cutoff)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var account_id uuid.UUID
+		if err := rows.Scan(&account_id); err != nil {
+			return nil, err
+		}
+		items = append(items, account_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertBlock = `-- name: InsertBlock :exec
 INSERT INTO social.blocks (blocker, blocked, created_at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
 `
@@ -631,6 +656,20 @@ func (q *Queries) MarkConversationRead(ctx context.Context, arg MarkConversation
 	return err
 }
 
+const markDigest = `-- name: MarkDigest :exec
+INSERT INTO social.digests (account_id, sent_at) VALUES ($1, $2) ON CONFLICT (account_id) DO UPDATE SET sent_at = EXCLUDED.sent_at
+`
+
+type MarkDigestParams struct {
+	AccountID uuid.UUID
+	Now       time.Time
+}
+
+func (q *Queries) MarkDigest(ctx context.Context, arg MarkDigestParams) error {
+	_, err := q.db.Exec(ctx, markDigest, arg.AccountID, arg.Now)
+	return err
+}
+
 const mentionableCharacters = `-- name: MentionableCharacters :many
 SELECT c.id, c.name, c.campaign_id, cp.name AS campaign_name FROM campaign.characters c
 JOIN campaign.campaigns cp ON cp.id = c.campaign_id
@@ -858,6 +897,40 @@ func (q *Queries) PendingRequest(ctx context.Context, id uuid.UUID) (PendingRequ
 	return i, err
 }
 
+const queueEmail = `-- name: QueueEmail :exec
+INSERT INTO social.email_queue (id, account_id, kind, title, body, action_label, action_path, dedupe_key, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+ON CONFLICT (account_id, dedupe_key) WHERE dedupe_key <> ''
+DO UPDATE SET title = EXCLUDED.title, body = EXCLUDED.body, action_path = EXCLUDED.action_path, created_at = EXCLUDED.created_at
+`
+
+type QueueEmailParams struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	DedupeKey   string
+	Now         time.Time
+}
+
+func (q *Queries) QueueEmail(ctx context.Context, arg QueueEmailParams) error {
+	_, err := q.db.Exec(ctx, queueEmail,
+		arg.ID,
+		arg.AccountID,
+		arg.Kind,
+		arg.Title,
+		arg.Body,
+		arg.ActionLabel,
+		arg.ActionPath,
+		arg.DedupeKey,
+		arg.Now,
+	)
+	return err
+}
+
 const readAllNotifications = `-- name: ReadAllNotifications :exec
 UPDATE social.notifications SET read_at = $1 WHERE account_id = $2 AND read_at IS NULL
 `
@@ -944,6 +1017,64 @@ func (q *Queries) SocialAccountByUsername(ctx context.Context, username string) 
 	var i SocialAccountByUsernameRow
 	err := row.Scan(&i.ID, &i.Username, &i.Nickname)
 	return i, err
+}
+
+const socialRecipient = `-- name: SocialRecipient :one
+SELECT subject, coalesce(email, '')::text AS email, nickname FROM identity.accounts WHERE id = $1 AND NOT disabled
+`
+
+type SocialRecipientRow struct {
+	Subject  string
+	Email    string
+	Nickname string
+}
+
+func (q *Queries) SocialRecipient(ctx context.Context, id uuid.UUID) (SocialRecipientRow, error) {
+	row := q.db.QueryRow(ctx, socialRecipient, id)
+	var i SocialRecipientRow
+	err := row.Scan(&i.Subject, &i.Email, &i.Nickname)
+	return i, err
+}
+
+const takeQueuedEmail = `-- name: TakeQueuedEmail :many
+DELETE FROM social.email_queue WHERE account_id = $1
+RETURNING kind, title, body, action_label, action_path, created_at
+`
+
+type TakeQueuedEmailRow struct {
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	CreatedAt   time.Time
+}
+
+func (q *Queries) TakeQueuedEmail(ctx context.Context, accountID uuid.UUID) ([]TakeQueuedEmailRow, error) {
+	rows, err := q.db.Query(ctx, takeQueuedEmail, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []TakeQueuedEmailRow{}
+	for rows.Next() {
+		var i TakeQueuedEmailRow
+		if err := rows.Scan(
+			&i.Kind,
+			&i.Title,
+			&i.Body,
+			&i.ActionLabel,
+			&i.ActionPath,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const touchConversation = `-- name: TouchConversation :exec

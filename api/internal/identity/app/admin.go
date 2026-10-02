@@ -18,9 +18,9 @@ type AdminRepository interface {
 	LiveCounts(ctx context.Context, account domain.AccountID, now time.Time) (int, int, error)
 }
 
-// Alerts tells an Account's holder about a change to how it signs in.
+// Alerts tells an Account's holder about a change to how it signs in; event is the history line.
 type Alerts interface {
-	Alert(ctx context.Context, account domain.AccountID, title string) error
+	Alert(ctx context.Context, account domain.AccountID, event, title, detail string) error
 }
 
 // alerts are the history lines that also reach the holder as a security Notification.
@@ -35,6 +35,8 @@ var alerts = map[string]string{ //nolint:gochecknoglobals // a fixed table
 	domain.EventAdminGranted:   "You are now an Admin",
 	domain.EventAdminRevoked:   "Your Admin role was removed",
 	domain.EventEnabled:        "Your Account was enabled again",
+	domain.EventDisabled:       "Your Account was disabled",
+	domain.EventNewSignIn:      "A new sign-in to your Account",
 }
 
 // record writes one line of an Account's history and alerts its holder when it touches their sign-in.
@@ -44,7 +46,7 @@ func (s *Service) record(ctx context.Context, r Repository, account domain.Accou
 		return err
 	}
 	if title, ok := alerts[action]; ok && s.Alerts != nil {
-		_ = s.Alerts.Alert(ctx, account, title)
+		_ = s.Alerts.Alert(ctx, account, action, title, detail)
 	}
 	return nil
 }

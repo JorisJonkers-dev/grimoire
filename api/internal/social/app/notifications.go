@@ -2,12 +2,14 @@ package app
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"time"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
 
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail/letters"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/social/domain"
 )
 
@@ -19,6 +21,11 @@ type NotificationRepository interface {
 	ReadAllNotifications(ctx context.Context, account domain.AccountID, now time.Time) error
 	Preferences(ctx context.Context, account domain.AccountID) (map[[2]string]bool, error)
 	SetPreference(ctx context.Context, account domain.AccountID, kind, channel string, enabled bool) error
+	Recipient(ctx context.Context, account domain.AccountID) (domain.Recipient, error)
+	QueueEmail(ctx context.Context, account domain.AccountID, id uuid.UUID, n domain.Notice, now time.Time) error
+	DueDigests(ctx context.Context, cutoff time.Time) ([]domain.AccountID, error)
+	TakeQueued(ctx context.Context, account domain.AccountID) ([]domain.Queued, error)
+	MarkDigest(ctx context.Context, account domain.AccountID, now time.Time) error
 }
 
 // Enabled reports whether a kind reaches an Account on a channel, by its choice or the default.
@@ -43,12 +50,52 @@ func (s *Service) Notify(ctx context.Context, account domain.AccountID, n domain
 }
 
 func (s *Service) notify(ctx context.Context, r Repository, account domain.AccountID, n domain.Notice) error {
-	on, err := enabled(ctx, r, account, n.Kind, domain.ChannelInApp)
-	if err != nil || !on {
+	prefs, err := r.Preferences(ctx, account)
+	if err != nil {
 		return err
 	}
+	on := func(channel string) bool {
+		if v, chosen := prefs[[2]string{n.Kind, channel}]; chosen {
+			return v
+		}
+		return domain.Default(n.Kind, channel)
+	}
 	n.Title, n.Body = cut(n.Title, 120), cut(n.Body, 200)
-	return r.UpsertNotification(ctx, account, uuid.New(), n, s.Now())
+	now := s.Now()
+	if on(domain.ChannelInApp) {
+		if err := r.UpsertNotification(ctx, account, uuid.New(), n, now); err != nil {
+			return err
+		}
+	}
+	return s.beyondTheBell(ctx, r, account, n, on(domain.ChannelPush) && s.Devices != nil, on(domain.ChannelEmail) && s.Mailer != nil, now)
+}
+
+// beyondTheBell pushes a Notice to the Account's devices and mails it: security at once, the rest
+// into the next Digest.
+func (s *Service) beyondTheBell(ctx context.Context, r Repository, account domain.AccountID, n domain.Notice, push, email bool, now time.Time) error {
+	if !push && !email {
+		return nil
+	}
+	to, err := r.Recipient(ctx, account)
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if push {
+		s.Devices.Push(to.Subject, n.Title, n.Body, s.link(n.ActionPath))
+	}
+	if !email || to.Email == "" {
+		return nil
+	}
+	if n.Kind == domain.KindSecurity {
+		return s.mail(ctx, to, letter(to, n, s.link(n.ActionPath)))
+	}
+	if n.Mail == "" {
+		n.Mail = string(mailKinds[n.Kind])
+	}
+	return r.QueueEmail(ctx, account, uuid.New(), n, now)
 }
 
 // cut keeps the first runes of a text that fit.
@@ -141,9 +188,18 @@ func (s *Service) SetPreferences(ctx context.Context, subject string, in []domai
 	return s.Preferences(ctx, subject)
 }
 
-// Alert tells an Account's holder about a change to how it signs in.
-func (s *Service) Alert(ctx context.Context, account domain.AccountID, title string) error {
-	return s.Notify(ctx, account, domain.Notice{Kind: domain.KindSecurity, Title: title, Body: "If this was not you, change your password and tell an Admin.", ActionLabel: "Open", ActionPath: "/account", Dedupe: ""})
+// Alert tells an Account's holder about a change to how it signs in; detail says from where, for a
+// new sign-in.
+func (s *Service) Alert(ctx context.Context, account domain.AccountID, event, title, detail string) error {
+	body := "If this was not you, change your password and tell an Admin."
+	if detail != "" {
+		body = "From " + detail + ". " + body
+	}
+	mail := map[string]string{"two_step_reset": string(letters.TwoStepReset), "disabled": string(letters.AccountDisabled)}[event]
+	if mail == "" {
+		mail = string(letters.NewSignIn)
+	}
+	return s.Notify(ctx, account, domain.Notice{Kind: domain.KindSecurity, Title: title, Body: body, ActionLabel: "Open", ActionPath: "/account", Dedupe: "", Mail: mail})
 }
 
 func setPreference(ctx context.Context, r Repository, account domain.AccountID, p domain.Preference) error {

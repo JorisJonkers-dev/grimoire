@@ -13,6 +13,8 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail/letters"
 )
 
 // Repository persists Accounts, Invites, sessions and sign-in links.
@@ -27,6 +29,7 @@ type Repository interface {
 	InviteByToken(ctx context.Context, tokenHash []byte) (domain.Invite, error)
 	UseInvite(ctx context.Context, id uuid.UUID, account domain.AccountID, now time.Time) (bool, error)
 	InsertSession(ctx context.Context, s domain.Session, tokenHash []byte, now time.Time) error
+	SeenUserAgent(ctx context.Context, account domain.AccountID, userAgent string) (bool, int, error)
 	SessionSubject(ctx context.Context, tokenHash []byte, now time.Time) (domain.LiveSession, error)
 	TouchSession(ctx context.Context, id uuid.UUID, now time.Time) error
 	RevokeSession(ctx context.Context, tokenHash []byte, now time.Time) error
@@ -44,7 +47,7 @@ type Repository interface {
 
 // Mailer sends an email.
 type Mailer interface {
-	Send(ctx context.Context, to, subject, body string) error
+	Send(ctx context.Context, m mail.Message) error
 }
 
 // How long things last.
@@ -150,7 +153,7 @@ func (s *Service) Accept(ctx context.Context, token string, in domain.Setup, use
 		if err := s.record(ctx, r, id, out.Subject, domain.EventCreated, "from an invite"); err != nil {
 			return err
 		}
-		session, err = startSession(ctx, r, id, userAgent, now, false)
+		session, err = s.startSession(ctx, r, out, userAgent, now, false)
 		return err
 	})
 	return out, session, err
@@ -214,7 +217,9 @@ func (s *Service) SignIn(ctx context.Context, username, password, userAgent stri
 	return s.firstStep(ctx, a, userAgent)
 }
 
-func startSession(ctx context.Context, r Repository, account domain.AccountID, userAgent string, now time.Time, strong bool) (string, error) {
+// startSession signs an Account in on a device. A sign-in from a device it never used before, when
+// it has used others, tells its holder.
+func (s *Service) startSession(ctx context.Context, r Repository, a domain.Account, userAgent string, now time.Time, strong bool) (string, error) {
 	token, hash, err := newToken()
 	if err != nil {
 		return "", err
@@ -223,8 +228,26 @@ func startSession(ctx context.Context, r Repository, account domain.AccountID, u
 	if len(ua) > 300 {
 		ua = ua[:300]
 	}
-	s := domain.Session{ID: uuid.New(), Account: account, UserAgent: ua, ExpiresAt: now.Add(SessionTTL), Strong: strong}
-	return token, r.InsertSession(ctx, s, hash, now)
+	seen, sessions, err := r.SeenUserAgent(ctx, a.ID, ua)
+	if err != nil {
+		return "", err
+	}
+	ses := domain.Session{ID: uuid.New(), Account: a.ID, UserAgent: ua, ExpiresAt: now.Add(SessionTTL), Strong: strong}
+	if err := r.InsertSession(ctx, ses, hash, now); err != nil {
+		return "", err
+	}
+	if !seen && sessions > 0 {
+		return token, s.record(ctx, r, a.ID, a.Subject, domain.EventNewSignIn, cut(ua, 200))
+	}
+	return token, nil
+}
+
+// cut keeps the first characters of a text that fit.
+func cut(s string, limit int) string {
+	if utf8.RuneCountInString(s) <= limit {
+		return s
+	}
+	return string([]rune(s)[:limit])
 }
 
 // SignOut ends the session a token belongs to.
@@ -268,9 +291,15 @@ func (s *Service) mailLink(ctx context.Context, r Repository, a domain.Account) 
 	if err := r.InsertSignInLink(ctx, hash, a.ID, now, now.Add(SignInLink)); err != nil {
 		return err
 	}
-	body := "Hello " + a.Nickname + ",\n\nSign in to Grimoire with this link; it works once, within 30 minutes:\n\n" +
-		strings.TrimRight(s.BaseURL, "/") + "/sign-in-link#" + token + "\n\nIf you did not ask for it, ignore this email.\n"
-	return s.Mailer.Send(ctx, a.Email, "Your Grimoire sign-in link", body)
+	subject, text, html, err := letters.Render(letters.Letter{
+		Kind: letters.SignInLink, Subject: "", Nickname: a.Nickname, Heading: "Sign in to Grimoire",
+		Paragraphs: []string{"This link signs you in once, within 30 minutes.", "If you did not ask for it, ignore this email."},
+		Action:     &letters.Action{Label: "Sign in", URL: strings.TrimRight(s.BaseURL, "/") + "/sign-in-link#" + token}, Items: nil,
+	})
+	if err != nil {
+		return err
+	}
+	return s.Mailer.Send(ctx, mail.Message{To: a.Email, Subject: subject, Text: text, HTML: html})
 }
 
 // UseLink signs in with an emailed link, once, or asks for the second step when two-step is on.

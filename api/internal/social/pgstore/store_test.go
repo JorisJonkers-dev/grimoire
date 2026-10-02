@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
@@ -192,7 +193,7 @@ func TestEveryNotificationDatabaseFaultSurfaces(t *testing.T) {
 	pool := db.Pool()
 	aria := account(t, pool, "aria")
 	base := &app.Service{Repo: pgstore.New(pool), Now: time.Now}
-	if err := base.Alert(ctx, aria, "Your password changed"); err != nil {
+	if err := base.Alert(ctx, aria, "password_set", "Your password changed", ""); err != nil {
 		t.Fatal(err)
 	}
 	list, _, _ := base.Notifications(ctx, "aria")
@@ -228,5 +229,52 @@ func TestEveryNotificationDatabaseFaultSurfaces(t *testing.T) {
 	}
 	if ok, _ := base.Enabled(ctx, aria, domain.KindConversation, domain.ChannelPush); ok {
 		t.Fatal("a chosen channel keeps its choice")
+	}
+}
+
+type sink struct{ sent int }
+
+func (k *sink) Send(context.Context, mail.Message) error { k.sent++; return nil }
+func (k *sink) Push(string, string, string, string)      {}
+
+// Email and push delivery, and the Digest, report a database fault at any of their calls.
+func TestEveryDeliveryDatabaseFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	pool := db.Pool()
+	aria := account(t, pool, "aria")
+	out := &sink{}
+	service := func(repo app.Repository) *app.Service {
+		return &app.Service{Repo: repo, Now: time.Now, Mailer: out, Devices: out, BaseURL: "https://grimoire.example"}
+	}
+	base := service(pgstore.New(pool))
+	if _, err := base.SetPreferences(ctx, "aria", []domain.Preference{{Kind: domain.KindConversation, InApp: true, Push: true, Email: true}}); err != nil {
+		t.Fatal(err)
+	}
+	talk := domain.Notice{Kind: domain.KindConversation, Title: "Bram wrote", Body: "hi", ActionLabel: "Open", ActionPath: "/conversations", Dedupe: ""}
+	ops := map[string]func(s *app.Service) error{
+		"queue":    func(s *app.Service) error { return s.Notify(ctx, aria, talk) },
+		"security": func(s *app.Service) error { return s.Alert(ctx, aria, "two_step_reset", "Reset", "") },
+		"digest":   func(s *app.Service) error { return s.SendDigests(ctx) },
+	}
+	for _, name := range []string{"queue", "security", "queue", "digest"} {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := ops[name](service(pgstore.NewFaulty(pool, f)))
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+	if out.sent == 0 {
+		t.Fatal("nothing was mailed")
+	}
+	if err := (&app.Service{Repo: pgstore.New(pool), Now: time.Now}).SendDigests(ctx); err != nil {
+		t.Fatalf("no mailer, no Digest: %v", err)
 	}
 }

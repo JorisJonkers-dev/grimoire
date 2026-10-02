@@ -111,7 +111,7 @@ func (s *Service) firstStep(ctx context.Context, a domain.Account, userAgent str
 	}
 	now := s.Now()
 	if !confirmed {
-		out.Session, err = startSession(ctx, s.Repo, a.ID, userAgent, now, false)
+		out.Session, err = s.startSession(ctx, s.Repo, a, userAgent, now, false)
 		return out, err
 	}
 	token, hash, err := newToken()
@@ -148,7 +148,7 @@ func (s *Service) PassTwoStep(ctx context.Context, challenge, code, userAgent st
 	if a.Disabled {
 		return domain.Account{}, "", domain.ErrUnauthenticated
 	}
-	session, err := startSession(ctx, s.Repo, id, userAgent, now, true)
+	session, err := s.startSession(ctx, s.Repo, a, userAgent, now, true)
 	return a, session, err
 }
 

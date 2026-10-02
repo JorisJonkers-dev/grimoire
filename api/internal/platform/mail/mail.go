@@ -3,6 +3,8 @@ package mail
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/smtp"
@@ -10,14 +12,22 @@ import (
 	"time"
 )
 
+// Message is one email, as plain text and, when it has one, HTML.
+type Message struct {
+	To      string
+	Subject string
+	Text    string
+	HTML    string
+}
+
 // Log writes each email into the log instead of sending it, for development.
 type Log struct {
 	Log *slog.Logger
 }
 
 // Send logs the email.
-func (l Log) Send(ctx context.Context, to, subject, body string) error {
-	l.Log.InfoContext(ctx, "email not sent: no SMTP server configured", "to", to, "subject", subject, "body", body)
+func (l Log) Send(ctx context.Context, m Message) error {
+	l.Log.InfoContext(ctx, "email not sent: no SMTP server configured", "to", m.To, "subject", m.Subject, "body", m.Text)
 	return nil
 }
 
@@ -30,20 +40,33 @@ type SMTP struct {
 	Now      func() time.Time
 }
 
-// Send sends one plain-text email.
-func (s SMTP) Send(_ context.Context, to, subject, body string) error {
-	if strings.ContainsAny(to+subject, "\r\n") {
-		return fmt.Errorf("mail: header injection in %q", to)
+// Send sends one email.
+func (s SMTP) Send(_ context.Context, m Message) error {
+	if strings.ContainsAny(m.To+m.Subject, "\r\n") {
+		return fmt.Errorf("mail: header injection in %q", m.To)
 	}
 	host := s.Addr
 	if i := strings.LastIndex(host, ":"); i >= 0 {
 		host = host[:i]
 	}
-	msg := "From: Grimoire <" + s.From + ">\r\nTo: " + to + "\r\nSubject: " + subject + "\r\nDate: " + s.Now().UTC().Format(time.RFC1123Z) +
-		"\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n" + strings.ReplaceAll(body, "\n", "\r\n")
+	raw := make([]byte, 12)
+	_, _ = rand.Read(raw)
 	var auth smtp.Auth
 	if s.Username != "" {
 		auth = smtp.PlainAuth("", s.Username, s.Password, host)
 	}
-	return smtp.SendMail(s.Addr, auth, s.From, []string{to}, []byte(msg))
+	return smtp.SendMail(s.Addr, auth, s.From, []string{m.To}, []byte(Compose(s.From, m, s.Now(), hex.EncodeToString(raw))))
+}
+
+// Compose is the raw email: plain text alone, or plain text and HTML as alternatives.
+func Compose(from string, m Message, now time.Time, boundary string) string {
+	head := "From: Grimoire <" + from + ">\r\nTo: " + m.To + "\r\nSubject: " + m.Subject + "\r\nDate: " + now.UTC().Format(time.RFC1123Z) + "\r\nMIME-Version: 1.0\r\n"
+	crlf := func(s string) string { return strings.ReplaceAll(s, "\n", "\r\n") }
+	if m.HTML == "" {
+		return head + "Content-Type: text/plain; charset=utf-8\r\n\r\n" + crlf(m.Text)
+	}
+	return head + "Content-Type: multipart/alternative; boundary=\"" + boundary + "\"\r\n\r\n" +
+		"--" + boundary + "\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n" + crlf(m.Text) + "\r\n" +
+		"--" + boundary + "\r\nContent-Type: text/html; charset=utf-8\r\n\r\n" + crlf(m.HTML) + "\r\n" +
+		"--" + boundary + "--\r\n"
 }

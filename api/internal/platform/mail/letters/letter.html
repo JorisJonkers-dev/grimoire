@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>{{.Subject}}</title>
+</head>
+<body style="margin:0;padding:0;background:#14110d;color:#ece3d3;font-family:Georgia,'Times New Roman',serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#14110d;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#1f1a14;border:1px solid #3a3127;border-radius:12px;">
+<tr><td align="center" style="padding:28px 28px 8px;font-size:13px;letter-spacing:0.3em;color:#c9a35a;">GRIMOIRE</td></tr>
+<tr><td style="padding:8px 28px 28px;font-size:16px;line-height:1.6;color:#ece3d3;">
+{{- if .Nickname}}
+<p style="margin:0 0 16px;">Hello {{.Nickname}},</p>
+{{- end}}
+{{- if .Heading}}
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:normal;color:#e8c77f;text-align:center;">{{.Heading}}</h1>
+{{- end}}
+{{- range .Paragraphs}}
+<p style="margin:0 0 16px;">{{.}}</p>
+{{- end}}
+{{- if .Items}}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+{{- range .Items}}
+<tr><td style="padding:10px 0;border-top:1px solid #3a3127;">
+{{- if .URL}}<a href="{{.URL}}" style="color:#e8c77f;text-decoration:none;">{{.Title}}</a>{{else}}<span style="color:#e8c77f;">{{.Title}}</span>{{end}}
+{{- if .Body}}<br><span style="color:#bfb199;font-size:14px;">{{.Body}}</span>{{end}}
+</td></tr>
+{{- end}}
+</table>
+{{- end}}
+{{- if .Action}}
+<p style="margin:24px 0 8px;text-align:center;"><a href="{{.Action.URL}}" style="display:inline-block;padding:12px 24px;background:#c9a35a;color:#14110d;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;">{{.Action.Label}}</a></p>
+{{- end}}
+</td></tr>
+<tr><td align="center" style="padding:16px 28px 24px;border-top:1px solid #3a3127;font-size:12px;line-height:1.5;color:#8f826c;">{{.Footer}}</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

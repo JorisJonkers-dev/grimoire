@@ -1714,6 +1714,23 @@ type SocialConversationMember struct {
 	LastReadAt     time.Time
 }
 
+type SocialDigest struct {
+	AccountID uuid.UUID
+	SentAt    time.Time
+}
+
+type SocialEmailQueue struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	DedupeKey   string
+	CreatedAt   time.Time
+}
+
 type SocialFriendRequest struct {
 	ID          uuid.UUID
 	FromAccount uuid.UUID

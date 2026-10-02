@@ -33,10 +33,15 @@ type Repository interface {
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
-// Service is the Friends use cases.
+// Service is the social use cases: Friends, Conversations and Notifications.
 type Service struct {
 	Repo Repository
 	Now  func() time.Time
+	// Mailer sends Notifications by email and Devices pushes them; nil leaves that channel out.
+	Mailer  Mailer
+	Devices Devices
+	// BaseURL is where links in emails and pushes point.
+	BaseURL string
 }
 
 func (s *Service) me(ctx context.Context, subject string) (domain.Person, error) {

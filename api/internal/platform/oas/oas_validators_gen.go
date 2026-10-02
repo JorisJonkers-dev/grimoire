@@ -1436,6 +1436,8 @@ func (s AccountEventAction) Validate() error {
 		return nil
 	case "enabled":
 		return nil
+	case "new_sign_in":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}

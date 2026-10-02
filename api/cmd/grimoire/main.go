@@ -132,6 +132,22 @@ func crossCheck(ctx context.Context, args []string) error {
 	return os.WriteFile(out, []byte(report.Markdown()), 0o600) //nolint:gosec // developer command writing where the developer points it
 }
 
+// digests sends the hourly email Digests until the server stops.
+func digests(ctx context.Context, social *socialapp.Service, logger *slog.Logger) {
+	tick := time.NewTicker(5 * time.Minute)
+	defer tick.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+			if err := social.SendDigests(ctx); err != nil {
+				logger.Warn("digest", "error", err)
+			}
+		}
+	}
+}
+
 func mailer(cfg config.Config, logger *slog.Logger) identityapp.Mailer {
 	if s := cfg.SMTP; s != nil {
 		return mail.SMTP{Addr: s.Addr, Username: s.Username, Password: s.Password, From: s.From, Now: time.Now}
@@ -211,7 +227,11 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		defer sender.Wait()
 		hub.Notify, notices = sender, sender
 	}
-	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now}
+	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now, Mailer: mailer(cfg, logger), Devices: nil, BaseURL: cfg.BaseURL}
+	if s, ok := notices.(*push.Sender); ok {
+		social.Devices = s
+	}
+	go digests(ctx, social, logger)
 	accounts := &identityapp.Service{
 		Repo: identitypg.New(store.Pool()), Mailer: mailer(cfg, logger), Passwords: identityapp.DefaultPasswords(), Now: time.Now,
 		Admins: map[string]bool{}, BaseURL: cfg.BaseURL, Strong: httpx.Strong, Alerts: social,

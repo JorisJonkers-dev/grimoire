@@ -913,6 +913,7 @@ const (
 	AccountEventActionAdminRevoked   AccountEventAction = "admin_revoked"
 	AccountEventActionDisabled       AccountEventAction = "disabled"
 	AccountEventActionEnabled        AccountEventAction = "enabled"
+	AccountEventActionNewSignIn      AccountEventAction = "new_sign_in"
 )
 
 // AllValues returns all AccountEventAction values.
@@ -930,6 +931,7 @@ func (AccountEventAction) AllValues() []AccountEventAction {
 		AccountEventActionAdminRevoked,
 		AccountEventActionDisabled,
 		AccountEventActionEnabled,
+		AccountEventActionNewSignIn,
 	}
 }
 
@@ -959,6 +961,8 @@ func (s AccountEventAction) MarshalText() ([]byte, error) {
 	case AccountEventActionDisabled:
 		return []byte(s), nil
 	case AccountEventActionEnabled:
+		return []byte(s), nil
+	case AccountEventActionNewSignIn:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -1003,6 +1007,9 @@ func (s *AccountEventAction) UnmarshalText(data []byte) error {
 		return nil
 	case AccountEventActionEnabled:
 		*s = AccountEventActionEnabled
+		return nil
+	case AccountEventActionNewSignIn:
+		*s = AccountEventActionNewSignIn
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

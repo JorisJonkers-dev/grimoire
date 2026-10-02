@@ -179,3 +179,7 @@ SELECT count(*)::integer AS live FROM identity.account_sessions WHERE account_id
 
 -- name: CountLiveTokens :one
 SELECT count(*)::integer AS live FROM identity.access_tokens WHERE account_id = @account_id AND revoked_at IS NULL AND expires_at > @now;
+
+-- name: SeenUserAgent :one
+SELECT count(*) FILTER (WHERE s.user_agent = @user_agent)::integer AS seen, count(*)::integer AS sessions
+FROM identity.account_sessions s WHERE s.account_id = @account_id;

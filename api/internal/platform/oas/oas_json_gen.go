@@ -1702,6 +1702,8 @@ func (s *AccountEventAction) Decode(d *jx.Decoder) error {
 		*s = AccountEventActionDisabled
 	case AccountEventActionEnabled:
 		*s = AccountEventActionEnabled
+	case AccountEventActionNewSignIn:
+		*s = AccountEventActionNewSignIn
 	default:
 		*s = AccountEventAction(v)
 	}

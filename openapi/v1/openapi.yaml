@@ -5129,7 +5129,7 @@ components:
         actor: { type: string, maxLength: 200, description: "The Username of whoever did it, or their subject when they have no Account." }
         action:
           type: string
-          enum: [created, password_set, two_step_on, two_step_off, two_step_reset, linked, unlinked, sign_in_link_sent, admin_granted, admin_revoked, disabled, enabled]
+          enum: [created, password_set, two_step_on, two_step_off, two_step_reset, linked, unlinked, sign_in_link_sent, admin_granted, admin_revoked, disabled, enabled, new_sign_in]
         detail: { type: string, maxLength: 200 }
     AccountEventList:
       type: object

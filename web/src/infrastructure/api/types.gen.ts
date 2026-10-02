@@ -171,7 +171,7 @@ export type AccountEvent = {
      * The Username of whoever did it, or their subject when they have no Account.
      */
     actor: string;
-    action: 'created' | 'password_set' | 'two_step_on' | 'two_step_off' | 'two_step_reset' | 'linked' | 'unlinked' | 'sign_in_link_sent' | 'admin_granted' | 'admin_revoked' | 'disabled' | 'enabled';
+    action: 'created' | 'password_set' | 'two_step_on' | 'two_step_off' | 'two_step_reset' | 'linked' | 'unlinked' | 'sign_in_link_sent' | 'admin_granted' | 'admin_revoked' | 'disabled' | 'enabled' | 'new_sign_in';
     detail: string;
 };
 

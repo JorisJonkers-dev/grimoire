@@ -2,6 +2,7 @@ package pgstore
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -67,4 +68,41 @@ func (s *Store) Preferences(ctx context.Context, account domain.AccountID) (map[
 // SetPreference stores whether a kind reaches an Account on a channel.
 func (s *Store) SetPreference(ctx context.Context, account domain.AccountID, kind, channel string, enabled bool) error {
 	return s.q.SetNotificationPreference(ctx, queries.SetNotificationPreferenceParams{AccountID: account, Kind: kind, Channel: channel, Enabled: enabled})
+}
+
+// Recipient reads where a live Account's Notifications go beyond the bell.
+func (s *Store) Recipient(ctx context.Context, account domain.AccountID) (domain.Recipient, error) {
+	r, err := s.q.SocialRecipient(ctx, account)
+	return domain.Recipient{Subject: r.Subject, Email: r.Email, Nickname: r.Nickname}, notFound(err)
+}
+
+// QueueEmail keeps a Notice for the next Digest, under the email it becomes.
+func (s *Store) QueueEmail(ctx context.Context, account domain.AccountID, id uuid.UUID, n domain.Notice, now time.Time) error {
+	return s.q.QueueEmail(ctx, queries.QueueEmailParams{
+		ID: id, AccountID: account, Kind: n.Mail, Title: n.Title, Body: n.Body, ActionLabel: n.ActionLabel, ActionPath: n.ActionPath, DedupeKey: n.Dedupe, Now: now,
+	})
+}
+
+// DueDigests lists the Accounts with email waiting and no Digest since the cutoff.
+func (s *Store) DueDigests(ctx context.Context, cutoff time.Time) ([]domain.AccountID, error) {
+	return s.q.DueDigests(ctx, cutoff)
+}
+
+// TakeQueued removes and returns an Account's waiting email, oldest first.
+func (s *Store) TakeQueued(ctx context.Context, account domain.AccountID) ([]domain.Queued, error) {
+	rows, err := s.q.TakeQueuedEmail(ctx, account)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.Queued, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, domain.Queued{Notice: domain.Notice{Kind: "", Title: r.Title, Body: r.Body, ActionLabel: r.ActionLabel, ActionPath: r.ActionPath, Dedupe: "", Mail: r.Kind}, At: r.CreatedAt})
+	}
+	slices.SortFunc(out, func(a, b domain.Queued) int { return a.At.Compare(b.At) })
+	return out, nil
+}
+
+// MarkDigest records that an Account just got a Digest.
+func (s *Store) MarkDigest(ctx context.Context, account domain.AccountID, now time.Time) error {
+	return s.q.MarkDigest(ctx, queries.MarkDigestParams{AccountID: account, Now: now})
 }

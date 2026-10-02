@@ -161,3 +161,23 @@ ON CONFLICT (account_id, kind, channel) DO UPDATE SET enabled = EXCLUDED.enabled
 
 -- name: ConversationTitle :one
 SELECT title FROM social.conversations WHERE id = @id;
+
+-- name: SocialRecipient :one
+SELECT subject, coalesce(email, '')::text AS email, nickname FROM identity.accounts WHERE id = @id AND NOT disabled;
+
+-- name: QueueEmail :exec
+INSERT INTO social.email_queue (id, account_id, kind, title, body, action_label, action_path, dedupe_key, created_at)
+VALUES (@id, @account_id, @kind, @title, @body, @action_label, @action_path, @dedupe_key, @now)
+ON CONFLICT (account_id, dedupe_key) WHERE dedupe_key <> ''
+DO UPDATE SET title = EXCLUDED.title, body = EXCLUDED.body, action_path = EXCLUDED.action_path, created_at = EXCLUDED.created_at;
+
+-- name: DueDigests :many
+SELECT DISTINCT q.account_id FROM social.email_queue q LEFT JOIN social.digests d ON d.account_id = q.account_id
+WHERE d.sent_at IS NULL OR d.sent_at <= @cutoff;
+
+-- name: TakeQueuedEmail :many
+DELETE FROM social.email_queue WHERE account_id = @account_id
+RETURNING kind, title, body, action_label, action_path, created_at;
+
+-- name: MarkDigest :exec
+INSERT INTO social.digests (account_id, sent_at) VALUES (@account_id, @now) ON CONFLICT (account_id) DO UPDATE SET sent_at = EXCLUDED.sent_at;

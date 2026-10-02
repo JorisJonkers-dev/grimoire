@@ -174,6 +174,7 @@ type Querier interface {
 	// The one-to-one Conversation between two Accounts, if they have one.
 	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
 	DropPushEndpoint(ctx context.Context, endpoint string) error
+	DueDigests(ctx context.Context, cutoff time.Time) ([]uuid.UUID, error)
 	Edits(ctx context.Context, arg EditsParams) ([]EditsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
@@ -402,6 +403,7 @@ type Querier interface {
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error
+	MarkDigest(ctx context.Context, arg MarkDigestParams) error
 	MentionableCharacters(ctx context.Context, arg MentionableCharactersParams) ([]MentionableCharactersRow, error)
 	MentionableLocations(ctx context.Context, arg MentionableLocationsParams) ([]MentionableLocationsRow, error)
 	// A Campaign Character a reader may open: they are a Member of its Campaign.
@@ -434,6 +436,7 @@ type Querier interface {
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
 	PushSubscriptions(ctx context.Context, subject string) ([]PushSubscriptionsRow, error)
+	QueueEmail(ctx context.Context, arg QueueEmailParams) error
 	ReadAllNotifications(ctx context.Context, arg ReadAllNotificationsParams) error
 	ReadNotification(ctx context.Context, arg ReadNotificationParams) (int64, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
@@ -478,6 +481,7 @@ type Querier interface {
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
+	SeenUserAgent(ctx context.Context, arg SeenUserAgentParams) (SeenUserAgentRow, error)
 	SessionAccount(ctx context.Context, arg SessionAccountParams) (SessionAccountRow, error)
 	SessionActionBySeq(ctx context.Context, arg SessionActionBySeqParams) (SessionActionBySeqRow, error)
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
@@ -538,6 +542,7 @@ type Querier interface {
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
 	SocialAccountBySubject(ctx context.Context, subject string) (SocialAccountBySubjectRow, error)
 	SocialAccountByUsername(ctx context.Context, username string) (SocialAccountByUsernameRow, error)
+	SocialRecipient(ctx context.Context, id uuid.UUID) (SocialRecipientRow, error)
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
@@ -548,6 +553,7 @@ type Querier interface {
 	TOTPFactor(ctx context.Context, accountID uuid.UUID) (TOTPFactorRow, error)
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
+	TakeQueuedEmail(ctx context.Context, accountID uuid.UUID) ([]TakeQueuedEmailRow, error)
 	TouchAccessToken(ctx context.Context, arg TouchAccessTokenParams) error
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	TouchConversation(ctx context.Context, arg TouchConversationParams) error

@@ -30,11 +30,6 @@ const (
 	ChannelEmail = "email"
 )
 
-// Channels lists every channel.
-func Channels() []string {
-	return []string{ChannelInApp, ChannelPush, ChannelEmail}
-}
-
 // Default is whether a kind reaches a channel before the Account chooses: everything shows in app,
 // everything but Release Notes reaches a device, and only security mail is sent.
 func Default(kind, channel string) bool {
@@ -57,6 +52,21 @@ type Notice struct {
 	ActionLabel string
 	ActionPath  string
 	Dedupe      string
+	// Mail picks the email it becomes, when the kind alone does not say; empty takes the kind's.
+	Mail string
+}
+
+// Recipient is where an Account's Notifications go beyond the bell.
+type Recipient struct {
+	Subject  string
+	Email    string
+	Nickname string
+}
+
+// Queued is a Notice waiting for the next Digest.
+type Queued struct {
+	Notice
+	At time.Time
 }
 
 // Notification is a Notice as an Account's bell shows it.

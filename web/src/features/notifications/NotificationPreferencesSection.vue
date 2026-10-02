@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 import { ref, watch } from 'vue'
 import { getNotificationPreferencesOptions, setNotificationPreferencesMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { NotificationPreference } from '@/infrastructure/api/types.gen'
+import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { GButton } from '@/shared/ui'
 import { kindLabels } from './kinds'
 
@@ -30,7 +31,8 @@ watch(prefs.data, (d) => {
         </tr>
       </tbody>
     </table>
-    <p class="hint">Sign-in and security Notifications always show in app.</p>
+    <p class="hint">Sign-in and security Notifications always show in app. Email other than security comes as a Digest, at most once an hour.</p>
+    <NotifyToggle label="Get notifications on this device" done="This device gets the Notifications you chose for devices." />
     <p v-if="save.isSuccess.value" role="status" data-testid="preferences-saved">Saved.</p>
     <p v-if="save.isError.value" role="alert" class="g-alert">The preferences could not be saved.</p>
     <GButton type="submit" :disabled="save.isPending.value">Save the preferences</GButton>

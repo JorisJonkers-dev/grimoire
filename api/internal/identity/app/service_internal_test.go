@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 )
 
 var errBoom = errors.New("boom")
@@ -27,6 +28,7 @@ type fakeRepo struct {
 	secret    string
 	confirmed bool
 	noLink    bool
+	newDevice bool
 }
 
 func (f *fakeRepo) err(call string) error {
@@ -81,6 +83,10 @@ func (f *fakeRepo) SessionSubject(context.Context, []byte, time.Time) (domain.Li
 }
 
 func (f *fakeRepo) TouchSession(context.Context, uuid.UUID, time.Time) error { return nil }
+
+func (f *fakeRepo) SeenUserAgent(context.Context, domain.AccountID, string) (bool, int, error) {
+	return !f.newDevice, 1, f.err("seen")
+}
 
 func (f *fakeRepo) RevokeSession(context.Context, []byte, time.Time) error { return nil }
 
@@ -243,7 +249,7 @@ func (f *fakeRepo) InTx(_ context.Context, fn func(Repository) error) error { re
 
 type failingMail struct{}
 
-func (failingMail) Send(context.Context, string, string, string) error { return errBoom }
+func (failingMail) Send(context.Context, mail.Message) error { return errBoom }
 
 func service(r *fakeRepo) *Service {
 	now := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)

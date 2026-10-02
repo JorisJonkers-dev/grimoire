@@ -167,3 +167,10 @@ func (s *Store) UseSignInLink(ctx context.Context, tokenHash []byte, now time.Ti
 func optional(s string) pgtype.Text {
 	return pgtype.Text{String: s, Valid: s != ""}
 }
+
+// SeenUserAgent reports whether an Account signed in from a device before, and how many sessions it
+// ever had.
+func (s *Store) SeenUserAgent(ctx context.Context, account domain.AccountID, userAgent string) (bool, int, error) {
+	r, err := s.q.SeenUserAgent(ctx, queries.SeenUserAgentParams{UserAgent: userAgent, AccountID: account})
+	return r.Seen > 0, int(r.Sessions), err
+}

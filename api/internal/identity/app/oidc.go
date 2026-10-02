@@ -202,7 +202,7 @@ func (s *Service) signInLinked(ctx context.Context, id domain.AccountID, c domai
 	if out.Account, err = promote(ctx, s.Repo, a, s.admin(c)); err != nil {
 		return out, err
 	}
-	out.Session, err = startSession(ctx, s.Repo, id, userAgent, now, true)
+	out.Session, err = s.startSession(ctx, s.Repo, a, userAgent, now, true)
 	return out, err
 }
 
@@ -242,7 +242,7 @@ func (s *Service) CreateFromOIDC(ctx context.Context, token, username, nickname,
 		if err := s.record(ctx, r, out.ID, out.Subject, domain.EventCreated, "from the external login"); err != nil {
 			return err
 		}
-		session, err = startSession(ctx, r, out.ID, userAgent, now, true)
+		session, err = s.startSession(ctx, r, out, userAgent, now, true)
 		return err
 	})
 	return out, session, err
@@ -275,7 +275,7 @@ func (s *Service) LinkFromOIDC(ctx context.Context, token, username, password, u
 		if a, err = promote(ctx, r, a, admin); err != nil {
 			return err
 		}
-		session, err = startSession(ctx, r, a.ID, userAgent, now, true)
+		session, err = s.startSession(ctx, r, a, userAgent, now, true)
 		return err
 	})
 	return a, session, err

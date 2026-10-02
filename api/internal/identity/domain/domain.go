@@ -179,6 +179,7 @@ const (
 	EventAdminRevoked   = "admin_revoked"
 	EventDisabled       = "disabled"
 	EventEnabled        = "enabled"
+	EventNewSignIn      = "new_sign_in"
 )
 
 // Listed is an Account as the Admin list shows it, with when it was last seen.

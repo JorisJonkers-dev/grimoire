@@ -14,6 +14,7 @@ export const eventLabels: Record<AccountEvent['action'], string> = {
   admin_revoked: 'Admin role removed',
   disabled: 'Disabled',
   enabled: 'Enabled again',
+  new_sign_in: 'Signed in on a new device',
 }
 
 export const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })

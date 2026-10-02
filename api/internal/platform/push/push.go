@@ -78,6 +78,19 @@ func (s *Sender) Notify(campaign, member uuid.UUID, n live.Notice) {
 	}()
 }
 
+// Push wakes the devices a subject opted in on, for an Account's Notification.
+func (s *Sender) Push(subject, title, body, url string) {
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		if err := s.deliverTo(ctx, subject, live.Notice{Title: title, Body: body, URL: url}); err != nil {
+			s.Log.Warn("push: deliver", "error", err)
+		}
+	}()
+}
+
 // Wait blocks until every Notice in flight has been delivered or given up on.
 func (s *Sender) Wait() { s.wg.Wait() }
 
@@ -86,8 +99,12 @@ func (s *Sender) deliver(ctx context.Context, campaign, member uuid.UUID, n live
 	if err != nil {
 		return err
 	}
+	return s.deliverTo(ctx, m.Subject, n)
+}
+
+func (s *Sender) deliverTo(ctx context.Context, subject string, n live.Notice) error {
 	q := queries.New(s.Pool)
-	subs, err := q.PushSubscriptions(ctx, m.Subject)
+	subs, err := q.PushSubscriptions(ctx, subject)
 	if err != nil {
 		return err
 	}

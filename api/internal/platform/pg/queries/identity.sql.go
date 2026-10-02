@@ -863,6 +863,28 @@ func (q *Queries) RevokeAccountTokens(ctx context.Context, arg RevokeAccountToke
 	return err
 }
 
+const seenUserAgent = `-- name: SeenUserAgent :one
+SELECT count(*) FILTER (WHERE s.user_agent = $1)::integer AS seen, count(*)::integer AS sessions
+FROM identity.account_sessions s WHERE s.account_id = $2
+`
+
+type SeenUserAgentParams struct {
+	UserAgent string
+	AccountID uuid.UUID
+}
+
+type SeenUserAgentRow struct {
+	Seen     int32
+	Sessions int32
+}
+
+func (q *Queries) SeenUserAgent(ctx context.Context, arg SeenUserAgentParams) (SeenUserAgentRow, error) {
+	row := q.db.QueryRow(ctx, seenUserAgent, arg.UserAgent, arg.AccountID)
+	var i SeenUserAgentRow
+	err := row.Scan(&i.Seen, &i.Sessions)
+	return i, err
+}
+
 const sessionAccount = `-- name: SessionAccount :one
 SELECT s.id, a.subject, a.disabled, s.strong FROM identity.account_sessions s JOIN identity.accounts a ON a.id = s.account_id
 WHERE s.token_hash = $1 AND s.revoked_at IS NULL AND s.expires_at > $2

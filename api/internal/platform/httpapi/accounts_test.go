@@ -20,6 +20,7 @@ import (
 	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
@@ -30,12 +31,14 @@ import (
 type outbox struct {
 	mu   sync.Mutex
 	sent []string
+	html []string
 }
 
-func (o *outbox) Send(_ context.Context, to, _, body string) error {
+func (o *outbox) Send(_ context.Context, m mail.Message) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
-	o.sent = append(o.sent, to+"\n"+body)
+	o.sent = append(o.sent, m.To+"\n"+m.Subject+"\n"+m.Text)
+	o.html = append(o.html, m.HTML)
 	return nil
 }
 
@@ -74,6 +77,39 @@ func accountServers(t *testing.T) (http.Handler, http.Handler, *outbox, *clock) 
 
 func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (http.Handler, http.Handler, *outbox, *clock) {
 	t.Helper()
+	st := newStack(t, configure)
+	return st.trusted, st.public, st.mail, st.now
+}
+
+// pushes records what reached each subject's devices.
+type pushes struct {
+	mu   sync.Mutex
+	sent map[string][]string
+}
+
+func (p *pushes) Push(subject, title, _, url string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.sent[subject] = append(p.sent[subject], title+" "+url)
+}
+
+func (p *pushes) to(subject string) []string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.sent[subject]
+}
+
+// stack is the account test servers with the social service and the devices it pushes to.
+type stack struct {
+	trusted, public http.Handler
+	mail            *outbox
+	now             *clock
+	social          *socialapp.Service
+	devices         *pushes
+}
+
+func newStack(t *testing.T, configure func(*identityapp.Service)) stack {
+	t.Helper()
 	store, err := pg.Open(context.Background(), pgtest.URL(t))
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +120,8 @@ func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (htt
 		Repo: identitypg.New(store.Pool()), Mailer: mail, Passwords: identityapp.Passwords{MemoryKiB: 64, Time: 1, Threads: 1}, Now: now.Now,
 		Admins: map[string]bool{"root": true}, BaseURL: "https://grimoire.example/", Strong: httpx.Strong,
 	}
-	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: now.Now}
+	devices := &pushes{mu: sync.Mutex{}, sent: map[string][]string{}}
+	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: now.Now, Mailer: mail, Devices: devices, BaseURL: "https://grimoire.example/"}
 	accounts.Alerts = social
 	configure(accounts)
 	build := func(trust bool) http.Handler {
@@ -104,7 +141,7 @@ func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (htt
 		}
 		return h
 	}
-	return build(true), build(false), mail, now
+	return stack{trusted: build(true), public: build(false), mail: mail, now: now, social: social, devices: devices}
 }
 
 // send makes a request with an optional session cookie and forward-auth subject.

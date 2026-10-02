@@ -118,6 +118,12 @@ func TestDevicesHearAboutTurnsUntilTheyGoAway(t *testing.T) {
 	if got := service.seen(); len(got) != 3 {
 		t.Fatalf("a gone device is forgotten: %d deliveries", len(got))
 	}
+	s.Push("player", "Bram wrote to you", "See you", "https://grimoire.example/conversations")
+	s.Push("nobody", "Bram wrote to you", "", "")
+	s.Wait()
+	if got := service.seen(); len(got) != 4 {
+		t.Fatalf("an Account's Notification reaches its devices: %d deliveries", len(got))
+	}
 	if err := s.Unsubscribe(ctx, "someone", phone); !errors.Is(err, apperr.ErrNotFound) {
 		t.Fatalf("someone else's device: %v", err)
 	}
