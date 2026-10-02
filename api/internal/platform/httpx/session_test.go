@@ -16,6 +16,46 @@ func (s sessions) Resolve(_ context.Context, token string) (string, bool, bool) 
 	return subject, token == "strong", ok
 }
 
+func (s sessions) ResolveToken(_ context.Context, token string) (string, []string, bool) {
+	subject, ok := s[token]
+	return subject, []string{"read", "build"}, ok
+}
+
+// An Access Token sets the identity and its scopes and is never strong; a bad one is refused, and
+// scopes a client sends itself are dropped.
+func TestSessionsTakeAccessTokens(t *testing.T) {
+	t.Parallel()
+	var seen, scopes string
+	var strong, reached bool
+	next := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		seen, scopes, strong, reached = r.Header.Get(httpx.IdentityHeader), r.Header.Get(httpx.ScopesHeader), httpx.Strong(r.Context()), true
+	})
+	known := sessions{"gmt_good": "account:3"}
+	for _, c := range []struct {
+		name, auth, header string
+		want, scopes       string
+		code               int
+	}{
+		{"a token", "Bearer gmt_good", "", "account:3", "read build", http.StatusOK},
+		{"a token over forward-auth", "Bearer gmt_good", "estate-user", "account:3", "read build", http.StatusOK},
+		{"a bad token", "Bearer gmt_bad", "", "", "", http.StatusUnauthorized},
+		{"another service's bearer", "Bearer eyJ", "estate-user", "estate-user", "", http.StatusOK},
+	} {
+		seen, scopes, strong, reached = "", "", true, false
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		req.Header.Set("Authorization", c.auth)
+		req.Header.Set(httpx.ScopesHeader, "play")
+		if c.header != "" {
+			req.Header.Set(httpx.IdentityHeader, c.header)
+		}
+		rec := httptest.NewRecorder()
+		httpx.Sessions("s", known, true, next).ServeHTTP(rec, req)
+		if rec.Code != c.code || seen != c.want || scopes != c.scopes || (reached && strong && c.scopes != "") {
+			t.Errorf("%s = %d %q %q strong=%v", c.name, rec.Code, seen, scopes, strong)
+		}
+	}
+}
+
 func TestSessionsSetTheIdentity(t *testing.T) {
 	t.Parallel()
 	var seen, agent string

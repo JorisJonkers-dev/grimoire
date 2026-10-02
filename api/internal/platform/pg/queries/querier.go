@@ -14,6 +14,7 @@ import (
 
 type Querier interface {
 	AbilityIDBySlug(ctx context.Context, slug string) (int64, error)
+	AccessTokenAccount(ctx context.Context, arg AccessTokenAccountParams) (AccessTokenAccountRow, error)
 	AccountByEmail(ctx context.Context, email string) (AccountByEmailRow, error)
 	AccountByID(ctx context.Context, id uuid.UUID) (AccountByIDRow, error)
 	AccountBySubject(ctx context.Context, subject string) (AccountBySubjectRow, error)
@@ -190,6 +191,7 @@ type Querier interface {
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
 	GetTableRevision(ctx context.Context, arg GetTableRevisionParams) (GetTableRevisionRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
+	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
 	InsertAccountSession(ctx context.Context, arg InsertAccountSessionParams) error
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
@@ -286,6 +288,7 @@ type Querier interface {
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
+	ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
@@ -389,6 +392,7 @@ type Querier interface {
 	RestCharacters(ctx context.Context, arg RestCharactersParams) ([]RestCharactersRow, error)
 	RestResourcesUsed(ctx context.Context, ids []uuid.UUID) ([]CampaignCharacterResource, error)
 	ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error)
+	RevokeAccessToken(ctx context.Context, arg RevokeAccessTokenParams) (int64, error)
 	RevokeAccountSession(ctx context.Context, arg RevokeAccountSessionParams) error
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
@@ -483,6 +487,7 @@ type Querier interface {
 	TOTPFactor(ctx context.Context, accountID uuid.UUID) (TOTPFactorRow, error)
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
+	TouchAccessToken(ctx context.Context, arg TouchAccessTokenParams) error
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)

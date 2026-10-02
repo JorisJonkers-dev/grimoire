@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/auth"
@@ -36,6 +38,9 @@ type AccountService interface {
 	ConfirmTwoStep(ctx context.Context, subject, code, session string) ([]string, error)
 	DisableTwoStep(ctx context.Context, subject, code string) error
 	ResetRecoveryCodes(ctx context.Context, subject, code string) ([]string, error)
+	MintToken(ctx context.Context, subject, name string, scopes []string, days int) (string, domain.AccessToken, error)
+	AccessTokens(ctx context.Context, subject string) ([]domain.AccessToken, error)
+	RevokeToken(ctx context.Context, subject string, id uuid.UUID) error
 }
 
 var _ AccountService = (*app.Service)(nil)

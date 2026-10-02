@@ -350,6 +350,309 @@ func (*AcceptAccountInviteCreatedHeaders) passTwoStepRes()         {}
 func (*AcceptAccountInviteCreatedHeaders) signInRes()              {}
 func (*AcceptAccountInviteCreatedHeaders) useSignInLinkRes()       {}
 
+// An Access Token, without the token itself.
+// Ref: #/components/schemas/AccessToken
+type AccessToken struct {
+	ID         ID                 `json:"id"`
+	Name       string             `json:"name"`
+	Scopes     []AccessTokenScope `json:"scopes"`
+	CreatedAt  time.Time          `json:"createdAt"`
+	ExpiresAt  time.Time          `json:"expiresAt"`
+	LastUsedAt OptDateTime        `json:"lastUsedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *AccessToken) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *AccessToken) GetName() string {
+	return s.Name
+}
+
+// GetScopes returns the value of Scopes.
+func (s *AccessToken) GetScopes() []AccessTokenScope {
+	return s.Scopes
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *AccessToken) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *AccessToken) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// GetLastUsedAt returns the value of LastUsedAt.
+func (s *AccessToken) GetLastUsedAt() OptDateTime {
+	return s.LastUsedAt
+}
+
+// SetID sets the value of ID.
+func (s *AccessToken) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *AccessToken) SetName(val string) {
+	s.Name = val
+}
+
+// SetScopes sets the value of Scopes.
+func (s *AccessToken) SetScopes(val []AccessTokenScope) {
+	s.Scopes = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *AccessToken) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *AccessToken) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+// SetLastUsedAt sets the value of LastUsedAt.
+func (s *AccessToken) SetLastUsedAt(val OptDateTime) {
+	s.LastUsedAt = val
+}
+
+// A new Access Token; token is shown only now.
+// Ref: #/components/schemas/AccessTokenCreated
+type AccessTokenCreated struct {
+	Token       string      `json:"token"`
+	AccessToken AccessToken `json:"accessToken"`
+}
+
+// GetToken returns the value of Token.
+func (s *AccessTokenCreated) GetToken() string {
+	return s.Token
+}
+
+// GetAccessToken returns the value of AccessToken.
+func (s *AccessTokenCreated) GetAccessToken() AccessToken {
+	return s.AccessToken
+}
+
+// SetToken sets the value of Token.
+func (s *AccessTokenCreated) SetToken(val string) {
+	s.Token = val
+}
+
+// SetAccessToken sets the value of AccessToken.
+func (s *AccessTokenCreated) SetAccessToken(val AccessToken) {
+	s.AccessToken = val
+}
+
+// AccessTokenCreatedHeaders wraps AccessTokenCreated with response headers.
+type AccessTokenCreatedHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AccessTokenCreated
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AccessTokenCreatedHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AccessTokenCreatedHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AccessTokenCreatedHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AccessTokenCreatedHeaders) GetResponse() AccessTokenCreated {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AccessTokenCreatedHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AccessTokenCreatedHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AccessTokenCreatedHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AccessTokenCreatedHeaders) SetResponse(val AccessTokenCreated) {
+	s.Response = val
+}
+
+func (*AccessTokenCreatedHeaders) createAccessTokenRes() {}
+
+// An Account's live Access Tokens.
+// Ref: #/components/schemas/AccessTokenList
+type AccessTokenList struct {
+	Items []AccessToken `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *AccessTokenList) GetItems() []AccessToken {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *AccessTokenList) SetItems(val []AccessToken) {
+	s.Items = val
+}
+
+// AccessTokenListHeaders wraps AccessTokenList with response headers.
+type AccessTokenListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AccessTokenList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AccessTokenListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AccessTokenListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AccessTokenListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AccessTokenListHeaders) GetResponse() AccessTokenList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AccessTokenListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AccessTokenListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AccessTokenListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AccessTokenListHeaders) SetResponse(val AccessTokenList) {
+	s.Response = val
+}
+
+func (*AccessTokenListHeaders) listAccessTokensRes() {}
+
+// A name, the scopes and how many days a new Access Token lives.
+// Ref: #/components/schemas/AccessTokenRequest
+type AccessTokenRequest struct {
+	Name   string             `json:"name"`
+	Scopes []AccessTokenScope `json:"scopes"`
+	Days   int32              `json:"days"`
+}
+
+// GetName returns the value of Name.
+func (s *AccessTokenRequest) GetName() string {
+	return s.Name
+}
+
+// GetScopes returns the value of Scopes.
+func (s *AccessTokenRequest) GetScopes() []AccessTokenScope {
+	return s.Scopes
+}
+
+// GetDays returns the value of Days.
+func (s *AccessTokenRequest) GetDays() int32 {
+	return s.Days
+}
+
+// SetName sets the value of Name.
+func (s *AccessTokenRequest) SetName(val string) {
+	s.Name = val
+}
+
+// SetScopes sets the value of Scopes.
+func (s *AccessTokenRequest) SetScopes(val []AccessTokenScope) {
+	s.Scopes = val
+}
+
+// SetDays sets the value of Days.
+func (s *AccessTokenRequest) SetDays(val int32) {
+	s.Days = val
+}
+
+// What an Access Token may do. read covers every read, build changes Campaigns and their prep, play
+// acts in Sessions.
+// Ref: #/components/schemas/AccessTokenScope
+type AccessTokenScope string
+
+const (
+	AccessTokenScopeRead  AccessTokenScope = "read"
+	AccessTokenScopeBuild AccessTokenScope = "build"
+	AccessTokenScopePlay  AccessTokenScope = "play"
+)
+
+// AllValues returns all AccessTokenScope values.
+func (AccessTokenScope) AllValues() []AccessTokenScope {
+	return []AccessTokenScope{
+		AccessTokenScopeRead,
+		AccessTokenScopeBuild,
+		AccessTokenScopePlay,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AccessTokenScope) MarshalText() ([]byte, error) {
+	switch s {
+	case AccessTokenScopeRead:
+		return []byte(s), nil
+	case AccessTokenScopeBuild:
+		return []byte(s), nil
+	case AccessTokenScopePlay:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AccessTokenScope) UnmarshalText(data []byte) error {
+	switch AccessTokenScope(data) {
+	case AccessTokenScopeRead:
+		*s = AccessTokenScopeRead
+		return nil
+	case AccessTokenScopeBuild:
+		*s = AccessTokenScopeBuild
+		return nil
+	case AccessTokenScopePlay:
+		*s = AccessTokenScopePlay
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A Grimoire Account.
 // Ref: #/components/schemas/Account
 type Account struct {
@@ -21115,6 +21418,7 @@ func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
 func (*ProblemStatusCodeWithHeaders) confirmTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) createAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
@@ -21164,6 +21468,7 @@ func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
+func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
@@ -21205,6 +21510,7 @@ func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
+func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
@@ -22023,6 +22329,45 @@ func (s *RevisionOrigin) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// RevokeAccessTokenNoContent is response for RevokeAccessToken operation.
+type RevokeAccessTokenNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RevokeAccessTokenNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RevokeAccessTokenNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RevokeAccessTokenNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RevokeAccessTokenNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RevokeAccessTokenNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RevokeAccessTokenNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*RevokeAccessTokenNoContent) revokeAccessTokenRes() {}
 
 // RevokeInviteNoContent is response for RevokeInvite operation.
 type RevokeInviteNoContent struct {

@@ -18,14 +18,21 @@ var (
 	rn1AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn103AllowedHeaders = map[string]string{
+	rn105AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn147AllowedHeaders = map[string]string{
+	rn13AllowedHeaders = map[string]string{
+		"GET":  "X-User-Id",
+		"POST": "Content-Type,X-User-Id",
+	}
+	rn139AllowedHeaders = map[string]string{
+		"DELETE": "X-User-Id",
+	}
+	rn150AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
 		"POST":   "X-User-Id",
 	}
-	rn141AllowedHeaders = map[string]string{
+	rn144AllowedHeaders = map[string]string{
 		"PUT": "Content-Type,X-User-Id",
 	}
 	rn5AllowedHeaders = map[string]string{
@@ -34,16 +41,16 @@ var (
 	rn11AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn45AllowedHeaders = map[string]string{
+	rn47AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn117AllowedHeaders = map[string]string{
+	rn119AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn13AllowedHeaders = map[string]string{
+	rn15AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn14AllowedHeaders = map[string]string{
+	rn16AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
 		"POST": "Content-Type,X-User-Id",
 	}
@@ -51,17 +58,17 @@ var (
 		"GET":   "X-User-Id",
 		"PATCH": "Content-Type,X-User-Id",
 	}
-	rn84AllowedHeaders = map[string]string{
+	rn86AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn151AllowedHeaders = map[string]string{
+	rn154AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
 	}
-	rn15AllowedHeaders = map[string]string{
+	rn17AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn104AllowedHeaders = map[string]string{
+	rn106AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
 	rn9AllowedHeaders = map[string]string{
@@ -69,7 +76,7 @@ var (
 		"GET":    "X-User-Id",
 		"PATCH":  "Content-Type,X-User-Id",
 	}
-	rn69AllowedHeaders = map[string]string{
+	rn71AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 		"PUT": "Content-Type,X-User-Id",
 	}
@@ -78,22 +85,8 @@ var (
 		"GET":    "X-User-Id",
 		"PUT":    "Content-Type,X-User-Id",
 	}
-	rn86AllowedHeaders = map[string]string{
+	rn88AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
-	}
-	rn17AllowedHeaders = map[string]string{
-		"GET":  "X-User-Id",
-		"POST": "Content-Type,X-User-Id",
-	}
-	rn30AllowedHeaders = map[string]string{
-		"DELETE": "X-User-Id",
-		"PUT":    "Content-Type,X-User-Id",
-	}
-	rn87AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-	}
-	rn120AllowedHeaders = map[string]string{
-		"POST": "X-User-Id",
 	}
 	rn19AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
@@ -103,24 +96,11 @@ var (
 		"DELETE": "X-User-Id",
 		"PUT":    "Content-Type,X-User-Id",
 	}
-	rn88AllowedHeaders = map[string]string{
+	rn89AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn123AllowedHeaders = map[string]string{
+	rn122AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
-	}
-	rn20AllowedHeaders = map[string]string{
-		"GET":  "X-User-Id",
-		"POST": "X-User-Id",
-	}
-	rn137AllowedHeaders = map[string]string{
-		"DELETE": "X-User-Id",
-	}
-	rn90AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-	}
-	rn53AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
 	}
 	rn21AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
@@ -130,93 +110,106 @@ var (
 		"DELETE": "X-User-Id",
 		"PUT":    "Content-Type,X-User-Id",
 	}
-	rn91AllowedHeaders = map[string]string{
+	rn90AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn126AllowedHeaders = map[string]string{
+	rn125AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
-	}
-	rn92AllowedHeaders = map[string]string{
-		"GET":  "X-User-Id",
-		"POST": "Content-Type,X-User-Id",
-	}
-	rn65AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-		"PUT": "Content-Type,X-User-Id",
-	}
-	rn66AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-	}
-	rn112AllowedHeaders = map[string]string{
-		"DELETE": "X-User-Id",
-		"PATCH":  "Content-Type,X-User-Id",
 	}
 	rn22AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
-		"POST": "Content-Type,X-User-Id",
+		"POST": "X-User-Id",
 	}
-	rn85AllowedHeaders = map[string]string{
+	rn141AllowedHeaders = map[string]string{
+		"DELETE": "X-User-Id",
+	}
+	rn92AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
+	}
+	rn55AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn23AllowedHeaders = map[string]string{
+		"GET":  "X-User-Id",
+		"POST": "Content-Type,X-User-Id",
 	}
 	rn36AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
-		"GET":    "X-User-Id",
 		"PUT":    "Content-Type,X-User-Id",
 	}
 	rn93AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn43AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-	}
-	rn129AllowedHeaders = map[string]string{
-		"POST": "X-User-Id",
-	}
-	rn25AllowedHeaders = map[string]string{
-		"GET":  "X-User-Id",
-		"POST": "Content-Type,X-User-Id",
-	}
-	rn74AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-	}
-	rn144AllowedHeaders = map[string]string{
-		"POST": "Content-Type,X-User-Id",
-	}
-	rn138AllowedHeaders = map[string]string{
+	rn128AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
 	}
 	rn94AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
-		"POST": "X-User-Id",
-	}
-	rn48AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
-	}
-	rn139AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn49AllowedHeaders = map[string]string{
-		"POST": "X-User-Id",
+	rn67AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+		"PUT": "Content-Type,X-User-Id",
 	}
-	rn76AllowedHeaders = map[string]string{
+	rn68AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn77AllowedHeaders = map[string]string{
-		"GET": "X-User-Id",
+	rn114AllowedHeaders = map[string]string{
+		"DELETE": "X-User-Id",
+		"PATCH":  "Content-Type,X-User-Id",
 	}
-	rn26AllowedHeaders = map[string]string{
+	rn24AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn40AllowedHeaders = map[string]string{
+	rn87AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn38AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
+		"GET":    "X-User-Id",
 		"PUT":    "Content-Type,X-User-Id",
 	}
 	rn95AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn132AllowedHeaders = map[string]string{
+	rn45AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn131AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
+	}
+	rn27AllowedHeaders = map[string]string{
+		"GET":  "X-User-Id",
+		"POST": "Content-Type,X-User-Id",
+	}
+	rn76AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn147AllowedHeaders = map[string]string{
+		"POST": "Content-Type,X-User-Id",
+	}
+	rn142AllowedHeaders = map[string]string{
+		"POST": "X-User-Id",
+	}
+	rn96AllowedHeaders = map[string]string{
+		"GET":  "X-User-Id",
+		"POST": "X-User-Id",
+	}
+	rn50AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn143AllowedHeaders = map[string]string{
+		"POST": "Content-Type,X-User-Id",
+	}
+	rn51AllowedHeaders = map[string]string{
+		"POST": "X-User-Id",
+	}
+	rn78AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn79AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
 	}
 	rn28AllowedHeaders = map[string]string{
 		"GET":  "X-User-Id",
@@ -226,82 +219,96 @@ var (
 		"DELETE": "X-User-Id",
 		"PUT":    "Content-Type,X-User-Id",
 	}
-	rn96AllowedHeaders = map[string]string{
+	rn97AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn135AllowedHeaders = map[string]string{
+	rn134AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
 	}
-	rn116AllowedHeaders = map[string]string{
-		"POST": "X-User-Id",
+	rn30AllowedHeaders = map[string]string{
+		"GET":  "X-User-Id",
+		"POST": "Content-Type,X-User-Id",
 	}
-	rn55AllowedHeaders = map[string]string{
-		"GET": "If-None-Match,X-User-Id",
-	}
-	rn57AllowedHeaders = map[string]string{
-		"GET": "If-None-Match,X-User-Id",
-	}
-	rn89AllowedHeaders = map[string]string{
-		"GET": "If-None-Match,X-User-Id",
-	}
-	rn61AllowedHeaders = map[string]string{
-		"GET": "If-None-Match,X-User-Id",
+	rn44AllowedHeaders = map[string]string{
+		"DELETE": "X-User-Id",
+		"PUT":    "Content-Type,X-User-Id",
 	}
 	rn98AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn99AllowedHeaders = map[string]string{
+	rn137AllowedHeaders = map[string]string{
+		"POST": "X-User-Id",
+	}
+	rn118AllowedHeaders = map[string]string{
+		"POST": "X-User-Id",
+	}
+	rn57AllowedHeaders = map[string]string{
 		"GET": "If-None-Match,X-User-Id",
 	}
-	rn80AllowedHeaders = map[string]string{
+	rn59AllowedHeaders = map[string]string{
+		"GET": "If-None-Match,X-User-Id",
+	}
+	rn91AllowedHeaders = map[string]string{
+		"GET": "If-None-Match,X-User-Id",
+	}
+	rn63AllowedHeaders = map[string]string{
+		"GET": "If-None-Match,X-User-Id",
+	}
+	rn100AllowedHeaders = map[string]string{
+		"GET": "X-User-Id",
+	}
+	rn101AllowedHeaders = map[string]string{
+		"GET": "If-None-Match,X-User-Id",
+	}
+	rn82AllowedHeaders = map[string]string{
 		"GET": "If-None-Match,X-User-Id",
 	}
 	rn3AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn106AllowedHeaders = map[string]string{
+	rn108AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn67AllowedHeaders = map[string]string{
+	rn69AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn23AllowedHeaders = map[string]string{
+	rn25AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn51AllowedHeaders = map[string]string{
+	rn53AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn83AllowedHeaders = map[string]string{
+	rn85AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn71AllowedHeaders = map[string]string{
+	rn73AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn24AllowedHeaders = map[string]string{
+	rn26AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn38AllowedHeaders = map[string]string{
+	rn40AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
-	}
-	rn107AllowedHeaders = map[string]string{
-		"POST": "Content-Type,X-User-Id",
 	}
 	rn109AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn100AllowedHeaders = map[string]string{
+	rn111AllowedHeaders = map[string]string{
+		"POST": "Content-Type,X-User-Id",
+	}
+	rn102AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn114AllowedHeaders = map[string]string{
+	rn116AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn152AllowedHeaders = map[string]string{
+	rn155AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn101AllowedHeaders = map[string]string{
+	rn103AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn82AllowedHeaders = map[string]string{
+	rn84AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
 )
@@ -460,7 +467,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									default:
 										s.notAllowed(w, r, notAllowedParams{
 											allowedMethods: "POST",
-											allowedHeaders: rn103AllowedHeaders,
+											allowedHeaders: rn105AllowedHeaders,
 											acceptPost:     "application/json",
 											acceptPatch:    "",
 										})
@@ -483,6 +490,70 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								break
 							}
 							switch elem[0] {
+							case 'a': // Prefix: "access-tokens"
+
+								if l := len("access-tokens"); len(elem) >= l && elem[0:l] == "access-tokens" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch r.Method {
+									case "GET":
+										s.handleListAccessTokensRequest([0]string{}, elemIsEscaped, w, r)
+									case "POST":
+										s.handleCreateAccessTokenRequest([0]string{}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, notAllowedParams{
+											allowedMethods: "GET,POST",
+											allowedHeaders: rn13AllowedHeaders,
+											acceptPost:     "application/json",
+											acceptPatch:    "",
+										})
+									}
+
+									return
+								}
+								switch elem[0] {
+								case '/': // Prefix: "/"
+
+									if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+										elem = elem[l:]
+									} else {
+										break
+									}
+
+									// Param: "accessId"
+									// Leaf parameter, slashes are prohibited
+									idx := strings.IndexByte(elem, '/')
+									if idx >= 0 {
+										break
+									}
+									args[0] = elem
+									elem = ""
+
+									if len(elem) == 0 {
+										// Leaf node.
+										switch r.Method {
+										case "DELETE":
+											s.handleRevokeAccessTokenRequest([1]string{
+												args[0],
+											}, elemIsEscaped, w, r)
+										default:
+											s.notAllowed(w, r, notAllowedParams{
+												allowedMethods: "DELETE",
+												allowedHeaders: rn139AllowedHeaders,
+												acceptPost:     "",
+												acceptPatch:    "",
+											})
+										}
+
+										return
+									}
+
+								}
+
 							case 'o': // Prefix: "oidc-link"
 
 								if l := len("oidc-link"); len(elem) >= l && elem[0:l] == "oidc-link" {
@@ -501,7 +572,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									default:
 										s.notAllowed(w, r, notAllowedParams{
 											allowedMethods: "DELETE,POST",
-											allowedHeaders: rn147AllowedHeaders,
+											allowedHeaders: rn150AllowedHeaders,
 											acceptPost:     "",
 											acceptPatch:    "",
 										})
@@ -526,7 +597,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									default:
 										s.notAllowed(w, r, notAllowedParams{
 											allowedMethods: "PUT",
-											allowedHeaders: rn141AllowedHeaders,
+											allowedHeaders: rn144AllowedHeaders,
 											acceptPost:     "",
 											acceptPatch:    "",
 										})
@@ -612,7 +683,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "POST",
-													allowedHeaders: rn45AllowedHeaders,
+													allowedHeaders: rn47AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -637,7 +708,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "POST",
-													allowedHeaders: rn117AllowedHeaders,
+													allowedHeaders: rn119AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -670,7 +741,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn13AllowedHeaders,
+									allowedHeaders: rn15AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -710,7 +781,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "GET,POST",
-									allowedHeaders: rn14AllowedHeaders,
+									allowedHeaders: rn16AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -787,7 +858,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET",
-												allowedHeaders: rn84AllowedHeaders,
+												allowedHeaders: rn86AllowedHeaders,
 												acceptPost:     "",
 												acceptPatch:    "",
 											})
@@ -836,7 +907,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "POST",
-														allowedHeaders: rn151AllowedHeaders,
+														allowedHeaders: rn154AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -870,7 +941,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET,POST",
-												allowedHeaders: rn15AllowedHeaders,
+												allowedHeaders: rn17AllowedHeaders,
 												acceptPost:     "application/json",
 												acceptPatch:    "",
 											})
@@ -909,7 +980,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "POST",
-														allowedHeaders: rn104AllowedHeaders,
+														allowedHeaders: rn106AllowedHeaders,
 														acceptPost:     "application/json",
 														acceptPatch:    "",
 													})
@@ -994,7 +1065,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "GET,PUT",
-															allowedHeaders: rn69AllowedHeaders,
+															allowedHeaders: rn71AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -1077,7 +1148,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET",
-													allowedHeaders: rn86AllowedHeaders,
+													allowedHeaders: rn88AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -1107,7 +1178,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET,POST",
-													allowedHeaders: rn17AllowedHeaders,
+													allowedHeaders: rn19AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -1148,7 +1219,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "DELETE,PUT",
-														allowedHeaders: rn30AllowedHeaders,
+														allowedHeaders: rn32AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -1175,7 +1246,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "GET",
-															allowedHeaders: rn87AllowedHeaders,
+															allowedHeaders: rn89AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -1225,7 +1296,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "POST",
-																	allowedHeaders: rn120AllowedHeaders,
+																	allowedHeaders: rn122AllowedHeaders,
 																	acceptPost:     "",
 																	acceptPatch:    "",
 																})
@@ -1263,7 +1334,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET,POST",
-													allowedHeaders: rn19AllowedHeaders,
+													allowedHeaders: rn21AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -1304,7 +1375,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "DELETE,PUT",
-														allowedHeaders: rn32AllowedHeaders,
+														allowedHeaders: rn34AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -1331,7 +1402,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "GET",
-															allowedHeaders: rn88AllowedHeaders,
+															allowedHeaders: rn90AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -1381,7 +1452,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "POST",
-																	allowedHeaders: rn123AllowedHeaders,
+																	allowedHeaders: rn125AllowedHeaders,
 																	acceptPost:     "",
 																	acceptPatch:    "",
 																})
@@ -1421,7 +1492,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET,POST",
-												allowedHeaders: rn20AllowedHeaders,
+												allowedHeaders: rn22AllowedHeaders,
 												acceptPost:     "",
 												acceptPatch:    "",
 											})
@@ -1458,7 +1529,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "DELETE",
-													allowedHeaders: rn137AllowedHeaders,
+													allowedHeaders: rn141AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -1499,7 +1570,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET",
-													allowedHeaders: rn90AllowedHeaders,
+													allowedHeaders: rn92AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -1526,7 +1597,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET",
-													allowedHeaders: rn53AllowedHeaders,
+													allowedHeaders: rn55AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -1556,7 +1627,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET,POST",
-													allowedHeaders: rn21AllowedHeaders,
+													allowedHeaders: rn23AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -1597,7 +1668,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "DELETE,PUT",
-														allowedHeaders: rn34AllowedHeaders,
+														allowedHeaders: rn36AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -1624,7 +1695,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "GET",
-															allowedHeaders: rn91AllowedHeaders,
+															allowedHeaders: rn93AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -1674,7 +1745,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "POST",
-																	allowedHeaders: rn126AllowedHeaders,
+																	allowedHeaders: rn128AllowedHeaders,
 																	acceptPost:     "",
 																	acceptPatch:    "",
 																})
@@ -1726,7 +1797,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET,POST",
-													allowedHeaders: rn92AllowedHeaders,
+													allowedHeaders: rn94AllowedHeaders,
 													acceptPost:     "application/octet-stream",
 													acceptPatch:    "",
 												})
@@ -1767,7 +1838,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "GET,PUT",
-														allowedHeaders: rn65AllowedHeaders,
+														allowedHeaders: rn67AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -1795,7 +1866,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "GET",
-															allowedHeaders: rn66AllowedHeaders,
+															allowedHeaders: rn68AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -1841,7 +1912,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "DELETE,PATCH",
-													allowedHeaders: rn112AllowedHeaders,
+													allowedHeaders: rn114AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "application/json",
 												})
@@ -1873,7 +1944,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET,POST",
-												allowedHeaders: rn22AllowedHeaders,
+												allowedHeaders: rn24AllowedHeaders,
 												acceptPost:     "application/json",
 												acceptPatch:    "",
 											})
@@ -1912,7 +1983,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "GET",
-														allowedHeaders: rn85AllowedHeaders,
+														allowedHeaders: rn87AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -1952,7 +2023,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "DELETE,GET,PUT",
-													allowedHeaders: rn36AllowedHeaders,
+													allowedHeaders: rn38AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -1979,7 +2050,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "GET",
-														allowedHeaders: rn93AllowedHeaders,
+														allowedHeaders: rn95AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -2019,7 +2090,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 														default:
 															s.notAllowed(w, r, notAllowedParams{
 																allowedMethods: "GET",
-																allowedHeaders: rn43AllowedHeaders,
+																allowedHeaders: rn45AllowedHeaders,
 																acceptPost:     "",
 																acceptPatch:    "",
 															})
@@ -2063,7 +2134,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 														default:
 															s.notAllowed(w, r, notAllowedParams{
 																allowedMethods: "POST",
-																allowedHeaders: rn129AllowedHeaders,
+																allowedHeaders: rn131AllowedHeaders,
 																acceptPost:     "",
 																acceptPatch:    "",
 															})
@@ -2101,7 +2172,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET,POST",
-												allowedHeaders: rn25AllowedHeaders,
+												allowedHeaders: rn27AllowedHeaders,
 												acceptPost:     "application/json",
 												acceptPatch:    "",
 											})
@@ -2137,7 +2208,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET",
-													allowedHeaders: rn74AllowedHeaders,
+													allowedHeaders: rn76AllowedHeaders,
 													acceptPost:     "",
 													acceptPatch:    "",
 												})
@@ -2187,7 +2258,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "POST",
-															allowedHeaders: rn144AllowedHeaders,
+															allowedHeaders: rn147AllowedHeaders,
 															acceptPost:     "application/json",
 															acceptPatch:    "",
 														})
@@ -2215,7 +2286,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "POST",
-															allowedHeaders: rn138AllowedHeaders,
+															allowedHeaders: rn142AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -2275,7 +2346,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "GET,POST",
-														allowedHeaders: rn94AllowedHeaders,
+														allowedHeaders: rn96AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -2311,7 +2382,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "GET",
-															allowedHeaders: rn48AllowedHeaders,
+															allowedHeaders: rn50AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -2351,7 +2422,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "POST",
-																	allowedHeaders: rn139AllowedHeaders,
+																	allowedHeaders: rn143AllowedHeaders,
 																	acceptPost:     "application/json",
 																	acceptPatch:    "",
 																})
@@ -2379,7 +2450,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "POST",
-																	allowedHeaders: rn49AllowedHeaders,
+																	allowedHeaders: rn51AllowedHeaders,
 																	acceptPost:     "",
 																	acceptPatch:    "",
 																})
@@ -2407,7 +2478,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "GET",
-																	allowedHeaders: rn76AllowedHeaders,
+																	allowedHeaders: rn78AllowedHeaders,
 																	acceptPost:     "",
 																	acceptPatch:    "",
 																})
@@ -2435,7 +2506,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 															default:
 																s.notAllowed(w, r, notAllowedParams{
 																	allowedMethods: "GET",
-																	allowedHeaders: rn77AllowedHeaders,
+																	allowedHeaders: rn79AllowedHeaders,
 																	acceptPost:     "",
 																	acceptPatch:    "",
 																})
@@ -2471,7 +2542,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "GET,POST",
-														allowedHeaders: rn26AllowedHeaders,
+														allowedHeaders: rn28AllowedHeaders,
 														acceptPost:     "application/json",
 														acceptPatch:    "",
 													})
@@ -2512,7 +2583,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 													default:
 														s.notAllowed(w, r, notAllowedParams{
 															allowedMethods: "DELETE,PUT",
-															allowedHeaders: rn40AllowedHeaders,
+															allowedHeaders: rn42AllowedHeaders,
 															acceptPost:     "",
 															acceptPatch:    "",
 														})
@@ -2539,7 +2610,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 														default:
 															s.notAllowed(w, r, notAllowedParams{
 																allowedMethods: "GET",
-																allowedHeaders: rn95AllowedHeaders,
+																allowedHeaders: rn97AllowedHeaders,
 																acceptPost:     "",
 																acceptPatch:    "",
 															})
@@ -2589,7 +2660,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 																default:
 																	s.notAllowed(w, r, notAllowedParams{
 																		allowedMethods: "POST",
-																		allowedHeaders: rn132AllowedHeaders,
+																		allowedHeaders: rn134AllowedHeaders,
 																		acceptPost:     "",
 																		acceptPatch:    "",
 																	})
@@ -2629,7 +2700,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "GET,POST",
-													allowedHeaders: rn28AllowedHeaders,
+													allowedHeaders: rn30AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -2670,7 +2741,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "DELETE,PUT",
-														allowedHeaders: rn42AllowedHeaders,
+														allowedHeaders: rn44AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -2709,7 +2780,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 														default:
 															s.notAllowed(w, r, notAllowedParams{
 																allowedMethods: "GET",
-																allowedHeaders: rn96AllowedHeaders,
+																allowedHeaders: rn98AllowedHeaders,
 																acceptPost:     "",
 																acceptPatch:    "",
 															})
@@ -2759,7 +2830,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 																default:
 																	s.notAllowed(w, r, notAllowedParams{
 																		allowedMethods: "POST",
-																		allowedHeaders: rn135AllowedHeaders,
+																		allowedHeaders: rn137AllowedHeaders,
 																		acceptPost:     "",
 																		acceptPatch:    "",
 																	})
@@ -2791,7 +2862,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 														default:
 															s.notAllowed(w, r, notAllowedParams{
 																allowedMethods: "POST",
-																allowedHeaders: rn116AllowedHeaders,
+																allowedHeaders: rn118AllowedHeaders,
 																acceptPost:     "",
 																acceptPatch:    "",
 															})
@@ -2842,7 +2913,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								default:
 									s.notAllowed(w, r, notAllowedParams{
 										allowedMethods: "GET",
-										allowedHeaders: rn55AllowedHeaders,
+										allowedHeaders: rn57AllowedHeaders,
 										acceptPost:     "",
 										acceptPatch:    "",
 									})
@@ -2867,7 +2938,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								default:
 									s.notAllowed(w, r, notAllowedParams{
 										allowedMethods: "GET",
-										allowedHeaders: rn57AllowedHeaders,
+										allowedHeaders: rn59AllowedHeaders,
 										acceptPost:     "",
 										acceptPatch:    "",
 									})
@@ -2891,7 +2962,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								default:
 									s.notAllowed(w, r, notAllowedParams{
 										allowedMethods: "GET",
-										allowedHeaders: rn89AllowedHeaders,
+										allowedHeaders: rn91AllowedHeaders,
 										acceptPost:     "",
 										acceptPatch:    "",
 									})
@@ -2949,7 +3020,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET",
-												allowedHeaders: rn61AllowedHeaders,
+												allowedHeaders: rn63AllowedHeaders,
 												acceptPost:     "",
 												acceptPatch:    "",
 											})
@@ -2990,7 +3061,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									default:
 										s.notAllowed(w, r, notAllowedParams{
 											allowedMethods: "GET",
-											allowedHeaders: rn98AllowedHeaders,
+											allowedHeaders: rn100AllowedHeaders,
 											acceptPost:     "",
 											acceptPatch:    "",
 										})
@@ -3014,7 +3085,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									default:
 										s.notAllowed(w, r, notAllowedParams{
 											allowedMethods: "GET",
-											allowedHeaders: rn99AllowedHeaders,
+											allowedHeaders: rn101AllowedHeaders,
 											acceptPost:     "",
 											acceptPatch:    "",
 										})
@@ -3050,7 +3121,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "GET",
-												allowedHeaders: rn80AllowedHeaders,
+												allowedHeaders: rn82AllowedHeaders,
 												acceptPost:     "",
 												acceptPatch:    "",
 											})
@@ -3120,7 +3191,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn106AllowedHeaders,
+									allowedHeaders: rn108AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3147,7 +3218,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						default:
 							s.notAllowed(w, r, notAllowedParams{
 								allowedMethods: "GET",
-								allowedHeaders: rn67AllowedHeaders,
+								allowedHeaders: rn69AllowedHeaders,
 								acceptPost:     "",
 								acceptPatch:    "",
 							})
@@ -3184,7 +3255,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn23AllowedHeaders,
+									allowedHeaders: rn25AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3209,7 +3280,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn51AllowedHeaders,
+									allowedHeaders: rn53AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3234,7 +3305,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn83AllowedHeaders,
+									allowedHeaders: rn85AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3298,7 +3369,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "GET",
-									allowedHeaders: rn71AllowedHeaders,
+									allowedHeaders: rn73AllowedHeaders,
 									acceptPost:     "",
 									acceptPatch:    "",
 								})
@@ -3322,7 +3393,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn24AllowedHeaders,
+									allowedHeaders: rn26AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3358,7 +3429,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								default:
 									s.notAllowed(w, r, notAllowedParams{
 										allowedMethods: "DELETE",
-										allowedHeaders: rn38AllowedHeaders,
+										allowedHeaders: rn40AllowedHeaders,
 										acceptPost:     "",
 										acceptPatch:    "",
 									})
@@ -3399,7 +3470,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn107AllowedHeaders,
+									allowedHeaders: rn109AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3424,7 +3495,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "POST",
-									allowedHeaders: rn109AllowedHeaders,
+									allowedHeaders: rn111AllowedHeaders,
 									acceptPost:     "application/json",
 									acceptPatch:    "",
 								})
@@ -3474,7 +3545,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								default:
 									s.notAllowed(w, r, notAllowedParams{
 										allowedMethods: "POST",
-										allowedHeaders: rn100AllowedHeaders,
+										allowedHeaders: rn102AllowedHeaders,
 										acceptPost:     "application/json",
 										acceptPatch:    "",
 									})
@@ -3510,7 +3581,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 										default:
 											s.notAllowed(w, r, notAllowedParams{
 												allowedMethods: "POST",
-												allowedHeaders: rn114AllowedHeaders,
+												allowedHeaders: rn116AllowedHeaders,
 												acceptPost:     "application/json",
 												acceptPatch:    "",
 											})
@@ -3535,7 +3606,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "POST",
-													allowedHeaders: rn152AllowedHeaders,
+													allowedHeaders: rn155AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -3589,7 +3660,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									default:
 										s.notAllowed(w, r, notAllowedParams{
 											allowedMethods: "POST",
-											allowedHeaders: rn101AllowedHeaders,
+											allowedHeaders: rn103AllowedHeaders,
 											acceptPost:     "application/json",
 											acceptPatch:    "",
 										})
@@ -3643,7 +3714,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							default:
 								s.notAllowed(w, r, notAllowedParams{
 									allowedMethods: "GET",
-									allowedHeaders: rn82AllowedHeaders,
+									allowedHeaders: rn84AllowedHeaders,
 									acceptPost:     "",
 									acceptPatch:    "",
 								})
@@ -3844,7 +3915,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = GetAccountOperation
 								r.summary = "Get my Account"
 								r.operationID = "getAccount"
-								r.operationGroup = ""
+								r.operationGroup = "Read"
 								r.pathPattern = "/api/v1/account"
 								r.args = args
 								r.count = 0
@@ -3853,7 +3924,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = UpdateAccountOperation
 								r.summary = "Change my profile"
 								r.operationID = "updateAccount"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/account"
 								r.args = args
 								r.count = 0
@@ -3890,7 +3961,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = AcceptAccountInviteOperation
 										r.summary = "Set up an Account from an invite"
 										r.operationID = "acceptAccountInvite"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/account-invites/accept"
 										r.args = args
 										r.count = 0
@@ -3915,7 +3986,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = PreviewAccountInviteOperation
 										r.summary = "Check an Account Invite"
 										r.operationID = "previewAccountInvite"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/account-invites/preview"
 										r.args = args
 										r.count = 0
@@ -3939,6 +4010,75 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								break
 							}
 							switch elem[0] {
+							case 'a': // Prefix: "access-tokens"
+
+								if l := len("access-tokens"); len(elem) >= l && elem[0:l] == "access-tokens" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch method {
+									case "GET":
+										r.name = ListAccessTokensOperation
+										r.summary = "List my Access Tokens"
+										r.operationID = "listAccessTokens"
+										r.operationGroup = "Read"
+										r.pathPattern = "/api/v1/account/access-tokens"
+										r.args = args
+										r.count = 0
+										return r, true
+									case "POST":
+										r.name = CreateAccessTokenOperation
+										r.summary = "Mint an Access Token"
+										r.operationID = "createAccessToken"
+										r.operationGroup = "Account"
+										r.pathPattern = "/api/v1/account/access-tokens"
+										r.args = args
+										r.count = 0
+										return r, true
+									default:
+										return
+									}
+								}
+								switch elem[0] {
+								case '/': // Prefix: "/"
+
+									if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+										elem = elem[l:]
+									} else {
+										break
+									}
+
+									// Param: "accessId"
+									// Leaf parameter, slashes are prohibited
+									idx := strings.IndexByte(elem, '/')
+									if idx >= 0 {
+										break
+									}
+									args[0] = elem
+									elem = ""
+
+									if len(elem) == 0 {
+										// Leaf node.
+										switch method {
+										case "DELETE":
+											r.name = RevokeAccessTokenOperation
+											r.summary = "Revoke an Access Token"
+											r.operationID = "revokeAccessToken"
+											r.operationGroup = "Account"
+											r.pathPattern = "/api/v1/account/access-tokens/{accessId}"
+											r.args = args
+											r.count = 1
+											return r, true
+										default:
+											return
+										}
+									}
+
+								}
+
 							case 'o': // Prefix: "oidc-link"
 
 								if l := len("oidc-link"); len(elem) >= l && elem[0:l] == "oidc-link" {
@@ -3954,7 +4094,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = UnlinkOidcOperation
 										r.summary = "Unlink the external login"
 										r.operationID = "unlinkOidc"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/account/oidc-link"
 										r.args = args
 										r.count = 0
@@ -3963,7 +4103,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = StartOidcLinkOperation
 										r.summary = "Start linking the external login"
 										r.operationID = "startOidcLink"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/account/oidc-link"
 										r.args = args
 										r.count = 0
@@ -3988,7 +4128,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = SetAccountPasswordOperation
 										r.summary = "Set my password"
 										r.operationID = "setAccountPassword"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/account/password"
 										r.args = args
 										r.count = 0
@@ -4012,7 +4152,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = BeginTwoStepOperation
 										r.summary = "Start two-step sign-in"
 										r.operationID = "beginTwoStep"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/account/two-step"
 										r.args = args
 										r.count = 0
@@ -4049,7 +4189,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ConfirmTwoStepOperation
 												r.summary = "Turn two-step on"
 												r.operationID = "confirmTwoStep"
-												r.operationGroup = ""
+												r.operationGroup = "Account"
 												r.pathPattern = "/api/v1/account/two-step/confirm"
 												r.args = args
 												r.count = 0
@@ -4074,7 +4214,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = DisableTwoStepOperation
 												r.summary = "Turn two-step off"
 												r.operationID = "disableTwoStep"
-												r.operationGroup = ""
+												r.operationGroup = "Account"
 												r.pathPattern = "/api/v1/account/two-step/disable"
 												r.args = args
 												r.count = 0
@@ -4099,7 +4239,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ResetRecoveryCodesOperation
 												r.summary = "Replace the recovery codes"
 												r.operationID = "resetRecoveryCodes"
-												r.operationGroup = ""
+												r.operationGroup = "Account"
 												r.pathPattern = "/api/v1/account/two-step/recovery-codes"
 												r.args = args
 												r.count = 0
@@ -4132,7 +4272,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = CreateAccountInviteOperation
 								r.summary = "Invite someone to set up an Account"
 								r.operationID = "createAccountInvite"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/admin/account-invites"
 								r.args = args
 								r.count = 0
@@ -4170,7 +4310,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = ListCampaignsOperation
 								r.summary = "List my campaigns"
 								r.operationID = "listCampaigns"
-								r.operationGroup = ""
+								r.operationGroup = "Read"
 								r.pathPattern = "/api/v1/campaigns"
 								r.args = args
 								r.count = 0
@@ -4179,7 +4319,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = CreateCampaignOperation
 								r.summary = "Create a campaign"
 								r.operationID = "createCampaign"
-								r.operationGroup = ""
+								r.operationGroup = "Build"
 								r.pathPattern = "/api/v1/campaigns"
 								r.args = args
 								r.count = 0
@@ -4212,7 +4352,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = GetCampaignOperation
 									r.summary = "Get a campaign"
 									r.operationID = "getCampaign"
-									r.operationGroup = ""
+									r.operationGroup = "Read"
 									r.pathPattern = "/api/v1/campaigns/{campaignId}"
 									r.args = args
 									r.count = 1
@@ -4221,7 +4361,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = UpdateCampaignOperation
 									r.summary = "Update a campaign"
 									r.operationID = "updateCampaign"
-									r.operationGroup = ""
+									r.operationGroup = "Build"
 									r.pathPattern = "/api/v1/campaigns/{campaignId}"
 									r.args = args
 									r.count = 1
@@ -4257,7 +4397,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = ListActivityOperation
 											r.summary = "List AI activity"
 											r.operationID = "listActivity"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/activity"
 											r.args = args
 											r.count = 1
@@ -4303,7 +4443,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = UndoChangeOperation
 													r.summary = "Undo a change"
 													r.operationID = "undoChange"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/activity/{revisionId}/undo"
 													r.args = args
 													r.count = 2
@@ -4331,7 +4471,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = ListCharactersOperation
 											r.summary = "List characters"
 											r.operationID = "listCharacters"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/characters"
 											r.args = args
 											r.count = 1
@@ -4340,7 +4480,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = CreateCharacterOperation
 											r.summary = "Create a character"
 											r.operationID = "createCharacter"
-											r.operationGroup = ""
+											r.operationGroup = "Build"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/characters"
 											r.args = args
 											r.count = 1
@@ -4377,7 +4517,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = PreviewCharacterOperation
 													r.summary = "Preview a character"
 													r.operationID = "previewCharacter"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/preview"
 													r.args = args
 													r.count = 1
@@ -4404,7 +4544,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = DeleteCharacterOperation
 												r.summary = "Delete a character"
 												r.operationID = "deleteCharacter"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}"
 												r.args = args
 												r.count = 2
@@ -4413,7 +4553,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = GetCharacterOperation
 												r.summary = "Get a character sheet"
 												r.operationID = "getCharacter"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}"
 												r.args = args
 												r.count = 2
@@ -4422,7 +4562,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = UpdateCharacterOperation
 												r.summary = "Edit a character"
 												r.operationID = "updateCharacter"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}"
 												r.args = args
 												r.count = 2
@@ -4459,7 +4599,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = GetPortraitOperation
 														r.summary = "Get the portrait"
 														r.operationID = "getPortrait"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/portrait"
 														r.args = args
 														r.count = 2
@@ -4468,7 +4608,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = SetPortraitOperation
 														r.summary = "Upload the portrait"
 														r.operationID = "setPortrait"
-														r.operationGroup = ""
+														r.operationGroup = "Build"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/portrait"
 														r.args = args
 														r.count = 2
@@ -4493,7 +4633,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = ClearTokenIconOperation
 														r.summary = "Use initials for the token"
 														r.operationID = "clearTokenIcon"
-														r.operationGroup = ""
+														r.operationGroup = "Build"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/token"
 														r.args = args
 														r.count = 2
@@ -4502,7 +4642,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = GetTokenIconOperation
 														r.summary = "Get the token icon"
 														r.operationID = "getTokenIcon"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/token"
 														r.args = args
 														r.count = 2
@@ -4511,7 +4651,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = SetTokenIconOperation
 														r.summary = "Upload the token icon"
 														r.operationID = "setTokenIcon"
-														r.operationGroup = ""
+														r.operationGroup = "Build"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/token"
 														r.args = args
 														r.count = 2
@@ -4554,7 +4694,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListEncounterChecksOperation
 												r.summary = "List Encounter Checks"
 												r.operationID = "listEncounterChecks"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-checks"
 												r.args = args
 												r.count = 1
@@ -4578,7 +4718,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListEncounterPoolsOperation
 												r.summary = "List Encounter Pools"
 												r.operationID = "listEncounterPools"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-pools"
 												r.args = args
 												r.count = 1
@@ -4587,7 +4727,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = CreateEncounterPoolOperation
 												r.summary = "Create an Encounter Pool"
 												r.operationID = "createEncounterPool"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-pools"
 												r.args = args
 												r.count = 1
@@ -4620,7 +4760,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = DeleteEncounterPoolOperation
 													r.summary = "Delete an Encounter Pool"
 													r.operationID = "deleteEncounterPool"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}"
 													r.args = args
 													r.count = 2
@@ -4629,7 +4769,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = UpdateEncounterPoolOperation
 													r.summary = "Update an Encounter Pool"
 													r.operationID = "updateEncounterPool"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}"
 													r.args = args
 													r.count = 2
@@ -4653,7 +4793,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = ListEncounterPoolRevisionsOperation
 														r.summary = "List Encounter Pool revisions"
 														r.operationID = "listEncounterPoolRevisions"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions"
 														r.args = args
 														r.count = 2
@@ -4699,7 +4839,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = RestoreEncounterPoolRevisionOperation
 																r.summary = "Restore an Encounter Pool revision"
 																r.operationID = "restoreEncounterPoolRevision"
-																r.operationGroup = ""
+																r.operationGroup = "Build"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore"
 																r.args = args
 																r.count = 3
@@ -4731,7 +4871,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListEncounterTablesOperation
 												r.summary = "List Encounter Tables"
 												r.operationID = "listEncounterTables"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-tables"
 												r.args = args
 												r.count = 1
@@ -4740,7 +4880,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = CreateEncounterTableOperation
 												r.summary = "Create an Encounter Table"
 												r.operationID = "createEncounterTable"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-tables"
 												r.args = args
 												r.count = 1
@@ -4773,7 +4913,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = DeleteEncounterTableOperation
 													r.summary = "Delete an Encounter Table"
 													r.operationID = "deleteEncounterTable"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}"
 													r.args = args
 													r.count = 2
@@ -4782,7 +4922,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = UpdateEncounterTableOperation
 													r.summary = "Update an Encounter Table"
 													r.operationID = "updateEncounterTable"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}"
 													r.args = args
 													r.count = 2
@@ -4806,7 +4946,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = ListEncounterTableRevisionsOperation
 														r.summary = "List Encounter Table revisions"
 														r.operationID = "listEncounterTableRevisions"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions"
 														r.args = args
 														r.count = 2
@@ -4852,7 +4992,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = RestoreEncounterTableRevisionOperation
 																r.summary = "Restore an Encounter Table revision"
 																r.operationID = "restoreEncounterTableRevision"
-																r.operationGroup = ""
+																r.operationGroup = "Build"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore"
 																r.args = args
 																r.count = 3
@@ -4886,7 +5026,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = ListInvitesOperation
 											r.summary = "List open invites"
 											r.operationID = "listInvites"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/invites"
 											r.args = args
 											r.count = 1
@@ -4895,7 +5035,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = CreateInviteOperation
 											r.summary = "Create an invite link"
 											r.operationID = "createInvite"
-											r.operationGroup = ""
+											r.operationGroup = "Build"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/invites"
 											r.args = args
 											r.count = 1
@@ -4929,7 +5069,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = RevokeInviteOperation
 												r.summary = "Revoke an invite link"
 												r.operationID = "revokeInvite"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/invites/{inviteId}"
 												r.args = args
 												r.count = 2
@@ -4968,7 +5108,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListLocationsOperation
 												r.summary = "List locations"
 												r.operationID = "listLocations"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/locations"
 												r.args = args
 												r.count = 1
@@ -4993,7 +5133,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = GetActionLogOperation
 												r.summary = "Read the Action Log"
 												r.operationID = "getActionLog"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/log"
 												r.args = args
 												r.count = 1
@@ -5017,7 +5157,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListLootTablesOperation
 												r.summary = "List Loot Tables"
 												r.operationID = "listLootTables"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/loot-tables"
 												r.args = args
 												r.count = 1
@@ -5026,7 +5166,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = CreateLootTableOperation
 												r.summary = "Create a Loot Table"
 												r.operationID = "createLootTable"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/loot-tables"
 												r.args = args
 												r.count = 1
@@ -5059,7 +5199,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = DeleteLootTableOperation
 													r.summary = "Delete a Loot Table"
 													r.operationID = "deleteLootTable"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}"
 													r.args = args
 													r.count = 2
@@ -5068,7 +5208,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = UpdateLootTableOperation
 													r.summary = "Update a Loot Table"
 													r.operationID = "updateLootTable"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}"
 													r.args = args
 													r.count = 2
@@ -5092,7 +5232,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = ListLootTableRevisionsOperation
 														r.summary = "List Loot Table revisions"
 														r.operationID = "listLootTableRevisions"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions"
 														r.args = args
 														r.count = 2
@@ -5138,7 +5278,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = RestoreLootTableRevisionOperation
 																r.summary = "Restore a Loot Table revision"
 																r.operationID = "restoreLootTableRevision"
-																r.operationGroup = ""
+																r.operationGroup = "Build"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore"
 																r.args = args
 																r.count = 3
@@ -5184,7 +5324,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListMapsOperation
 												r.summary = "List maps"
 												r.operationID = "listMaps"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/maps"
 												r.args = args
 												r.count = 1
@@ -5193,7 +5333,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = UploadMapOperation
 												r.summary = "Upload a map"
 												r.operationID = "uploadMap"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/maps"
 												r.args = args
 												r.count = 1
@@ -5226,7 +5366,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = GetMapOperation
 													r.summary = "Get a map"
 													r.operationID = "getMap"
-													r.operationGroup = ""
+													r.operationGroup = "Read"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/maps/{mapId}"
 													r.args = args
 													r.count = 2
@@ -5235,7 +5375,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = UpdateMapOperation
 													r.summary = "Calibrate a map"
 													r.operationID = "updateMap"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/maps/{mapId}"
 													r.args = args
 													r.count = 2
@@ -5260,7 +5400,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = GetMapImageOperation
 														r.summary = "Get a map picture"
 														r.operationID = "getMapImage"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/maps/{mapId}/image"
 														r.args = args
 														r.count = 2
@@ -5298,7 +5438,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = RemoveMemberOperation
 												r.summary = "Remove a member"
 												r.operationID = "removeMember"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/members/{memberId}"
 												r.args = args
 												r.count = 2
@@ -5307,7 +5447,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = UpdateMemberOperation
 												r.summary = "Change a member role"
 												r.operationID = "updateMember"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/members/{memberId}"
 												r.args = args
 												r.count = 2
@@ -5333,7 +5473,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = ListNpcsOperation
 											r.summary = "List NPCs"
 											r.operationID = "listNpcs"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs"
 											r.args = args
 											r.count = 1
@@ -5342,7 +5482,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = CreateNpcOperation
 											r.summary = "Create an NPC"
 											r.operationID = "createNpc"
-											r.operationGroup = ""
+											r.operationGroup = "Build"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs"
 											r.args = args
 											r.count = 1
@@ -5379,7 +5519,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = ListDeletedNpcsOperation
 													r.summary = "List deleted NPCs"
 													r.operationID = "listDeletedNpcs"
-													r.operationGroup = ""
+													r.operationGroup = "Read"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/deleted"
 													r.args = args
 													r.count = 1
@@ -5406,7 +5546,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = DeleteNpcOperation
 												r.summary = "Delete an NPC"
 												r.operationID = "deleteNpc"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/{npcId}"
 												r.args = args
 												r.count = 2
@@ -5415,7 +5555,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = GetNpcOperation
 												r.summary = "Get an NPC"
 												r.operationID = "getNpc"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/{npcId}"
 												r.args = args
 												r.count = 2
@@ -5424,7 +5564,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = UpdateNpcOperation
 												r.summary = "Update an NPC"
 												r.operationID = "updateNpc"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/{npcId}"
 												r.args = args
 												r.count = 2
@@ -5448,7 +5588,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = ListNpcRevisionsOperation
 													r.summary = "List NPC revisions"
 													r.operationID = "listNpcRevisions"
-													r.operationGroup = ""
+													r.operationGroup = "Read"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions"
 													r.args = args
 													r.count = 2
@@ -5485,7 +5625,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 															r.name = DiffNpcRevisionsOperation
 															r.summary = "Compare two NPC revisions"
 															r.operationID = "diffNpcRevisions"
-															r.operationGroup = ""
+															r.operationGroup = "Read"
 															r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff"
 															r.args = args
 															r.count = 2
@@ -5525,7 +5665,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 															r.name = RestoreNpcRevisionOperation
 															r.summary = "Restore an NPC revision"
 															r.operationID = "restoreNpcRevision"
-															r.operationGroup = ""
+															r.operationGroup = "Build"
 															r.pathPattern = "/api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore"
 															r.args = args
 															r.count = 3
@@ -5557,7 +5697,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = ListRollsOperation
 											r.summary = "List roll requests"
 											r.operationID = "listRolls"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/rolls"
 											r.args = args
 											r.count = 1
@@ -5566,7 +5706,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = CreateRollOperation
 											r.summary = "Request a roll"
 											r.operationID = "createRoll"
-											r.operationGroup = ""
+											r.operationGroup = "Play"
 											r.pathPattern = "/api/v1/campaigns/{campaignId}/rolls"
 											r.args = args
 											r.count = 1
@@ -5599,7 +5739,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = GetRollOperation
 												r.summary = "Get a roll request"
 												r.operationID = "getRoll"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/rolls/{rollId}"
 												r.args = args
 												r.count = 2
@@ -5645,7 +5785,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = SetDieOperation
 														r.summary = "Roll or enter one die"
 														r.operationID = "setDie"
-														r.operationGroup = ""
+														r.operationGroup = "Play"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}"
 														r.args = args
 														r.count = 3
@@ -5670,7 +5810,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = RollRestOperation
 														r.summary = "Roll the rest"
 														r.operationID = "rollRest"
-														r.operationGroup = ""
+														r.operationGroup = "Play"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/rolls/{rollId}/rest"
 														r.args = args
 														r.count = 2
@@ -5724,7 +5864,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = ListSessionsOperation
 													r.summary = "List sessions"
 													r.operationID = "listSessions"
-													r.operationGroup = ""
+													r.operationGroup = "Read"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions"
 													r.args = args
 													r.count = 1
@@ -5733,7 +5873,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = StartSessionOperation
 													r.summary = "Start a session"
 													r.operationID = "startSession"
-													r.operationGroup = ""
+													r.operationGroup = "Play"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions"
 													r.args = args
 													r.count = 1
@@ -5766,7 +5906,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = GetSessionOperation
 														r.summary = "Get a session"
 														r.operationID = "getSession"
-														r.operationGroup = ""
+														r.operationGroup = "Read"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions/{sessionId}"
 														r.args = args
 														r.count = 2
@@ -5803,7 +5943,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = SendLiveCommandOperation
 																r.summary = "Act in a live session"
 																r.operationID = "sendLiveCommand"
-																r.operationGroup = ""
+																r.operationGroup = "Play"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands"
 																r.args = args
 																r.count = 2
@@ -5828,7 +5968,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = EndSessionOperation
 																r.summary = "End a session"
 																r.operationID = "endSession"
-																r.operationGroup = ""
+																r.operationGroup = "Play"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/end"
 																r.args = args
 																r.count = 2
@@ -5853,7 +5993,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = GetSessionLogOperation
 																r.summary = "Read a session's Action Log"
 																r.operationID = "getSessionLog"
-																r.operationGroup = ""
+																r.operationGroup = "Read"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/log"
 																r.args = args
 																r.count = 2
@@ -5878,7 +6018,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																r.name = GetSessionViewOperation
 																r.summary = "See a live session"
 																r.operationID = "getSessionView"
-																r.operationGroup = ""
+																r.operationGroup = "Read"
 																r.pathPattern = "/api/v1/campaigns/{campaignId}/sessions/{sessionId}/view"
 																r.args = args
 																r.count = 2
@@ -5908,7 +6048,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = ListSettlementsOperation
 													r.summary = "List Settlements"
 													r.operationID = "listSettlements"
-													r.operationGroup = ""
+													r.operationGroup = "Read"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/settlements"
 													r.args = args
 													r.count = 1
@@ -5917,7 +6057,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = CreateSettlementOperation
 													r.summary = "Create a Settlement"
 													r.operationID = "createSettlement"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/settlements"
 													r.args = args
 													r.count = 1
@@ -5950,7 +6090,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = DeleteSettlementOperation
 														r.summary = "Delete a Settlement"
 														r.operationID = "deleteSettlement"
-														r.operationGroup = ""
+														r.operationGroup = "Build"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/settlements/{settlementId}"
 														r.args = args
 														r.count = 2
@@ -5959,7 +6099,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 														r.name = UpdateSettlementOperation
 														r.summary = "Update a Settlement"
 														r.operationID = "updateSettlement"
-														r.operationGroup = ""
+														r.operationGroup = "Build"
 														r.pathPattern = "/api/v1/campaigns/{campaignId}/settlements/{settlementId}"
 														r.args = args
 														r.count = 2
@@ -5983,7 +6123,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 															r.name = ListSettlementRevisionsOperation
 															r.summary = "List Settlement revisions"
 															r.operationID = "listSettlementRevisions"
-															r.operationGroup = ""
+															r.operationGroup = "Read"
 															r.pathPattern = "/api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions"
 															r.args = args
 															r.count = 2
@@ -6029,7 +6169,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																	r.name = RestoreSettlementRevisionOperation
 																	r.summary = "Restore a Settlement revision"
 																	r.operationID = "restoreSettlementRevision"
-																	r.operationGroup = ""
+																	r.operationGroup = "Build"
 																	r.pathPattern = "/api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore"
 																	r.args = args
 																	r.count = 3
@@ -6063,7 +6203,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = ListShopsOperation
 												r.summary = "List Shops"
 												r.operationID = "listShops"
-												r.operationGroup = ""
+												r.operationGroup = "Read"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/shops"
 												r.args = args
 												r.count = 1
@@ -6072,7 +6212,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = CreateShopOperation
 												r.summary = "Create a Shop"
 												r.operationID = "createShop"
-												r.operationGroup = ""
+												r.operationGroup = "Build"
 												r.pathPattern = "/api/v1/campaigns/{campaignId}/shops"
 												r.args = args
 												r.count = 1
@@ -6105,7 +6245,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = DeleteShopOperation
 													r.summary = "Delete a Shop"
 													r.operationID = "deleteShop"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/shops/{shopId}"
 													r.args = args
 													r.count = 2
@@ -6114,7 +6254,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 													r.name = UpdateShopOperation
 													r.summary = "Update a Shop"
 													r.operationID = "updateShop"
-													r.operationGroup = ""
+													r.operationGroup = "Build"
 													r.pathPattern = "/api/v1/campaigns/{campaignId}/shops/{shopId}"
 													r.args = args
 													r.count = 2
@@ -6150,7 +6290,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 															r.name = ListShopRevisionsOperation
 															r.summary = "List Shop revisions"
 															r.operationID = "listShopRevisions"
-															r.operationGroup = ""
+															r.operationGroup = "Read"
 															r.pathPattern = "/api/v1/campaigns/{campaignId}/shops/{shopId}/revisions"
 															r.args = args
 															r.count = 2
@@ -6196,7 +6336,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																	r.name = RestoreShopRevisionOperation
 																	r.summary = "Restore a Shop revision"
 																	r.operationID = "restoreShopRevision"
-																	r.operationGroup = ""
+																	r.operationGroup = "Build"
 																	r.pathPattern = "/api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore"
 																	r.args = args
 																	r.count = 3
@@ -6225,7 +6365,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 															r.name = RerollStockOperation
 															r.summary = "Reroll Stock"
 															r.operationID = "rerollStock"
-															r.operationGroup = ""
+															r.operationGroup = "Build"
 															r.pathPattern = "/api/v1/campaigns/{campaignId}/shops/{shopId}/stock"
 															r.args = args
 															r.count = 2
@@ -6276,7 +6416,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = GetAutomationCoverageOperation
 									r.summary = "Get automation coverage"
 									r.operationID = "getAutomationCoverage"
-									r.operationGroup = ""
+									r.operationGroup = "Read"
 									r.pathPattern = "/api/v1/compendium/automation"
 									r.args = args
 									r.count = 0
@@ -6301,7 +6441,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = GetBuilderOptionsOperation
 									r.summary = "Get character builder options"
 									r.operationID = "getBuilderOptions"
-									r.operationGroup = ""
+									r.operationGroup = "Read"
 									r.pathPattern = "/api/v1/compendium/builder"
 									r.args = args
 									r.count = 0
@@ -6325,7 +6465,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = ListEntriesOperation
 									r.summary = "List compendium entries"
 									r.operationID = "listEntries"
-									r.operationGroup = ""
+									r.operationGroup = "Read"
 									r.pathPattern = "/api/v1/compendium/entries"
 									r.args = args
 									r.count = 0
@@ -6380,7 +6520,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = GetEntryOperation
 											r.summary = "Get a compendium entry"
 											r.operationID = "getEntry"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/compendium/entries/{kind}/{slug}"
 											r.args = args
 											r.count = 2
@@ -6421,7 +6561,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = ListSourcesOperation
 										r.summary = "List compendium sources"
 										r.operationID = "listSources"
-										r.operationGroup = ""
+										r.operationGroup = "Read"
 										r.pathPattern = "/api/v1/compendium/sources"
 										r.args = args
 										r.count = 0
@@ -6445,7 +6585,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = ListSpellsOperation
 										r.summary = "List spells"
 										r.operationID = "listSpells"
-										r.operationGroup = ""
+										r.operationGroup = "Read"
 										r.pathPattern = "/api/v1/compendium/spells"
 										r.args = args
 										r.count = 0
@@ -6479,7 +6619,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = GetSpellOperation
 											r.summary = "Get a spell"
 											r.operationID = "getSpell"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/compendium/spells/{slug}"
 											r.args = args
 											r.count = 1
@@ -6524,7 +6664,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = AcceptInviteOperation
 								r.summary = "Accept an invite"
 								r.operationID = "acceptInvite"
-								r.operationGroup = ""
+								r.operationGroup = "Build"
 								r.pathPattern = "/api/v1/invites/accept"
 								r.args = args
 								r.count = 0
@@ -6549,7 +6689,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = PreviewInviteOperation
 								r.summary = "Preview an invite"
 								r.operationID = "previewInvite"
-								r.operationGroup = ""
+								r.operationGroup = "Build"
 								r.pathPattern = "/api/v1/invites/preview"
 								r.args = args
 								r.count = 0
@@ -6576,7 +6716,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							r.name = GetMeOperation
 							r.summary = "Who am I"
 							r.operationID = "getMe"
-							r.operationGroup = ""
+							r.operationGroup = "Read"
 							r.pathPattern = "/api/v1/me"
 							r.args = args
 							r.count = 0
@@ -6613,7 +6753,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = CreateOidcAccountOperation
 								r.summary = "Create an Account for an external login"
 								r.operationID = "createOidcAccount"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/oidc/accounts"
 								r.args = args
 								r.count = 0
@@ -6638,7 +6778,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = FinishOidcOperation
 								r.summary = "Finish an external sign-in"
 								r.operationID = "finishOidc"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/oidc/callback"
 								r.args = args
 								r.count = 0
@@ -6663,7 +6803,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = LinkOidcAccountOperation
 								r.summary = "Link an external login to an existing Account"
 								r.operationID = "linkOidcAccount"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/oidc/links"
 								r.args = args
 								r.count = 0
@@ -6688,7 +6828,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = StartOidcSignInOperation
 								r.summary = "Start signing in with the external login"
 								r.operationID = "startOidcSignIn"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/oidc/sign-ins"
 								r.args = args
 								r.count = 0
@@ -6727,7 +6867,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = GetPushKeyOperation
 								r.summary = "Get the push key"
 								r.operationID = "getPushKey"
-								r.operationGroup = ""
+								r.operationGroup = "Read"
 								r.pathPattern = "/api/v1/push/key"
 								r.args = args
 								r.count = 0
@@ -6751,7 +6891,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = CreatePushSubscriptionOperation
 								r.summary = "Subscribe a device"
 								r.operationID = "createPushSubscription"
-								r.operationGroup = ""
+								r.operationGroup = "Account"
 								r.pathPattern = "/api/v1/push/subscriptions"
 								r.args = args
 								r.count = 0
@@ -6785,7 +6925,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = DeletePushSubscriptionOperation
 									r.summary = "Unsubscribe a device"
 									r.operationID = "deletePushSubscription"
-									r.operationGroup = ""
+									r.operationGroup = "Account"
 									r.pathPattern = "/api/v1/push/subscriptions/{subscriptionId}"
 									r.args = args
 									r.count = 1
@@ -6826,7 +6966,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = PreviewReachOperation
 								r.summary = "Preview movement"
 								r.operationID = "previewReach"
-								r.operationGroup = ""
+								r.operationGroup = "Build"
 								r.pathPattern = "/api/v1/rules/hex/reach"
 								r.args = args
 								r.count = 0
@@ -6851,7 +6991,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = PreviewSightOperation
 								r.summary = "Preview line of sight"
 								r.operationID = "previewSight"
-								r.operationGroup = ""
+								r.operationGroup = "Build"
 								r.pathPattern = "/api/v1/rules/hex/sight"
 								r.args = args
 								r.count = 0
@@ -6901,7 +7041,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = SignInOperation
 									r.summary = "Sign in with a Username and password"
 									r.operationID = "signIn"
-									r.operationGroup = ""
+									r.operationGroup = "Account"
 									r.pathPattern = "/api/v1/sign-in"
 									r.args = args
 									r.count = 0
@@ -6937,7 +7077,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = RequestSignInLinkOperation
 											r.summary = "Email a sign-in link"
 											r.operationID = "requestSignInLink"
-											r.operationGroup = ""
+											r.operationGroup = "Account"
 											r.pathPattern = "/api/v1/sign-in-links"
 											r.args = args
 											r.count = 0
@@ -6962,7 +7102,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 												r.name = UseSignInLinkOperation
 												r.summary = "Sign in with an emailed link"
 												r.operationID = "useSignInLink"
-												r.operationGroup = ""
+												r.operationGroup = "Account"
 												r.pathPattern = "/api/v1/sign-in-links/use"
 												r.args = args
 												r.count = 0
@@ -6989,7 +7129,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 											r.name = GetSignInMethodsOperation
 											r.summary = "List the sign-in methods"
 											r.operationID = "getSignInMethods"
-											r.operationGroup = ""
+											r.operationGroup = "Read"
 											r.pathPattern = "/api/v1/sign-in-methods"
 											r.args = args
 											r.count = 0
@@ -7016,7 +7156,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 										r.name = PassTwoStepOperation
 										r.summary = "Answer the second step"
 										r.operationID = "passTwoStep"
-										r.operationGroup = ""
+										r.operationGroup = "Account"
 										r.pathPattern = "/api/v1/sign-in/two-step"
 										r.args = args
 										r.count = 0
@@ -7043,7 +7183,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.name = SignOutOperation
 									r.summary = "Sign out"
 									r.operationID = "signOut"
-									r.operationGroup = ""
+									r.operationGroup = "Account"
 									r.pathPattern = "/api/v1/sign-out"
 									r.args = args
 									r.count = 0
@@ -7070,7 +7210,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.name = GetStatusOperation
 								r.summary = "Service status"
 								r.operationID = "getStatus"
-								r.operationGroup = ""
+								r.operationGroup = "Read"
 								r.pathPattern = "/api/v1/status"
 								r.args = args
 								r.count = 0
@@ -7099,7 +7239,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = GetHealthOperation
 						r.summary = "Liveness probe"
 						r.operationID = "getHealth"
-						r.operationGroup = ""
+						r.operationGroup = "Read"
 						r.pathPattern = "/healthz"
 						r.args = args
 						r.count = 0
@@ -7124,7 +7264,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = GetReadinessOperation
 						r.summary = "Readiness probe"
 						r.operationID = "getReadiness"
-						r.operationGroup = ""
+						r.operationGroup = "Read"
 						r.pathPattern = "/readyz"
 						r.args = args
 						r.count = 0

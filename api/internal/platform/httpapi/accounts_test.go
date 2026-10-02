@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	campaignapp "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
 	identityapp "github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
@@ -84,9 +86,9 @@ func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (htt
 		h, err := httpapi.New(httpapi.Options{
 			Handler: &httpapi.Handler{
 				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
-				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())),
+				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())), NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			},
-			RateLimit: 1000, Now: time.Now, Sessions: accounts, TrustForwardAuth: trust,
+			RateLimit: 1000, Now: time.Now, Sessions: accounts, TrustForwardAuth: trust, Edits: campaignpg.New(store.Pool()),
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -360,6 +362,15 @@ func (brokenAccounts) ResetRecoveryCodes(context.Context, string, string) ([]str
 	return nil, errAccounts
 }
 
+func (brokenAccounts) MintToken(context.Context, string, string, []string, int) (string, domain.AccessToken, error) {
+	return "", domain.AccessToken{}, errAccounts
+}
+
+func (brokenAccounts) AccessTokens(context.Context, string) ([]domain.AccessToken, error) {
+	return nil, errAccounts
+}
+func (brokenAccounts) RevokeToken(context.Context, string, uuid.UUID) error { return errAccounts }
+
 // When the Account store fails, every call answers 503 without saying why.
 func TestAccountsWhenTheStoreFails(t *testing.T) {
 	t.Parallel()
@@ -392,6 +403,9 @@ func TestAccountsWhenTheStoreFails(t *testing.T) {
 		{http.MethodPost, "/api/v1/account/two-step/confirm", "", "someone", `{"code":"123456"}`},
 		{http.MethodPost, "/api/v1/account/two-step/disable", "", "someone", `{"code":"123456"}`},
 		{http.MethodPost, "/api/v1/account/two-step/recovery-codes", "", "someone", `{"code":"123456"}`},
+		{http.MethodGet, "/api/v1/account/access-tokens", "", "someone", ""},
+		{http.MethodPost, "/api/v1/account/access-tokens", "", "someone", `{"name":"x","scopes":["read"],"days":1}`},
+		{http.MethodDelete, "/api/v1/account/access-tokens/0190c7a8-0000-7000-8000-0000000000c1", "", "someone", ""},
 	} {
 		if rec := send(h, c.method, c.path, c.cookie, c.subject, c.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s = %d %s", c.method, c.path, rec.Code, rec.Body.String())

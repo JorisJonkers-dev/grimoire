@@ -21,6 +21,10 @@ type ConfirmTwoStepRes interface {
 	confirmTwoStepRes()
 }
 
+type CreateAccessTokenRes interface {
+	createAccessTokenRes()
+}
+
 type CreateAccountInviteRes interface {
 	createAccountInviteRes()
 }
@@ -217,6 +221,10 @@ type LinkOidcAccountRes interface {
 	linkOidcAccountRes()
 }
 
+type ListAccessTokensRes interface {
+	listAccessTokensRes()
+}
+
 type ListActivityRes interface {
 	listActivityRes()
 }
@@ -379,6 +387,10 @@ type RestoreSettlementRevisionRes interface {
 
 type RestoreShopRevisionRes interface {
 	restoreShopRevisionRes()
+}
+
+type RevokeAccessTokenRes interface {
+	revokeAccessTokenRes()
 }
 
 type RevokeInviteRes interface {

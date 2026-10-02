@@ -9679,6 +9679,79 @@ func decodeRestoreShopRevisionParams(args [3]string, argsEscaped bool, r *http.R
 	return params, nil
 }
 
+// RevokeAccessTokenParams is parameters of revokeAccessToken operation.
+type RevokeAccessTokenParams struct {
+	// Access Token id.
+	AccessId ID
+}
+
+func unpackRevokeAccessTokenParams(packed middleware.Parameters) (params RevokeAccessTokenParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "accessId",
+			In:   "path",
+		}
+		params.AccessId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeRevokeAccessTokenParams(args [1]string, argsEscaped bool, r *http.Request) (params RevokeAccessTokenParams, _ error) {
+	// Decode path: accessId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "accessId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotAccessIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAccessIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AccessId = ID(paramsDotAccessIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "accessId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // RevokeInviteParams is parameters of revokeInvite operation.
 type RevokeInviteParams struct {
 	// Campaign id.

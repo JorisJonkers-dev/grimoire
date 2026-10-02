@@ -30,18 +30,22 @@ func trimTrailingSlashes(u *url.URL) {
 
 // Invoker invokes operations described by OpenAPI v3 specification.
 type Invoker interface {
+	AccountInvoker
+	BuildInvoker
+	PlayInvoker
+	ReadInvoker
+}
+
+// AccountInvoker invokes operations described by OpenAPI v3 specification.
+//
+// x-gen-operation-group: Account
+type AccountInvoker interface {
 	// AcceptAccountInvite invokes acceptAccountInvite operation.
 	//
 	// Creates the Account the invite was for and signs it in on this device.
 	//
 	// POST /api/v1/account-invites/accept
 	AcceptAccountInvite(ctx context.Context, request *AccountSetup) (AcceptAccountInviteRes, error)
-	// AcceptInvite invokes acceptInvite operation.
-	//
-	// Joins the caller to the Campaign as a Player. A Member keeps their role.
-	//
-	// POST /api/v1/invites/accept
-	AcceptInvite(ctx context.Context, request *InviteAccept) (AcceptInviteRes, error)
 	// BeginTwoStep invokes beginTwoStep operation.
 	//
 	// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
@@ -49,18 +53,19 @@ type Invoker interface {
 	//
 	// POST /api/v1/account/two-step
 	BeginTwoStep(ctx context.Context) (BeginTwoStepRes, error)
-	// ClearTokenIcon invokes clearTokenIcon operation.
-	//
-	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
-	//
-	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
-	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
 	// ConfirmTwoStep invokes confirmTwoStep operation.
 	//
 	// Checks a first code from the app and returns the recovery codes, shown only now.
 	//
 	// POST /api/v1/account/two-step/confirm
 	ConfirmTwoStep(ctx context.Context, request *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error)
+	// CreateAccessToken invokes createAccessToken operation.
+	//
+	// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
+	// now.
+	//
+	// POST /api/v1/account/access-tokens
+	CreateAccessToken(ctx context.Context, request *AccessTokenRequest) (CreateAccessTokenRes, error)
 	// CreateAccountInvite invokes createAccountInvite operation.
 	//
 	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
@@ -68,6 +73,142 @@ type Invoker interface {
 	//
 	// POST /api/v1/admin/account-invites
 	CreateAccountInvite(ctx context.Context, request *AccountInviteRequest) (CreateAccountInviteRes, error)
+	// CreateOidcAccount invokes createOidcAccount operation.
+	//
+	// Sets up an Account for a login no Account has yet, and signs it in.
+	//
+	// POST /api/v1/oidc/accounts
+	CreateOidcAccount(ctx context.Context, request *OidcAccountSetup) (CreateOidcAccountRes, error)
+	// CreatePushSubscription invokes createPushSubscription operation.
+	//
+	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
+	// closed.
+	//
+	// POST /api/v1/push/subscriptions
+	CreatePushSubscription(ctx context.Context, request *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
+	// DeletePushSubscription invokes deletePushSubscription operation.
+	//
+	// Stops notifications to one of the caller's devices.
+	//
+	// DELETE /api/v1/push/subscriptions/{subscriptionId}
+	DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (DeletePushSubscriptionRes, error)
+	// DisableTwoStep invokes disableTwoStep operation.
+	//
+	// Needs a current code or a recovery code; the recovery codes go too.
+	//
+	// POST /api/v1/account/two-step/disable
+	DisableTwoStep(ctx context.Context, request *TwoStepCode) (DisableTwoStepRes, error)
+	// FinishOidc invokes finishOidc operation.
+	//
+	// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+	// Account page started it, or leaves it waiting for an Account.
+	//
+	// POST /api/v1/oidc/callback
+	FinishOidc(ctx context.Context, request *OidcCallback, params FinishOidcParams) (FinishOidcRes, error)
+	// LinkOidcAccount invokes linkOidcAccount operation.
+	//
+	// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+	//
+	// POST /api/v1/oidc/links
+	LinkOidcAccount(ctx context.Context, request *OidcAccountLink) (LinkOidcAccountRes, error)
+	// PassTwoStep invokes passTwoStep operation.
+	//
+	// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+	// and five wrong codes.
+	//
+	// POST /api/v1/sign-in/two-step
+	PassTwoStep(ctx context.Context, request *TwoStepAnswer) (PassTwoStepRes, error)
+	// PreviewAccountInvite invokes previewAccountInvite operation.
+	//
+	// Whether an invite link can still set up an Account; gone once used or expired.
+	//
+	// POST /api/v1/account-invites/preview
+	PreviewAccountInvite(ctx context.Context, request *LinkToken) (PreviewAccountInviteRes, error)
+	// RequestSignInLink invokes requestSignInLink operation.
+	//
+	// For a forgotten password. Answers the same whether or not an Account has the email.
+	//
+	// POST /api/v1/sign-in-links
+	RequestSignInLink(ctx context.Context, request *SignInLinkRequest) (RequestSignInLinkRes, error)
+	// ResetRecoveryCodes invokes resetRecoveryCodes operation.
+	//
+	// Needs a current code; the old recovery codes stop working.
+	//
+	// POST /api/v1/account/two-step/recovery-codes
+	ResetRecoveryCodes(ctx context.Context, request *TwoStepCode) (ResetRecoveryCodesRes, error)
+	// RevokeAccessToken invokes revokeAccessToken operation.
+	//
+	// The token stops working at once.
+	//
+	// DELETE /api/v1/account/access-tokens/{accessId}
+	RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (RevokeAccessTokenRes, error)
+	// SetAccountPassword invokes setAccountPassword operation.
+	//
+	// Replaces the signed-in Account's password, for example after signing in with an emailed link.
+	//
+	// PUT /api/v1/account/password
+	SetAccountPassword(ctx context.Context, request *PasswordChange) (SetAccountPasswordRes, error)
+	// SignIn invokes signIn operation.
+	//
+	// Signs the Account in on this device. Every failure answers the same.
+	//
+	// POST /api/v1/sign-in
+	SignIn(ctx context.Context, request *SignInRequest) (SignInRes, error)
+	// SignOut invokes signOut operation.
+	//
+	// Ends this device's session and clears its cookie.
+	//
+	// POST /api/v1/sign-out
+	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
+	// StartOidcLink invokes startOidcLink operation.
+	//
+	// Returns where to send the browser to link a login to the signed-in Account.
+	//
+	// POST /api/v1/account/oidc-link
+	StartOidcLink(ctx context.Context) (StartOidcLinkRes, error)
+	// StartOidcSignIn invokes startOidcSignIn operation.
+	//
+	// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+	//
+	// POST /api/v1/oidc/sign-ins
+	StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error)
+	// UnlinkOidc invokes unlinkOidc operation.
+	//
+	// Removes the linked login; the Account stays. An Account without a password keeps its login.
+	//
+	// DELETE /api/v1/account/oidc-link
+	UnlinkOidc(ctx context.Context) (UnlinkOidcRes, error)
+	// UpdateAccount invokes updateAccount operation.
+	//
+	// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+	// read-only.
+	//
+	// PUT /api/v1/account
+	UpdateAccount(ctx context.Context, request *AccountChange) (UpdateAccountRes, error)
+	// UseSignInLink invokes useSignInLink operation.
+	//
+	// Signs the Account in on this device; a link works once, within 30 minutes.
+	//
+	// POST /api/v1/sign-in-links/use
+	UseSignInLink(ctx context.Context, request *LinkToken) (UseSignInLinkRes, error)
+}
+
+// BuildInvoker invokes operations described by OpenAPI v3 specification.
+//
+// x-gen-operation-group: Build
+type BuildInvoker interface {
+	// AcceptInvite invokes acceptInvite operation.
+	//
+	// Joins the caller to the Campaign as a Player. A Member keeps their role.
+	//
+	// POST /api/v1/invites/accept
+	AcceptInvite(ctx context.Context, request *InviteAccept) (AcceptInviteRes, error)
+	// ClearTokenIcon invokes clearTokenIcon operation.
+	//
+	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
 	// CreateCampaign invokes createCampaign operation.
 	//
 	// Starts a Campaign with the caller as its first DM.
@@ -110,25 +251,6 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, request *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
-	// CreateOidcAccount invokes createOidcAccount operation.
-	//
-	// Sets up an Account for a login no Account has yet, and signs it in.
-	//
-	// POST /api/v1/oidc/accounts
-	CreateOidcAccount(ctx context.Context, request *OidcAccountSetup) (CreateOidcAccountRes, error)
-	// CreatePushSubscription invokes createPushSubscription operation.
-	//
-	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
-	// closed.
-	//
-	// POST /api/v1/push/subscriptions
-	CreatePushSubscription(ctx context.Context, request *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
-	// CreateRoll invokes createRoll operation.
-	//
-	// Opens a Roll Request for the caller, or, from a DM, for another Member.
-	//
-	// POST /api/v1/campaigns/{campaignId}/rolls
-	CreateRoll(ctx context.Context, request *RollCreate, params CreateRollParams) (CreateRollRes, error)
 	// CreateSettlement invokes createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -171,12 +293,6 @@ type Invoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
-	// DeletePushSubscription invokes deletePushSubscription operation.
-	//
-	// Stops notifications to one of the caller's devices.
-	//
-	// DELETE /api/v1/push/subscriptions/{subscriptionId}
-	DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (DeletePushSubscriptionRes, error)
 	// DeleteSettlement invokes deleteSettlement operation.
 	//
 	// Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -189,31 +305,236 @@ type Invoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
-	// DiffNpcRevisions invokes diffNpcRevisions operation.
+	// PreviewCharacter invokes previewCharacter operation.
 	//
-	// The fields that differ between two Revisions. DM only.
+	// Validates a build and returns the sheet it would make, without saving it.
 	//
-	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
-	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
-	// DisableTwoStep invokes disableTwoStep operation.
+	// POST /api/v1/campaigns/{campaignId}/characters/preview
+	PreviewCharacter(ctx context.Context, request *CharacterBuild, params PreviewCharacterParams) (PreviewCharacterRes, error)
+	// PreviewInvite invokes previewInvite operation.
 	//
-	// Needs a current code or a recovery code; the recovery codes go too.
+	// Which Campaign an invite link leads to, before joining.
 	//
-	// POST /api/v1/account/two-step/disable
-	DisableTwoStep(ctx context.Context, request *TwoStepCode) (DisableTwoStepRes, error)
+	// POST /api/v1/invites/preview
+	PreviewInvite(ctx context.Context, request *InviteToken) (PreviewInviteRes, error)
+	// PreviewReach invokes previewReach operation.
+	//
+	// Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
+	//
+	// POST /api/v1/rules/hex/reach
+	PreviewReach(ctx context.Context, request *ReachRequest) (PreviewReachRes, error)
+	// PreviewSight invokes previewSight operation.
+	//
+	// Whether one hex can see another and the cover in between. Changes nothing.
+	//
+	// POST /api/v1/rules/hex/sight
+	PreviewSight(ctx context.Context, request *SightRequest) (PreviewSightRes, error)
+	// RemoveMember invokes removeMember operation.
+	//
+	// A DM removes a Member, or a Member leaves. The last DM cannot leave.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
+	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RerollStock invokes rerollStock operation.
+	//
+	// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
+	RerollStock(ctx context.Context, params RerollStockParams) (RerollStockRes, error)
+	// RestoreEncounterPoolRevision invokes restoreEncounterPoolRevision operation.
+	//
+	// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore
+	RestoreEncounterPoolRevision(ctx context.Context, params RestoreEncounterPoolRevisionParams) (RestoreEncounterPoolRevisionRes, error)
+	// RestoreEncounterTableRevision invokes restoreEncounterTableRevision operation.
+	//
+	// Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
+	RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (RestoreEncounterTableRevisionRes, error)
+	// RestoreLootTableRevision invokes restoreLootTableRevision operation.
+	//
+	// Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore
+	RestoreLootTableRevision(ctx context.Context, params RestoreLootTableRevisionParams) (RestoreLootTableRevisionRes, error)
+	// RestoreNpcRevision invokes restoreNpcRevision operation.
+	//
+	// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
+	RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (RestoreNpcRevisionRes, error)
+	// RestoreSettlementRevision invokes restoreSettlementRevision operation.
+	//
+	// Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a
+	// Revision. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore
+	RestoreSettlementRevision(ctx context.Context, params RestoreSettlementRevisionParams) (RestoreSettlementRevisionRes, error)
+	// RestoreShopRevision invokes restoreShopRevision operation.
+	//
+	// Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
+	RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (RestoreShopRevisionRes, error)
+	// RevokeInvite invokes revokeInvite operation.
+	//
+	// Closes an invite link. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
+	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
+	// SetPortrait invokes setPortrait operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
+	SetPortrait(ctx context.Context, request SetPortraitReq, params SetPortraitParams) (SetPortraitRes, error)
+	// SetTokenIcon invokes setTokenIcon operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+	SetTokenIcon(ctx context.Context, request SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// UndoChange invokes undoChange operation.
+	//
+	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
+	// Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
+	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
+	// UpdateCampaign invokes updateCampaign operation.
+	//
+	// Changes a Campaign's settings. DM only.
+	//
+	// PATCH /api/v1/campaigns/{campaignId}
+	UpdateCampaign(ctx context.Context, request *CampaignUpdate, params UpdateCampaignParams) (UpdateCampaignRes, error)
+	// UpdateCharacter invokes updateCharacter operation.
+	//
+	// Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
+	//
+	// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
+	UpdateCharacter(ctx context.Context, request *CharacterEdit, params UpdateCharacterParams) (UpdateCharacterRes, error)
+	// UpdateEncounterPool invokes updateEncounterPool operation.
+	//
+	// Replaces the Encounter Pool and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}
+	UpdateEncounterPool(ctx context.Context, request *EncounterPoolInput, params UpdateEncounterPoolParams) (UpdateEncounterPoolRes, error)
+	// UpdateEncounterTable invokes updateEncounterTable operation.
+	//
+	// Replaces the Encounter Table and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
+	UpdateEncounterTable(ctx context.Context, request *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
+	// UpdateLootTable invokes updateLootTable operation.
+	//
+	// Replaces the Loot Table and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
+	UpdateLootTable(ctx context.Context, request *LootTableInput, params UpdateLootTableParams) (UpdateLootTableRes, error)
+	// UpdateMap invokes updateMap operation.
+	//
+	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/maps/{mapId}
+	UpdateMap(ctx context.Context, request *MapEdit, params UpdateMapParams) (UpdateMapRes, error)
+	// UpdateMember invokes updateMember operation.
+	//
+	// Makes a Member a DM or a Player. DM only; the last DM cannot step down.
+	//
+	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
+	UpdateMember(ctx context.Context, request *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
+	// UpdateNpc invokes updateNpc operation.
+	//
+	// Replaces the NPC and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	UpdateNpc(ctx context.Context, request *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
+	// UpdateSettlement invokes updateSettlement operation.
+	//
+	// Replaces the Settlement and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/settlements/{settlementId}
+	UpdateSettlement(ctx context.Context, request *SettlementInput, params UpdateSettlementParams) (UpdateSettlementRes, error)
+	// UpdateShop invokes updateShop operation.
+	//
+	// Replaces the Shop and records a Revision. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/shops/{shopId}
+	UpdateShop(ctx context.Context, request *ShopInput, params UpdateShopParams) (UpdateShopRes, error)
+	// UploadMap invokes uploadMap operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/maps
+	UploadMap(ctx context.Context, request UploadMapReq, params UploadMapParams) (UploadMapRes, error)
+}
+
+// PlayInvoker invokes operations described by OpenAPI v3 specification.
+//
+// x-gen-operation-group: Play
+type PlayInvoker interface {
+	// CreateRoll invokes createRoll operation.
+	//
+	// Opens a Roll Request for the caller, or, from a DM, for another Member.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls
+	CreateRoll(ctx context.Context, request *RollCreate, params CreateRollParams) (CreateRollRes, error)
 	// EndSession invokes endSession operation.
 	//
 	// Ends a live Session and disconnects everyone. DM only.
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
-	// FinishOidc invokes finishOidc operation.
+	// RollRest invokes rollRest operation.
 	//
-	// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
-	// Account page started it, or leaves it waiting for an Account.
+	// The server rolls every die still empty. The roller or a DM.
 	//
-	// POST /api/v1/oidc/callback
-	FinishOidc(ctx context.Context, request *OidcCallback, params FinishOidcParams) (FinishOidcRes, error)
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
+	RollRest(ctx context.Context, params RollRestParams) (RollRestRes, error)
+	// SendLiveCommand invokes sendLiveCommand operation.
+	//
+	// Sends one command to a live Session as the caller, with the same authority as their live connection,
+	// and answers once the Session has applied it. Members only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
+	SendLiveCommand(ctx context.Context, request *LiveCommand, params SendLiveCommandParams) (SendLiveCommandRes, error)
+	// SetDie invokes setDie operation.
+	//
+	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
+	// or a DM; the last die resolves the request.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
+	SetDie(ctx context.Context, request *DieFill, params SetDieParams) (SetDieRes, error)
+	// StartSession invokes startSession operation.
+	//
+	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
+	// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are
+	// LiveCommand and LiveUpdate.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions
+	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
+}
+
+// ReadInvoker invokes operations described by OpenAPI v3 specification.
+//
+// x-gen-operation-group: Read
+type ReadInvoker interface {
+	// DiffNpcRevisions invokes diffNpcRevisions operation.
+	//
+	// The fields that differ between two Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
+	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
 	// GetAccount invokes getAccount operation.
 	//
 	// The Account the caller is signed in as.
@@ -355,12 +676,12 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
-	// LinkOidcAccount invokes linkOidcAccount operation.
+	// ListAccessTokens invokes listAccessTokens operation.
 	//
-	// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+	// The signed-in Account's live Access Tokens, newest first, with when each was last used.
 	//
-	// POST /api/v1/oidc/links
-	LinkOidcAccount(ctx context.Context, request *OidcAccountLink) (LinkOidcAccountRes, error)
+	// GET /api/v1/account/access-tokens
+	ListAccessTokens(ctx context.Context) (ListAccessTokensRes, error)
 	// ListActivity invokes listActivity operation.
 	//
 	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
@@ -513,280 +834,6 @@ type Invoker interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
-	// PassTwoStep invokes passTwoStep operation.
-	//
-	// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
-	// and five wrong codes.
-	//
-	// POST /api/v1/sign-in/two-step
-	PassTwoStep(ctx context.Context, request *TwoStepAnswer) (PassTwoStepRes, error)
-	// PreviewAccountInvite invokes previewAccountInvite operation.
-	//
-	// Whether an invite link can still set up an Account; gone once used or expired.
-	//
-	// POST /api/v1/account-invites/preview
-	PreviewAccountInvite(ctx context.Context, request *LinkToken) (PreviewAccountInviteRes, error)
-	// PreviewCharacter invokes previewCharacter operation.
-	//
-	// Validates a build and returns the sheet it would make, without saving it.
-	//
-	// POST /api/v1/campaigns/{campaignId}/characters/preview
-	PreviewCharacter(ctx context.Context, request *CharacterBuild, params PreviewCharacterParams) (PreviewCharacterRes, error)
-	// PreviewInvite invokes previewInvite operation.
-	//
-	// Which Campaign an invite link leads to, before joining.
-	//
-	// POST /api/v1/invites/preview
-	PreviewInvite(ctx context.Context, request *InviteToken) (PreviewInviteRes, error)
-	// PreviewReach invokes previewReach operation.
-	//
-	// Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
-	//
-	// POST /api/v1/rules/hex/reach
-	PreviewReach(ctx context.Context, request *ReachRequest) (PreviewReachRes, error)
-	// PreviewSight invokes previewSight operation.
-	//
-	// Whether one hex can see another and the cover in between. Changes nothing.
-	//
-	// POST /api/v1/rules/hex/sight
-	PreviewSight(ctx context.Context, request *SightRequest) (PreviewSightRes, error)
-	// RemoveMember invokes removeMember operation.
-	//
-	// A DM removes a Member, or a Member leaves. The last DM cannot leave.
-	//
-	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
-	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
-	// RequestSignInLink invokes requestSignInLink operation.
-	//
-	// For a forgotten password. Answers the same whether or not an Account has the email.
-	//
-	// POST /api/v1/sign-in-links
-	RequestSignInLink(ctx context.Context, request *SignInLinkRequest) (RequestSignInLinkRes, error)
-	// RerollStock invokes rerollStock operation.
-	//
-	// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
-	// Revision. DM only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
-	RerollStock(ctx context.Context, params RerollStockParams) (RerollStockRes, error)
-	// ResetRecoveryCodes invokes resetRecoveryCodes operation.
-	//
-	// Needs a current code; the old recovery codes stop working.
-	//
-	// POST /api/v1/account/two-step/recovery-codes
-	ResetRecoveryCodes(ctx context.Context, request *TwoStepCode) (ResetRecoveryCodesRes, error)
-	// RestoreEncounterPoolRevision invokes restoreEncounterPoolRevision operation.
-	//
-	// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
-	// Revision. DM only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore
-	RestoreEncounterPoolRevision(ctx context.Context, params RestoreEncounterPoolRevisionParams) (RestoreEncounterPoolRevisionRes, error)
-	// RestoreEncounterTableRevision invokes restoreEncounterTableRevision operation.
-	//
-	// Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a
-	// Revision. DM only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore
-	RestoreEncounterTableRevision(ctx context.Context, params RestoreEncounterTableRevisionParams) (RestoreEncounterTableRevisionRes, error)
-	// RestoreLootTableRevision invokes restoreLootTableRevision operation.
-	//
-	// Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a
-	// Revision. DM only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore
-	RestoreLootTableRevision(ctx context.Context, params RestoreLootTableRevisionParams) (RestoreLootTableRevisionRes, error)
-	// RestoreNpcRevision invokes restoreNpcRevision operation.
-	//
-	// Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
-	// only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore
-	RestoreNpcRevision(ctx context.Context, params RestoreNpcRevisionParams) (RestoreNpcRevisionRes, error)
-	// RestoreSettlementRevision invokes restoreSettlementRevision operation.
-	//
-	// Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a
-	// Revision. DM only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore
-	RestoreSettlementRevision(ctx context.Context, params RestoreSettlementRevisionParams) (RestoreSettlementRevisionRes, error)
-	// RestoreShopRevision invokes restoreShopRevision operation.
-	//
-	// Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM
-	// only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
-	RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (RestoreShopRevisionRes, error)
-	// RevokeInvite invokes revokeInvite operation.
-	//
-	// Closes an invite link. DM only.
-	//
-	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
-	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
-	// RollRest invokes rollRest operation.
-	//
-	// The server rolls every die still empty. The roller or a DM.
-	//
-	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
-	RollRest(ctx context.Context, params RollRestParams) (RollRestRes, error)
-	// SendLiveCommand invokes sendLiveCommand operation.
-	//
-	// Sends one command to a live Session as the caller, with the same authority as their live connection,
-	// and answers once the Session has applied it. Members only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
-	SendLiveCommand(ctx context.Context, request *LiveCommand, params SendLiveCommandParams) (SendLiveCommandRes, error)
-	// SetAccountPassword invokes setAccountPassword operation.
-	//
-	// Replaces the signed-in Account's password, for example after signing in with an emailed link.
-	//
-	// PUT /api/v1/account/password
-	SetAccountPassword(ctx context.Context, request *PasswordChange) (SetAccountPasswordRes, error)
-	// SetDie invokes setDie operation.
-	//
-	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
-	// or a DM; the last die resolves the request.
-	//
-	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
-	SetDie(ctx context.Context, request *DieFill, params SetDieParams) (SetDieRes, error)
-	// SetPortrait invokes setPortrait operation.
-	//
-	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
-	SetPortrait(ctx context.Context, request SetPortraitReq, params SetPortraitParams) (SetPortraitRes, error)
-	// SetTokenIcon invokes setTokenIcon operation.
-	//
-	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
-	SetTokenIcon(ctx context.Context, request SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
-	// SignIn invokes signIn operation.
-	//
-	// Signs the Account in on this device. Every failure answers the same.
-	//
-	// POST /api/v1/sign-in
-	SignIn(ctx context.Context, request *SignInRequest) (SignInRes, error)
-	// SignOut invokes signOut operation.
-	//
-	// Ends this device's session and clears its cookie.
-	//
-	// POST /api/v1/sign-out
-	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
-	// StartOidcLink invokes startOidcLink operation.
-	//
-	// Returns where to send the browser to link a login to the signed-in Account.
-	//
-	// POST /api/v1/account/oidc-link
-	StartOidcLink(ctx context.Context) (StartOidcLinkRes, error)
-	// StartOidcSignIn invokes startOidcSignIn operation.
-	//
-	// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
-	//
-	// POST /api/v1/oidc/sign-ins
-	StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error)
-	// StartSession invokes startSession operation.
-	//
-	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
-	// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are
-	// LiveCommand and LiveUpdate.
-	//
-	// POST /api/v1/campaigns/{campaignId}/sessions
-	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
-	// UndoChange invokes undoChange operation.
-	//
-	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
-	// Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM
-	// only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
-	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
-	// UnlinkOidc invokes unlinkOidc operation.
-	//
-	// Removes the linked login; the Account stays. An Account without a password keeps its login.
-	//
-	// DELETE /api/v1/account/oidc-link
-	UnlinkOidc(ctx context.Context) (UnlinkOidcRes, error)
-	// UpdateAccount invokes updateAccount operation.
-	//
-	// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
-	// read-only.
-	//
-	// PUT /api/v1/account
-	UpdateAccount(ctx context.Context, request *AccountChange) (UpdateAccountRes, error)
-	// UpdateCampaign invokes updateCampaign operation.
-	//
-	// Changes a Campaign's settings. DM only.
-	//
-	// PATCH /api/v1/campaigns/{campaignId}
-	UpdateCampaign(ctx context.Context, request *CampaignUpdate, params UpdateCampaignParams) (UpdateCampaignRes, error)
-	// UpdateCharacter invokes updateCharacter operation.
-	//
-	// Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
-	//
-	// PATCH /api/v1/campaigns/{campaignId}/characters/{characterId}
-	UpdateCharacter(ctx context.Context, request *CharacterEdit, params UpdateCharacterParams) (UpdateCharacterRes, error)
-	// UpdateEncounterPool invokes updateEncounterPool operation.
-	//
-	// Replaces the Encounter Pool and records a Revision. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}
-	UpdateEncounterPool(ctx context.Context, request *EncounterPoolInput, params UpdateEncounterPoolParams) (UpdateEncounterPoolRes, error)
-	// UpdateEncounterTable invokes updateEncounterTable operation.
-	//
-	// Replaces the Encounter Table and records a Revision. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
-	UpdateEncounterTable(ctx context.Context, request *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
-	// UpdateLootTable invokes updateLootTable operation.
-	//
-	// Replaces the Loot Table and records a Revision. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}
-	UpdateLootTable(ctx context.Context, request *LootTableInput, params UpdateLootTableParams) (UpdateLootTableRes, error)
-	// UpdateMap invokes updateMap operation.
-	//
-	// Renames a Map and sets its hex size, grid origin and ambient light. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/maps/{mapId}
-	UpdateMap(ctx context.Context, request *MapEdit, params UpdateMapParams) (UpdateMapRes, error)
-	// UpdateMember invokes updateMember operation.
-	//
-	// Makes a Member a DM or a Player. DM only; the last DM cannot step down.
-	//
-	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
-	UpdateMember(ctx context.Context, request *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
-	// UpdateNpc invokes updateNpc operation.
-	//
-	// Replaces the NPC and records a Revision. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
-	UpdateNpc(ctx context.Context, request *NpcInput, params UpdateNpcParams) (UpdateNpcRes, error)
-	// UpdateSettlement invokes updateSettlement operation.
-	//
-	// Replaces the Settlement and records a Revision. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/settlements/{settlementId}
-	UpdateSettlement(ctx context.Context, request *SettlementInput, params UpdateSettlementParams) (UpdateSettlementRes, error)
-	// UpdateShop invokes updateShop operation.
-	//
-	// Replaces the Shop and records a Revision. DM only.
-	//
-	// PUT /api/v1/campaigns/{campaignId}/shops/{shopId}
-	UpdateShop(ctx context.Context, request *ShopInput, params UpdateShopParams) (UpdateShopRes, error)
-	// UploadMap invokes uploadMap operation.
-	//
-	// A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM
-	// only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/maps
-	UploadMap(ctx context.Context, request UploadMapReq, params UploadMapParams) (UploadMapRes, error)
-	// UseSignInLink invokes useSignInLink operation.
-	//
-	// Signs the Account in on this device; a link works once, within 30 minutes.
-	//
-	// POST /api/v1/sign-in-links/use
-	UseSignInLink(ctx context.Context, request *LinkToken) (UseSignInLinkRes, error)
 }
 
 // Client implements OAS client.
@@ -1428,6 +1475,123 @@ func (c *Client) sendConfirmTwoStep(ctx context.Context, request *TwoStepCode, p
 
 	stage = "DecodeResponse"
 	result, err := decodeConfirmTwoStepResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// CreateAccessToken invokes createAccessToken operation.
+//
+// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
+// now.
+//
+// POST /api/v1/account/access-tokens
+func (c *Client) CreateAccessToken(ctx context.Context, request *AccessTokenRequest) (CreateAccessTokenRes, error) {
+	res, err := c.sendCreateAccessToken(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendCreateAccessToken(ctx context.Context, request *AccessTokenRequest) (res CreateAccessTokenRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createAccessToken"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/account/access-tokens"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateAccessTokenOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/access-tokens"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreateAccessTokenRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, CreateAccessTokenOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreateAccessTokenResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -8214,6 +8378,119 @@ func (c *Client) sendLinkOidcAccount(ctx context.Context, request *OidcAccountLi
 	return result, nil
 }
 
+// ListAccessTokens invokes listAccessTokens operation.
+//
+// The signed-in Account's live Access Tokens, newest first, with when each was last used.
+//
+// GET /api/v1/account/access-tokens
+func (c *Client) ListAccessTokens(ctx context.Context) (ListAccessTokensRes, error) {
+	res, err := c.sendListAccessTokens(ctx)
+	return res, err
+}
+
+func (c *Client) sendListAccessTokens(ctx context.Context) (res ListAccessTokensRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("listAccessTokens"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/account/access-tokens"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ListAccessTokensOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/access-tokens"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ListAccessTokensOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeListAccessTokensResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ListActivity invokes listActivity operation.
 //
 // The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
@@ -14164,6 +14441,140 @@ func (c *Client) sendRestoreShopRevision(ctx context.Context, params RestoreShop
 
 	stage = "DecodeResponse"
 	result, err := decodeRestoreShopRevisionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// RevokeAccessToken invokes revokeAccessToken operation.
+//
+// The token stops working at once.
+//
+// DELETE /api/v1/account/access-tokens/{accessId}
+func (c *Client) RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (RevokeAccessTokenRes, error) {
+	res, err := c.sendRevokeAccessToken(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendRevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (res RevokeAccessTokenRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("revokeAccessToken"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.URLTemplateKey.String("/api/v1/account/access-tokens/{accessId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, RevokeAccessTokenOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/account/access-tokens/"
+	{
+		// Encode "accessId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "accessId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.AccessId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, RevokeAccessTokenOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeRevokeAccessTokenResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

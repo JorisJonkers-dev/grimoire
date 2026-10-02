@@ -189,6 +189,24 @@ func (f *fakeRepo) StrengthenSession(context.Context, []byte, domain.AccountID) 
 	return f.err("strengthen")
 }
 
+func (f *fakeRepo) InsertAccessToken(context.Context, domain.AccountID, domain.AccessToken, []byte) error {
+	return f.err("insert token")
+}
+
+func (f *fakeRepo) AccessTokens(context.Context, domain.AccountID, time.Time) ([]domain.AccessToken, error) {
+	return nil, f.err("tokens")
+}
+
+func (f *fakeRepo) RevokeAccessToken(context.Context, domain.AccountID, uuid.UUID, time.Time) (bool, error) {
+	return true, f.err("revoke token")
+}
+
+func (f *fakeRepo) AccessTokenSubject(context.Context, []byte, time.Time) (uuid.UUID, string, []string, bool, error) {
+	return uuid.Nil, f.account.Subject, []string{"read"}, f.account.Disabled, f.err("token subject")
+}
+
+func (f *fakeRepo) TouchAccessToken(context.Context, uuid.UUID, time.Time) error { return nil }
+
 func (f *fakeRepo) InTx(_ context.Context, fn func(Repository) error) error { return fn(f) }
 
 type failingMail struct{}

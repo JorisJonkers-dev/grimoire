@@ -862,6 +862,18 @@ type CompendiumWeaponProperty struct {
 	Detail   pgtype.Text
 }
 
+type IdentityAccessToken struct {
+	ID         uuid.UUID
+	AccountID  uuid.UUID
+	Name       string
+	Scopes     []string
+	TokenHash  []byte
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	LastUsedAt pgtype.Timestamptz
+	RevokedAt  pgtype.Timestamptz
+}
+
 type IdentityAccount struct {
 	ID           uuid.UUID
 	Subject      string

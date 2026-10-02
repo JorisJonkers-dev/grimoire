@@ -37,6 +37,7 @@ type Repository interface {
 	SetAdmin(ctx context.Context, id domain.AccountID, admin bool) error
 	OIDCRepository
 	TwoStepRepository
+	AccessTokenRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 

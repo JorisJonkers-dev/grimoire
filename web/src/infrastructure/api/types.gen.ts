@@ -156,6 +156,47 @@ export type Account = {
 };
 
 /**
+ * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
+ */
+export type AccessTokenScope = 'read' | 'build' | 'play';
+
+/**
+ * An Access Token, without the token itself.
+ */
+export type AccessToken = {
+    id: Id;
+    name: string;
+    scopes: Array<AccessTokenScope>;
+    createdAt: string;
+    expiresAt: string;
+    lastUsedAt?: string;
+};
+
+/**
+ * An Account's live Access Tokens.
+ */
+export type AccessTokenList = {
+    items: Array<AccessToken>;
+};
+
+/**
+ * A name, the scopes and how many days a new Access Token lives.
+ */
+export type AccessTokenRequest = {
+    name: string;
+    scopes: Array<AccessTokenScope>;
+    days: number;
+};
+
+/**
+ * A new Access Token; token is shown only now.
+ */
+export type AccessTokenCreated = {
+    token: string;
+    accessToken: AccessToken;
+};
+
+/**
  * A sign-in waiting for its second step.
  */
 export type TwoStepChallenge = {
@@ -6736,6 +6777,98 @@ export type ResetRecoveryCodesResponses = {
 };
 
 export type ResetRecoveryCodesResponse = ResetRecoveryCodesResponses[keyof ResetRecoveryCodesResponses];
+
+export type ListAccessTokensData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/access-tokens';
+};
+
+export type ListAccessTokensErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListAccessTokensError = ListAccessTokensErrors[keyof ListAccessTokensErrors];
+
+export type ListAccessTokensResponses = {
+    /**
+     * The Access Tokens.
+     */
+    200: AccessTokenList;
+};
+
+export type ListAccessTokensResponse = ListAccessTokensResponses[keyof ListAccessTokensResponses];
+
+export type CreateAccessTokenData = {
+    body: AccessTokenRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/access-tokens';
+};
+
+export type CreateAccessTokenErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateAccessTokenError = CreateAccessTokenErrors[keyof CreateAccessTokenErrors];
+
+export type CreateAccessTokenResponses = {
+    /**
+     * The token and its details.
+     */
+    201: AccessTokenCreated;
+};
+
+export type CreateAccessTokenResponse = CreateAccessTokenResponses[keyof CreateAccessTokenResponses];
+
+export type RevokeAccessTokenData = {
+    body?: never;
+    path: {
+        /**
+         * Access Token id.
+         */
+        accessId: Id;
+    };
+    query?: never;
+    url: '/api/v1/account/access-tokens/{accessId}';
+};
+
+export type RevokeAccessTokenErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RevokeAccessTokenError = RevokeAccessTokenErrors[keyof RevokeAccessTokenErrors];
+
+export type RevokeAccessTokenResponses = {
+    /**
+     * Revoked.
+     */
+    204: void;
+};
+
+export type RevokeAccessTokenResponse = RevokeAccessTokenResponses[keyof RevokeAccessTokenResponses];
 
 export type GetHealthData = {
     body?: never;

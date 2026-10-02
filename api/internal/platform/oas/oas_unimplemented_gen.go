@@ -59,6 +59,16 @@ func (UnimplementedHandler) ConfirmTwoStep(ctx context.Context, req *TwoStepCode
 	return r, ht.ErrNotImplemented
 }
 
+// CreateAccessToken implements createAccessToken operation.
+//
+// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
+// now.
+//
+// POST /api/v1/account/access-tokens
+func (UnimplementedHandler) CreateAccessToken(ctx context.Context, req *AccessTokenRequest) (r CreateAccessTokenRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateAccountInvite implements createAccountInvite operation.
 //
 // An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
@@ -506,6 +516,15 @@ func (UnimplementedHandler) LinkOidcAccount(ctx context.Context, req *OidcAccoun
 	return r, ht.ErrNotImplemented
 }
 
+// ListAccessTokens implements listAccessTokens operation.
+//
+// The signed-in Account's live Access Tokens, newest first, with when each was last used.
+//
+// GET /api/v1/account/access-tokens
+func (UnimplementedHandler) ListAccessTokens(ctx context.Context) (r ListAccessTokensRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListActivity implements listActivity operation.
 //
 // The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
@@ -882,6 +901,15 @@ func (UnimplementedHandler) RestoreSettlementRevision(ctx context.Context, param
 //
 // POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
 func (UnimplementedHandler) RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (r RestoreShopRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RevokeAccessToken implements revokeAccessToken operation.
+//
+// The token stops working at once.
+//
+// DELETE /api/v1/account/access-tokens/{accessId}
+func (UnimplementedHandler) RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (r RevokeAccessTokenRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

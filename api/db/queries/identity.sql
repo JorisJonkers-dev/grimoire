@@ -130,3 +130,21 @@ RETURNING account_id;
 
 -- name: UseTwoStepChallenge :exec
 UPDATE identity.two_step_challenges SET used_at = @now WHERE token_hash = @token_hash;
+
+-- name: InsertAccessToken :exec
+INSERT INTO identity.access_tokens (id, account_id, name, scopes, token_hash, created_at, expires_at)
+VALUES (@id, @account_id, @name, @scopes::text[], @token_hash, @now, @expires_at);
+
+-- name: ListAccessTokens :many
+SELECT id, name, scopes, created_at, expires_at, last_used_at FROM identity.access_tokens
+WHERE account_id = @account_id AND revoked_at IS NULL AND expires_at > @now ORDER BY created_at DESC;
+
+-- name: RevokeAccessToken :execrows
+UPDATE identity.access_tokens SET revoked_at = @now WHERE id = @id AND account_id = @account_id AND revoked_at IS NULL;
+
+-- name: AccessTokenAccount :one
+SELECT t.id, t.scopes, t.last_used_at, a.subject, a.disabled FROM identity.access_tokens t JOIN identity.accounts a ON a.id = t.account_id
+WHERE t.token_hash = @token_hash AND t.revoked_at IS NULL AND t.expires_at > @now;
+
+-- name: TouchAccessToken :exec
+UPDATE identity.access_tokens SET last_used_at = @now WHERE id = @id AND (last_used_at IS NULL OR last_used_at < @cutoff);

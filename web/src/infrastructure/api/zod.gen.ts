@@ -34,6 +34,51 @@ export const zMember = z.object({
 });
 
 /**
+ * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
+ */
+export const zAccessTokenScope = z.enum([
+    'read',
+    'build',
+    'play'
+]);
+
+/**
+ * An Access Token, without the token itself.
+ */
+export const zAccessToken = z.object({
+    id: zId,
+    name: z.string().min(1).max(60),
+    scopes: z.array(zAccessTokenScope).min(1).max(3),
+    createdAt: z.iso.datetime().max(40),
+    expiresAt: z.iso.datetime().max(40),
+    lastUsedAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * An Account's live Access Tokens.
+ */
+export const zAccessTokenList = z.object({
+    items: z.array(zAccessToken).max(200)
+});
+
+/**
+ * A name, the scopes and how many days a new Access Token lives.
+ */
+export const zAccessTokenRequest = z.object({
+    name: z.string().min(1).max(60),
+    scopes: z.array(zAccessTokenScope).min(1).max(3),
+    days: z.int().gte(1).lte(365)
+});
+
+/**
+ * A new Access Token; token is shown only now.
+ */
+export const zAccessTokenCreated = z.object({
+    token: z.string().length(47).regex(/^gmt_[A-Za-z0-9_-]{43}$/),
+    accessToken: zAccessToken
+});
+
+/**
  * A sign-in waiting for its second step.
  */
 export const zTwoStepChallenge = z.object({
@@ -3832,6 +3877,27 @@ export const zResetRecoveryCodesBody = zTwoStepCode;
  * The new recovery codes.
  */
 export const zResetRecoveryCodesResponse = zRecoveryCodes;
+
+/**
+ * The Access Tokens.
+ */
+export const zListAccessTokensResponse = zAccessTokenList;
+
+export const zCreateAccessTokenBody = zAccessTokenRequest;
+
+/**
+ * The token and its details.
+ */
+export const zCreateAccessTokenResponse = zAccessTokenCreated;
+
+export const zRevokeAccessTokenPath = z.object({
+    accessId: zId
+});
+
+/**
+ * Revoked.
+ */
+export const zRevokeAccessTokenResponse = z.void();
 
 /**
  * The process is alive.

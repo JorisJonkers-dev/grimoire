@@ -93,10 +93,11 @@ type revision struct {
 
 func (o Options) call(t Tool) mcp.ToolHandler {
 	return func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		subject := ""
+		subject, scopes := "", ""
 		if req.Extra != nil {
-			subject = req.Extra.Header.Get(httpx.IdentityHeader)
+			subject, scopes = req.Extra.Header.Get(httpx.IdentityHeader), req.Extra.Header.Get(httpx.ScopesHeader)
 		}
+		ctx = context.WithValue(ctx, scopesKey{}, scopes)
 		args, ok := arguments(req.Params.Arguments)
 		if !ok {
 			return failure("The arguments must be a JSON object."), nil
@@ -221,10 +222,17 @@ func (o Options) requireDM(ctx context.Context, subject, cid string) string {
 	return ""
 }
 
-// serve runs one API call as the caller and returns its status and body.
+// scopesKey carries the scopes of the Access Token a tool call came with to every API call it makes.
+type scopesKey struct{}
+
+// serve runs one API call as the caller, within its Access Token's scopes, and returns its status and
+// body.
 func (o Options) serve(ctx context.Context, subject, method, path string, body json.RawMessage) (int, json.RawMessage) {
 	r := httptest.NewRequestWithContext(ctx, method, path, bytes.NewReader(body))
 	r.Header.Set(httpx.IdentityHeader, subject)
+	if scopes, _ := ctx.Value(scopesKey{}).(string); scopes != "" {
+		r.Header.Set(httpx.ScopesHeader, scopes)
+	}
 	if body != nil {
 		r.Header.Set("Content-Type", "application/json")
 	}

@@ -137,3 +137,21 @@ type ProfileChange struct {
 	Nickname string
 	Email    string
 }
+
+// AccessToken is a bearer credential an Account mints for MCP clients and scripts (ADR-0009): it acts
+// as the Account within its scopes until it expires or is revoked.
+type AccessToken struct {
+	ID         uuid.UUID
+	Name       string
+	Scopes     []string
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	LastUsedAt *time.Time
+}
+
+// Access Token scopes: reading, building Campaigns and their prep, and playing a Session.
+const (
+	ScopeRead  = "read"
+	ScopeBuild = "build"
+	ScopePlay  = "play"
+)

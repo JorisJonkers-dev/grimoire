@@ -13,6 +13,37 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const accessTokenAccount = `-- name: AccessTokenAccount :one
+SELECT t.id, t.scopes, t.last_used_at, a.subject, a.disabled FROM identity.access_tokens t JOIN identity.accounts a ON a.id = t.account_id
+WHERE t.token_hash = $1 AND t.revoked_at IS NULL AND t.expires_at > $2
+`
+
+type AccessTokenAccountParams struct {
+	TokenHash []byte
+	Now       time.Time
+}
+
+type AccessTokenAccountRow struct {
+	ID         uuid.UUID
+	Scopes     []string
+	LastUsedAt pgtype.Timestamptz
+	Subject    string
+	Disabled   bool
+}
+
+func (q *Queries) AccessTokenAccount(ctx context.Context, arg AccessTokenAccountParams) (AccessTokenAccountRow, error) {
+	row := q.db.QueryRow(ctx, accessTokenAccount, arg.TokenHash, arg.Now)
+	var i AccessTokenAccountRow
+	err := row.Scan(
+		&i.ID,
+		&i.Scopes,
+		&i.LastUsedAt,
+		&i.Subject,
+		&i.Disabled,
+	)
+	return i, err
+}
+
 const accountByEmail = `-- name: AccountByEmail :one
 SELECT id, subject, username, nickname, email, admin, disabled, created_at FROM identity.accounts WHERE lower(email) = lower($1)
 `
@@ -183,6 +214,34 @@ DELETE FROM identity.totp_factors WHERE account_id = $1
 
 func (q *Queries) DeleteTOTP(ctx context.Context, accountID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteTOTP, accountID)
+	return err
+}
+
+const insertAccessToken = `-- name: InsertAccessToken :exec
+INSERT INTO identity.access_tokens (id, account_id, name, scopes, token_hash, created_at, expires_at)
+VALUES ($1, $2, $3, $4::text[], $5, $6, $7)
+`
+
+type InsertAccessTokenParams struct {
+	ID        uuid.UUID
+	AccountID uuid.UUID
+	Name      string
+	Scopes    []string
+	TokenHash []byte
+	Now       time.Time
+	ExpiresAt time.Time
+}
+
+func (q *Queries) InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error {
+	_, err := q.db.Exec(ctx, insertAccessToken,
+		arg.ID,
+		arg.AccountID,
+		arg.Name,
+		arg.Scopes,
+		arg.TokenHash,
+		arg.Now,
+		arg.ExpiresAt,
+	)
 	return err
 }
 
@@ -461,6 +520,52 @@ func (q *Queries) InviteByToken(ctx context.Context, tokenHash []byte) (InviteBy
 	return i, err
 }
 
+const listAccessTokens = `-- name: ListAccessTokens :many
+SELECT id, name, scopes, created_at, expires_at, last_used_at FROM identity.access_tokens
+WHERE account_id = $1 AND revoked_at IS NULL AND expires_at > $2 ORDER BY created_at DESC
+`
+
+type ListAccessTokensParams struct {
+	AccountID uuid.UUID
+	Now       time.Time
+}
+
+type ListAccessTokensRow struct {
+	ID         uuid.UUID
+	Name       string
+	Scopes     []string
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	LastUsedAt pgtype.Timestamptz
+}
+
+func (q *Queries) ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error) {
+	rows, err := q.db.Query(ctx, listAccessTokens, arg.AccountID, arg.Now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccessTokensRow{}
+	for rows.Next() {
+		var i ListAccessTokensRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Scopes,
+			&i.CreatedAt,
+			&i.ExpiresAt,
+			&i.LastUsedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const oIDCLinkByAccount = `-- name: OIDCLinkByAccount :one
 SELECT account_id, issuer, subject, email, username, name, linked_at FROM identity.oidc_links WHERE account_id = $1
 `
@@ -513,6 +618,24 @@ func (q *Queries) RecoveryCodesLeft(ctx context.Context, accountID uuid.UUID) (i
 	var left_count int32
 	err := row.Scan(&left_count)
 	return left_count, err
+}
+
+const revokeAccessToken = `-- name: RevokeAccessToken :execrows
+UPDATE identity.access_tokens SET revoked_at = $1 WHERE id = $2 AND account_id = $3 AND revoked_at IS NULL
+`
+
+type RevokeAccessTokenParams struct {
+	Now       pgtype.Timestamptz
+	ID        uuid.UUID
+	AccountID uuid.UUID
+}
+
+func (q *Queries) RevokeAccessToken(ctx context.Context, arg RevokeAccessTokenParams) (int64, error) {
+	result, err := q.db.Exec(ctx, revokeAccessToken, arg.Now, arg.ID, arg.AccountID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const revokeAccountSession = `-- name: RevokeAccountSession :exec
@@ -635,6 +758,21 @@ func (q *Queries) TOTPFactor(ctx context.Context, accountID uuid.UUID) (TOTPFact
 	var i TOTPFactorRow
 	err := row.Scan(&i.Secret, &i.ConfirmedAt, &i.LastStep)
 	return i, err
+}
+
+const touchAccessToken = `-- name: TouchAccessToken :exec
+UPDATE identity.access_tokens SET last_used_at = $1 WHERE id = $2 AND (last_used_at IS NULL OR last_used_at < $3)
+`
+
+type TouchAccessTokenParams struct {
+	Now    pgtype.Timestamptz
+	ID     uuid.UUID
+	Cutoff pgtype.Timestamptz
+}
+
+func (q *Queries) TouchAccessToken(ctx context.Context, arg TouchAccessTokenParams) error {
+	_, err := q.db.Exec(ctx, touchAccessToken, arg.Now, arg.ID, arg.Cutoff)
+	return err
 }
 
 const touchAccountSession = `-- name: TouchAccountSession :exec

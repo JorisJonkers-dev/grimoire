@@ -32,6 +32,7 @@ var regexMap = map[string]ogenregex.Regexp{
 	"^[a-z0-9][a-z0-9_.-]{2,31}$": ogenregex.MustCompile("^[a-z0-9][a-z0-9_.-]{2,31}$"),
 	"^[a-z1-9]{5}-[a-z1-9]{5}$":   ogenregex.MustCompile("^[a-z1-9]{5}-[a-z1-9]{5}$"),
 	"^[a-z][a-z0-9-]{0,39}$":      ogenregex.MustCompile("^[a-z][a-z0-9-]{0,39}$"),
+	"^gmt_[A-Za-z0-9_-]{43}$":     ogenregex.MustCompile("^gmt_[A-Za-z0-9_-]{43}$"),
 	"^https://":                   ogenregex.MustCompile("^https://"),
 }
 var (

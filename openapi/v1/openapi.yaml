@@ -37,6 +37,7 @@ paths:
   /api/v1/compendium/spells:
     get:
       operationId: listSpells
+      x-ogen-operation-group: Read
       x-mcp: { tool: search_spells }
       summary: List spells
       description: Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
@@ -96,6 +97,7 @@ paths:
   /api/v1/compendium/spells/{slug}:
     get:
       operationId: getSpell
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_spell }
       summary: Get a spell
       description: One spell with its rules text and the conditions it mentions.
@@ -136,6 +138,7 @@ paths:
   /api/v1/compendium/entries:
     get:
       operationId: listEntries
+      x-ogen-operation-group: Read
       x-mcp: { tool: search_compendium }
       summary: List compendium entries
       description: Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
@@ -188,6 +191,7 @@ paths:
   /api/v1/compendium/entries/{kind}/{slug}:
     get:
       operationId: getEntry
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_compendium_entry }
       summary: Get a compendium entry
       description: One entry rendered for reading, with the conditions its text mentions.
@@ -233,6 +237,7 @@ paths:
   /api/v1/compendium/automation:
     get:
       operationId: getAutomationCoverage
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_automation_coverage }
       summary: Get automation coverage
       description: How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
@@ -270,6 +275,7 @@ paths:
   /api/v1/compendium/builder:
     get:
       operationId: getBuilderOptions
+      x-ogen-operation-group: Read
       summary: Get character builder options
       description: Every class, species, background, armour and weapon a first-level character can choose in one ruleset.
       tags: [Compendium]
@@ -308,6 +314,7 @@ paths:
   /api/v1/compendium/sources:
     get:
       operationId: listSources
+      x-ogen-operation-group: Read
       summary: List compendium sources
       description: The documents the compendium draws from, with the attribution each license requires.
       tags: [Compendium]
@@ -335,6 +342,7 @@ paths:
   /api/v1/campaigns:
     get:
       operationId: listCampaigns
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_campaigns }
       summary: List my campaigns
       description: The Campaigns the caller is a Member of, newest first.
@@ -368,6 +376,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createCampaign
+      x-ogen-operation-group: Build
       summary: Create a campaign
       description: Starts a Campaign with the caller as its first DM.
       tags: [Campaign]
@@ -398,6 +407,7 @@ paths:
   /api/v1/campaigns/{campaignId}:
     get:
       operationId: getCampaign
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_campaign }
       summary: Get a campaign
       description: A Campaign's home with its settings, the caller's role and every Member. Members only.
@@ -424,6 +434,7 @@ paths:
           $ref: "#/components/responses/Problem"
     patch:
       operationId: updateCampaign
+      x-ogen-operation-group: Build
       summary: Update a campaign
       description: Changes a Campaign's settings. DM only.
       tags: [Campaign]
@@ -456,6 +467,7 @@ paths:
   /api/v1/campaigns/{campaignId}/members/{memberId}:
     patch:
       operationId: updateMember
+      x-ogen-operation-group: Build
       summary: Change a member role
       description: Makes a Member a DM or a Player. DM only; the last DM cannot step down.
       tags: [Campaign]
@@ -488,6 +500,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: removeMember
+      x-ogen-operation-group: Build
       summary: Remove a member
       description: A DM removes a Member, or a Member leaves. The last DM cannot leave.
       tags: [Campaign]
@@ -511,6 +524,7 @@ paths:
   /api/v1/campaigns/{campaignId}/invites:
     get:
       operationId: listInvites
+      x-ogen-operation-group: Read
       summary: List open invites
       description: Invite links that still work. DM only.
       tags: [Campaign]
@@ -539,6 +553,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createInvite
+      x-ogen-operation-group: Build
       summary: Create an invite link
       description: Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
       tags: [Campaign]
@@ -565,6 +580,7 @@ paths:
   /api/v1/campaigns/{campaignId}/invites/{inviteId}:
     delete:
       operationId: revokeInvite
+      x-ogen-operation-group: Build
       summary: Revoke an invite link
       description: Closes an invite link. DM only.
       tags: [Campaign]
@@ -588,6 +604,7 @@ paths:
   /api/v1/campaigns/{campaignId}/characters:
     get:
       operationId: listCharacters
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_characters }
       summary: List characters
       description: The party's Characters. Members only.
@@ -617,6 +634,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createCharacter
+      x-ogen-operation-group: Build
       summary: Create a character
       description: Builds a first-level Character owned by the caller, validated against the campaign ruleset.
       tags: [Campaign]
@@ -649,6 +667,7 @@ paths:
   /api/v1/campaigns/{campaignId}/characters/preview:
     post:
       operationId: previewCharacter
+      x-ogen-operation-group: Build
       summary: Preview a character
       description: Validates a build and returns the sheet it would make, without saving it.
       tags: [Campaign]
@@ -681,6 +700,7 @@ paths:
   /api/v1/campaigns/{campaignId}/characters/{characterId}:
     get:
       operationId: getCharacter
+      x-ogen-operation-group: Read
       summary: Get a character sheet
       description: A Character's sheet. Members only.
       tags: [Campaign]
@@ -707,6 +727,7 @@ paths:
           $ref: "#/components/responses/Problem"
     patch:
       operationId: updateCharacter
+      x-ogen-operation-group: Build
       summary: Edit a character
       description: Out-of-combat changes by the owner or a DM; refused with 409 while the Character is in Combat.
       tags: [Campaign]
@@ -739,6 +760,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteCharacter
+      x-ogen-operation-group: Build
       summary: Delete a character
       description: Removes a Character. The owner or a DM, never during Combat.
       tags: [Campaign]
@@ -762,6 +784,7 @@ paths:
   /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
     get:
       operationId: getPortrait
+      x-ogen-operation-group: Read
       summary: Get the portrait
       description: The picture itself, served only to Members of the Campaign.
       tags: [Campaign]
@@ -794,6 +817,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: setPortrait
+      x-ogen-operation-group: Build
       summary: Upload the portrait
       description: A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
       tags: [Campaign]
@@ -825,6 +849,7 @@ paths:
   /api/v1/campaigns/{campaignId}/characters/{characterId}/token:
     get:
       operationId: getTokenIcon
+      x-ogen-operation-group: Read
       summary: Get the token icon
       description: The picture itself, served only to Members of the Campaign.
       tags: [Campaign]
@@ -857,6 +882,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: setTokenIcon
+      x-ogen-operation-group: Build
       summary: Upload the token icon
       description: A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
       tags: [Campaign]
@@ -887,6 +913,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: clearTokenIcon
+      x-ogen-operation-group: Build
       summary: Use initials for the token
       description: Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
       tags: [Campaign]
@@ -910,6 +937,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools:
     get:
       operationId: listEncounterPools
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_encounter_pools }
       summary: List Encounter Pools
       description: The Campaign's Encounter Pools. DM only.
@@ -939,6 +967,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createEncounterPool
+      x-ogen-operation-group: Build
       x-mcp: { tool: create_encounter_pool, entity: encounter_pool }
       summary: Create an Encounter Pool
       description: Adds an Encounter Pool and records its first Revision. DM only.
@@ -972,6 +1001,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}:
     put:
       operationId: updateEncounterPool
+      x-ogen-operation-group: Build
       x-mcp: { tool: update_encounter_pool, entity: encounter_pool, id: poolId }
       summary: Update an Encounter Pool
       description: Replaces the Encounter Pool and records a Revision. DM only.
@@ -1005,6 +1035,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteEncounterPool
+      x-ogen-operation-group: Build
       x-mcp: { tool: delete_encounter_pool, entity: encounter_pool, id: poolId }
       summary: Delete an Encounter Pool
       description: Removes the Encounter Pool; its Revisions keep it restorable. DM only.
@@ -1029,6 +1060,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions:
     get:
       operationId: listEncounterPoolRevisions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_encounter_pool_revisions }
       summary: List Encounter Pool revisions
       description: Every Revision of the Encounter Pool, newest first. DM only.
@@ -1060,6 +1092,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreEncounterPoolRevision
+      x-ogen-operation-group: Build
       x-mcp: { tool: restore_encounter_pool_revision, entity: encounter_pool, id: poolId }
       summary: Restore an Encounter Pool revision
       description: Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
@@ -1089,6 +1122,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables:
     get:
       operationId: listEncounterTables
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_encounter_tables }
       summary: List Encounter Tables
       description: The Campaign's Encounter Tables. DM only.
@@ -1118,6 +1152,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createEncounterTable
+      x-ogen-operation-group: Build
       x-mcp: { tool: create_encounter_table, entity: encounter_table }
       summary: Create an Encounter Table
       description: Adds an Encounter Table and records its first Revision. DM only.
@@ -1151,6 +1186,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}:
     put:
       operationId: updateEncounterTable
+      x-ogen-operation-group: Build
       x-mcp: { tool: update_encounter_table, entity: encounter_table, id: tableId }
       summary: Update an Encounter Table
       description: Replaces the Encounter Table and records a Revision. DM only.
@@ -1184,6 +1220,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteEncounterTable
+      x-ogen-operation-group: Build
       x-mcp: { tool: delete_encounter_table, entity: encounter_table, id: tableId }
       summary: Delete an Encounter Table
       description: Removes the Encounter Table; its Revisions keep it restorable. DM only.
@@ -1208,6 +1245,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions:
     get:
       operationId: listEncounterTableRevisions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_encounter_table_revisions }
       summary: List Encounter Table revisions
       description: Every Revision of the Encounter Table, newest first. DM only.
@@ -1239,6 +1277,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreEncounterTableRevision
+      x-ogen-operation-group: Build
       x-mcp: { tool: restore_encounter_table_revision, entity: encounter_table, id: tableId }
       summary: Restore an Encounter Table revision
       description: Brings the Encounter Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
@@ -1268,6 +1307,7 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables:
     get:
       operationId: listLootTables
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_loot_tables }
       summary: List Loot Tables
       description: The Campaign's Loot Tables. DM only.
@@ -1297,6 +1337,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createLootTable
+      x-ogen-operation-group: Build
       x-mcp: { tool: create_loot_table, entity: loot_table }
       summary: Create a Loot Table
       description: Adds a Loot Table and records its first Revision. DM only.
@@ -1330,6 +1371,7 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}:
     put:
       operationId: updateLootTable
+      x-ogen-operation-group: Build
       x-mcp: { tool: update_loot_table, entity: loot_table, id: lootTableId }
       summary: Update a Loot Table
       description: Replaces the Loot Table and records a Revision. DM only.
@@ -1363,6 +1405,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteLootTable
+      x-ogen-operation-group: Build
       x-mcp: { tool: delete_loot_table, entity: loot_table, id: lootTableId }
       summary: Delete a Loot Table
       description: Removes the Loot Table; its Revisions keep it restorable. DM only.
@@ -1387,6 +1430,7 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions:
     get:
       operationId: listLootTableRevisions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_loot_table_revisions }
       summary: List Loot Table revisions
       description: Every Revision of the Loot Table, newest first. DM only.
@@ -1418,6 +1462,7 @@ paths:
   /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreLootTableRevision
+      x-ogen-operation-group: Build
       x-mcp: { tool: restore_loot_table_revision, entity: loot_table, id: lootTableId }
       summary: Restore a Loot Table revision
       description: Brings the Loot Table back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
@@ -1447,6 +1492,7 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements:
     get:
       operationId: listSettlements
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_settlements }
       summary: List Settlements
       description: The Campaign's Settlements. DM only.
@@ -1476,6 +1522,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createSettlement
+      x-ogen-operation-group: Build
       x-mcp: { tool: create_settlement, entity: settlement }
       summary: Create a Settlement
       description: Adds a Settlement and records its first Revision. DM only.
@@ -1509,6 +1556,7 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements/{settlementId}:
     put:
       operationId: updateSettlement
+      x-ogen-operation-group: Build
       x-mcp: { tool: update_settlement, entity: settlement, id: settlementId }
       summary: Update a Settlement
       description: Replaces the Settlement and records a Revision. DM only.
@@ -1542,6 +1590,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteSettlement
+      x-ogen-operation-group: Build
       x-mcp: { tool: delete_settlement, entity: settlement, id: settlementId }
       summary: Delete a Settlement
       description: Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -1566,6 +1615,7 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions:
     get:
       operationId: listSettlementRevisions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_settlement_revisions }
       summary: List Settlement revisions
       description: Every Revision of the Settlement, newest first. DM only.
@@ -1597,6 +1647,7 @@ paths:
   /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreSettlementRevision
+      x-ogen-operation-group: Build
       x-mcp: { tool: restore_settlement_revision, entity: settlement, id: settlementId }
       summary: Restore a Settlement revision
       description: Brings the Settlement back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
@@ -1626,6 +1677,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops:
     get:
       operationId: listShops
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_shops }
       summary: List Shops
       description: The Campaign's Shops. DM only.
@@ -1655,6 +1707,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createShop
+      x-ogen-operation-group: Build
       x-mcp: { tool: create_shop, entity: shop }
       summary: Create a Shop
       description: Adds a Shop and records its first Revision. DM only.
@@ -1688,6 +1741,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}:
     put:
       operationId: updateShop
+      x-ogen-operation-group: Build
       x-mcp: { tool: update_shop, entity: shop, id: shopId }
       summary: Update a Shop
       description: Replaces the Shop and records a Revision. DM only.
@@ -1721,6 +1775,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteShop
+      x-ogen-operation-group: Build
       x-mcp: { tool: delete_shop, entity: shop, id: shopId }
       summary: Delete a Shop
       description: Removes the Shop; its Revisions keep it restorable. DM only.
@@ -1745,6 +1800,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions:
     get:
       operationId: listShopRevisions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_shop_revisions }
       summary: List Shop revisions
       description: Every Revision of the Shop, newest first. DM only.
@@ -1776,6 +1832,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreShopRevision
+      x-ogen-operation-group: Build
       x-mcp: { tool: restore_shop_revision, entity: shop, id: shopId }
       summary: Restore a Shop revision
       description: Brings the Shop back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
@@ -1805,6 +1862,7 @@ paths:
   /api/v1/campaigns/{campaignId}/shops/{shopId}/stock:
     post:
       operationId: rerollStock
+      x-ogen-operation-group: Build
       x-mcp: { tool: reroll_stock, entity: shop, id: shopId }
       summary: Reroll Stock
       description: Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a Revision. DM only.
@@ -1833,6 +1891,7 @@ paths:
   /api/v1/campaigns/{campaignId}/locations:
     get:
       operationId: listLocations
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_locations }
       summary: List locations
       description: The places on the Campaign's world maps an Encounter Table can belong to. DM only.
@@ -1863,6 +1922,7 @@ paths:
   /api/v1/campaigns/{campaignId}/encounter-checks:
     get:
       operationId: listEncounterChecks
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_encounter_checks }
       summary: List Encounter Checks
       description: The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
@@ -1893,6 +1953,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs:
     get:
       operationId: listNpcs
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_npcs }
       summary: List NPCs
       description: The Campaign's NPCs. DM only.
@@ -1922,6 +1983,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createNpc
+      x-ogen-operation-group: Build
       x-mcp: { tool: create_npc, entity: npc }
       summary: Create an NPC
       description: Adds an NPC and records its first Revision. DM only.
@@ -1955,6 +2017,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/deleted:
     get:
       operationId: listDeletedNpcs
+      x-ogen-operation-group: Read
       summary: List deleted NPCs
       description: NPCs that were deleted and can still be restored from their Revisions. DM only.
       tags: [Prep]
@@ -1984,6 +2047,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}:
     get:
       operationId: getNpc
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_npc }
       summary: Get an NPC
       description: One NPC. DM only.
@@ -2011,6 +2075,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: updateNpc
+      x-ogen-operation-group: Build
       x-mcp: { tool: update_npc, entity: npc, id: npcId }
       summary: Update an NPC
       description: Replaces the NPC and records a Revision. DM only.
@@ -2044,6 +2109,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: deleteNpc
+      x-ogen-operation-group: Build
       x-mcp: { tool: delete_npc, entity: npc, id: npcId }
       summary: Delete an NPC
       description: Removes the NPC; its Revisions keep it restorable. DM only.
@@ -2068,6 +2134,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions:
     get:
       operationId: listNpcRevisions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_npc_revisions }
       summary: List NPC revisions
       description: Every Revision of the NPC, newest first, with its author and origin. DM only.
@@ -2099,6 +2166,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff:
     get:
       operationId: diffNpcRevisions
+      x-ogen-operation-group: Read
       summary: Compare two NPC revisions
       description: The fields that differ between two Revisions. DM only.
       tags: [Prep]
@@ -2139,6 +2207,7 @@ paths:
   /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/{revisionNo}/restore:
     post:
       operationId: restoreNpcRevision
+      x-ogen-operation-group: Build
       x-mcp: { tool: restore_npc_revision, entity: npc, id: npcId }
       summary: Restore an NPC revision
       description: Brings the NPC back to a Revision, recreating it if deleted; the restore is itself a Revision. DM only.
@@ -2168,6 +2237,7 @@ paths:
   /api/v1/campaigns/{campaignId}/activity:
     get:
       operationId: listActivity
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_activity }
       summary: List AI activity
       description: The latest prep changes made through MCP, newest first, and whether each can still be undone. DM only.
@@ -2198,6 +2268,7 @@ paths:
   /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo:
     post:
       operationId: undoChange
+      x-ogen-operation-group: Build
       x-mcp: { tool: undo_change }
       summary: Undo a change
       description: Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the Revision before it. Only an entity's latest change can be undone. The undo is itself a Revision. DM only.
@@ -2230,6 +2301,7 @@ paths:
   /api/v1/campaigns/{campaignId}/rolls:
     get:
       operationId: listRolls
+      x-ogen-operation-group: Read
       summary: List roll requests
       description: Recent Roll Requests in the Campaign. Members only.
       tags: [Play]
@@ -2262,6 +2334,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: createRoll
+      x-ogen-operation-group: Play
       summary: Request a roll
       description: Opens a Roll Request for the caller, or, from a DM, for another Member.
       tags: [Play]
@@ -2294,6 +2367,7 @@ paths:
   /api/v1/campaigns/{campaignId}/rolls/{rollId}:
     get:
       operationId: getRoll
+      x-ogen-operation-group: Read
       summary: Get a roll request
       description: One Roll Request with every die. Members only.
       tags: [Play]
@@ -2321,6 +2395,7 @@ paths:
   /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}:
     post:
       operationId: setDie
+      x-ogen-operation-group: Play
       summary: Roll or enter one die
       description: The server rolls the die from a logged seed, or takes the face read off a physical die. The roller or a DM; the last die resolves the request.
       tags: [Play]
@@ -2359,6 +2434,7 @@ paths:
   /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest:
     post:
       operationId: rollRest
+      x-ogen-operation-group: Play
       summary: Roll the rest
       description: The server rolls every die still empty. The roller or a DM.
       tags: [Play]
@@ -2386,6 +2462,7 @@ paths:
   /api/v1/campaigns/{campaignId}/log:
     get:
       operationId: getActionLog
+      x-ogen-operation-group: Read
       summary: Read the Action Log
       description: The Campaign's recent Actions with their seeds. DM only.
       tags: [Play]
@@ -2419,6 +2496,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions:
     get:
       operationId: listSessions
+      x-ogen-operation-group: Read
       x-mcp: { tool: list_sessions }
       summary: List sessions
       description: The Campaign's Sessions, newest first. Members only.
@@ -2448,6 +2526,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: startSession
+      x-ogen-operation-group: Play
       summary: Start a session
       description: Opens the next live Session. DM only. Live play then runs over the WebSocket at /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are LiveCommand and LiveUpdate.
       tags: [Play]
@@ -2474,6 +2553,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions/{sessionId}:
     get:
       operationId: getSession
+      x-ogen-operation-group: Read
       summary: Get a session
       description: One Session. Members only.
       tags: [Play]
@@ -2501,6 +2581,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view:
     get:
       operationId: getSessionView
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_session_state }
       summary: See a live session
       description: What the caller may see of a live Session now; the DM sees everything. Members only.
@@ -2529,6 +2610,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions/{sessionId}/log:
     get:
       operationId: getSessionLog
+      x-ogen-operation-group: Read
       x-mcp: { tool: get_session_log }
       summary: Read a session's Action Log
       description: The Session's latest Actions, newest first, and whether each can still be undone. DM only.
@@ -2564,6 +2646,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands:
     post:
       operationId: sendLiveCommand
+      x-ogen-operation-group: Play
       x-mcp:
         defaults: { nonce: mcp, q: 0, r: 0, hidden: false }
         tools:
@@ -2652,6 +2735,7 @@ paths:
   /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end:
     post:
       operationId: endSession
+      x-ogen-operation-group: Play
       summary: End a session
       description: Ends a live Session and disconnects everyone. DM only.
       tags: [Play]
@@ -2679,6 +2763,7 @@ paths:
   /api/v1/campaigns/{campaignId}/maps:
     get:
       operationId: listMaps
+      x-ogen-operation-group: Read
       summary: List maps
       description: The Campaign's local and world Maps. DM only.
       tags: [Prep]
@@ -2707,6 +2792,7 @@ paths:
           $ref: "#/components/responses/Problem"
     post:
       operationId: uploadMap
+      x-ogen-operation-group: Build
       summary: Upload a map
       description: A PNG, JPEG or WebP picture of at most 25 MB and 36 megapixels, with a default hex calibration. DM only.
       tags: [Prep]
@@ -2749,6 +2835,7 @@ paths:
   /api/v1/campaigns/{campaignId}/maps/{mapId}:
     get:
       operationId: getMap
+      x-ogen-operation-group: Read
       summary: Get a map
       description: One Map with its calibration. DM only.
       tags: [Prep]
@@ -2775,6 +2862,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: updateMap
+      x-ogen-operation-group: Build
       summary: Calibrate a map
       description: Renames a Map and sets its hex size, grid origin and ambient light. DM only.
       tags: [Prep]
@@ -2808,6 +2896,7 @@ paths:
   /api/v1/campaigns/{campaignId}/maps/{mapId}/image:
     get:
       operationId: getMapImage
+      x-ogen-operation-group: Read
       summary: Get a map picture
       description: The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted black on the server.
       tags: [Play]
@@ -2845,6 +2934,7 @@ paths:
   /api/v1/invites/preview:
     post:
       operationId: previewInvite
+      x-ogen-operation-group: Build
       summary: Preview an invite
       description: Which Campaign an invite link leads to, before joining.
       tags: [Campaign]
@@ -2875,6 +2965,7 @@ paths:
   /api/v1/invites/accept:
     post:
       operationId: acceptInvite
+      x-ogen-operation-group: Build
       summary: Accept an invite
       description: Joins the caller to the Campaign as a Player. A Member keeps their role.
       tags: [Campaign]
@@ -2905,6 +2996,7 @@ paths:
   /api/v1/rules/hex/reach:
     post:
       operationId: previewReach
+      x-ogen-operation-group: Build
       summary: Preview movement
       description: Every hex a mover can reach and, with a target, the cheapest path to it. Changes nothing.
       tags: [Rules]
@@ -2935,6 +3027,7 @@ paths:
   /api/v1/rules/hex/sight:
     post:
       operationId: previewSight
+      x-ogen-operation-group: Build
       summary: Preview line of sight
       description: Whether one hex can see another and the cover in between. Changes nothing.
       tags: [Rules]
@@ -2965,6 +3058,7 @@ paths:
   /api/v1/me:
     get:
       operationId: getMe
+      x-ogen-operation-group: Read
       summary: Who am I
       description: Returns the identity the platform authenticated for this request.
       tags: [Identity]
@@ -2989,6 +3083,7 @@ paths:
   /api/v1/push/key:
     get:
       operationId: getPushKey
+      x-ogen-operation-group: Read
       summary: Get the push key
       description: The server's VAPID public key, for a device to subscribe to notifications with. Not found when the server sends none.
       tags: [Identity]
@@ -3013,6 +3108,7 @@ paths:
   /api/v1/push/subscriptions:
     post:
       operationId: createPushSubscription
+      x-ogen-operation-group: Account
       summary: Subscribe a device
       description: Asks for this device to be told about the caller's turns and Reaction Prompts while the app is closed.
       tags: [Identity]
@@ -3043,6 +3139,7 @@ paths:
   /api/v1/push/subscriptions/{subscriptionId}:
     delete:
       operationId: deletePushSubscription
+      x-ogen-operation-group: Account
       summary: Unsubscribe a device
       description: Stops notifications to one of the caller's devices.
       tags: [Identity]
@@ -3069,6 +3166,7 @@ paths:
   /api/v1/status:
     get:
       operationId: getStatus
+      x-ogen-operation-group: Read
       summary: Service status
       description: Reports the running version and whether the database answers.
       tags: [Operations]
@@ -3093,6 +3191,7 @@ paths:
   /api/v1/admin/account-invites:
     post:
       operationId: createAccountInvite
+      x-ogen-operation-group: Account
       summary: Invite someone to set up an Account
       description: An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
       tags: [Identity]
@@ -3123,6 +3222,7 @@ paths:
   /api/v1/account-invites/preview:
     post:
       operationId: previewAccountInvite
+      x-ogen-operation-group: Account
       summary: Check an Account Invite
       description: Whether an invite link can still set up an Account; gone once used or expired.
       tags: [Identity]
@@ -3154,6 +3254,7 @@ paths:
   /api/v1/account-invites/accept:
     post:
       operationId: acceptAccountInvite
+      x-ogen-operation-group: Account
       summary: Set up an Account from an invite
       description: Creates the Account the invite was for and signs it in on this device.
       tags: [Identity]
@@ -3187,6 +3288,7 @@ paths:
   /api/v1/sign-in:
     post:
       operationId: signIn
+      x-ogen-operation-group: Account
       summary: Sign in with a Username and password
       description: Signs the Account in on this device. Every failure answers the same.
       tags: [Identity]
@@ -3233,6 +3335,7 @@ paths:
   /api/v1/sign-in/two-step:
     post:
       operationId: passTwoStep
+      x-ogen-operation-group: Account
       summary: Answer the second step
       description: Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes and five wrong codes.
       tags: [Identity]
@@ -3266,6 +3369,7 @@ paths:
   /api/v1/sign-out:
     post:
       operationId: signOut
+      x-ogen-operation-group: Account
       summary: Sign out
       description: Ends this device's session and clears its cookie.
       tags: [Identity]
@@ -3295,6 +3399,7 @@ paths:
   /api/v1/sign-in-links:
     post:
       operationId: requestSignInLink
+      x-ogen-operation-group: Account
       summary: Email a sign-in link
       description: For a forgotten password. Answers the same whether or not an Account has the email.
       tags: [Identity]
@@ -3322,6 +3427,7 @@ paths:
   /api/v1/sign-in-links/use:
     post:
       operationId: useSignInLink
+      x-ogen-operation-group: Account
       summary: Sign in with an emailed link
       description: Signs the Account in on this device; a link works once, within 30 minutes.
       tags: [Identity]
@@ -3368,6 +3474,7 @@ paths:
   /api/v1/sign-in-methods:
     get:
       operationId: getSignInMethods
+      x-ogen-operation-group: Read
       summary: List the sign-in methods
       description: Which external sign-in, if any, the sign-in page offers beside a password.
       tags: [Identity]
@@ -3393,6 +3500,7 @@ paths:
   /api/v1/oidc/sign-ins:
     post:
       operationId: startOidcSignIn
+      x-ogen-operation-group: Account
       summary: Start signing in with the external login
       description: Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
       tags: [Identity]
@@ -3420,6 +3528,7 @@ paths:
   /api/v1/oidc/callback:
     post:
       operationId: finishOidc
+      x-ogen-operation-group: Account
       summary: Finish an external sign-in
       description: Takes the code and state the provider sent back. Signs in a linked login, links the login when the Account page started it, or leaves it waiting for an Account.
       tags: [Identity]
@@ -3459,6 +3568,7 @@ paths:
   /api/v1/oidc/accounts:
     post:
       operationId: createOidcAccount
+      x-ogen-operation-group: Account
       summary: Create an Account for an external login
       description: Sets up an Account for a login no Account has yet, and signs it in.
       tags: [Identity]
@@ -3492,6 +3602,7 @@ paths:
   /api/v1/oidc/links:
     post:
       operationId: linkOidcAccount
+      x-ogen-operation-group: Account
       summary: Link an external login to an existing Account
       description: Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
       tags: [Identity]
@@ -3525,6 +3636,7 @@ paths:
   /api/v1/account:
     get:
       operationId: getAccount
+      x-ogen-operation-group: Read
       summary: Get my Account
       description: The Account the caller is signed in as.
       tags: [Identity]
@@ -3548,6 +3660,7 @@ paths:
           $ref: "#/components/responses/Problem"
     put:
       operationId: updateAccount
+      x-ogen-operation-group: Account
       summary: Change my profile
       description: Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays read-only.
       tags: [Identity]
@@ -3578,6 +3691,7 @@ paths:
   /api/v1/account/password:
     put:
       operationId: setAccountPassword
+      x-ogen-operation-group: Account
       summary: Set my password
       description: Replaces the signed-in Account's password, for example after signing in with an emailed link.
       tags: [Identity]
@@ -3604,6 +3718,7 @@ paths:
   /api/v1/account/oidc-link:
     post:
       operationId: startOidcLink
+      x-ogen-operation-group: Account
       summary: Start linking the external login
       description: Returns where to send the browser to link a login to the signed-in Account.
       tags: [Identity]
@@ -3629,6 +3744,7 @@ paths:
           $ref: "#/components/responses/Problem"
     delete:
       operationId: unlinkOidc
+      x-ogen-operation-group: Account
       summary: Unlink the external login
       description: Removes the linked login; the Account stays. An Account without a password keeps its login.
       tags: [Identity]
@@ -3649,6 +3765,7 @@ paths:
   /api/v1/account/two-step:
     post:
       operationId: beginTwoStep
+      x-ogen-operation-group: Account
       summary: Start two-step sign-in
       description: Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step on.
       tags: [Identity]
@@ -3673,6 +3790,7 @@ paths:
   /api/v1/account/two-step/confirm:
     post:
       operationId: confirmTwoStep
+      x-ogen-operation-group: Account
       summary: Turn two-step on
       description: Checks a first code from the app and returns the recovery codes, shown only now.
       tags: [Identity]
@@ -3709,6 +3827,7 @@ paths:
   /api/v1/account/two-step/disable:
     post:
       operationId: disableTwoStep
+      x-ogen-operation-group: Account
       summary: Turn two-step off
       description: Needs a current code or a recovery code; the recovery codes go too.
       tags: [Identity]
@@ -3735,6 +3854,7 @@ paths:
   /api/v1/account/two-step/recovery-codes:
     post:
       operationId: resetRecoveryCodes
+      x-ogen-operation-group: Account
       summary: Replace the recovery codes
       description: Needs a current code; the old recovery codes stop working.
       tags: [Identity]
@@ -3762,9 +3882,92 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/account/access-tokens:
+    get:
+      operationId: listAccessTokens
+      x-ogen-operation-group: Read
+      summary: List my Access Tokens
+      description: The signed-in Account's live Access Tokens, newest first, with when each was last used.
+      tags: [Identity]
+      responses:
+        "200":
+          description: The Access Tokens.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessTokenList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createAccessToken
+      x-ogen-operation-group: Account
+      summary: Mint an Access Token
+      description: A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only now.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccessTokenRequest"
+      responses:
+        "201":
+          description: The token and its details.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessTokenCreated"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/access-tokens/{accessId}:
+    delete:
+      operationId: revokeAccessToken
+      x-ogen-operation-group: Account
+      summary: Revoke an Access Token
+      description: The token stops working at once.
+      tags: [Identity]
+      parameters:
+        - name: accessId
+          in: path
+          required: true
+          description: Access Token id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Revoked.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
+      x-ogen-operation-group: Read
       summary: Liveness probe
       description: Returns ok while the process is serving requests.
       tags: [Operations]
@@ -3781,6 +3984,7 @@ paths:
   /readyz:
     get:
       operationId: getReadiness
+      x-ogen-operation-group: Read
       summary: Readiness probe
       description: Returns ok once the API can serve traffic.
       tags: [Operations]
@@ -4097,6 +4301,58 @@ components:
         recoveryCodesLeft: { type: integer, format: int32, minimum: 0, maximum: 10 }
         adminPowers: { type: boolean, description: "Whether this request holds Admin powers; an Admin needs two-step or the external login." }
         oidc: { $ref: "#/components/schemas/OidcLink" }
+    AccessTokenScope:
+      type: string
+      description: What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
+      enum: [read, build, play]
+    AccessToken:
+      type: object
+      description: An Access Token, without the token itself.
+      additionalProperties: false
+      required: [id, name, scopes, createdAt, expiresAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, minLength: 1, maxLength: 60 }
+        scopes:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items: { $ref: "#/components/schemas/AccessTokenScope" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        expiresAt: { type: string, format: date-time, maxLength: 40 }
+        lastUsedAt: { type: string, format: date-time, maxLength: 40 }
+    AccessTokenList:
+      type: object
+      description: An Account's live Access Tokens.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/AccessToken" }
+    AccessTokenRequest:
+      type: object
+      description: A name, the scopes and how many days a new Access Token lives.
+      additionalProperties: false
+      required: [name, scopes, days]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        scopes:
+          type: array
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/AccessTokenScope" }
+        days: { type: integer, format: int32, minimum: 1, maximum: 365 }
+    AccessTokenCreated:
+      type: object
+      description: A new Access Token; token is shown only now.
+      additionalProperties: false
+      required: [token, accessToken]
+      properties:
+        token: { type: string, pattern: "^gmt_[A-Za-z0-9_-]{43}$", minLength: 47, maxLength: 47 }
+        accessToken: { $ref: "#/components/schemas/AccessToken" }
     TwoStepChallenge:
       type: object
       description: A sign-in waiting for its second step.

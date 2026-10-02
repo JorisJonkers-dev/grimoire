@@ -46,15 +46,16 @@ func New(o Options) (http.Handler, error) {
 		Exempt: map[string]bool{"/healthz": true, "/readyz": true},
 		Log:    o.Handler.Log,
 	}
-	api := o.identity(limiter.Wrap(srv))
+	guarded := scoped(srv)
+	api := o.identity(limiter.Wrap(guarded))
 	mux := http.NewServeMux()
 	if o.Handler.Hub != nil {
-		socket := o.identity(http.HandlerFunc(o.Handler.LiveSocket))
+		socket := o.identity(playing(http.HandlerFunc(o.Handler.LiveSocket)))
 		mux.Handle("GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live", socket)
 	}
 	if o.Edits != nil {
 		tools := o.identity(limiter.Wrap(mcpapi.Handler(mcpapi.Options{
-			API: srv, Edits: o.Edits, Version: o.Handler.Version, Log: o.Handler.Log, Issuer: o.OAuthIssuer,
+			API: guarded, Edits: o.Edits, Version: o.Handler.Version, Log: o.Handler.Log, Issuer: o.OAuthIssuer,
 		})))
 		mux.Handle("/mcp", tools)
 	}
