@@ -239,3 +239,95 @@ func (s *Store) Switch(ctx context.Context, campaign, collection uuid.UUID, on b
 	}
 	return s.q.SwitchOffLibraryCollection(ctx, queries.SwitchOffLibraryCollectionParams{CampaignID: campaign, CollectionID: collection})
 }
+
+// AddToCollection puts an entry in a Collection.
+func (s *Store) AddToCollection(ctx context.Context, collection, entry uuid.UUID) error {
+	return s.q.AddToLibraryCollection(ctx, queries.AddToLibraryCollectionParams{CollectionID: collection, EntryID: entry})
+}
+
+// CampaignHome reads the Campaign Collection's id.
+func (s *Store) CampaignHome(ctx context.Context, campaign uuid.UUID) (uuid.UUID, error) {
+	id, err := s.q.CampaignHome(ctx, campaign)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, apperr.ErrNotFound
+	}
+	return id, err
+}
+
+// InsertCampaignHome makes a Collection the Campaign Collection.
+func (s *Store) InsertCampaignHome(ctx context.Context, campaign, collection uuid.UUID) error {
+	return s.q.InsertCampaignHome(ctx, queries.InsertCampaignHomeParams{CampaignID: campaign, CollectionID: collection})
+}
+
+func optUUID(id *uuid.UUID) pgtype.UUID {
+	if id == nil {
+		return pgtype.UUID{}
+	}
+	return pgtype.UUID{Bytes: *id, Valid: true}
+}
+
+func uuidOf(p pgtype.UUID) *uuid.UUID {
+	if !p.Valid {
+		return nil
+	}
+	id := uuid.UUID(p.Bytes)
+	return &id
+}
+
+// InsertProposal adds a pending Proposal.
+func (s *Store) InsertProposal(ctx context.Context, p domain.Proposal) error {
+	return s.q.InsertProposal(ctx, queries.InsertProposalParams{
+		ID: p.ID, CampaignID: p.Campaign, AuthorSubject: p.Author, AuthorName: p.AuthorName, Kind: p.Draft.Kind, Name: p.Draft.Name,
+		Fields: encode(p.Draft.Fields), Note: p.Note, BaseEntryID: optUUID(p.Base), Now: p.CreatedAt,
+	})
+}
+
+// UpdateProposal saves a Proposal's draft, status, message and resulting entry.
+func (s *Store) UpdateProposal(ctx context.Context, p domain.Proposal) error {
+	return s.q.UpdateProposal(ctx, queries.UpdateProposalParams{
+		ID: p.ID, Name: p.Draft.Name, Fields: encode(p.Draft.Fields), Note: p.Note, Status: p.Status, Message: p.Message,
+		EntryID: optUUID(p.Entry), Now: p.UpdatedAt,
+	})
+}
+
+func proposalOf(r queries.LibraryProposal) domain.Proposal {
+	return domain.Proposal{
+		ID: r.ID, Campaign: r.CampaignID, Author: r.AuthorSubject, AuthorName: r.AuthorName,
+		Draft: domain.Draft{Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields)}, Note: r.Note, Base: uuidOf(r.BaseEntryID),
+		Status: r.Status, Message: r.Message, Entry: uuidOf(r.EntryID), CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
+	}
+}
+
+// Proposal reads one Proposal.
+func (s *Store) Proposal(ctx context.Context, id uuid.UUID) (domain.Proposal, error) {
+	r, err := s.q.Proposal(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Proposal{}, apperr.ErrNotFound
+	}
+	return proposalOf(r), err
+}
+
+// Proposals lists a Campaign's Proposals, newest first; only one author's when author is set.
+func (s *Store) Proposals(ctx context.Context, campaign uuid.UUID, author string) ([]domain.Proposal, error) {
+	rows, err := s.q.CampaignProposals(ctx, queries.CampaignProposalsParams{CampaignID: campaign, AuthorSubject: pgtype.Text{String: author, Valid: author != ""}})
+	out := make([]domain.Proposal, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, proposalOf(r))
+	}
+	return out, err
+}
+
+// InsertReview records the next step of a Proposal's history.
+func (s *Store) InsertReview(ctx context.Context, proposal uuid.UUID, r domain.Review) error {
+	return s.q.InsertProposalReview(ctx, queries.InsertProposalReviewParams{ProposalID: proposal, Action: r.Action, Message: r.Message, ByName: r.By, Now: r.At})
+}
+
+// Reviews lists a Proposal's history in order.
+func (s *Store) Reviews(ctx context.Context, proposal uuid.UUID) ([]domain.Review, error) {
+	rows, err := s.q.ProposalReviews(ctx, proposal)
+	out := make([]domain.Review, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, domain.Review{No: int(r.No), Action: r.Action, Message: r.Message, By: r.ByName, At: r.CreatedAt})
+	}
+	return out, err
+}

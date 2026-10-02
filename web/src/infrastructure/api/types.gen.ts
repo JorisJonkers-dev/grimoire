@@ -2659,6 +2659,82 @@ export type LibraryPinInput = {
 };
 
 /**
+ * Where a Proposal stands.
+ */
+export type ProposalStatus = 'pending' | 'changes_requested' | 'approved' | 'declined';
+
+/**
+ * A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees (baseEntryId). entryId is the Library entry an approval made or changed.
+ */
+export type Proposal = {
+    id: Id;
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    note: string;
+    authorName: string;
+    status: ProposalStatus;
+    /**
+     * The DM's latest message.
+     */
+    message: string;
+    baseEntryId?: Id;
+    entryId?: Id;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/**
+ * One step of a Proposal's history.
+ */
+export type ProposalStep = {
+    no: number;
+    action: 'submitted' | 'resubmitted' | 'changes_requested' | 'approved' | 'declined';
+    message: string;
+    by: string;
+    createdAt: string;
+};
+
+/**
+ * A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a side-by-side review.
+ */
+export type ProposalDetail = {
+    proposal: Proposal;
+    steps: Array<ProposalStep>;
+    current?: LinkedEntry;
+};
+
+/**
+ * A new entry to propose, or a change to the entry baseEntryId.
+ */
+export type ProposalInput = {
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    note?: string;
+    baseEntryId?: Id;
+};
+
+/**
+ * A Proposal changed as the DM asked.
+ */
+export type ProposalUpdate = {
+    name: string;
+    fields: LibraryFields;
+    note?: string;
+};
+
+/**
+ * A DM's decision; an approval may edit the name and fields first.
+ */
+export type ProposalReviewInput = {
+    action: 'approve' | 'request_changes' | 'decline';
+    message?: string;
+    name?: string;
+    fields?: LibraryFields;
+};
+
+/**
  * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
@@ -3630,6 +3706,11 @@ export type TableId = Id;
  * Collection id.
  */
 export type CollectionId = Id;
+
+/**
+ * Proposal id.
+ */
+export type ProposalId = Id;
 
 /**
  * Library entry id.
@@ -8427,6 +8508,188 @@ export type PinLibraryRevisionResponses = {
 };
 
 export type PinLibraryRevisionResponse = PinLibraryRevisionResponses[keyof PinLibraryRevisionResponses];
+
+export type ListProposalsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals';
+};
+
+export type ListProposalsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListProposalsError = ListProposalsErrors[keyof ListProposalsErrors];
+
+export type ListProposalsResponses = {
+    /**
+     * The Proposals.
+     */
+    200: Array<Proposal>;
+};
+
+export type ListProposalsResponse = ListProposalsResponses[keyof ListProposalsResponses];
+
+export type CreateProposalData = {
+    body: ProposalInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals';
+};
+
+export type CreateProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateProposalError = CreateProposalErrors[keyof CreateProposalErrors];
+
+export type CreateProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    201: Proposal;
+};
+
+export type CreateProposalResponse = CreateProposalResponses[keyof CreateProposalResponses];
+
+export type GetProposalData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Proposal id.
+         */
+        proposalId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals/{proposalId}';
+};
+
+export type GetProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetProposalError = GetProposalErrors[keyof GetProposalErrors];
+
+export type GetProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    200: ProposalDetail;
+};
+
+export type GetProposalResponse = GetProposalResponses[keyof GetProposalResponses];
+
+export type ResubmitProposalData = {
+    body: ProposalUpdate;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Proposal id.
+         */
+        proposalId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals/{proposalId}';
+};
+
+export type ResubmitProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ResubmitProposalError = ResubmitProposalErrors[keyof ResubmitProposalErrors];
+
+export type ResubmitProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    200: ProposalDetail;
+};
+
+export type ResubmitProposalResponse = ResubmitProposalResponses[keyof ResubmitProposalResponses];
+
+export type ReviewProposalData = {
+    body: ProposalReviewInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Proposal id.
+         */
+        proposalId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/proposals/{proposalId}/review';
+};
+
+export type ReviewProposalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReviewProposalError = ReviewProposalErrors[keyof ReviewProposalErrors];
+
+export type ReviewProposalResponses = {
+    /**
+     * The Proposal.
+     */
+    200: ProposalDetail;
+};
+
+export type ReviewProposalResponse = ReviewProposalResponses[keyof ReviewProposalResponses];
 
 export type GetMeData = {
     body?: never;

@@ -101,10 +101,8 @@ func CleanCollection(name, description string) (string, string, error) {
 
 // Resolved is the base with the Campaign Override on top.
 func (l Linked) Resolved() Fields {
-	out := maps.Clone(l.Base)
-	if out == nil {
-		out = Fields{}
-	}
+	out := Fields{}
+	maps.Copy(out, l.Base)
 	maps.Copy(out, l.Override)
 	return out
 }
@@ -145,4 +143,63 @@ func CleanFields(in Fields) (Fields, error) {
 		out[name] = value
 	}
 	return out, nil
+}
+
+// Proposal statuses.
+const (
+	StatusPending          = "pending"
+	StatusChangesRequested = "changes_requested"
+	StatusApproved         = "approved"
+	StatusDeclined         = "declined"
+)
+
+// Review actions: what happened to a Proposal.
+const (
+	ReviewSubmitted        = "submitted"
+	ReviewResubmitted      = "resubmitted"
+	ReviewChangesRequested = "changes_requested"
+	ReviewApproved         = "approved"
+	ReviewDeclined         = "declined"
+)
+
+// Proposal is a Player's request that the DM accept a new entry into a Campaign, or a change to one
+// the Campaign sees (Base). Entry is the Library entry an approval made or changed.
+type Proposal struct {
+	ID         uuid.UUID
+	Campaign   uuid.UUID
+	Author     string
+	AuthorName string
+	Draft      Draft
+	Note       string
+	Base       *uuid.UUID
+	Status     string
+	Message    string
+	Entry      *uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+// Review is one step of a Proposal's history.
+type Review struct {
+	No      int
+	Action  string
+	Message string
+	By      string
+	At      time.Time
+}
+
+// ProposalDetail is a Proposal with its history and, for a change, the entry as the Campaign sees it now.
+type ProposalDetail struct {
+	Proposal
+	Reviews []Review
+	Current *Linked
+}
+
+// CleanMessage checks a note or a DM's message.
+func CleanMessage(s string) (string, error) {
+	s = strings.TrimSpace(s)
+	if utf8.RuneCountInString(s) > 2000 {
+		return s, apperr.Refuse("keep the message to 2000 characters")
+	}
+	return s, nil
 }

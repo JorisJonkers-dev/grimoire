@@ -32,6 +32,11 @@ type LibraryService interface {
 	UpdateCollection(ctx context.Context, c caller.Caller, id uuid.UUID, name, description string, entries []uuid.UUID) (domain.Collection, error)
 	CampaignCollections(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Collection, error)
 	Switch(ctx context.Context, c caller.Caller, campaign, collection uuid.UUID, on bool) ([]domain.Collection, error)
+	Propose(ctx context.Context, c caller.Caller, campaign uuid.UUID, d domain.Draft, note string, base *uuid.UUID) (domain.Proposal, error)
+	Proposals(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Proposal, error)
+	Proposal(ctx context.Context, c caller.Caller, campaign, id uuid.UUID) (domain.ProposalDetail, error)
+	Resubmit(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, d domain.Draft, note string) (domain.ProposalDetail, error)
+	Review(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, action, message string, edit *domain.Draft) (domain.ProposalDetail, error)
 }
 
 var _ LibraryService = (*app.Service)(nil)
@@ -327,4 +332,102 @@ func (h *Handler) SwitchLibraryCollection(ctx context.Context, req *oas.LibraryS
 		return bad, nil
 	}
 	return &oas.SwitchLibraryCollectionOKHeaders{Response: collectionsOut(list, me, true)}, nil
+}
+
+func optID(id *uuid.UUID) oas.OptID {
+	if id == nil {
+		return oas.OptID{}
+	}
+	return oas.NewOptID(oas.ID(*id))
+}
+
+func proposalOut(p domain.Proposal) oas.Proposal {
+	return oas.Proposal{
+		ID: oas.ID(p.ID), Kind: oas.LibraryKind(p.Draft.Kind), Name: p.Draft.Name, Fields: fieldsOut(p.Draft.Fields), Note: p.Note,
+		AuthorName: p.AuthorName, Status: oas.ProposalStatus(p.Status), Message: p.Message, BaseEntryId: optID(p.Base), EntryId: optID(p.Entry),
+		CreatedAt: p.CreatedAt.UTC(), UpdatedAt: p.UpdatedAt.UTC(),
+	}
+}
+
+func proposalDetailOut(d domain.ProposalDetail) *oas.ProposalDetailHeaders {
+	out := oas.ProposalDetail{Proposal: proposalOut(d.Proposal), Steps: []oas.ProposalStep{}}
+	for _, r := range d.Reviews {
+		out.Steps = append(out.Steps, oas.ProposalStep{No: int32(r.No), Action: oas.ProposalStepAction(r.Action), Message: r.Message, By: r.By, CreatedAt: r.At.UTC()}) //nolint:gosec // a short history
+	}
+	if d.Current != nil {
+		out.Current = oas.NewOptLinkedEntry(linkedOut(*d.Current))
+	}
+	return &oas.ProposalDetailHeaders{Response: out}
+}
+
+// ListProposals lists a Campaign's Proposals.
+func (h *Handler) ListProposals(ctx context.Context, p oas.ListProposalsParams) (oas.ListProposalsRes, error) {
+	list, bad := libraryCall(ctx, h, "list proposals", func(c caller.Caller) ([]domain.Proposal, error) {
+		return h.Library.Proposals(ctx, c, uuid.UUID(p.CampaignId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	out := make([]oas.Proposal, 0, len(list))
+	for _, x := range list {
+		out = append(out, proposalOut(x))
+	}
+	return &oas.ListProposalsOKHeaders{Response: out}, nil
+}
+
+// CreateProposal sends the DM a new entry, or a change to one the Campaign sees.
+func (h *Handler) CreateProposal(ctx context.Context, req *oas.ProposalInput, p oas.CreateProposalParams) (oas.CreateProposalRes, error) {
+	var base *uuid.UUID
+	if id, ok := req.BaseEntryId.Get(); ok {
+		b := uuid.UUID(id)
+		base = &b
+	}
+	out, bad := libraryCall(ctx, h, "create proposal", func(c caller.Caller) (domain.Proposal, error) {
+		d := domain.Draft{Kind: string(req.Kind), Name: req.Name, Fields: fieldsIn(req.Fields)}
+		return h.Library.Propose(ctx, c, uuid.UUID(p.CampaignId), d, req.Note.Or(""), base)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.ProposalHeaders{Response: proposalOut(out)}, nil
+}
+
+// GetProposal reads one Proposal.
+func (h *Handler) GetProposal(ctx context.Context, p oas.GetProposalParams) (oas.GetProposalRes, error) {
+	d, bad := libraryCall(ctx, h, "get proposal", func(c caller.Caller) (domain.ProposalDetail, error) {
+		return h.Library.Proposal(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.ProposalId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return proposalDetailOut(d), nil
+}
+
+// ResubmitProposal sends a Proposal again after the DM asked for changes.
+func (h *Handler) ResubmitProposal(ctx context.Context, req *oas.ProposalUpdate, p oas.ResubmitProposalParams) (oas.ResubmitProposalRes, error) {
+	d, bad := libraryCall(ctx, h, "resubmit proposal", func(c caller.Caller) (domain.ProposalDetail, error) {
+		return h.Library.Resubmit(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.ProposalId), domain.Draft{Name: req.Name, Fields: fieldsIn(req.Fields)}, req.Note.Or(""))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return proposalDetailOut(d), nil
+}
+
+// ReviewProposal decides a pending Proposal.
+func (h *Handler) ReviewProposal(ctx context.Context, req *oas.ProposalReviewInput, p oas.ReviewProposalParams) (oas.ReviewProposalRes, error) {
+	var edit *domain.Draft
+	if req.Name.Set || req.Fields != nil {
+		edit = &domain.Draft{Name: req.Name.Or("")}
+		if req.Fields != nil {
+			edit.Fields = fieldsIn(req.Fields)
+		}
+	}
+	d, bad := libraryCall(ctx, h, "review proposal", func(c caller.Caller) (domain.ProposalDetail, error) {
+		return h.Library.Review(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.ProposalId), string(req.Action), req.Message.Or(""), edit)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return proposalDetailOut(d), nil
 }

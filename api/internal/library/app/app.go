@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,12 +39,24 @@ type Repository interface {
 	// Collections lists an owner's Collections and, with a Campaign, every other one switched on there.
 	Collections(ctx context.Context, owner string, campaign *uuid.UUID) ([]domain.Collection, error)
 	Switch(ctx context.Context, campaign, collection uuid.UUID, on bool, now time.Time) error
+	AddToCollection(ctx context.Context, collection, entry uuid.UUID) error
+	// CampaignHome is the Campaign Collection's id, or ErrNotFound before the Campaign has one.
+	CampaignHome(ctx context.Context, campaign uuid.UUID) (uuid.UUID, error)
+	InsertCampaignHome(ctx context.Context, campaign, collection uuid.UUID) error
+	InsertProposal(ctx context.Context, p domain.Proposal) error
+	UpdateProposal(ctx context.Context, p domain.Proposal) error
+	Proposal(ctx context.Context, id uuid.UUID) (domain.Proposal, error)
+	// Proposals lists a Campaign's Proposals, newest first; only one author's when author is set.
+	Proposals(ctx context.Context, campaign uuid.UUID, author string) ([]domain.Proposal, error)
+	InsertReview(ctx context.Context, proposal uuid.UUID, r domain.Review) error
+	Reviews(ctx context.Context, proposal uuid.UUID) ([]domain.Review, error)
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
-// Members finds who a caller is in a Campaign.
+// Members finds who a caller is in a Campaign, and its DMs.
 type Members interface {
 	Membership(ctx context.Context, campaign uuid.UUID, subject string) (playdomain.Member, error)
+	DMs(ctx context.Context, campaign uuid.UUID) ([]playdomain.Member, error)
 }
 
 // Service is the Library use cases.
@@ -51,6 +64,9 @@ type Service struct {
 	Repo    Repository
 	Members Members
 	Now     func() time.Time
+	// Notices rings bells about Proposals, and Log records a bell that failed; nil Notices rings none.
+	Notices Notifier
+	Log     *slog.Logger
 }
 
 // Entries lists the caller's entries, of one kind when kind is set.

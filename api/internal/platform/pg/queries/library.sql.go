@@ -27,6 +27,17 @@ func (q *Queries) AddToLibraryCollection(ctx context.Context, arg AddToLibraryCo
 	return err
 }
 
+const campaignHome = `-- name: CampaignHome :one
+SELECT collection_id FROM library.campaign_homes WHERE campaign_id = $1
+`
+
+func (q *Queries) CampaignHome(ctx context.Context, campaignID uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, campaignHome, campaignID)
+	var collection_id uuid.UUID
+	err := row.Scan(&collection_id)
+	return collection_id, err
+}
+
 const campaignLibraryCollections = `-- name: CampaignLibraryCollections :many
 SELECT c.id, c.owner_subject, c.name, c.description, c.created_at, c.updated_at,
     ARRAY(SELECT ce.entry_id FROM library.collection_entries ce WHERE ce.collection_id = c.id ORDER BY ce.entry_id)::uuid[] AS entry_ids,
@@ -161,12 +172,73 @@ func (q *Queries) CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryL
 	return items, nil
 }
 
+const campaignProposals = `-- name: CampaignProposals :many
+SELECT id, campaign_id, author_subject, author_name, kind, name, fields, note, base_entry_id, status, message, entry_id, created_at, updated_at
+FROM library.proposals
+WHERE campaign_id = $1 AND ($2::text IS NULL OR author_subject = $2::text)
+ORDER BY created_at DESC, id
+`
+
+type CampaignProposalsParams struct {
+	CampaignID    uuid.UUID
+	AuthorSubject pgtype.Text
+}
+
+func (q *Queries) CampaignProposals(ctx context.Context, arg CampaignProposalsParams) ([]LibraryProposal, error) {
+	rows, err := q.db.Query(ctx, campaignProposals, arg.CampaignID, arg.AuthorSubject)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LibraryProposal{}
+	for rows.Next() {
+		var i LibraryProposal
+		if err := rows.Scan(
+			&i.ID,
+			&i.CampaignID,
+			&i.AuthorSubject,
+			&i.AuthorName,
+			&i.Kind,
+			&i.Name,
+			&i.Fields,
+			&i.Note,
+			&i.BaseEntryID,
+			&i.Status,
+			&i.Message,
+			&i.EntryID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const clearLibraryCollection = `-- name: ClearLibraryCollection :exec
 DELETE FROM library.collection_entries WHERE collection_id = $1
 `
 
 func (q *Queries) ClearLibraryCollection(ctx context.Context, collectionID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, clearLibraryCollection, collectionID)
+	return err
+}
+
+const insertCampaignHome = `-- name: InsertCampaignHome :exec
+INSERT INTO library.campaign_homes (campaign_id, collection_id) VALUES ($1, $2)
+`
+
+type InsertCampaignHomeParams struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+}
+
+func (q *Queries) InsertCampaignHome(ctx context.Context, arg InsertCampaignHomeParams) error {
+	_, err := q.db.Exec(ctx, insertCampaignHome, arg.CampaignID, arg.CollectionID)
 	return err
 }
 
@@ -241,6 +313,64 @@ func (q *Queries) InsertLibraryRevision(ctx context.Context, arg InsertLibraryRe
 		arg.Name,
 		arg.Fields,
 		arg.AuthorSubject,
+		arg.Now,
+	)
+	return err
+}
+
+const insertProposal = `-- name: InsertProposal :exec
+INSERT INTO library.proposals (id, campaign_id, author_subject, author_name, kind, name, fields, note, base_entry_id, status, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10, $10)
+`
+
+type InsertProposalParams struct {
+	ID            uuid.UUID
+	CampaignID    uuid.UUID
+	AuthorSubject string
+	AuthorName    string
+	Kind          string
+	Name          string
+	Fields        []byte
+	Note          string
+	BaseEntryID   pgtype.UUID
+	Now           time.Time
+}
+
+func (q *Queries) InsertProposal(ctx context.Context, arg InsertProposalParams) error {
+	_, err := q.db.Exec(ctx, insertProposal,
+		arg.ID,
+		arg.CampaignID,
+		arg.AuthorSubject,
+		arg.AuthorName,
+		arg.Kind,
+		arg.Name,
+		arg.Fields,
+		arg.Note,
+		arg.BaseEntryID,
+		arg.Now,
+	)
+	return err
+}
+
+const insertProposalReview = `-- name: InsertProposalReview :exec
+INSERT INTO library.proposal_reviews (proposal_id, no, action, message, by_name, created_at)
+SELECT $1, coalesce(max(no), 0) + 1, $2, $3, $4, $5 FROM library.proposal_reviews WHERE proposal_id = $1
+`
+
+type InsertProposalReviewParams struct {
+	ProposalID uuid.UUID
+	Action     string
+	Message    string
+	ByName     string
+	Now        time.Time
+}
+
+func (q *Queries) InsertProposalReview(ctx context.Context, arg InsertProposalReviewParams) error {
+	_, err := q.db.Exec(ctx, insertProposalReview,
+		arg.ProposalID,
+		arg.Action,
+		arg.Message,
+		arg.ByName,
 		arg.Now,
 	)
 	return err
@@ -465,6 +595,71 @@ func (q *Queries) PinLibraryRevision(ctx context.Context, arg PinLibraryRevision
 	return err
 }
 
+const proposal = `-- name: Proposal :one
+SELECT id, campaign_id, author_subject, author_name, kind, name, fields, note, base_entry_id, status, message, entry_id, created_at, updated_at
+FROM library.proposals WHERE id = $1
+`
+
+func (q *Queries) Proposal(ctx context.Context, id uuid.UUID) (LibraryProposal, error) {
+	row := q.db.QueryRow(ctx, proposal, id)
+	var i LibraryProposal
+	err := row.Scan(
+		&i.ID,
+		&i.CampaignID,
+		&i.AuthorSubject,
+		&i.AuthorName,
+		&i.Kind,
+		&i.Name,
+		&i.Fields,
+		&i.Note,
+		&i.BaseEntryID,
+		&i.Status,
+		&i.Message,
+		&i.EntryID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const proposalReviews = `-- name: ProposalReviews :many
+SELECT no, action, message, by_name, created_at FROM library.proposal_reviews WHERE proposal_id = $1 ORDER BY no
+`
+
+type ProposalReviewsRow struct {
+	No        int32
+	Action    string
+	Message   string
+	ByName    string
+	CreatedAt time.Time
+}
+
+func (q *Queries) ProposalReviews(ctx context.Context, proposalID uuid.UUID) ([]ProposalReviewsRow, error) {
+	rows, err := q.db.Query(ctx, proposalReviews, proposalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ProposalReviewsRow{}
+	for rows.Next() {
+		var i ProposalReviewsRow
+		if err := rows.Scan(
+			&i.No,
+			&i.Action,
+			&i.Message,
+			&i.ByName,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const setLibraryOverride = `-- name: SetLibraryOverride :exec
 INSERT INTO library.campaign_links (campaign_id, entry_id, override, direct, linked_at, updated_at)
 VALUES ($1, $2, $3, false, $4, $4)
@@ -577,4 +772,35 @@ func (q *Queries) UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntry
 	var revision int32
 	err := row.Scan(&revision)
 	return revision, err
+}
+
+const updateProposal = `-- name: UpdateProposal :exec
+UPDATE library.proposals SET name = $1, fields = $2, note = $3, status = $4, message = $5,
+    entry_id = $6, updated_at = $7
+WHERE id = $8
+`
+
+type UpdateProposalParams struct {
+	Name    string
+	Fields  []byte
+	Note    string
+	Status  string
+	Message string
+	EntryID pgtype.UUID
+	Now     time.Time
+	ID      uuid.UUID
+}
+
+func (q *Queries) UpdateProposal(ctx context.Context, arg UpdateProposalParams) error {
+	_, err := q.db.Exec(ctx, updateProposal,
+		arg.Name,
+		arg.Fields,
+		arg.Note,
+		arg.Status,
+		arg.Message,
+		arg.EntryID,
+		arg.Now,
+		arg.ID,
+	)
+	return err
 }

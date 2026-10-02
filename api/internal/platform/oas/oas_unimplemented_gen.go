@@ -216,6 +216,15 @@ func (UnimplementedHandler) CreateOidcAccount(ctx context.Context, req *OidcAcco
 	return r, ht.ErrNotImplemented
 }
 
+// CreateProposal implements createProposal operation.
+//
+// Sends the DM a new entry for the Campaign, or a change to one it sees. The DMs hear of it.
+//
+// POST /api/v1/campaigns/{campaignId}/proposals
+func (UnimplementedHandler) CreateProposal(ctx context.Context, req *ProposalInput, params CreateProposalParams) (r CreateProposalRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreatePushSubscription implements createPushSubscription operation.
 //
 // Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
@@ -588,6 +597,16 @@ func (UnimplementedHandler) GetNpc(ctx context.Context, params GetNpcParams) (r 
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 func (UnimplementedHandler) GetPortrait(ctx context.Context, params GetPortraitParams) (r GetPortraitRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetProposal implements getProposal operation.
+//
+// One Proposal with its history and, for a change, the entry as the Campaign sees it now. Its author
+// or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+func (UnimplementedHandler) GetProposal(ctx context.Context, params GetProposalParams) (r GetProposalRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1023,6 +1042,15 @@ func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams)
 	return r, ht.ErrNotImplemented
 }
 
+// ListProposals implements listProposals operation.
+//
+// The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.
+//
+// GET /api/v1/campaigns/{campaignId}/proposals
+func (UnimplementedHandler) ListProposals(ctx context.Context, params ListProposalsParams) (r ListProposalsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListReleaseNotes implements listReleaseNotes operation.
 //
 // Every Release Note, drafts and scheduled ones too, newest first. For Admins.
@@ -1376,6 +1404,26 @@ func (UnimplementedHandler) RestoreSettlementRevision(ctx context.Context, param
 //
 // POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
 func (UnimplementedHandler) RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (r RestoreShopRevisionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ResubmitProposal implements resubmitProposal operation.
+//
+// Its author sends a Proposal the DM asked changes to again, changed.
+//
+// PUT /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+func (UnimplementedHandler) ResubmitProposal(ctx context.Context, req *ProposalUpdate, params ResubmitProposalParams) (r ResubmitProposalRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReviewProposal implements reviewProposal operation.
+//
+// A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
+// Collection, edited first if they like), asks for changes with a message, or declines it. The author
+// hears either way.
+//
+// POST /api/v1/campaigns/{campaignId}/proposals/{proposalId}/review
+func (UnimplementedHandler) ReviewProposal(ctx context.Context, req *ProposalReviewInput, params ReviewProposalParams) (r ReviewProposalRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

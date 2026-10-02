@@ -1699,6 +1699,94 @@ export const zLibraryPinInput = z.object({
 });
 
 /**
+ * Where a Proposal stands.
+ */
+export const zProposalStatus = z.enum([
+    'pending',
+    'changes_requested',
+    'approved',
+    'declined'
+]);
+
+/**
+ * A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees (baseEntryId). entryId is the Library entry an approval made or changed.
+ */
+export const zProposal = z.object({
+    id: zId,
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000),
+    authorName: z.string().max(80),
+    status: zProposalStatus,
+    message: z.string().max(2000),
+    baseEntryId: zId.optional(),
+    entryId: zId.optional(),
+    createdAt: z.iso.datetime().max(40),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * One step of a Proposal's history.
+ */
+export const zProposalStep = z.object({
+    no: z.int().gte(1).lte(100000),
+    action: z.enum([
+        'submitted',
+        'resubmitted',
+        'changes_requested',
+        'approved',
+        'declined'
+    ]),
+    message: z.string().max(2000),
+    by: z.string().max(80),
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a side-by-side review.
+ */
+export const zProposalDetail = z.object({
+    proposal: zProposal,
+    steps: z.array(zProposalStep).max(1000),
+    current: zLinkedEntry.optional()
+});
+
+/**
+ * A new entry to propose, or a change to the entry baseEntryId.
+ */
+export const zProposalInput = z.object({
+    kind: zLibraryKind,
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000).optional(),
+    baseEntryId: zId.optional()
+});
+
+/**
+ * A Proposal changed as the DM asked.
+ */
+export const zProposalUpdate = z.object({
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000).optional()
+});
+
+/**
+ * A DM's decision; an approval may edit the name and fields first.
+ */
+export const zProposalReviewInput = z.object({
+    action: z.enum([
+        'approve',
+        'request_changes',
+        'decline'
+    ]),
+    message: z.string().max(2000).optional(),
+    name: z.string().min(1).max(80).optional(),
+    fields: zLibraryFields.optional()
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -3833,6 +3921,11 @@ export const zTableId = zId;
 export const zCollectionId = zId;
 
 /**
+ * Proposal id.
+ */
+export const zProposalId = zId;
+
+/**
  * Library entry id.
  */
 export const zLibraryEntryId = zId;
@@ -5223,6 +5316,60 @@ export const zPinLibraryRevisionPath = z.object({
  * The linked entry.
  */
 export const zPinLibraryRevisionResponse = zLinkedEntry;
+
+export const zListProposalsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Proposals.
+ */
+export const zListProposalsResponse = z.array(zProposal).max(1000);
+
+export const zCreateProposalBody = zProposalInput;
+
+export const zCreateProposalPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zCreateProposalResponse = zProposal;
+
+export const zGetProposalPath = z.object({
+    campaignId: zId,
+    proposalId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zGetProposalResponse = zProposalDetail;
+
+export const zResubmitProposalBody = zProposalUpdate;
+
+export const zResubmitProposalPath = z.object({
+    campaignId: zId,
+    proposalId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zResubmitProposalResponse = zProposalDetail;
+
+export const zReviewProposalBody = zProposalReviewInput;
+
+export const zReviewProposalPath = z.object({
+    campaignId: zId,
+    proposalId: zId
+});
+
+/**
+ * The Proposal.
+ */
+export const zReviewProposalResponse = zProposalDetail;
 
 /**
  * The signed-in account.

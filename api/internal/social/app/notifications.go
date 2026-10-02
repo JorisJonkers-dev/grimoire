@@ -49,6 +49,19 @@ func (s *Service) Notify(ctx context.Context, account domain.AccountID, n domain
 	return s.notify(ctx, s.Repo, account, n)
 }
 
+// NotifySubject rings the bell of the Account a subject signs in as; a subject without an Account has
+// no bell, so nothing rings.
+func (s *Service) NotifySubject(ctx context.Context, subject string, n domain.Notice) error {
+	p, err := s.Repo.AccountBySubject(ctx, subject)
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return s.Notify(ctx, p.ID, n)
+}
+
 func (s *Service) notify(ctx context.Context, r Repository, account domain.AccountID, n domain.Notice) error {
 	prefs, err := r.Preferences(ctx, account)
 	if err != nil {

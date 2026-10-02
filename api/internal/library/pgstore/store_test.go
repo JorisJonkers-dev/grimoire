@@ -72,7 +72,63 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 			_, err := s.Override(ctx, dm, campaign, fresh(), domain.Fields{"Mood": "grim"})
 			return err
 		},
-		"pin": func(s *app.Service) error { _, err := s.Pin(ctx, dm, campaign, fresh(), &one); return err },
+		"pin":         func(s *app.Service) error { _, err := s.Pin(ctx, dm, campaign, fresh(), &one); return err },
+		"collections": func(s *app.Service) error { _, err := s.Collections(ctx, dm); return err },
+		"collect": func(s *app.Service) error {
+			col, err := s.CreateCollection(ctx, dm, "Fey", "")
+			if err == nil {
+				_, err = s.UpdateCollection(ctx, dm, col.ID, "Fey", "Fey magic", []uuid.UUID{fresh(), fresh()})
+			}
+			return err
+		},
+		"campaign collections": func(s *app.Service) error { _, err := s.CampaignCollections(ctx, dm, campaign); return err },
+		"switch": func(s *app.Service) error {
+			col, err := base.CreateCollection(ctx, dm, "Fey", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := s.Switch(ctx, dm, campaign, col.ID, true); err != nil {
+				return err
+			}
+			_, err = s.Switch(ctx, dm, campaign, col.ID, false)
+			return err
+		},
+		"propose": func(s *app.Service) error {
+			_, err := s.Propose(ctx, dm, campaign, draft, "note", nil)
+			return err
+		},
+		"proposals": func(s *app.Service) error { _, err := s.Proposals(ctx, dm, campaign); return err },
+		"proposal": func(s *app.Service) error {
+			e := fresh()
+			p, err := base.Propose(ctx, dm, campaign, draft, "", &e)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = s.Proposal(ctx, dm, campaign, p.ID)
+			return err
+		},
+		"review": func(s *app.Service) error {
+			first, err := base.Propose(ctx, dm, campaign, draft, "", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := s.Review(ctx, dm, campaign, first.ID, app.RequestChanges, "more", nil); err != nil {
+				return err
+			}
+			if _, err := s.Resubmit(ctx, dm, campaign, first.ID, draft, "done"); err != nil {
+				return err
+			}
+			if _, err := s.Review(ctx, dm, campaign, first.ID, app.Approve, "", nil); err != nil {
+				return err
+			}
+			e := fresh()
+			change, err := base.Propose(ctx, dm, campaign, draft, "", &e)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = s.Review(ctx, dm, campaign, change.ID, app.Approve, "", nil)
+			return err
+		},
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {

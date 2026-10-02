@@ -102,3 +102,35 @@ ON CONFLICT DO NOTHING;
 
 -- name: SwitchOffLibraryCollection :exec
 DELETE FROM library.campaign_collections WHERE campaign_id = @campaign_id AND collection_id = @collection_id;
+
+-- name: CampaignHome :one
+SELECT collection_id FROM library.campaign_homes WHERE campaign_id = @campaign_id;
+
+-- name: InsertCampaignHome :exec
+INSERT INTO library.campaign_homes (campaign_id, collection_id) VALUES (@campaign_id, @collection_id);
+
+-- name: InsertProposal :exec
+INSERT INTO library.proposals (id, campaign_id, author_subject, author_name, kind, name, fields, note, base_entry_id, status, created_at, updated_at)
+VALUES (@id, @campaign_id, @author_subject, @author_name, @kind, @name, @fields, @note, sqlc.narg(base_entry_id), 'pending', @now, @now);
+
+-- name: UpdateProposal :exec
+UPDATE library.proposals SET name = @name, fields = @fields, note = @note, status = @status, message = @message,
+    entry_id = sqlc.narg(entry_id), updated_at = @now
+WHERE id = @id;
+
+-- name: Proposal :one
+SELECT id, campaign_id, author_subject, author_name, kind, name, fields, note, base_entry_id, status, message, entry_id, created_at, updated_at
+FROM library.proposals WHERE id = @id;
+
+-- name: CampaignProposals :many
+SELECT id, campaign_id, author_subject, author_name, kind, name, fields, note, base_entry_id, status, message, entry_id, created_at, updated_at
+FROM library.proposals
+WHERE campaign_id = @campaign_id AND (sqlc.narg(author_subject)::text IS NULL OR author_subject = sqlc.narg(author_subject)::text)
+ORDER BY created_at DESC, id;
+
+-- name: InsertProposalReview :exec
+INSERT INTO library.proposal_reviews (proposal_id, no, action, message, by_name, created_at)
+SELECT @proposal_id, coalesce(max(no), 0) + 1, @action, @message, @by_name, @now FROM library.proposal_reviews WHERE proposal_id = @proposal_id;
+
+-- name: ProposalReviews :many
+SELECT no, action, message, by_name, created_at FROM library.proposal_reviews WHERE proposal_id = @proposal_id ORDER BY no;

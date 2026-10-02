@@ -16,3 +16,21 @@ export const copyFields = (fields: LibraryField[]): LibraryField[] => fields.map
 export const kindNames: Record<string, string> = {
   creature: 'Creature', npc: 'NPC', location: 'Location', shop: 'Shop', item: 'Item', spell: 'Spell', table: 'Table',
 }
+
+export const statusNames: Record<string, string> = {
+  pending: 'Waiting for the DM', changes_requested: 'Changes asked for', approved: 'Approved', declined: 'Declined',
+}
+
+export const stepNames: Record<string, string> = {
+  submitted: 'Sent', resubmitted: 'Sent again', changes_requested: 'Changes asked for', approved: 'Approved', declined: 'Declined',
+}
+
+/** Each field on either side of a review: its value now, its proposed value, and whether they differ. */
+export function compare(now: LibraryField[], proposed: LibraryField[]): { name: string; now?: string; proposed?: string; changed: boolean }[] {
+  const names = [...new Set([...now.map((f) => f.name), ...proposed.map((f) => f.name)])].sort()
+  return names.map((name) => {
+    const a = now.find((f) => f.name === name)?.value
+    const b = proposed.find((f) => f.name === name)?.value
+    return { name, now: a, proposed: b, changed: a !== b }
+  })
+}

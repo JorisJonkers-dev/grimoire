@@ -26,6 +26,8 @@ const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
 const LibraryPage = () => import('@/features/library/LibraryPage.vue')
 const LibraryEntryPage = () => import('@/features/library/LibraryEntryPage.vue')
 const CampaignLibraryPage = () => import('@/features/library/CampaignLibraryPage.vue')
+const ProposalsPage = () => import('@/features/library/ProposalsPage.vue')
+const ProposalPage = () => import('@/features/library/ProposalPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
 const EncountersPage = () => import('@/features/prep/EncountersPage.vue')
 const LootPage = () => import('@/features/prep/LootPage.vue')
@@ -69,6 +71,8 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/characters/:characterId/inventory', name: 'character-inventory', component: InventoryPage },
       { path: '/campaigns/:id/npcs', name: 'npcs', component: NpcListPage },
       { path: '/campaigns/:id/library', name: 'campaign-library', component: CampaignLibraryPage },
+      { path: '/campaigns/:id/proposals', name: 'proposals', component: ProposalsPage },
+      { path: '/campaigns/:id/proposals/:proposalId', name: 'proposal', component: ProposalPage },
       { path: '/library', name: 'library', component: LibraryPage },
       { path: '/library/:entryId', name: 'library-entry', component: LibraryEntryPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },

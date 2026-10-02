@@ -13804,6 +13804,56 @@ func (s *ListNpcsOKHeaders) SetResponse(val []Npc) {
 
 func (*ListNpcsOKHeaders) listNpcsRes() {}
 
+// ListProposalsOKHeaders wraps []Proposal with response headers.
+type ListProposalsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Proposal
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListProposalsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListProposalsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListProposalsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListProposalsOKHeaders) GetResponse() []Proposal {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListProposalsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListProposalsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListProposalsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListProposalsOKHeaders) SetResponse(val []Proposal) {
+	s.Response = val
+}
+
+func (*ListProposalsOKHeaders) listProposalsRes() {}
+
 // ListRetrainChoicesOKHeaders wraps []RetrainChoice with response headers.
 type ListRetrainChoicesOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -25984,6 +26034,52 @@ func (o OptLibraryKind) Or(d LibraryKind) LibraryKind {
 	return d
 }
 
+// NewOptLinkedEntry returns new OptLinkedEntry with value set to v.
+func NewOptLinkedEntry(v LinkedEntry) OptLinkedEntry {
+	return OptLinkedEntry{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLinkedEntry is optional LinkedEntry.
+type OptLinkedEntry struct {
+	Value LinkedEntry
+	Set   bool
+}
+
+// IsSet returns true if OptLinkedEntry was set.
+func (o OptLinkedEntry) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLinkedEntry) Reset() {
+	var v LinkedEntry
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLinkedEntry) SetTo(v LinkedEntry) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLinkedEntry) Get() (v LinkedEntry, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLinkedEntry) Or(d LinkedEntry) LinkedEntry {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveArea returns new OptLiveArea with value set to v.
 func NewOptLiveArea(v LiveArea) OptLiveArea {
 	return OptLiveArea{
@@ -29013,6 +29109,7 @@ func (*ProblemStatusCodeWithHeaders) createLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createOidcAccountRes()             {}
+func (*ProblemStatusCodeWithHeaders) createProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
@@ -29054,6 +29151,7 @@ func (*ProblemStatusCodeWithHeaders) getMyCharacterRes()                {}
 func (*ProblemStatusCodeWithHeaders) getNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getProposalRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getPushKeyRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
@@ -29101,6 +29199,7 @@ func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listProposalsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRetrainChoicesRes()            {}
 func (*ProblemStatusCodeWithHeaders) listRetrainsRes()                  {}
@@ -29139,6 +29238,8 @@ func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
 func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
+func (*ProblemStatusCodeWithHeaders) resubmitProposalRes()              {}
+func (*ProblemStatusCodeWithHeaders) reviewProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
@@ -29215,6 +29316,660 @@ func (s *Proficiencies) SetArmor(val []string) {
 // SetWeapons sets the value of Weapons.
 func (s *Proficiencies) SetWeapons(val []string) {
 	s.Weapons = val
+}
+
+// A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees
+// (baseEntryId). entryId is the Library entry an approval made or changed.
+// Ref: #/components/schemas/Proposal
+type Proposal struct {
+	ID         ID             `json:"id"`
+	Kind       LibraryKind    `json:"kind"`
+	Name       string         `json:"name"`
+	Fields     LibraryFields  `json:"fields"`
+	Note       string         `json:"note"`
+	AuthorName string         `json:"authorName"`
+	Status     ProposalStatus `json:"status"`
+	// The DM's latest message.
+	Message     string    `json:"message"`
+	BaseEntryId OptID     `json:"baseEntryId"`
+	EntryId     OptID     `json:"entryId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *Proposal) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *Proposal) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *Proposal) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *Proposal) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *Proposal) GetNote() string {
+	return s.Note
+}
+
+// GetAuthorName returns the value of AuthorName.
+func (s *Proposal) GetAuthorName() string {
+	return s.AuthorName
+}
+
+// GetStatus returns the value of Status.
+func (s *Proposal) GetStatus() ProposalStatus {
+	return s.Status
+}
+
+// GetMessage returns the value of Message.
+func (s *Proposal) GetMessage() string {
+	return s.Message
+}
+
+// GetBaseEntryId returns the value of BaseEntryId.
+func (s *Proposal) GetBaseEntryId() OptID {
+	return s.BaseEntryId
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *Proposal) GetEntryId() OptID {
+	return s.EntryId
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Proposal) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Proposal) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Proposal) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *Proposal) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *Proposal) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *Proposal) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *Proposal) SetNote(val string) {
+	s.Note = val
+}
+
+// SetAuthorName sets the value of AuthorName.
+func (s *Proposal) SetAuthorName(val string) {
+	s.AuthorName = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Proposal) SetStatus(val ProposalStatus) {
+	s.Status = val
+}
+
+// SetMessage sets the value of Message.
+func (s *Proposal) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetBaseEntryId sets the value of BaseEntryId.
+func (s *Proposal) SetBaseEntryId(val OptID) {
+	s.BaseEntryId = val
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *Proposal) SetEntryId(val OptID) {
+	s.EntryId = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Proposal) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Proposal) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a
+// side-by-side review.
+// Ref: #/components/schemas/ProposalDetail
+type ProposalDetail struct {
+	Proposal Proposal       `json:"proposal"`
+	Steps    []ProposalStep `json:"steps"`
+	Current  OptLinkedEntry `json:"current"`
+}
+
+// GetProposal returns the value of Proposal.
+func (s *ProposalDetail) GetProposal() Proposal {
+	return s.Proposal
+}
+
+// GetSteps returns the value of Steps.
+func (s *ProposalDetail) GetSteps() []ProposalStep {
+	return s.Steps
+}
+
+// GetCurrent returns the value of Current.
+func (s *ProposalDetail) GetCurrent() OptLinkedEntry {
+	return s.Current
+}
+
+// SetProposal sets the value of Proposal.
+func (s *ProposalDetail) SetProposal(val Proposal) {
+	s.Proposal = val
+}
+
+// SetSteps sets the value of Steps.
+func (s *ProposalDetail) SetSteps(val []ProposalStep) {
+	s.Steps = val
+}
+
+// SetCurrent sets the value of Current.
+func (s *ProposalDetail) SetCurrent(val OptLinkedEntry) {
+	s.Current = val
+}
+
+// ProposalDetailHeaders wraps ProposalDetail with response headers.
+type ProposalDetailHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ProposalDetail
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ProposalDetailHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ProposalDetailHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ProposalDetailHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ProposalDetailHeaders) GetResponse() ProposalDetail {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ProposalDetailHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ProposalDetailHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ProposalDetailHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ProposalDetailHeaders) SetResponse(val ProposalDetail) {
+	s.Response = val
+}
+
+func (*ProposalDetailHeaders) getProposalRes()      {}
+func (*ProposalDetailHeaders) resubmitProposalRes() {}
+func (*ProposalDetailHeaders) reviewProposalRes()   {}
+
+// ProposalHeaders wraps Proposal with response headers.
+type ProposalHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Proposal
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ProposalHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ProposalHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ProposalHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ProposalHeaders) GetResponse() Proposal {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ProposalHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ProposalHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ProposalHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ProposalHeaders) SetResponse(val Proposal) {
+	s.Response = val
+}
+
+func (*ProposalHeaders) createProposalRes() {}
+
+// A new entry to propose, or a change to the entry baseEntryId.
+// Ref: #/components/schemas/ProposalInput
+type ProposalInput struct {
+	Kind        LibraryKind   `json:"kind"`
+	Name        string        `json:"name"`
+	Fields      LibraryFields `json:"fields"`
+	Note        OptString     `json:"note"`
+	BaseEntryId OptID         `json:"baseEntryId"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ProposalInput) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *ProposalInput) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ProposalInput) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *ProposalInput) GetNote() OptString {
+	return s.Note
+}
+
+// GetBaseEntryId returns the value of BaseEntryId.
+func (s *ProposalInput) GetBaseEntryId() OptID {
+	return s.BaseEntryId
+}
+
+// SetKind sets the value of Kind.
+func (s *ProposalInput) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *ProposalInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ProposalInput) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *ProposalInput) SetNote(val OptString) {
+	s.Note = val
+}
+
+// SetBaseEntryId sets the value of BaseEntryId.
+func (s *ProposalInput) SetBaseEntryId(val OptID) {
+	s.BaseEntryId = val
+}
+
+// A DM's decision; an approval may edit the name and fields first.
+// Ref: #/components/schemas/ProposalReviewInput
+type ProposalReviewInput struct {
+	Action  ProposalReviewInputAction `json:"action"`
+	Message OptString                 `json:"message"`
+	Name    OptString                 `json:"name"`
+	Fields  LibraryFields             `json:"fields"`
+}
+
+// GetAction returns the value of Action.
+func (s *ProposalReviewInput) GetAction() ProposalReviewInputAction {
+	return s.Action
+}
+
+// GetMessage returns the value of Message.
+func (s *ProposalReviewInput) GetMessage() OptString {
+	return s.Message
+}
+
+// GetName returns the value of Name.
+func (s *ProposalReviewInput) GetName() OptString {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ProposalReviewInput) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// SetAction sets the value of Action.
+func (s *ProposalReviewInput) SetAction(val ProposalReviewInputAction) {
+	s.Action = val
+}
+
+// SetMessage sets the value of Message.
+func (s *ProposalReviewInput) SetMessage(val OptString) {
+	s.Message = val
+}
+
+// SetName sets the value of Name.
+func (s *ProposalReviewInput) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ProposalReviewInput) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+type ProposalReviewInputAction string
+
+const (
+	ProposalReviewInputActionApprove        ProposalReviewInputAction = "approve"
+	ProposalReviewInputActionRequestChanges ProposalReviewInputAction = "request_changes"
+	ProposalReviewInputActionDecline        ProposalReviewInputAction = "decline"
+)
+
+// AllValues returns all ProposalReviewInputAction values.
+func (ProposalReviewInputAction) AllValues() []ProposalReviewInputAction {
+	return []ProposalReviewInputAction{
+		ProposalReviewInputActionApprove,
+		ProposalReviewInputActionRequestChanges,
+		ProposalReviewInputActionDecline,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProposalReviewInputAction) MarshalText() ([]byte, error) {
+	switch s {
+	case ProposalReviewInputActionApprove:
+		return []byte(s), nil
+	case ProposalReviewInputActionRequestChanges:
+		return []byte(s), nil
+	case ProposalReviewInputActionDecline:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProposalReviewInputAction) UnmarshalText(data []byte) error {
+	switch ProposalReviewInputAction(data) {
+	case ProposalReviewInputActionApprove:
+		*s = ProposalReviewInputActionApprove
+		return nil
+	case ProposalReviewInputActionRequestChanges:
+		*s = ProposalReviewInputActionRequestChanges
+		return nil
+	case ProposalReviewInputActionDecline:
+		*s = ProposalReviewInputActionDecline
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Where a Proposal stands.
+// Ref: #/components/schemas/ProposalStatus
+type ProposalStatus string
+
+const (
+	ProposalStatusPending          ProposalStatus = "pending"
+	ProposalStatusChangesRequested ProposalStatus = "changes_requested"
+	ProposalStatusApproved         ProposalStatus = "approved"
+	ProposalStatusDeclined         ProposalStatus = "declined"
+)
+
+// AllValues returns all ProposalStatus values.
+func (ProposalStatus) AllValues() []ProposalStatus {
+	return []ProposalStatus{
+		ProposalStatusPending,
+		ProposalStatusChangesRequested,
+		ProposalStatusApproved,
+		ProposalStatusDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProposalStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ProposalStatusPending:
+		return []byte(s), nil
+	case ProposalStatusChangesRequested:
+		return []byte(s), nil
+	case ProposalStatusApproved:
+		return []byte(s), nil
+	case ProposalStatusDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProposalStatus) UnmarshalText(data []byte) error {
+	switch ProposalStatus(data) {
+	case ProposalStatusPending:
+		*s = ProposalStatusPending
+		return nil
+	case ProposalStatusChangesRequested:
+		*s = ProposalStatusChangesRequested
+		return nil
+	case ProposalStatusApproved:
+		*s = ProposalStatusApproved
+		return nil
+	case ProposalStatusDeclined:
+		*s = ProposalStatusDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One step of a Proposal's history.
+// Ref: #/components/schemas/ProposalStep
+type ProposalStep struct {
+	No        int32              `json:"no"`
+	Action    ProposalStepAction `json:"action"`
+	Message   string             `json:"message"`
+	By        string             `json:"by"`
+	CreatedAt time.Time          `json:"createdAt"`
+}
+
+// GetNo returns the value of No.
+func (s *ProposalStep) GetNo() int32 {
+	return s.No
+}
+
+// GetAction returns the value of Action.
+func (s *ProposalStep) GetAction() ProposalStepAction {
+	return s.Action
+}
+
+// GetMessage returns the value of Message.
+func (s *ProposalStep) GetMessage() string {
+	return s.Message
+}
+
+// GetBy returns the value of By.
+func (s *ProposalStep) GetBy() string {
+	return s.By
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ProposalStep) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetNo sets the value of No.
+func (s *ProposalStep) SetNo(val int32) {
+	s.No = val
+}
+
+// SetAction sets the value of Action.
+func (s *ProposalStep) SetAction(val ProposalStepAction) {
+	s.Action = val
+}
+
+// SetMessage sets the value of Message.
+func (s *ProposalStep) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetBy sets the value of By.
+func (s *ProposalStep) SetBy(val string) {
+	s.By = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ProposalStep) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+type ProposalStepAction string
+
+const (
+	ProposalStepActionSubmitted        ProposalStepAction = "submitted"
+	ProposalStepActionResubmitted      ProposalStepAction = "resubmitted"
+	ProposalStepActionChangesRequested ProposalStepAction = "changes_requested"
+	ProposalStepActionApproved         ProposalStepAction = "approved"
+	ProposalStepActionDeclined         ProposalStepAction = "declined"
+)
+
+// AllValues returns all ProposalStepAction values.
+func (ProposalStepAction) AllValues() []ProposalStepAction {
+	return []ProposalStepAction{
+		ProposalStepActionSubmitted,
+		ProposalStepActionResubmitted,
+		ProposalStepActionChangesRequested,
+		ProposalStepActionApproved,
+		ProposalStepActionDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProposalStepAction) MarshalText() ([]byte, error) {
+	switch s {
+	case ProposalStepActionSubmitted:
+		return []byte(s), nil
+	case ProposalStepActionResubmitted:
+		return []byte(s), nil
+	case ProposalStepActionChangesRequested:
+		return []byte(s), nil
+	case ProposalStepActionApproved:
+		return []byte(s), nil
+	case ProposalStepActionDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProposalStepAction) UnmarshalText(data []byte) error {
+	switch ProposalStepAction(data) {
+	case ProposalStepActionSubmitted:
+		*s = ProposalStepActionSubmitted
+		return nil
+	case ProposalStepActionResubmitted:
+		*s = ProposalStepActionResubmitted
+		return nil
+	case ProposalStepActionChangesRequested:
+		*s = ProposalStepActionChangesRequested
+		return nil
+	case ProposalStepActionApproved:
+		*s = ProposalStepActionApproved
+		return nil
+	case ProposalStepActionDeclined:
+		*s = ProposalStepActionDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Proposal changed as the DM asked.
+// Ref: #/components/schemas/ProposalUpdate
+type ProposalUpdate struct {
+	Name   string        `json:"name"`
+	Fields LibraryFields `json:"fields"`
+	Note   OptString     `json:"note"`
+}
+
+// GetName returns the value of Name.
+func (s *ProposalUpdate) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ProposalUpdate) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *ProposalUpdate) GetNote() OptString {
+	return s.Note
+}
+
+// SetName sets the value of Name.
+func (s *ProposalUpdate) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ProposalUpdate) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *ProposalUpdate) SetNote(val OptString) {
+	s.Note = val
 }
 
 // The VAPID public key devices subscribe with, base64url-encoded.

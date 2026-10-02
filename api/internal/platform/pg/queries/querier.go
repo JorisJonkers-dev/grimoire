@@ -78,6 +78,7 @@ type Querier interface {
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
+	CampaignHome(ctx context.Context, campaignID uuid.UUID) (uuid.UUID, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLibraryCollections(ctx context.Context, arg CampaignLibraryCollectionsParams) ([]CampaignLibraryCollectionsRow, error)
@@ -88,6 +89,7 @@ type Querier interface {
 	CampaignNode(ctx context.Context, arg CampaignNodeParams) (CampaignNodeRow, error)
 	CampaignNpc(ctx context.Context, arg CampaignNpcParams) (string, error)
 	CampaignPoolMembers(ctx context.Context, campaignID uuid.UUID) ([]PrepPoolMember, error)
+	CampaignProposals(ctx context.Context, arg CampaignProposalsParams) ([]LibraryProposal, error)
 	CampaignReactionTimeout(ctx context.Context, id uuid.UUID) (int32, error)
 	CampaignRestSupplies(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
@@ -254,6 +256,7 @@ type Querier interface {
 	InsertAccountSession(ctx context.Context, arg InsertAccountSessionParams) error
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertBlock(ctx context.Context, arg InsertBlockParams) error
+	InsertCampaignHome(ctx context.Context, arg InsertCampaignHomeParams) error
 	InsertCast(ctx context.Context, arg InsertCastParams) error
 	InsertCastHex(ctx context.Context, arg InsertCastHexParams) error
 	InsertCastTarget(ctx context.Context, arg InsertCastTargetParams) error
@@ -326,6 +329,8 @@ type Querier interface {
 	InsertPoolMember(ctx context.Context, arg InsertPoolMemberParams) error
 	InsertPoolRevision(ctx context.Context, arg InsertPoolRevisionParams) error
 	InsertPoolRevisionMember(ctx context.Context, arg InsertPoolRevisionMemberParams) error
+	InsertProposal(ctx context.Context, arg InsertProposalParams) error
+	InsertProposalReview(ctx context.Context, arg InsertProposalReviewParams) error
 	InsertRecoveryCode(ctx context.Context, arg InsertRecoveryCodeParams) error
 	InsertReleaseNote(ctx context.Context, arg InsertReleaseNoteParams) error
 	InsertRetrain(ctx context.Context, arg InsertRetrainParams) error
@@ -504,6 +509,8 @@ type Querier interface {
 	PinLibraryRevision(ctx context.Context, arg PinLibraryRevisionParams) error
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
+	Proposal(ctx context.Context, id uuid.UUID) (LibraryProposal, error)
+	ProposalReviews(ctx context.Context, proposalID uuid.UUID) ([]ProposalReviewsRow, error)
 	PushSubscriptions(ctx context.Context, subject string) ([]PushSubscriptionsRow, error)
 	QueueEmail(ctx context.Context, arg QueueEmailParams) error
 	ReadAllNotifications(ctx context.Context, arg ReadAllNotificationsParams) error
@@ -671,6 +678,7 @@ type Querier interface {
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)
 	UpdateNPC(ctx context.Context, arg UpdateNPCParams) (int64, error)
 	UpdateOIDCLink(ctx context.Context, arg UpdateOIDCLinkParams) error
+	UpdateProposal(ctx context.Context, arg UpdateProposalParams) error
 	UpdateReleaseNote(ctx context.Context, arg UpdateReleaseNoteParams) (int64, error)
 	UpdateToken(ctx context.Context, arg UpdateTokenParams) error
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error

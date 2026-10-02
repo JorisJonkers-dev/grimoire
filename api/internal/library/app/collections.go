@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 
@@ -46,8 +47,12 @@ func (s *Service) UpdateCollection(ctx context.Context, c caller.Caller, id uuid
 		return col, err
 	}
 	for _, e := range entries {
-		if _, err := s.owned(ctx, c, e); err != nil {
+		_, err := s.owned(ctx, c, e)
+		if errors.Is(err, apperr.ErrNotFound) {
 			return col, apperr.Refuse("a Collection holds only entries from your own Library")
+		}
+		if err != nil {
+			return col, err
 		}
 	}
 	col.Entries, col.UpdatedAt = entries, s.Now()

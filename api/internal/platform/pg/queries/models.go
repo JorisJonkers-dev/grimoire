@@ -1128,6 +1128,11 @@ type LibraryCampaignCollection struct {
 	SwitchedAt   time.Time
 }
 
+type LibraryCampaignHome struct {
+	CampaignID   uuid.UUID
+	CollectionID uuid.UUID
+}
+
 type LibraryCampaignLink struct {
 	CampaignID     uuid.UUID
 	EntryID        uuid.UUID
@@ -1170,6 +1175,32 @@ type LibraryEntryRevision struct {
 	Fields        []byte
 	AuthorSubject string
 	CreatedAt     time.Time
+}
+
+type LibraryProposal struct {
+	ID            uuid.UUID
+	CampaignID    uuid.UUID
+	AuthorSubject string
+	AuthorName    string
+	Kind          string
+	Name          string
+	Fields        []byte
+	Note          string
+	BaseEntryID   pgtype.UUID
+	Status        string
+	Message       string
+	EntryID       pgtype.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+type LibraryProposalReview struct {
+	ProposalID uuid.UUID
+	No         int32
+	Action     string
+	Message    string
+	ByName     string
+	CreatedAt  time.Time
 }
 
 type OpsCompendiumImport struct {

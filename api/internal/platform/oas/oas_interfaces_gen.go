@@ -89,6 +89,10 @@ type CreateOidcAccountRes interface {
 	createOidcAccountRes()
 }
 
+type CreateProposalRes interface {
+	createProposalRes()
+}
+
 type CreatePushSubscriptionRes interface {
 	createPushSubscriptionRes()
 }
@@ -251,6 +255,10 @@ type GetNpcRes interface {
 
 type GetPortraitRes interface {
 	getPortraitRes()
+}
+
+type GetProposalRes interface {
+	getProposalRes()
 }
 
 type GetPushKeyRes interface {
@@ -441,6 +449,10 @@ type ListNpcsRes interface {
 	listNpcsRes()
 }
 
+type ListProposalsRes interface {
+	listProposalsRes()
+}
+
 type ListReleaseNotesRes interface {
 	listReleaseNotesRes()
 }
@@ -591,6 +603,14 @@ type RestoreSettlementRevisionRes interface {
 
 type RestoreShopRevisionRes interface {
 	restoreShopRevisionRes()
+}
+
+type ResubmitProposalRes interface {
+	resubmitProposalRes()
+}
+
+type ReviewProposalRes interface {
+	reviewProposalRes()
 }
 
 type RevokeAccessTokenRes interface {

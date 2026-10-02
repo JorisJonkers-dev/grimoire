@@ -234,6 +234,20 @@ func encodeCreateOidcAccountRequest(
 	return nil
 }
 
+func encodeCreateProposalRequest(
+	req *ProposalInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreatePushSubscriptionRequest(
 	req *PushSubscriptionInput,
 	r *http.Request,
@@ -614,6 +628,34 @@ func encodeRerollDieRequest(
 
 func encodeResetRecoveryCodesRequest(
 	req *TwoStepCode,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeResubmitProposalRequest(
+	req *ProposalUpdate,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeReviewProposalRequest(
+	req *ProposalReviewInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

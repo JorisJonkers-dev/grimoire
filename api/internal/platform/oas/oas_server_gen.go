@@ -371,6 +371,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
+	// CreateProposal implements createProposal operation.
+	//
+	// Sends the DM a new entry for the Campaign, or a change to one it sees. The DMs hear of it.
+	//
+	// POST /api/v1/campaigns/{campaignId}/proposals
+	CreateProposal(ctx context.Context, req *ProposalInput, params CreateProposalParams) (CreateProposalRes, error)
 	// CreateSettlement implements createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -556,6 +562,20 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions/{revisionNo}/restore
 	RestoreShopRevision(ctx context.Context, params RestoreShopRevisionParams) (RestoreShopRevisionRes, error)
+	// ResubmitProposal implements resubmitProposal operation.
+	//
+	// Its author sends a Proposal the DM asked changes to again, changed.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+	ResubmitProposal(ctx context.Context, req *ProposalUpdate, params ResubmitProposalParams) (ResubmitProposalRes, error)
+	// ReviewProposal implements reviewProposal operation.
+	//
+	// A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
+	// Collection, edited first if they like), asks for changes with a message, or declines it. The author
+	// hears either way.
+	//
+	// POST /api/v1/campaigns/{campaignId}/proposals/{proposalId}/review
+	ReviewProposal(ctx context.Context, req *ProposalReviewInput, params ReviewProposalParams) (ReviewProposalRes, error)
 	// RevokeInvite implements revokeInvite operation.
 	//
 	// Closes an invite link. DM only.
@@ -943,6 +963,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 	GetPortrait(ctx context.Context, params GetPortraitParams) (GetPortraitRes, error)
+	// GetProposal implements getProposal operation.
+	//
+	// One Proposal with its history and, for a change, the entry as the Campaign sees it now. Its author
+	// or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/proposals/{proposalId}
+	GetProposal(ctx context.Context, params GetProposalParams) (GetProposalRes, error)
 	// GetPushKey implements getPushKey operation.
 	//
 	// The server's VAPID public key, for a device to subscribe to notifications with. Not found when the
@@ -1202,6 +1229,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs
 	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListProposals implements listProposals operation.
+	//
+	// The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise.
+	//
+	// GET /api/v1/campaigns/{campaignId}/proposals
+	ListProposals(ctx context.Context, params ListProposalsParams) (ListProposalsRes, error)
 	// ListReleaseNotes implements listReleaseNotes operation.
 	//
 	// Every Release Note, drafts and scheduled ones too, newest first. For Admins.

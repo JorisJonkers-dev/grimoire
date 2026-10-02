@@ -4152,6 +4152,163 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/proposals:
+    get:
+      operationId: listProposals
+      x-ogen-operation-group: Read
+      summary: List Proposals
+      description: "The Campaign's Proposals, newest first: every one for a DM, a Player's own otherwise."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Proposals.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/Proposal"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createProposal
+      x-ogen-operation-group: Build
+      summary: Propose an entry
+      description: "Sends the DM a new entry for the Campaign, or a change to one it sees. The DMs hear of it."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalInput"
+      responses:
+        "201":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/proposals/{proposalId}:
+    get:
+      operationId: getProposal
+      x-ogen-operation-group: Read
+      summary: Get a Proposal
+      description: "One Proposal with its history and, for a change, the entry as the Campaign sees it now. Its author or a DM."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/ProposalId"
+      responses:
+        "200":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: resubmitProposal
+      x-ogen-operation-group: Build
+      summary: Send a Proposal again
+      description: "Its author sends a Proposal the DM asked changes to again, changed."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/ProposalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalUpdate"
+      responses:
+        "200":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/proposals/{proposalId}/review:
+    post:
+      operationId: reviewProposal
+      x-ogen-operation-group: Build
+      summary: Review a Proposal
+      description: "A DM approves a pending Proposal (copied once into their Library and linked into the Campaign Collection, edited first if they like), asks for changes with a message, or declines it. The author hears either way."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/ProposalId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalReviewInput"
+      responses:
+        "200":
+          description: The Proposal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposalDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -6313,6 +6470,12 @@ components:
       in: path
       required: true
       description: Collection id.
+      schema: { $ref: "#/components/schemas/Id" }
+    ProposalId:
+      name: proposalId
+      in: path
+      required: true
+      description: Proposal id.
       schema: { $ref: "#/components/schemas/Id" }
     LibraryEntryId:
       name: entryId
@@ -9186,6 +9349,81 @@ components:
       required: [revision]
       properties:
         revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+    ProposalStatus:
+      type: string
+      description: Where a Proposal stands.
+      enum: [pending, changes_requested, approved, declined]
+    Proposal:
+      type: object
+      description: A Player's request that the DM accept a new entry into a Campaign, or a change to one it sees (baseEntryId). entryId is the Library entry an approval made or changed.
+      additionalProperties: false
+      required: [id, kind, name, fields, note, authorName, status, message, createdAt, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+        authorName: { type: string, maxLength: 80 }
+        status: { $ref: "#/components/schemas/ProposalStatus" }
+        message: { type: string, maxLength: 2000, description: "The DM's latest message." }
+        baseEntryId: { $ref: "#/components/schemas/Id" }
+        entryId: { $ref: "#/components/schemas/Id" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    ProposalStep:
+      type: object
+      description: One step of a Proposal's history.
+      additionalProperties: false
+      required: [no, action, message, by, createdAt]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        action: { type: string, enum: [submitted, resubmitted, changes_requested, approved, declined] }
+        message: { type: string, maxLength: 2000 }
+        by: { type: string, maxLength: 80 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+    ProposalDetail:
+      type: object
+      description: A Proposal with its history and, for a change, the entry as the Campaign sees it now, for a side-by-side review.
+      additionalProperties: false
+      required: [proposal, steps]
+      properties:
+        proposal: { $ref: "#/components/schemas/Proposal" }
+        steps:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ProposalStep" }
+        current: { $ref: "#/components/schemas/LinkedEntry" }
+    ProposalInput:
+      type: object
+      description: A new entry to propose, or a change to the entry baseEntryId.
+      additionalProperties: false
+      required: [kind, name, fields]
+      properties:
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+        baseEntryId: { $ref: "#/components/schemas/Id" }
+    ProposalUpdate:
+      type: object
+      description: A Proposal changed as the DM asked.
+      additionalProperties: false
+      required: [name, fields]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+    ProposalReviewInput:
+      type: object
+      description: A DM's decision; an approval may edit the name and fields first.
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: { type: string, enum: [approve, request_changes, decline] }
+        message: { type: string, maxLength: 2000 }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
