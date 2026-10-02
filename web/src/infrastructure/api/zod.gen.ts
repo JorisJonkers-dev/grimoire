@@ -776,6 +776,38 @@ export const zAbilityLine = z.object({
 });
 
 /**
+ * A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+ */
+export const zAttackLine = z.object({
+    name: z.string().max(120),
+    toHit: z.int().gte(-10).lte(30),
+    damage: z.string().max(30),
+    damageType: z.string().max(40),
+    reachFeet: z.int().gte(0).lte(30),
+    rangeFeet: z.int().gte(0).lte(10000),
+    longRangeFeet: z.int().gte(0).lte(10000),
+    mastery: z.string().max(40).optional()
+});
+
+/**
+ * A class feature or species trait the Character has.
+ */
+export const zTraitLine = z.object({
+    name: z.string().max(120),
+    source: z.enum(['class', 'species']),
+    level: z.int().gte(0).lte(20),
+    description: z.string().max(20000)
+});
+
+/**
+ * The armor and weapons a Character is trained with.
+ */
+export const zProficiencies = z.object({
+    armor: z.array(z.string().max(60)).max(10),
+    weapons: z.array(z.string().max(60)).max(10)
+});
+
+/**
  * An Effect currently on the Character.
  */
 export const zActiveEffect = z.object({
@@ -2063,6 +2095,9 @@ export const zCharacterBuild = z.object({
 export const zCharacterEdit = z.object({
     name: zCharacterName.optional(),
     hpCurrent: z.int().gte(0).lte(1000).optional(),
+    damage: z.int().gte(0).lte(1000).optional(),
+    heal: z.int().gte(0).lte(1000).optional(),
+    tempHp: z.int().gte(0).lte(1000).optional(),
     armor: zArmorChoice.optional(),
     shield: z.boolean().optional(),
     weapons: z.array(zSlug).max(4).optional()
@@ -2083,7 +2118,8 @@ export const zSkillLine = z.object({
     skill: zSlug,
     ability: zAbility,
     bonus: z.int().gte(-5).lte(30),
-    proficient: z.boolean()
+    proficient: z.boolean(),
+    expertise: z.boolean()
 });
 
 /**
@@ -2849,6 +2885,7 @@ export const zCharacterSheet = z.object({
     backgroundSkills: z.array(zSlug).max(4),
     hpCurrent: z.int().gte(0).lte(1000),
     hpMax: z.int().gte(1).lte(1000),
+    tempHp: z.int().gte(0).lte(1000).optional(),
     armorClass: z.int().gte(0).lte(50),
     initiative: z.int().gte(-5).lte(30),
     speedFeet: z.int().gte(0).lte(200),
@@ -2861,7 +2898,11 @@ export const zCharacterSheet = z.object({
     effects: z.array(zActiveEffect).max(50),
     warnings: z.array(z.string().max(200)).max(10),
     portraitUrl: zAssetUrl.optional(),
-    tokenUrl: zAssetUrl.optional()
+    tokenUrl: zAssetUrl.optional(),
+    characterId: zId.optional(),
+    attacks: z.array(zAttackLine).max(4).optional(),
+    traits: z.array(zTraitLine).max(200).optional(),
+    proficiencies: zProficiencies.optional()
 });
 
 /**

@@ -150,17 +150,20 @@ type SkillBonus struct {
 	Skill      Skill
 	Ability    Ability
 	Proficient bool
+	Expertise  bool
 	Bonus      int
 }
 
 // SheetInput is everything the sheet is derived from.
 type SheetInput struct {
-	Class       string
-	Level       int
-	HitDie      int
-	Scores      map[Ability]int
-	SaveProfs   []Ability
-	SkillProfs  []Skill
+	Class      string
+	Level      int
+	HitDie     int
+	Scores     map[Ability]int
+	SaveProfs  []Ability
+	SkillProfs []Skill
+	// Expertise doubles the proficiency bonus for skills the character is proficient in.
+	Expertise   []Skill
 	Armor       *Armor
 	ShieldBonus int
 	SpeedFeet   int
@@ -200,7 +203,8 @@ func BuildSheet(in SheetInput) Sheet {
 	}
 	for _, sk := range Skills() {
 		prof := contains(in.SkillProfs, sk.Skill)
-		b := SkillBonus{Skill: sk.Skill, Ability: sk.Ability, Proficient: prof, Bonus: mod(sk.Ability) + pbIf(prof, pb)}
+		expert := prof && contains(in.Expertise, sk.Skill)
+		b := SkillBonus{Skill: sk.Skill, Ability: sk.Ability, Proficient: prof, Expertise: expert, Bonus: mod(sk.Ability) + pbIf(prof, pb) + pbIf(expert, pb)}
 		if sk.Skill == "perception" {
 			s.PassivePerception = 10 + b.Bonus
 		}

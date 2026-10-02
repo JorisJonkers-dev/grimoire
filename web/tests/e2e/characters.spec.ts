@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { buildFighter } from './wizard'
 
-test('a player builds a Character through the wizard and reads the phone sheet', async ({ page }, info) => {
+test('a player builds a Character through the wizard and plays from the sheet', async ({ page }, info) => {
   await page.goto('/campaigns')
   await page.getByTestId('campaign-name').fill(`Builder ${info.project.name} ${String(Date.now())}`)
   await page.getByTestId('campaign-display-name').fill('Tester')
@@ -20,7 +20,27 @@ test('a player builds a Character through the wizard and reads the phone sheet',
   await expect(sheet.getByTestId('ac')).toHaveText('18')
   await expect(sheet.getByTestId('hp')).toHaveText('12 / 12')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await sheet.getByTestId('hp-down').click()
-  await expect(sheet.getByTestId('hp')).toHaveText('11 / 12')
+  await expect(sheet.getByTestId('attacks')).toContainText('mastery')
+  await sheet.getByTestId('hp-amount').fill('5')
+  await sheet.getByTestId('hp-temp').click()
+  await expect(sheet.getByTestId('temp-hp')).toHaveText('+5 temporary')
+  await sheet.getByTestId('hp-amount').fill('7')
+  await sheet.getByTestId('hp-damage').click()
+  await expect(sheet.getByTestId('hp')).toHaveText('10 / 12')
+  await expect(sheet.getByTestId('temp-hp')).toHaveCount(0)
+  await sheet.getByTestId('hp-heal').click()
+  await expect(sheet.getByTestId('hp')).toHaveText('12 / 12')
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+
+  const phone = info.project.name === 'phone'
+  const trait = sheet.getByTestId('trait').filter({ hasText: 'Second Wind' })
+  if (phone) {
+    await expect(trait).toBeHidden()
+    await sheet.getByTestId('part-features').click()
+  }
+  await expect(trait).toBeVisible()
+  await trait.locator('summary').click()
+  await expect(trait).toContainText('Bonus Action')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
 })

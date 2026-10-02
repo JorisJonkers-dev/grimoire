@@ -288,7 +288,7 @@ func (q *Queries) GetAccountCharacter(ctx context.Context, id uuid.UUID) (GetAcc
 const getCharacter = `-- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1 AND c.id = $2
 `
@@ -322,6 +322,7 @@ type GetCharacterRow struct {
 	PortraitType   pgtype.Text
 	TokenKey       pgtype.Text
 	TokenType      pgtype.Text
+	TempHp         int32
 }
 
 func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error) {
@@ -351,6 +352,7 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 		&i.PortraitType,
 		&i.TokenKey,
 		&i.TokenType,
+		&i.TempHp,
 	)
 	return i, err
 }
@@ -726,13 +728,14 @@ func (q *Queries) UpdateAccountCharacter(ctx context.Context, arg UpdateAccountC
 
 const updateCharacter = `-- name: UpdateCharacter :exec
 UPDATE campaign.characters
-SET name = $1, hp_current = $2, armor_slug = $3, shield = $4, updated_at = $5
-WHERE campaign_id = $6 AND id = $7
+SET name = $1, hp_current = $2, temp_hp = $3, armor_slug = $4, shield = $5, updated_at = $6
+WHERE campaign_id = $7 AND id = $8
 `
 
 type UpdateCharacterParams struct {
 	Name       string
 	HpCurrent  int32
+	TempHp     int32
 	ArmorSlug  pgtype.Text
 	Shield     bool
 	Now        time.Time
@@ -744,6 +747,7 @@ func (q *Queries) UpdateCharacter(ctx context.Context, arg UpdateCharacterParams
 	_, err := q.db.Exec(ctx, updateCharacter,
 		arg.Name,
 		arg.HpCurrent,
+		arg.TempHp,
 		arg.ArmorSlug,
 		arg.Shield,
 		arg.Now,

@@ -922,6 +922,18 @@ export type CharacterBuild = {
 export type CharacterEdit = {
     name?: CharacterName;
     hpCurrent?: number;
+    /**
+     * Damage taken, soaked by temporary hit points first.
+     */
+    damage?: number;
+    /**
+     * Hit points regained, up to the maximum.
+     */
+    heal?: number;
+    /**
+     * Temporary hit points gained; the higher of old and new stays.
+     */
+    tempHp?: number;
     armor?: ArmorChoice;
     shield?: boolean;
     weapons?: Array<Slug>;
@@ -954,6 +966,42 @@ export type SkillLine = {
     ability: Ability;
     bonus: number;
     proficient: boolean;
+    /**
+     * Proficiency bonus counted twice.
+     */
+    expertise: boolean;
+};
+
+/**
+ * A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+ */
+export type AttackLine = {
+    name: string;
+    toHit: number;
+    damage: string;
+    damageType: string;
+    reachFeet: number;
+    rangeFeet: number;
+    longRangeFeet: number;
+    mastery?: string;
+};
+
+/**
+ * A class feature or species trait the Character has.
+ */
+export type TraitLine = {
+    name: string;
+    source: 'class' | 'species';
+    level: number;
+    description: string;
+};
+
+/**
+ * The armor and weapons a Character is trained with.
+ */
+export type Proficiencies = {
+    armor: Array<string>;
+    weapons: Array<string>;
 };
 
 /**
@@ -1058,6 +1106,7 @@ export type CharacterSheet = {
     backgroundSkills: Array<Slug>;
     hpCurrent: number;
     hpMax: number;
+    tempHp?: number;
     armorClass: number;
     initiative: number;
     speedFeet: number;
@@ -1071,6 +1120,13 @@ export type CharacterSheet = {
     warnings: Array<string>;
     portraitUrl?: AssetUrl;
     tokenUrl?: AssetUrl;
+    /**
+     * The Account's own Character this Campaign Character was made from.
+     */
+    characterId?: Id;
+    attacks?: Array<AttackLine>;
+    traits?: Array<TraitLine>;
+    proficiencies?: Proficiencies;
 };
 
 /**

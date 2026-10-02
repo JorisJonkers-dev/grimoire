@@ -226,3 +226,11 @@ type BuilderOptions struct {
 	Armor       []ArmorOption
 	Weapons     []WeaponOption
 }
+
+// Trait is a feature or trait a Character has: from its class at a level, or from its species.
+type Trait struct {
+	Name        string
+	Source      string
+	Level       int
+	Description string
+}

@@ -63,3 +63,6 @@ export function bonusValid(bonus: AbilityBonus): boolean {
   const values = Object.values(bonus).sort()
   return values.join() === '1,2' || values.join() === '1,1,1'
 }
+
+/** The change a player makes to hit points: damage soaks temporary hit points first, healing stops at the maximum. */
+export type HitPointChange = { damage: number } | { heal: number } | { tempHp: number }

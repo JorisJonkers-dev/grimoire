@@ -213,6 +213,30 @@ func TestEmbeddedSnapshotImports(t *testing.T) {
 		t.Fatalf("fireball = %+v %v", fireball.SpellSummary, err)
 	}
 	assertBuilderOptions(t, s)
+	assertTraits(t, s)
+}
+
+func assertTraits(t *testing.T, s *pgstore.Store) {
+	t.Helper()
+	ctx := context.Background()
+	traits, err := s.Traits(ctx, "srd-2024", "fighter", "dwarf", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]compendium.Trait{}
+	for _, tr := range traits {
+		got[tr.Name] = tr
+	}
+	if got["Second Wind"].Level != 1 || got["Action Surge"].Level != 2 || got["Darkvision"].Source != "species" {
+		t.Fatalf("traits = %+v", traits)
+	}
+	if _, ok := got["Indomitable"]; ok {
+		t.Fatal("a level 9 feature at level 2")
+	}
+	cat, err := s.Features(ctx)
+	if err != nil || cat.MasteryCount("fighter", 1) != 3 || cat.MasteryCount("fighter", 4) != 4 || cat.MasteryCount("wizard", 5) != 0 {
+		t.Fatalf("mastery counts: %v", err)
+	}
 }
 
 func assertBuilderOptions(t *testing.T, s *pgstore.Store) {

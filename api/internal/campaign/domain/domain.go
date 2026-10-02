@@ -176,6 +176,7 @@ type Character struct {
 	BackgroundSkills []string
 	HPMax            int
 	HPCurrent        int
+	TempHP           int
 	UpdatedAt        time.Time
 	Portrait         *Image
 	Token            *Image

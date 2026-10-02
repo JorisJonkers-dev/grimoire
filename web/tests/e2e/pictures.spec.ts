@@ -15,6 +15,7 @@ test('a player uploads a portrait and crops a token icon from it', async ({ page
   await buildFighter(page, 'Mira')
   await page.getByTestId('create-character').click()
 
+  if (info.project.name === 'phone') await page.getByTestId('part-gear').click()
   await page.getByTestId('portrait-file').setInputFiles({ name: 'mira.png', mimeType: 'image/png', buffer: png })
   await expect(page.getByTestId('portrait')).toBeVisible()
   const editor = page.getByTestId('token-editor')

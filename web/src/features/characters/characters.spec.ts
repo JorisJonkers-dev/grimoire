@@ -36,7 +36,7 @@ const sheet = (extra = {}) => ({
   method: 'standard-array',
   base: { strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8 },
   bonus: { strength: 2, constitution: 1 }, abilities,
-  skills: [{ skill: 'perception', ability: 'wisdom', bonus: 2, proficient: true }, { skill: 'stealth', ability: 'dexterity', bonus: 2, proficient: false }],
+  skills: [{ skill: 'perception', ability: 'wisdom', bonus: 2, proficient: true, expertise: false }, { skill: 'stealth', ability: 'dexterity', bonus: 2, proficient: false, expertise: false }],
   classSkills: ['perception', 'survival'], backgroundSkills: ['athletics', 'intimidation'],
   hpCurrent: 12, hpMax: 12, armorClass: 18, initiative: 2, speedFeet: 30, proficiencyBonus: 2, passivePerception: 12,
   armor: { slug: 'chain-mail', name: 'Chain Mail' }, shield: true,
@@ -205,21 +205,69 @@ describe('character sheet', () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
       [`/api/v1/campaigns/${ID}/characters/${CH}`]: async (_u, req) => {
         if (req.method === 'PATCH') patches.push(await req.clone().json())
-        return sheet()
+        return sheet({
+          tempHp: 3,
+          attacks: [
+            { name: 'Longsword', toHit: 5, damage: '1d8+3', damageType: 'slashing', reachFeet: 5, rangeFeet: 0, longRangeFeet: 0, mastery: 'sap' },
+            { name: 'Longbow', toHit: 4, damage: '1d8+2', damageType: 'piercing', reachFeet: 0, rangeFeet: 150, longRangeFeet: 600 },
+          ],
+          traits: [
+            { name: 'Second Wind', source: 'class', level: 1, description: 'Regain hit points.' },
+            { name: 'Resourceful', source: 'species', level: 0, description: 'Heroic Inspiration.' },
+          ],
+          proficiencies: { armor: ['Light', 'Heavy'], weapons: [] },
+          skills: [{ skill: 'stealth', ability: 'dexterity', bonus: 6, proficient: true, expertise: true }],
+        })
       },
     })
     const s = wrapper.get('[data-testid="character-sheet"]')
     expect(s.get('[data-testid="ac"]').text()).toBe('18')
     expect(s.get('[data-testid="hp"]').text()).toBe('12 / 12')
+    expect(s.get('[data-testid="temp-hp"]').text()).toBe('+3 temporary')
     expect(s.text()).toContain('Chain Mail and a shield')
-    expect(s.text()).toContain('150/600 ft')
+    expect(s.get('[data-testid="attacks"]').text()).toContain('Sap mastery')
+    expect(s.get('[data-testid="attacks"]').text()).toContain('150/600 ft')
+    expect(s.get('[data-testid="attacks"]').text()).toContain('5 ft reach')
+    expect(s.findAll('[data-testid="trait"]').map((t) => t.text())).toEqual([
+      expect.stringContaining('Fighter 1'),
+      expect.stringContaining('Human'),
+    ])
+    expect(s.get('[data-testid="proficiencies"]').text()).toContain('Light, Heavy')
+    expect(s.get('[data-testid="proficiencies"]').text()).toContain('None')
+    expect(s.find('[aria-label="Expertise"]').exists()).toBe(true)
     expect(s.text()).toContain('Disadvantage on Stealth')
     expect(s.get('[data-testid="resources"]').text()).toContain('Hit Dice (d10): 1 / 1')
     await expectAccessible(wrapper.element as Element)
-    await s.get('[data-testid="hp-down"]').trigger('click')
-    await s.get('[data-testid="hp-up"]').trigger('click')
+    await s.get('[data-testid="part-gear"]').trigger('click')
+    expect(s.get('[data-testid="part-gear"]').attributes('aria-pressed')).toBe('true')
+    await s.get('[data-testid="hp-amount"]').setValue('4')
+    await s.get('[data-testid="hp-damage"]').trigger('click')
+    await s.get('[data-testid="hp-heal"]').trigger('click')
+    await s.get('[data-testid="hp-temp"]').trigger('click')
+    await s.get('[data-testid="hp-amount"]').setValue('0')
+    expect(s.get('[data-testid="hp-damage"]').attributes('disabled')).toBeDefined()
     await flushPromises()
-    expect(patches).toEqual([{ hpCurrent: 11 }, { hpCurrent: 12 }])
+    expect(patches).toEqual([{ damage: 4 }, { heal: 4 }, { tempHp: 4 }])
+  })
+
+  it('switches between the Campaigns a Character plays in', async () => {
+    const OTHER = '0190c7a8-0000-7000-8000-00000000000b'
+    const OWNED = '0190c7a8-0000-7000-8000-00000000000c'
+    const entry = (campaignId: string, campaignName: string, characterId: string) => ({ campaignId, campaignName, characterId, level: 1, hpCurrent: 12, hpMax: 12 })
+    const { wrapper, router } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`/api/v1/campaigns/${OTHER}/characters/${CH}`]: () => sheet({ name: 'Kara in Saltmarsh', characterId: OWNED }),
+      [`/api/v1/campaigns/${ID}/characters/${CH}`]: () => sheet({ characterId: OWNED }),
+      [`/api/v1/characters/${OWNED}`]: () => ({
+        id: OWNED, name: 'Kara', ruleset: 'srd-2024', species: 'human', class: 'fighter', background: 'soldier', backstory: '',
+        hasPortrait: false,
+        campaigns: [entry(ID, 'Morvain', CH), entry(OTHER, 'Saltmarsh', CH)],
+      }),
+    })
+    const select = await vi.waitFor(() => wrapper.get('[data-testid="campaign-switch"]'))
+    await select.setValue(OTHER)
+    await vi.waitFor(() => { expect(router.currentRoute.value.params.id).toBe(OTHER) })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Kara in Saltmarsh')
   })
 
   it('reads effects, locks when not editable and reports failures', async () => {
@@ -228,14 +276,16 @@ describe('character sheet', () => {
         sheet({ editable: false, armor: undefined, shield: false, effects: [{ name: 'Blessed', detail: '+1d4' }], warnings: [] }),
     })
     expect(locked.wrapper.find('[data-testid="sheet-locked"]').exists()).toBe(true)
-    expect(locked.wrapper.find('[data-testid="hp-down"]').exists()).toBe(false)
+    expect(locked.wrapper.find('[data-testid="hp-damage"]').exists()).toBe(false)
+    expect(locked.wrapper.text()).toContain('No weapons carried')
+    expect(locked.wrapper.text()).toContain('Nothing yet')
     expect(locked.wrapper.text()).toContain('No armour')
     expect(locked.wrapper.text()).toContain('Blessed: +1d4')
     document.body.innerHTML = ''
     const failing = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
       [`/api/v1/campaigns/${ID}/characters/${CH}`]: (_u, req) => (req.method === 'GET' ? sheet() : problem(409)()),
     })
-    await failing.wrapper.get('[data-testid="hp-down"]').trigger('click')
+    await failing.wrapper.get('[data-testid="hp-heal"]').trigger('click')
     await flushPromises()
     expect(failing.wrapper.text()).toContain('was not saved')
     await failing.wrapper.get('[data-testid="delete-character"]').trigger('click')

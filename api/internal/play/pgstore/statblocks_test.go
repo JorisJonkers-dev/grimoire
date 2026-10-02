@@ -17,10 +17,17 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 )
 
 type armoury struct{}
+
+func (armoury) Traits(context.Context, string, string, string, int) ([]compendium.Trait, error) {
+	return nil, nil
+}
+
+func (armoury) Features(context.Context) (features.Catalog, error) { return features.Catalog{}, nil }
 
 func (armoury) BuilderOptions(_ context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	return compendium.BuilderOptions{

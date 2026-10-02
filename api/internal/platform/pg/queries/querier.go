@@ -552,6 +552,9 @@ type Querier interface {
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
+	// A class's features up to a level, each at the first level it is gained.
+	SheetClassFeatures(ctx context.Context, arg SheetClassFeaturesParams) ([]SheetClassFeaturesRow, error)
+	SheetSpeciesTraits(ctx context.Context, arg SheetSpeciesTraitsParams) ([]SheetSpeciesTraitsRow, error)
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
 	SocialAccountBySubject(ctx context.Context, subject string) (SocialAccountBySubjectRow, error)
 	SocialAccountByUsername(ctx context.Context, username string) (SocialAccountByUsernameRow, error)

@@ -4489,6 +4489,221 @@ func (s *AssetUrl) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *AttackLine) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *AttackLine) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		e.FieldStart("toHit")
+		e.Int32(s.ToHit)
+	}
+	{
+		e.FieldStart("damage")
+		e.Str(s.Damage)
+	}
+	{
+		e.FieldStart("damageType")
+		e.Str(s.DamageType)
+	}
+	{
+		e.FieldStart("reachFeet")
+		e.Int32(s.ReachFeet)
+	}
+	{
+		e.FieldStart("rangeFeet")
+		e.Int32(s.RangeFeet)
+	}
+	{
+		e.FieldStart("longRangeFeet")
+		e.Int32(s.LongRangeFeet)
+	}
+	{
+		if s.Mastery.Set {
+			e.FieldStart("mastery")
+			s.Mastery.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfAttackLine = [8]string{
+	0: "name",
+	1: "toHit",
+	2: "damage",
+	3: "damageType",
+	4: "reachFeet",
+	5: "rangeFeet",
+	6: "longRangeFeet",
+	7: "mastery",
+}
+
+// Decode decodes AttackLine from json.
+func (s *AttackLine) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode AttackLine to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "name":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "toHit":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Int32()
+				s.ToHit = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"toHit\"")
+			}
+		case "damage":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Str()
+				s.Damage = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"damage\"")
+			}
+		case "damageType":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Str()
+				s.DamageType = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"damageType\"")
+			}
+		case "reachFeet":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Int32()
+				s.ReachFeet = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"reachFeet\"")
+			}
+		case "rangeFeet":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Int32()
+				s.RangeFeet = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rangeFeet\"")
+			}
+		case "longRangeFeet":
+			requiredBitSet[0] |= 1 << 6
+			if err := func() error {
+				v, err := d.Int32()
+				s.LongRangeFeet = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"longRangeFeet\"")
+			}
+		case "mastery":
+			if err := func() error {
+				s.Mastery.Reset()
+				if err := s.Mastery.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"mastery\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode AttackLine")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b01111111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfAttackLine) {
+					name = jsonFieldsNameOfAttackLine[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *AttackLine) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *AttackLine) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *AutomationCount) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -7576,6 +7791,24 @@ func (s *CharacterEdit) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Damage.Set {
+			e.FieldStart("damage")
+			s.Damage.Encode(e)
+		}
+	}
+	{
+		if s.Heal.Set {
+			e.FieldStart("heal")
+			s.Heal.Encode(e)
+		}
+	}
+	{
+		if s.TempHp.Set {
+			e.FieldStart("tempHp")
+			s.TempHp.Encode(e)
+		}
+	}
+	{
 		if s.Armor.Set {
 			e.FieldStart("armor")
 			s.Armor.Encode(e)
@@ -7599,12 +7832,15 @@ func (s *CharacterEdit) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCharacterEdit = [5]string{
+var jsonFieldsNameOfCharacterEdit = [8]string{
 	0: "name",
 	1: "hpCurrent",
-	2: "armor",
-	3: "shield",
-	4: "weapons",
+	2: "damage",
+	3: "heal",
+	4: "tempHp",
+	5: "armor",
+	6: "shield",
+	7: "weapons",
 }
 
 // Decode decodes CharacterEdit from json.
@@ -7634,6 +7870,36 @@ func (s *CharacterEdit) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"hpCurrent\"")
+			}
+		case "damage":
+			if err := func() error {
+				s.Damage.Reset()
+				if err := s.Damage.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"damage\"")
+			}
+		case "heal":
+			if err := func() error {
+				s.Heal.Reset()
+				if err := s.Heal.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"heal\"")
+			}
+		case "tempHp":
+			if err := func() error {
+				s.TempHp.Reset()
+				if err := s.TempHp.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tempHp\"")
 			}
 		case "armor":
 			if err := func() error {
@@ -7934,6 +8200,12 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 		e.Int32(s.HpMax)
 	}
 	{
+		if s.TempHp.Set {
+			e.FieldStart("tempHp")
+			s.TempHp.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("armorClass")
 		e.Int32(s.ArmorClass)
 	}
@@ -8007,9 +8279,41 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 			s.TokenUrl.Encode(e)
 		}
 	}
+	{
+		if s.CharacterId.Set {
+			e.FieldStart("characterId")
+			s.CharacterId.Encode(e)
+		}
+	}
+	{
+		if s.Attacks != nil {
+			e.FieldStart("attacks")
+			e.ArrStart()
+			for _, elem := range s.Attacks {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Traits != nil {
+			e.FieldStart("traits")
+			e.ArrStart()
+			for _, elem := range s.Traits {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Proficiencies.Set {
+			e.FieldStart("proficiencies")
+			s.Proficiencies.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCharacterSheet = [32]string{
+var jsonFieldsNameOfCharacterSheet = [37]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -8029,19 +8333,24 @@ var jsonFieldsNameOfCharacterSheet = [32]string{
 	16: "backgroundSkills",
 	17: "hpCurrent",
 	18: "hpMax",
-	19: "armorClass",
-	20: "initiative",
-	21: "speedFeet",
-	22: "proficiencyBonus",
-	23: "passivePerception",
-	24: "armor",
-	25: "shield",
-	26: "weapons",
-	27: "resources",
-	28: "effects",
-	29: "warnings",
-	30: "portraitUrl",
-	31: "tokenUrl",
+	19: "tempHp",
+	20: "armorClass",
+	21: "initiative",
+	22: "speedFeet",
+	23: "proficiencyBonus",
+	24: "passivePerception",
+	25: "armor",
+	26: "shield",
+	27: "weapons",
+	28: "resources",
+	29: "effects",
+	30: "warnings",
+	31: "portraitUrl",
+	32: "tokenUrl",
+	33: "characterId",
+	34: "attacks",
+	35: "traits",
+	36: "proficiencies",
 }
 
 // Decode decodes CharacterSheet from json.
@@ -8049,7 +8358,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode CharacterSheet to nil")
 	}
-	var requiredBitSet [4]uint8
+	var requiredBitSet [5]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -8285,8 +8594,18 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"hpMax\"")
 			}
+		case "tempHp":
+			if err := func() error {
+				s.TempHp.Reset()
+				if err := s.TempHp.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tempHp\"")
+			}
 		case "armorClass":
-			requiredBitSet[2] |= 1 << 3
+			requiredBitSet[2] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int32()
 				s.ArmorClass = int32(v)
@@ -8298,7 +8617,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"armorClass\"")
 			}
 		case "initiative":
-			requiredBitSet[2] |= 1 << 4
+			requiredBitSet[2] |= 1 << 5
 			if err := func() error {
 				v, err := d.Int32()
 				s.Initiative = int32(v)
@@ -8310,7 +8629,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"initiative\"")
 			}
 		case "speedFeet":
-			requiredBitSet[2] |= 1 << 5
+			requiredBitSet[2] |= 1 << 6
 			if err := func() error {
 				v, err := d.Int32()
 				s.SpeedFeet = int32(v)
@@ -8322,7 +8641,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"speedFeet\"")
 			}
 		case "proficiencyBonus":
-			requiredBitSet[2] |= 1 << 6
+			requiredBitSet[2] |= 1 << 7
 			if err := func() error {
 				v, err := d.Int32()
 				s.ProficiencyBonus = int32(v)
@@ -8334,7 +8653,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"proficiencyBonus\"")
 			}
 		case "passivePerception":
-			requiredBitSet[2] |= 1 << 7
+			requiredBitSet[3] |= 1 << 0
 			if err := func() error {
 				v, err := d.Int32()
 				s.PassivePerception = int32(v)
@@ -8356,7 +8675,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"armor\"")
 			}
 		case "shield":
-			requiredBitSet[3] |= 1 << 1
+			requiredBitSet[3] |= 1 << 2
 			if err := func() error {
 				v, err := d.Bool()
 				s.Shield = bool(v)
@@ -8368,7 +8687,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"shield\"")
 			}
 		case "weapons":
-			requiredBitSet[3] |= 1 << 2
+			requiredBitSet[3] |= 1 << 3
 			if err := func() error {
 				s.Weapons = make([]WeaponLine, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -8386,7 +8705,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"weapons\"")
 			}
 		case "resources":
-			requiredBitSet[3] |= 1 << 3
+			requiredBitSet[3] |= 1 << 4
 			if err := func() error {
 				s.Resources = make([]ResourcePool, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -8404,7 +8723,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"resources\"")
 			}
 		case "effects":
-			requiredBitSet[3] |= 1 << 4
+			requiredBitSet[3] |= 1 << 5
 			if err := func() error {
 				s.Effects = make([]ActiveEffect, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -8422,7 +8741,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"effects\"")
 			}
 		case "warnings":
-			requiredBitSet[3] |= 1 << 5
+			requiredBitSet[3] |= 1 << 6
 			if err := func() error {
 				s.Warnings = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -8461,6 +8780,60 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"tokenUrl\"")
 			}
+		case "characterId":
+			if err := func() error {
+				s.CharacterId.Reset()
+				if err := s.CharacterId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"characterId\"")
+			}
+		case "attacks":
+			if err := func() error {
+				s.Attacks = make([]AttackLine, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem AttackLine
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Attacks = append(s.Attacks, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"attacks\"")
+			}
+		case "traits":
+			if err := func() error {
+				s.Traits = make([]TraitLine, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem TraitLine
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Traits = append(s.Traits, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"traits\"")
+			}
+		case "proficiencies":
+			if err := func() error {
+				s.Proficiencies.Reset()
+				if err := s.Proficiencies.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"proficiencies\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -8470,11 +8843,12 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [4]uint8{
+	for i, mask := range [5]uint8{
 		0b11111110,
 		0b11111111,
-		0b11111111,
-		0b00111110,
+		0b11110111,
+		0b01111101,
+		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -35717,6 +36091,39 @@ func (s *OptOidcPending) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes Proficiencies as json.
+func (o OptProficiencies) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes Proficiencies from json.
+func (o *OptProficiencies) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptProficiencies to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptProficiencies) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptProficiencies) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes ReactionTimeout as json.
 func (o OptReactionTimeout) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -37158,6 +37565,143 @@ func (s *Problem) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *Problem) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *Proficiencies) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *Proficiencies) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("armor")
+		e.ArrStart()
+		for _, elem := range s.Armor {
+			e.Str(elem)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("weapons")
+		e.ArrStart()
+		for _, elem := range s.Weapons {
+			e.Str(elem)
+		}
+		e.ArrEnd()
+	}
+}
+
+var jsonFieldsNameOfProficiencies = [2]string{
+	0: "armor",
+	1: "weapons",
+}
+
+// Decode decodes Proficiencies from json.
+func (s *Proficiencies) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode Proficiencies to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "armor":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				s.Armor = make([]string, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem string
+					v, err := d.Str()
+					elem = string(v)
+					if err != nil {
+						return err
+					}
+					s.Armor = append(s.Armor, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"armor\"")
+			}
+		case "weapons":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				s.Weapons = make([]string, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem string
+					v, err := d.Str()
+					elem = string(v)
+					if err != nil {
+						return err
+					}
+					s.Weapons = append(s.Weapons, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"weapons\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode Proficiencies")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfProficiencies) {
+					name = jsonFieldsNameOfProficiencies[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *Proficiencies) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *Proficiencies) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -42330,13 +42874,18 @@ func (s *SkillLine) encodeFields(e *jx.Encoder) {
 		e.FieldStart("proficient")
 		e.Bool(s.Proficient)
 	}
+	{
+		e.FieldStart("expertise")
+		e.Bool(s.Expertise)
+	}
 }
 
-var jsonFieldsNameOfSkillLine = [4]string{
+var jsonFieldsNameOfSkillLine = [5]string{
 	0: "skill",
 	1: "ability",
 	2: "bonus",
 	3: "proficient",
+	4: "expertise",
 }
 
 // Decode decodes SkillLine from json.
@@ -42392,6 +42941,18 @@ func (s *SkillLine) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"proficient\"")
 			}
+		case "expertise":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Bool()
+				s.Expertise = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"expertise\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -42402,7 +42963,7 @@ func (s *SkillLine) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -44531,6 +45092,191 @@ func (s TokenKind) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *TokenKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *TraitLine) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *TraitLine) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		e.FieldStart("source")
+		s.Source.Encode(e)
+	}
+	{
+		e.FieldStart("level")
+		e.Int32(s.Level)
+	}
+	{
+		e.FieldStart("description")
+		e.Str(s.Description)
+	}
+}
+
+var jsonFieldsNameOfTraitLine = [4]string{
+	0: "name",
+	1: "source",
+	2: "level",
+	3: "description",
+}
+
+// Decode decodes TraitLine from json.
+func (s *TraitLine) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode TraitLine to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "name":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "source":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Source.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"source\"")
+			}
+		case "level":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Int32()
+				s.Level = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"level\"")
+			}
+		case "description":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Str()
+				s.Description = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"description\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode TraitLine")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00001111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfTraitLine) {
+					name = jsonFieldsNameOfTraitLine[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *TraitLine) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *TraitLine) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes TraitLineSource as json.
+func (s TraitLineSource) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes TraitLineSource from json.
+func (s *TraitLineSource) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode TraitLineSource to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch TraitLineSource(v) {
+	case TraitLineSourceClass:
+		*s = TraitLineSourceClass
+	case TraitLineSourceSpecies:
+		*s = TraitLineSourceSpecies
+	default:
+		*s = TraitLineSource(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s TraitLineSource) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *TraitLineSource) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

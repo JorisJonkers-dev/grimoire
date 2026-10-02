@@ -86,7 +86,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		},
 		ID: domain.CharacterID(r.ID), Owned: domain.OwnedID(r.CharacterID.Bytes), CampaignID: domain.CampaignID(r.CampaignID),
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
-		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), UpdatedAt: r.UpdatedAt,
+		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), TempHP: int(r.TempHp), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
@@ -140,7 +140,7 @@ func (s *Store) UpdateCharacter(ctx context.Context, c domain.Character, now tim
 		q := r.(*Store).q
 		id := uuid.UUID(c.ID)
 		if err := q.UpdateCharacter(ctx, queries.UpdateCharacterParams{
-			CampaignID: uuid.UUID(c.CampaignID), ID: id, Name: c.Name, HpCurrent: int32(c.HPCurrent), //nolint:gosec // hit points are small
+			CampaignID: uuid.UUID(c.CampaignID), ID: id, Name: c.Name, HpCurrent: int32(c.HPCurrent), TempHp: int32(c.TempHP), //nolint:gosec // hit points are small
 			ArmorSlug: optSlug(c.Armor), Shield: c.Shield, Now: now,
 		}); err != nil {
 			return err

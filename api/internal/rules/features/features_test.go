@@ -203,3 +203,18 @@ func TestCatalogFindsWhatAnOwnerGrants(t *testing.T) {
 		t.Errorf("the barbarian's resources = %+v", got)
 	}
 }
+
+func TestMasteryCountReadsTheClassScale(t *testing.T) {
+	t.Parallel()
+	cat := features.Catalog{Scales: map[string]features.Named{
+		"fighter-weapon-mastery": {Slug: "fighter-weapon-mastery", Name: "Weapon Mastery", Steps: features.Scale[string]{{Level: 1, Value: "3"}, {Level: 4, Value: "4"}}},
+	}}
+	for level, want := range map[int]int{1: 3, 3: 3, 4: 4, 20: 4} {
+		if got := cat.MasteryCount("fighter", level); got != want {
+			t.Errorf("fighter %d = %d, want %d", level, got, want)
+		}
+	}
+	if got := cat.MasteryCount("wizard", 5); got != 0 {
+		t.Errorf("wizard = %d", got)
+	}
+}

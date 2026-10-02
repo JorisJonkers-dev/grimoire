@@ -83,7 +83,7 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 		},
 		Abilities: make([]oas.AbilityLine, 0, 6), Skills: make([]oas.SkillLine, 0, 18),
 		ClassSkills: slugsOf(s.Skills), BackgroundSkills: slugsOf(s.BackgroundSkills),
-		HpCurrent: int32(s.HPCurrent), HpMax: int32(s.HPMax), ArmorClass: int32(s.Derived.ArmorClass),
+		HpCurrent: int32(s.HPCurrent), HpMax: int32(s.HPMax), TempHp: oas.NewOptInt32(int32(s.TempHP)), ArmorClass: int32(s.Derived.ArmorClass),
 		Initiative: int32(s.Derived.Initiative), SpeedFeet: int32(s.Derived.SpeedFeet), ProficiencyBonus: int32(s.Derived.ProficiencyBonus),
 		PassivePerception: int32(s.Derived.PassivePerception), Shield: s.Shield, Weapons: make([]oas.WeaponLine, 0, len(s.Weapons)),
 		Resources: make([]oas.ResourcePool, 0, len(s.Derived.Resources)), Effects: []oas.ActiveEffect{}, Warnings: s.Derived.Warnings,
@@ -104,7 +104,7 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 		})
 	}
 	for _, sk := range s.Derived.Skills {
-		out.Skills = append(out.Skills, oas.SkillLine{Skill: oas.Slug(sk.Skill), Ability: oas.Ability(sk.Ability), Bonus: int32(sk.Bonus), Proficient: sk.Proficient})
+		out.Skills = append(out.Skills, oas.SkillLine{Skill: oas.Slug(sk.Skill), Ability: oas.Ability(sk.Ability), Bonus: int32(sk.Bonus), Proficient: sk.Proficient, Expertise: sk.Expertise})
 	}
 	if s.Armor != nil {
 		out.Armor = oas.NewOptNamedRef(oas.NamedRef{Slug: oas.Slug(s.Armor.Slug), Name: s.Armor.Name})
@@ -115,7 +115,41 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 	for _, r := range s.Derived.Resources {
 		out.Resources = append(out.Resources, oas.ResourcePool{Key: oas.Slug(r.Key), Label: r.Label, Current: int32(r.Current), Max: int32(r.Max)})
 	}
+	extrasOut(&out, s)
 	return out
+}
+
+// extrasOut adds what only a saved Character's sheet carries: its own Character, attacks, traits and
+// training.
+//
+//nolint:gosec // values are bounded by the rules
+func extrasOut(out *oas.CharacterSheet, s app.Sheet) {
+	if s.Owned != (domain.OwnedID{}) {
+		out.CharacterId = oas.NewOptID(oas.ID(s.Owned))
+	}
+	for _, a := range s.Attacks {
+		line := oas.AttackLine{
+			Name: a.Name, ToHit: int32(a.ToHit), Damage: a.Damage, DamageType: a.DamageType,
+			ReachFeet: int32(a.ReachFt), RangeFeet: int32(a.RangeFt), LongRangeFeet: int32(a.LongRangeFt),
+		}
+		if a.Mastery != "" {
+			line.Mastery = oas.NewOptString(a.Mastery)
+		}
+		out.Attacks = append(out.Attacks, line)
+	}
+	for _, t := range s.Traits {
+		out.Traits = append(out.Traits, oas.TraitLine{Name: t.Name, Source: oas.TraitLineSource(t.Source), Level: int32(t.Level), Description: t.Description})
+	}
+	if s.Proficiencies.Armor != nil || s.Proficiencies.Weapons != nil {
+		out.Proficiencies = oas.NewOptProficiencies(oas.Proficiencies{Armor: nonNil(s.Proficiencies.Armor), Weapons: nonNil(s.Proficiencies.Weapons)})
+	}
+}
+
+func nonNil(in []string) []string {
+	if in == nil {
+		return []string{}
+	}
+	return in
 }
 
 func bonusOut(m map[string]int) oas.AbilityBonus {
@@ -138,6 +172,15 @@ func weaponOut(w compendium.WeaponOption) oas.WeaponLine {
 		Slug: oas.Slug(w.Slug), Name: w.Name, DamageDice: w.DamageDice, DamageType: w.DamageType,
 		RangeFeet: int32(w.RangeFeet), LongRangeFeet: int32(w.LongRangeFeet),
 	}
+}
+
+func optInt(v oas.OptInt32) *int {
+	n, set := v.Get()
+	if !set {
+		return nil
+	}
+	i := int(n)
+	return &i
 }
 
 func slugsOf(in []string) []oas.Slug {
@@ -288,14 +331,10 @@ func (h *Handler) UpdateCharacter(ctx context.Context, req *oas.CharacterEdit, p
 	if !ok {
 		return unauthorized(), nil
 	}
-	var e app.Edit
+	e := app.Edit{HPCurrent: optInt(req.HpCurrent), Damage: optInt(req.Damage), Heal: optInt(req.Heal), TempHP: optInt(req.TempHp)}
 	if v, set := req.Name.Get(); set {
 		name := string(v)
 		e.Name = &name
-	}
-	if v, set := req.HpCurrent.Get(); set {
-		hp := int(v)
-		e.HPCurrent = &hp
 	}
 	if v, set := req.Armor.Get(); set {
 		armor := string(v)

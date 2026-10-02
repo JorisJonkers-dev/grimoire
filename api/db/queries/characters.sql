@@ -24,7 +24,7 @@ INSERT INTO campaign.character_weapons (character_id, weapon_slug, ordering) VAL
 -- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = @campaign_id AND c.id = @id;
 
@@ -46,7 +46,7 @@ SELECT weapon_slug FROM campaign.character_weapons WHERE character_id = $1 ORDER
 
 -- name: UpdateCharacter :exec
 UPDATE campaign.characters
-SET name = @name, hp_current = @hp_current, armor_slug = sqlc.narg(armor_slug), shield = @shield, updated_at = @now
+SET name = @name, hp_current = @hp_current, temp_hp = @temp_hp, armor_slug = sqlc.narg(armor_slug), shield = @shield, updated_at = @now
 WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: DeleteCharacter :exec

@@ -70,6 +70,7 @@ type CampaignCharacter struct {
 	HitDiceSpent   int32
 	LevelUpReady   bool
 	CharacterID    pgtype.UUID
+	TempHp         int32
 }
 
 type CampaignCharacterAbility struct {

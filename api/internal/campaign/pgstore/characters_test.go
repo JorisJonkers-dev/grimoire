@@ -15,10 +15,19 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
 type fakeOptions struct{ err error }
+
+func (f fakeOptions) Traits(context.Context, string, string, string, int) ([]compendium.Trait, error) {
+	return nil, f.err
+}
+
+func (f fakeOptions) Features(context.Context) (features.Catalog, error) {
+	return features.Catalog{}, f.err
+}
 
 func (f fakeOptions) BuilderOptions(_ context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	year, abilities := 2024, []string{"strength", "dexterity", "constitution"}
@@ -165,7 +174,7 @@ func TestShieldNeedsTheRuleset(t *testing.T) {
 	}
 }
 
-type noShield struct{}
+type noShield struct{ fakeOptions }
 
 func (noShield) BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	o, err := fakeOptions{}.BuilderOptions(ctx, ruleset)
@@ -284,7 +293,7 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	ctx := context.Background()
 	chars, combat, d := party(t, pgstore.New(open(t).Pool()))
 	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
-	boom := errors.New("boom")
+	boom := errExtras
 	combat.err = boom
 	if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, boom) {
 		t.Fatalf("combat status error: %v", err)
@@ -296,6 +305,12 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	}
 	if _, err := chars.Preview(ctx, playerCaller, d.ID, fighter()); !errors.Is(err, boom) {
 		t.Fatalf("compendium error on preview: %v", err)
+	}
+	for _, c := range []app.Compendium{extrasFail{catalog: true}, extrasFail{catalog: false}} {
+		chars.Compendium = c
+		if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, boom) {
+			t.Fatalf("features or traits error on get: %v", err)
+		}
 	}
 	chars.Compendium = noShield{}
 	if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, domain.ErrInvalid) {
@@ -312,10 +327,33 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	}
 }
 
-var errSecond = errors.New("second lookup failed")
+// extrasFail builds sheets but fails reading the feature catalogue, or the traits.
+type extrasFail struct {
+	fakeOptions
+	catalog bool
+}
+
+func (f extrasFail) Features(context.Context) (features.Catalog, error) {
+	if f.catalog {
+		return features.Catalog{}, errExtras
+	}
+	return features.Catalog{}, nil
+}
+
+func (f extrasFail) Traits(context.Context, string, string, string, int) ([]compendium.Trait, error) {
+	return nil, errExtras
+}
+
+var (
+	errSecond = errors.New("second lookup failed")
+	errExtras = errors.New("boom")
+)
 
 // secondFails answers the first lookup and fails the next, as a compendium outage mid-edit would.
-type secondFails struct{ calls int }
+type secondFails struct {
+	fakeOptions
+	calls int
+}
 
 func (f *secondFails) BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	f.calls++

@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -11,13 +13,19 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/mastery"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
-// Compendium is the compendium read port the builder needs.
+// Compendium is the compendium read port the builder and the sheet need.
 type Compendium interface {
 	BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error)
+	Traits(ctx context.Context, ruleset, class, species string, level int) ([]compendium.Trait, error)
+	Features(ctx context.Context) (features.Catalog, error)
 }
 
 // CombatStatus says whether a Character is in an active Combat, which locks its sheet.
@@ -54,6 +62,22 @@ type Sheet struct {
 	Weapons        []compendium.WeaponOption
 	Mine           bool
 	Editable       bool
+	// Attacks, Traits and Proficiencies are filled in for a saved Character's sheet.
+	Attacks       []Attack
+	Traits        []compendium.Trait
+	Proficiencies rules.Proficiencies
+}
+
+// Attack is one weapon attack as the sheet shows it, with the Weapon Mastery the Character has.
+type Attack struct {
+	Name        string
+	ToHit       int
+	Damage      string
+	DamageType  string
+	ReachFt     int
+	RangeFt     int
+	LongRangeFt int
+	Mastery     string
 }
 
 // MaxStartingWeapons caps the weapons a new character carries.
@@ -327,13 +351,62 @@ func (s *Characters) Get(ctx context.Context, c caller.Caller, id domain.Campaig
 	}
 	sheet.Mine = stored.Owner.ID == me.ID
 	sheet.Editable = !inCombat && (sheet.Mine || me.Role == domain.RoleDM)
+	return s.extras(ctx, sheet)
+}
+
+// extras adds what a saved Character's sheet shows beyond its build: attacks with Weapon Mastery,
+// class features and species traits up to its level, and its training.
+func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
+	cat, err := s.Compendium.Features(ctx)
+	if err != nil {
+		return Sheet{}, err
+	}
+	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Class, sheet.Species, sheet.Level); err != nil {
+		return Sheet{}, err
+	}
+	sheet.Proficiencies = rules.ClassProficiencies(sheet.Class)
+	var carried []string
+	for _, w := range sheet.Weapons {
+		carried = append(carried, w.Slug)
+	}
+	mastered := mastery.Mastered(carried, cat.MasteryCount(sheet.Class, sheet.Level))
+	str, dex := rules.Modifier(sheet.Scores[rules.Strength]), rules.Modifier(sheet.Scores[rules.Dexterity])
+	for _, w := range sheet.Weapons {
+		props := attack.Weapon{Finesse: slices.Contains(w.Properties, "Finesse"), Ammunition: slices.Contains(w.Properties, "Ammunition"), Reach: slices.Contains(w.Properties, "Reach")}
+		toHit, bonus, reach := attack.WeaponAttack(props, str, dex, sheet.Derived.ProficiencyBonus)
+		if props.Ammunition {
+			reach = 0
+		}
+		a := Attack{Name: w.Name, ToHit: toHit, Damage: damageText(w.DamageDice, bonus), DamageType: w.DamageType, ReachFt: reach, RangeFt: w.RangeFeet, LongRangeFt: w.LongRangeFeet, Mastery: ""}
+		if m, ok := mastery.Of(w.Properties); ok && slices.Contains(mastered, w.Slug) {
+			a.Mastery = string(m)
+		}
+		sheet.Attacks = append(sheet.Attacks, a)
+	}
 	return sheet, nil
 }
 
-// Edit is an out-of-combat change to a Character; nil leaves a field alone.
+// damageText is a weapon's damage with its modifier: dice and a bonus, or a flat number such as a
+// blowgun's.
+func damageText(notation string, bonus int) string {
+	if _, err := dice.Parse(notation); err != nil {
+		n, _ := strconv.Atoi(notation)
+		return strconv.Itoa(max(n+bonus, 0))
+	}
+	if bonus == 0 {
+		return notation
+	}
+	return notation + fmt.Sprintf("%+d", bonus)
+}
+
+// Edit is an out-of-combat change to a Character; nil leaves a field alone. Damage soaks temporary hit
+// points first, Heal stops at the maximum and TempHP keeps the higher of old and new.
 type Edit struct {
 	Name      *string
 	HPCurrent *int
+	Damage    *int
+	Heal      *int
+	TempHP    *int
 	Armor     *string
 	Shield    *bool
 	Weapons   []string
@@ -376,6 +449,7 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 		}
 		next.HPCurrent = *e.HPCurrent
 	}
+	next = hitPoints(next, e)
 	if e.Armor != nil {
 		next.Armor = *e.Armor
 	}
@@ -396,6 +470,20 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 		return Sheet{}, err
 	}
 	return s.Get(ctx, c, id, ch)
+}
+
+// hitPoints applies an Edit's damage, healing and temporary hit points.
+func hitPoints(c domain.Character, e Edit) domain.Character {
+	if e.Damage != nil {
+		c.HPCurrent, c.TempHP = rules.TakeDamage(c.HPCurrent, c.TempHP, *e.Damage)
+	}
+	if e.Heal != nil {
+		c.HPCurrent = rules.Heal(c.HPCurrent, c.HPMax, *e.Heal)
+	}
+	if e.TempHP != nil {
+		c.TempHP = rules.GainTempHP(c.TempHP, *e.TempHP)
+	}
+	return c
 }
 
 // Delete removes a Character. The owner or a DM, and never during Combat.

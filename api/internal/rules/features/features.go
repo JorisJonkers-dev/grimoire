@@ -287,3 +287,10 @@ func name(r Requirement) string {
 	}
 	return string(r.Kind)
 }
+
+// MasteryCount is how many weapons a class lets a character master at a level.
+func (cat Catalog) MasteryCount(class string, level int) int {
+	n, _ := cat.Scales[class+"-weapon-mastery"].Steps.At(level)
+	count, _ := strconv.Atoi(n)
+	return count
+}

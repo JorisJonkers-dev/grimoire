@@ -2669,6 +2669,99 @@ func (s *ArmorOptionItem) SetStealthDisadvantage(val bool) {
 
 type AssetUrl string
 
+// A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+// Ref: #/components/schemas/AttackLine
+type AttackLine struct {
+	Name          string    `json:"name"`
+	ToHit         int32     `json:"toHit"`
+	Damage        string    `json:"damage"`
+	DamageType    string    `json:"damageType"`
+	ReachFeet     int32     `json:"reachFeet"`
+	RangeFeet     int32     `json:"rangeFeet"`
+	LongRangeFeet int32     `json:"longRangeFeet"`
+	Mastery       OptString `json:"mastery"`
+}
+
+// GetName returns the value of Name.
+func (s *AttackLine) GetName() string {
+	return s.Name
+}
+
+// GetToHit returns the value of ToHit.
+func (s *AttackLine) GetToHit() int32 {
+	return s.ToHit
+}
+
+// GetDamage returns the value of Damage.
+func (s *AttackLine) GetDamage() string {
+	return s.Damage
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *AttackLine) GetDamageType() string {
+	return s.DamageType
+}
+
+// GetReachFeet returns the value of ReachFeet.
+func (s *AttackLine) GetReachFeet() int32 {
+	return s.ReachFeet
+}
+
+// GetRangeFeet returns the value of RangeFeet.
+func (s *AttackLine) GetRangeFeet() int32 {
+	return s.RangeFeet
+}
+
+// GetLongRangeFeet returns the value of LongRangeFeet.
+func (s *AttackLine) GetLongRangeFeet() int32 {
+	return s.LongRangeFeet
+}
+
+// GetMastery returns the value of Mastery.
+func (s *AttackLine) GetMastery() OptString {
+	return s.Mastery
+}
+
+// SetName sets the value of Name.
+func (s *AttackLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetToHit sets the value of ToHit.
+func (s *AttackLine) SetToHit(val int32) {
+	s.ToHit = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *AttackLine) SetDamage(val string) {
+	s.Damage = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *AttackLine) SetDamageType(val string) {
+	s.DamageType = val
+}
+
+// SetReachFeet sets the value of ReachFeet.
+func (s *AttackLine) SetReachFeet(val int32) {
+	s.ReachFeet = val
+}
+
+// SetRangeFeet sets the value of RangeFeet.
+func (s *AttackLine) SetRangeFeet(val int32) {
+	s.RangeFeet = val
+}
+
+// SetLongRangeFeet sets the value of LongRangeFeet.
+func (s *AttackLine) SetLongRangeFeet(val int32) {
+	s.LongRangeFeet = val
+}
+
+// SetMastery sets the value of Mastery.
+func (s *AttackLine) SetMastery(val OptString) {
+	s.Mastery = val
+}
+
 // Entries of one kind by Automation Level.
 // Ref: #/components/schemas/AutomationCount
 type AutomationCount struct {
@@ -4430,9 +4523,15 @@ func (s *CharacterDraftSave) SetBuild(val CharacterDraftBuild) {
 type CharacterEdit struct {
 	Name      OptCharacterName `json:"name"`
 	HpCurrent OptInt32         `json:"hpCurrent"`
-	Armor     OptArmorChoice   `json:"armor"`
-	Shield    OptBool          `json:"shield"`
-	Weapons   []Slug           `json:"weapons"`
+	// Damage taken, soaked by temporary hit points first.
+	Damage OptInt32 `json:"damage"`
+	// Hit points regained, up to the maximum.
+	Heal OptInt32 `json:"heal"`
+	// Temporary hit points gained; the higher of old and new stays.
+	TempHp  OptInt32       `json:"tempHp"`
+	Armor   OptArmorChoice `json:"armor"`
+	Shield  OptBool        `json:"shield"`
+	Weapons []Slug         `json:"weapons"`
 }
 
 // GetName returns the value of Name.
@@ -4443,6 +4542,21 @@ func (s *CharacterEdit) GetName() OptCharacterName {
 // GetHpCurrent returns the value of HpCurrent.
 func (s *CharacterEdit) GetHpCurrent() OptInt32 {
 	return s.HpCurrent
+}
+
+// GetDamage returns the value of Damage.
+func (s *CharacterEdit) GetDamage() OptInt32 {
+	return s.Damage
+}
+
+// GetHeal returns the value of Heal.
+func (s *CharacterEdit) GetHeal() OptInt32 {
+	return s.Heal
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *CharacterEdit) GetTempHp() OptInt32 {
+	return s.TempHp
 }
 
 // GetArmor returns the value of Armor.
@@ -4468,6 +4582,21 @@ func (s *CharacterEdit) SetName(val OptCharacterName) {
 // SetHpCurrent sets the value of HpCurrent.
 func (s *CharacterEdit) SetHpCurrent(val OptInt32) {
 	s.HpCurrent = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *CharacterEdit) SetDamage(val OptInt32) {
+	s.Damage = val
+}
+
+// SetHeal sets the value of Heal.
+func (s *CharacterEdit) SetHeal(val OptInt32) {
+	s.Heal = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *CharacterEdit) SetTempHp(val OptInt32) {
+	s.TempHp = val
 }
 
 // SetArmor sets the value of Armor.
@@ -4525,6 +4654,7 @@ type CharacterSheet struct {
 	BackgroundSkills  []Slug               `json:"backgroundSkills"`
 	HpCurrent         int32                `json:"hpCurrent"`
 	HpMax             int32                `json:"hpMax"`
+	TempHp            OptInt32             `json:"tempHp"`
 	ArmorClass        int32                `json:"armorClass"`
 	Initiative        int32                `json:"initiative"`
 	SpeedFeet         int32                `json:"speedFeet"`
@@ -4538,6 +4668,11 @@ type CharacterSheet struct {
 	Warnings          []string             `json:"warnings"`
 	PortraitUrl       OptAssetUrl          `json:"portraitUrl"`
 	TokenUrl          OptAssetUrl          `json:"tokenUrl"`
+	// The Account's own Character this Campaign Character was made from.
+	CharacterId   OptID            `json:"characterId"`
+	Attacks       []AttackLine     `json:"attacks"`
+	Traits        []TraitLine      `json:"traits"`
+	Proficiencies OptProficiencies `json:"proficiencies"`
 }
 
 // GetID returns the value of ID.
@@ -4635,6 +4770,11 @@ func (s *CharacterSheet) GetHpMax() int32 {
 	return s.HpMax
 }
 
+// GetTempHp returns the value of TempHp.
+func (s *CharacterSheet) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
 // GetArmorClass returns the value of ArmorClass.
 func (s *CharacterSheet) GetArmorClass() int32 {
 	return s.ArmorClass
@@ -4698,6 +4838,26 @@ func (s *CharacterSheet) GetPortraitUrl() OptAssetUrl {
 // GetTokenUrl returns the value of TokenUrl.
 func (s *CharacterSheet) GetTokenUrl() OptAssetUrl {
 	return s.TokenUrl
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *CharacterSheet) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetAttacks returns the value of Attacks.
+func (s *CharacterSheet) GetAttacks() []AttackLine {
+	return s.Attacks
+}
+
+// GetTraits returns the value of Traits.
+func (s *CharacterSheet) GetTraits() []TraitLine {
+	return s.Traits
+}
+
+// GetProficiencies returns the value of Proficiencies.
+func (s *CharacterSheet) GetProficiencies() OptProficiencies {
+	return s.Proficiencies
 }
 
 // SetID sets the value of ID.
@@ -4795,6 +4955,11 @@ func (s *CharacterSheet) SetHpMax(val int32) {
 	s.HpMax = val
 }
 
+// SetTempHp sets the value of TempHp.
+func (s *CharacterSheet) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
 // SetArmorClass sets the value of ArmorClass.
 func (s *CharacterSheet) SetArmorClass(val int32) {
 	s.ArmorClass = val
@@ -4858,6 +5023,26 @@ func (s *CharacterSheet) SetPortraitUrl(val OptAssetUrl) {
 // SetTokenUrl sets the value of TokenUrl.
 func (s *CharacterSheet) SetTokenUrl(val OptAssetUrl) {
 	s.TokenUrl = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *CharacterSheet) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetAttacks sets the value of Attacks.
+func (s *CharacterSheet) SetAttacks(val []AttackLine) {
+	s.Attacks = val
+}
+
+// SetTraits sets the value of Traits.
+func (s *CharacterSheet) SetTraits(val []TraitLine) {
+	s.Traits = val
+}
+
+// SetProficiencies sets the value of Proficiencies.
+func (s *CharacterSheet) SetProficiencies(val OptProficiencies) {
+	s.Proficiencies = val
 }
 
 // CharacterSheetHeaders wraps CharacterSheet with response headers.
@@ -23644,6 +23829,52 @@ func (o OptOidcPending) Or(d OidcPending) OidcPending {
 	return d
 }
 
+// NewOptProficiencies returns new OptProficiencies with value set to v.
+func NewOptProficiencies(v Proficiencies) OptProficiencies {
+	return OptProficiencies{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptProficiencies is optional Proficiencies.
+type OptProficiencies struct {
+	Value Proficiencies
+	Set   bool
+}
+
+// IsSet returns true if OptProficiencies was set.
+func (o OptProficiencies) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptProficiencies) Reset() {
+	var v Proficiencies
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptProficiencies) SetTo(v Proficiencies) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptProficiencies) Get() (v Proficiencies, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptProficiencies) Or(d Proficiencies) Proficiencies {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptReactionTimeout returns new OptReactionTimeout with value set to v.
 func NewOptReactionTimeout(v ReactionTimeout) OptReactionTimeout {
 	return OptReactionTimeout{
@@ -24909,6 +25140,33 @@ func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) useSignInLinkRes()                 {}
+
+// The armor and weapons a Character is trained with.
+// Ref: #/components/schemas/Proficiencies
+type Proficiencies struct {
+	Armor   []string `json:"armor"`
+	Weapons []string `json:"weapons"`
+}
+
+// GetArmor returns the value of Armor.
+func (s *Proficiencies) GetArmor() []string {
+	return s.Armor
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *Proficiencies) GetWeapons() []string {
+	return s.Weapons
+}
+
+// SetArmor sets the value of Armor.
+func (s *Proficiencies) SetArmor(val []string) {
+	s.Armor = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *Proficiencies) SetWeapons(val []string) {
+	s.Weapons = val
+}
 
 // The VAPID public key devices subscribe with, base64url-encoded.
 // Ref: #/components/schemas/PushKey
@@ -28339,6 +28597,8 @@ type SkillLine struct {
 	Ability    Ability `json:"ability"`
 	Bonus      int32   `json:"bonus"`
 	Proficient bool    `json:"proficient"`
+	// Proficiency bonus counted twice.
+	Expertise bool `json:"expertise"`
 }
 
 // GetSkill returns the value of Skill.
@@ -28361,6 +28621,11 @@ func (s *SkillLine) GetProficient() bool {
 	return s.Proficient
 }
 
+// GetExpertise returns the value of Expertise.
+func (s *SkillLine) GetExpertise() bool {
+	return s.Expertise
+}
+
 // SetSkill sets the value of Skill.
 func (s *SkillLine) SetSkill(val Slug) {
 	s.Skill = val
@@ -28379,6 +28644,11 @@ func (s *SkillLine) SetBonus(val int32) {
 // SetProficient sets the value of Proficient.
 func (s *SkillLine) SetProficient(val bool) {
 	s.Proficient = val
+}
+
+// SetExpertise sets the value of Expertise.
+func (s *SkillLine) SetExpertise(val bool) {
+	s.Expertise = val
 }
 
 type Slug string
@@ -29502,6 +29772,96 @@ func (s *TokenKind) UnmarshalText(data []byte) error {
 		return nil
 	case TokenKindObject:
 		*s = TokenKindObject
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A class feature or species trait the Character has.
+// Ref: #/components/schemas/TraitLine
+type TraitLine struct {
+	Name        string          `json:"name"`
+	Source      TraitLineSource `json:"source"`
+	Level       int32           `json:"level"`
+	Description string          `json:"description"`
+}
+
+// GetName returns the value of Name.
+func (s *TraitLine) GetName() string {
+	return s.Name
+}
+
+// GetSource returns the value of Source.
+func (s *TraitLine) GetSource() TraitLineSource {
+	return s.Source
+}
+
+// GetLevel returns the value of Level.
+func (s *TraitLine) GetLevel() int32 {
+	return s.Level
+}
+
+// GetDescription returns the value of Description.
+func (s *TraitLine) GetDescription() string {
+	return s.Description
+}
+
+// SetName sets the value of Name.
+func (s *TraitLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetSource sets the value of Source.
+func (s *TraitLine) SetSource(val TraitLineSource) {
+	s.Source = val
+}
+
+// SetLevel sets the value of Level.
+func (s *TraitLine) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetDescription sets the value of Description.
+func (s *TraitLine) SetDescription(val string) {
+	s.Description = val
+}
+
+type TraitLineSource string
+
+const (
+	TraitLineSourceClass   TraitLineSource = "class"
+	TraitLineSourceSpecies TraitLineSource = "species"
+)
+
+// AllValues returns all TraitLineSource values.
+func (TraitLineSource) AllValues() []TraitLineSource {
+	return []TraitLineSource{
+		TraitLineSourceClass,
+		TraitLineSourceSpecies,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TraitLineSource) MarshalText() ([]byte, error) {
+	switch s {
+	case TraitLineSourceClass:
+		return []byte(s), nil
+	case TraitLineSourceSpecies:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TraitLineSource) UnmarshalText(data []byte) error {
+	switch TraitLineSource(data) {
+	case TraitLineSourceClass:
+		*s = TraitLineSourceClass
+		return nil
+	case TraitLineSourceSpecies:
+		*s = TraitLineSourceSpecies
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

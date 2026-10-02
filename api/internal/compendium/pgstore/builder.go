@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
 )
 
 var feetPattern = regexp.MustCompile(`(\d+) feet`)
@@ -129,4 +130,24 @@ func (s *Store) builderWeapons(ctx context.Context, out *compendium.BuilderOptio
 		})
 	}
 	return nil
+}
+
+// Traits are a Character's class features up to its level, then its species traits.
+func (s *Store) Traits(ctx context.Context, ruleset, class, species string, level int) ([]compendium.Trait, error) {
+	features, err := s.q.SheetClassFeatures(ctx, queries.SheetClassFeaturesParams{Ruleset: ruleset, Class: class, Level: int32(level)}) //nolint:gosec // 1 to 20
+	if err != nil {
+		return nil, err
+	}
+	traits, err := s.q.SheetSpeciesTraits(ctx, queries.SheetSpeciesTraitsParams{Ruleset: ruleset, Species: species})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]compendium.Trait, 0, len(features)+len(traits))
+	for _, f := range features {
+		out = append(out, compendium.Trait{Name: f.Name, Source: "class", Level: int(f.Level), Description: f.Description})
+	}
+	for _, t := range traits {
+		out = append(out, compendium.Trait{Name: t.Name, Source: "species", Level: 0, Description: t.Description})
+	}
+	return out, nil
 }

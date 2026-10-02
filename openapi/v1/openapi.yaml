@@ -6239,6 +6239,9 @@ components:
       properties:
         name: { $ref: "#/components/schemas/CharacterName" }
         hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        damage: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Damage taken, soaked by temporary hit points first." }
+        heal: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Hit points regained, up to the maximum." }
+        tempHp: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Temporary hit points gained; the higher of old and new stays." }
         armor: { $ref: "#/components/schemas/ArmorChoice" }
         shield: { type: boolean }
         weapons:
@@ -6268,12 +6271,51 @@ components:
       type: object
       description: One skill on the sheet.
       additionalProperties: false
-      required: [skill, ability, bonus, proficient]
+      required: [skill, ability, bonus, proficient, expertise]
       properties:
         skill: { $ref: "#/components/schemas/Slug" }
         ability: { $ref: "#/components/schemas/Ability" }
         bonus: { type: integer, format: int32, minimum: -5, maximum: 30 }
         proficient: { type: boolean }
+        expertise: { type: boolean, description: "Proficiency bonus counted twice." }
+    AttackLine:
+      type: object
+      description: A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+      additionalProperties: false
+      required: [name, toHit, damage, damageType, reachFeet, rangeFeet, longRangeFeet]
+      properties:
+        name: { type: string, maxLength: 120 }
+        toHit: { type: integer, format: int32, minimum: -10, maximum: 30 }
+        damage: { type: string, maxLength: 30 }
+        damageType: { type: string, maxLength: 40 }
+        reachFeet: { type: integer, format: int32, minimum: 0, maximum: 30 }
+        rangeFeet: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        longRangeFeet: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        mastery: { type: string, maxLength: 40 }
+    TraitLine:
+      type: object
+      description: A class feature or species trait the Character has.
+      additionalProperties: false
+      required: [name, source, level, description]
+      properties:
+        name: { type: string, maxLength: 120 }
+        source: { type: string, enum: [class, species] }
+        level: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        description: { type: string, maxLength: 20000 }
+    Proficiencies:
+      type: object
+      description: The armor and weapons a Character is trained with.
+      additionalProperties: false
+      required: [armor, weapons]
+      properties:
+        armor:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 60 }
+        weapons:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 60 }
     ResourcePool:
       type: object
       description: A spendable pool such as hit dice or spell slots.
@@ -6396,6 +6438,7 @@ components:
           items: { $ref: "#/components/schemas/Slug" }
         hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        tempHp: { type: integer, format: int32, minimum: 0, maximum: 1000 }
         armorClass: { type: integer, format: int32, minimum: 0, maximum: 50 }
         initiative: { type: integer, format: int32, minimum: -5, maximum: 30 }
         speedFeet: { type: integer, format: int32, minimum: 0, maximum: 200 }
@@ -6421,6 +6464,18 @@ components:
           items: { type: string, maxLength: 200 }
         portraitUrl: { $ref: "#/components/schemas/AssetUrl" }
         tokenUrl: { $ref: "#/components/schemas/AssetUrl" }
+        characterId:
+          $ref: "#/components/schemas/Id"
+          description: The Account's own Character this Campaign Character was made from.
+        attacks:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/AttackLine" }
+        traits:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/TraitLine" }
+        proficiencies: { $ref: "#/components/schemas/Proficiencies" }
     AssetUrl:
       type: string
       description: Same-origin path of a stored picture; it changes when the picture does.

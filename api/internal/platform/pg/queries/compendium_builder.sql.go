@@ -240,3 +240,85 @@ func (q *Queries) RulesetYear(ctx context.Context, key string) (int32, error) {
 	err := row.Scan(&ruleset_year)
 	return ruleset_year, err
 }
+
+const sheetClassFeatures = `-- name: SheetClassFeatures :many
+SELECT f.name, f.description, min(l.level)::integer AS level
+FROM compendium.class_features f
+JOIN compendium.classes c ON c.id = f.class_id
+JOIN compendium.documents d ON d.id = c.document_id
+JOIN compendium.class_feature_levels l ON l.feature_id = f.id
+WHERE d.key = $1 AND c.slug = $2 AND l.level <= $3
+GROUP BY f.id, f.name, f.description, f.ordering
+ORDER BY min(l.level), f.ordering
+`
+
+type SheetClassFeaturesParams struct {
+	Ruleset string
+	Class   string
+	Level   int32
+}
+
+type SheetClassFeaturesRow struct {
+	Name        string
+	Description string
+	Level       int32
+}
+
+// A class's features up to a level, each at the first level it is gained.
+func (q *Queries) SheetClassFeatures(ctx context.Context, arg SheetClassFeaturesParams) ([]SheetClassFeaturesRow, error) {
+	rows, err := q.db.Query(ctx, sheetClassFeatures, arg.Ruleset, arg.Class, arg.Level)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SheetClassFeaturesRow{}
+	for rows.Next() {
+		var i SheetClassFeaturesRow
+		if err := rows.Scan(&i.Name, &i.Description, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sheetSpeciesTraits = `-- name: SheetSpeciesTraits :many
+SELECT t.name, t.description FROM compendium.species_traits t
+JOIN compendium.species s ON s.id = t.species_id
+JOIN compendium.documents d ON d.id = s.document_id
+WHERE d.key = $1 AND s.slug = $2
+ORDER BY t.ordering
+`
+
+type SheetSpeciesTraitsParams struct {
+	Ruleset string
+	Species string
+}
+
+type SheetSpeciesTraitsRow struct {
+	Name        string
+	Description string
+}
+
+func (q *Queries) SheetSpeciesTraits(ctx context.Context, arg SheetSpeciesTraitsParams) ([]SheetSpeciesTraitsRow, error) {
+	rows, err := q.db.Query(ctx, sheetSpeciesTraits, arg.Ruleset, arg.Species)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SheetSpeciesTraitsRow{}
+	for rows.Next() {
+		var i SheetSpeciesTraitsRow
+		if err := rows.Scan(&i.Name, &i.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

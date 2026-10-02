@@ -8,7 +8,7 @@ export const sheet = (extra = {}) => ({
   method: 'standard-array',
   base: { strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8 },
   bonus: { strength: 2, constitution: 1 }, abilities,
-  skills: [{ skill: 'perception', ability: 'wisdom', bonus: 2, proficient: true }, { skill: 'stealth', ability: 'dexterity', bonus: 2, proficient: false }],
+  skills: [{ skill: 'perception', ability: 'wisdom', bonus: 2, proficient: true, expertise: false }, { skill: 'stealth', ability: 'dexterity', bonus: 2, proficient: false, expertise: false }],
   classSkills: ['perception', 'survival'], backgroundSkills: ['athletics', 'intimidation'],
   hpCurrent: 12, hpMax: 12, armorClass: 18, initiative: 2, speedFeet: 30, proficiencyBonus: 2, passivePerception: 12,
   armor: { slug: 'chain-mail', name: 'Chain Mail' }, shield: true,
