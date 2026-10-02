@@ -3,7 +3,7 @@
 
 # Both build stages run on the build platform; only the Go binary is cross-compiled, so a
 # multi-arch build needs no emulation.
-FROM --platform=$BUILDPLATFORM node:24-alpine AS web
+FROM --platform=$BUILDPLATFORM node:24.21.0-alpine AS web
 RUN npm install -g pnpm@12.6.0
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
