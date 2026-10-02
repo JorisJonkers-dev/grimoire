@@ -34,6 +34,43 @@ export const zMember = z.object({
 });
 
 /**
+ * A sign-in waiting for its second step.
+ */
+export const zTwoStepChallenge = z.object({
+    challenge: z.string().min(20).max(64)
+});
+
+/**
+ * A challenge and the code that answers it, from the authenticator app or a recovery code.
+ */
+export const zTwoStepAnswer = z.object({
+    challenge: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    code: z.string().min(6).max(16).regex(/^[0-9A-Za-z -]{6,16}$/)
+});
+
+/**
+ * A code from the authenticator app or a recovery code.
+ */
+export const zTwoStepCode = z.object({
+    code: z.string().min(6).max(16).regex(/^[0-9A-Za-z -]{6,16}$/)
+});
+
+/**
+ * A new authenticator secret and the otpauth URI that adds it to an app.
+ */
+export const zTwoStepSetup = z.object({
+    secret: z.string().length(32).regex(/^[A-Z2-7]{32}$/),
+    uri: z.string().min(1).max(500)
+});
+
+/**
+ * Recovery codes, each good once; shown only when made.
+ */
+export const zRecoveryCodes = z.object({
+    codes: z.array(z.string().length(11).regex(/^[a-z1-9]{5}-[a-z1-9]{5}$/)).max(10)
+});
+
+/**
  * The external login linked to an Account, as the provider last described it; read-only.
  */
 export const zOidcLink = z.object({
@@ -117,6 +154,9 @@ export const zAccount = z.object({
     email: z.email().max(254),
     admin: z.boolean(),
     hasPassword: z.boolean(),
+    twoStep: z.boolean(),
+    recoveryCodesLeft: z.int().gte(0).lte(10),
+    adminPowers: z.boolean(),
     oidc: zOidcLink.optional()
 });
 
@@ -3681,10 +3721,17 @@ export const zAcceptAccountInviteResponse = zAccount;
 
 export const zSignInBody = zSignInRequest;
 
+export const zSignInResponse = z.union([
+    zAccount,
+    zTwoStepChallenge
+]);
+
+export const zPassTwoStepBody = zTwoStepAnswer;
+
 /**
  * The Account, signed in.
  */
-export const zSignInResponse = zAccount;
+export const zPassTwoStepResponse = zAccount;
 
 /**
  * Signed out.
@@ -3695,10 +3742,10 @@ export const zRequestSignInLinkBody = zSignInLinkRequest;
 
 export const zUseSignInLinkBody = zLinkToken;
 
-/**
- * The Account, signed in.
- */
-export const zUseSignInLinkResponse = zAccount;
+export const zUseSignInLinkResponse = z.union([
+    zAccount,
+    zTwoStepChallenge
+]);
 
 /**
  * The sign-in methods.
@@ -3759,6 +3806,32 @@ export const zUnlinkOidcResponse = z.void();
  * Where to send the browser.
  */
 export const zStartOidcLinkResponse = zOidcRedirect;
+
+/**
+ * The secret and the URI an authenticator app scans.
+ */
+export const zBeginTwoStepResponse = zTwoStepSetup;
+
+export const zConfirmTwoStepBody = zTwoStepCode;
+
+/**
+ * The recovery codes.
+ */
+export const zConfirmTwoStepResponse = zRecoveryCodes;
+
+export const zDisableTwoStepBody = zTwoStepCode;
+
+/**
+ * Two-step is off.
+ */
+export const zDisableTwoStepResponse = z.void();
+
+export const zResetRecoveryCodesBody = zTwoStepCode;
+
+/**
+ * The new recovery codes.
+ */
+export const zResetRecoveryCodesResponse = zRecoveryCodes;
 
 /**
  * The process is alive.

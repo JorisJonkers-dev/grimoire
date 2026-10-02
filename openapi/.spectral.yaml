@@ -22,6 +22,7 @@ overrides:
       - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in-links~1use"
       - "v1/openapi.yaml#/paths/~1api~1v1~1account-invites~1preview"
       - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in-methods"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in~1two-step"
       - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1sign-ins"
       - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1callback"
       - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1accounts"

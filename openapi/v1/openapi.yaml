@@ -3213,6 +3213,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Account"
+        "202":
+          description: Two-step is on; answer the challenge with a code.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoStepChallenge"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/sign-in/two-step:
+    post:
+      operationId: passTwoStep
+      summary: Answer the second step
+      description: Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes and five wrong codes.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoStepAnswer"
+      responses:
+        "200":
+          description: The Account, signed in.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -3302,6 +3348,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Account"
+        "202":
+          description: Two-step is on; answer the challenge with a code.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoStepChallenge"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -3583,6 +3642,122 @@ paths:
               $ref: "#/components/headers/RateLimit-Remaining"
             RateLimit-Reset:
               $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/two-step:
+    post:
+      operationId: beginTwoStep
+      summary: Start two-step sign-in
+      description: Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step on.
+      tags: [Identity]
+      responses:
+        "201":
+          description: The secret and the URI an authenticator app scans.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoStepSetup"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/two-step/confirm:
+    post:
+      operationId: confirmTwoStep
+      summary: Turn two-step on
+      description: Checks a first code from the app and returns the recovery codes, shown only now.
+      tags: [Identity]
+      parameters:
+        - name: grimoire_session
+          in: cookie
+          required: false
+          description: The session that confirms two-step, which becomes strong.
+          schema: { type: string, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoStepCode"
+      responses:
+        "200":
+          description: The recovery codes.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecoveryCodes"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/two-step/disable:
+    post:
+      operationId: disableTwoStep
+      summary: Turn two-step off
+      description: Needs a current code or a recovery code; the recovery codes go too.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoStepCode"
+      responses:
+        "204":
+          description: Two-step is off.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/two-step/recovery-codes:
+    post:
+      operationId: resetRecoveryCodes
+      summary: Replace the recovery codes
+      description: Needs a current code; the old recovery codes stop working.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoStepCode"
+      responses:
+        "200":
+          description: The new recovery codes.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecoveryCodes"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -3910,7 +4085,7 @@ components:
       type: object
       description: A Grimoire Account.
       additionalProperties: false
-      required: [id, username, nickname, email, admin, hasPassword]
+      required: [id, username, nickname, email, admin, hasPassword, twoStep, recoveryCodesLeft, adminPowers]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         username: { $ref: "#/components/schemas/Username" }
@@ -3918,7 +4093,50 @@ components:
         email: { type: string, format: email, maxLength: 254 }
         admin: { type: boolean }
         hasPassword: { type: boolean, description: "Whether the Account can sign in with a password." }
+        twoStep: { type: boolean, description: "Whether two-step sign-in is on." }
+        recoveryCodesLeft: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        adminPowers: { type: boolean, description: "Whether this request holds Admin powers; an Admin needs two-step or the external login." }
         oidc: { $ref: "#/components/schemas/OidcLink" }
+    TwoStepChallenge:
+      type: object
+      description: A sign-in waiting for its second step.
+      additionalProperties: false
+      required: [challenge]
+      properties:
+        challenge: { type: string, minLength: 20, maxLength: 64 }
+    TwoStepAnswer:
+      type: object
+      description: A challenge and the code that answers it, from the authenticator app or a recovery code.
+      additionalProperties: false
+      required: [challenge, code]
+      properties:
+        challenge: { type: string, pattern: "^[A-Za-z0-9_-]{20,64}$", minLength: 20, maxLength: 64 }
+        code: { type: string, pattern: "^[0-9A-Za-z -]{6,16}$", minLength: 6, maxLength: 16 }
+    TwoStepCode:
+      type: object
+      description: A code from the authenticator app or a recovery code.
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: { type: string, pattern: "^[0-9A-Za-z -]{6,16}$", minLength: 6, maxLength: 16 }
+    TwoStepSetup:
+      type: object
+      description: A new authenticator secret and the otpauth URI that adds it to an app.
+      additionalProperties: false
+      required: [secret, uri]
+      properties:
+        secret: { type: string, pattern: "^[A-Z2-7]{32}$", minLength: 32, maxLength: 32 }
+        uri: { type: string, minLength: 1, maxLength: 500 }
+    RecoveryCodes:
+      type: object
+      description: Recovery codes, each good once; shown only when made.
+      additionalProperties: false
+      required: [codes]
+      properties:
+        codes:
+          type: array
+          maxItems: 10
+          items: { type: string, pattern: "^[a-z1-9]{5}-[a-z1-9]{5}$", minLength: 11, maxLength: 11 }
     OidcLink:
       type: object
       description: The external login linked to an Account, as the provider last described it; read-only.

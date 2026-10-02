@@ -18,10 +18,10 @@ type AccountService interface {
 	CreateInvite(ctx context.Context, by string, hours int, admin bool) (string, domain.Invite, error)
 	Invite(ctx context.Context, token string) (domain.Invite, error)
 	Accept(ctx context.Context, token string, in domain.Setup, userAgent string) (domain.Account, string, error)
-	SignIn(ctx context.Context, username, password, userAgent string) (domain.Account, string, error)
+	SignIn(ctx context.Context, username, password, userAgent string) (domain.SignedIn, error)
 	SignOut(ctx context.Context, token string) error
 	RequestLink(ctx context.Context, email string) error
-	UseLink(ctx context.Context, token, userAgent string) (domain.Account, string, error)
+	UseLink(ctx context.Context, token, userAgent string) (domain.SignedIn, error)
 	Me(ctx context.Context, subject string) (domain.Profile, error)
 	SetPassword(ctx context.Context, subject, password string) error
 	UpdateProfile(ctx context.Context, subject string, in domain.ProfileChange) (domain.Profile, error)
@@ -31,6 +31,11 @@ type AccountService interface {
 	CreateFromOIDC(ctx context.Context, token, username, nickname, userAgent string) (domain.Account, string, error)
 	LinkFromOIDC(ctx context.Context, token, username, password, userAgent string) (domain.Account, string, error)
 	Unlink(ctx context.Context, subject string) error
+	PassTwoStep(ctx context.Context, challenge, code, userAgent string) (domain.Account, string, error)
+	BeginTwoStep(ctx context.Context, subject string) (app.TwoStepSetup, error)
+	ConfirmTwoStep(ctx context.Context, subject, code, session string) ([]string, error)
+	DisableTwoStep(ctx context.Context, subject, code string) error
+	ResetRecoveryCodes(ctx context.Context, subject, code string) ([]string, error)
 }
 
 var _ AccountService = (*app.Service)(nil)
@@ -101,11 +106,14 @@ func (h *Handler) AcceptAccountInvite(ctx context.Context, req *oas.AccountSetup
 
 // SignIn signs in with a Username and password.
 func (h *Handler) SignIn(ctx context.Context, req *oas.SignInRequest) (oas.SignInRes, error) {
-	a, token, err := h.Accounts.SignIn(ctx, req.Username, req.Password, httpx.UserAgent(ctx))
+	out, err := h.Accounts.SignIn(ctx, req.Username, req.Password, httpx.UserAgent(ctx))
 	if err != nil {
 		return h.identityError(ctx, "sign in", err), nil
 	}
-	return h.signedInProfile(ctx, a, token), nil
+	if out.Challenge != "" {
+		return challenged(out), nil
+	}
+	return h.signedInProfile(ctx, out.Account, out.Session), nil
 }
 
 // SignOut ends this device's session.
@@ -129,11 +137,14 @@ func (h *Handler) RequestSignInLink(ctx context.Context, req *oas.SignInLinkRequ
 
 // UseSignInLink signs in with an emailed link.
 func (h *Handler) UseSignInLink(ctx context.Context, req *oas.LinkToken) (oas.UseSignInLinkRes, error) {
-	a, token, err := h.Accounts.UseLink(ctx, req.Token, httpx.UserAgent(ctx))
+	out, err := h.Accounts.UseLink(ctx, req.Token, httpx.UserAgent(ctx))
 	if err != nil {
 		return h.identityError(ctx, "use sign-in link", err), nil
 	}
-	return h.signedInProfile(ctx, a, token), nil
+	if out.Challenge != "" {
+		return challenged(out), nil
+	}
+	return h.signedInProfile(ctx, out.Account, out.Session), nil
 }
 
 // GetAccount reads the signed-in Account.

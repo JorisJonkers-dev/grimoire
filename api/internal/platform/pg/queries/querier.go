@@ -126,6 +126,7 @@ type Querier interface {
 	CombatPrompt(ctx context.Context, combatID uuid.UUID) (CombatPromptRow, error)
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
+	ConfirmTOTP(ctx context.Context, arg ConfirmTOTPParams) (int64, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	CountEntriesByKind(ctx context.Context, arg CountEntriesByKindParams) ([]CountEntriesByKindRow, error)
 	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
@@ -145,11 +146,13 @@ type Querier interface {
 	DeletePendingAction(ctx context.Context, rollID uuid.UUID) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
+	DeleteRecoveryCodes(ctx context.Context, accountID uuid.UUID) error
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
 	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
 	DeleteShop(ctx context.Context, arg DeleteShopParams) (int64, error)
 	DeleteShopStock(ctx context.Context, arg DeleteShopStockParams) error
 	DeleteStack(ctx context.Context, arg DeleteStackParams) error
+	DeleteTOTP(ctx context.Context, accountID uuid.UUID) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
@@ -249,6 +252,7 @@ type Querier interface {
 	InsertPoolMember(ctx context.Context, arg InsertPoolMemberParams) error
 	InsertPoolRevision(ctx context.Context, arg InsertPoolRevisionParams) error
 	InsertPoolRevisionMember(ctx context.Context, arg InsertPoolRevisionMemberParams) error
+	InsertRecoveryCode(ctx context.Context, arg InsertRecoveryCodeParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
 	InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error)
 	InsertRollDie(ctx context.Context, arg InsertRollDieParams) error
@@ -274,6 +278,7 @@ type Querier interface {
 	InsertTokenEvent(ctx context.Context, arg InsertTokenEventParams) error
 	InsertTokenSave(ctx context.Context, arg InsertTokenSaveParams) error
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
+	InsertTwoStepChallenge(ctx context.Context, arg InsertTwoStepChallengeParams) error
 	InsertUndo(ctx context.Context, arg InsertUndoParams) error
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
 	InviteByToken(ctx context.Context, tokenHash []byte) (InviteByTokenRow, error)
@@ -375,6 +380,7 @@ type Querier interface {
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
 	PushSubscriptions(ctx context.Context, subject string) ([]PushSubscriptionsRow, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
+	RecoveryCodesLeft(ctx context.Context, accountID uuid.UUID) (int32, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
 	RemoveWall(ctx context.Context, arg RemoveWallParams) error
@@ -472,9 +478,13 @@ type Querier interface {
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
 	SpendHitDie(ctx context.Context, id uuid.UUID) error
+	StartTOTP(ctx context.Context, arg StartTOTPParams) (int64, error)
+	StrengthenSession(ctx context.Context, arg StrengthenSessionParams) error
+	TOTPFactor(ctx context.Context, accountID uuid.UUID) (TOTPFactorRow, error)
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
+	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
@@ -502,7 +512,10 @@ type Querier interface {
 	UseInvite(ctx context.Context, arg UseInviteParams) (int64, error)
 	UseOIDCPending(ctx context.Context, arg UseOIDCPendingParams) (UseOIDCPendingRow, error)
 	UseOIDCRequest(ctx context.Context, arg UseOIDCRequestParams) (UseOIDCRequestRow, error)
+	UseRecoveryCode(ctx context.Context, arg UseRecoveryCodeParams) (int64, error)
 	UseSignInLink(ctx context.Context, arg UseSignInLinkParams) (uuid.UUID, error)
+	UseTOTPStep(ctx context.Context, arg UseTOTPStepParams) (int64, error)
+	UseTwoStepChallenge(ctx context.Context, arg UseTwoStepChallengeParams) error
 	WeaponProperties(ctx context.Context, weaponID int64) ([]WeaponPropertiesRow, error)
 }
 

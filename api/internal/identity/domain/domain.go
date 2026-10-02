@@ -68,12 +68,28 @@ type Setup struct {
 	Password string
 }
 
-// Session is a signed-in device.
+// Session is a signed-in device. A Strong session passed a second step or came from the external login.
 type Session struct {
 	ID        uuid.UUID
 	Account   AccountID
 	UserAgent string
 	ExpiresAt time.Time
+	Strong    bool
+}
+
+// LiveSession is a session a token signs in, as a request sees it.
+type LiveSession struct {
+	ID       uuid.UUID
+	Subject  string
+	Disabled bool
+	Strong   bool
+}
+
+// SignedIn is a sign-in's outcome: a session, or a challenge its second step answers.
+type SignedIn struct {
+	Account   Account
+	Session   string
+	Challenge string
 }
 
 // Claims are what an OIDC provider vouches for about a login.
@@ -97,11 +113,14 @@ type Link struct {
 	LinkedAt time.Time
 }
 
-// Profile is an Account with how it signs in.
+// Profile is an Account with how it signs in, and whether this request holds its Admin powers.
 type Profile struct {
-	Account     Account
-	HasPassword bool
-	Link        *Link
+	Account           Account
+	HasPassword       bool
+	Link              *Link
+	TwoStep           bool
+	RecoveryCodesLeft int
+	AdminPowers       bool
 }
 
 // Pending is an OIDC login no Account has yet; its holder creates an Account or links one.

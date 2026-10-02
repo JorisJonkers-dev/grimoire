@@ -29,6 +29,7 @@ import (
 	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/push"
@@ -210,7 +211,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	}
 	accounts := &identityapp.Service{
 		Repo: identitypg.New(store.Pool()), Mailer: mailer(cfg, logger), Passwords: identityapp.DefaultPasswords(), Now: time.Now,
-		Admins: map[string]bool{}, BaseURL: cfg.BaseURL,
+		Admins: map[string]bool{}, BaseURL: cfg.BaseURL, Strong: httpx.Strong,
 	}
 	for _, s := range cfg.AdminSubjects {
 		accounts.Admins[s] = true

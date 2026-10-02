@@ -38,6 +38,20 @@ func encodeAcceptInviteRequest(
 	return nil
 }
 
+func encodeConfirmTwoStepRequest(
+	req *TwoStepCode,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateAccountInviteRequest(
 	req *AccountInviteRequest,
 	r *http.Request,
@@ -206,6 +220,20 @@ func encodeCreateShopRequest(
 	return nil
 }
 
+func encodeDisableTwoStepRequest(
+	req *TwoStepCode,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeFinishOidcRequest(
 	req *OidcCallback,
 	r *http.Request,
@@ -222,6 +250,20 @@ func encodeFinishOidcRequest(
 
 func encodeLinkOidcAccountRequest(
 	req *OidcAccountLink,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePassTwoStepRequest(
+	req *TwoStepAnswer,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -306,6 +348,20 @@ func encodePreviewSightRequest(
 
 func encodeRequestSignInLinkRequest(
 	req *SignInLinkRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeResetRecoveryCodesRequest(
+	req *TwoStepCode,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

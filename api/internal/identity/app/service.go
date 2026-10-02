@@ -27,7 +27,7 @@ type Repository interface {
 	InviteByToken(ctx context.Context, tokenHash []byte) (domain.Invite, error)
 	UseInvite(ctx context.Context, id uuid.UUID, account domain.AccountID, now time.Time) (bool, error)
 	InsertSession(ctx context.Context, s domain.Session, tokenHash []byte, now time.Time) error
-	SessionSubject(ctx context.Context, tokenHash []byte, now time.Time) (uuid.UUID, string, bool, error)
+	SessionSubject(ctx context.Context, tokenHash []byte, now time.Time) (domain.LiveSession, error)
 	TouchSession(ctx context.Context, id uuid.UUID, now time.Time) error
 	RevokeSession(ctx context.Context, tokenHash []byte, now time.Time) error
 	InsertSignInLink(ctx context.Context, tokenHash []byte, account domain.AccountID, now, expires time.Time) error
@@ -36,6 +36,7 @@ type Repository interface {
 	UpdateProfile(ctx context.Context, id domain.AccountID, p domain.ProfileChange) error
 	SetAdmin(ctx context.Context, id domain.AccountID, admin bool) error
 	OIDCRepository
+	TwoStepRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
@@ -66,17 +67,21 @@ type Service struct {
 	OIDC      Provider
 	Grant     string
 	AdminRole string
+	// Strong reports whether a request's session holds Admin powers: it passed a second step, came from
+	// the external login, or the platform vouched for it.
+	Strong func(context.Context) bool
 }
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]{2,31}$`)
 
-// IsAdmin reports whether a subject may use Admin powers.
+// IsAdmin reports whether a subject may use Admin powers in this request: an Admin Account needs a
+// strong session, so two-step sign-in guards a password.
 func (s *Service) IsAdmin(ctx context.Context, subject string) bool {
 	if s.Admins[subject] {
 		return true
 	}
 	a, err := s.Repo.AccountBySubject(ctx, subject)
-	return err == nil && a.Admin && !a.Disabled
+	return err == nil && a.Admin && !a.Disabled && s.Strong != nil && s.Strong(ctx)
 }
 
 // CreateInvite makes an Account Invite that expires after so many hours, for an Admin; only an Admin's
@@ -138,7 +143,7 @@ func (s *Service) Accept(ctx context.Context, token string, in domain.Setup, use
 		if used, err := r.UseInvite(ctx, inv.ID, id, now); err != nil || !used {
 			return firstErr(err, domain.ErrExpired)
 		}
-		session, err = startSession(ctx, r, id, userAgent, now)
+		session, err = startSession(ctx, r, id, userAgent, now, false)
 		return err
 	})
 	return out, session, err
@@ -184,22 +189,21 @@ func cleanProfile(in domain.ProfileChange) (domain.ProfileChange, error) {
 // dummyHash keeps a sign-in with an unknown Username as slow as one with a wrong password.
 const dummyHash = "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$4m0gQ8Rk1dG8F0bD1yV3c3lnQ1hQ3m5u1n2dQ3lB9w0"
 
-// SignIn checks a Username and password and signs the Account in, returning the session token. Every
-// failure looks the same.
-func (s *Service) SignIn(ctx context.Context, username, password, userAgent string) (domain.Account, string, error) {
+// SignIn checks a Username and password. It signs the Account in, or asks for the second step when
+// two-step is on. Every failure looks the same.
+func (s *Service) SignIn(ctx context.Context, username, password, userAgent string) (domain.SignedIn, error) {
 	a, hash, err := s.Repo.AccountByUsername(ctx, strings.ToLower(strings.TrimSpace(username)))
 	if err != nil || hash == "" {
 		s.Passwords.Verify(password, dummyHash)
-		return domain.Account{}, "", domain.ErrUnauthenticated
+		return domain.SignedIn{}, domain.ErrUnauthenticated
 	}
 	if !s.Passwords.Verify(password, hash) || a.Disabled {
-		return domain.Account{}, "", domain.ErrUnauthenticated
+		return domain.SignedIn{}, domain.ErrUnauthenticated
 	}
-	session, err := startSession(ctx, s.Repo, a.ID, userAgent, s.Now())
-	return a, session, err
+	return s.firstStep(ctx, a, userAgent)
 }
 
-func startSession(ctx context.Context, r Repository, account domain.AccountID, userAgent string, now time.Time) (string, error) {
+func startSession(ctx context.Context, r Repository, account domain.AccountID, userAgent string, now time.Time, strong bool) (string, error) {
 	token, hash, err := newToken()
 	if err != nil {
 		return "", err
@@ -208,7 +212,7 @@ func startSession(ctx context.Context, r Repository, account domain.AccountID, u
 	if len(ua) > 300 {
 		ua = ua[:300]
 	}
-	s := domain.Session{ID: uuid.New(), Account: account, UserAgent: ua, ExpiresAt: now.Add(SessionTTL)}
+	s := domain.Session{ID: uuid.New(), Account: account, UserAgent: ua, ExpiresAt: now.Add(SessionTTL), Strong: strong}
 	return token, r.InsertSession(ctx, s, hash, now)
 }
 
@@ -217,15 +221,16 @@ func (s *Service) SignOut(ctx context.Context, token string) error {
 	return s.Repo.RevokeSession(ctx, HashToken(token), s.Now())
 }
 
-// Resolve finds the subject a session token signs in, refusing disabled Accounts.
-func (s *Service) Resolve(ctx context.Context, token string) (string, bool) {
+// Resolve finds the subject a session token signs in and whether the session is strong, refusing
+// disabled Accounts.
+func (s *Service) Resolve(ctx context.Context, token string) (string, bool, bool) {
 	now := s.Now()
-	id, subject, disabled, err := s.Repo.SessionSubject(ctx, HashToken(token), now)
-	if err != nil || disabled {
-		return "", false
+	live, err := s.Repo.SessionSubject(ctx, HashToken(token), now)
+	if err != nil || live.Disabled {
+		return "", false, false
 	}
-	_ = s.Repo.TouchSession(ctx, id, now)
-	return subject, true
+	_ = s.Repo.TouchSession(ctx, live.ID, now)
+	return live.Subject, live.Strong, true
 }
 
 // RequestLink emails an Account's holder a sign-in link, if an Account has that email. It never says
@@ -248,19 +253,17 @@ func (s *Service) RequestLink(ctx context.Context, email string) error {
 	return s.Mailer.Send(ctx, a.Email, "Your Grimoire sign-in link", body)
 }
 
-// UseLink signs in with an emailed link, once, returning the session token.
-func (s *Service) UseLink(ctx context.Context, token, userAgent string) (domain.Account, string, error) {
-	now := s.Now()
-	id, err := s.Repo.UseSignInLink(ctx, HashToken(token), now)
+// UseLink signs in with an emailed link, once, or asks for the second step when two-step is on.
+func (s *Service) UseLink(ctx context.Context, token, userAgent string) (domain.SignedIn, error) {
+	id, err := s.Repo.UseSignInLink(ctx, HashToken(token), s.Now())
 	if err != nil {
-		return domain.Account{}, "", domain.ErrExpired
+		return domain.SignedIn{}, domain.ErrExpired
 	}
 	a, err := s.Repo.AccountByID(ctx, id)
 	if err != nil || a.Disabled {
-		return domain.Account{}, "", domain.ErrExpired
+		return domain.SignedIn{}, domain.ErrExpired
 	}
-	session, err := startSession(ctx, s.Repo, a.ID, userAgent, now)
-	return a, session, err
+	return s.firstStep(ctx, a, userAgent)
 }
 
 // Me reads the Account a subject signs in as, with how it signs in.
@@ -273,9 +276,12 @@ func (s *Service) Me(ctx context.Context, subject string) (domain.Profile, error
 }
 
 func (s *Service) profile(ctx context.Context, a domain.Account) (domain.Profile, error) {
-	p := domain.Profile{Account: a, HasPassword: false, Link: nil}
+	p := domain.Profile{Account: a, HasPassword: false, Link: nil, TwoStep: false, RecoveryCodesLeft: 0, AdminPowers: s.IsAdmin(ctx, a.Subject)}
 	var err error
 	if p.HasPassword, err = s.Repo.HasPassword(ctx, a.ID); err != nil {
+		return p, err
+	}
+	if p.TwoStep, p.RecoveryCodesLeft, err = s.twoStepOf(ctx, a.ID); err != nil {
 		return p, err
 	}
 	link, err := s.Repo.LinkOf(ctx, a.ID)

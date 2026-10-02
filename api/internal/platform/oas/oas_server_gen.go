@@ -20,12 +20,25 @@ type Handler interface {
 	//
 	// POST /api/v1/invites/accept
 	AcceptInvite(ctx context.Context, req *InviteAccept) (AcceptInviteRes, error)
+	// BeginTwoStep implements beginTwoStep operation.
+	//
+	// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
+	// on.
+	//
+	// POST /api/v1/account/two-step
+	BeginTwoStep(ctx context.Context) (BeginTwoStepRes, error)
 	// ClearTokenIcon implements clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// ConfirmTwoStep implements confirmTwoStep operation.
+	//
+	// Checks a first code from the app and returns the recovery codes, shown only now.
+	//
+	// POST /api/v1/account/two-step/confirm
+	ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error)
 	// CreateAccountInvite implements createAccountInvite operation.
 	//
 	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
@@ -160,6 +173,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// DisableTwoStep implements disableTwoStep operation.
+	//
+	// Needs a current code or a recovery code; the recovery codes go too.
+	//
+	// POST /api/v1/account/two-step/disable
+	DisableTwoStep(ctx context.Context, req *TwoStepCode) (DisableTwoStepRes, error)
 	// EndSession implements endSession operation.
 	//
 	// Ends a live Session and disconnects everyone. DM only.
@@ -472,6 +491,13 @@ type Handler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PassTwoStep implements passTwoStep operation.
+	//
+	// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+	// and five wrong codes.
+	//
+	// POST /api/v1/sign-in/two-step
+	PassTwoStep(ctx context.Context, req *TwoStepAnswer) (PassTwoStepRes, error)
 	// PreviewAccountInvite implements previewAccountInvite operation.
 	//
 	// Whether an invite link can still set up an Account; gone once used or expired.
@@ -521,6 +547,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
 	RerollStock(ctx context.Context, params RerollStockParams) (RerollStockRes, error)
+	// ResetRecoveryCodes implements resetRecoveryCodes operation.
+	//
+	// Needs a current code; the old recovery codes stop working.
+	//
+	// POST /api/v1/account/two-step/recovery-codes
+	ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (ResetRecoveryCodesRes, error)
 	// RestoreEncounterPoolRevision implements restoreEncounterPoolRevision operation.
 	//
 	// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a

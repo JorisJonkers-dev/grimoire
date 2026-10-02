@@ -36,7 +36,9 @@ func findAuthorization(h http.Header, prefix string) (string, bool) {
 // operationRolesForwardAuth is a private map storing roles per operation.
 var operationRolesForwardAuth = map[string][]string{
 	AcceptInviteOperation:                  []string{},
+	BeginTwoStepOperation:                  []string{},
 	ClearTokenIconOperation:                []string{},
+	ConfirmTwoStepOperation:                []string{},
 	CreateAccountInviteOperation:           []string{},
 	CreateCampaignOperation:                []string{},
 	CreateCharacterOperation:               []string{},
@@ -58,6 +60,7 @@ var operationRolesForwardAuth = map[string][]string{
 	DeleteSettlementOperation:              []string{},
 	DeleteShopOperation:                    []string{},
 	DiffNpcRevisionsOperation:              []string{},
+	DisableTwoStepOperation:                []string{},
 	EndSessionOperation:                    []string{},
 	GetAccountOperation:                    []string{},
 	GetActionLogOperation:                  []string{},
@@ -110,6 +113,7 @@ var operationRolesForwardAuth = map[string][]string{
 	PreviewSightOperation:                  []string{},
 	RemoveMemberOperation:                  []string{},
 	RerollStockOperation:                   []string{},
+	ResetRecoveryCodesOperation:            []string{},
 	RestoreEncounterPoolRevisionOperation:  []string{},
 	RestoreEncounterTableRevisionOperation: []string{},
 	RestoreLootTableRevisionOperation:      []string{},

@@ -28,11 +28,11 @@ SELECT id, created_by, admin, created_at, expires_at, used_at FROM identity.invi
 UPDATE identity.invites SET used_at = @now, account_id = @account_id WHERE id = @id AND used_at IS NULL AND expires_at > @now;
 
 -- name: InsertAccountSession :exec
-INSERT INTO identity.account_sessions (id, account_id, token_hash, user_agent, created_at, last_seen_at, expires_at)
-VALUES (@id, @account_id, @token_hash, @user_agent, @now, @now, @expires_at);
+INSERT INTO identity.account_sessions (id, account_id, token_hash, user_agent, created_at, last_seen_at, expires_at, strong)
+VALUES (@id, @account_id, @token_hash, @user_agent, @now, @now, @expires_at, @strong);
 
 -- name: SessionAccount :one
-SELECT s.id, a.subject, a.disabled FROM identity.account_sessions s JOIN identity.accounts a ON a.id = s.account_id
+SELECT s.id, a.subject, a.disabled, s.strong FROM identity.account_sessions s JOIN identity.accounts a ON a.id = s.account_id
 WHERE s.token_hash = @token_hash AND s.revoked_at IS NULL AND s.expires_at > @now;
 
 -- name: TouchAccountSession :exec
@@ -87,3 +87,46 @@ VALUES (@token_hash, @issuer, @subject, @email, @username, @name, @admin, @now, 
 -- name: UseOIDCPending :one
 UPDATE identity.oidc_pending SET used_at = @now WHERE token_hash = @token_hash AND used_at IS NULL AND expires_at > @now
 RETURNING issuer, subject, email, username, name, admin;
+
+-- name: StrengthenSession :exec
+UPDATE identity.account_sessions SET strong = true WHERE token_hash = @token_hash AND account_id = @account_id;
+
+-- name: StartTOTP :execrows
+INSERT INTO identity.totp_factors (account_id, secret, created_at) VALUES (@account_id, @secret, @now)
+ON CONFLICT (account_id) DO UPDATE SET secret = EXCLUDED.secret, created_at = EXCLUDED.created_at
+WHERE identity.totp_factors.confirmed_at IS NULL;
+
+-- name: TOTPFactor :one
+SELECT secret, confirmed_at, last_step FROM identity.totp_factors WHERE account_id = @account_id;
+
+-- name: ConfirmTOTP :execrows
+UPDATE identity.totp_factors SET confirmed_at = @now, last_step = @step WHERE account_id = @account_id AND confirmed_at IS NULL;
+
+-- name: UseTOTPStep :execrows
+UPDATE identity.totp_factors SET last_step = @step WHERE account_id = @account_id AND confirmed_at IS NOT NULL AND last_step < @step;
+
+-- name: DeleteTOTP :exec
+DELETE FROM identity.totp_factors WHERE account_id = @account_id;
+
+-- name: DeleteRecoveryCodes :exec
+DELETE FROM identity.recovery_codes WHERE account_id = @account_id;
+
+-- name: InsertRecoveryCode :exec
+INSERT INTO identity.recovery_codes (code_hash, account_id) VALUES (@code_hash, @account_id);
+
+-- name: UseRecoveryCode :execrows
+UPDATE identity.recovery_codes SET used_at = @now WHERE code_hash = @code_hash AND account_id = @account_id AND used_at IS NULL;
+
+-- name: RecoveryCodesLeft :one
+SELECT count(*)::integer AS left_count FROM identity.recovery_codes WHERE account_id = @account_id AND used_at IS NULL;
+
+-- name: InsertTwoStepChallenge :exec
+INSERT INTO identity.two_step_challenges (token_hash, account_id, created_at, expires_at) VALUES (@token_hash, @account_id, @now, @expires_at);
+
+-- name: TryTwoStepChallenge :one
+UPDATE identity.two_step_challenges SET attempts = attempts + 1
+WHERE token_hash = @token_hash AND used_at IS NULL AND expires_at > @now AND attempts < @max_attempts::integer
+RETURNING account_id;
+
+-- name: UseTwoStepChallenge :exec
+UPDATE identity.two_step_challenges SET used_at = @now WHERE token_hash = @token_hash;

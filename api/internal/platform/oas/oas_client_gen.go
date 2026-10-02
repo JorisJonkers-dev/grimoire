@@ -42,12 +42,25 @@ type Invoker interface {
 	//
 	// POST /api/v1/invites/accept
 	AcceptInvite(ctx context.Context, request *InviteAccept) (AcceptInviteRes, error)
+	// BeginTwoStep invokes beginTwoStep operation.
+	//
+	// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
+	// on.
+	//
+	// POST /api/v1/account/two-step
+	BeginTwoStep(ctx context.Context) (BeginTwoStepRes, error)
 	// ClearTokenIcon invokes clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// ConfirmTwoStep invokes confirmTwoStep operation.
+	//
+	// Checks a first code from the app and returns the recovery codes, shown only now.
+	//
+	// POST /api/v1/account/two-step/confirm
+	ConfirmTwoStep(ctx context.Context, request *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error)
 	// CreateAccountInvite invokes createAccountInvite operation.
 	//
 	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
@@ -182,6 +195,12 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// DisableTwoStep invokes disableTwoStep operation.
+	//
+	// Needs a current code or a recovery code; the recovery codes go too.
+	//
+	// POST /api/v1/account/two-step/disable
+	DisableTwoStep(ctx context.Context, request *TwoStepCode) (DisableTwoStepRes, error)
 	// EndSession invokes endSession operation.
 	//
 	// Ends a live Session and disconnects everyone. DM only.
@@ -494,6 +513,13 @@ type Invoker interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PassTwoStep invokes passTwoStep operation.
+	//
+	// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+	// and five wrong codes.
+	//
+	// POST /api/v1/sign-in/two-step
+	PassTwoStep(ctx context.Context, request *TwoStepAnswer) (PassTwoStepRes, error)
 	// PreviewAccountInvite invokes previewAccountInvite operation.
 	//
 	// Whether an invite link can still set up an Account; gone once used or expired.
@@ -543,6 +569,12 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
 	RerollStock(ctx context.Context, params RerollStockParams) (RerollStockRes, error)
+	// ResetRecoveryCodes invokes resetRecoveryCodes operation.
+	//
+	// Needs a current code; the old recovery codes stop working.
+	//
+	// POST /api/v1/account/two-step/recovery-codes
+	ResetRecoveryCodes(ctx context.Context, request *TwoStepCode) (ResetRecoveryCodesRes, error)
 	// RestoreEncounterPoolRevision invokes restoreEncounterPoolRevision operation.
 	//
 	// Brings the Encounter Pool back to a Revision, recreating it if deleted; the restore is itself a
@@ -997,6 +1029,120 @@ func (c *Client) sendAcceptInvite(ctx context.Context, request *InviteAccept) (r
 	return result, nil
 }
 
+// BeginTwoStep invokes beginTwoStep operation.
+//
+// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
+// on.
+//
+// POST /api/v1/account/two-step
+func (c *Client) BeginTwoStep(ctx context.Context) (BeginTwoStepRes, error) {
+	res, err := c.sendBeginTwoStep(ctx)
+	return res, err
+}
+
+func (c *Client) sendBeginTwoStep(ctx context.Context) (res BeginTwoStepRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("beginTwoStep"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/account/two-step"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, BeginTwoStepOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/two-step"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, BeginTwoStepOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeBeginTwoStepResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ClearTokenIcon invokes clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -1147,6 +1293,141 @@ func (c *Client) sendClearTokenIcon(ctx context.Context, params ClearTokenIconPa
 
 	stage = "DecodeResponse"
 	result, err := decodeClearTokenIconResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ConfirmTwoStep invokes confirmTwoStep operation.
+//
+// Checks a first code from the app and returns the recovery codes, shown only now.
+//
+// POST /api/v1/account/two-step/confirm
+func (c *Client) ConfirmTwoStep(ctx context.Context, request *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error) {
+	res, err := c.sendConfirmTwoStep(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendConfirmTwoStep(ctx context.Context, request *TwoStepCode, params ConfirmTwoStepParams) (res ConfirmTwoStepRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("confirmTwoStep"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/account/two-step/confirm"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ConfirmTwoStepOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/two-step/confirm"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeConfirmTwoStepRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "EncodeCookieParams"
+	cookie := uri.NewCookieEncoder(r)
+	{
+		// Encode "grimoire_session" parameter.
+		cfg := uri.CookieParameterEncodingConfig{
+			Name:    "grimoire_session",
+			Explode: true,
+		}
+
+		if err := cookie.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.GrimoireSession.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode cookie")
+		}
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ConfirmTwoStepOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeConfirmTwoStepResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -4234,6 +4515,122 @@ func (c *Client) sendDiffNpcRevisions(ctx context.Context, params DiffNpcRevisio
 
 	stage = "DecodeResponse"
 	result, err := decodeDiffNpcRevisionsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// DisableTwoStep invokes disableTwoStep operation.
+//
+// Needs a current code or a recovery code; the recovery codes go too.
+//
+// POST /api/v1/account/two-step/disable
+func (c *Client) DisableTwoStep(ctx context.Context, request *TwoStepCode) (DisableTwoStepRes, error) {
+	res, err := c.sendDisableTwoStep(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendDisableTwoStep(ctx context.Context, request *TwoStepCode) (res DisableTwoStepRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("disableTwoStep"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/account/two-step/disable"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, DisableTwoStepOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/two-step/disable"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeDisableTwoStepRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, DisableTwoStepOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeDisableTwoStepResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -11546,6 +11943,90 @@ func (c *Client) sendListSpells(ctx context.Context, params ListSpellsParams) (r
 	return result, nil
 }
 
+// PassTwoStep invokes passTwoStep operation.
+//
+// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+// and five wrong codes.
+//
+// POST /api/v1/sign-in/two-step
+func (c *Client) PassTwoStep(ctx context.Context, request *TwoStepAnswer) (PassTwoStepRes, error) {
+	res, err := c.sendPassTwoStep(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendPassTwoStep(ctx context.Context, request *TwoStepAnswer) (res PassTwoStepRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("passTwoStep"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/sign-in/two-step"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, PassTwoStepOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/sign-in/two-step"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePassTwoStepRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodePassTwoStepResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // PreviewAccountInvite invokes previewAccountInvite operation.
 //
 // Whether an invite link can still set up an Account; gone once used or expired.
@@ -12505,6 +12986,122 @@ func (c *Client) sendRerollStock(ctx context.Context, params RerollStockParams) 
 
 	stage = "DecodeResponse"
 	result, err := decodeRerollStockResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ResetRecoveryCodes invokes resetRecoveryCodes operation.
+//
+// Needs a current code; the old recovery codes stop working.
+//
+// POST /api/v1/account/two-step/recovery-codes
+func (c *Client) ResetRecoveryCodes(ctx context.Context, request *TwoStepCode) (ResetRecoveryCodesRes, error) {
+	res, err := c.sendResetRecoveryCodes(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendResetRecoveryCodes(ctx context.Context, request *TwoStepCode) (res ResetRecoveryCodesRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("resetRecoveryCodes"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/account/two-step/recovery-codes"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ResetRecoveryCodesOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/two-step/recovery-codes"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeResetRecoveryCodesRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ResetRecoveryCodesOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeResetRecoveryCodesResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

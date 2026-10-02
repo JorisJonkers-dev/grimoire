@@ -128,18 +128,18 @@ func (s *Store) UseInvite(ctx context.Context, id uuid.UUID, account domain.Acco
 // InsertSession stores a signed-in device under its token's hash.
 func (s *Store) InsertSession(ctx context.Context, ses domain.Session, tokenHash []byte, now time.Time) error {
 	return s.q.InsertAccountSession(ctx, queries.InsertAccountSessionParams{
-		ID: ses.ID, AccountID: ses.Account, TokenHash: tokenHash, UserAgent: ses.UserAgent, Now: now, ExpiresAt: ses.ExpiresAt,
+		ID: ses.ID, AccountID: ses.Account, TokenHash: tokenHash, UserAgent: ses.UserAgent, Now: now, ExpiresAt: ses.ExpiresAt, Strong: ses.Strong,
 	})
 }
 
-// SessionSubject reads the live session a token belongs to: its id, its Account's subject, and
-// whether that Account is disabled.
-func (s *Store) SessionSubject(ctx context.Context, tokenHash []byte, now time.Time) (uuid.UUID, string, bool, error) {
+// SessionSubject reads the live session a token belongs to: its id, its Account's subject, whether
+// that Account is disabled, and whether the session is strong.
+func (s *Store) SessionSubject(ctx context.Context, tokenHash []byte, now time.Time) (domain.LiveSession, error) {
 	r, err := s.q.SessionAccount(ctx, queries.SessionAccountParams{TokenHash: tokenHash, Now: now})
 	if err != nil {
-		return uuid.Nil, "", false, notFound(err)
+		return domain.LiveSession{}, notFound(err)
 	}
-	return r.ID, r.Subject, r.Disabled, nil
+	return domain.LiveSession{ID: r.ID, Subject: r.Subject, Disabled: r.Disabled, Strong: r.Strong}, nil
 }
 
 // TouchSession records that a session was used, at most once a minute.

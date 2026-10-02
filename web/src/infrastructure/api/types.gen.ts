@@ -143,7 +143,53 @@ export type Account = {
      * Whether the Account can sign in with a password.
      */
     hasPassword: boolean;
+    /**
+     * Whether two-step sign-in is on.
+     */
+    twoStep: boolean;
+    recoveryCodesLeft: number;
+    /**
+     * Whether this request holds Admin powers; an Admin needs two-step or the external login.
+     */
+    adminPowers: boolean;
     oidc?: OidcLink;
+};
+
+/**
+ * A sign-in waiting for its second step.
+ */
+export type TwoStepChallenge = {
+    challenge: string;
+};
+
+/**
+ * A challenge and the code that answers it, from the authenticator app or a recovery code.
+ */
+export type TwoStepAnswer = {
+    challenge: string;
+    code: string;
+};
+
+/**
+ * A code from the authenticator app or a recovery code.
+ */
+export type TwoStepCode = {
+    code: string;
+};
+
+/**
+ * A new authenticator secret and the otpauth URI that adds it to an app.
+ */
+export type TwoStepSetup = {
+    secret: string;
+    uri: string;
+};
+
+/**
+ * Recovery codes, each good once; shown only when made.
+ */
+export type RecoveryCodes = {
+    codes: Array<string>;
 };
 
 /**
@@ -6159,9 +6205,42 @@ export type SignInResponses = {
      * The Account, signed in.
      */
     200: Account;
+    /**
+     * Two-step is on; answer the challenge with a code.
+     */
+    202: TwoStepChallenge;
 };
 
 export type SignInResponse = SignInResponses[keyof SignInResponses];
+
+export type PassTwoStepData = {
+    body: TwoStepAnswer;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in/two-step';
+};
+
+export type PassTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PassTwoStepError = PassTwoStepErrors[keyof PassTwoStepErrors];
+
+export type PassTwoStepResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+};
+
+export type PassTwoStepResponse = PassTwoStepResponses[keyof PassTwoStepResponses];
 
 export type SignOutData = {
     body?: never;
@@ -6244,6 +6323,10 @@ export type UseSignInLinkResponses = {
      * The Account, signed in.
      */
     200: Account;
+    /**
+     * Two-step is on; answer the challenge with a code.
+     */
+    202: TwoStepChallenge;
 };
 
 export type UseSignInLinkResponse = UseSignInLinkResponses[keyof UseSignInLinkResponses];
@@ -6537,6 +6620,122 @@ export type StartOidcLinkResponses = {
 };
 
 export type StartOidcLinkResponse = StartOidcLinkResponses[keyof StartOidcLinkResponses];
+
+export type BeginTwoStepData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step';
+};
+
+export type BeginTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type BeginTwoStepError = BeginTwoStepErrors[keyof BeginTwoStepErrors];
+
+export type BeginTwoStepResponses = {
+    /**
+     * The secret and the URI an authenticator app scans.
+     */
+    201: TwoStepSetup;
+};
+
+export type BeginTwoStepResponse = BeginTwoStepResponses[keyof BeginTwoStepResponses];
+
+export type ConfirmTwoStepData = {
+    body: TwoStepCode;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step/confirm';
+};
+
+export type ConfirmTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ConfirmTwoStepError = ConfirmTwoStepErrors[keyof ConfirmTwoStepErrors];
+
+export type ConfirmTwoStepResponses = {
+    /**
+     * The recovery codes.
+     */
+    200: RecoveryCodes;
+};
+
+export type ConfirmTwoStepResponse = ConfirmTwoStepResponses[keyof ConfirmTwoStepResponses];
+
+export type DisableTwoStepData = {
+    body: TwoStepCode;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step/disable';
+};
+
+export type DisableTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DisableTwoStepError = DisableTwoStepErrors[keyof DisableTwoStepErrors];
+
+export type DisableTwoStepResponses = {
+    /**
+     * Two-step is off.
+     */
+    204: void;
+};
+
+export type DisableTwoStepResponse = DisableTwoStepResponses[keyof DisableTwoStepResponses];
+
+export type ResetRecoveryCodesData = {
+    body: TwoStepCode;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step/recovery-codes';
+};
+
+export type ResetRecoveryCodesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ResetRecoveryCodesError = ResetRecoveryCodesErrors[keyof ResetRecoveryCodesErrors];
+
+export type ResetRecoveryCodesResponses = {
+    /**
+     * The new recovery codes.
+     */
+    200: RecoveryCodes;
+};
+
+export type ResetRecoveryCodesResponse = ResetRecoveryCodesResponses[keyof ResetRecoveryCodesResponses];
 
 export type GetHealthData = {
     body?: never;

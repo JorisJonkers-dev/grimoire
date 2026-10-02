@@ -5,12 +5,22 @@ import (
 	"net/http"
 )
 
-// SessionResolver finds the subject a session token signs in.
+// SessionResolver finds the subject a session token signs in, and whether the session is strong.
 type SessionResolver interface {
-	Resolve(ctx context.Context, token string) (string, bool)
+	Resolve(ctx context.Context, token string) (string, bool, bool)
 }
 
-type userAgentKey struct{}
+type (
+	userAgentKey struct{}
+	strongKey    struct{}
+)
+
+// Strong reports whether a request's identity is strong: a session that passed a second step or came
+// from the external login, or an identity the platform's forward-auth set.
+func Strong(ctx context.Context) bool {
+	strong, _ := ctx.Value(strongKey{}).(bool)
+	return strong
+}
 
 // UserAgent is the User-Agent of the request a context belongs to.
 func UserAgent(ctx context.Context) string {
@@ -25,11 +35,14 @@ func Sessions(cookie string, resolver SessionResolver, trustForwardAuth bool, ne
 		if !trustForwardAuth {
 			r.Header.Del(IdentityHeader)
 		}
-		if c, err := r.Cookie(cookie); err == nil && c.Value != "" && r.Header.Get(IdentityHeader) == "" {
-			if subject, ok := resolver.Resolve(r.Context(), c.Value); ok {
+		strong := r.Header.Get(IdentityHeader) != ""
+		if c, err := r.Cookie(cookie); err == nil && c.Value != "" && !strong {
+			if subject, s, ok := resolver.Resolve(r.Context(), c.Value); ok {
 				r.Header.Set(IdentityHeader, subject)
+				strong = s
 			}
 		}
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), userAgentKey{}, r.UserAgent())))
+		ctx := context.WithValue(context.WithValue(r.Context(), userAgentKey{}, r.UserAgent()), strongKey{}, strong)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

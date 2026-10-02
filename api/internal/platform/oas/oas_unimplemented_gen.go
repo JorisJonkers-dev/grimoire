@@ -31,12 +31,31 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 	return r, ht.ErrNotImplemented
 }
 
+// BeginTwoStep implements beginTwoStep operation.
+//
+// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
+// on.
+//
+// POST /api/v1/account/two-step
+func (UnimplementedHandler) BeginTwoStep(ctx context.Context) (r BeginTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ClearTokenIcon implements clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 //
 // DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (r ClearTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ConfirmTwoStep implements confirmTwoStep operation.
+//
+// Checks a first code from the app and returns the recovery codes, shown only now.
+//
+// POST /api/v1/account/two-step/confirm
+func (UnimplementedHandler) ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (r ConfirmTwoStepRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -237,6 +256,15 @@ func (UnimplementedHandler) DeleteShop(ctx context.Context, params DeleteShopPar
 //
 // GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (r DiffNpcRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DisableTwoStep implements disableTwoStep operation.
+//
+// Needs a current code or a recovery code; the recovery codes go too.
+//
+// POST /api/v1/account/two-step/disable
+func (UnimplementedHandler) DisableTwoStep(ctx context.Context, req *TwoStepCode) (r DisableTwoStepRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -705,6 +733,16 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// PassTwoStep implements passTwoStep operation.
+//
+// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+// and five wrong codes.
+//
+// POST /api/v1/sign-in/two-step
+func (UnimplementedHandler) PassTwoStep(ctx context.Context, req *TwoStepAnswer) (r PassTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewAccountInvite implements previewAccountInvite operation.
 //
 // Whether an invite link can still set up an Account; gone once used or expired.
@@ -775,6 +813,15 @@ func (UnimplementedHandler) RequestSignInLink(ctx context.Context, req *SignInLi
 //
 // POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
 func (UnimplementedHandler) RerollStock(ctx context.Context, params RerollStockParams) (r RerollStockRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ResetRecoveryCodes implements resetRecoveryCodes operation.
+//
+// Needs a current code; the old recovery codes stop working.
+//
+// POST /api/v1/account/two-step/recovery-codes
+func (UnimplementedHandler) ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (r ResetRecoveryCodesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

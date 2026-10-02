@@ -204,9 +204,13 @@ func TestOIDCPermissionAndAdmin(t *testing.T) {
 		t.Fatalf("the password still works: %d", rec.Code)
 	}
 	l.Roles = []string{"admin"}
-	signedIn := outcome(t, login(t, public, issuer, "/api/v1/oidc/sign-ins", "", l), "signed_in")
+	rec := login(t, public, issuer, "/api/v1/oidc/sign-ins", "", l)
+	signedIn := outcome(t, rec, "signed_in")
 	if a, _ := signedIn["account"].(map[string]any); a["admin"] != true {
 		t.Fatalf("the admin role = %v", signedIn)
+	}
+	if rec := send(public, http.MethodPost, "/api/v1/admin/account-invites", session(t, rec), "", `{"hours":1}`); rec.Code != http.StatusCreated {
+		t.Fatalf("an Admin signed in externally invites: %d", rec.Code)
 	}
 }
 

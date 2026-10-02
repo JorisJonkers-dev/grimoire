@@ -15,15 +15,17 @@ var errBoom = errors.New("boom")
 
 // fakeRepo answers from memory; fail names the one call that errors.
 type fakeRepo struct {
-	fail     string
-	account  domain.Account
-	hash     string
-	invite   domain.Invite
-	reused   bool
-	linkedTo domain.AccountID
-	nonce    string
-	linkFor  *domain.AccountID
-	unlinked bool
+	fail      string
+	account   domain.Account
+	hash      string
+	invite    domain.Invite
+	reused    bool
+	linkedTo  domain.AccountID
+	nonce     string
+	linkFor   *domain.AccountID
+	unlinked  bool
+	secret    string
+	confirmed bool
 }
 
 func (f *fakeRepo) err(call string) error {
@@ -73,8 +75,8 @@ func (f *fakeRepo) InsertSession(context.Context, domain.Session, []byte, time.T
 	return f.err("insert session")
 }
 
-func (f *fakeRepo) SessionSubject(context.Context, []byte, time.Time) (uuid.UUID, string, bool, error) {
-	return uuid.Nil, f.account.Subject, f.account.Disabled, f.err("session")
+func (f *fakeRepo) SessionSubject(context.Context, []byte, time.Time) (domain.LiveSession, error) {
+	return domain.LiveSession{Subject: f.account.Subject, Disabled: f.account.Disabled}, f.err("session")
 }
 
 func (f *fakeRepo) TouchSession(context.Context, uuid.UUID, time.Time) error { return nil }
@@ -138,6 +140,55 @@ func (f *fakeRepo) UsePending(context.Context, []byte, time.Time) (domain.Claims
 	return domain.Claims{Subject: "estate", Email: "a@b.c"}, true, f.err("use pending")
 }
 
+func (f *fakeRepo) StartTOTP(context.Context, domain.AccountID, string, time.Time) (bool, error) {
+	return !f.confirmed, f.err("start totp")
+}
+
+func (f *fakeRepo) TOTPFactor(context.Context, domain.AccountID) (string, bool, error) {
+	if f.secret == "" && f.fail != "totp" {
+		return "", false, domain.ErrNotFound
+	}
+	return f.secret, f.confirmed, f.err("totp")
+}
+
+func (f *fakeRepo) ConfirmTOTP(context.Context, domain.AccountID, int64, time.Time) (bool, error) {
+	return true, f.err("confirm totp")
+}
+
+func (f *fakeRepo) UseTOTPStep(context.Context, domain.AccountID, int64) (bool, error) {
+	return true, f.err("use step")
+}
+
+func (f *fakeRepo) DeleteTOTP(context.Context, domain.AccountID) error { return f.err("delete totp") }
+
+func (f *fakeRepo) ReplaceRecoveryCodes(context.Context, domain.AccountID, [][]byte) error {
+	return f.err("replace codes")
+}
+
+func (f *fakeRepo) UseRecoveryCode(context.Context, domain.AccountID, []byte, time.Time) (bool, error) {
+	return true, f.err("use code")
+}
+
+func (f *fakeRepo) RecoveryCodesLeft(context.Context, domain.AccountID) (int, error) {
+	return 10, f.err("codes left")
+}
+
+func (f *fakeRepo) InsertChallenge(context.Context, []byte, domain.AccountID, time.Time, time.Time) error {
+	return f.err("insert challenge")
+}
+
+func (f *fakeRepo) TryChallenge(context.Context, []byte, time.Time, int) (domain.AccountID, error) {
+	return f.account.ID, f.err("try challenge")
+}
+
+func (f *fakeRepo) UseChallenge(context.Context, []byte, time.Time) error {
+	return f.err("use challenge")
+}
+
+func (f *fakeRepo) StrengthenSession(context.Context, []byte, domain.AccountID) error {
+	return f.err("strengthen")
+}
+
 func (f *fakeRepo) InTx(_ context.Context, fn func(Repository) error) error { return fn(f) }
 
 type failingMail struct{}
@@ -186,10 +237,10 @@ func TestServiceErrorPaths(t *testing.T) {
 	if err := service(&fakeRepo{account: domain.Account{Disabled: true}}).RequestLink(ctx, "a@b.c"); err != nil {
 		t.Errorf("a disabled Account gets no link = %v", err)
 	}
-	if _, _, err := service(&fakeRepo{account: domain.Account{Disabled: true}}).UseLink(ctx, "x", "ua"); !errors.Is(err, domain.ErrExpired) {
+	if _, err := service(&fakeRepo{account: domain.Account{Disabled: true}}).UseLink(ctx, "x", "ua"); !errors.Is(err, domain.ErrExpired) {
 		t.Errorf("a disabled Account's link = %v", err)
 	}
-	if _, ok := service(&fakeRepo{account: domain.Account{Subject: "s", Disabled: true}}).Resolve(ctx, "x"); ok {
+	if _, _, ok := service(&fakeRepo{account: domain.Account{Subject: "s", Disabled: true}}).Resolve(ctx, "x"); ok {
 		t.Error("a disabled Account's session resolves")
 	}
 	if err := service(&fakeRepo{fail: "by subject"}).SetPassword(ctx, "s", "0123456789"); !errors.Is(err, errBoom) {
@@ -202,7 +253,7 @@ func TestServiceErrorPaths(t *testing.T) {
 		t.Error("a disabled Admin keeps Admin powers")
 	}
 	hash, _ := service(&fakeRepo{}).Passwords.Hash("0123456789")
-	if _, _, err := service(&fakeRepo{account: domain.Account{Disabled: true}, hash: hash}).SignIn(ctx, "aria", "0123456789", "ua"); !errors.Is(err, domain.ErrUnauthenticated) {
+	if _, err := service(&fakeRepo{account: domain.Account{Disabled: true}, hash: hash}).SignIn(ctx, "aria", "0123456789", "ua"); !errors.Is(err, domain.ErrUnauthenticated) {
 		t.Errorf("a disabled Account signs in = %v", err)
 	}
 	if !errors.Is(firstErr(errBoom, domain.ErrExpired), errBoom) || !errors.Is(firstErr(nil, domain.ErrExpired), domain.ErrExpired) {

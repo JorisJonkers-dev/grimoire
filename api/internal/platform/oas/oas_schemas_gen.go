@@ -346,6 +346,7 @@ func (s *AcceptAccountInviteCreatedHeaders) SetResponse(val Account) {
 func (*AcceptAccountInviteCreatedHeaders) acceptAccountInviteRes() {}
 func (*AcceptAccountInviteCreatedHeaders) createOidcAccountRes()   {}
 func (*AcceptAccountInviteCreatedHeaders) linkOidcAccountRes()     {}
+func (*AcceptAccountInviteCreatedHeaders) passTwoStepRes()         {}
 func (*AcceptAccountInviteCreatedHeaders) signInRes()              {}
 func (*AcceptAccountInviteCreatedHeaders) useSignInLinkRes()       {}
 
@@ -358,7 +359,12 @@ type Account struct {
 	Email    string   `json:"email"`
 	Admin    bool     `json:"admin"`
 	// Whether the Account can sign in with a password.
-	HasPassword bool        `json:"hasPassword"`
+	HasPassword bool `json:"hasPassword"`
+	// Whether two-step sign-in is on.
+	TwoStep           bool  `json:"twoStep"`
+	RecoveryCodesLeft int32 `json:"recoveryCodesLeft"`
+	// Whether this request holds Admin powers; an Admin needs two-step or the external login.
+	AdminPowers bool        `json:"adminPowers"`
 	Oidc        OptOidcLink `json:"oidc"`
 }
 
@@ -390,6 +396,21 @@ func (s *Account) GetAdmin() bool {
 // GetHasPassword returns the value of HasPassword.
 func (s *Account) GetHasPassword() bool {
 	return s.HasPassword
+}
+
+// GetTwoStep returns the value of TwoStep.
+func (s *Account) GetTwoStep() bool {
+	return s.TwoStep
+}
+
+// GetRecoveryCodesLeft returns the value of RecoveryCodesLeft.
+func (s *Account) GetRecoveryCodesLeft() int32 {
+	return s.RecoveryCodesLeft
+}
+
+// GetAdminPowers returns the value of AdminPowers.
+func (s *Account) GetAdminPowers() bool {
+	return s.AdminPowers
 }
 
 // GetOidc returns the value of Oidc.
@@ -425,6 +446,21 @@ func (s *Account) SetAdmin(val bool) {
 // SetHasPassword sets the value of HasPassword.
 func (s *Account) SetHasPassword(val bool) {
 	s.HasPassword = val
+}
+
+// SetTwoStep sets the value of TwoStep.
+func (s *Account) SetTwoStep(val bool) {
+	s.TwoStep = val
+}
+
+// SetRecoveryCodesLeft sets the value of RecoveryCodesLeft.
+func (s *Account) SetRecoveryCodesLeft(val int32) {
+	s.RecoveryCodesLeft = val
+}
+
+// SetAdminPowers sets the value of AdminPowers.
+func (s *Account) SetAdminPowers(val bool) {
+	s.AdminPowers = val
 }
 
 // SetOidc sets the value of Oidc.
@@ -4255,6 +4291,45 @@ func (s *DiffNpcRevisionsOKHeaders) SetResponse(val []FieldChange) {
 }
 
 func (*DiffNpcRevisionsOKHeaders) diffNpcRevisionsRes() {}
+
+// DisableTwoStepNoContent is response for DisableTwoStep operation.
+type DisableTwoStepNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DisableTwoStepNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DisableTwoStepNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DisableTwoStepNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DisableTwoStepNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DisableTwoStepNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DisableTwoStepNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DisableTwoStepNoContent) disableTwoStepRes() {}
 
 type DisplayName string
 
@@ -21037,7 +21112,9 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 
 func (*ProblemStatusCodeWithHeaders) acceptAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
+func (*ProblemStatusCodeWithHeaders) confirmTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
@@ -21060,6 +21137,7 @@ func (*ProblemStatusCodeWithHeaders) deletePushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
+func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
@@ -21111,6 +21189,7 @@ func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
@@ -21119,6 +21198,7 @@ func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) requestSignInLinkRes()             {}
 func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
+func (*ProblemStatusCodeWithHeaders) resetRecoveryCodesRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
 func (*ProblemStatusCodeWithHeaders) restoreLootTableRevisionRes()      {}
@@ -21557,6 +21637,73 @@ func (s *ReachRequest) SetClimbSpeed(val OptBool) {
 }
 
 type ReactionTimeout int32
+
+// Recovery codes, each good once; shown only when made.
+// Ref: #/components/schemas/RecoveryCodes
+type RecoveryCodes struct {
+	Codes []string `json:"codes"`
+}
+
+// GetCodes returns the value of Codes.
+func (s *RecoveryCodes) GetCodes() []string {
+	return s.Codes
+}
+
+// SetCodes sets the value of Codes.
+func (s *RecoveryCodes) SetCodes(val []string) {
+	s.Codes = val
+}
+
+// RecoveryCodesHeaders wraps RecoveryCodes with response headers.
+type RecoveryCodesHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RecoveryCodes
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RecoveryCodesHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RecoveryCodesHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RecoveryCodesHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RecoveryCodesHeaders) GetResponse() RecoveryCodes {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RecoveryCodesHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RecoveryCodesHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RecoveryCodesHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RecoveryCodesHeaders) SetResponse(val RecoveryCodes) {
+	s.Response = val
+}
+
+func (*RecoveryCodesHeaders) confirmTwoStepRes()     {}
+func (*RecoveryCodesHeaders) resetRecoveryCodesRes() {}
 
 // RemoveMemberNoContent is response for RemoveMember operation.
 type RemoveMemberNoContent struct {
@@ -25049,6 +25196,193 @@ func (s *TravelPace) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// A challenge and the code that answers it, from the authenticator app or a recovery code.
+// Ref: #/components/schemas/TwoStepAnswer
+type TwoStepAnswer struct {
+	Challenge string `json:"challenge"`
+	Code      string `json:"code"`
+}
+
+// GetChallenge returns the value of Challenge.
+func (s *TwoStepAnswer) GetChallenge() string {
+	return s.Challenge
+}
+
+// GetCode returns the value of Code.
+func (s *TwoStepAnswer) GetCode() string {
+	return s.Code
+}
+
+// SetChallenge sets the value of Challenge.
+func (s *TwoStepAnswer) SetChallenge(val string) {
+	s.Challenge = val
+}
+
+// SetCode sets the value of Code.
+func (s *TwoStepAnswer) SetCode(val string) {
+	s.Code = val
+}
+
+// A sign-in waiting for its second step.
+// Ref: #/components/schemas/TwoStepChallenge
+type TwoStepChallenge struct {
+	Challenge string `json:"challenge"`
+}
+
+// GetChallenge returns the value of Challenge.
+func (s *TwoStepChallenge) GetChallenge() string {
+	return s.Challenge
+}
+
+// SetChallenge sets the value of Challenge.
+func (s *TwoStepChallenge) SetChallenge(val string) {
+	s.Challenge = val
+}
+
+// TwoStepChallengeHeaders wraps TwoStepChallenge with response headers.
+type TwoStepChallengeHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           TwoStepChallenge
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *TwoStepChallengeHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *TwoStepChallengeHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *TwoStepChallengeHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *TwoStepChallengeHeaders) GetResponse() TwoStepChallenge {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *TwoStepChallengeHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *TwoStepChallengeHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *TwoStepChallengeHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *TwoStepChallengeHeaders) SetResponse(val TwoStepChallenge) {
+	s.Response = val
+}
+
+func (*TwoStepChallengeHeaders) signInRes()        {}
+func (*TwoStepChallengeHeaders) useSignInLinkRes() {}
+
+// A code from the authenticator app or a recovery code.
+// Ref: #/components/schemas/TwoStepCode
+type TwoStepCode struct {
+	Code string `json:"code"`
+}
+
+// GetCode returns the value of Code.
+func (s *TwoStepCode) GetCode() string {
+	return s.Code
+}
+
+// SetCode sets the value of Code.
+func (s *TwoStepCode) SetCode(val string) {
+	s.Code = val
+}
+
+// A new authenticator secret and the otpauth URI that adds it to an app.
+// Ref: #/components/schemas/TwoStepSetup
+type TwoStepSetup struct {
+	Secret string `json:"secret"`
+	URI    string `json:"uri"`
+}
+
+// GetSecret returns the value of Secret.
+func (s *TwoStepSetup) GetSecret() string {
+	return s.Secret
+}
+
+// GetURI returns the value of URI.
+func (s *TwoStepSetup) GetURI() string {
+	return s.URI
+}
+
+// SetSecret sets the value of Secret.
+func (s *TwoStepSetup) SetSecret(val string) {
+	s.Secret = val
+}
+
+// SetURI sets the value of URI.
+func (s *TwoStepSetup) SetURI(val string) {
+	s.URI = val
+}
+
+// TwoStepSetupHeaders wraps TwoStepSetup with response headers.
+type TwoStepSetupHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           TwoStepSetup
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *TwoStepSetupHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *TwoStepSetupHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *TwoStepSetupHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *TwoStepSetupHeaders) GetResponse() TwoStepSetup {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *TwoStepSetupHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *TwoStepSetupHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *TwoStepSetupHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *TwoStepSetupHeaders) SetResponse(val TwoStepSetup) {
+	s.Response = val
+}
+
+func (*TwoStepSetupHeaders) beginTwoStepRes() {}
 
 // UnlinkOidcNoContent is response for UnlinkOidc operation.
 type UnlinkOidcNoContent struct {

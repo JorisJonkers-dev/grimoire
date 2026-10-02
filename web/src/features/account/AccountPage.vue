@@ -13,6 +13,7 @@ import {
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton, GField } from '@/shared/ui'
 import { leaveFor } from './leave'
+import TwoStepSection from './TwoStepSection.vue'
 
 const client = useQueryClient()
 const account = useQuery(getAccountOptions())
@@ -95,7 +96,8 @@ const inviteLink = (token: string) => `${window.location.origin}/account-invite#
         <p v-if="save.isSuccess.value" role="status" data-testid="password-saved">Saved.</p>
         <GButton type="submit" :disabled="password.length < 10 || save.isPending.value">{{ account.data.value.hasPassword ? 'Change the password' : 'Set a password' }}</GButton>
       </form>
-      <form v-if="account.data.value.admin" class="g-card stack" data-testid="invite-form" @submit.prevent="invite.mutate({ body: { hours, admin: asAdmin } })">
+      <TwoStepSection v-if="account.data.value.hasPassword" :account="account.data.value" />
+      <form v-if="account.data.value.adminPowers" class="g-card stack" data-testid="invite-form" @submit.prevent="invite.mutate({ body: { hours, admin: asAdmin } })">
         <h2>Invite someone</h2>
         <label class="g-field">
           <span>Open for</span>

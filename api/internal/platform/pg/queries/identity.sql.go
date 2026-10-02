@@ -138,6 +138,24 @@ func (q *Queries) AccountHasPassword(ctx context.Context, id uuid.UUID) (bool, e
 	return has_password, err
 }
 
+const confirmTOTP = `-- name: ConfirmTOTP :execrows
+UPDATE identity.totp_factors SET confirmed_at = $1, last_step = $2 WHERE account_id = $3 AND confirmed_at IS NULL
+`
+
+type ConfirmTOTPParams struct {
+	Now       pgtype.Timestamptz
+	Step      int64
+	AccountID uuid.UUID
+}
+
+func (q *Queries) ConfirmTOTP(ctx context.Context, arg ConfirmTOTPParams) (int64, error) {
+	result, err := q.db.Exec(ctx, confirmTOTP, arg.Now, arg.Step, arg.AccountID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const deleteOIDCLink = `-- name: DeleteOIDCLink :execrows
 DELETE FROM identity.oidc_links WHERE account_id = $1
 `
@@ -148,6 +166,24 @@ func (q *Queries) DeleteOIDCLink(ctx context.Context, accountID uuid.UUID) (int6
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const deleteRecoveryCodes = `-- name: DeleteRecoveryCodes :exec
+DELETE FROM identity.recovery_codes WHERE account_id = $1
+`
+
+func (q *Queries) DeleteRecoveryCodes(ctx context.Context, accountID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRecoveryCodes, accountID)
+	return err
+}
+
+const deleteTOTP = `-- name: DeleteTOTP :exec
+DELETE FROM identity.totp_factors WHERE account_id = $1
+`
+
+func (q *Queries) DeleteTOTP(ctx context.Context, accountID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTOTP, accountID)
+	return err
 }
 
 const insertAccount = `-- name: InsertAccount :one
@@ -204,8 +240,8 @@ func (q *Queries) InsertAccount(ctx context.Context, arg InsertAccountParams) (I
 }
 
 const insertAccountSession = `-- name: InsertAccountSession :exec
-INSERT INTO identity.account_sessions (id, account_id, token_hash, user_agent, created_at, last_seen_at, expires_at)
-VALUES ($1, $2, $3, $4, $5, $5, $6)
+INSERT INTO identity.account_sessions (id, account_id, token_hash, user_agent, created_at, last_seen_at, expires_at, strong)
+VALUES ($1, $2, $3, $4, $5, $5, $6, $7)
 `
 
 type InsertAccountSessionParams struct {
@@ -215,6 +251,7 @@ type InsertAccountSessionParams struct {
 	UserAgent string
 	Now       time.Time
 	ExpiresAt time.Time
+	Strong    bool
 }
 
 func (q *Queries) InsertAccountSession(ctx context.Context, arg InsertAccountSessionParams) error {
@@ -225,6 +262,7 @@ func (q *Queries) InsertAccountSession(ctx context.Context, arg InsertAccountSes
 		arg.UserAgent,
 		arg.Now,
 		arg.ExpiresAt,
+		arg.Strong,
 	)
 	return err
 }
@@ -340,6 +378,20 @@ func (q *Queries) InsertOIDCRequest(ctx context.Context, arg InsertOIDCRequestPa
 	return err
 }
 
+const insertRecoveryCode = `-- name: InsertRecoveryCode :exec
+INSERT INTO identity.recovery_codes (code_hash, account_id) VALUES ($1, $2)
+`
+
+type InsertRecoveryCodeParams struct {
+	CodeHash  []byte
+	AccountID uuid.UUID
+}
+
+func (q *Queries) InsertRecoveryCode(ctx context.Context, arg InsertRecoveryCodeParams) error {
+	_, err := q.db.Exec(ctx, insertRecoveryCode, arg.CodeHash, arg.AccountID)
+	return err
+}
+
 const insertSignInLink = `-- name: InsertSignInLink :exec
 INSERT INTO identity.sign_in_links (token_hash, account_id, created_at, expires_at) VALUES ($1, $2, $3, $4)
 `
@@ -353,6 +405,27 @@ type InsertSignInLinkParams struct {
 
 func (q *Queries) InsertSignInLink(ctx context.Context, arg InsertSignInLinkParams) error {
 	_, err := q.db.Exec(ctx, insertSignInLink,
+		arg.TokenHash,
+		arg.AccountID,
+		arg.Now,
+		arg.ExpiresAt,
+	)
+	return err
+}
+
+const insertTwoStepChallenge = `-- name: InsertTwoStepChallenge :exec
+INSERT INTO identity.two_step_challenges (token_hash, account_id, created_at, expires_at) VALUES ($1, $2, $3, $4)
+`
+
+type InsertTwoStepChallengeParams struct {
+	TokenHash []byte
+	AccountID uuid.UUID
+	Now       time.Time
+	ExpiresAt time.Time
+}
+
+func (q *Queries) InsertTwoStepChallenge(ctx context.Context, arg InsertTwoStepChallengeParams) error {
+	_, err := q.db.Exec(ctx, insertTwoStepChallenge,
 		arg.TokenHash,
 		arg.AccountID,
 		arg.Now,
@@ -431,6 +504,17 @@ func (q *Queries) OIDCLinkBySubject(ctx context.Context, arg OIDCLinkBySubjectPa
 	return i, err
 }
 
+const recoveryCodesLeft = `-- name: RecoveryCodesLeft :one
+SELECT count(*)::integer AS left_count FROM identity.recovery_codes WHERE account_id = $1 AND used_at IS NULL
+`
+
+func (q *Queries) RecoveryCodesLeft(ctx context.Context, accountID uuid.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, recoveryCodesLeft, accountID)
+	var left_count int32
+	err := row.Scan(&left_count)
+	return left_count, err
+}
+
 const revokeAccountSession = `-- name: RevokeAccountSession :exec
 UPDATE identity.account_sessions SET revoked_at = $1 WHERE token_hash = $2 AND revoked_at IS NULL
 `
@@ -446,7 +530,7 @@ func (q *Queries) RevokeAccountSession(ctx context.Context, arg RevokeAccountSes
 }
 
 const sessionAccount = `-- name: SessionAccount :one
-SELECT s.id, a.subject, a.disabled FROM identity.account_sessions s JOIN identity.accounts a ON a.id = s.account_id
+SELECT s.id, a.subject, a.disabled, s.strong FROM identity.account_sessions s JOIN identity.accounts a ON a.id = s.account_id
 WHERE s.token_hash = $1 AND s.revoked_at IS NULL AND s.expires_at > $2
 `
 
@@ -459,12 +543,18 @@ type SessionAccountRow struct {
 	ID       uuid.UUID
 	Subject  string
 	Disabled bool
+	Strong   bool
 }
 
 func (q *Queries) SessionAccount(ctx context.Context, arg SessionAccountParams) (SessionAccountRow, error) {
 	row := q.db.QueryRow(ctx, sessionAccount, arg.TokenHash, arg.Now)
 	var i SessionAccountRow
-	err := row.Scan(&i.ID, &i.Subject, &i.Disabled)
+	err := row.Scan(
+		&i.ID,
+		&i.Subject,
+		&i.Disabled,
+		&i.Strong,
+	)
 	return i, err
 }
 
@@ -496,6 +586,57 @@ func (q *Queries) SetAccountPassword(ctx context.Context, arg SetAccountPassword
 	return err
 }
 
+const startTOTP = `-- name: StartTOTP :execrows
+INSERT INTO identity.totp_factors (account_id, secret, created_at) VALUES ($1, $2, $3)
+ON CONFLICT (account_id) DO UPDATE SET secret = EXCLUDED.secret, created_at = EXCLUDED.created_at
+WHERE identity.totp_factors.confirmed_at IS NULL
+`
+
+type StartTOTPParams struct {
+	AccountID uuid.UUID
+	Secret    string
+	Now       time.Time
+}
+
+func (q *Queries) StartTOTP(ctx context.Context, arg StartTOTPParams) (int64, error) {
+	result, err := q.db.Exec(ctx, startTOTP, arg.AccountID, arg.Secret, arg.Now)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const strengthenSession = `-- name: StrengthenSession :exec
+UPDATE identity.account_sessions SET strong = true WHERE token_hash = $1 AND account_id = $2
+`
+
+type StrengthenSessionParams struct {
+	TokenHash []byte
+	AccountID uuid.UUID
+}
+
+func (q *Queries) StrengthenSession(ctx context.Context, arg StrengthenSessionParams) error {
+	_, err := q.db.Exec(ctx, strengthenSession, arg.TokenHash, arg.AccountID)
+	return err
+}
+
+const tOTPFactor = `-- name: TOTPFactor :one
+SELECT secret, confirmed_at, last_step FROM identity.totp_factors WHERE account_id = $1
+`
+
+type TOTPFactorRow struct {
+	Secret      string
+	ConfirmedAt pgtype.Timestamptz
+	LastStep    int64
+}
+
+func (q *Queries) TOTPFactor(ctx context.Context, accountID uuid.UUID) (TOTPFactorRow, error) {
+	row := q.db.QueryRow(ctx, tOTPFactor, accountID)
+	var i TOTPFactorRow
+	err := row.Scan(&i.Secret, &i.ConfirmedAt, &i.LastStep)
+	return i, err
+}
+
 const touchAccountSession = `-- name: TouchAccountSession :exec
 UPDATE identity.account_sessions SET last_seen_at = $1 WHERE id = $2 AND last_seen_at < $3
 `
@@ -509,6 +650,25 @@ type TouchAccountSessionParams struct {
 func (q *Queries) TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error {
 	_, err := q.db.Exec(ctx, touchAccountSession, arg.Now, arg.ID, arg.Cutoff)
 	return err
+}
+
+const tryTwoStepChallenge = `-- name: TryTwoStepChallenge :one
+UPDATE identity.two_step_challenges SET attempts = attempts + 1
+WHERE token_hash = $1 AND used_at IS NULL AND expires_at > $2 AND attempts < $3::integer
+RETURNING account_id
+`
+
+type TryTwoStepChallengeParams struct {
+	TokenHash   []byte
+	Now         time.Time
+	MaxAttempts int32
+}
+
+func (q *Queries) TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, tryTwoStepChallenge, arg.TokenHash, arg.Now, arg.MaxAttempts)
+	var account_id uuid.UUID
+	err := row.Scan(&account_id)
+	return account_id, err
 }
 
 const updateAccountProfile = `-- name: UpdateAccountProfile :exec
@@ -627,6 +787,24 @@ func (q *Queries) UseOIDCRequest(ctx context.Context, arg UseOIDCRequestParams) 
 	return i, err
 }
 
+const useRecoveryCode = `-- name: UseRecoveryCode :execrows
+UPDATE identity.recovery_codes SET used_at = $1 WHERE code_hash = $2 AND account_id = $3 AND used_at IS NULL
+`
+
+type UseRecoveryCodeParams struct {
+	Now       pgtype.Timestamptz
+	CodeHash  []byte
+	AccountID uuid.UUID
+}
+
+func (q *Queries) UseRecoveryCode(ctx context.Context, arg UseRecoveryCodeParams) (int64, error) {
+	result, err := q.db.Exec(ctx, useRecoveryCode, arg.Now, arg.CodeHash, arg.AccountID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const useSignInLink = `-- name: UseSignInLink :one
 UPDATE identity.sign_in_links SET used_at = $1 WHERE token_hash = $2 AND used_at IS NULL AND expires_at > $1 RETURNING account_id
 `
@@ -641,4 +819,35 @@ func (q *Queries) UseSignInLink(ctx context.Context, arg UseSignInLinkParams) (u
 	var account_id uuid.UUID
 	err := row.Scan(&account_id)
 	return account_id, err
+}
+
+const useTOTPStep = `-- name: UseTOTPStep :execrows
+UPDATE identity.totp_factors SET last_step = $1 WHERE account_id = $2 AND confirmed_at IS NOT NULL AND last_step < $1
+`
+
+type UseTOTPStepParams struct {
+	Step      int64
+	AccountID uuid.UUID
+}
+
+func (q *Queries) UseTOTPStep(ctx context.Context, arg UseTOTPStepParams) (int64, error) {
+	result, err := q.db.Exec(ctx, useTOTPStep, arg.Step, arg.AccountID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const useTwoStepChallenge = `-- name: UseTwoStepChallenge :exec
+UPDATE identity.two_step_challenges SET used_at = $1 WHERE token_hash = $2
+`
+
+type UseTwoStepChallengeParams struct {
+	Now       pgtype.Timestamptz
+	TokenHash []byte
+}
+
+func (q *Queries) UseTwoStepChallenge(ctx context.Context, arg UseTwoStepChallengeParams) error {
+	_, err := q.db.Exec(ctx, useTwoStepChallenge, arg.Now, arg.TokenHash)
+	return err
 }

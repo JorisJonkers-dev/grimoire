@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptAccountInvite, acceptInvite, clearTokenIcon, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createOidcAccount, createPushSubscription, createRoll, createSettlement, createShop, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, endSession, finishOidc, getAccount, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpell, getStatus, getTokenIcon, linkOidcAccount, listActivity, listCampaigns, listCharacters, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, previewAccountInvite, previewCharacter, previewInvite, previewReach, previewSight, removeMember, requestSignInLink, rerollStock, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeInvite, rollRest, sendLiveCommand, setAccountPassword, setDie, setPortrait, setTokenIcon, signIn, signOut, startOidcLink, startOidcSignIn, startSession, undoChange, unlinkOidc, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateNpc, updateSettlement, updateShop, uploadMap, useSignInLink } from '../sdk.gen';
-import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListActivityData, ListActivityError, ListActivityResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestSignInLinkData, RequestSignInLinkError, RerollStockData, RerollStockError, RerollStockResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
+import { acceptAccountInvite, acceptInvite, beginTwoStep, clearTokenIcon, confirmTwoStep, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createOidcAccount, createPushSubscription, createRoll, createSettlement, createShop, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, disableTwoStep, endSession, finishOidc, getAccount, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpell, getStatus, getTokenIcon, linkOidcAccount, listActivity, listCampaigns, listCharacters, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, passTwoStep, previewAccountInvite, previewCharacter, previewInvite, previewReach, previewSight, removeMember, requestSignInLink, rerollStock, resetRecoveryCodes, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeInvite, rollRest, sendLiveCommand, setAccountPassword, setDie, setPortrait, setTokenIcon, signIn, signOut, startOidcLink, startOidcSignIn, startSession, undoChange, unlinkOidc, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateNpc, updateSettlement, updateShop, uploadMap, useSignInLink } from '../sdk.gen';
+import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, BeginTwoStepData, BeginTwoStepError, BeginTwoStepResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, ConfirmTwoStepData, ConfirmTwoStepError, ConfirmTwoStepResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, DisableTwoStepData, DisableTwoStepError, DisableTwoStepResponse, EndSessionData, EndSessionError, EndSessionResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListActivityData, ListActivityError, ListActivityResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PassTwoStepData, PassTwoStepError, PassTwoStepResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestSignInLinkData, RequestSignInLinkError, RerollStockData, RerollStockError, RerollStockResponse, ResetRecoveryCodesData, ResetRecoveryCodesError, ResetRecoveryCodesResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -2148,6 +2148,25 @@ export const signInMutation = (options?: Partial<Options<SignInData>>): UseMutat
 };
 
 /**
+ * Answer the second step
+ *
+ * Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes and five wrong codes.
+ */
+export const passTwoStepMutation = (options?: Partial<Options<PassTwoStepData>>): UseMutationOptions<PassTwoStepResponse, PassTwoStepError, Options<PassTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<PassTwoStepResponse, PassTwoStepError, Options<PassTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await passTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * Sign out
  *
  * Ends this device's session and clears its cookie.
@@ -2386,6 +2405,82 @@ export const startOidcLinkMutation = (options?: Partial<Options<StartOidcLinkDat
     const mutationOptions: UseMutationOptions<StartOidcLinkResponse, StartOidcLinkError, Options<StartOidcLinkData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await startOidcLink({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Start two-step sign-in
+ *
+ * Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step on.
+ */
+export const beginTwoStepMutation = (options?: Partial<Options<BeginTwoStepData>>): UseMutationOptions<BeginTwoStepResponse, BeginTwoStepError, Options<BeginTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<BeginTwoStepResponse, BeginTwoStepError, Options<BeginTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await beginTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Turn two-step on
+ *
+ * Checks a first code from the app and returns the recovery codes, shown only now.
+ */
+export const confirmTwoStepMutation = (options?: Partial<Options<ConfirmTwoStepData>>): UseMutationOptions<ConfirmTwoStepResponse, ConfirmTwoStepError, Options<ConfirmTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<ConfirmTwoStepResponse, ConfirmTwoStepError, Options<ConfirmTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await confirmTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Turn two-step off
+ *
+ * Needs a current code or a recovery code; the recovery codes go too.
+ */
+export const disableTwoStepMutation = (options?: Partial<Options<DisableTwoStepData>>): UseMutationOptions<DisableTwoStepResponse, DisableTwoStepError, Options<DisableTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<DisableTwoStepResponse, DisableTwoStepError, Options<DisableTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await disableTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Replace the recovery codes
+ *
+ * Needs a current code; the old recovery codes stop working.
+ */
+export const resetRecoveryCodesMutation = (options?: Partial<Options<ResetRecoveryCodesData>>): UseMutationOptions<ResetRecoveryCodesResponse, ResetRecoveryCodesError, Options<ResetRecoveryCodesData>> => {
+    const mutationOptions: UseMutationOptions<ResetRecoveryCodesResponse, ResetRecoveryCodesError, Options<ResetRecoveryCodesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resetRecoveryCodes({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

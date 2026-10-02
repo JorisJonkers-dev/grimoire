@@ -9,8 +9,16 @@ type AcceptInviteRes interface {
 	acceptInviteRes()
 }
 
+type BeginTwoStepRes interface {
+	beginTwoStepRes()
+}
+
 type ClearTokenIconRes interface {
 	clearTokenIconRes()
+}
+
+type ConfirmTwoStepRes interface {
+	confirmTwoStepRes()
 }
 
 type CreateAccountInviteRes interface {
@@ -99,6 +107,10 @@ type DeleteShopRes interface {
 
 type DiffNpcRevisionsRes interface {
 	diffNpcRevisionsRes()
+}
+
+type DisableTwoStepRes interface {
+	disableTwoStepRes()
 }
 
 type EndSessionRes interface {
@@ -305,6 +317,10 @@ type ListSpellsRes interface {
 	listSpellsRes()
 }
 
+type PassTwoStepRes interface {
+	passTwoStepRes()
+}
+
 type PreviewAccountInviteRes interface {
 	previewAccountInviteRes()
 }
@@ -335,6 +351,10 @@ type RequestSignInLinkRes interface {
 
 type RerollStockRes interface {
 	rerollStockRes()
+}
+
+type ResetRecoveryCodesRes interface {
+	resetRecoveryCodesRes()
 }
 
 type RestoreEncounterPoolRevisionRes interface {

@@ -883,6 +883,7 @@ type IdentityAccountSession struct {
 	LastSeenAt time.Time
 	ExpiresAt  time.Time
 	RevokedAt  pgtype.Timestamptz
+	Strong     bool
 }
 
 type IdentityInvite struct {
@@ -929,12 +930,35 @@ type IdentityOidcRequest struct {
 	UsedAt    pgtype.Timestamptz
 }
 
+type IdentityRecoveryCode struct {
+	CodeHash  []byte
+	AccountID uuid.UUID
+	UsedAt    pgtype.Timestamptz
+}
+
 type IdentitySignInLink struct {
 	TokenHash []byte
 	AccountID uuid.UUID
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	UsedAt    pgtype.Timestamptz
+}
+
+type IdentityTotpFactor struct {
+	AccountID   uuid.UUID
+	Secret      string
+	CreatedAt   time.Time
+	ConfirmedAt pgtype.Timestamptz
+	LastStep    int64
+}
+
+type IdentityTwoStepChallenge struct {
+	TokenHash []byte
+	AccountID uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+	Attempts  int32
 }
 
 type OpsCompendiumImport struct {

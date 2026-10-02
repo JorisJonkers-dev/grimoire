@@ -6,7 +6,7 @@ import { jsonResponse } from '@/test/mountWithQuery'
 const leave = vi.hoisted(() => ({ leaveFor: vi.fn(), returnTo: vi.fn(() => '/campaigns') }))
 vi.mock('@/features/account/leave', () => leave)
 
-const account = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false, hasPassword: true }
+const account = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false, hasPassword: true, twoStep: false, recoveryCodesLeft: 0, adminPowers: false }
 const linked = { ...account, oidc: { email: 'aria@jorisjonkers.dev', username: 'aria.j', name: 'Aria Jonk', linkedAt: '2026-10-02T12:00:00Z' } }
 const methods = { oidc: 'jorisjonkers.dev' }
 const token = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG'

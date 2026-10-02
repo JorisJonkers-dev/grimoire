@@ -163,7 +163,8 @@ func (h *Handler) UpdateAccount(ctx context.Context, req *oas.AccountChange) (oa
 
 func profileOut(p domain.Profile) oas.Account {
 	out := accountOut(p.Account)
-	out.HasPassword = p.HasPassword
+	out.HasPassword, out.TwoStep, out.AdminPowers = p.HasPassword, p.TwoStep, p.AdminPowers
+	out.RecoveryCodesLeft = int32(p.RecoveryCodesLeft) //nolint:gosec // at most ten
 	if l := p.Link; l != nil {
 		out.Oidc = oas.NewOptOidcLink(oas.OidcLink{Email: l.Email, Username: l.Username, Name: l.Name, LinkedAt: l.LinkedAt.UTC()})
 	}

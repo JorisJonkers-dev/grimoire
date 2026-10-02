@@ -4,7 +4,7 @@ import { signInOnUnauthorized } from '@/infrastructure/http'
 import { mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 
-const account = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false, hasPassword: true }
+const account = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false, hasPassword: true, twoStep: false, recoveryCodesLeft: 0, adminPowers: false }
 const token = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG'
 
 afterEach(() => { unmountAll(); })
@@ -154,7 +154,7 @@ describe('the Account page', () => {
         sent.push(await req.json())
         return new Response(null, { status: 204 })
       },
-      '/api/v1/account': () => ({ ...account, admin: true }),
+      '/api/v1/account': () => ({ ...account, admin: true, adminPowers: true }),
       '/api/v1/admin/account-invites': async (_u, req) => {
         sent.push(await req.json())
         return jsonResponse({ token, expiresAt: '2026-10-05T12:00:00Z' }, 201)

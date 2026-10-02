@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getSignInMethodsOptions, requestSignInLinkMutation, signInMutation, startOidcSignInMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton, GField } from '@/shared/ui'
 import { leaveFor } from './leave'
+import TwoStepForm from './TwoStepForm.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,6 +14,7 @@ const username = ref('')
 const password = ref('')
 const email = ref('')
 const forgot = ref(false)
+const challenge = ref('')
 const signIn = useMutation(signInMutation())
 const link = useMutation(requestSignInLinkMutation())
 const methods = useQuery(getSignInMethodsOptions())
@@ -22,11 +24,19 @@ const next = () => {
   const n = typeof route.query.next === 'string' ? route.query.next : '/'
   return n.startsWith('/') && !n.startsWith('//') ? n : '/'
 }
+function done() {
+  void client.invalidateQueries()
+  void router.push(next())
+}
 function submit() {
-  signIn.mutate({ body: { username: username.value.trim(), password: password.value } }, { onSuccess: () => {
-        void client.invalidateQueries()
-        void router.push(next())
+  signIn.mutate({ body: { username: username.value.trim(), password: password.value } }, { onSuccess: (out) => {
+        if ('challenge' in out) challenge.value = out.challenge
+        else done()
       } })
+}
+function restart() {
+  challenge.value = ''
+  password.value = ''
 }
 function signInExternally() {
   external.mutate({}, { onSuccess: (out) => { leaveFor(out.url, next()) } })
@@ -39,7 +49,8 @@ function sendLink() {
 <template>
   <main class="g-page narrow">
     <h1>Sign in</h1>
-    <form v-if="!forgot" class="g-card stack" data-testid="sign-in-form" @submit.prevent="submit">
+    <TwoStepForm v-if="challenge" :challenge="challenge" @done="done" @restart="restart" />
+    <form v-else-if="!forgot" class="g-card stack" data-testid="sign-in-form" @submit.prevent="submit">
       <GField v-model="username" label="Username" :maxlength="32" autocomplete="username" required data-testid="sign-in-username" />
       <GField v-model="password" label="Password" type="password" :maxlength="200" autocomplete="current-password" required data-testid="sign-in-password" />
       <p v-if="signIn.isError.value" role="alert" class="g-alert" data-testid="sign-in-failed">That Username and password do not match.</p>

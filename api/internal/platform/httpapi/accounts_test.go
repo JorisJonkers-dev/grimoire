@@ -17,6 +17,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/domain"
 	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 )
@@ -76,7 +77,7 @@ func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (htt
 	mail, now := &outbox{}, &clock{now: time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)}
 	accounts := &identityapp.Service{
 		Repo: identitypg.New(store.Pool()), Mailer: mail, Passwords: identityapp.Passwords{MemoryKiB: 64, Time: 1, Threads: 1}, Now: now.Now,
-		Admins: map[string]bool{"root": true}, BaseURL: "https://grimoire.example/",
+		Admins: map[string]bool{"root": true}, BaseURL: "https://grimoire.example/", Strong: httpx.Strong,
 	}
 	configure(accounts)
 	build := func(trust bool) http.Handler {
@@ -234,6 +235,10 @@ func TestInvitesExpireAndAdminsInvite(t *testing.T) {
 	if rec := accept(invite(t, trusted, `{"hours":24}`), "other", "CHIEF@example.com"); rec.Code != http.StatusConflict {
 		t.Fatalf("a taken email: %d", rec.Code)
 	}
+	if rec := send(public, http.MethodPost, "/api/v1/admin/account-invites", chief, "", `{"hours":24,"admin":true}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("an Admin Account without two-step invites: %d", rec.Code)
+	}
+	enableTwoStep(t, public, now, chief)
 	if rec := send(public, http.MethodPost, "/api/v1/admin/account-invites", chief, "", `{"hours":24,"admin":true}`); rec.Code != http.StatusCreated {
 		t.Fatalf("an Admin Account invites: %d %s", rec.Code, rec.Body.String())
 	}
@@ -306,13 +311,13 @@ func (brokenAccounts) Accept(context.Context, string, domain.Setup, string) (dom
 	return domain.Account{}, "", errAccounts
 }
 
-func (brokenAccounts) SignIn(context.Context, string, string, string) (domain.Account, string, error) {
-	return domain.Account{}, "", errAccounts
+func (brokenAccounts) SignIn(context.Context, string, string, string) (domain.SignedIn, error) {
+	return domain.SignedIn{}, errAccounts
 }
 func (brokenAccounts) SignOut(context.Context, string) error     { return errAccounts }
 func (brokenAccounts) RequestLink(context.Context, string) error { return errAccounts }
-func (brokenAccounts) UseLink(context.Context, string, string) (domain.Account, string, error) {
-	return domain.Account{}, "", errAccounts
+func (brokenAccounts) UseLink(context.Context, string, string) (domain.SignedIn, error) {
+	return domain.SignedIn{}, errAccounts
 }
 
 func (brokenAccounts) Me(context.Context, string) (domain.Profile, error) {
@@ -339,6 +344,21 @@ func (brokenAccounts) LinkFromOIDC(context.Context, string, string, string, stri
 	return domain.Account{}, "", errAccounts
 }
 func (brokenAccounts) Unlink(context.Context, string) error { return errAccounts }
+func (brokenAccounts) PassTwoStep(context.Context, string, string, string) (domain.Account, string, error) {
+	return domain.Account{}, "", errAccounts
+}
+
+func (brokenAccounts) BeginTwoStep(context.Context, string) (identityapp.TwoStepSetup, error) {
+	return identityapp.TwoStepSetup{}, errAccounts
+}
+
+func (brokenAccounts) ConfirmTwoStep(context.Context, string, string, string) ([]string, error) {
+	return nil, errAccounts
+}
+func (brokenAccounts) DisableTwoStep(context.Context, string, string) error { return errAccounts }
+func (brokenAccounts) ResetRecoveryCodes(context.Context, string, string) ([]string, error) {
+	return nil, errAccounts
+}
 
 // When the Account store fails, every call answers 503 without saying why.
 func TestAccountsWhenTheStoreFails(t *testing.T) {
@@ -367,6 +387,11 @@ func TestAccountsWhenTheStoreFails(t *testing.T) {
 		{http.MethodDelete, "/api/v1/account/oidc-link", "", "someone", ""},
 		{http.MethodPost, "/api/v1/oidc/accounts", "", "", `{"token":"abcdefghijklmnopqrstuvwxyz","username":"aria","nickname":"A"}`},
 		{http.MethodPost, "/api/v1/oidc/links", "", "", `{"token":"abcdefghijklmnopqrstuvwxyz","username":"aria","password":"x"}`},
+		{http.MethodPost, "/api/v1/sign-in/two-step", "", "", `{"challenge":"abcdefghijklmnopqrstuvwxyz","code":"123456"}`},
+		{http.MethodPost, "/api/v1/account/two-step", "", "someone", ""},
+		{http.MethodPost, "/api/v1/account/two-step/confirm", "", "someone", `{"code":"123456"}`},
+		{http.MethodPost, "/api/v1/account/two-step/disable", "", "someone", `{"code":"123456"}`},
+		{http.MethodPost, "/api/v1/account/two-step/recovery-codes", "", "someone", `{"code":"123456"}`},
 	} {
 		if rec := send(h, c.method, c.path, c.cookie, c.subject, c.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s = %d %s", c.method, c.path, rec.Code, rec.Body.String())
