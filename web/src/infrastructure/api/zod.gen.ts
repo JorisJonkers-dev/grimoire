@@ -91,6 +91,20 @@ export const zAdminCampaign = z.object({
 });
 
 /**
+ * The Username to ask.
+ */
+export const zFriendRequestCreate = z.object({
+    username: z.string().min(1).max(32)
+});
+
+/**
+ * Whether to block the sender too.
+ */
+export const zFriendRequestDecline = z.object({
+    block: z.boolean().optional()
+});
+
+/**
  * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
  */
 export const zAccessTokenScope = z.enum([
@@ -295,6 +309,42 @@ export const zAdminAccountDetail = z.object({
     tokens: z.int().gte(0).lte(100000),
     campaigns: z.array(zAdminCampaign).max(200),
     history: z.array(zAccountEvent).max(100)
+});
+
+/**
+ * Another Account as social pages show it.
+ */
+export const zPerson = z.object({
+    id: zId,
+    username: zUsername,
+    nickname: z.string().min(1).max(40)
+});
+
+/**
+ * A Friend, and since when.
+ */
+export const zFriendEntry = z.object({
+    person: zPerson,
+    since: z.iso.datetime().max(40)
+});
+
+/**
+ * A Friend request and the Account on its other side.
+ */
+export const zFriendRequestEntry = z.object({
+    id: zId,
+    person: zPerson,
+    at: z.iso.datetime().max(40)
+});
+
+/**
+ * Friends, Friend requests both ways, and blocked Accounts.
+ */
+export const zFriendsPage = z.object({
+    friends: z.array(zFriendEntry).max(1000),
+    incoming: z.array(zFriendRequestEntry).max(1000),
+    outgoing: z.array(zFriendRequestEntry).max(1000),
+    blocked: z.array(zFriendRequestEntry).max(1000)
 });
 
 /**
@@ -4129,6 +4179,60 @@ export const zJoinCampaignPath = z.object({
  * The new Campaign Character.
  */
 export const zJoinCampaignResponse = zCharacterSheet;
+
+/**
+ * The Friends page.
+ */
+export const zListFriendsResponse = zFriendsPage;
+
+export const zUnfriendPath = z.object({
+    accountId: zId
+});
+
+/**
+ * No longer Friends.
+ */
+export const zUnfriendResponse = z.void();
+
+export const zSendFriendRequestBody = zFriendRequestCreate;
+
+export const zCancelFriendRequestPath = z.object({
+    requestId: zId
+});
+
+/**
+ * Withdrawn.
+ */
+export const zCancelFriendRequestResponse = z.void();
+
+export const zAcceptFriendRequestPath = z.object({
+    requestId: zId
+});
+
+/**
+ * Friends.
+ */
+export const zAcceptFriendRequestResponse = z.void();
+
+export const zDeclineFriendRequestBody = zFriendRequestDecline;
+
+export const zDeclineFriendRequestPath = z.object({
+    requestId: zId
+});
+
+/**
+ * Declined.
+ */
+export const zDeclineFriendRequestResponse = z.void();
+
+export const zUnblockPath = z.object({
+    accountId: zId
+});
+
+/**
+ * Unblocked.
+ */
+export const zUnblockResponse = z.void();
 
 /**
  * The process is alive.

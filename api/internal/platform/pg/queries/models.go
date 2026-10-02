@@ -1692,3 +1692,24 @@ type PrepTableRevisionMonster struct {
 	MonsterSlug string
 	Count       int32
 }
+
+type SocialBlock struct {
+	Blocker   uuid.UUID
+	Blocked   uuid.UUID
+	CreatedAt time.Time
+}
+
+type SocialFriendRequest struct {
+	ID          uuid.UUID
+	FromAccount uuid.UUID
+	ToAccount   uuid.UUID
+	Status      string
+	CreatedAt   time.Time
+	DecidedAt   pgtype.Timestamptz
+}
+
+type SocialFriendship struct {
+	A     uuid.UUID
+	B     uuid.UUID
+	Since time.Time
+}

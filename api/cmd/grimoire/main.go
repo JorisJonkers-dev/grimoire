@@ -42,6 +42,8 @@ import (
 	prepapp "github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
 	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	socialapp "github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
+	socialpg "github.com/JorisJonkers-dev/grimoire/api/internal/social/pgstore"
 )
 
 // version is set at build time with -ldflags "-X main.version=…".
@@ -228,6 +230,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
 			Push: notices, Accounts: accounts, OIDCName: oidcName,
+			Friends: &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now},
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

@@ -25,6 +25,7 @@ function leave() {
       <nav aria-label="Main">
         <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
         <RouterLink v-if="account.data.value" :to="{ name: 'my-characters' }" data-testid="characters-link">Characters</RouterLink>
+        <RouterLink v-if="account.data.value" :to="{ name: 'friends' }" data-testid="friends-link">Friends</RouterLink>
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
         <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
       </nav>
@@ -104,6 +105,22 @@ nav a {
 nav a.router-link-active {
   border-bottom-color: var(--color-gold);
   color: var(--color-gold-high);
+}
+/* On a phone the links take their own row under the brand and the account, and scroll sideways. */
+@media (max-width: 640px) {
+  .bar {
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
+  nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+  nav a {
+    min-height: 44px;
+    white-space: nowrap;
+  }
 }
 /* The footer spans the whole window, whatever the page above it does. */
 .credit {

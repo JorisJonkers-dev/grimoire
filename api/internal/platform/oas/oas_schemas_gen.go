@@ -350,6 +350,45 @@ func (*AcceptAccountInviteCreatedHeaders) passTwoStepRes()         {}
 func (*AcceptAccountInviteCreatedHeaders) signInRes()              {}
 func (*AcceptAccountInviteCreatedHeaders) useSignInLinkRes()       {}
 
+// AcceptFriendRequestNoContent is response for AcceptFriendRequest operation.
+type AcceptFriendRequestNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AcceptFriendRequestNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AcceptFriendRequestNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AcceptFriendRequestNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AcceptFriendRequestNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AcceptFriendRequestNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AcceptFriendRequestNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*AcceptFriendRequestNoContent) acceptFriendRequestRes() {}
+
 // An Access Token, without the token itself.
 // Ref: #/components/schemas/AccessToken
 type AccessToken struct {
@@ -3758,6 +3797,45 @@ func (s *CampaignUpdate) SetShareInitiative(val OptBool) {
 	s.ShareInitiative = val
 }
 
+// CancelFriendRequestNoContent is response for CancelFriendRequest operation.
+type CancelFriendRequestNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CancelFriendRequestNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CancelFriendRequestNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CancelFriendRequestNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CancelFriendRequestNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CancelFriendRequestNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CancelFriendRequestNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*CancelFriendRequestNoContent) cancelFriendRequestRes() {}
+
 // The choices for a first-level Character.
 // Ref: #/components/schemas/CharacterBuild
 type CharacterBuild struct {
@@ -4841,6 +4919,45 @@ func (s *CoverLevel) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// DeclineFriendRequestNoContent is response for DeclineFriendRequest operation.
+type DeclineFriendRequestNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeclineFriendRequestNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeclineFriendRequestNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeclineFriendRequestNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeclineFriendRequestNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeclineFriendRequestNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeclineFriendRequestNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeclineFriendRequestNoContent) declineFriendRequestRes() {}
 
 // DeleteCharacterNoContent is response for DeleteCharacter operation.
 type DeleteCharacterNoContent struct {
@@ -7059,6 +7176,202 @@ func (s *ForwardAuth) SetAPIKey(val string) {
 func (s *ForwardAuth) SetRoles(val []string) {
 	s.Roles = val
 }
+
+// A Friend, and since when.
+// Ref: #/components/schemas/FriendEntry
+type FriendEntry struct {
+	Person Person    `json:"person"`
+	Since  time.Time `json:"since"`
+}
+
+// GetPerson returns the value of Person.
+func (s *FriendEntry) GetPerson() Person {
+	return s.Person
+}
+
+// GetSince returns the value of Since.
+func (s *FriendEntry) GetSince() time.Time {
+	return s.Since
+}
+
+// SetPerson sets the value of Person.
+func (s *FriendEntry) SetPerson(val Person) {
+	s.Person = val
+}
+
+// SetSince sets the value of Since.
+func (s *FriendEntry) SetSince(val time.Time) {
+	s.Since = val
+}
+
+// The Username to ask.
+// Ref: #/components/schemas/FriendRequestCreate
+type FriendRequestCreate struct {
+	Username string `json:"username"`
+}
+
+// GetUsername returns the value of Username.
+func (s *FriendRequestCreate) GetUsername() string {
+	return s.Username
+}
+
+// SetUsername sets the value of Username.
+func (s *FriendRequestCreate) SetUsername(val string) {
+	s.Username = val
+}
+
+// Whether to block the sender too.
+// Ref: #/components/schemas/FriendRequestDecline
+type FriendRequestDecline struct {
+	Block OptBool `json:"block"`
+}
+
+// GetBlock returns the value of Block.
+func (s *FriendRequestDecline) GetBlock() OptBool {
+	return s.Block
+}
+
+// SetBlock sets the value of Block.
+func (s *FriendRequestDecline) SetBlock(val OptBool) {
+	s.Block = val
+}
+
+// A Friend request and the Account on its other side.
+// Ref: #/components/schemas/FriendRequestEntry
+type FriendRequestEntry struct {
+	ID     ID        `json:"id"`
+	Person Person    `json:"person"`
+	At     time.Time `json:"at"`
+}
+
+// GetID returns the value of ID.
+func (s *FriendRequestEntry) GetID() ID {
+	return s.ID
+}
+
+// GetPerson returns the value of Person.
+func (s *FriendRequestEntry) GetPerson() Person {
+	return s.Person
+}
+
+// GetAt returns the value of At.
+func (s *FriendRequestEntry) GetAt() time.Time {
+	return s.At
+}
+
+// SetID sets the value of ID.
+func (s *FriendRequestEntry) SetID(val ID) {
+	s.ID = val
+}
+
+// SetPerson sets the value of Person.
+func (s *FriendRequestEntry) SetPerson(val Person) {
+	s.Person = val
+}
+
+// SetAt sets the value of At.
+func (s *FriendRequestEntry) SetAt(val time.Time) {
+	s.At = val
+}
+
+// Friends, Friend requests both ways, and blocked Accounts.
+// Ref: #/components/schemas/FriendsPage
+type FriendsPage struct {
+	Friends  []FriendEntry        `json:"friends"`
+	Incoming []FriendRequestEntry `json:"incoming"`
+	Outgoing []FriendRequestEntry `json:"outgoing"`
+	Blocked  []FriendRequestEntry `json:"blocked"`
+}
+
+// GetFriends returns the value of Friends.
+func (s *FriendsPage) GetFriends() []FriendEntry {
+	return s.Friends
+}
+
+// GetIncoming returns the value of Incoming.
+func (s *FriendsPage) GetIncoming() []FriendRequestEntry {
+	return s.Incoming
+}
+
+// GetOutgoing returns the value of Outgoing.
+func (s *FriendsPage) GetOutgoing() []FriendRequestEntry {
+	return s.Outgoing
+}
+
+// GetBlocked returns the value of Blocked.
+func (s *FriendsPage) GetBlocked() []FriendRequestEntry {
+	return s.Blocked
+}
+
+// SetFriends sets the value of Friends.
+func (s *FriendsPage) SetFriends(val []FriendEntry) {
+	s.Friends = val
+}
+
+// SetIncoming sets the value of Incoming.
+func (s *FriendsPage) SetIncoming(val []FriendRequestEntry) {
+	s.Incoming = val
+}
+
+// SetOutgoing sets the value of Outgoing.
+func (s *FriendsPage) SetOutgoing(val []FriendRequestEntry) {
+	s.Outgoing = val
+}
+
+// SetBlocked sets the value of Blocked.
+func (s *FriendsPage) SetBlocked(val []FriendRequestEntry) {
+	s.Blocked = val
+}
+
+// FriendsPageHeaders wraps FriendsPage with response headers.
+type FriendsPageHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           FriendsPage
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *FriendsPageHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *FriendsPageHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *FriendsPageHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *FriendsPageHeaders) GetResponse() FriendsPage {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *FriendsPageHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *FriendsPageHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *FriendsPageHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *FriendsPageHeaders) SetResponse(val FriendsPage) {
+	s.Response = val
+}
+
+func (*FriendsPageHeaders) listFriendsRes() {}
 
 // GetActionLogOKHeaders wraps []ActionEntry with response headers.
 type GetActionLogOKHeaders struct {
@@ -22205,6 +22518,44 @@ func (s *PasswordChange) SetPassword(val string) {
 	s.Password = val
 }
 
+// Another Account as social pages show it.
+// Ref: #/components/schemas/Person
+type Person struct {
+	ID       ID       `json:"id"`
+	Username Username `json:"username"`
+	Nickname string   `json:"nickname"`
+}
+
+// GetID returns the value of ID.
+func (s *Person) GetID() ID {
+	return s.ID
+}
+
+// GetUsername returns the value of Username.
+func (s *Person) GetUsername() Username {
+	return s.Username
+}
+
+// GetNickname returns the value of Nickname.
+func (s *Person) GetNickname() string {
+	return s.Nickname
+}
+
+// SetID sets the value of ID.
+func (s *Person) SetID(val ID) {
+	s.ID = val
+}
+
+// SetUsername sets the value of Username.
+func (s *Person) SetUsername(val Username) {
+	s.Username = val
+}
+
+// SetNickname sets the value of Nickname.
+func (s *Person) SetNickname(val string) {
+	s.Nickname = val
+}
+
 // One evening of play.
 // Ref: #/components/schemas/PlaySession
 type PlaySession struct {
@@ -22500,8 +22851,10 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 }
 
 func (*ProblemStatusCodeWithHeaders) acceptAccountInviteRes()           {}
+func (*ProblemStatusCodeWithHeaders) acceptFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
+func (*ProblemStatusCodeWithHeaders) cancelFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
 func (*ProblemStatusCodeWithHeaders) confirmTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) createAccessTokenRes()             {}
@@ -22518,6 +22871,7 @@ func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
+func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
@@ -22570,6 +22924,7 @@ func (*ProblemStatusCodeWithHeaders) listEncounterPoolsRes()            {}
 func (*ProblemStatusCodeWithHeaders) listEncounterTableRevisionsRes()   {}
 func (*ProblemStatusCodeWithHeaders) listEncounterTablesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listFriendsRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listLootTableRevisionsRes()        {}
@@ -22607,6 +22962,7 @@ func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
+func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
 func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
 func (*ProblemStatusCodeWithHeaders) setAccountDisabledRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
@@ -22619,7 +22975,9 @@ func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
 func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
+func (*ProblemStatusCodeWithHeaders) unblockRes()                       {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
+func (*ProblemStatusCodeWithHeaders) unfriendRes()                      {}
 func (*ProblemStatusCodeWithHeaders) unlinkOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) updateAccountRes()                 {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
@@ -24120,6 +24478,45 @@ func (s *SendAdminSignInLinkAccepted) SetRateLimitReset(val OptInt32) {
 }
 
 func (*SendAdminSignInLinkAccepted) sendAdminSignInLinkRes() {}
+
+// SendFriendRequestAccepted is response for SendFriendRequest operation.
+type SendFriendRequestAccepted struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SendFriendRequestAccepted) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SendFriendRequestAccepted) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SendFriendRequestAccepted) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SendFriendRequestAccepted) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SendFriendRequestAccepted) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SendFriendRequestAccepted) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SendFriendRequestAccepted) sendFriendRequestRes() {}
 
 // One Action of a live Session, what it touched, and whether it can still be undone.
 // Ref: #/components/schemas/SessionAction
@@ -26997,6 +27394,84 @@ func (s *TwoStepSetupHeaders) SetResponse(val TwoStepSetup) {
 }
 
 func (*TwoStepSetupHeaders) beginTwoStepRes() {}
+
+// UnblockNoContent is response for Unblock operation.
+type UnblockNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UnblockNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UnblockNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UnblockNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UnblockNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UnblockNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UnblockNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UnblockNoContent) unblockRes() {}
+
+// UnfriendNoContent is response for Unfriend operation.
+type UnfriendNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UnfriendNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UnfriendNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UnfriendNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UnfriendNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UnfriendNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UnfriendNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UnfriendNoContent) unfriendRes() {}
 
 // UnlinkOidcNoContent is response for UnlinkOidc operation.
 type UnlinkOidcNoContent struct {

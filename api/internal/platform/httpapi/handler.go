@@ -38,6 +38,8 @@ type Handler struct {
 	Accounts AccountService
 	// OIDCName names the external sign-in on the sign-in page.
 	OIDCName string
+	// Friends are Friends between Accounts.
+	Friends FriendService
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
 	LiveTimeout time.Duration
 	Log         *slog.Logger

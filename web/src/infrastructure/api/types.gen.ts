@@ -238,6 +238,56 @@ export type AdminAccountDetail = {
 };
 
 /**
+ * Another Account as social pages show it.
+ */
+export type Person = {
+    id: Id;
+    username: Username;
+    nickname: string;
+};
+
+/**
+ * A Friend, and since when.
+ */
+export type FriendEntry = {
+    person: Person;
+    since: string;
+};
+
+/**
+ * A Friend request and the Account on its other side.
+ */
+export type FriendRequestEntry = {
+    id: Id;
+    person: Person;
+    at: string;
+};
+
+/**
+ * Friends, Friend requests both ways, and blocked Accounts.
+ */
+export type FriendsPage = {
+    friends: Array<FriendEntry>;
+    incoming: Array<FriendRequestEntry>;
+    outgoing: Array<FriendRequestEntry>;
+    blocked: Array<FriendRequestEntry>;
+};
+
+/**
+ * The Username to ask.
+ */
+export type FriendRequestCreate = {
+    username: string;
+};
+
+/**
+ * Whether to block the sender too.
+ */
+export type FriendRequestDecline = {
+    block?: boolean;
+};
+
+/**
  * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
  */
 export type AccessTokenScope = 'read' | 'build' | 'play';
@@ -7357,6 +7407,232 @@ export type JoinCampaignResponses = {
 };
 
 export type JoinCampaignResponse = JoinCampaignResponses[keyof JoinCampaignResponses];
+
+export type ListFriendsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/friends';
+};
+
+export type ListFriendsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListFriendsError = ListFriendsErrors[keyof ListFriendsErrors];
+
+export type ListFriendsResponses = {
+    /**
+     * The Friends page.
+     */
+    200: FriendsPage;
+};
+
+export type ListFriendsResponse = ListFriendsResponses[keyof ListFriendsResponses];
+
+export type UnfriendData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friends/{accountId}';
+};
+
+export type UnfriendErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnfriendError = UnfriendErrors[keyof UnfriendErrors];
+
+export type UnfriendResponses = {
+    /**
+     * No longer Friends.
+     */
+    204: void;
+};
+
+export type UnfriendResponse = UnfriendResponses[keyof UnfriendResponses];
+
+export type SendFriendRequestData = {
+    body: FriendRequestCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/friend-requests';
+};
+
+export type SendFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendFriendRequestError = SendFriendRequestErrors[keyof SendFriendRequestErrors];
+
+export type SendFriendRequestResponses = {
+    /**
+     * The request is sent.
+     */
+    202: unknown;
+};
+
+export type CancelFriendRequestData = {
+    body?: never;
+    path: {
+        /**
+         * Friend request id.
+         */
+        requestId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friend-requests/{requestId}';
+};
+
+export type CancelFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CancelFriendRequestError = CancelFriendRequestErrors[keyof CancelFriendRequestErrors];
+
+export type CancelFriendRequestResponses = {
+    /**
+     * Withdrawn.
+     */
+    204: void;
+};
+
+export type CancelFriendRequestResponse = CancelFriendRequestResponses[keyof CancelFriendRequestResponses];
+
+export type AcceptFriendRequestData = {
+    body?: never;
+    path: {
+        /**
+         * Friend request id.
+         */
+        requestId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friend-requests/{requestId}/accept';
+};
+
+export type AcceptFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type AcceptFriendRequestError = AcceptFriendRequestErrors[keyof AcceptFriendRequestErrors];
+
+export type AcceptFriendRequestResponses = {
+    /**
+     * Friends.
+     */
+    204: void;
+};
+
+export type AcceptFriendRequestResponse = AcceptFriendRequestResponses[keyof AcceptFriendRequestResponses];
+
+export type DeclineFriendRequestData = {
+    body: FriendRequestDecline;
+    path: {
+        /**
+         * Friend request id.
+         */
+        requestId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friend-requests/{requestId}/decline';
+};
+
+export type DeclineFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeclineFriendRequestError = DeclineFriendRequestErrors[keyof DeclineFriendRequestErrors];
+
+export type DeclineFriendRequestResponses = {
+    /**
+     * Declined.
+     */
+    204: void;
+};
+
+export type DeclineFriendRequestResponse = DeclineFriendRequestResponses[keyof DeclineFriendRequestResponses];
+
+export type UnblockData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/blocks/{accountId}';
+};
+
+export type UnblockErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnblockError = UnblockErrors[keyof UnblockErrors];
+
+export type UnblockResponses = {
+    /**
+     * Unblocked.
+     */
+    204: void;
+};
+
+export type UnblockResponse = UnblockResponses[keyof UnblockResponses];
 
 export type GetHealthData = {
     body?: never;

@@ -22,6 +22,15 @@ func (UnimplementedHandler) AcceptAccountInvite(ctx context.Context, req *Accoun
 	return r, ht.ErrNotImplemented
 }
 
+// AcceptFriendRequest implements acceptFriendRequest operation.
+//
+// The two are Friends from now on.
+//
+// POST /api/v1/friend-requests/{requestId}/accept
+func (UnimplementedHandler) AcceptFriendRequest(ctx context.Context, params AcceptFriendRequestParams) (r AcceptFriendRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // AcceptInvite implements acceptInvite operation.
 //
 // Joins the caller to the Campaign as a Player. A Member keeps their role.
@@ -38,6 +47,15 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 //
 // POST /api/v1/account/two-step
 func (UnimplementedHandler) BeginTwoStep(ctx context.Context) (r BeginTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CancelFriendRequest implements cancelFriendRequest operation.
+//
+// Withdraws a request the signed-in Account sent.
+//
+// DELETE /api/v1/friend-requests/{requestId}
+func (UnimplementedHandler) CancelFriendRequest(ctx context.Context, params CancelFriendRequestParams) (r CancelFriendRequestRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -185,6 +203,15 @@ func (UnimplementedHandler) CreateSettlement(ctx context.Context, req *Settlemen
 //
 // POST /api/v1/campaigns/{campaignId}/shops
 func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (r CreateShopRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeclineFriendRequest implements declineFriendRequest operation.
+//
+// Turns the request down; with block, the sender's later requests never show.
+//
+// POST /api/v1/friend-requests/{requestId}/decline
+func (UnimplementedHandler) DeclineFriendRequest(ctx context.Context, req *FriendRequestDecline, params DeclineFriendRequestParams) (r DeclineFriendRequestRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -663,6 +690,15 @@ func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesP
 	return r, ht.ErrNotImplemented
 }
 
+// ListFriends implements listFriends operation.
+//
+// The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+//
+// GET /api/v1/friends
+func (UnimplementedHandler) ListFriends(ctx context.Context) (r ListFriendsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListInvites implements listInvites operation.
 //
 // Invite links that still work. DM only.
@@ -1004,6 +1040,16 @@ func (UnimplementedHandler) SendAdminSignInLink(ctx context.Context, params Send
 	return r, ht.ErrNotImplemented
 }
 
+// SendFriendRequest implements sendFriendRequest operation.
+//
+// Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The
+// answer is the same whether or not they blocked the sender.
+//
+// POST /api/v1/friend-requests
+func (UnimplementedHandler) SendFriendRequest(ctx context.Context, req *FriendRequestCreate) (r SendFriendRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SendLiveCommand implements sendLiveCommand operation.
 //
 // Sends one command to a live Session as the caller, with the same authority as their live connection,
@@ -1116,6 +1162,15 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 	return r, ht.ErrNotImplemented
 }
 
+// Unblock implements unblock operation.
+//
+// Lets the Account's Friend requests through again.
+//
+// DELETE /api/v1/blocks/{accountId}
+func (UnimplementedHandler) Unblock(ctx context.Context, params UnblockParams) (r UnblockRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UndoChange implements undoChange operation.
 //
 // Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
@@ -1124,6 +1179,15 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 //
 // POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 func (UnimplementedHandler) UndoChange(ctx context.Context, params UndoChangeParams) (r UndoChangeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// Unfriend implements unfriend operation.
+//
+// The two are no longer Friends.
+//
+// DELETE /api/v1/friends/{accountId}
+func (UnimplementedHandler) Unfriend(ctx context.Context, params UnfriendParams) (r UnfriendRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

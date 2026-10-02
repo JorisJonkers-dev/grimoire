@@ -24,6 +24,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account-invites/accept
 	AcceptAccountInvite(ctx context.Context, req *AccountSetup) (AcceptAccountInviteRes, error)
+	// AcceptFriendRequest implements acceptFriendRequest operation.
+	//
+	// The two are Friends from now on.
+	//
+	// POST /api/v1/friend-requests/{requestId}/accept
+	AcceptFriendRequest(ctx context.Context, params AcceptFriendRequestParams) (AcceptFriendRequestRes, error)
 	// BeginTwoStep implements beginTwoStep operation.
 	//
 	// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
@@ -31,6 +37,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account/two-step
 	BeginTwoStep(ctx context.Context) (BeginTwoStepRes, error)
+	// CancelFriendRequest implements cancelFriendRequest operation.
+	//
+	// Withdraws a request the signed-in Account sent.
+	//
+	// DELETE /api/v1/friend-requests/{requestId}
+	CancelFriendRequest(ctx context.Context, params CancelFriendRequestParams) (CancelFriendRequestRes, error)
 	// ConfirmTwoStep implements confirmTwoStep operation.
 	//
 	// Checks a first code from the app and returns the recovery codes, shown only now.
@@ -64,6 +76,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/push/subscriptions
 	CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
+	// DeclineFriendRequest implements declineFriendRequest operation.
+	//
+	// Turns the request down; with block, the sender's later requests never show.
+	//
+	// POST /api/v1/friend-requests/{requestId}/decline
+	DeclineFriendRequest(ctx context.Context, req *FriendRequestDecline, params DeclineFriendRequestParams) (DeclineFriendRequestRes, error)
 	// DeletePushSubscription implements deletePushSubscription operation.
 	//
 	// Stops notifications to one of the caller's devices.
@@ -132,6 +150,13 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/admin/accounts/{accountId}/sign-in-link
 	SendAdminSignInLink(ctx context.Context, params SendAdminSignInLinkParams) (SendAdminSignInLinkRes, error)
+	// SendFriendRequest implements sendFriendRequest operation.
+	//
+	// Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The
+	// answer is the same whether or not they blocked the sender.
+	//
+	// POST /api/v1/friend-requests
+	SendFriendRequest(ctx context.Context, req *FriendRequestCreate) (SendFriendRequestRes, error)
 	// SetAccountDisabled implements setAccountDisabled operation.
 	//
 	// Disabling ends every session and Access Token the Account has. Nobody disables themselves.
@@ -174,6 +199,18 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/oidc/sign-ins
 	StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error)
+	// Unblock implements unblock operation.
+	//
+	// Lets the Account's Friend requests through again.
+	//
+	// DELETE /api/v1/blocks/{accountId}
+	Unblock(ctx context.Context, params UnblockParams) (UnblockRes, error)
+	// Unfriend implements unfriend operation.
+	//
+	// The two are no longer Friends.
+	//
+	// DELETE /api/v1/friends/{accountId}
+	Unfriend(ctx context.Context, params UnfriendParams) (UnfriendRes, error)
 	// UnlinkOidc implements unlinkOidc operation.
 	//
 	// Removes the linked login; the Account stays. An Account without a password keeps its login.
@@ -783,6 +820,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/entries
 	ListEntries(ctx context.Context, params ListEntriesParams) (ListEntriesRes, error)
+	// ListFriends implements listFriends operation.
+	//
+	// The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+	//
+	// GET /api/v1/friends
+	ListFriends(ctx context.Context) (ListFriendsRes, error)
 	// ListInvites implements listInvites operation.
 	//
 	// Invite links that still work. DM only.

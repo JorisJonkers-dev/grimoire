@@ -2,10 +2,17 @@ package httpapi
 
 import (
 	"context"
+	"errors"
+	"io"
+	"log/slog"
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/auth"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/social/domain"
 )
 
 // Every Account handler refuses a call that reaches it without an identity, whatever the router let
@@ -31,11 +38,53 @@ func TestAccountHandlersNeedAnIdentity(t *testing.T) {
 		"admin account": func() (any, error) { return h.GetAdminAccount(ctx, oas.GetAdminAccountParams{}) },
 		"admin link":    func() (any, error) { return h.SendAdminSignInLink(ctx, oas.SendAdminSignInLinkParams{}) },
 		"history":       func() (any, error) { return h.GetAccountHistory(ctx) },
+		"friends":       func() (any, error) { return h.ListFriends(ctx) },
+		"befriend":      func() (any, error) { return h.SendFriendRequest(ctx, &oas.FriendRequestCreate{}) },
+		"accept friend": func() (any, error) { return h.AcceptFriendRequest(ctx, oas.AcceptFriendRequestParams{}) },
 	}
 	for name, call := range calls {
 		res, err := call()
 		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
 		if err != nil || !ok || p.StatusCode != http.StatusUnauthorized {
+			t.Errorf("%s = %#v, %v", name, res, err)
+		}
+	}
+}
+
+type brokenFriends struct{}
+
+var errFriends = errors.New("database gone")
+
+func (brokenFriends) Request(context.Context, string, string) error            { return errFriends }
+func (brokenFriends) Accept(context.Context, string, uuid.UUID) error          { return errFriends }
+func (brokenFriends) Decline(context.Context, string, uuid.UUID, bool) error   { return errFriends }
+func (brokenFriends) Cancel(context.Context, string, uuid.UUID) error          { return errFriends }
+func (brokenFriends) Unfriend(context.Context, string, domain.AccountID) error { return errFriends }
+func (brokenFriends) Unblock(context.Context, string, domain.AccountID) error  { return errFriends }
+func (brokenFriends) Friends(context.Context, string) (domain.Friends, error) {
+	return domain.Friends{}, errFriends
+}
+
+// When the Friends store fails, every call answers 503 without saying why.
+func TestFriendsWhenTheStoreFails(t *testing.T) {
+	t.Parallel()
+	ctx := auth.WithIdentity(context.Background(), auth.Identity{Subject: "aria"})
+	h := &Handler{Friends: brokenFriends{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	calls := map[string]func() (any, error){
+		"list":    func() (any, error) { return h.ListFriends(ctx) },
+		"request": func() (any, error) { return h.SendFriendRequest(ctx, &oas.FriendRequestCreate{}) },
+		"accept":  func() (any, error) { return h.AcceptFriendRequest(ctx, oas.AcceptFriendRequestParams{}) },
+		"decline": func() (any, error) {
+			return h.DeclineFriendRequest(ctx, &oas.FriendRequestDecline{}, oas.DeclineFriendRequestParams{})
+		},
+		"cancel":   func() (any, error) { return h.CancelFriendRequest(ctx, oas.CancelFriendRequestParams{}) },
+		"unfriend": func() (any, error) { return h.Unfriend(ctx, oas.UnfriendParams{}) },
+		"unblock":  func() (any, error) { return h.Unblock(ctx, oas.UnblockParams{}) },
+	}
+	for name, call := range calls {
+		res, err := call()
+		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+		if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
 			t.Errorf("%s = %#v, %v", name, res, err)
 		}
 	}

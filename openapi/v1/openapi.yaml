@@ -31,6 +31,8 @@ tags:
     description: Non-mutating rules previews.
   - name: Identity
     description: The signed-in account.
+  - name: Social
+    description: Friends between Accounts.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
@@ -4294,6 +4296,199 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/friends:
+    get:
+      operationId: listFriends
+      x-ogen-operation-group: Read
+      summary: List my Friends
+      description: The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+      tags: [Social]
+      responses:
+        "200":
+          description: The Friends page.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FriendsPage"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/friends/{accountId}:
+    delete:
+      operationId: unfriend
+      x-ogen-operation-group: Account
+      summary: End a friendship
+      description: The two are no longer Friends.
+      tags: [Social]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: No longer Friends.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/friend-requests:
+    post:
+      operationId: sendFriendRequest
+      x-ogen-operation-group: Account
+      summary: Send a Friend request
+      description: Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The answer is the same whether or not they blocked the sender.
+      tags: [Social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FriendRequestCreate"
+      responses:
+        "202":
+          description: The request is sent.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/friend-requests/{requestId}:
+    delete:
+      operationId: cancelFriendRequest
+      x-ogen-operation-group: Account
+      summary: Withdraw a Friend request
+      description: Withdraws a request the signed-in Account sent.
+      tags: [Social]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: Friend request id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Withdrawn.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/friend-requests/{requestId}/accept:
+    post:
+      operationId: acceptFriendRequest
+      x-ogen-operation-group: Account
+      summary: Accept a Friend request
+      description: The two are Friends from now on.
+      tags: [Social]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: Friend request id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Friends.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/friend-requests/{requestId}/decline:
+    post:
+      operationId: declineFriendRequest
+      x-ogen-operation-group: Account
+      summary: Decline a Friend request
+      description: Turns the request down; with block, the sender's later requests never show.
+      tags: [Social]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: Friend request id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FriendRequestDecline"
+      responses:
+        "204":
+          description: Declined.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/blocks/{accountId}:
+    delete:
+      operationId: unblock
+      x-ogen-operation-group: Account
+      summary: Unblock an Account
+      description: Lets the Account's Friend requests through again.
+      tags: [Social]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Unblocked.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -4727,6 +4922,67 @@ components:
           type: array
           maxItems: 100
           items: { $ref: "#/components/schemas/AccountEvent" }
+    Person:
+      type: object
+      description: Another Account as social pages show it.
+      additionalProperties: false
+      required: [id, username, nickname]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        username: { $ref: "#/components/schemas/Username" }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+    FriendEntry:
+      type: object
+      description: A Friend, and since when.
+      additionalProperties: false
+      required: [person, since]
+      properties:
+        person: { $ref: "#/components/schemas/Person" }
+        since: { type: string, format: date-time, maxLength: 40 }
+    FriendRequestEntry:
+      type: object
+      description: A Friend request and the Account on its other side.
+      additionalProperties: false
+      required: [id, person, at]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        person: { $ref: "#/components/schemas/Person" }
+        at: { type: string, format: date-time, maxLength: 40 }
+    FriendsPage:
+      type: object
+      description: Friends, Friend requests both ways, and blocked Accounts.
+      additionalProperties: false
+      required: [friends, incoming, outgoing, blocked]
+      properties:
+        friends:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/FriendEntry" }
+        incoming:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/FriendRequestEntry" }
+        outgoing:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/FriendRequestEntry" }
+        blocked:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/FriendRequestEntry" }
+    FriendRequestCreate:
+      type: object
+      description: The Username to ask.
+      additionalProperties: false
+      required: [username]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 32 }
+    FriendRequestDecline:
+      type: object
+      description: Whether to block the sender too.
+      additionalProperties: false
+      properties:
+        block: { type: boolean }
     AccessTokenScope:
       type: string
       description: What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.

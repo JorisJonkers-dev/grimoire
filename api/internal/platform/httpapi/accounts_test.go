@@ -22,6 +22,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	socialapp "github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
+	socialpg "github.com/JorisJonkers-dev/grimoire/api/internal/social/pgstore"
 )
 
 type outbox struct {
@@ -86,6 +88,7 @@ func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (htt
 		h, err := httpapi.New(httpapi.Options{
 			Handler: &httpapi.Handler{
 				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
+				Friends:   &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: now.Now},
 				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())), NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			},
 			RateLimit: 1000, Now: time.Now, Sessions: accounts, TrustForwardAuth: trust, Edits: campaignpg.New(store.Pool()),

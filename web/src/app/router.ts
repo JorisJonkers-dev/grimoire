@@ -15,6 +15,7 @@ const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilde
 const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
 const MyCharactersPage = () => import('@/features/characters/MyCharactersPage.vue')
 const MyCharacterPage = () => import('@/features/characters/MyCharacterPage.vue')
+const FriendsPage = () => import('@/features/friends/FriendsPage.vue')
 const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
 const EncountersPage = () => import('@/features/prep/EncountersPage.vue')
@@ -73,6 +74,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/oidc/callback', name: 'oidc-callback', component: OidcCallbackPage },
       { path: '/admin', name: 'admin', component: AdminPage },
       { path: '/characters', name: 'my-characters', component: MyCharactersPage },
+      { path: '/friends', name: 'friends', component: FriendsPage },
       { path: '/characters/:characterId', name: 'my-character', component: MyCharacterPage },
       { path: '/admin/accounts/:id', name: 'admin-account', component: AdminAccountPage },
     ],

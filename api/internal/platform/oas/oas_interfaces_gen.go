@@ -5,12 +5,20 @@ type AcceptAccountInviteRes interface {
 	acceptAccountInviteRes()
 }
 
+type AcceptFriendRequestRes interface {
+	acceptFriendRequestRes()
+}
+
 type AcceptInviteRes interface {
 	acceptInviteRes()
 }
 
 type BeginTwoStepRes interface {
 	beginTwoStepRes()
+}
+
+type CancelFriendRequestRes interface {
+	cancelFriendRequestRes()
 }
 
 type ClearTokenIconRes interface {
@@ -75,6 +83,10 @@ type CreateSettlementRes interface {
 
 type CreateShopRes interface {
 	createShopRes()
+}
+
+type DeclineFriendRequestRes interface {
+	declineFriendRequestRes()
 }
 
 type DeleteCharacterRes interface {
@@ -285,6 +297,10 @@ type ListEntriesRes interface {
 	listEntriesRes()
 }
 
+type ListFriendsRes interface {
+	listFriendsRes()
+}
+
 type ListInvitesRes interface {
 	listInvitesRes()
 }
@@ -433,6 +449,10 @@ type SendAdminSignInLinkRes interface {
 	sendAdminSignInLinkRes()
 }
 
+type SendFriendRequestRes interface {
+	sendFriendRequestRes()
+}
+
 type SendLiveCommandRes interface {
 	sendLiveCommandRes()
 }
@@ -481,8 +501,16 @@ type StartSessionRes interface {
 	startSessionRes()
 }
 
+type UnblockRes interface {
+	unblockRes()
+}
+
 type UndoChangeRes interface {
 	undoChangeRes()
+}
+
+type UnfriendRes interface {
+	unfriendRes()
 }
 
 type UnlinkOidcRes interface {
