@@ -886,6 +886,15 @@ type IdentityAccount struct {
 	CreatedAt    time.Time
 }
 
+type IdentityAccountEvent struct {
+	ID        uuid.UUID
+	AccountID uuid.UUID
+	Actor     string
+	Action    string
+	Detail    string
+	At        time.Time
+}
+
 type IdentityAccountSession struct {
 	ID         uuid.UUID
 	AccountID  uuid.UUID

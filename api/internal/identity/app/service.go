@@ -38,6 +38,7 @@ type Repository interface {
 	OIDCRepository
 	TwoStepRepository
 	AccessTokenRepository
+	AdminRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
@@ -144,6 +145,9 @@ func (s *Service) Accept(ctx context.Context, token string, in domain.Setup, use
 		if used, err := r.UseInvite(ctx, inv.ID, id, now); err != nil || !used {
 			return firstErr(err, domain.ErrExpired)
 		}
+		if err := s.record(ctx, r, id, out.Subject, domain.EventCreated, "from an invite"); err != nil {
+			return err
+		}
 		session, err = startSession(ctx, r, id, userAgent, now, false)
 		return err
 	})
@@ -241,12 +245,17 @@ func (s *Service) RequestLink(ctx context.Context, email string) error {
 	if err != nil || a.Disabled {
 		return nil //nolint:nilerr // the answer is the same either way
 	}
+	return s.mailLink(ctx, s.Repo, a)
+}
+
+// mailLink emails an Account's holder a sign-in link that works once, within 30 minutes.
+func (s *Service) mailLink(ctx context.Context, r Repository, a domain.Account) error {
 	token, hash, err := newToken()
 	if err != nil {
 		return err
 	}
 	now := s.Now()
-	if err := s.Repo.InsertSignInLink(ctx, hash, a.ID, now, now.Add(SignInLink)); err != nil {
+	if err := r.InsertSignInLink(ctx, hash, a.ID, now, now.Add(SignInLink)); err != nil {
 		return err
 	}
 	body := "Hello " + a.Nickname + ",\n\nSign in to Grimoire with this link; it works once, within 30 minutes:\n\n" +
@@ -326,5 +335,8 @@ func (s *Service) SetPassword(ctx context.Context, subject, password string) err
 	if err != nil {
 		return err
 	}
-	return s.Repo.SetPassword(ctx, a.ID, hash)
+	if err := s.Repo.SetPassword(ctx, a.ID, hash); err != nil {
+		return err
+	}
+	return s.record(ctx, s.Repo, a.ID, subject, domain.EventPasswordSet, "")
 }

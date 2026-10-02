@@ -108,6 +108,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/sign-in-links
 	RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (RequestSignInLinkRes, error)
+	// ResetAccountTwoStep implements resetAccountTwoStep operation.
+	//
+	// Turns two-step off for a holder who lost their phone and recovery codes.
+	//
+	// POST /api/v1/admin/accounts/{accountId}/two-step/reset
+	ResetAccountTwoStep(ctx context.Context, params ResetAccountTwoStepParams) (ResetAccountTwoStepRes, error)
 	// ResetRecoveryCodes implements resetRecoveryCodes operation.
 	//
 	// Needs a current code; the old recovery codes stop working.
@@ -120,12 +126,30 @@ type AccountHandler interface {
 	//
 	// DELETE /api/v1/account/access-tokens/{accessId}
 	RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (RevokeAccessTokenRes, error)
+	// SendAdminSignInLink implements sendAdminSignInLink operation.
+	//
+	// Sends the holder a link that signs them in once, within 30 minutes.
+	//
+	// POST /api/v1/admin/accounts/{accountId}/sign-in-link
+	SendAdminSignInLink(ctx context.Context, params SendAdminSignInLinkParams) (SendAdminSignInLinkRes, error)
+	// SetAccountDisabled implements setAccountDisabled operation.
+	//
+	// Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+	//
+	// PUT /api/v1/admin/accounts/{accountId}/disabled
+	SetAccountDisabled(ctx context.Context, req *Toggle, params SetAccountDisabledParams) (SetAccountDisabledRes, error)
 	// SetAccountPassword implements setAccountPassword operation.
 	//
 	// Replaces the signed-in Account's password, for example after signing in with an emailed link.
 	//
 	// PUT /api/v1/account/password
 	SetAccountPassword(ctx context.Context, req *PasswordChange) (SetAccountPasswordRes, error)
+	// SetAdminRole implements setAdminRole operation.
+	//
+	// Nobody removes their own Admin role.
+	//
+	// PUT /api/v1/admin/accounts/{accountId}/admin
+	SetAdminRole(ctx context.Context, req *Toggle, params SetAdminRoleParams) (SetAdminRoleRes, error)
 	// SignIn implements signIn operation.
 	//
 	// Signs the Account in on this device. Every failure answers the same.
@@ -519,12 +543,24 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/account
 	GetAccount(ctx context.Context) (GetAccountRes, error)
+	// GetAccountHistory implements getAccountHistory operation.
+	//
+	// What happened to the signed-in Account and who did it, newest first.
+	//
+	// GET /api/v1/account/history
+	GetAccountHistory(ctx context.Context) (GetAccountHistoryRes, error)
 	// GetActionLog implements getActionLog operation.
 	//
 	// The Campaign's recent Actions with their seeds. DM only.
 	//
 	// GET /api/v1/campaigns/{campaignId}/log
 	GetActionLog(ctx context.Context, params GetActionLogParams) (GetActionLogRes, error)
+	// GetAdminAccount implements getAdminAccount operation.
+	//
+	// How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+	//
+	// GET /api/v1/admin/accounts/{accountId}
+	GetAdminAccount(ctx context.Context, params GetAdminAccountParams) (GetAdminAccountRes, error)
 	// GetAutomationCoverage implements getAutomationCoverage operation.
 	//
 	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
@@ -667,6 +703,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/activity
 	ListActivity(ctx context.Context, params ListActivityParams) (ListActivityRes, error)
+	// ListAdminAccounts implements listAdminAccounts operation.
+	//
+	// Every Account with its status, and every Invite nobody has used yet. For Admins.
+	//
+	// GET /api/v1/admin/accounts
+	ListAdminAccounts(ctx context.Context) (ListAdminAccountsRes, error)
 	// ListCampaigns implements listCampaigns operation.
 	//
 	// The Campaigns the caller is a Member of, newest first.

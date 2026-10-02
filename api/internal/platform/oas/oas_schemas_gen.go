@@ -809,6 +809,233 @@ func (s *AccountChange) SetEmail(val string) {
 	s.Email = val
 }
 
+// One thing that happened to an Account, and who did it.
+// Ref: #/components/schemas/AccountEvent
+type AccountEvent struct {
+	At time.Time `json:"at"`
+	// The Username of whoever did it, or their subject when they have no Account.
+	Actor  string             `json:"actor"`
+	Action AccountEventAction `json:"action"`
+	Detail string             `json:"detail"`
+}
+
+// GetAt returns the value of At.
+func (s *AccountEvent) GetAt() time.Time {
+	return s.At
+}
+
+// GetActor returns the value of Actor.
+func (s *AccountEvent) GetActor() string {
+	return s.Actor
+}
+
+// GetAction returns the value of Action.
+func (s *AccountEvent) GetAction() AccountEventAction {
+	return s.Action
+}
+
+// GetDetail returns the value of Detail.
+func (s *AccountEvent) GetDetail() string {
+	return s.Detail
+}
+
+// SetAt sets the value of At.
+func (s *AccountEvent) SetAt(val time.Time) {
+	s.At = val
+}
+
+// SetActor sets the value of Actor.
+func (s *AccountEvent) SetActor(val string) {
+	s.Actor = val
+}
+
+// SetAction sets the value of Action.
+func (s *AccountEvent) SetAction(val AccountEventAction) {
+	s.Action = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *AccountEvent) SetDetail(val string) {
+	s.Detail = val
+}
+
+type AccountEventAction string
+
+const (
+	AccountEventActionCreated        AccountEventAction = "created"
+	AccountEventActionPasswordSet    AccountEventAction = "password_set"
+	AccountEventActionTwoStepOn      AccountEventAction = "two_step_on"
+	AccountEventActionTwoStepOff     AccountEventAction = "two_step_off"
+	AccountEventActionTwoStepReset   AccountEventAction = "two_step_reset"
+	AccountEventActionLinked         AccountEventAction = "linked"
+	AccountEventActionUnlinked       AccountEventAction = "unlinked"
+	AccountEventActionSignInLinkSent AccountEventAction = "sign_in_link_sent"
+	AccountEventActionAdminGranted   AccountEventAction = "admin_granted"
+	AccountEventActionAdminRevoked   AccountEventAction = "admin_revoked"
+	AccountEventActionDisabled       AccountEventAction = "disabled"
+	AccountEventActionEnabled        AccountEventAction = "enabled"
+)
+
+// AllValues returns all AccountEventAction values.
+func (AccountEventAction) AllValues() []AccountEventAction {
+	return []AccountEventAction{
+		AccountEventActionCreated,
+		AccountEventActionPasswordSet,
+		AccountEventActionTwoStepOn,
+		AccountEventActionTwoStepOff,
+		AccountEventActionTwoStepReset,
+		AccountEventActionLinked,
+		AccountEventActionUnlinked,
+		AccountEventActionSignInLinkSent,
+		AccountEventActionAdminGranted,
+		AccountEventActionAdminRevoked,
+		AccountEventActionDisabled,
+		AccountEventActionEnabled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AccountEventAction) MarshalText() ([]byte, error) {
+	switch s {
+	case AccountEventActionCreated:
+		return []byte(s), nil
+	case AccountEventActionPasswordSet:
+		return []byte(s), nil
+	case AccountEventActionTwoStepOn:
+		return []byte(s), nil
+	case AccountEventActionTwoStepOff:
+		return []byte(s), nil
+	case AccountEventActionTwoStepReset:
+		return []byte(s), nil
+	case AccountEventActionLinked:
+		return []byte(s), nil
+	case AccountEventActionUnlinked:
+		return []byte(s), nil
+	case AccountEventActionSignInLinkSent:
+		return []byte(s), nil
+	case AccountEventActionAdminGranted:
+		return []byte(s), nil
+	case AccountEventActionAdminRevoked:
+		return []byte(s), nil
+	case AccountEventActionDisabled:
+		return []byte(s), nil
+	case AccountEventActionEnabled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AccountEventAction) UnmarshalText(data []byte) error {
+	switch AccountEventAction(data) {
+	case AccountEventActionCreated:
+		*s = AccountEventActionCreated
+		return nil
+	case AccountEventActionPasswordSet:
+		*s = AccountEventActionPasswordSet
+		return nil
+	case AccountEventActionTwoStepOn:
+		*s = AccountEventActionTwoStepOn
+		return nil
+	case AccountEventActionTwoStepOff:
+		*s = AccountEventActionTwoStepOff
+		return nil
+	case AccountEventActionTwoStepReset:
+		*s = AccountEventActionTwoStepReset
+		return nil
+	case AccountEventActionLinked:
+		*s = AccountEventActionLinked
+		return nil
+	case AccountEventActionUnlinked:
+		*s = AccountEventActionUnlinked
+		return nil
+	case AccountEventActionSignInLinkSent:
+		*s = AccountEventActionSignInLinkSent
+		return nil
+	case AccountEventActionAdminGranted:
+		*s = AccountEventActionAdminGranted
+		return nil
+	case AccountEventActionAdminRevoked:
+		*s = AccountEventActionAdminRevoked
+		return nil
+	case AccountEventActionDisabled:
+		*s = AccountEventActionDisabled
+		return nil
+	case AccountEventActionEnabled:
+		*s = AccountEventActionEnabled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// An Account's history, newest first.
+// Ref: #/components/schemas/AccountEventList
+type AccountEventList struct {
+	Items []AccountEvent `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *AccountEventList) GetItems() []AccountEvent {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *AccountEventList) SetItems(val []AccountEvent) {
+	s.Items = val
+}
+
+// AccountEventListHeaders wraps AccountEventList with response headers.
+type AccountEventListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AccountEventList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AccountEventListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AccountEventListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AccountEventListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AccountEventListHeaders) GetResponse() AccountEventList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AccountEventListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AccountEventListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AccountEventListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AccountEventListHeaders) SetResponse(val AccountEventList) {
+	s.Response = val
+}
+
+func (*AccountEventListHeaders) getAccountHistoryRes() {}
+
 // AccountHeaders wraps Account with response headers.
 type AccountHeaders struct {
 	RateLimitLimit     OptInt32
@@ -1709,6 +1936,529 @@ func (s *ActivityOrigin) UnmarshalText(data []byte) error {
 		return nil
 	case ActivityOriginSystem:
 		*s = ActivityOriginSystem
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One Account as its Admin page shows it.
+// Ref: #/components/schemas/AdminAccountDetail
+type AdminAccountDetail struct {
+	Account   Account                  `json:"account"`
+	Status    AdminAccountDetailStatus `json:"status"`
+	CreatedAt time.Time                `json:"createdAt"`
+	Sessions  int32                    `json:"sessions"`
+	Tokens    int32                    `json:"tokens"`
+	Campaigns []AdminCampaign          `json:"campaigns"`
+	History   []AccountEvent           `json:"history"`
+}
+
+// GetAccount returns the value of Account.
+func (s *AdminAccountDetail) GetAccount() Account {
+	return s.Account
+}
+
+// GetStatus returns the value of Status.
+func (s *AdminAccountDetail) GetStatus() AdminAccountDetailStatus {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *AdminAccountDetail) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetSessions returns the value of Sessions.
+func (s *AdminAccountDetail) GetSessions() int32 {
+	return s.Sessions
+}
+
+// GetTokens returns the value of Tokens.
+func (s *AdminAccountDetail) GetTokens() int32 {
+	return s.Tokens
+}
+
+// GetCampaigns returns the value of Campaigns.
+func (s *AdminAccountDetail) GetCampaigns() []AdminCampaign {
+	return s.Campaigns
+}
+
+// GetHistory returns the value of History.
+func (s *AdminAccountDetail) GetHistory() []AccountEvent {
+	return s.History
+}
+
+// SetAccount sets the value of Account.
+func (s *AdminAccountDetail) SetAccount(val Account) {
+	s.Account = val
+}
+
+// SetStatus sets the value of Status.
+func (s *AdminAccountDetail) SetStatus(val AdminAccountDetailStatus) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *AdminAccountDetail) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetSessions sets the value of Sessions.
+func (s *AdminAccountDetail) SetSessions(val int32) {
+	s.Sessions = val
+}
+
+// SetTokens sets the value of Tokens.
+func (s *AdminAccountDetail) SetTokens(val int32) {
+	s.Tokens = val
+}
+
+// SetCampaigns sets the value of Campaigns.
+func (s *AdminAccountDetail) SetCampaigns(val []AdminCampaign) {
+	s.Campaigns = val
+}
+
+// SetHistory sets the value of History.
+func (s *AdminAccountDetail) SetHistory(val []AccountEvent) {
+	s.History = val
+}
+
+// AdminAccountDetailHeaders wraps AdminAccountDetail with response headers.
+type AdminAccountDetailHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AdminAccountDetail
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AdminAccountDetailHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AdminAccountDetailHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AdminAccountDetailHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AdminAccountDetailHeaders) GetResponse() AdminAccountDetail {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AdminAccountDetailHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AdminAccountDetailHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AdminAccountDetailHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AdminAccountDetailHeaders) SetResponse(val AdminAccountDetail) {
+	s.Response = val
+}
+
+func (*AdminAccountDetailHeaders) getAdminAccountRes() {}
+
+type AdminAccountDetailStatus string
+
+const (
+	AdminAccountDetailStatusActive   AdminAccountDetailStatus = "active"
+	AdminAccountDetailStatusDisabled AdminAccountDetailStatus = "disabled"
+)
+
+// AllValues returns all AdminAccountDetailStatus values.
+func (AdminAccountDetailStatus) AllValues() []AdminAccountDetailStatus {
+	return []AdminAccountDetailStatus{
+		AdminAccountDetailStatusActive,
+		AdminAccountDetailStatusDisabled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AdminAccountDetailStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case AdminAccountDetailStatusActive:
+		return []byte(s), nil
+	case AdminAccountDetailStatusDisabled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AdminAccountDetailStatus) UnmarshalText(data []byte) error {
+	switch AdminAccountDetailStatus(data) {
+	case AdminAccountDetailStatusActive:
+		*s = AdminAccountDetailStatusActive
+		return nil
+	case AdminAccountDetailStatusDisabled:
+		*s = AdminAccountDetailStatusDisabled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Every Account and every unused Invite.
+// Ref: #/components/schemas/AdminAccountList
+type AdminAccountList struct {
+	Accounts []AdminAccountRow `json:"accounts"`
+	Invites  []AdminInviteRow  `json:"invites"`
+}
+
+// GetAccounts returns the value of Accounts.
+func (s *AdminAccountList) GetAccounts() []AdminAccountRow {
+	return s.Accounts
+}
+
+// GetInvites returns the value of Invites.
+func (s *AdminAccountList) GetInvites() []AdminInviteRow {
+	return s.Invites
+}
+
+// SetAccounts sets the value of Accounts.
+func (s *AdminAccountList) SetAccounts(val []AdminAccountRow) {
+	s.Accounts = val
+}
+
+// SetInvites sets the value of Invites.
+func (s *AdminAccountList) SetInvites(val []AdminInviteRow) {
+	s.Invites = val
+}
+
+// AdminAccountListHeaders wraps AdminAccountList with response headers.
+type AdminAccountListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AdminAccountList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AdminAccountListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AdminAccountListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AdminAccountListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AdminAccountListHeaders) GetResponse() AdminAccountList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AdminAccountListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AdminAccountListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AdminAccountListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AdminAccountListHeaders) SetResponse(val AdminAccountList) {
+	s.Response = val
+}
+
+func (*AdminAccountListHeaders) listAdminAccountsRes() {}
+
+// An Account in the Admin list.
+// Ref: #/components/schemas/AdminAccountRow
+type AdminAccountRow struct {
+	ID         ID                    `json:"id"`
+	Username   Username              `json:"username"`
+	Nickname   string                `json:"nickname"`
+	Email      string                `json:"email"`
+	Admin      bool                  `json:"admin"`
+	Status     AdminAccountRowStatus `json:"status"`
+	CreatedAt  time.Time             `json:"createdAt"`
+	LastSeenAt OptDateTime           `json:"lastSeenAt"`
+}
+
+// GetID returns the value of ID.
+func (s *AdminAccountRow) GetID() ID {
+	return s.ID
+}
+
+// GetUsername returns the value of Username.
+func (s *AdminAccountRow) GetUsername() Username {
+	return s.Username
+}
+
+// GetNickname returns the value of Nickname.
+func (s *AdminAccountRow) GetNickname() string {
+	return s.Nickname
+}
+
+// GetEmail returns the value of Email.
+func (s *AdminAccountRow) GetEmail() string {
+	return s.Email
+}
+
+// GetAdmin returns the value of Admin.
+func (s *AdminAccountRow) GetAdmin() bool {
+	return s.Admin
+}
+
+// GetStatus returns the value of Status.
+func (s *AdminAccountRow) GetStatus() AdminAccountRowStatus {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *AdminAccountRow) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetLastSeenAt returns the value of LastSeenAt.
+func (s *AdminAccountRow) GetLastSeenAt() OptDateTime {
+	return s.LastSeenAt
+}
+
+// SetID sets the value of ID.
+func (s *AdminAccountRow) SetID(val ID) {
+	s.ID = val
+}
+
+// SetUsername sets the value of Username.
+func (s *AdminAccountRow) SetUsername(val Username) {
+	s.Username = val
+}
+
+// SetNickname sets the value of Nickname.
+func (s *AdminAccountRow) SetNickname(val string) {
+	s.Nickname = val
+}
+
+// SetEmail sets the value of Email.
+func (s *AdminAccountRow) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetAdmin sets the value of Admin.
+func (s *AdminAccountRow) SetAdmin(val bool) {
+	s.Admin = val
+}
+
+// SetStatus sets the value of Status.
+func (s *AdminAccountRow) SetStatus(val AdminAccountRowStatus) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *AdminAccountRow) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetLastSeenAt sets the value of LastSeenAt.
+func (s *AdminAccountRow) SetLastSeenAt(val OptDateTime) {
+	s.LastSeenAt = val
+}
+
+type AdminAccountRowStatus string
+
+const (
+	AdminAccountRowStatusActive   AdminAccountRowStatus = "active"
+	AdminAccountRowStatusDisabled AdminAccountRowStatus = "disabled"
+)
+
+// AllValues returns all AdminAccountRowStatus values.
+func (AdminAccountRowStatus) AllValues() []AdminAccountRowStatus {
+	return []AdminAccountRowStatus{
+		AdminAccountRowStatusActive,
+		AdminAccountRowStatusDisabled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AdminAccountRowStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case AdminAccountRowStatusActive:
+		return []byte(s), nil
+	case AdminAccountRowStatusDisabled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AdminAccountRowStatus) UnmarshalText(data []byte) error {
+	switch AdminAccountRowStatus(data) {
+	case AdminAccountRowStatusActive:
+		*s = AdminAccountRowStatusActive
+		return nil
+	case AdminAccountRowStatusDisabled:
+		*s = AdminAccountRowStatusDisabled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Campaign an Account belongs to, and its role there.
+// Ref: #/components/schemas/AdminCampaign
+type AdminCampaign struct {
+	ID   ID     `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
+// GetID returns the value of ID.
+func (s *AdminCampaign) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *AdminCampaign) GetName() string {
+	return s.Name
+}
+
+// GetRole returns the value of Role.
+func (s *AdminCampaign) GetRole() string {
+	return s.Role
+}
+
+// SetID sets the value of ID.
+func (s *AdminCampaign) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *AdminCampaign) SetName(val string) {
+	s.Name = val
+}
+
+// SetRole sets the value of Role.
+func (s *AdminCampaign) SetRole(val string) {
+	s.Role = val
+}
+
+// An Invite nobody has used, open until it expires.
+// Ref: #/components/schemas/AdminInviteRow
+type AdminInviteRow struct {
+	ID        ID                   `json:"id"`
+	Admin     bool                 `json:"admin"`
+	Status    AdminInviteRowStatus `json:"status"`
+	CreatedAt time.Time            `json:"createdAt"`
+	ExpiresAt time.Time            `json:"expiresAt"`
+}
+
+// GetID returns the value of ID.
+func (s *AdminInviteRow) GetID() ID {
+	return s.ID
+}
+
+// GetAdmin returns the value of Admin.
+func (s *AdminInviteRow) GetAdmin() bool {
+	return s.Admin
+}
+
+// GetStatus returns the value of Status.
+func (s *AdminInviteRow) GetStatus() AdminInviteRowStatus {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *AdminInviteRow) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *AdminInviteRow) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// SetID sets the value of ID.
+func (s *AdminInviteRow) SetID(val ID) {
+	s.ID = val
+}
+
+// SetAdmin sets the value of Admin.
+func (s *AdminInviteRow) SetAdmin(val bool) {
+	s.Admin = val
+}
+
+// SetStatus sets the value of Status.
+func (s *AdminInviteRow) SetStatus(val AdminInviteRowStatus) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *AdminInviteRow) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *AdminInviteRow) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+type AdminInviteRowStatus string
+
+const (
+	AdminInviteRowStatusInvited AdminInviteRowStatus = "invited"
+	AdminInviteRowStatusExpired AdminInviteRowStatus = "expired"
+)
+
+// AllValues returns all AdminInviteRowStatus values.
+func (AdminInviteRowStatus) AllValues() []AdminInviteRowStatus {
+	return []AdminInviteRowStatus{
+		AdminInviteRowStatusInvited,
+		AdminInviteRowStatusExpired,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AdminInviteRowStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case AdminInviteRowStatusInvited:
+		return []byte(s), nil
+	case AdminInviteRowStatusExpired:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AdminInviteRowStatus) UnmarshalText(data []byte) error {
+	switch AdminInviteRowStatus(data) {
+	case AdminInviteRowStatusInvited:
+		*s = AdminInviteRowStatusInvited
+		return nil
+	case AdminInviteRowStatusExpired:
+		*s = AdminInviteRowStatusExpired
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -21444,8 +22194,10 @@ func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
+func (*ProblemStatusCodeWithHeaders) getAccountHistoryRes()             {}
 func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getAdminAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
@@ -21470,6 +22222,7 @@ func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
+func (*ProblemStatusCodeWithHeaders) listAdminAccountsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
@@ -21503,6 +22256,7 @@ func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) requestSignInLinkRes()             {}
 func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
+func (*ProblemStatusCodeWithHeaders) resetAccountTwoStepRes()           {}
 func (*ProblemStatusCodeWithHeaders) resetRecoveryCodesRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
@@ -21513,8 +22267,11 @@ func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
+func (*ProblemStatusCodeWithHeaders) setAccountDisabledRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
+func (*ProblemStatusCodeWithHeaders) setAdminRoleRes()                  {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
@@ -22088,6 +22845,45 @@ func (s *RequestSignInLinkAccepted) SetRateLimitReset(val OptInt32) {
 }
 
 func (*RequestSignInLinkAccepted) requestSignInLinkRes() {}
+
+// ResetAccountTwoStepNoContent is response for ResetAccountTwoStep operation.
+type ResetAccountTwoStepNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ResetAccountTwoStepNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ResetAccountTwoStepNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ResetAccountTwoStepNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ResetAccountTwoStepNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ResetAccountTwoStepNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ResetAccountTwoStepNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*ResetAccountTwoStepNoContent) resetAccountTwoStepRes() {}
 
 // A spendable pool such as hit dice or spell slots.
 // Ref: #/components/schemas/ResourcePool
@@ -22946,6 +23742,45 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 	}
 }
 
+// SendAdminSignInLinkAccepted is response for SendAdminSignInLink operation.
+type SendAdminSignInLinkAccepted struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SendAdminSignInLinkAccepted) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SendAdminSignInLinkAccepted) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SendAdminSignInLinkAccepted) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SendAdminSignInLinkAccepted) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SendAdminSignInLinkAccepted) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SendAdminSignInLinkAccepted) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SendAdminSignInLinkAccepted) sendAdminSignInLinkRes() {}
+
 // One Action of a live Session, what it touched, and whether it can still be undone.
 // Ref: #/components/schemas/SessionAction
 type SessionAction struct {
@@ -23094,6 +23929,45 @@ func (s *SessionActionOrigin) UnmarshalText(data []byte) error {
 	}
 }
 
+// SetAccountDisabledNoContent is response for SetAccountDisabled operation.
+type SetAccountDisabledNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SetAccountDisabledNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SetAccountDisabledNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SetAccountDisabledNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SetAccountDisabledNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SetAccountDisabledNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SetAccountDisabledNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SetAccountDisabledNoContent) setAccountDisabledRes() {}
+
 // SetAccountPasswordNoContent is response for SetAccountPassword operation.
 type SetAccountPasswordNoContent struct {
 	RateLimitLimit     OptInt32
@@ -23132,6 +24006,45 @@ func (s *SetAccountPasswordNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*SetAccountPasswordNoContent) setAccountPasswordRes() {}
+
+// SetAdminRoleNoContent is response for SetAdminRole operation.
+type SetAdminRoleNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SetAdminRoleNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SetAdminRoleNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SetAdminRoleNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SetAdminRoleNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SetAdminRoleNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SetAdminRoleNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SetAdminRoleNoContent) setAdminRoleRes() {}
 
 // SetPortraitNoContent is response for SetPortrait operation.
 type SetPortraitNoContent struct {
@@ -25430,6 +26343,22 @@ func (s *Tactics) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// Turns a setting on or off.
+// Ref: #/components/schemas/Toggle
+type Toggle struct {
+	Value bool `json:"value"`
+}
+
+// GetValue returns the value of Value.
+func (s *Toggle) GetValue() bool {
+	return s.Value
+}
+
+// SetValue sets the value of Value.
+func (s *Toggle) SetValue(val bool) {
+	s.Value = val
 }
 
 type Token string

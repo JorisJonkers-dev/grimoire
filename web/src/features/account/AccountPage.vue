@@ -2,8 +2,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { ref, watch } from 'vue'
 import {
-  createAccountInviteMutation,
   getAccountOptions,
+  getAccountHistoryOptions,
   getAccountQueryKey,
   getSignInMethodsOptions,
   setAccountPasswordMutation,
@@ -13,12 +13,14 @@ import {
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton, GField } from '@/shared/ui'
 import { leaveFor } from './leave'
+import { eventLabels, when } from '@/features/admin/labels'
 import AccessTokensSection from './AccessTokensSection.vue'
 import TwoStepSection from './TwoStepSection.vue'
 
 const client = useQueryClient()
 const account = useQuery(getAccountOptions())
 const methods = useQuery(getSignInMethodsOptions())
+const history = useQuery(getAccountHistoryOptions())
 const refresh = () => client.invalidateQueries({ queryKey: getAccountQueryKey() })
 const password = ref('')
 const save = useMutation(setAccountPasswordMutation())
@@ -49,10 +51,6 @@ function link() {
 function unlink() {
   unlinking.mutate({}, { onSuccess: () => void refresh() })
 }
-const hours = ref(72)
-const asAdmin = ref(false)
-const invite = useMutation(createAccountInviteMutation())
-const inviteLink = (token: string) => `${window.location.origin}/account-invite#${token}`
 </script>
 
 <template>
@@ -99,20 +97,16 @@ const inviteLink = (token: string) => `${window.location.origin}/account-invite#
       </form>
       <TwoStepSection v-if="account.data.value.hasPassword" :account="account.data.value" />
       <AccessTokensSection />
-      <form v-if="account.data.value.adminPowers" class="g-card stack" data-testid="invite-form" @submit.prevent="invite.mutate({ body: { hours, admin: asAdmin } })">
-        <h2>Invite someone</h2>
-        <label class="g-field">
-          <span>Open for</span>
-          <select v-model.number="hours" data-testid="invite-hours">
-            <option :value="24">A day</option>
-            <option :value="72">Three days</option>
-            <option :value="168">A week</option>
-          </select>
-        </label>
-        <label class="check"><input v-model="asAdmin" type="checkbox" data-testid="invite-admin" /><span>As an Admin</span></label>
-        <GButton type="submit" :disabled="invite.isPending.value">Create the invite</GButton>
-        <p v-if="invite.data.value" role="status" data-testid="invite-link">Send this link, which works once: <code>{{ inviteLink(invite.data.value.token) }}</code></p>
-      </form>
+      <p v-if="account.data.value.adminPowers" class="g-card"><RouterLink :to="{ name: 'admin' }" data-testid="account-admin-link">Manage Accounts and invites</RouterLink></p>
+      <details v-if="history.data.value?.items.length" class="g-card" data-testid="account-history">
+        <summary>Recent activity</summary>
+        <ol class="history">
+          <li v-for="(e, i) in history.data.value.items" :key="i">
+            <span>{{ eventLabels[e.action] }}</span>
+            <span class="dim">{{ e.actor }} · {{ when(e.at) }}</span>
+          </li>
+        </ol>
+      </details>
     </template>
   </main>
 </template>
@@ -139,6 +133,24 @@ h2 {
 .readonly dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dim {
+  color: var(--color-text-3);
+  font-size: 14px;
 }
 .hint {
   margin: 0;

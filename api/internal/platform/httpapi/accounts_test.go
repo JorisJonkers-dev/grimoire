@@ -371,6 +371,34 @@ func (brokenAccounts) AccessTokens(context.Context, string) ([]domain.AccessToke
 }
 func (brokenAccounts) RevokeToken(context.Context, string, uuid.UUID) error { return errAccounts }
 
+func (brokenAccounts) AdminAccounts(context.Context, string) ([]domain.Listed, []domain.ListedInvite, error) {
+	return nil, nil, errAccounts
+}
+
+func (brokenAccounts) AdminAccount(context.Context, string, domain.AccountID) (domain.Detail, error) {
+	return domain.Detail{}, errAccounts
+}
+
+func (brokenAccounts) SendSignInLink(context.Context, string, domain.AccountID) error {
+	return errAccounts
+}
+
+func (brokenAccounts) SetAdmin(context.Context, string, domain.AccountID, bool) error {
+	return errAccounts
+}
+
+func (brokenAccounts) SetDisabled(context.Context, string, domain.AccountID, bool) error {
+	return errAccounts
+}
+
+func (brokenAccounts) ResetTwoStep(context.Context, string, domain.AccountID) error {
+	return errAccounts
+}
+
+func (brokenAccounts) History(context.Context, string) ([]domain.Event, error) {
+	return nil, errAccounts
+}
+
 // When the Account store fails, every call answers 503 without saying why.
 func TestAccountsWhenTheStoreFails(t *testing.T) {
 	t.Parallel()
@@ -406,6 +434,13 @@ func TestAccountsWhenTheStoreFails(t *testing.T) {
 		{http.MethodGet, "/api/v1/account/access-tokens", "", "someone", ""},
 		{http.MethodPost, "/api/v1/account/access-tokens", "", "someone", `{"name":"x","scopes":["read"],"days":1}`},
 		{http.MethodDelete, "/api/v1/account/access-tokens/0190c7a8-0000-7000-8000-0000000000c1", "", "someone", ""},
+		{http.MethodGet, "/api/v1/admin/accounts", "", "root", ""},
+		{http.MethodGet, "/api/v1/admin/accounts/0190c7a8-0000-7000-8000-0000000000c1", "", "root", ""},
+		{http.MethodPost, "/api/v1/admin/accounts/0190c7a8-0000-7000-8000-0000000000c1/sign-in-link", "", "root", ""},
+		{http.MethodPut, "/api/v1/admin/accounts/0190c7a8-0000-7000-8000-0000000000c1/admin", "", "root", `{"value":true}`},
+		{http.MethodPut, "/api/v1/admin/accounts/0190c7a8-0000-7000-8000-0000000000c1/disabled", "", "root", `{"value":true}`},
+		{http.MethodPost, "/api/v1/admin/accounts/0190c7a8-0000-7000-8000-0000000000c1/two-step/reset", "", "root", ""},
+		{http.MethodGet, "/api/v1/account/history", "", "someone", ""},
 	} {
 		if rec := send(h, c.method, c.path, c.cookie, c.subject, c.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s = %d %s", c.method, c.path, rec.Code, rec.Body.String())

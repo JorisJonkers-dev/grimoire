@@ -187,6 +187,38 @@ func (q *Queries) ConfirmTOTP(ctx context.Context, arg ConfirmTOTPParams) (int64
 	return result.RowsAffected(), nil
 }
 
+const countLiveSessions = `-- name: CountLiveSessions :one
+SELECT count(*)::integer AS live FROM identity.account_sessions WHERE account_id = $1 AND revoked_at IS NULL AND expires_at > $2
+`
+
+type CountLiveSessionsParams struct {
+	AccountID uuid.UUID
+	Now       time.Time
+}
+
+func (q *Queries) CountLiveSessions(ctx context.Context, arg CountLiveSessionsParams) (int32, error) {
+	row := q.db.QueryRow(ctx, countLiveSessions, arg.AccountID, arg.Now)
+	var live int32
+	err := row.Scan(&live)
+	return live, err
+}
+
+const countLiveTokens = `-- name: CountLiveTokens :one
+SELECT count(*)::integer AS live FROM identity.access_tokens WHERE account_id = $1 AND revoked_at IS NULL AND expires_at > $2
+`
+
+type CountLiveTokensParams struct {
+	AccountID uuid.UUID
+	Now       time.Time
+}
+
+func (q *Queries) CountLiveTokens(ctx context.Context, arg CountLiveTokensParams) (int32, error) {
+	row := q.db.QueryRow(ctx, countLiveTokens, arg.AccountID, arg.Now)
+	var live int32
+	err := row.Scan(&live)
+	return live, err
+}
+
 const deleteOIDCLink = `-- name: DeleteOIDCLink :execrows
 DELETE FROM identity.oidc_links WHERE account_id = $1
 `
@@ -296,6 +328,31 @@ func (q *Queries) InsertAccount(ctx context.Context, arg InsertAccountParams) (I
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const insertAccountEvent = `-- name: InsertAccountEvent :exec
+INSERT INTO identity.account_events (id, account_id, actor, action, detail, at) VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertAccountEventParams struct {
+	ID        uuid.UUID
+	AccountID uuid.UUID
+	Actor     string
+	Action    string
+	Detail    string
+	At        time.Time
+}
+
+func (q *Queries) InsertAccountEvent(ctx context.Context, arg InsertAccountEventParams) error {
+	_, err := q.db.Exec(ctx, insertAccountEvent,
+		arg.ID,
+		arg.AccountID,
+		arg.Actor,
+		arg.Action,
+		arg.Detail,
+		arg.At,
+	)
+	return err
 }
 
 const insertAccountSession = `-- name: InsertAccountSession :exec
@@ -566,6 +623,132 @@ func (q *Queries) ListAccessTokens(ctx context.Context, arg ListAccessTokensPara
 	return items, nil
 }
 
+const listAccountEvents = `-- name: ListAccountEvents :many
+SELECT e.at, e.actor, coalesce(a.username, '')::text AS actor_name, e.action, e.detail
+FROM identity.account_events e LEFT JOIN identity.accounts a ON a.subject = e.actor
+WHERE e.account_id = $1 ORDER BY e.at DESC, e.id LIMIT 100
+`
+
+type ListAccountEventsRow struct {
+	At        time.Time
+	Actor     string
+	ActorName string
+	Action    string
+	Detail    string
+}
+
+func (q *Queries) ListAccountEvents(ctx context.Context, accountID uuid.UUID) ([]ListAccountEventsRow, error) {
+	rows, err := q.db.Query(ctx, listAccountEvents, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccountEventsRow{}
+	for rows.Next() {
+		var i ListAccountEventsRow
+		if err := rows.Scan(
+			&i.At,
+			&i.Actor,
+			&i.ActorName,
+			&i.Action,
+			&i.Detail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAccounts = `-- name: ListAccounts :many
+SELECT a.id, a.subject, a.username, a.nickname, a.email, a.admin, a.disabled, a.created_at, max(s.last_seen_at) AS last_seen_at
+FROM identity.accounts a LEFT JOIN identity.account_sessions s ON s.account_id = a.id
+GROUP BY a.id ORDER BY lower(a.nickname), a.username
+`
+
+type ListAccountsRow struct {
+	ID         uuid.UUID
+	Subject    string
+	Username   string
+	Nickname   string
+	Email      string
+	Admin      bool
+	Disabled   bool
+	CreatedAt  time.Time
+	LastSeenAt interface{}
+}
+
+func (q *Queries) ListAccounts(ctx context.Context) ([]ListAccountsRow, error) {
+	rows, err := q.db.Query(ctx, listAccounts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccountsRow{}
+	for rows.Next() {
+		var i ListAccountsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Subject,
+			&i.Username,
+			&i.Nickname,
+			&i.Email,
+			&i.Admin,
+			&i.Disabled,
+			&i.CreatedAt,
+			&i.LastSeenAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnusedInvites = `-- name: ListUnusedInvites :many
+SELECT id, created_by, admin, created_at, expires_at FROM identity.invites WHERE used_at IS NULL ORDER BY created_at DESC LIMIT 200
+`
+
+type ListUnusedInvitesRow struct {
+	ID        uuid.UUID
+	CreatedBy string
+	Admin     bool
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+func (q *Queries) ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow, error) {
+	rows, err := q.db.Query(ctx, listUnusedInvites)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUnusedInvitesRow{}
+	for rows.Next() {
+		var i ListUnusedInvitesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedBy,
+			&i.Admin,
+			&i.CreatedAt,
+			&i.ExpiresAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const oIDCLinkByAccount = `-- name: OIDCLinkByAccount :one
 SELECT account_id, issuer, subject, email, username, name, linked_at FROM identity.oidc_links WHERE account_id = $1
 `
@@ -652,6 +835,34 @@ func (q *Queries) RevokeAccountSession(ctx context.Context, arg RevokeAccountSes
 	return err
 }
 
+const revokeAccountSessions = `-- name: RevokeAccountSessions :exec
+UPDATE identity.account_sessions SET revoked_at = $1 WHERE account_id = $2 AND revoked_at IS NULL
+`
+
+type RevokeAccountSessionsParams struct {
+	Now       pgtype.Timestamptz
+	AccountID uuid.UUID
+}
+
+func (q *Queries) RevokeAccountSessions(ctx context.Context, arg RevokeAccountSessionsParams) error {
+	_, err := q.db.Exec(ctx, revokeAccountSessions, arg.Now, arg.AccountID)
+	return err
+}
+
+const revokeAccountTokens = `-- name: RevokeAccountTokens :exec
+UPDATE identity.access_tokens SET revoked_at = $1 WHERE account_id = $2 AND revoked_at IS NULL
+`
+
+type RevokeAccountTokensParams struct {
+	Now       pgtype.Timestamptz
+	AccountID uuid.UUID
+}
+
+func (q *Queries) RevokeAccountTokens(ctx context.Context, arg RevokeAccountTokensParams) error {
+	_, err := q.db.Exec(ctx, revokeAccountTokens, arg.Now, arg.AccountID)
+	return err
+}
+
 const sessionAccount = `-- name: SessionAccount :one
 SELECT s.id, a.subject, a.disabled, s.strong FROM identity.account_sessions s JOIN identity.accounts a ON a.id = s.account_id
 WHERE s.token_hash = $1 AND s.revoked_at IS NULL AND s.expires_at > $2
@@ -692,6 +903,20 @@ type SetAccountAdminParams struct {
 
 func (q *Queries) SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error {
 	_, err := q.db.Exec(ctx, setAccountAdmin, arg.Admin, arg.ID)
+	return err
+}
+
+const setAccountDisabled = `-- name: SetAccountDisabled :exec
+UPDATE identity.accounts SET disabled = $1 WHERE id = $2
+`
+
+type SetAccountDisabledParams struct {
+	Disabled bool
+	ID       uuid.UUID
+}
+
+func (q *Queries) SetAccountDisabled(ctx context.Context, arg SetAccountDisabledParams) error {
+	_, err := q.db.Exec(ctx, setAccountDisabled, arg.Disabled, arg.ID)
 	return err
 }
 

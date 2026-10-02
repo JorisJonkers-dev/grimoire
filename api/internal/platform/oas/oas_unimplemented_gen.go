@@ -306,12 +306,30 @@ func (UnimplementedHandler) GetAccount(ctx context.Context) (r GetAccountRes, _ 
 	return r, ht.ErrNotImplemented
 }
 
+// GetAccountHistory implements getAccountHistory operation.
+//
+// What happened to the signed-in Account and who did it, newest first.
+//
+// GET /api/v1/account/history
+func (UnimplementedHandler) GetAccountHistory(ctx context.Context) (r GetAccountHistoryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetActionLog implements getActionLog operation.
 //
 // The Campaign's recent Actions with their seeds. DM only.
 //
 // GET /api/v1/campaigns/{campaignId}/log
 func (UnimplementedHandler) GetActionLog(ctx context.Context, params GetActionLogParams) (r GetActionLogRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAdminAccount implements getAdminAccount operation.
+//
+// How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+//
+// GET /api/v1/admin/accounts/{accountId}
+func (UnimplementedHandler) GetAdminAccount(ctx context.Context, params GetAdminAccountParams) (r GetAdminAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -532,6 +550,15 @@ func (UnimplementedHandler) ListAccessTokens(ctx context.Context) (r ListAccessT
 //
 // GET /api/v1/campaigns/{campaignId}/activity
 func (UnimplementedHandler) ListActivity(ctx context.Context, params ListActivityParams) (r ListActivityRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListAdminAccounts implements listAdminAccounts operation.
+//
+// Every Account with its status, and every Invite nobody has used yet. For Admins.
+//
+// GET /api/v1/admin/accounts
+func (UnimplementedHandler) ListAdminAccounts(ctx context.Context) (r ListAdminAccountsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -835,6 +862,15 @@ func (UnimplementedHandler) RerollStock(ctx context.Context, params RerollStockP
 	return r, ht.ErrNotImplemented
 }
 
+// ResetAccountTwoStep implements resetAccountTwoStep operation.
+//
+// Turns two-step off for a holder who lost their phone and recovery codes.
+//
+// POST /api/v1/admin/accounts/{accountId}/two-step/reset
+func (UnimplementedHandler) ResetAccountTwoStep(ctx context.Context, params ResetAccountTwoStepParams) (r ResetAccountTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ResetRecoveryCodes implements resetRecoveryCodes operation.
 //
 // Needs a current code; the old recovery codes stop working.
@@ -931,6 +967,15 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 	return r, ht.ErrNotImplemented
 }
 
+// SendAdminSignInLink implements sendAdminSignInLink operation.
+//
+// Sends the holder a link that signs them in once, within 30 minutes.
+//
+// POST /api/v1/admin/accounts/{accountId}/sign-in-link
+func (UnimplementedHandler) SendAdminSignInLink(ctx context.Context, params SendAdminSignInLinkParams) (r SendAdminSignInLinkRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SendLiveCommand implements sendLiveCommand operation.
 //
 // Sends one command to a live Session as the caller, with the same authority as their live connection,
@@ -941,12 +986,30 @@ func (UnimplementedHandler) SendLiveCommand(ctx context.Context, req *LiveComman
 	return r, ht.ErrNotImplemented
 }
 
+// SetAccountDisabled implements setAccountDisabled operation.
+//
+// Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+//
+// PUT /api/v1/admin/accounts/{accountId}/disabled
+func (UnimplementedHandler) SetAccountDisabled(ctx context.Context, req *Toggle, params SetAccountDisabledParams) (r SetAccountDisabledRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SetAccountPassword implements setAccountPassword operation.
 //
 // Replaces the signed-in Account's password, for example after signing in with an emailed link.
 //
 // PUT /api/v1/account/password
 func (UnimplementedHandler) SetAccountPassword(ctx context.Context, req *PasswordChange) (r SetAccountPasswordRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetAdminRole implements setAdminRole operation.
+//
+// Nobody removes their own Admin role.
+//
+// PUT /api/v1/admin/accounts/{accountId}/admin
+func (UnimplementedHandler) SetAdminRole(ctx context.Context, req *Toggle, params SetAdminRoleParams) (r SetAdminRoleRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

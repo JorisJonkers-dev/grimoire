@@ -125,12 +125,20 @@ type FinishOidcRes interface {
 	finishOidcRes()
 }
 
+type GetAccountHistoryRes interface {
+	getAccountHistoryRes()
+}
+
 type GetAccountRes interface {
 	getAccountRes()
 }
 
 type GetActionLogRes interface {
 	getActionLogRes()
+}
+
+type GetAdminAccountRes interface {
+	getAdminAccountRes()
 }
 
 type GetAutomationCoverageRes interface {
@@ -227,6 +235,10 @@ type ListAccessTokensRes interface {
 
 type ListActivityRes interface {
 	listActivityRes()
+}
+
+type ListAdminAccountsRes interface {
+	listAdminAccountsRes()
 }
 
 type ListCampaignsRes interface {
@@ -361,6 +373,10 @@ type RerollStockRes interface {
 	rerollStockRes()
 }
 
+type ResetAccountTwoStepRes interface {
+	resetAccountTwoStepRes()
+}
+
 type ResetRecoveryCodesRes interface {
 	resetRecoveryCodesRes()
 }
@@ -401,12 +417,24 @@ type RollRestRes interface {
 	rollRestRes()
 }
 
+type SendAdminSignInLinkRes interface {
+	sendAdminSignInLinkRes()
+}
+
 type SendLiveCommandRes interface {
 	sendLiveCommandRes()
 }
 
+type SetAccountDisabledRes interface {
+	setAccountDisabledRes()
+}
+
 type SetAccountPasswordRes interface {
 	setAccountPasswordRes()
+}
+
+type SetAdminRoleRes interface {
+	setAdminRoleRes()
 }
 
 type SetDieRes interface {

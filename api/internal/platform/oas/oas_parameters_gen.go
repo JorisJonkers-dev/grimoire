@@ -2548,6 +2548,79 @@ func decodeGetActionLogParams(args [1]string, argsEscaped bool, r *http.Request)
 	return params, nil
 }
 
+// GetAdminAccountParams is parameters of getAdminAccount operation.
+type GetAdminAccountParams struct {
+	// Account id.
+	AccountId ID
+}
+
+func unpackGetAdminAccountParams(packed middleware.Parameters) (params GetAdminAccountParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "accountId",
+			In:   "path",
+		}
+		params.AccountId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetAdminAccountParams(args [1]string, argsEscaped bool, r *http.Request) (params GetAdminAccountParams, _ error) {
+	// Decode path: accountId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "accountId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotAccountIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAccountIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AccountId = ID(paramsDotAccountIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "accountId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetAutomationCoverageParams is parameters of getAutomationCoverage operation.
 type GetAutomationCoverageParams struct {
 	// ETag from an earlier response; the server answers 304 when nothing changed.
@@ -8443,6 +8516,79 @@ func decodeRerollStockParams(args [2]string, argsEscaped bool, r *http.Request) 
 	return params, nil
 }
 
+// ResetAccountTwoStepParams is parameters of resetAccountTwoStep operation.
+type ResetAccountTwoStepParams struct {
+	// Account id.
+	AccountId ID
+}
+
+func unpackResetAccountTwoStepParams(packed middleware.Parameters) (params ResetAccountTwoStepParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "accountId",
+			In:   "path",
+		}
+		params.AccountId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeResetAccountTwoStepParams(args [1]string, argsEscaped bool, r *http.Request) (params ResetAccountTwoStepParams, _ error) {
+	// Decode path: accountId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "accountId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotAccountIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAccountIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AccountId = ID(paramsDotAccountIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "accountId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // RestoreEncounterPoolRevisionParams is parameters of restoreEncounterPoolRevision operation.
 type RestoreEncounterPoolRevisionParams struct {
 	// Campaign id.
@@ -10020,6 +10166,79 @@ func decodeRollRestParams(args [2]string, argsEscaped bool, r *http.Request) (pa
 	return params, nil
 }
 
+// SendAdminSignInLinkParams is parameters of sendAdminSignInLink operation.
+type SendAdminSignInLinkParams struct {
+	// Account id.
+	AccountId ID
+}
+
+func unpackSendAdminSignInLinkParams(packed middleware.Parameters) (params SendAdminSignInLinkParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "accountId",
+			In:   "path",
+		}
+		params.AccountId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSendAdminSignInLinkParams(args [1]string, argsEscaped bool, r *http.Request) (params SendAdminSignInLinkParams, _ error) {
+	// Decode path: accountId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "accountId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotAccountIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAccountIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AccountId = ID(paramsDotAccountIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "accountId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // SendLiveCommandParams is parameters of sendLiveCommand operation.
 type SendLiveCommandParams struct {
 	// Campaign id.
@@ -10147,6 +10366,152 @@ func decodeSendLiveCommandParams(args [2]string, argsEscaped bool, r *http.Reque
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "sessionId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SetAccountDisabledParams is parameters of setAccountDisabled operation.
+type SetAccountDisabledParams struct {
+	// Account id.
+	AccountId ID
+}
+
+func unpackSetAccountDisabledParams(packed middleware.Parameters) (params SetAccountDisabledParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "accountId",
+			In:   "path",
+		}
+		params.AccountId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSetAccountDisabledParams(args [1]string, argsEscaped bool, r *http.Request) (params SetAccountDisabledParams, _ error) {
+	// Decode path: accountId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "accountId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotAccountIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAccountIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AccountId = ID(paramsDotAccountIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "accountId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SetAdminRoleParams is parameters of setAdminRole operation.
+type SetAdminRoleParams struct {
+	// Account id.
+	AccountId ID
+}
+
+func unpackSetAdminRoleParams(packed middleware.Parameters) (params SetAdminRoleParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "accountId",
+			In:   "path",
+		}
+		params.AccountId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSetAdminRoleParams(args [1]string, argsEscaped bool, r *http.Request) (params SetAdminRoleParams, _ error) {
+	// Decode path: accountId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "accountId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotAccountIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotAccountIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.AccountId = ID(paramsDotAccountIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "accountId",
 			In:   "path",
 			Err:  err,
 		}

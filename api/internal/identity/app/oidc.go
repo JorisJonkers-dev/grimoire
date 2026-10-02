@@ -135,6 +135,9 @@ func (s *Service) linkTo(ctx context.Context, id domain.AccountID, c domain.Clai
 	if err := s.Repo.InsertLink(ctx, id, linkOf(c, now)); err != nil {
 		return out, err
 	}
+	if err := s.record(ctx, s.Repo, id, a.Subject, domain.EventLinked, "from the Account page"); err != nil {
+		return out, err
+	}
 	out.Account, err = promote(ctx, s.Repo, a, s.admin(c))
 	return out, err
 }
@@ -201,6 +204,9 @@ func (s *Service) CreateFromOIDC(ctx context.Context, token, username, nickname,
 		if err := r.InsertLink(ctx, out.ID, linkOf(c, now)); err != nil {
 			return err
 		}
+		if err := s.record(ctx, r, out.ID, out.Subject, domain.EventCreated, "from the external login"); err != nil {
+			return err
+		}
 		session, err = startSession(ctx, r, out.ID, userAgent, now, true)
 		return err
 	})
@@ -226,6 +232,9 @@ func (s *Service) LinkFromOIDC(ctx context.Context, token, username, password, u
 			return domain.ErrExpired
 		}
 		if err := r.InsertLink(ctx, a.ID, linkOf(c, now)); err != nil {
+			return err
+		}
+		if err := s.record(ctx, r, a.ID, a.Subject, domain.EventLinked, "from the sign-in page"); err != nil {
 			return err
 		}
 		if a, err = promote(ctx, r, a, admin); err != nil {
@@ -258,7 +267,7 @@ func (s *Service) Unlink(ctx context.Context, subject string) error {
 	if !gone {
 		return domain.ErrNotFound
 	}
-	return nil
+	return s.record(ctx, s.Repo, a.ID, subject, domain.EventUnlinked, "")
 }
 
 // OIDCEnabled reports whether an OIDC sign-in is set up.

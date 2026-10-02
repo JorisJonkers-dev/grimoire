@@ -130,6 +130,8 @@ type Querier interface {
 	ConfirmTOTP(ctx context.Context, arg ConfirmTOTPParams) (int64, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	CountEntriesByKind(ctx context.Context, arg CountEntriesByKindParams) ([]CountEntriesByKindRow, error)
+	CountLiveSessions(ctx context.Context, arg CountLiveSessionsParams) (int32, error)
+	CountLiveTokens(ctx context.Context, arg CountLiveTokensParams) (int32, error)
 	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
 	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
@@ -193,6 +195,7 @@ type Querier interface {
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
+	InsertAccountEvent(ctx context.Context, arg InsertAccountEventParams) error
 	InsertAccountSession(ctx context.Context, arg InsertAccountSessionParams) error
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertCast(ctx context.Context, arg InsertCastParams) error
@@ -289,6 +292,8 @@ type Querier interface {
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
+	ListAccountEvents(ctx context.Context, accountID uuid.UUID) ([]ListAccountEventsRow, error)
+	ListAccounts(ctx context.Context) ([]ListAccountsRow, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
@@ -346,6 +351,7 @@ type Querier interface {
 	ListSurfaceDefinitions(ctx context.Context) ([]CompendiumSurfaceDefinition, error)
 	ListSurfaceReactions(ctx context.Context) ([]CompendiumSurfaceReaction, error)
 	ListTables(ctx context.Context, campaignID uuid.UUID) ([]ListTablesRow, error)
+	ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
 	LockCampaignLog(ctx context.Context, lockKey string) error
 	LockEntity(ctx context.Context, lockKey string) error
@@ -394,6 +400,8 @@ type Querier interface {
 	ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error)
 	RevokeAccessToken(ctx context.Context, arg RevokeAccessTokenParams) (int64, error)
 	RevokeAccountSession(ctx context.Context, arg RevokeAccountSessionParams) error
+	RevokeAccountSessions(ctx context.Context, arg RevokeAccountSessionsParams) error
+	RevokeAccountTokens(ctx context.Context, arg RevokeAccountTokensParams) error
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
 	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
@@ -452,6 +460,7 @@ type Querier interface {
 	SessionZoneCreatures(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCreature, error)
 	SessionZones(ctx context.Context, sessionID uuid.UUID) ([]SessionZonesRow, error)
 	SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error
+	SetAccountDisabled(ctx context.Context, arg SetAccountDisabledParams) error
 	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error

@@ -34,6 +34,63 @@ export const zMember = z.object({
 });
 
 /**
+ * Turns a setting on or off.
+ */
+export const zToggle = z.object({
+    value: z.boolean()
+});
+
+/**
+ * One thing that happened to an Account, and who did it.
+ */
+export const zAccountEvent = z.object({
+    at: z.iso.datetime().max(40),
+    actor: z.string().max(200),
+    action: z.enum([
+        'created',
+        'password_set',
+        'two_step_on',
+        'two_step_off',
+        'two_step_reset',
+        'linked',
+        'unlinked',
+        'sign_in_link_sent',
+        'admin_granted',
+        'admin_revoked',
+        'disabled',
+        'enabled'
+    ]),
+    detail: z.string().max(200)
+});
+
+/**
+ * An Account's history, newest first.
+ */
+export const zAccountEventList = z.object({
+    items: z.array(zAccountEvent).max(100)
+});
+
+/**
+ * An Invite nobody has used, open until it expires.
+ */
+export const zAdminInviteRow = z.object({
+    id: zId,
+    admin: z.boolean(),
+    status: z.enum(['invited', 'expired']),
+    createdAt: z.iso.datetime().max(40),
+    expiresAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Campaign an Account belongs to, and its role there.
+ */
+export const zAdminCampaign = z.object({
+    id: zId,
+    name: z.string().max(120),
+    role: z.string().max(20)
+});
+
+/**
  * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
  */
 export const zAccessTokenScope = z.enum([
@@ -203,6 +260,41 @@ export const zAccount = z.object({
     recoveryCodesLeft: z.int().gte(0).lte(10),
     adminPowers: z.boolean(),
     oidc: zOidcLink.optional()
+});
+
+/**
+ * An Account in the Admin list.
+ */
+export const zAdminAccountRow = z.object({
+    id: zId,
+    username: zUsername,
+    nickname: z.string().min(1).max(40),
+    email: z.string().max(254),
+    admin: z.boolean(),
+    status: z.enum(['active', 'disabled']),
+    createdAt: z.iso.datetime().max(40),
+    lastSeenAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * Every Account and every unused Invite.
+ */
+export const zAdminAccountList = z.object({
+    accounts: z.array(zAdminAccountRow).max(10000),
+    invites: z.array(zAdminInviteRow).max(200)
+});
+
+/**
+ * One Account as its Admin page shows it.
+ */
+export const zAdminAccountDetail = z.object({
+    account: zAccount,
+    status: z.enum(['active', 'disabled']),
+    createdAt: z.iso.datetime().max(40),
+    sessions: z.int().gte(0).lte(100000),
+    tokens: z.int().gte(0).lte(100000),
+    campaigns: z.array(zAdminCampaign).max(200),
+    history: z.array(zAccountEvent).max(100)
 });
 
 /**
@@ -3898,6 +3990,60 @@ export const zRevokeAccessTokenPath = z.object({
  * Revoked.
  */
 export const zRevokeAccessTokenResponse = z.void();
+
+/**
+ * The Accounts and Invites.
+ */
+export const zListAdminAccountsResponse = zAdminAccountList;
+
+export const zGetAdminAccountPath = z.object({
+    accountId: zId
+});
+
+/**
+ * The Account.
+ */
+export const zGetAdminAccountResponse = zAdminAccountDetail;
+
+export const zSendAdminSignInLinkPath = z.object({
+    accountId: zId
+});
+
+export const zSetAdminRoleBody = zToggle;
+
+export const zSetAdminRolePath = z.object({
+    accountId: zId
+});
+
+/**
+ * Changed.
+ */
+export const zSetAdminRoleResponse = z.void();
+
+export const zSetAccountDisabledBody = zToggle;
+
+export const zSetAccountDisabledPath = z.object({
+    accountId: zId
+});
+
+/**
+ * Changed.
+ */
+export const zSetAccountDisabledResponse = z.void();
+
+export const zResetAccountTwoStepPath = z.object({
+    accountId: zId
+});
+
+/**
+ * Two-step is off.
+ */
+export const zResetAccountTwoStepResponse = z.void();
+
+/**
+ * The history.
+ */
+export const zGetAccountHistoryResponse = zAccountEventList;
 
 /**
  * The process is alive.

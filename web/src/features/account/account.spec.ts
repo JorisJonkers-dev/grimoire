@@ -147,30 +147,25 @@ describe('sign-in links', () => {
 })
 
 describe('the Account page', () => {
-  it('changes the password and lets an Admin invite someone', async () => {
+  it('changes the password and points an Admin to the Admin page', async () => {
     const sent: unknown[] = []
     const { wrapper } = await mountApp('/account', {
       '/api/v1/account/password': async (_u, req) => {
         sent.push(await req.json())
         return new Response(null, { status: 204 })
       },
+      '/api/v1/account/history': () => ({ items: [{ at: '2026-10-02T12:00:00Z', actor: 'aria', action: 'created', detail: 'from an invite' }] }),
       '/api/v1/account': () => ({ ...account, admin: true, adminPowers: true }),
-      '/api/v1/admin/account-invites': async (_u, req) => {
-        sent.push(await req.json())
-        return jsonResponse({ token, expiresAt: '2026-10-05T12:00:00Z' }, 201)
-      },
     })
     expect(wrapper.get('[data-testid="profile-form"]').text()).toContain('You are an Admin.')
+    expect(wrapper.get('[data-testid="account-admin-link"]').attributes('href')).toBe('/admin')
+    expect(wrapper.get('[data-testid="admin-link"]').text()).toBe('Admin')
+    expect(wrapper.get('[data-testid="account-history"]').text()).toContain('Account created')
     await wrapper.get('[data-testid="account-password"]').setValue('a new long password')
     await wrapper.get('[data-testid="password-form"]').trigger('submit')
     await flushPromises()
     expect(wrapper.get('[data-testid="password-saved"]').text()).toBe('Saved.')
-    await wrapper.get('[data-testid="invite-hours"]').setValue(168)
-    await wrapper.get('[data-testid="invite-admin"]').setValue(true)
-    await wrapper.get('[data-testid="invite-form"]').trigger('submit')
-    await flushPromises()
-    expect(sent).toEqual([{ password: 'a new long password' }, { hours: 168, admin: true }])
-    expect(wrapper.get('[data-testid="invite-link"]').text()).toContain(`/account-invite#${token}`)
+    expect(sent).toEqual([{ password: 'a new long password' }])
   })
 
   it('says when the Account cannot be read', async () => {

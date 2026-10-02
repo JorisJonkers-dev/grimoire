@@ -25,6 +25,7 @@ function leave() {
       <nav aria-label="Main">
         <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
+        <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
       </nav>
       <div class="me" data-testid="account-menu">
         <template v-if="account.data.value">

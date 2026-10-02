@@ -41,6 +41,13 @@ type AccountService interface {
 	MintToken(ctx context.Context, subject, name string, scopes []string, days int) (string, domain.AccessToken, error)
 	AccessTokens(ctx context.Context, subject string) ([]domain.AccessToken, error)
 	RevokeToken(ctx context.Context, subject string, id uuid.UUID) error
+	AdminAccounts(ctx context.Context, actor string) ([]domain.Listed, []domain.ListedInvite, error)
+	AdminAccount(ctx context.Context, actor string, id domain.AccountID) (domain.Detail, error)
+	SendSignInLink(ctx context.Context, actor string, id domain.AccountID) error
+	SetAdmin(ctx context.Context, actor string, id domain.AccountID, admin bool) error
+	SetDisabled(ctx context.Context, actor string, id domain.AccountID, disabled bool) error
+	ResetTwoStep(ctx context.Context, actor string, id domain.AccountID) error
+	History(ctx context.Context, subject string) ([]domain.Event, error)
 }
 
 var _ AccountService = (*app.Service)(nil)

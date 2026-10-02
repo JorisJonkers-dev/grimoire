@@ -207,6 +207,34 @@ func (f *fakeRepo) AccessTokenSubject(context.Context, []byte, time.Time) (uuid.
 
 func (f *fakeRepo) TouchAccessToken(context.Context, uuid.UUID, time.Time) error { return nil }
 
+func (f *fakeRepo) ListAccounts(context.Context) ([]domain.Listed, error) {
+	return []domain.Listed{{Account: f.account}}, f.err("list accounts")
+}
+
+func (f *fakeRepo) UnusedInvites(context.Context) ([]domain.Invite, error) {
+	return []domain.Invite{f.invite}, f.err("unused invites")
+}
+
+func (f *fakeRepo) InsertEvent(context.Context, domain.AccountID, domain.Event) error {
+	return f.err("insert event")
+}
+
+func (f *fakeRepo) Events(context.Context, domain.AccountID) ([]domain.Event, error) {
+	return nil, f.err("events")
+}
+
+func (f *fakeRepo) SetDisabled(context.Context, domain.AccountID, bool) error {
+	return f.err("set disabled")
+}
+
+func (f *fakeRepo) RevokeEverything(context.Context, domain.AccountID, time.Time) error {
+	return f.err("revoke everything")
+}
+
+func (f *fakeRepo) LiveCounts(context.Context, domain.AccountID, time.Time) (int, int, error) {
+	return 1, 2, f.err("live counts")
+}
+
 func (f *fakeRepo) InTx(_ context.Context, fn func(Repository) error) error { return fn(f) }
 
 type failingMail struct{}

@@ -155,3 +155,48 @@ const (
 	ScopeBuild = "build"
 	ScopePlay  = "play"
 )
+
+// Event is one thing that happened to an Account, and who did it.
+type Event struct {
+	At        time.Time
+	Actor     string
+	ActorName string
+	Action    string
+	Detail    string
+}
+
+// Account events.
+const (
+	EventCreated        = "created"
+	EventPasswordSet    = "password_set"
+	EventTwoStepOn      = "two_step_on"
+	EventTwoStepOff     = "two_step_off"
+	EventTwoStepReset   = "two_step_reset"
+	EventLinked         = "linked"
+	EventUnlinked       = "unlinked"
+	EventSignInLinkSent = "sign_in_link_sent"
+	EventAdminGranted   = "admin_granted"
+	EventAdminRevoked   = "admin_revoked"
+	EventDisabled       = "disabled"
+	EventEnabled        = "enabled"
+)
+
+// Listed is an Account as the Admin list shows it, with when it was last seen.
+type Listed struct {
+	Account    Account
+	LastSeenAt *time.Time
+}
+
+// ListedInvite is an unused Invite as the Admin list shows it.
+type ListedInvite struct {
+	Invite Invite
+	Open   bool
+}
+
+// Detail is one Account as its Admin page shows it.
+type Detail struct {
+	Profile  Profile
+	Sessions int
+	Tokens   int
+	Events   []Event
+}

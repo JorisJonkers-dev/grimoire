@@ -3964,6 +3964,207 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/admin/accounts:
+    get:
+      operationId: listAdminAccounts
+      x-ogen-operation-group: Read
+      summary: List every Account
+      description: Every Account with its status, and every Invite nobody has used yet. For Admins.
+      tags: [Identity]
+      responses:
+        "200":
+          description: The Accounts and Invites.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccountList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/accounts/{accountId}:
+    get:
+      operationId: getAdminAccount
+      x-ogen-operation-group: Read
+      summary: Read an Account for an Admin
+      description: How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+      tags: [Identity]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The Account.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccountDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/accounts/{accountId}/sign-in-link:
+    post:
+      operationId: sendAdminSignInLink
+      x-ogen-operation-group: Account
+      summary: Email an Account a sign-in link
+      description: Sends the holder a link that signs them in once, within 30 minutes.
+      tags: [Identity]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "202":
+          description: The link is on its way.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/accounts/{accountId}/admin:
+    put:
+      operationId: setAdminRole
+      x-ogen-operation-group: Account
+      summary: Make an Account an Admin or not
+      description: Nobody removes their own Admin role.
+      tags: [Identity]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Toggle"
+      responses:
+        "204":
+          description: Changed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/accounts/{accountId}/disabled:
+    put:
+      operationId: setAccountDisabled
+      x-ogen-operation-group: Account
+      summary: Disable an Account or enable it
+      description: Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+      tags: [Identity]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Toggle"
+      responses:
+        "204":
+          description: Changed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/accounts/{accountId}/two-step/reset:
+    post:
+      operationId: resetAccountTwoStep
+      x-ogen-operation-group: Account
+      summary: Reset an Account's two-step
+      description: Turns two-step off for a holder who lost their phone and recovery codes.
+      tags: [Identity]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: Account id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Two-step is off.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/history:
+    get:
+      operationId: getAccountHistory
+      x-ogen-operation-group: Read
+      summary: Read my Account history
+      description: What happened to the signed-in Account and who did it, newest first.
+      tags: [Identity]
+      responses:
+        "200":
+          description: The history.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountEventList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -4301,6 +4502,102 @@ components:
         recoveryCodesLeft: { type: integer, format: int32, minimum: 0, maximum: 10 }
         adminPowers: { type: boolean, description: "Whether this request holds Admin powers; an Admin needs two-step or the external login." }
         oidc: { $ref: "#/components/schemas/OidcLink" }
+    Toggle:
+      type: object
+      description: Turns a setting on or off.
+      additionalProperties: false
+      required: [value]
+      properties:
+        value: { type: boolean }
+    AccountEvent:
+      type: object
+      description: One thing that happened to an Account, and who did it.
+      additionalProperties: false
+      required: [at, actor, action, detail]
+      properties:
+        at: { type: string, format: date-time, maxLength: 40 }
+        actor: { type: string, maxLength: 200, description: "The Username of whoever did it, or their subject when they have no Account." }
+        action:
+          type: string
+          enum: [created, password_set, two_step_on, two_step_off, two_step_reset, linked, unlinked, sign_in_link_sent, admin_granted, admin_revoked, disabled, enabled]
+        detail: { type: string, maxLength: 200 }
+    AccountEventList:
+      type: object
+      description: An Account's history, newest first.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/AccountEvent" }
+    AdminAccountRow:
+      type: object
+      description: An Account in the Admin list.
+      additionalProperties: false
+      required: [id, username, nickname, email, admin, status, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        username: { $ref: "#/components/schemas/Username" }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+        email: { type: string, maxLength: 254 }
+        admin: { type: boolean }
+        status: { type: string, enum: [active, disabled] }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        lastSeenAt: { type: string, format: date-time, maxLength: 40 }
+    AdminInviteRow:
+      type: object
+      description: An Invite nobody has used, open until it expires.
+      additionalProperties: false
+      required: [id, admin, status, createdAt, expiresAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        admin: { type: boolean }
+        status: { type: string, enum: [invited, expired] }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        expiresAt: { type: string, format: date-time, maxLength: 40 }
+    AdminAccountList:
+      type: object
+      description: Every Account and every unused Invite.
+      additionalProperties: false
+      required: [accounts, invites]
+      properties:
+        accounts:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/AdminAccountRow" }
+        invites:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/AdminInviteRow" }
+    AdminCampaign:
+      type: object
+      description: A Campaign an Account belongs to, and its role there.
+      additionalProperties: false
+      required: [id, name, role]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 120 }
+        role: { type: string, maxLength: 20 }
+    AdminAccountDetail:
+      type: object
+      description: One Account as its Admin page shows it.
+      additionalProperties: false
+      required: [account, status, createdAt, sessions, tokens, campaigns, history]
+      properties:
+        account: { $ref: "#/components/schemas/Account" }
+        status: { type: string, enum: [active, disabled] }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        sessions: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        tokens: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        campaigns:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/AdminCampaign" }
+        history:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/AccountEvent" }
     AccessTokenScope:
       type: string
       description: What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.

@@ -148,3 +148,34 @@ WHERE t.token_hash = @token_hash AND t.revoked_at IS NULL AND t.expires_at > @no
 
 -- name: TouchAccessToken :exec
 UPDATE identity.access_tokens SET last_used_at = @now WHERE id = @id AND (last_used_at IS NULL OR last_used_at < @cutoff);
+
+-- name: InsertAccountEvent :exec
+INSERT INTO identity.account_events (id, account_id, actor, action, detail, at) VALUES (@id, @account_id, @actor, @action, @detail, @at);
+
+-- name: ListAccountEvents :many
+SELECT e.at, e.actor, coalesce(a.username, '')::text AS actor_name, e.action, e.detail
+FROM identity.account_events e LEFT JOIN identity.accounts a ON a.subject = e.actor
+WHERE e.account_id = @account_id ORDER BY e.at DESC, e.id LIMIT 100;
+
+-- name: ListAccounts :many
+SELECT a.id, a.subject, a.username, a.nickname, a.email, a.admin, a.disabled, a.created_at, max(s.last_seen_at) AS last_seen_at
+FROM identity.accounts a LEFT JOIN identity.account_sessions s ON s.account_id = a.id
+GROUP BY a.id ORDER BY lower(a.nickname), a.username;
+
+-- name: ListUnusedInvites :many
+SELECT id, created_by, admin, created_at, expires_at FROM identity.invites WHERE used_at IS NULL ORDER BY created_at DESC LIMIT 200;
+
+-- name: SetAccountDisabled :exec
+UPDATE identity.accounts SET disabled = @disabled WHERE id = @id;
+
+-- name: RevokeAccountSessions :exec
+UPDATE identity.account_sessions SET revoked_at = @now WHERE account_id = @account_id AND revoked_at IS NULL;
+
+-- name: RevokeAccountTokens :exec
+UPDATE identity.access_tokens SET revoked_at = @now WHERE account_id = @account_id AND revoked_at IS NULL;
+
+-- name: CountLiveSessions :one
+SELECT count(*)::integer AS live FROM identity.account_sessions WHERE account_id = @account_id AND revoked_at IS NULL AND expires_at > @now;
+
+-- name: CountLiveTokens :one
+SELECT count(*)::integer AS live FROM identity.access_tokens WHERE account_id = @account_id AND revoked_at IS NULL AND expires_at > @now;

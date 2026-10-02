@@ -156,6 +156,88 @@ export type Account = {
 };
 
 /**
+ * Turns a setting on or off.
+ */
+export type Toggle = {
+    value: boolean;
+};
+
+/**
+ * One thing that happened to an Account, and who did it.
+ */
+export type AccountEvent = {
+    at: string;
+    /**
+     * The Username of whoever did it, or their subject when they have no Account.
+     */
+    actor: string;
+    action: 'created' | 'password_set' | 'two_step_on' | 'two_step_off' | 'two_step_reset' | 'linked' | 'unlinked' | 'sign_in_link_sent' | 'admin_granted' | 'admin_revoked' | 'disabled' | 'enabled';
+    detail: string;
+};
+
+/**
+ * An Account's history, newest first.
+ */
+export type AccountEventList = {
+    items: Array<AccountEvent>;
+};
+
+/**
+ * An Account in the Admin list.
+ */
+export type AdminAccountRow = {
+    id: Id;
+    username: Username;
+    nickname: string;
+    email: string;
+    admin: boolean;
+    status: 'active' | 'disabled';
+    createdAt: string;
+    lastSeenAt?: string;
+};
+
+/**
+ * An Invite nobody has used, open until it expires.
+ */
+export type AdminInviteRow = {
+    id: Id;
+    admin: boolean;
+    status: 'invited' | 'expired';
+    createdAt: string;
+    expiresAt: string;
+};
+
+/**
+ * Every Account and every unused Invite.
+ */
+export type AdminAccountList = {
+    accounts: Array<AdminAccountRow>;
+    invites: Array<AdminInviteRow>;
+};
+
+/**
+ * A Campaign an Account belongs to, and its role there.
+ */
+export type AdminCampaign = {
+    id: Id;
+    name: string;
+    role: string;
+};
+
+/**
+ * One Account as its Admin page shows it.
+ */
+export type AdminAccountDetail = {
+    account: Account;
+    status: 'active' | 'disabled';
+    createdAt: string;
+    sessions: number;
+    tokens: number;
+    campaigns: Array<AdminCampaign>;
+    history: Array<AccountEvent>;
+};
+
+/**
  * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
  */
 export type AccessTokenScope = 'read' | 'build' | 'play';
@@ -6869,6 +6951,232 @@ export type RevokeAccessTokenResponses = {
 };
 
 export type RevokeAccessTokenResponse = RevokeAccessTokenResponses[keyof RevokeAccessTokenResponses];
+
+export type ListAdminAccountsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/accounts';
+};
+
+export type ListAdminAccountsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListAdminAccountsError = ListAdminAccountsErrors[keyof ListAdminAccountsErrors];
+
+export type ListAdminAccountsResponses = {
+    /**
+     * The Accounts and Invites.
+     */
+    200: AdminAccountList;
+};
+
+export type ListAdminAccountsResponse = ListAdminAccountsResponses[keyof ListAdminAccountsResponses];
+
+export type GetAdminAccountData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}';
+};
+
+export type GetAdminAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAdminAccountError = GetAdminAccountErrors[keyof GetAdminAccountErrors];
+
+export type GetAdminAccountResponses = {
+    /**
+     * The Account.
+     */
+    200: AdminAccountDetail;
+};
+
+export type GetAdminAccountResponse = GetAdminAccountResponses[keyof GetAdminAccountResponses];
+
+export type SendAdminSignInLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/sign-in-link';
+};
+
+export type SendAdminSignInLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendAdminSignInLinkError = SendAdminSignInLinkErrors[keyof SendAdminSignInLinkErrors];
+
+export type SendAdminSignInLinkResponses = {
+    /**
+     * The link is on its way.
+     */
+    202: unknown;
+};
+
+export type SetAdminRoleData = {
+    body: Toggle;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/admin';
+};
+
+export type SetAdminRoleErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetAdminRoleError = SetAdminRoleErrors[keyof SetAdminRoleErrors];
+
+export type SetAdminRoleResponses = {
+    /**
+     * Changed.
+     */
+    204: void;
+};
+
+export type SetAdminRoleResponse = SetAdminRoleResponses[keyof SetAdminRoleResponses];
+
+export type SetAccountDisabledData = {
+    body: Toggle;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/disabled';
+};
+
+export type SetAccountDisabledErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetAccountDisabledError = SetAccountDisabledErrors[keyof SetAccountDisabledErrors];
+
+export type SetAccountDisabledResponses = {
+    /**
+     * Changed.
+     */
+    204: void;
+};
+
+export type SetAccountDisabledResponse = SetAccountDisabledResponses[keyof SetAccountDisabledResponses];
+
+export type ResetAccountTwoStepData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/two-step/reset';
+};
+
+export type ResetAccountTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ResetAccountTwoStepError = ResetAccountTwoStepErrors[keyof ResetAccountTwoStepErrors];
+
+export type ResetAccountTwoStepResponses = {
+    /**
+     * Two-step is off.
+     */
+    204: void;
+};
+
+export type ResetAccountTwoStepResponse = ResetAccountTwoStepResponses[keyof ResetAccountTwoStepResponses];
+
+export type GetAccountHistoryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/history';
+};
+
+export type GetAccountHistoryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAccountHistoryError = GetAccountHistoryErrors[keyof GetAccountHistoryErrors];
+
+export type GetAccountHistoryResponses = {
+    /**
+     * The history.
+     */
+    200: AccountEventList;
+};
+
+export type GetAccountHistoryResponse = GetAccountHistoryResponses[keyof GetAccountHistoryResponses];
 
 export type GetHealthData = {
     body?: never;

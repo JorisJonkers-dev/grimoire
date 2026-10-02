@@ -229,6 +229,9 @@ func (s *Service) ConfirmTwoStep(ctx context.Context, subject, code, session str
 		if codes, err = newRecoveryCodes(ctx, r, a.ID); err != nil {
 			return err
 		}
+		if err := s.record(ctx, r, a.ID, subject, domain.EventTwoStepOn, ""); err != nil {
+			return err
+		}
 		if session == "" {
 			return nil
 		}
@@ -243,7 +246,10 @@ func (s *Service) DisableTwoStep(ctx context.Context, subject, code string) erro
 	if err != nil {
 		return err
 	}
-	return s.Repo.DeleteTOTP(ctx, a.ID)
+	if err := s.Repo.DeleteTOTP(ctx, a.ID); err != nil {
+		return err
+	}
+	return s.record(ctx, s.Repo, a.ID, subject, domain.EventTwoStepOff, "")
 }
 
 // ResetRecoveryCodes replaces the recovery codes, with a current code, and returns the new ones.
