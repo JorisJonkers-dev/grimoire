@@ -16,7 +16,9 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -37,12 +39,41 @@ type Write struct {
 	Rolls     []domain.Roll
 	Combatant domain.CombatantID
 	HP        *HPChange
+	// Resources are Character Resources an Effect spent or gave back as it landed; Dismissed are summoned
+	// tokens that left because the Effect keeping them ended.
+	Resources []ResourceDelta
+	Dismissed []domain.TokenID
+	// Objects are the Map Objects a change touched, for the store to save; Object the one it removed.
+	Objects []domain.ObjectID
+	Object  domain.ObjectID
+	// Sneak is the party's sneaking after a change when SaveSneak, nil once it stops; Explore the same
+	// for exploration turns.
+	Sneak       *domain.Sneak
+	SaveSneak   bool
+	Explore     *domain.Exploration
+	SaveExplore bool
+	// Unveiled marks a write whose token lost Visibility Qualities to a Reveal.
+	Unveiled bool
+	// Formed is a token as it takes a form; Reverted are tokens whose form ended.
+	Formed   *domain.Token
+	Reverted []domain.TokenID
 	// Observers saw a ranged attack's damage; each remembers it against the attacker.
 	Observers []domain.TokenID
 	attack    *domain.PendingAttack
-	board     *domain.MapState
-	frames    []*state
-	prompt    *domain.ReactionPrompt
+	summons   []domain.Combatant
+	commanded domain.CombatantID
+	// changedObjects are Map Objects as a change leaves them; trigger an Effect one sets off.
+	changedObjects map[domain.ObjectID]domain.MapObject
+	trigger        *trigger
+	// grounded are Effects Surfaces put on creatures that entered them or started a turn in them;
+	// forced marks a change that may drop creatures from a height.
+	grounded []grounding
+	forced   bool
+	sneak    *domain.Sneak
+	explore  *domain.Exploration
+	board    *domain.MapState
+	frames   []*state
+	prompt   *domain.ReactionPrompt
 	// Effects is the Session's Effects after the change, for the store to save; nil when unchanged.
 	Effects *domain.Effects
 	// Surfaces is the Session's Surfaces after the change when SaveSurfaces; Cast the area spell when SaveCast.
@@ -83,6 +114,24 @@ type Write struct {
 	Restock *prep.Shop
 	Day     *int
 	haggle  *haggleChange
+	// Resting is the rest a write leaves under way; RestOver ends it. Supplies are the Rations a Long
+	// Rest ate; Results what a finished rest leaves each Character with; Healed the hit points it gave back.
+	Resting  *domain.Rest
+	RestOver bool
+	Supplies []domain.Supply
+	Results  []domain.RestResult
+	Healed   []HPChange
+	// Pending is a Hide, Grapple or Shove waiting on its roll; Settled the roll of one that resolved.
+	// Pushed is a shoved creature where it lands; Dragged a grappled creature pulled along a walk.
+	Pending *domain.PendingAction
+	Settled domain.RollID
+	Pushed  *domain.Token
+	Dragged *domain.Token
+	taken   *takenAction
+	cleave  *domain.TokenID
+	// Dying is a Character's death saves after the change; Undying the one that woke or was revived.
+	Dying   *domain.Dying
+	Undying *domain.TokenID
 	// Spawned are the creatures an encounter_spawned places; Undoes is the Action an undo reverts.
 	Spawned []domain.Token
 	Undoes  uuid.UUID
@@ -106,14 +155,67 @@ type Write struct {
 	resource    combat.Resource
 }
 
+// loaded is what the rules keep between a Session's runtimes besides tokens, Combat and Effects.
+type loaded struct {
+	catalog  effects.Catalog
+	surfaces surface.Catalog
+	rest     *domain.Rest
+	pending  []domain.PendingAction
+	dying    map[domain.TokenID]domain.Dying
+	sneak    *domain.Sneak
+	explore  *domain.Exploration
+}
+
+// loadRules reads the Effect catalogue, the rest the Session has under way, the Hides, Grapples and
+// Shoves waiting on rolls, and the Characters at 0 hit points.
+func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
+	var out loaded
+	var err error
+	if out.catalog, err = h.Store.Effects(ctx); err != nil {
+		return out, err
+	}
+	if out.surfaces, err = h.Store.Surfaces(ctx); err != nil {
+		return out, err
+	}
+	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
+		return out, err
+	}
+	if out.pending, err = h.Store.LoadPendingActions(ctx, s.ID); err != nil {
+		return out, err
+	}
+	if out.dying, err = h.Store.LoadDying(ctx, s.ID); err != nil {
+		return out, err
+	}
+	if out.sneak, err = h.Store.LoadSneak(ctx, s.ID); err != nil {
+		return out, err
+	}
+	out.explore, err = h.Store.LoadExploration(ctx, s.ID)
+	return out, err
+}
+
 // Store is the runtime's persistence port.
 type Store interface {
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
+	// LoadRest reads the rest a Session has under way, with each rester's Hit Die roll still out; nil when none.
+	LoadRest(ctx context.Context, campaign uuid.UUID, id domain.SessionID) (*domain.Rest, error)
+	// LoadPendingActions reads the Hides, Grapples and Shoves waiting on rolls.
+	LoadPendingActions(ctx context.Context, id domain.SessionID) ([]domain.PendingAction, error)
+	// LoadDying reads the Characters at 0 hit points.
+	LoadDying(ctx context.Context, id domain.SessionID) (map[domain.TokenID]domain.Dying, error)
+	// RestInfo reads what a rest needs of each Character; RestSupplies whether a Long Rest costs Rations.
+	RestInfo(ctx context.Context, campaign uuid.UUID, characters []uuid.UUID) ([]domain.Rester, error)
+	RestSupplies(ctx context.Context, campaign uuid.UUID) (bool, error)
+	// Features reads what classes, species and feats grant.
+	Features(ctx context.Context) (features.Catalog, error)
 	// Effects reads the Effect catalogue the rules resolve against.
 	Effects(ctx context.Context) (effects.Catalog, error)
+	Surfaces(ctx context.Context) (surface.Catalog, error)
+	LoadSneak(ctx context.Context, id domain.SessionID) (*domain.Sneak, error)
+	CampaignInitiative(ctx context.Context, campaign uuid.UUID) (string, bool, error)
+	LoadExploration(ctx context.Context, id domain.SessionID) (*domain.Exploration, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
 	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
 	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
@@ -281,7 +383,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
-	catalog, err := h.Store.Effects(ctx)
+	kept, err := h.loadRules(ctx, s)
 	if err != nil {
 		release()
 		return nil, err
@@ -317,7 +419,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -552,7 +654,8 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
 		return true
 	}
 	return false
@@ -605,6 +708,10 @@ func (r *runtime) viewUpdate(a Audience, seq int64, w *Write) Update {
 // down as turns start, concentration broken by damage, and those of a removed token.
 func apply(s *state, w *Write) {
 	before := s.acting()
+	var heights map[domain.TokenID]int
+	if w.forced || w.Pushed != nil {
+		heights = s.heights()
+	}
 	round := 0
 	if s.combat != nil {
 		round = s.combat.Round
@@ -614,6 +721,11 @@ func apply(s *state, w *Write) {
 		s.day = *w.Day
 	}
 	applyZones(s, w)
+	if w.Kind == domain.ActionRestTaken {
+		w.ended = append(w.ended, s.restEnded()...)
+	}
+	fell := heights != nil && s.falls(w, heights)
+	s.formBroken(w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
 	started := map[domain.TokenID]bool{}
@@ -623,18 +735,28 @@ func apply(s *state, w *Write) {
 	changed = s.tick(started) || changed
 	changed = s.hazards(started, w) || changed
 	settleTerrain(s, w, round)
+	changed = s.aftermath(w) || changed || fell
+	if changed {
+		fx := cloneEffects(s.fx)
+		w.Effects = &fx
+	}
+}
+
+// aftermath settles what a change leaves behind: concentration broken by damage, the Effects of a
+// removed token, summons whose Effect ended and forms that reverted. It reports whether the Effects
+// changed.
+func (s *state) aftermath(w *Write) bool {
+	changed := false
 	if w.Kind == domain.ActionDamageDealt {
-		changed = s.concentrate(*w.HP) || changed
+		changed = s.concentrate(*w.HP)
 	}
 	if w.Kind == domain.ActionTokenRemoved {
 		s.forget(w.Token.ID)
 		s.forgetChecks(w.Token.ID)
 		changed = true
 	}
-	if changed {
-		fx := cloneEffects(s.fx)
-		w.Effects = &fx
-	}
+	changed = s.dismiss(w) || changed
+	return s.revert(w) || changed
 }
 
 // settleTerrain ages Surfaces as a round starts, drops a removed token from the waiting area spell, and
@@ -650,7 +772,7 @@ func settleTerrain(s *state, w *Write, round int) {
 		}
 	}
 	switch w.Kind {
-	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionTokenRemoved:
+	case domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionTokenRemoved, domain.ActionCountered:
 		w.Cast, w.SaveCast = s.cast, true
 	}
 	if w.terrain {
@@ -664,6 +786,48 @@ func change(s *state, w *Write) {
 	case domain.ActionTokenWalked:
 		walk(s, w)
 		return
+	case domain.ActionTaken, domain.ActionConcentrationChecked:
+		applyAction(s, w)
+		applyDying(s, w)
+		return
+	case domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived:
+		applyDying(s, w)
+		return
+	case domain.ActionObjectUsed:
+		applyInteraction(s, w)
+		return
+	case domain.ActionTeleported:
+		applyTeleport(s, w)
+	case domain.ActionSummoned, domain.ActionCommanded:
+		applySummon(s, w)
+		return
+	case domain.ActionJumped:
+		applyJump(s, w)
+	case domain.ActionSneakStarted, domain.ActionSneakEnded, domain.ActionStealthRolled, domain.ActionPartyNoticed:
+		s.sneak, w.Sneak, w.SaveSneak = w.sneak, w.sneak, true
+		return
+	case domain.ActionExplorationStarted, domain.ActionExplorationTurn, domain.ActionExplorationEnded:
+		s.explore, w.Explore, w.SaveExplore = w.explore, w.explore, true
+		return
+	case domain.ActionThrown:
+		applyThrow(s, w)
+		return
+	case domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
+		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung:
+		applyObject(s, w)
+	case domain.ActionMasteryUsed:
+		applyMastery(s, w)
+		return
+	case domain.ActionReactionSet:
+		s.tokens[w.Token.ID] = w.Token
+		return
+	case domain.ActionUnarmed:
+		applyAction(s, w)
+		applyResolved(s, w)
+		return
+	case domain.ActionResolved:
+		applyResolved(s, w)
+		return
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded:
 		applyCombat(s, w)
 		return
@@ -673,7 +837,7 @@ func change(s *state, w *Write) {
 	case domain.ActionTacticsSet:
 		s.tokens[w.Token.ID] = w.Token
 		return
-	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined:
+	case domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined, domain.ActionCountered:
 		applyReaction(s, w)
 		return
 	case domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionManualResolved:
@@ -685,7 +849,11 @@ func change(s *state, w *Write) {
 		s.table, s.tableMap = *w.Table, w.tableMap
 		return
 	case domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
-		domain.ActionRestTaken, domain.ActionCheckScheduled:
+		domain.ActionCheckScheduled:
+		return
+	case domain.ActionRestTaken, domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent,
+		domain.ActionHitDieHealed, domain.ActionRestInterrupted:
+		applyRest(s, w)
 		return
 	case domain.ActionEncounterChecked, domain.ActionEncounterResolved:
 		applyCheck(s, *w.Check)
@@ -702,11 +870,7 @@ func change(s *state, w *Write) {
 		applyWorld(s, w)
 		return
 	case domain.ActionHPAdjusted:
-		t := s.tokens[w.HP.Token]
-		stats := *t.Stats
-		stats.HP = w.HP.After
-		t.Stats = &stats
-		s.tokens[t.ID] = t
+		s.setHP(*w.HP)
 		return
 	case domain.ActionEncounterSpawned:
 		for _, t := range w.Spawned {
@@ -715,7 +879,7 @@ func change(s *state, w *Write) {
 	case domain.ActionTokenRemoved:
 		delete(s.tokens, w.Token.ID)
 		dropCombatant(s, w)
-	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed:
+	case domain.ActionTokenPlaced, domain.ActionTokenMoved, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionVisibilitySet:
 		s.tokens[w.Token.ID] = w.Token
 	case domain.ActionMapSet:
 		s.session.MapID = w.MapID
@@ -736,11 +900,18 @@ func walk(s *state, w *Write) {
 		}
 		s.combat.Prompt, s.combat.Resume, w.Combat = w.prompt, w.resume, s.combat
 	}
+	if e := s.explore; e != nil && s.combat == nil && e.Order[e.Turn] == w.Token.ID {
+		e.MovedFt += w.CostFt
+		w.Explore, w.SaveExplore = e, true
+	}
 	for _, c := range w.Path[1:] {
 		w.Token.Q, w.Token.R = c.Q, c.R
 		s.tokens[w.Token.ID] = w.Token
 		s.reveal(w)
 		w.frames = append(w.frames, s.clone())
+	}
+	if w.Dragged != nil {
+		s.tokens[w.Dragged.ID] = *w.Dragged
 	}
 }
 

@@ -579,6 +579,133 @@
       "r": 0,
       "hidden": false,
       "seq": 42
+    },
+    {
+      "nonce": "n64",
+      "kind": "propose_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "rest": "long"
+    },
+    {
+      "nonce": "n65",
+      "kind": "agree_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n66",
+      "kind": "spend_hit_die",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n67",
+      "kind": "finish_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n68",
+      "kind": "interrupt_rest",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
+      "nonce": "n69",
+      "kind": "take_action",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "action": "ready",
+      "trigger": "enters_reach"
+    },
+    {
+      "nonce": "n70",
+      "kind": "take_action",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "action": "utilize",
+      "detail": "pulls the lever"
+    },
+    {
+      "nonce": "n71",
+      "kind": "unarmed",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "option": "shove_push"
+    },
+    {
+      "nonce": "n72",
+      "kind": "attack",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "attackNo": 1,
+      "offHand": true
+    },
+    {
+      "nonce": "n73",
+      "kind": "interact",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "detail": "draws a dagger"
+    },
+    {
+      "nonce": "n74",
+      "kind": "attack",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "cleave": true
+    },
+    {
+      "nonce": "n76",
+      "kind": "stabilise",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "option": "medicine"
+    },
+    {
+      "nonce": "n77",
+      "kind": "revive",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-00000000000a",
+      "option": "revivify"
+    },
+    {
+      "nonce": "n75",
+      "kind": "set_reaction",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "reactionKind": "opportunity_attack",
+      "reactionMode": "always",
+      "condition": "target_bloodied"
     }
   ],
   "updates": [
@@ -610,6 +737,13 @@
                 "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                 "concentration": true,
                 "roundsLeft": 9
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000037",
+                "slug": "exhaustion",
+                "name": "Exhaustion",
+                "concentration": false,
+                "level": 2
               }
             ]
           },
@@ -633,10 +767,22 @@
                 "longRangeFt": 0,
                 "damage": "1d8",
                 "damageBonus": 3,
-                "damageType": "slashing"
+                "damageType": "slashing",
+                "mastery": "sap"
               }
             ],
-            "shield": true
+            "shield": true,
+            "reactions": [
+              {
+                "kind": "shield",
+                "mode": "always"
+              }
+            ],
+            "dying": {
+              "successes": 1,
+              "failures": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000038"
+            }
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -692,6 +838,12 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "disengaged": true,
+              "readied": true,
+              "attacksLeft": 1,
+              "offHand": true,
+              "interaction": true,
+              "cleave": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -947,6 +1099,26 @@
             }
           ]
         },
+        "rest": {
+          "kind": "short",
+          "status": "resting",
+          "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+          "agreed": [
+            "0190c7a8-0000-7000-8000-00000000000f"
+          ],
+          "waiting": [],
+          "waitingOnDm": false,
+          "resters": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "name": "Aria",
+              "hitDie": "d10",
+              "hitDiceLeft": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000036"
+            }
+          ]
+        },
         "gameDay": 3
       }
     },
@@ -974,6 +1146,13 @@
                 "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                 "concentration": true,
                 "roundsLeft": 9
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000037",
+                "slug": "exhaustion",
+                "name": "Exhaustion",
+                "concentration": false,
+                "level": 2
               }
             ]
           },
@@ -997,10 +1176,22 @@
                 "longRangeFt": 0,
                 "damage": "1d8",
                 "damageBonus": 3,
-                "damageType": "slashing"
+                "damageType": "slashing",
+                "mastery": "sap"
               }
             ],
-            "shield": true
+            "shield": true,
+            "reactions": [
+              {
+                "kind": "shield",
+                "mode": "always"
+              }
+            ],
+            "dying": {
+              "successes": 1,
+              "failures": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000038"
+            }
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1072,6 +1263,12 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "disengaged": true,
+              "readied": true,
+              "attacksLeft": 1,
+              "offHand": true,
+              "interaction": true,
+              "cleave": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1366,6 +1563,26 @@
             }
           ]
         },
+        "rest": {
+          "kind": "short",
+          "status": "resting",
+          "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+          "agreed": [
+            "0190c7a8-0000-7000-8000-00000000000f"
+          ],
+          "waiting": [],
+          "waitingOnDm": false,
+          "resters": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "name": "Aria",
+              "hitDie": "d10",
+              "hitDiceLeft": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000036"
+            }
+          ]
+        },
         "gameDay": 3
       }
     },
@@ -1432,6 +1649,13 @@
                 "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                 "concentration": true,
                 "roundsLeft": 9
+              },
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000037",
+                "slug": "exhaustion",
+                "name": "Exhaustion",
+                "concentration": false,
+                "level": 2
               }
             ]
           },
@@ -1455,10 +1679,22 @@
                 "longRangeFt": 0,
                 "damage": "1d8",
                 "damageBonus": 3,
-                "damageType": "slashing"
+                "damageType": "slashing",
+                "mastery": "sap"
               }
             ],
-            "shield": true
+            "shield": true,
+            "reactions": [
+              {
+                "kind": "shield",
+                "mode": "always"
+              }
+            ],
+            "dying": {
+              "successes": 1,
+              "failures": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000038"
+            }
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1514,6 +1750,12 @@
               "reaction": true,
               "movementFt": 20,
               "speedFt": 30,
+              "disengaged": true,
+              "readied": true,
+              "attacksLeft": 1,
+              "offHand": true,
+              "interaction": true,
+              "cleave": true,
               "surprised": true,
               "tactics": "auto",
               "suggestion": {
@@ -1769,6 +2011,26 @@
             }
           ]
         },
+        "rest": {
+          "kind": "short",
+          "status": "resting",
+          "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+          "agreed": [
+            "0190c7a8-0000-7000-8000-00000000000f"
+          ],
+          "waiting": [],
+          "waitingOnDm": false,
+          "resters": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+              "name": "Aria",
+              "hitDie": "d10",
+              "hitDiceLeft": 2,
+              "rollId": "0190c7a8-0000-7000-8000-000000000036"
+            }
+          ]
+        },
         "gameDay": 3
       },
       "steps": [
@@ -1791,6 +2053,13 @@
                   "sourceId": "0190c7a8-0000-7000-8000-00000000000a",
                   "concentration": true,
                   "roundsLeft": 9
+                },
+                {
+                  "id": "0190c7a8-0000-7000-8000-000000000037",
+                  "slug": "exhaustion",
+                  "name": "Exhaustion",
+                  "concentration": false,
+                  "level": 2
                 }
               ]
             },
@@ -1814,10 +2083,22 @@
                   "longRangeFt": 0,
                   "damage": "1d8",
                   "damageBonus": 3,
-                  "damageType": "slashing"
+                  "damageType": "slashing",
+                  "mastery": "sap"
                 }
               ],
-              "shield": true
+              "shield": true,
+              "reactions": [
+                {
+                  "kind": "shield",
+                  "mode": "always"
+                }
+              ],
+              "dying": {
+                "successes": 1,
+                "failures": 2,
+                "rollId": "0190c7a8-0000-7000-8000-000000000038"
+              }
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000014",
@@ -1873,6 +2154,12 @@
                 "reaction": true,
                 "movementFt": 20,
                 "speedFt": 30,
+                "disengaged": true,
+                "readied": true,
+                "attacksLeft": 1,
+                "offHand": true,
+                "interaction": true,
+                "cleave": true,
                 "surprised": true,
                 "tactics": "auto",
                 "suggestion": {
@@ -2125,6 +2412,26 @@
               {
                 "characterId": "0190c7a8-0000-7000-8000-000000000034",
                 "rollId": "0190c7a8-0000-7000-8000-000000000035"
+              }
+            ]
+          },
+          "rest": {
+            "kind": "short",
+            "status": "resting",
+            "proposedBy": "0190c7a8-0000-7000-8000-00000000000f",
+            "agreed": [
+              "0190c7a8-0000-7000-8000-00000000000f"
+            ],
+            "waiting": [],
+            "waitingOnDm": false,
+            "resters": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+                "name": "Aria",
+                "hitDie": "d10",
+                "hitDiceLeft": 2,
+                "rollId": "0190c7a8-0000-7000-8000-000000000036"
               }
             ]
           },

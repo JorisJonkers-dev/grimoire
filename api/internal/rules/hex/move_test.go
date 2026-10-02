@@ -73,8 +73,11 @@ func TestTerrainElevationAndCreatures(t *testing.T) {
 			t.Errorf("StepCost to %v (climb %v) = %d %v, want %d %v", tc.to, tc.climb, cost, ok, tc.cost, tc.ok)
 		}
 	}
-	if cost, _ := hex.StepCost(g, c(-1, 0), c(-1, 1), false); cost != 5 {
-		t.Fatalf("going down cost %d", cost)
+	if cost, _ := hex.StepCost(g, c(-1, 0), c(-1, 1), false); cost != 15 {
+		t.Fatalf("climbing down 10 feet cost %d", cost)
+	}
+	if cost, _ := hex.StepCost(g, c(-1, 0), c(-1, 1), true); cost != 5 {
+		t.Fatalf("a climber going down cost %d", cost)
 	}
 	reach := hex.Reachable(g, c(0, 0), hex.MoveOptions{SpeedFt: 10})
 	if s, ok := reach[c(1, -1)]; !ok || s.CanEnd {
@@ -119,5 +122,25 @@ func TestHighGroundBeatsAClimb(t *testing.T) {
 	reach := hex.Reachable(g, c(0, 0), hex.MoveOptions{SpeedFt: 30})
 	if s := reach[c(2, -1)]; s.CostFt != 15 || s.From != c(1, -1) {
 		t.Fatalf("staying high = %+v", s)
+	}
+}
+
+func TestCostMultipliers(t *testing.T) {
+	t.Parallel()
+	from, to := hex.Coord{Q: 0, R: 0}, hex.Coord{Q: 1, R: 0}
+	for _, c := range []struct {
+		cell hex.Cell
+		want int
+	}{
+		{hex.Cell{Multiplier: 4}, 20},
+		{hex.Cell{Multiplier: 4, Difficult: true}, 20},
+		{hex.Cell{Multiplier: 1, Difficult: true}, 10},
+		{hex.Cell{Multiplier: 3}, 15},
+		{hex.Cell{}, 5},
+	} {
+		g := hex.Grid{Cells: map[hex.Coord]hex.Cell{from: {}, to: c.cell}}
+		if got, ok := hex.StepCost(g, from, to, false); !ok || got != c.want {
+			t.Errorf("%+v costs %d", c.cell, got)
+		}
 	}
 }

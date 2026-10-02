@@ -34,6 +34,11 @@ export const zMember = z.object({
 });
 
 /**
+ * How a fight rolls initiative, each Combatant for itself or one roll per side.
+ */
+export const zInitiativeMode = z.enum(['individual', 'side']);
+
+/**
  * Seconds a Reaction Prompt waits before it counts as declined.
  */
 export const zReactionTimeout = z.int().gte(3).lte(120);
@@ -654,6 +659,35 @@ export const zTokenKind = z.enum([
 ]);
 
 /**
+ * A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
+ */
+export const zLiveDying = z.object({
+    successes: z.int().gte(0).lte(3),
+    failures: z.int().gte(0).lte(3),
+    stable: z.boolean().optional(),
+    dead: z.boolean().optional(),
+    rollId: zId.optional()
+});
+
+/**
+ * A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
+ */
+export const zLiveReactionSetting = z.object({
+    kind: z.enum([
+        'opportunity_attack',
+        'shield',
+        'readied',
+        'effect'
+    ]),
+    mode: z.enum([
+        'ask',
+        'always',
+        'never'
+    ]),
+    condition: z.enum(['target_bloodied']).optional()
+});
+
+/**
  * One attack on a token's hotbar.
  */
 export const zLiveAttack = z.object({
@@ -664,7 +698,18 @@ export const zLiveAttack = z.object({
     longRangeFt: z.int().gte(0).lte(10000),
     damage: z.string().max(40).optional(),
     damageBonus: z.int().gte(-10).lte(50),
-    damageType: z.string().max(80).optional()
+    damageType: z.string().max(80).optional(),
+    light: z.boolean().optional(),
+    mastery: z.enum([
+        'cleave',
+        'graze',
+        'nick',
+        'push',
+        'sap',
+        'slow',
+        'topple',
+        'vex'
+    ]).optional()
 });
 
 /**
@@ -734,6 +779,36 @@ export const zSessionAction = z.object({
     label: z.string().max(2000),
     undoable: z.boolean(),
     createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+ */
+export const zLiveRester = z.object({
+    characterId: zId,
+    tokenId: zId,
+    name: z.string().max(80),
+    hitDie: z.enum([
+        'd6',
+        'd8',
+        'd10',
+        'd12'
+    ]),
+    hitDiceLeft: z.int().gte(0).lte(20),
+    rollId: zId.optional()
+});
+
+/**
+ * The rest the party proposed or is taking. It starts once the DM and every Player resting a Character agree; a Short Rest spends Hit Dice.
+ */
+export const zLiveRest = z.object({
+    kind: z.enum(['short', 'long']),
+    status: z.enum(['proposed', 'resting']),
+    proposedBy: zId,
+    agreed: z.array(zId).max(50),
+    waiting: z.array(zId).max(50),
+    waitingOnDm: z.boolean(),
+    resters: z.array(zLiveRester).max(50)
 });
 
 /**
@@ -865,7 +940,8 @@ export const zTableScene = z.enum([
  */
 export const zLiveAreaTarget = z.object({
     tokenId: zId,
-    ally: z.boolean()
+    ally: z.boolean(),
+    pushedTo: zHexCoord.optional()
 });
 
 /**
@@ -878,7 +954,8 @@ export const zLiveAreaPreview = z.object({
     dc: z.int().gte(1).lte(40),
     hexes: z.array(zHexCoord).max(2000),
     targets: z.array(zLiveAreaTarget).max(200),
-    allies: z.int().gte(0).lte(200)
+    allies: z.int().gte(0).lte(200),
+    ends: z.array(z.string().max(80)).max(10).optional()
 });
 
 /**
@@ -906,14 +983,7 @@ export const zLiveArea = z.object({
 export const zLiveSurface = z.object({
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
-    kind: z.enum([
-        'fire',
-        'grease',
-        'water',
-        'ice',
-        'web',
-        'electrified'
-    ]),
+    kind: z.string().max(40).regex(/^[a-z][a-z0-9-]{0,39}$/),
     roundsLeft: z.int().gte(1).lte(100).optional()
 });
 
@@ -926,6 +996,64 @@ export const zLiveElevation = z.object({
     elevationFt: z.int().gte(-100).lte(100)
 });
 
+export const zMapObjectKind = z.enum([
+    'door',
+    'lever',
+    'chest',
+    'barrel',
+    'curtain',
+    'destructible',
+    'trap'
+]);
+
+/**
+ * A Map Object; its numbers, trigger and secrecy go to the DM only.
+ */
+export const zLiveObject = z.object({
+    id: zId,
+    kind: zMapObjectKind,
+    name: z.string().max(40),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    open: z.boolean(),
+    broken: z.boolean(),
+    secret: z.boolean().optional(),
+    ac: z.int().gte(1).lte(30).optional(),
+    hp: z.int().gte(0).lte(1000).optional(),
+    hpMax: z.int().gte(1).lte(1000).optional(),
+    effect: z.string().max(80).optional(),
+    radiusFt: z.int().gte(0).lte(60).optional(),
+    locked: z.boolean().optional(),
+    armed: z.boolean().optional(),
+    detectDc: z.int().gte(1).lte(40).optional(),
+    disarmDc: z.int().gte(1).lte(40).optional(),
+    triggerFt: z.int().gte(1).lte(60).optional(),
+    lockDc: z.int().gte(1).lte(40).optional(),
+    key: z.string().max(80).optional()
+});
+
+/**
+ * Something that keeps a creature or object from being seen for what it is.
+ */
+export const zVisibilityQuality = z.enum([
+    'hidden',
+    'invisible',
+    'disguised',
+    'illusory',
+    'ethereal',
+    'darkness',
+    'heavy',
+    'secret'
+]);
+
+/**
+ * One Visibility Quality of a token, and whether the party has seen through it with a check.
+ */
+export const zLiveQuality = z.object({
+    quality: zVisibilityQuality,
+    seenThrough: z.boolean().optional()
+});
+
 /**
  * An Effect on a token, which everyone who sees the token sees.
  */
@@ -935,7 +1063,10 @@ export const zLiveEffect = z.object({
     name: z.string().max(80),
     sourceId: zId.optional(),
     concentration: z.boolean(),
-    roundsLeft: z.int().gte(1).lte(100).optional()
+    roundsLeft: z.int().gte(1).lte(100).optional(),
+    level: z.int().gte(1).lte(10).optional(),
+    mode: z.string().max(80).optional(),
+    hexes: z.array(zHexCoord).max(2000).optional()
 });
 
 /**
@@ -953,6 +1084,10 @@ export const zLiveToken = z.object({
     ac: z.int().gte(0).lte(40).optional(),
     hp: z.int().gte(0).lte(10000).optional(),
     hpMax: z.int().gte(1).lte(10000).optional(),
+    tempHp: z.int().gte(1).lte(999).optional(),
+    form: z.string().max(80).optional(),
+    qualities: z.array(zLiveQuality).max(8).optional(),
+    disguise: z.string().max(40).optional(),
     health: z.enum([
         'unhurt',
         'hurt',
@@ -961,7 +1096,9 @@ export const zLiveToken = z.object({
     ]).optional(),
     attacks: z.array(zLiveAttack).max(50).optional(),
     shield: z.boolean().optional(),
-    effects: z.array(zLiveEffect).max(50).optional()
+    effects: z.array(zLiveEffect).max(50).optional(),
+    reactions: z.array(zLiveReactionSetting).max(4).optional(),
+    dying: zLiveDying.optional()
 });
 
 /**
@@ -1015,7 +1152,12 @@ export const zLiveCombatantSetup = z.object({
  */
 export const zLivePrompt = z.object({
     id: zId,
-    kind: z.enum(['opportunity_attack', 'shield']),
+    kind: z.enum([
+        'opportunity_attack',
+        'shield',
+        'readied',
+        'effect'
+    ]),
     reactorId: zId,
     triggerId: zId,
     effect: z.string().max(300),
@@ -1042,6 +1184,14 @@ export const zLiveCombatant = z.object({
     movementFt: z.int().gte(0).lte(120),
     speedFt: z.int().gte(0).lte(120),
     surprised: z.boolean().optional(),
+    disengaged: z.boolean().optional(),
+    readied: z.boolean().optional(),
+    attacksLeft: z.int().gte(0).lte(10).optional(),
+    offHand: z.boolean().optional(),
+    interaction: z.boolean().optional(),
+    cleave: z.boolean().optional(),
+    ownerId: zId.optional(),
+    awaitingCommand: z.boolean().optional(),
     tactics: zTactics.optional(),
     suggestion: zLiveSuggestion.optional()
 });
@@ -1555,7 +1705,34 @@ export const zLiveCommand = z.object({
         'haggle',
         'spawn_encounter',
         'adjust_hp',
-        'undo'
+        'undo',
+        'propose_rest',
+        'agree_rest',
+        'spend_hit_die',
+        'finish_rest',
+        'interrupt_rest',
+        'take_action',
+        'unarmed',
+        'interact',
+        'set_reaction',
+        'stabilise',
+        'revive',
+        'teleport',
+        'summon',
+        'command',
+        'set_visibility',
+        'place_object',
+        'remove_object',
+        'use_object',
+        'damage_object',
+        'find_object',
+        'unlock',
+        'disarm',
+        'jump',
+        'throw',
+        'sneak',
+        'explore',
+        'pass_turn'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1590,18 +1767,36 @@ export const zLiveCommand = z.object({
     effectName: z.string().max(80).optional(),
     sourceId: zId.optional(),
     rounds: z.int().gte(0).lte(100).optional(),
+    slot: z.int().gte(1).lte(9).optional(),
+    effectMode: z.string().max(80).optional(),
+    tempHp: z.int().gte(1).lte(999).optional(),
+    qualities: z.array(zVisibilityQuality).max(8).optional(),
+    seenThrough: z.array(zVisibilityQuality).max(8).optional(),
+    disguise: z.string().max(40).optional(),
+    objectId: zId.optional(),
+    objectKind: zMapObjectKind.optional(),
+    objectName: z.string().max(40).optional(),
+    armorClass: z.int().gte(1).lte(30).optional(),
+    hpMax: z.int().gte(1).lte(1000).optional(),
+    secret: z.boolean().optional(),
+    radiusFt: z.int().gte(0).lte(60).optional(),
+    links: z.array(zId).max(20).optional(),
+    detectDc: z.int().gte(1).lte(40).optional(),
+    disarmDc: z.int().gte(1).lte(40).optional(),
+    triggerFt: z.int().gte(1).lte(60).optional(),
+    lockDc: z.int().gte(1).lte(40).optional(),
+    key: z.string().max(80).optional(),
+    method: z.enum([
+        'key',
+        'tools',
+        'force',
+        'knock'
+    ]).optional(),
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),
     manualId: zId.optional(),
-    surface: z.enum([
-        'fire',
-        'grease',
-        'water',
-        'ice',
-        'web',
-        'electrified'
-    ]).optional(),
+    surface: z.string().max(40).regex(/^[a-z][a-z0-9-]{0,39}$/).optional(),
     elevationFt: z.int().gte(-100).lte(100).optional(),
     camera: zTableCamera.optional(),
     zoomPct: z.int().gte(50).lte(300).optional(),
@@ -1624,6 +1819,45 @@ export const zLiveCommand = z.object({
     lootTableId: zId.optional(),
     fromId: zId.optional(),
     instanceId: zId.optional(),
+    action: z.enum([
+        'dash',
+        'disengage',
+        'dodge',
+        'help',
+        'hide',
+        'influence',
+        'magic',
+        'ready',
+        'search',
+        'study',
+        'utilize'
+    ]).optional(),
+    detail: z.string().max(200).optional(),
+    trigger: z.enum(['enters_reach']).optional(),
+    option: z.enum([
+        'grapple',
+        'shove_push',
+        'shove_prone',
+        'medicine',
+        'spell',
+        'revivify',
+        'raise_dead',
+        'resurrection'
+    ]).optional(),
+    offHand: z.boolean().optional(),
+    cleave: z.boolean().optional(),
+    reactionKind: z.enum([
+        'opportunity_attack',
+        'shield',
+        'readied',
+        'effect'
+    ]).optional(),
+    reactionMode: z.enum([
+        'ask',
+        'always',
+        'never'
+    ]).optional(),
+    condition: z.enum(['', 'target_bloodied']).optional(),
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),
@@ -1764,11 +1998,27 @@ export const zLiveView = z.object({
     area: zLiveArea.optional(),
     table: zLiveTable.optional(),
     world: zLiveWorld.optional(),
+    sneak: z.object({
+        waiting: z.boolean(),
+        reach: z.array(zHexCoord).max(4000),
+        totals: z.record(z.string(), z.int().gte(-20).lte(80)).optional()
+    }).optional(),
+    exploration: z.object({
+        order: z.array(zId).max(50),
+        turn: zId,
+        leftFt: z.int().gte(0).lte(1000)
+    }).optional(),
+    surfaceKinds: z.array(z.object({
+        kind: z.string().max(40),
+        name: z.string().max(40)
+    })).max(500).optional(),
+    objects: z.array(zLiveObject).max(500).optional(),
     zones: z.array(zLiveZone).max(200).optional(),
     perception: z.array(zLivePerception).max(1000).optional(),
     checks: z.array(zLiveCheck).max(10).optional(),
     inventory: z.array(zLiveContainer).max(1000).optional(),
     shop: zLiveShop.optional(),
+    rest: zLiveRest.optional(),
     gameDay: z.int().gte(0).lte(1000000).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
@@ -1818,7 +2068,10 @@ export const zCampaignSummary = z.object({
     memberCount: z.int().gte(1).lte(1000),
     createdAt: z.iso.datetime().max(40),
     reactionTimeoutS: zReactionTimeout.optional(),
-    highGround: z.boolean().optional()
+    highGround: z.boolean().optional(),
+    restSupplies: z.boolean().optional(),
+    initiativeMode: zInitiativeMode.optional(),
+    shareInitiative: z.boolean().optional()
 });
 
 /**
@@ -1841,6 +2094,9 @@ export const zCampaign = z.object({
     createdAt: z.iso.datetime().max(40),
     reactionTimeoutS: zReactionTimeout.optional(),
     highGround: z.boolean().optional(),
+    restSupplies: z.boolean().optional(),
+    initiativeMode: zInitiativeMode.optional(),
+    shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
 });
@@ -1923,7 +2179,10 @@ export const zCampaignUpdate = z.object({
     name: zCampaignName.optional(),
     ruleset: zCampaignRuleset.optional(),
     reactionTimeoutS: zReactionTimeout.optional(),
-    highGround: z.boolean().optional()
+    highGround: z.boolean().optional(),
+    restSupplies: z.boolean().optional(),
+    initiativeMode: zInitiativeMode.optional(),
+    shareInitiative: z.boolean().optional()
 });
 
 /**

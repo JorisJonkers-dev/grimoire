@@ -21,6 +21,9 @@ type CampaignCampaign struct {
 	ReactionTimeoutS int32
 	HighGround       bool
 	GameDay          int32
+	RestSupplies     bool
+	InitiativeMode   string
+	ShareInitiative  bool
 }
 
 type CampaignCharacter struct {
@@ -44,6 +47,8 @@ type CampaignCharacter struct {
 	PortraitType   pgtype.Text
 	TokenKey       pgtype.Text
 	TokenType      pgtype.Text
+	HitDiceSpent   int32
+	LevelUpReady   bool
 }
 
 type CampaignCharacterAbility struct {
@@ -51,6 +56,12 @@ type CampaignCharacterAbility struct {
 	Ability     string
 	Base        int32
 	Bonus       int32
+}
+
+type CampaignCharacterResource struct {
+	CharacterID  uuid.UUID
+	ResourceSlug string
+	Used         int32
 }
 
 type CampaignCharacterSkill struct {
@@ -151,6 +162,35 @@ type CampaignMapNode struct {
 	Name  string
 	Q     int32
 	R     int32
+}
+
+type CampaignMapObject struct {
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	Kind       string
+	Name       string
+	Q          int32
+	R          int32
+	ArmorClass int32
+	Hp         int32
+	HpMax      int32
+	Open       bool
+	Broken     bool
+	Secret     bool
+	EffectSlug pgtype.Text
+	RadiusFt   int32
+	DetectDc   int32
+	DisarmDc   int32
+	TriggerFt  int32
+	Armed      bool
+	Locked     bool
+	LockDc     int32
+	KeySlug    pgtype.Text
+}
+
+type CampaignMapObjectLink struct {
+	ObjectID uuid.UUID
+	TargetID uuid.UUID
 }
 
 type CampaignMapParty struct {
@@ -257,6 +297,18 @@ type CompendiumBackgroundBenefit struct {
 	Description  string
 }
 
+type CompendiumChoice struct {
+	ID        int64
+	OwnerKind string
+	OwnerSlug string
+	Slug      string
+	Name      string
+	Level     int32
+	Count     int32
+	Pool      string
+	PoolFrom  string
+}
+
 type CompendiumClass struct {
 	ID          int64
 	DocumentID  int64
@@ -330,28 +382,65 @@ type CompendiumEffectBonusDice struct {
 	OnSaves   bool
 }
 
+type CompendiumEffectBranch struct {
+	EffectID     int64
+	Ordinal      int32
+	Kind         string
+	Condition    string
+	N            int32
+	CreatureType string
+}
+
 type CompendiumEffectComponent struct {
 	EffectID int64
 	Ordinal  int32
 	Kind     string
+	Parent   pgtype.Int4
+}
+
+type CompendiumEffectCounter struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	RangeFt  int32
+}
+
+type CompendiumEffectCrit struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Feet     int32
 }
 
 type CompendiumEffectDefinition struct {
-	ID            int64
-	Slug          string
-	Name          string
-	Concentration bool
-	OwnerKind     string
-	OwnerSlug     string
+	ID             int64
+	Slug           string
+	Name           string
+	Concentration  bool
+	OwnerKind      string
+	OwnerSlug      string
+	DurationKind   pgtype.Text
+	DurationAmount int32
+	RepeatSave     pgtype.Text
 }
 
 type CompendiumEffectEdge struct {
-	EffectID  int64
-	Ordinal   int32
-	Kind      string
-	Against   bool
-	Advantage bool
-	Reach     string
+	EffectID   int64
+	Ordinal    int32
+	Kind       string
+	Against    bool
+	Advantage  bool
+	Reach      string
+	SourceOnly bool
+}
+
+type CompendiumEffectExhaustion struct {
+	EffectID        int64
+	Ordinal         int32
+	Kind            string
+	D20PerLevel     int32
+	SpeedFtPerLevel int32
+	DeathAt         int32
 }
 
 type CompendiumEffectExtraDamage struct {
@@ -361,6 +450,29 @@ type CompendiumEffectExtraDamage struct {
 	Dice     string
 }
 
+type CompendiumEffectForcedMove struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ft       int32
+	Toward   bool
+}
+
+type CompendiumEffectForm struct {
+	EffectID    int64
+	Ordinal     int32
+	Kind        string
+	MonsterSlug string
+	TempHp      int32
+}
+
+type CompendiumEffectGrant struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Name     string
+}
+
 type CompendiumEffectManual struct {
 	EffectID    int64
 	Ordinal     int32
@@ -368,11 +480,41 @@ type CompendiumEffectManual struct {
 	Instruction string
 }
 
+type CompendiumEffectMode struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Name     string
+}
+
 type CompendiumEffectMoveCost struct {
 	EffectID   int64
 	Ordinal    int32
 	Kind       string
 	Multiplier int32
+}
+
+type CompendiumEffectReaction struct {
+	EffectID    int64
+	Ordinal     int32
+	Kind        string
+	Trigger     string
+	Instruction string
+}
+
+type CompendiumEffectResourceChange struct {
+	EffectID     int64
+	Ordinal      int32
+	Kind         string
+	ResourceSlug string
+	Delta        int32
+}
+
+type CompendiumEffectReveal struct {
+	EffectID  int64
+	Ordinal   int32
+	Kind      string
+	Qualities []string
 }
 
 type CompendiumEffectSaveCondition struct {
@@ -393,12 +535,66 @@ type CompendiumEffectSaveDamage struct {
 	Half       bool
 }
 
+type CompendiumEffectSaveEdge struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ability  string
+	Mode     string
+}
+
+type CompendiumEffectScaling struct {
+	EffectID   int64
+	Axis       string
+	ClassSlug  string
+	ColumnName string
+	BaseLevel  int32
+	Dice       string
+}
+
+type CompendiumEffectScalingStep struct {
+	EffectID int64
+	AtLevel  int32
+	Dice     string
+}
+
+type CompendiumEffectSpeedPenalty struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Ft       int32
+}
+
+type CompendiumEffectSummon struct {
+	EffectID     int64
+	Ordinal      int32
+	Kind         string
+	MonsterSlug  string
+	Count        int32
+	SharesTurn   bool
+	NeedsCommand bool
+}
+
 type CompendiumEffectSurface struct {
 	EffectID int64
 	Ordinal  int32
 	Kind     string
 	Surface  string
 	Rounds   int32
+}
+
+type CompendiumEffectTeleport struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	RangeFt  int32
+}
+
+type CompendiumEffectTempHp struct {
+	EffectID int64
+	Ordinal  int32
+	Kind     string
+	Amount   int32
 }
 
 type CompendiumEntry struct {
@@ -516,6 +712,63 @@ type CompendiumMonsterTrait struct {
 	Description string
 }
 
+type CompendiumPrerequisite struct {
+	OwnerKind string
+	OwnerSlug string
+	GroupNo   int32
+	Ordinal   int32
+	Kind      string
+	Ability   pgtype.Text
+	Minimum   int32
+	RefSlug   pgtype.Text
+}
+
+type CompendiumResource struct {
+	ID         int64
+	Slug       string
+	Name       string
+	OwnerKind  string
+	OwnerSlug  string
+	Basis      string
+	Multiplier int32
+	Ability    pgtype.Text
+	FromLevel  int32
+}
+
+type CompendiumResourceDice struct {
+	ResourceID int64
+	Level      int32
+	Die        string
+}
+
+type CompendiumResourceMaxima struct {
+	ResourceID int64
+	Level      int32
+	Maximum    int32
+}
+
+type CompendiumResourceRecharge struct {
+	ResourceID  int64
+	Event       string
+	FromLevel   int32
+	Amount      pgtype.Int4
+	RollAtLeast pgtype.Int4
+}
+
+type CompendiumScale struct {
+	ID        int64
+	Slug      string
+	Name      string
+	OwnerKind string
+	OwnerSlug string
+}
+
+type CompendiumScaleStep struct {
+	ScaleID int64
+	Level   int32
+	Value   string
+}
+
 type CompendiumSpeciesTrait struct {
 	SpeciesID   int64
 	Ordering    int32
@@ -571,6 +824,23 @@ type CompendiumSpellScaling struct {
 	Kind       string
 	AtLevel    int32
 	DamageRoll string
+}
+
+type CompendiumSurfaceDefinition struct {
+	Slug       string
+	Name       string
+	Cost       int32
+	Obscures   pgtype.Text
+	HazardDice pgtype.Text
+	HazardType pgtype.Text
+	EveryStep  bool
+	EffectSlug pgtype.Text
+}
+
+type CompendiumSurfaceReaction struct {
+	Surface    string
+	DamageType string
+	Becomes    string
 }
 
 type CompendiumWeapon struct {
@@ -684,6 +954,8 @@ type PlayActiveEffect struct {
 	RoundsLeft    pgtype.Int4
 	SaveAbility   pgtype.Text
 	SaveDc        pgtype.Int4
+	Level         int32
+	Mode          pgtype.Text
 }
 
 type PlayAreaCast struct {
@@ -721,6 +993,8 @@ type PlayAttack struct {
 	Ranged          bool
 	Total           pgtype.Int4
 	Opportunity     bool
+	OffHand         bool
+	Cleave          bool
 }
 
 type PlayCombat struct {
@@ -743,20 +1017,46 @@ type PlayCombatResumePath struct {
 }
 
 type PlayCombatant struct {
-	ID              uuid.UUID
-	CombatID        uuid.UUID
-	TokenID         uuid.UUID
-	RollID          uuid.UUID
-	InitiativeBonus int32
-	SpeedFt         int32
-	Initiative      pgtype.Int4
-	Done            bool
-	HasAction       bool
-	HasBonusAction  bool
-	HasReaction     bool
-	MovementFt      int32
-	Shielded        bool
-	Surprised       bool
+	ID               uuid.UUID
+	CombatID         uuid.UUID
+	TokenID          uuid.UUID
+	RollID           uuid.UUID
+	InitiativeBonus  int32
+	SpeedFt          int32
+	Initiative       pgtype.Int4
+	Done             bool
+	HasAction        bool
+	HasBonusAction   bool
+	HasReaction      bool
+	MovementFt       int32
+	Shielded         bool
+	Surprised        bool
+	Disengaged       bool
+	ReadiedTrigger   pgtype.Text
+	ReadiedWho       pgtype.UUID
+	ReadiedAttack    pgtype.Int4
+	AttacksLeft      int32
+	LightAttack      bool
+	OffHand          bool
+	Interaction      bool
+	CleaveFrom       pgtype.UUID
+	Cleaved          bool
+	OwnerCombatantID pgtype.UUID
+	Commanded        bool
+}
+
+type PlayDying struct {
+	TokenID   uuid.UUID
+	SessionID uuid.UUID
+	Successes int32
+	Failures  int32
+	Stable    bool
+	Dead      bool
+	EffectID  pgtype.UUID
+	RollID    pgtype.UUID
+	DiedFight pgtype.Text
+	DiedRound int32
+	DiedDay   int32
 }
 
 type PlayEncounterZone struct {
@@ -770,6 +1070,13 @@ type PlayEncounterZone struct {
 	Held        bool
 	Status      string
 	Dc          int32
+}
+
+type PlayExplorationTurn struct {
+	SessionID uuid.UUID
+	TurnOrder []uuid.UUID
+	Turn      int32
+	MovedFt   int32
 }
 
 type PlayHaggle struct {
@@ -793,6 +1100,16 @@ type PlayObservedDamage struct {
 	RangedDamage    int32
 }
 
+type PlayPendingAction struct {
+	RollID        uuid.UUID
+	SessionID     uuid.UUID
+	ActorTokenID  uuid.UUID
+	TargetTokenID pgtype.UUID
+	Action        string
+	Dc            int32
+	ObjectID      pgtype.UUID
+}
+
 type PlayPendingSafe struct {
 	RollID    uuid.UUID
 	EffectID  uuid.UUID
@@ -809,6 +1126,26 @@ type PlayReactionPrompt struct {
 	AttackNo       int32
 	Effect         string
 	Deadline       time.Time
+}
+
+type PlayRest struct {
+	SessionID  uuid.UUID
+	Kind       string
+	Status     string
+	ProposedBy uuid.UUID
+	DmAgreed   bool
+}
+
+type PlayRestAgreement struct {
+	SessionID uuid.UUID
+	MemberID  uuid.UUID
+}
+
+type PlayRestRester struct {
+	SessionID   uuid.UUID
+	CharacterID uuid.UUID
+	TokenID     uuid.UUID
+	RollID      pgtype.UUID
 }
 
 type PlayRollDice struct {
@@ -859,11 +1196,19 @@ type PlaySession struct {
 	EndedAt    pgtype.Timestamptz
 	MapID      pgtype.UUID
 	WorldMapID pgtype.UUID
+	Sneaking   bool
 }
 
 type PlaySessionShop struct {
 	SessionID uuid.UUID
 	ShopID    uuid.UUID
+}
+
+type PlaySneakRoll struct {
+	SessionID uuid.UUID
+	TokenID   uuid.UUID
+	RollID    uuid.UUID
+	Total     pgtype.Int4
 }
 
 type PlaySurface struct {
@@ -909,6 +1254,12 @@ type PlayToken struct {
 	Perception         int32
 	Initiative         int32
 	SpeedFt            int32
+	UnarmedDc          int32
+	AttacksPerAction   int32
+	TempHp             int32
+	SummonEffectID     pgtype.UUID
+	Disguise           pgtype.Text
+	Strength           int32
 }
 
 type PlayTokenAttack struct {
@@ -922,12 +1273,41 @@ type PlayTokenAttack struct {
 	DamageDice  string
 	DamageBonus int32
 	DamageType  string
+	Light       bool
+	DamageMod   int32
+	Mastery     pgtype.Text
+}
+
+type PlayTokenForm struct {
+	TokenID  uuid.UUID
+	EffectID uuid.UUID
+	Name     string
+	Stats    []byte
+}
+
+type PlayTokenQuality struct {
+	TokenID     uuid.UUID
+	Quality     string
+	SeenThrough bool
+}
+
+type PlayTokenReaction struct {
+	TokenID   uuid.UUID
+	Kind      string
+	Mode      string
+	Condition string
 }
 
 type PlayTokenSafe struct {
 	TokenID uuid.UUID
 	Ability string
 	Bonus   int32
+}
+
+type PlayTokenSense struct {
+	TokenID uuid.UUID
+	Sense   string
+	RangeFt int32
 }
 
 type PlayTravelLeg struct {

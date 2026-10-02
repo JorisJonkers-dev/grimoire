@@ -21,7 +21,7 @@ watch(
 onBeforeUnmount(() => {
   clearInterval(timer)
 })
-const title = { opportunity_attack: 'Opportunity attack', shield: 'Shield' }
+const title = { opportunity_attack: 'Opportunity attack', shield: 'Shield', readied: 'Readied attack', effect: 'Reaction' }
 </script>
 
 <template>

@@ -1,0 +1,8 @@
+-- +goose Up
+SET lock_timeout = '5s';
+SET statement_timeout = '60s';
+
+ALTER TABLE compendium.effect_components VALIDATE CONSTRAINT effect_components_kind_check;
+ALTER TABLE compendium.effect_components VALIDATE CONSTRAINT effect_components_parent_fkey;
+ALTER TABLE compendium.effect_definitions VALIDATE CONSTRAINT effect_definitions_duration_check;
+ALTER TABLE play.active_effects VALIDATE CONSTRAINT active_effects_mode_check;

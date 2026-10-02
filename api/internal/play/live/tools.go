@@ -112,8 +112,11 @@ func (r *runtime) planAdjustHP(cmd Command) (Write, string) {
 	case cmd.HPDelta == 0:
 		return Write{}, "Change the hit points by at least one."
 	}
+	if d, down := r.st.dying[t.ID]; down && d.State.Dead && cmd.HPDelta > 0 {
+		return Write{}, t.Label + " is dead; only revival magic brings them back."
+	}
 	after := max(0, min(t.Stats.HPMax, t.Stats.HP+cmd.HPDelta))
-	return Write{Kind: domain.ActionHPAdjusted, Token: t, HP: &HPChange{Token: t.ID, Before: t.Stats.HP, After: after}}, ""
+	return Write{Kind: domain.ActionHPAdjusted, Token: t, HP: &HPChange{Token: t.ID, Before: t.Stats.HP, After: after, Raw: -cmd.HPDelta}}, ""
 }
 
 // tokenByID finds a token on the board by its id as a client sends it.

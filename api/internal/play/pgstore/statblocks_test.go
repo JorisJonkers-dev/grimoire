@@ -32,10 +32,10 @@ func (armoury) BuilderOptions(_ context.Context, ruleset string) (compendium.Bui
 		Species:     []compendium.SpeciesOption{{Slug: "human", Name: "Human", SpeedFeet: 30}},
 		Backgrounds: []compendium.BackgroundOption{{Slug: "soldier", Name: "Soldier", Abilities: []string{"strength", "dexterity", "constitution"}, Skills: []string{"athletics", "intimidation"}}},
 		Weapons: []compendium.WeaponOption{
-			{Slug: "rapier", Name: "Rapier", DamageDice: "1d8", DamageType: "piercing", Properties: []string{"Finesse"}},
-			{Slug: "shortbow", Name: "Shortbow", DamageDice: "1d6", DamageType: "piercing", RangeFeet: 80, LongRangeFeet: 320, Properties: []string{"Ammunition"}},
-			{Slug: "glaive", Name: "Glaive", DamageDice: "1d10", DamageType: "slashing", Properties: []string{"Reach"}},
-			{Slug: "blowgun", Name: "Blowgun", DamageDice: "1", DamageType: "piercing", RangeFeet: 25, LongRangeFeet: 100, Properties: []string{"Ammunition"}},
+			{Slug: "rapier", Name: "Rapier", DamageDice: "1d8", DamageType: "piercing", Properties: []string{"Finesse", "Vex"}},
+			{Slug: "shortbow", Name: "Shortbow", DamageDice: "1d6", DamageType: "piercing", RangeFeet: 80, LongRangeFeet: 320, Properties: []string{"Ammunition", "Vex"}},
+			{Slug: "glaive", Name: "Glaive", DamageDice: "1d10", DamageType: "slashing", Properties: []string{"Reach", "Graze"}},
+			{Slug: "blowgun", Name: "Blowgun", DamageDice: "1", DamageType: "piercing", RangeFeet: 25, LongRangeFeet: 100, Properties: []string{"Ammunition", "Vex"}},
 		},
 	}, nil
 }
@@ -118,10 +118,10 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 	}
 	wantMira := []domain.Attack{
 		{Name: "Unarmed Strike", ToHit: 2, ReachFt: 5, DamageBonus: 1, DamageType: "bludgeoning"},
-		{Name: "Rapier", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "piercing"},
-		{Name: "Shortbow", ToHit: 5, RangeFt: 80, LongRangeFt: 320, Damage: "1d6", DamageBonus: 3, DamageType: "piercing"},
-		{Name: "Glaive", ToHit: 2, ReachFt: 10, Damage: "1d10", DamageType: "slashing"},
-		{Name: "Blowgun", ToHit: 5, RangeFt: 25, LongRangeFt: 100, DamageBonus: 4, DamageType: "piercing"},
+		{Name: "Rapier", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "piercing", DamageMod: 3, Mastery: "vex"},
+		{Name: "Shortbow", ToHit: 5, RangeFt: 80, LongRangeFt: 320, Damage: "1d6", DamageBonus: 3, DamageType: "piercing", DamageMod: 3, Mastery: "vex"},
+		{Name: "Glaive", ToHit: 2, ReachFt: 10, Damage: "1d10", DamageType: "slashing", Mastery: "graze"},
+		{Name: "Blowgun", ToHit: 5, RangeFt: 25, LongRangeFt: 100, DamageBonus: 4, DamageType: "piercing", DamageMod: 3},
 	}
 	for i, a := range wantMira {
 		if mira.Attacks[i] != a {
@@ -131,8 +131,14 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 	if mira.Stealth != 3 || mira.Perception != 3 || mira.Initiative != 3 || mira.SpeedFt != 30 {
 		t.Fatalf("mira ambush stats = %+v", mira)
 	}
-	if mira.SpellDC != 0 || mira.Shield || mira.Saves["strength"] != 2 {
-		t.Fatalf("a fighter casts nothing = %+v", mira)
+	if mira.SpellDC != 0 || mira.Shield || mira.Saves["strength"] != 2 || mira.AttacksPerAction != 1 || mira.UnarmedDC != 10 {
+		t.Fatalf("a level 1 fighter casts nothing and attacks once = %+v", mira)
+	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.characters SET level = 5 WHERE id = $1", uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, five, err := s.Character(ctx, dm, tb.campaign, uuid.UUID(sheet.ID)); err != nil || five.AttacksPerAction != 2 {
+		t.Fatalf("Extra Attack at level 5 = %+v %v", five.AttacksPerAction, err)
 	}
 	nim, err := chars.Create(ctx, player, campaigndomain.CampaignID(tb.campaign), campaigndomain.Build{
 		Name: "Nim", Species: "human", Class: "wizard", Background: "soldier", Method: "standard-array",

@@ -75,3 +75,20 @@ func ValidateSkills(class string, chosen, fromBackground []Skill) error {
 	}
 	return nil
 }
+
+// GroupCheck reads a group ability check: the group succeeds when at least half its members meet the
+// DC. A group of none fails.
+func GroupCheck(totals []int, dc int) bool {
+	met := 0
+	for _, t := range totals {
+		if t >= dc {
+			met++
+		}
+	}
+	return len(totals) > 0 && met*2 >= len(totals)
+}
+
+// PassivePerception is 10 plus a creature's Perception bonus.
+func PassivePerception(bonus int) int {
+	return 10 + bonus
+}

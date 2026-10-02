@@ -110,6 +110,9 @@ func summaryOut(s domain.Summary) oas.CampaignSummary {
 		MemberCount: int32(s.MemberCount), CreatedAt: s.CreatedAt.UTC(), //nolint:gosec // member counts are small
 		ReactionTimeoutS: oas.NewOptReactionTimeout(oas.ReactionTimeout(s.ReactionTimeoutS)), //nolint:gosec // 3 to 120 seconds
 		HighGround:       oas.NewOptBool(s.HighGround),
+		RestSupplies:     oas.NewOptBool(s.RestSupplies),
+		InitiativeMode:   oas.NewOptInitiativeMode(oas.InitiativeMode(s.InitiativeMode)),
+		ShareInitiative:  oas.NewOptBool(s.ShareInitiative),
 	}
 }
 
@@ -119,6 +122,9 @@ func detailOut(d domain.Detail) oas.Campaign {
 		MemberCount: int32(len(d.Members)), CreatedAt: d.CreatedAt.UTC(), Me: memberOut(d.Me, d.Me.Subject), //nolint:gosec // member counts are small
 		ReactionTimeoutS: oas.NewOptReactionTimeout(oas.ReactionTimeout(d.ReactionTimeoutS)), //nolint:gosec // 3 to 120 seconds
 		HighGround:       oas.NewOptBool(d.HighGround),
+		RestSupplies:     oas.NewOptBool(d.RestSupplies),
+		InitiativeMode:   oas.NewOptInitiativeMode(oas.InitiativeMode(d.InitiativeMode)),
+		ShareInitiative:  oas.NewOptBool(d.ShareInitiative),
 		Members:          make([]oas.Member, 0, len(d.Members)),
 	}
 	for _, m := range d.Members {
@@ -208,6 +214,16 @@ func (h *Handler) UpdateCampaign(ctx context.Context, req *oas.CampaignUpdate, p
 	}
 	if v, set := req.HighGround.Get(); set {
 		in.HighGround = &v
+	}
+	if v, set := req.RestSupplies.Get(); set {
+		in.RestSupplies = &v
+	}
+	if v, set := req.InitiativeMode.Get(); set {
+		mode := string(v)
+		in.InitiativeMode = &mode
+	}
+	if v, set := req.ShareInitiative.Get(); set {
+		in.ShareInitiative = &v
 	}
 	camp, err := h.Campaigns.Update(ctx, c, domain.CampaignID(p.CampaignId), in)
 	if err != nil {

@@ -6,8 +6,8 @@ import { describe, groundNotes, initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const props = withDefaults(
-  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; area?: Coord[]; zone?: Coord[]; title: string }>(),
-  { dm: false, selected: null, path: () => [], area: () => [], zone: () => [] },
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; title: string }>(),
+  { dm: false, selected: null, path: () => [], area: () => [], zone: () => [], reach: () => [] },
 )
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
@@ -20,12 +20,21 @@ const tokens = computed(() => new Map(props.view.tokens.map((t) => [key(t), t]))
 const route = computed(() => new Set(props.path.map(key)))
 const surfaces = computed(() => new Map((props.view.surfaces ?? []).map((s) => [key(s), s])))
 const heights = computed(() => new Map((props.view.elevation ?? []).map((e) => [key(e), e.elevationFt])))
+// shade darkens sunken ground and lightens raised ground, more the further from level it is.
+const shade = (ft: number) => Math.min(0.6, 0.12 + Math.abs(ft) / 50).toFixed(2)
 const area = computed(() => new Set(props.area.map(key)))
 const zone = computed(() => new Set(props.zone.map(key)))
+const reach = computed(() => new Set(props.reach.map(key)))
 const points = (c: Coord) =>
   corners(layout.value, c)
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
     .join(' ')
+const objects = computed(() => new Map((props.view.objects ?? []).map((o) => [key({ q: o.q, r: o.r }), o])))
+const objectNote = (k: string) => {
+  const o = objects.value.get(k)
+  if (!o) return ''
+  return `${o.name} (${o.broken ? 'broken' : o.kind === 'lever' ? (o.open ? 'pulled' : 'up') : o.open ? 'open' : 'closed'})`
+}
 const cells = computed(() =>
   cellsFor(layout.value, props.map.width, props.map.height).map((c) => {
     const k = key(c)
@@ -37,8 +46,9 @@ const cells = computed(() =>
       t ? describe(t) : '',
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
+      objectNote(k),
       route.value.has(k) ? 'on the path' : '',
-      ...groundNotes(k, surfaces.value, area.value, zone.value),
+      ...groundNotes(k, surfaces.value, area.value, zone.value, reach.value),
       heights.value.has(k) ? `${String(heights.value.get(k))} ft high` : '',
     ]
       .filter(Boolean)
@@ -63,7 +73,7 @@ const cells = computed(() =>
       <g
         v-for="c in cells"
         :key="c.k"
-        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
+        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k), 'cell--watched': reach.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
         role="button"
         tabindex="0"
         :aria-label="c.label"
@@ -72,6 +82,7 @@ const cells = computed(() =>
         @keydown.enter.prevent="emit('select', { q: c.q, r: c.r })"
       >
         <polygon :points="c.points" />
+        <polygon v-if="heights.has(c.k)" :points="c.points" :class="['height', (heights.get(c.k) ?? 0) > 0 ? 'height--up' : 'height--down']" :style="{ opacity: shade(heights.get(c.k) ?? 0) }" :data-height="heights.get(c.k)" />
         <circle v-if="lights.has(c.k)" :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.22" class="light" />
         <template v-if="c.token">
           <circle :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.62" :class="['token', `token--${c.token.kind}`, { 'token--hidden': c.token.hidden }]" />
@@ -97,6 +108,19 @@ const cells = computed(() =>
   stroke: rgb(255 255 255 / 12%);
   stroke-width: 1;
   cursor: pointer;
+}
+.cell .height {
+  pointer-events: none;
+  stroke: none;
+}
+.cell .height--up {
+  fill: #fff;
+}
+.cell .height--down {
+  fill: #000;
+}
+.cell--watched polygon {
+  fill: rgb(220 60 60 / 18%);
 }
 .cell--remembered polygon {
   fill: rgb(0 0 0 / 55%);

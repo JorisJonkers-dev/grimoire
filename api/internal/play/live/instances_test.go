@@ -23,10 +23,15 @@ func instanceNamed(t *testing.T, c live.ContainerView, name string) live.Instanc
 	return live.InstanceView{}
 }
 
+// look resyncs a subscriber and returns its snapshot, skipping updates still queued before it.
 func look(t *testing.T, w world, sub *live.Subscriber) *live.View {
 	t.Helper()
 	w.hub.Submit(sub, live.Command{Kind: live.CmdResync})
-	return next(t, sub).View
+	for {
+		if u := next(t, sub); u.Kind == live.UpdSnapshot {
+			return u.View
+		}
+	}
 }
 
 // Item Instances show beside plain stacks: each with its own name, Charges and state, a bag nested in

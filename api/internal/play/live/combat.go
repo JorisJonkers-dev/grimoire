@@ -49,6 +49,8 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "It is not " + t.Label + "'s turn."
 	case c.Status != domain.CombatActive:
 		return Write{}, "Roll initiative first."
+	case r.st.catalog.Incapacitated(r.st.actives(t.ID)):
+		return Write{}, t.Label + " can't act while Incapacitated."
 	}
 	if _, ok := x.Economy.Spend(res); !ok {
 		return Write{}, "That is already spent this turn."
@@ -82,6 +84,11 @@ func (r *runtime) planStart(dm domain.Member, cmd Command) (Write, string) {
 	c := &domain.Combat{ID: domain.CombatID(uuid.New()), Status: domain.CombatRolling, StartedAt: r.now()}
 	var rolls []domain.Roll
 	seen := map[domain.TokenID]bool{}
+	mode, share, err := r.store.CampaignInitiative(context.Background(), r.st.session.CampaignID)
+	if err != nil {
+		r.log.Error("live: initiative options", "error", err)
+	}
+	groups := map[string]domain.RollID{}
 	for _, in := range cmd.Combatants {
 		id, _ := uuid.Parse(in.TokenID)
 		t, ok := r.st.tokens[domain.TokenID(id)]
@@ -94,13 +101,33 @@ func (r *runtime) planStart(dm domain.Member, cmd Command) (Write, string) {
 			return Write{}, "Speed runs from 0 to 120 feet."
 		}
 		seen[t.ID] = true
-		roll := r.initiativeRoll(dm, t, in.InitiativeBonus)
-		rolls = append(rolls, roll)
+		group, label, bonus := initiativeGroup(t, in.InitiativeBonus, mode, share)
+		rollID, rolled := groups[group]
+		if !rolled {
+			roll := r.initiativeRoll(dm, t, bonus)
+			roll.Purpose = "Initiative for " + label
+			rolls, rollID = append(rolls, roll), roll.ID
+			groups[group] = rollID
+		}
 		c.Combatants = append(c.Combatants, domain.Combatant{
-			ID: domain.CombatantID(uuid.New()), TokenID: t.ID, RollID: roll.ID, InitiativeBonus: in.InitiativeBonus, SpeedFt: in.SpeedFt,
+			ID: domain.CombatantID(uuid.New()), TokenID: t.ID, RollID: rollID, InitiativeBonus: in.InitiativeBonus, SpeedFt: in.SpeedFt,
 		})
 	}
 	return Write{Kind: domain.ActionCombatStarted, Combat: c, Rolls: rolls}, ""
+}
+
+// initiativeGroup is who a Combatant rolls initiative with: its whole side, without modifier, in side
+// initiative; every monster of its statblock when identical monsters share; or itself alone.
+func initiativeGroup(t domain.Token, bonus int, mode string, share bool) (string, string, int) {
+	switch {
+	case mode == "side" && t.Kind == domain.TokenParty:
+		return "side:party", "the party", 0
+	case mode == "side":
+		return "side:foes", "the foes", 0
+	case share && t.Kind != domain.TokenParty && t.Stats != nil && t.Summon == nil:
+		return "statblock:" + t.Stats.Source, t.Label + " and its kin", bonus
+	}
+	return "token:" + uuid.UUID(t.ID).String(), t.Label, bonus
 }
 
 // initiativeRoll opens the Roll Request a Combatant's Controller fills in on a Roll Card; the DM rolls
@@ -171,6 +198,22 @@ func (r *runtime) outOfCombatRoll(id domain.RollID) bool {
 		r.checkRolled(c)
 		return true
 	}
+	if d, ok := r.st.pendingDeath(id); ok {
+		r.deathRolled(d, id)
+		return true
+	}
+	if p, ok := r.st.pendingAction(id); ok {
+		r.actionRolled(p)
+		return true
+	}
+	if t, ok := r.st.sneakRoll(id); ok {
+		r.stealthRolled(t, id)
+		return true
+	}
+	if i, ok := r.st.pendingHitDie(id); ok {
+		r.hitDieRolled(i, id)
+		return true
+	}
 	if character, ok := r.st.pendingHaggle(id); ok {
 		r.haggled(character, id)
 		return true
@@ -236,6 +279,12 @@ func applyCombat(s *state, w *Write) {
 	switch w.Kind {
 	case domain.ActionCombatStarted:
 		s.combat = w.Combat
+		if s.sneak != nil {
+			s.sneak, w.Sneak, w.SaveSneak = nil, nil, true
+		}
+		if s.explore != nil {
+			s.explore, w.Explore, w.SaveExplore = nil, nil, true
+		}
 		return
 	case domain.ActionCombatEnded:
 		s.combat = nil
@@ -246,20 +295,34 @@ func applyCombat(s *state, w *Write) {
 	x := &c.Combatants[i]
 	switch w.Kind {
 	case domain.ActionInitiativeRolled:
-		total := w.total
-		x.Initiative = &total
+		rollInitiative(c, x.RollID, w.total)
 	case domain.ActionTurnEnded:
 		x.Done = true
+		for i := range c.Combatants {
+			if o := c.Combatants[i].Owner; o != nil && *o == x.ID && c.Acting(c.Combatants[i]) {
+				c.Combatants[i].Done = true
+			}
+		}
 	default:
 		x.Economy, _ = x.Economy.Spend(w.resource)
 	}
-	settle(c)
+	settle(c, s.speedOf)
 	w.Combat = c
+}
+
+// rollInitiative gives every Combatant waiting on a roll its total: those rolling together share it.
+func rollInitiative(c *domain.Combat, id domain.RollID, total int) {
+	for i := range c.Combatants {
+		if c.Combatants[i].RollID == id && c.Combatants[i].Initiative == nil {
+			n := total
+			c.Combatants[i].Initiative = &n
+		}
+	}
 }
 
 // settle starts the fight once everyone has rolled, and moves to the next initiative count once
 // everyone on the current one has ended their turn.
-func settle(c *domain.Combat) {
+func settle(c *domain.Combat, speed func(domain.Combatant) int) {
 	totals := c.Totals()
 	if c.Status == domain.CombatRolling {
 		if len(totals) < len(c.Combatants) {
@@ -269,7 +332,7 @@ func settle(c *domain.Combat) {
 		for i := range c.Combatants {
 			c.Combatants[i].Economy.Reaction = true
 		}
-		startTurn(c)
+		startTurn(c, speed)
 		return
 	}
 	for range len(totals) + 1 {
@@ -280,20 +343,32 @@ func settle(c *domain.Combat) {
 		if newRound {
 			c.Round++
 			for i := range c.Combatants {
-				c.Combatants[i].Done = false
+				c.Combatants[i].Done, c.Combatants[i].Commanded = false, false
 			}
 		}
 		c.Turn = next
-		startTurn(c)
+		startTurn(c, speed)
 	}
 }
 
-func startTurn(c *domain.Combat) {
+func startTurn(c *domain.Combat, speed func(domain.Combatant) int) {
 	for i, x := range c.Combatants {
 		if c.Acting(x) {
-			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(x.SpeedFt), false
+			c.Combatants[i].Economy, c.Combatants[i].Shielded = combat.Fresh(speed(x)), false
+			c.Combatants[i].Disengaged, c.Combatants[i].Readied = false, nil
+			c.Combatants[i].CleaveFrom, c.Combatants[i].Cleaved = nil, false
 		}
 	}
+}
+
+// speedOf is how far a combatant can move this turn: none while Immobile, and less for each level of
+// exhaustion.
+func (s *state) speedOf(x domain.Combatant) int {
+	bearer := s.actives(x.TokenID)
+	if s.catalog.Immobile(bearer) {
+		return 0
+	}
+	return max(0, x.SpeedFt-s.catalog.SpeedPenaltyFt(bearer))
 }
 
 // dropCombatant takes a removed token out of the Combat.
@@ -311,7 +386,7 @@ func dropCombatant(s *state, w *Write) {
 	if r := s.combat.Resume; r != nil && r.Token == w.Token.ID {
 		s.combat.Resume = nil
 	}
-	settle(s.combat)
+	settle(s.combat, s.speedOf)
 	w.Combat = s.combat
 }
 
@@ -328,7 +403,7 @@ func (s *state) projectCombat(v *View, a Audience, seen map[hex.Coord]bool) {
 		if a != AudienceDM && !s.shows(t, seen) {
 			continue
 		}
-		cv := s.combatantView(x, t, totals, a)
+		cv := s.combatantView(x, s.masked(t, a), totals, a)
 		v.Combat.Combatants = append(v.Combat.Combatants, cv)
 	}
 	v.Combat.Attack, v.Combat.Prompt = s.pendingView(a, seen), s.promptView(a, seen, s.now())
@@ -349,13 +424,19 @@ func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, 
 	cv := CombatantView{
 		ID: uuid.UUID(x.ID).String(), TokenID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, RollID: uuid.UUID(x.RollID).String(),
 		Initiative: x.Initiative, Acting: c.Acting(x), Done: x.Done, Action: x.Economy.Action, BonusAction: x.Economy.BonusAction,
-		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised,
+		AttacksLeft: x.Economy.AttacksLeft, OffHand: x.Economy.CanOffHand(s.anyNick(t)), Interaction: x.Economy.Interaction,
+		Cleave:   x.CleaveFrom != nil && !x.Cleaved,
+		Reaction: x.Economy.Reaction, MovementFt: x.Economy.MovementFt, SpeedFt: x.SpeedFt, Surprised: x.Surprised, Disengaged: x.Disengaged,
+		Readied: x.Readied != nil && (a == AudienceDM || t.Kind == domain.TokenParty),
 	}
 	if x.Initiative != nil {
 		cv.Rank = combat.Rank(totals, *x.Initiative)
 	}
 	if t.Controller != nil {
 		cv.ControllerID = t.Controller.String()
+	}
+	if x.Owner != nil {
+		cv.OwnerID, cv.AwaitingCommand = uuid.UUID(*x.Owner).String(), s.uncommanded(t) != ""
 	}
 	if a == AudienceDM {
 		cv.Suggestion = s.suggest(x, t)
@@ -375,11 +456,7 @@ func applyAttack(s *state, w *Write) {
 		s.observed[o][w.Token.ID] += w.HP.Before - w.HP.After
 	}
 	if h := w.HP; h != nil {
-		t := s.tokens[h.Token]
-		stats := *t.Stats
-		stats.HP = h.After
-		t.Stats = &stats
-		s.tokens[t.ID] = t
+		s.setHP(*h)
 	}
 	if s.combat == nil || w.Kind == domain.ActionDamageUndone {
 		return
@@ -387,7 +464,15 @@ func applyAttack(s *state, w *Write) {
 	s.combat.Attack = w.attack
 	if w.Kind == domain.ActionAttackDeclared {
 		i := slices.IndexFunc(s.combat.Combatants, func(x domain.Combatant) bool { return x.ID == w.Combatant })
-		s.combat.Combatants[i].Economy, _ = s.combat.Combatants[i].Economy.Spend(combat.Action)
+		x := &s.combat.Combatants[i]
+		switch p := w.attack; {
+		case p.Cleave:
+			x.Cleaved, x.CleaveFrom = true, nil
+		case p.OffHand:
+			x.Economy, _ = x.Economy.OffHandAttack(nicks(w.Token.Stats.Attacks[p.AttackNo]))
+		default:
+			x.Economy, _ = x.Economy.Attack(w.Token.Stats.AttacksPerAction, w.Token.Stats.Attacks[p.AttackNo].Light)
+		}
 	}
 	w.Combat = s.combat
 }

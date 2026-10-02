@@ -27,18 +27,24 @@ type Querier interface {
 	AddClassFeatureLevel(ctx context.Context, arg AddClassFeatureLevelParams) error
 	AddClassSave(ctx context.Context, arg AddClassSaveParams) error
 	AddFeatBenefit(ctx context.Context, arg AddFeatBenefitParams) error
+	AddMapObjectLink(ctx context.Context, arg AddMapObjectLinkParams) error
 	AddMember(ctx context.Context, arg AddMemberParams) (CampaignMember, error)
 	AddMonsterAction(ctx context.Context, arg AddMonsterActionParams) (int64, error)
 	AddMonsterAttack(ctx context.Context, arg AddMonsterAttackParams) error
 	AddMonsterRelation(ctx context.Context, arg AddMonsterRelationParams) error
 	AddMonsterStat(ctx context.Context, arg AddMonsterStatParams) error
 	AddMonsterTrait(ctx context.Context, arg AddMonsterTraitParams) error
+	AddRestAgreement(ctx context.Context, arg AddRestAgreementParams) error
+	AddRestRester(ctx context.Context, arg AddRestResterParams) error
 	AddResumeHex(ctx context.Context, arg AddResumeHexParams) error
 	AddReveal(ctx context.Context, arg AddRevealParams) error
+	AddSneakRoll(ctx context.Context, arg AddSneakRollParams) error
 	AddSpeciesTrait(ctx context.Context, arg AddSpeciesTraitParams) error
 	AddSpellClass(ctx context.Context, arg AddSpellClassParams) error
 	AddSpellDamageType(ctx context.Context, arg AddSpellDamageTypeParams) error
 	AddSpellScaling(ctx context.Context, arg AddSpellScalingParams) error
+	AddTokenQuality(ctx context.Context, arg AddTokenQualityParams) error
+	AddTokenSense(ctx context.Context, arg AddTokenSenseParams) error
 	AddWall(ctx context.Context, arg AddWallParams) error
 	AddWeaponProperty(ctx context.Context, arg AddWeaponPropertyParams) error
 	AddZoneCreature(ctx context.Context, arg AddZoneCreatureParams) error
@@ -54,6 +60,7 @@ type Querier interface {
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
+	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
@@ -61,12 +68,14 @@ type Querier interface {
 	CampaignNpc(ctx context.Context, arg CampaignNpcParams) (string, error)
 	CampaignPoolMembers(ctx context.Context, campaignID uuid.UUID) ([]PrepPoolMember, error)
 	CampaignReactionTimeout(ctx context.Context, id uuid.UUID) (int32, error)
+	CampaignRestSupplies(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignRuleset(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignShopStock(ctx context.Context, campaignID uuid.UUID) ([]PrepShopStock, error)
 	CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]PrepShop, error)
 	CampaignTableEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepTableEntry, error)
 	CastHexes(ctx context.Context, castID uuid.UUID) ([]CastHexesRow, error)
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
+	ChangeResourceUsed(ctx context.Context, arg ChangeResourceUsedParams) error
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
 	CharacterTrade(ctx context.Context, campaignID uuid.UUID) ([]CharacterTradeRow, error)
@@ -81,23 +90,31 @@ type Querier interface {
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
 	ClearEffectComponents(ctx context.Context, effectID int64) error
+	ClearEffectScaling(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
+	ClearExploration(ctx context.Context, sessionID uuid.UUID) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
 	ClearLootEntries(ctx context.Context, tableID uuid.UUID) error
 	ClearManuals(ctx context.Context, sessionID uuid.UUID) error
+	ClearMapObjectLinks(ctx context.Context, objectID uuid.UUID) error
 	ClearMonsterChildren(ctx context.Context, monsterID int64) error
 	ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error
 	ClearPoolMembers(ctx context.Context, poolID uuid.UUID) error
 	ClearPrompts(ctx context.Context, combatID uuid.UUID) error
+	ClearRest(ctx context.Context, sessionID uuid.UUID) error
+	ClearRestMembers(ctx context.Context, sessionID uuid.UUID) error
 	ClearResumePath(ctx context.Context, combatID uuid.UUID) error
 	ClearSessionHaggles(ctx context.Context, sessionID uuid.UUID) error
 	ClearSessionShop(ctx context.Context, sessionID uuid.UUID) error
 	ClearShopStock(ctx context.Context, shopID uuid.UUID) error
+	ClearSneakRolls(ctx context.Context, sessionID uuid.UUID) error
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
+	ClearSurfaceReactions(ctx context.Context, surface string) error
 	ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error
 	ClearTableEntries(ctx context.Context, tableID uuid.UUID) error
+	ClearTokenQualities(ctx context.Context, tokenID uuid.UUID) error
 	ClearWeaponProperties(ctx context.Context, weaponID int64) error
 	CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAttack, error)
 	CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]PlayCombatant, error)
@@ -111,12 +128,15 @@ type Querier interface {
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
+	DeleteDying(ctx context.Context, tokenID uuid.UUID) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
 	DeleteLootTable(ctx context.Context, arg DeleteLootTableParams) (int64, error)
+	DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
+	DeletePendingAction(ctx context.Context, rollID uuid.UUID) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
@@ -125,6 +145,7 @@ type Querier interface {
 	DeleteShopStock(ctx context.Context, arg DeleteShopStockParams) error
 	DeleteStack(ctx context.Context, arg DeleteStackParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
+	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
 	DropPushEndpoint(ctx context.Context, endpoint string) error
@@ -151,6 +172,7 @@ type Querier interface {
 	GetNPC(ctx context.Context, arg GetNPCParams) (GetNPCRow, error)
 	GetNPCRevision(ctx context.Context, arg GetNPCRevisionParams) (GetNPCRevisionRow, error)
 	GetPoolRevision(ctx context.Context, arg GetPoolRevisionParams) (GetPoolRevisionRow, error)
+	GetRest(ctx context.Context, sessionID uuid.UUID) (GetRestRow, error)
 	GetRoll(ctx context.Context, arg GetRollParams) (PlayRollRequest, error)
 	GetSession(ctx context.Context, arg GetSessionParams) (PlaySession, error)
 	GetSettlementRevision(ctx context.Context, arg GetSettlementRevisionParams) (GetSettlementRevisionRow, error)
@@ -170,15 +192,33 @@ type Querier interface {
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
 	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
+	InsertEffectBranch(ctx context.Context, arg InsertEffectBranchParams) error
 	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
+	InsertEffectCounter(ctx context.Context, arg InsertEffectCounterParams) error
+	InsertEffectCrit(ctx context.Context, arg InsertEffectCritParams) error
 	InsertEffectEdge(ctx context.Context, arg InsertEffectEdgeParams) error
 	InsertEffectEvent(ctx context.Context, arg InsertEffectEventParams) error
+	InsertEffectExhaustion(ctx context.Context, arg InsertEffectExhaustionParams) error
 	InsertEffectExtraDamage(ctx context.Context, arg InsertEffectExtraDamageParams) error
+	InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error
+	InsertEffectForm(ctx context.Context, arg InsertEffectFormParams) error
+	InsertEffectGrant(ctx context.Context, arg InsertEffectGrantParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
+	InsertEffectMode(ctx context.Context, arg InsertEffectModeParams) error
 	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
+	InsertEffectReaction(ctx context.Context, arg InsertEffectReactionParams) error
+	InsertEffectResourceChange(ctx context.Context, arg InsertEffectResourceChangeParams) error
+	InsertEffectReveal(ctx context.Context, arg InsertEffectRevealParams) error
 	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
 	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
+	InsertEffectSaveEdge(ctx context.Context, arg InsertEffectSaveEdgeParams) error
+	InsertEffectScaling(ctx context.Context, arg InsertEffectScalingParams) error
+	InsertEffectScalingStep(ctx context.Context, arg InsertEffectScalingStepParams) error
+	InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffectSpeedPenaltyParams) error
+	InsertEffectSummon(ctx context.Context, arg InsertEffectSummonParams) error
 	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
+	InsertEffectTeleport(ctx context.Context, arg InsertEffectTeleportParams) error
+	InsertEffectTempHP(ctx context.Context, arg InsertEffectTempHPParams) error
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
@@ -192,6 +232,7 @@ type Querier interface {
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
 	InsertNode(ctx context.Context, arg InsertNodeParams) error
+	InsertPendingAction(ctx context.Context, arg InsertPendingActionParams) error
 	InsertPendingSave(ctx context.Context, arg InsertPendingSaveParams) error
 	InsertPoolMember(ctx context.Context, arg InsertPoolMemberParams) error
 	InsertPoolRevision(ctx context.Context, arg InsertPoolRevisionParams) error
@@ -210,6 +251,7 @@ type Querier interface {
 	InsertShopRevisionStock(ctx context.Context, arg InsertShopRevisionStockParams) error
 	InsertSpawnEvent(ctx context.Context, arg InsertSpawnEventParams) error
 	InsertSurface(ctx context.Context, arg InsertSurfaceParams) error
+	InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceReactionParams) error
 	InsertTableEntry(ctx context.Context, arg InsertTableEntryParams) error
 	InsertTableRevision(ctx context.Context, arg InsertTableRevisionParams) error
 	InsertTableRevisionEntry(ctx context.Context, arg InsertTableRevisionEntryParams) error
@@ -227,17 +269,36 @@ type Querier interface {
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
+	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
+	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
 	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
+	ListEffectCounters(ctx context.Context) ([]ListEffectCountersRow, error)
+	ListEffectCrits(ctx context.Context) ([]ListEffectCritsRow, error)
 	ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error)
 	ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, error)
+	ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaustionRow, error)
 	ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraDamageRow, error)
+	ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error)
+	ListEffectForms(ctx context.Context) ([]ListEffectFormsRow, error)
+	ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
+	ListEffectModes(ctx context.Context) ([]ListEffectModesRow, error)
 	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
+	ListEffectReactions(ctx context.Context) ([]ListEffectReactionsRow, error)
+	ListEffectResourceChanges(ctx context.Context) ([]ListEffectResourceChangesRow, error)
+	ListEffectReveals(ctx context.Context) ([]ListEffectRevealsRow, error)
 	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
 	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
+	ListEffectSaveEdges(ctx context.Context) ([]ListEffectSaveEdgesRow, error)
+	ListEffectScalingSteps(ctx context.Context) ([]CompendiumEffectScalingStep, error)
+	ListEffectScalings(ctx context.Context) ([]CompendiumEffectScaling, error)
+	ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error)
+	ListEffectSummons(ctx context.Context) ([]ListEffectSummonsRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
+	ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error)
+	ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
 	ListLootTables(ctx context.Context, campaignID uuid.UUID) ([]ListLootTablesRow, error)
@@ -245,12 +306,23 @@ type Querier interface {
 	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
 	ListNPCs(ctx context.Context, campaignID uuid.UUID) ([]ListNPCsRow, error)
 	ListPools(ctx context.Context, campaignID uuid.UUID) ([]ListPoolsRow, error)
+	ListPrerequisites(ctx context.Context) ([]CompendiumPrerequisite, error)
+	ListResourceDice(ctx context.Context) ([]CompendiumResourceDice, error)
+	ListResourceMaxima(ctx context.Context) ([]CompendiumResourceMaxima, error)
+	ListResourceRecharges(ctx context.Context) ([]CompendiumResourceRecharge, error)
+	ListResources(ctx context.Context) ([]CompendiumResource, error)
+	ListRestAgreements(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
+	ListRestResters(ctx context.Context, sessionID uuid.UUID) ([]ListRestRestersRow, error)
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
 	ListRolls(ctx context.Context, arg ListRollsParams) ([]uuid.UUID, error)
+	ListScaleSteps(ctx context.Context) ([]CompendiumScaleStep, error)
+	ListScales(ctx context.Context) ([]CompendiumScale, error)
 	ListSessions(ctx context.Context, campaignID uuid.UUID) ([]PlaySession, error)
 	ListSettlements(ctx context.Context, campaignID uuid.UUID) ([]ListSettlementsRow, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
+	ListSurfaceDefinitions(ctx context.Context) ([]CompendiumSurfaceDefinition, error)
+	ListSurfaceReactions(ctx context.Context) ([]CompendiumSurfaceReaction, error)
 	ListTables(ctx context.Context, campaignID uuid.UUID) ([]ListTablesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
 	LockCampaignLog(ctx context.Context, lockKey string) error
@@ -263,6 +335,8 @@ type Querier interface {
 	MapElevations(ctx context.Context, mapID uuid.UUID) ([]MapElevationsRow, error)
 	MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRow, error)
 	MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow, error)
+	MapObjectLinks(ctx context.Context, mapID uuid.UUID) ([]CampaignMapObjectLink, error)
+	MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjectsRow, error)
 	MapParty(ctx context.Context, mapID uuid.UUID) ([]uuid.UUID, error)
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
@@ -289,6 +363,9 @@ type Querier interface {
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
 	RemoveWall(ctx context.Context, arg RemoveWallParams) error
 	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
+	RestAbilities(ctx context.Context, ids []uuid.UUID) ([]RestAbilitiesRow, error)
+	RestCharacters(ctx context.Context, arg RestCharactersParams) ([]RestCharactersRow, error)
+	RestResourcesUsed(ctx context.Context, ids []uuid.UUID) ([]CampaignCharacterResource, error)
 	ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error)
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
@@ -299,15 +376,21 @@ type Querier interface {
 	SaveAttack(ctx context.Context, arg SaveAttackParams) error
 	SaveCombat(ctx context.Context, arg SaveCombatParams) error
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
+	SaveDying(ctx context.Context, arg SaveDyingParams) error
 	SaveEncounterCheck(ctx context.Context, arg SaveEncounterCheckParams) error
 	SaveEncounterTable(ctx context.Context, arg SaveEncounterTableParams) error
+	SaveExploration(ctx context.Context, arg SaveExplorationParams) error
 	SaveHaggle(ctx context.Context, arg SaveHaggleParams) error
 	SaveLootTable(ctx context.Context, arg SaveLootTableParams) error
+	SaveMapObject(ctx context.Context, arg SaveMapObjectParams) error
 	SavePool(ctx context.Context, arg SavePoolParams) error
 	SavePrompt(ctx context.Context, arg SavePromptParams) error
+	SaveRest(ctx context.Context, arg SaveRestParams) error
+	SaveRestResult(ctx context.Context, arg SaveRestResultParams) error
 	SaveSettlement(ctx context.Context, arg SaveSettlementParams) error
 	SaveShop(ctx context.Context, arg SaveShopParams) error
 	SaveTable(ctx context.Context, arg SaveTableParams) error
+	SaveTokenForm(ctx context.Context, arg SaveTokenFormParams) error
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
@@ -315,17 +398,26 @@ type Querier interface {
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
 	SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]SessionChecksRow, error)
+	SessionDying(ctx context.Context, sessionID uuid.UUID) ([]SessionDyingRow, error)
 	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
+	SessionExploration(ctx context.Context, sessionID uuid.UUID) (SessionExplorationRow, error)
 	SessionHaggles(ctx context.Context, sessionID uuid.UUID) ([]SessionHagglesRow, error)
 	SessionLog(ctx context.Context, arg SessionLogParams) ([]SessionLogRow, error)
 	SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error)
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
+	SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error)
 	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)
 	SessionShop(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
+	SessionSneakRolls(ctx context.Context, sessionID uuid.UUID) ([]SessionSneakRollsRow, error)
+	SessionSneaking(ctx context.Context, id uuid.UUID) (bool, error)
 	SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error)
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
+	SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenForm, error)
+	SessionTokenQualities(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenQuality, error)
+	SessionTokenReactions(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenReaction, error)
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
+	SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSense, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)
 	SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error)
 	SessionZoneChecks(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCheck, error)
@@ -340,20 +432,26 @@ type Querier interface {
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
+	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error
+	SetSessionSneaking(ctx context.Context, arg SetSessionSneakingParams) error
 	SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
 	SetStack(ctx context.Context, arg SetStackParams) error
+	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
+	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
+	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
 	SpeciesTraits(ctx context.Context, speciesID int64) ([]SpeciesTraitsRow, error)
 	SpellClasses(ctx context.Context, spellID int64) ([]string, error)
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
+	SpendHitDie(ctx context.Context, id uuid.UUID) error
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
@@ -376,6 +474,7 @@ type Querier interface {
 	UpsertPushSubscription(ctx context.Context, arg UpsertPushSubscriptionParams) (uuid.UUID, error)
 	UpsertSpecies(ctx context.Context, arg UpsertSpeciesParams) (int64, error)
 	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)
+	UpsertSurfaceDefinition(ctx context.Context, arg UpsertSurfaceDefinitionParams) error
 	UpsertWeapon(ctx context.Context, arg UpsertWeaponParams) (int64, error)
 	WeaponProperties(ctx context.Context, weaponID int64) ([]WeaponPropertiesRow, error)
 }

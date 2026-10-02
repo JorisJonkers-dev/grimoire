@@ -33,12 +33,13 @@ func samples() contract {
 	ac, hp, most := 15, 4, 7
 	view.Tokens = append(view.Tokens, live.TokenView{
 		ID: "0190c7a8-0000-7000-8000-000000000013", Label: "Aria", Kind: "party", AC: &ac, HP: &hp, HPMax: &most,
-		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing"}}, Shield: true,
+		Attacks: []live.AttackView{{Name: "Longsword", ToHit: 5, ReachFt: 5, Damage: "1d8", DamageBonus: 3, DamageType: "slashing", Mastery: "sap"}}, Shield: true,
+		Reactions: []live.ReactionSettingView{{Kind: "shield", Mode: "always"}}, Dying: &live.DyingView{Successes: 1, Failures: 2, RollID: "0190c7a8-0000-7000-8000-000000000038"},
 	}, live.TokenView{ID: "0190c7a8-0000-7000-8000-000000000014", Label: "Orc", Kind: "enemy", Health: "bloodied"})
 	seventeen, zero := 17, 0
 	view.Combat = &live.CombatView{Status: "active", Round: 2, Combatants: []live.CombatantView{{
 		ID: "0190c7a8-0000-7000-8000-000000000010", TokenID: token.ID, Label: "Goblin", Kind: "enemy", RollID: "0190c7a8-0000-7000-8000-000000000011",
-		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30, Surprised: true,
+		Initiative: &seventeen, Rank: 1, Acting: true, Action: true, Reaction: true, MovementFt: 20, SpeedFt: 30, Surprised: true, Disengaged: true, Readied: true, AttacksLeft: 1, OffHand: true, Interaction: true, Cleave: true,
 		Tactics: "auto", Suggestion: &live.SuggestionView{AttackNo: &zero, TargetID: "0190c7a8-0000-7000-8000-000000000013", Reason: "Simple: Aria is the nearest enemy, 5 ft away."},
 	}}, Attack: &live.PendingAttackView{
 		AttackerID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", Name: "Scimitar", Stage: "damage",
@@ -47,7 +48,7 @@ func samples() contract {
 		ID: "0190c7a8-0000-7000-8000-000000000016", Kind: "shield", ReactorID: "0190c7a8-0000-7000-8000-000000000013", TriggerID: token.ID,
 		Effect: "Shield: AC 15 → 20, so the attack (18) would miss.", SecondsLeft: 9,
 	}}
-	view.Tokens[0].Effects = []live.EffectView{{ID: "0190c7a8-0000-7000-8000-000000000017", Slug: "bless", Name: "Bless", SourceID: token.ID, Concentration: true, RoundsLeft: 9}}
+	view.Tokens[0].Effects = []live.EffectView{{ID: "0190c7a8-0000-7000-8000-000000000017", Slug: "bless", Name: "Bless", SourceID: token.ID, Concentration: true, RoundsLeft: 9}, {ID: "0190c7a8-0000-7000-8000-000000000037", Slug: "exhaustion", Name: "Exhaustion", Level: 2}}
 	view.Resolving = true
 	view.Saves = []live.SaveView{{RollID: "0190c7a8-0000-7000-8000-000000000019", TokenID: token.ID, Effect: "Hold Person", DC: 13}}
 	view.Surfaces = []live.SurfaceView{{Q: 1, R: 1, Kind: "grease", RoundsLeft: 9}}
@@ -77,6 +78,13 @@ func samples() contract {
 		},
 		{ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false},
 		{ID: "0190c7a8-0000-7000-8000-000000000035", Kind: "bag", Label: "Backpack", ParentID: "0190c7a8-0000-7000-8000-000000000030", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}},
+	}
+	view.Rest = &live.RestView{
+		Kind: live.RestShort, Status: "resting", ProposedBy: "0190c7a8-0000-7000-8000-00000000000f", Agreed: []string{"0190c7a8-0000-7000-8000-00000000000f"},
+		Waiting: []string{}, WaitingOnDM: false, Resters: []live.ResterView{{
+			CharacterID: "0190c7a8-0000-7000-8000-000000000012", TokenID: token.ID, Name: "Aria", HitDie: "d10", HitDiceLeft: 2,
+			RollID: "0190c7a8-0000-7000-8000-000000000036",
+		}},
 	}
 	view.Checks = []live.CheckView{{ID: "0190c7a8-0000-7000-8000-000000000027", Trigger: "long_rest", Visibility: "open", Status: "resolved", Outcome: "encounter", ChancePct: 25, ChanceRoll: 12}}
 	off := -10
@@ -168,6 +176,20 @@ func samples() contract {
 			{Nonce: "n61", Kind: live.CmdSpawnEncounter, Q: 2, R: 0, Hidden: true, Monsters: []live.SpawnMonster{{Slug: "goblin", Count: 3}}},
 			{Nonce: "n62", Kind: live.CmdAdjustHP, TokenID: token.ID, HPDelta: -4},
 			{Nonce: "n63", Kind: live.CmdUndo, Seq: 42},
+			{Nonce: "n64", Kind: live.CmdProposeRest, Rest: live.RestLong},
+			{Nonce: "n65", Kind: live.CmdAgreeRest},
+			{Nonce: "n66", Kind: live.CmdSpendHitDie, TokenID: token.ID},
+			{Nonce: "n67", Kind: live.CmdFinishRest},
+			{Nonce: "n68", Kind: live.CmdInterruptRest},
+			{Nonce: "n69", Kind: live.CmdTakeAction, TokenID: token.ID, Action: "ready", Trigger: "enters_reach", AttackNo: 0},
+			{Nonce: "n70", Kind: live.CmdTakeAction, TokenID: token.ID, Action: "utilize", Detail: "pulls the lever"},
+			{Nonce: "n71", Kind: live.CmdUnarmed, TokenID: token.ID, TargetID: token.ID, Option: "shove_push"},
+			{Nonce: "n72", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 1, TargetID: token.ID, OffHand: true},
+			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
+			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
+			{Nonce: "n76", Kind: live.CmdStabilise, TokenID: token.ID, TargetID: token.ID, Option: "medicine"},
+			{Nonce: "n77", Kind: live.CmdRevive, TargetID: token.ID, Option: "revivify"},
+			{Nonce: "n75", Kind: live.CmdSetReaction, TokenID: token.ID, ReactionKind: "opportunity_attack", ReactionMode: "always", Condition: "target_bloodied"},
 		},
 		Updates: []live.Update{
 			{

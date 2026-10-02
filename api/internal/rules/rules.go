@@ -53,3 +53,12 @@ func Modifier(score int) int {
 func ProficiencyBonus(level int) int {
 	return 2 + (level-1)/4
 }
+
+// ProficiencyByChallenge is a monster's proficiency bonus by Challenge Rating: +2 up to 4, one more for
+// every four ratings after.
+func ProficiencyByChallenge(cr float64) int {
+	if cr < 5 {
+		return 2
+	}
+	return 2 + (int(cr)-1)/4
+}

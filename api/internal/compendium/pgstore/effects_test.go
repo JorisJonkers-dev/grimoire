@@ -14,11 +14,8 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
-func seedOwner(slug string) effects.Owner {
-	if slug == "prone" || slug == "poisoned" {
-		return effects.Owner{Kind: effects.OwnedByCondition, Slug: slug}
-	}
-	return effects.Owner{Kind: effects.OwnedBySpell, Slug: slug}
+func seedOwner(d effects.Definition) effects.Owner {
+	return effects.Owner{Kind: d.Owner, Slug: d.Slug}
 }
 
 // The migrations seed the SRD Effects the engine resolves: whole Effects, areas and the parts left to
@@ -29,10 +26,12 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"bless", "burning-hands", "cone-of-cold", "faerie-fire", "fireball", "grease", "hunters-mark", "lightning-bolt", "prone", "shatter"}; !reflect.DeepEqual(got.Automated(), want) {
+	want := []string{"animate-dead", "bless", "burning-hands", "cone-of-cold", "counterspell", "dispel-magic", "dodging", "exhaustion", "faerie-fire", "false-life", "find-familiar", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "misty-step", "paralyzed", "polymorph", "prone", "restrained", "sapped", "shatter", "slowed", "spirit-guardians", "stunned", "thunderwave", "vexed", "wall-of-fire", "wild-shape"}
+	if !reflect.DeepEqual(got.Automated(), want) {
 		t.Fatalf("automated = %v", got.Automated())
 	}
-	if !reflect.DeepEqual(got.Partial(), []string{"poisoned", "thunderwave"}) {
+	partial := []string{"blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated", "petrified", "poisoned", "unconscious"}
+	if !reflect.DeepEqual(got.Partial(), partial) {
 		t.Fatalf("partial = %v", got.Partial())
 	}
 	blessed := []effects.Active{{Slug: "bless", Source: "cleric"}}
@@ -42,11 +41,33 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if fb, ok := got.AreaOf("fireball"); !ok || fb.Area != (effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}) || fb.Damage.Dice != "8d6" || fb.Save != "dexterity" {
 		t.Fatalf("fireball = %+v", fb)
 	}
+	paralyzed := []effects.Active{{Slug: "paralyzed"}}
+	if !got.Incapacitated(paralyzed) || !got.Immobile(paralyzed) || !got.ForSave(paralyzed, "dexterity").Fails || !got.ForAttack(nil, paralyzed, "x", true).Crit {
+		t.Fatalf("paralysed from rows = %+v", got["paralyzed"])
+	}
+	if got.SpeedPenaltyFt([]effects.Active{{Slug: "exhaustion", Level: 2}}) != 10 {
+		t.Fatalf("exhaustion from rows = %+v", got["exhaustion"])
+	}
 	if g, _ := got.AreaOf("grease"); g.Condition != "prone" || g.Surface.Rounds != 10 {
 		t.Fatalf("grease = %+v", g)
 	}
-	if !reflect.DeepEqual(got.Instructions("poisoned", "Poisoned"), []string{"Poisoned: ability checks are made with disadvantage."}) {
-		t.Fatalf("poisoned = %v", got.Instructions("poisoned", "Poisoned"))
+	if tw, _ := got.AreaOf("thunderwave"); tw.Push != (effects.ForcedMove{Ft: 10, Toward: false}) || got["thunderwave"].Owner != effects.OwnedBySpell {
+		t.Fatalf("thunderwave = %+v", got["thunderwave"])
+	}
+	if ft, ok := got.TeleportOf("misty-step"); !ok || ft != 30 {
+		t.Fatalf("misty step = %d %v", ft, ok)
+	}
+	if l := got.LandingOf("false-life", ""); l.TempHP != 9 || !got.LandingOf("dispel-magic", "").Dispels {
+		t.Fatalf("false life = %+v", l)
+	}
+	if ff, _ := got.AreaOf("faerie-fire"); !reflect.DeepEqual(ff.Reveals, []string{"invisible"}) {
+		t.Fatalf("faerie fire reveals = %+v", ff)
+	}
+	if wall, _ := got.AreaOf("wall-of-fire"); wall.Area.Shape != hex.WallArea || !got["wall-of-fire"].Concentration {
+		t.Fatalf("wall of fire = %+v", wall)
+	}
+	if !reflect.DeepEqual(got.Instructions("poisoned", "Poisoned", ""), []string{"Poisoned: ability checks are made with disadvantage."}) {
+		t.Fatalf("poisoned = %v", got.Instructions("poisoned", "Poisoned", ""))
 	}
 }
 
@@ -60,7 +81,7 @@ func TestSeededEffectsRoundTripThroughTheDatabase(t *testing.T) {
 		t.Fatal(err)
 	}
 	for slug, d := range seeded {
-		if err := s.SaveEffect(ctx, seedOwner(slug), d); err != nil {
+		if err := s.SaveEffect(ctx, seedOwner(d), d); err != nil {
 			t.Fatalf("save %s: %v", slug, err)
 		}
 	}
@@ -87,8 +108,18 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 	if err := s.SaveEffect(ctx, owner, first); err != nil {
 		t.Fatal(err)
 	}
-	second := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Concentration: true, Components: []effects.Component{
+	second := effects.Definition{Slug: "frost-ring", Name: "Frost Ring", Owner: effects.OwnedBySpell, Concentration: true, Components: []effects.Component{
 		effects.MoveCost{Multiplier: 2},
+		effects.TempHP{Amount: 5},
+		effects.Teleport{RangeFt: 30},
+		effects.ForcedMove{Ft: 10, Toward: true},
+		effects.Dispel{},
+		effects.Counter{RangeFt: 60},
+		effects.GrantFeature{Name: "Darkvision"},
+		effects.ResourceChange{Resource: "rage", Delta: -1},
+		effects.Summon{Monster: "wolf", Count: 2, Shares: true, NeedsCommand: true},
+		effects.Form{Monster: "owl", TempHP: 4},
+		effects.Reveal{Qualities: []string{"invisible", "secret"}},
 	}}
 	if err := s.SaveEffect(ctx, owner, second); err != nil {
 		t.Fatal(err)
@@ -99,6 +130,52 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got["frost-ring"], second) {
 		t.Fatalf("frost-ring = %+v", got["frost-ring"])
+	}
+}
+
+// Choices and branches nest through the database; durations and scaling come back as they went in.
+func TestShapedEffectsRoundTrip(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	s := pgstore.New(openPool(t))
+	d := effects.Definition{
+		Slug: "frost-choice", Name: "Frost Choice", Owner: effects.OwnedBySpell, Concentration: true,
+		Duration: effects.Duration{Kind: effects.Minutes, Amount: 1, RepeatSave: "wisdom"},
+		Scaling:  &effects.Scaling{Axis: effects.CharacterLevel, Class: "", Column: "", Base: 0, Dice: "", Steps: []effects.Step{{At: 5, Dice: "2d10"}, {At: 11, Dice: "3d10"}}},
+		Components: []effects.Component{
+			effects.Manual{Instruction: "Frost forms."},
+			effects.Choice{Modes: []effects.Mode{
+				{Name: "Bite", Components: []effects.Component{effects.ExtraDamage{Dice: "1d6"}, effects.Branch{
+					When: effects.Condition{Kind: effects.CreatureIs, N: 0, Type: "fiend"}, Then: []effects.Component{effects.Dispel{}},
+				}}},
+				{Name: "Numb", Components: []effects.Component{effects.SpeedPenalty{Ft: 10}}},
+			}},
+			effects.Branch{When: effects.Condition{Kind: effects.FailsBy, N: 5, Type: ""}, Then: []effects.Component{effects.Incapacitated{}, effects.MoveCost{Multiplier: 2}}},
+			effects.TempHP{Amount: 3},
+		},
+	}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: d.Slug}, d); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Effects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got[d.Slug], d) {
+		t.Fatalf("shaped effect:\n got %+v\nwant %+v", got[d.Slug], d)
+	}
+	if fb := got["fireball"]; !reflect.DeepEqual(fb.Scaling, &effects.Scaling{Axis: effects.SlotLevel, Base: 3, Dice: "1d6"}) || fb.Duration.Kind != effects.Instant {
+		t.Fatalf("fireball scales by slot = %+v", fb)
+	}
+	if b := got["bless"]; b.Duration != (effects.Duration{Kind: effects.Minutes, Amount: 1}) {
+		t.Fatalf("bless lasts a minute = %+v", b.Duration)
+	}
+	d.Scaling, d.Duration = nil, effects.Duration{}
+	if err := s.SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: d.Slug}, d); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := s.Effects(ctx); got[d.Slug].Scaling != nil || got[d.Slug].Duration != (effects.Duration{}) {
+		t.Fatalf("saving again clears the scaling = %+v", got[d.Slug])
 	}
 }
 
@@ -113,6 +190,13 @@ func TestInvalidEffectsAreRefused(t *testing.T) {
 		{Slug: "bad-dice", Name: "x", Components: []effects.Component{effects.ExtraDamage{Dice: "lots"}}},
 		{Slug: "bad-shape", Name: "x", Components: []effects.Component{effects.Area{Shape: "pyramid", SizeFt: 10}}},
 		{Slug: "no-roll", Name: "x", Components: []effects.Component{effects.BonusDie{Dice: "1d4"}}},
+		{Slug: "bad-duration", Name: "x", Duration: effects.Duration{Kind: "fortnight"}},
+		{Slug: "bad-scaling", Name: "x", Scaling: &effects.Scaling{Axis: effects.SlotLevel, Base: 1, Dice: "lots"}},
+		{Slug: "bad-step", Name: "x", Scaling: &effects.Scaling{Axis: effects.CharacterLevel, Steps: []effects.Step{{At: 30, Dice: "1d6"}}}},
+		{Slug: "bad-branch", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: "full_moon"}}}},
+		{Slug: "bad-reveal", Name: "x", Components: []effects.Component{effects.Reveal{Qualities: []string{"shiny"}}}},
+		{Slug: "bad-mode", Name: "x", Components: []effects.Component{effects.Choice{Modes: []effects.Mode{{Name: ""}}}}},
+		{Slug: "bad-nested", Name: "x", Components: []effects.Component{effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{effects.ExtraDamage{Dice: "lots"}}}}},
 	}
 	for _, d := range bad {
 		if err := s.SaveEffect(ctx, owner, d); err == nil {

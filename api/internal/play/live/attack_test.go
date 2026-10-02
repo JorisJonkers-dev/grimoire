@@ -33,11 +33,13 @@ func (bestiary) Monster(_ context.Context, _ uuid.UUID, slug string) (string, do
 		return "Wolf", domain.Stats{Source: "monster:wolf", AC: 13, HP: 11, HPMax: 11, Intelligence: 3, Attacks: []domain.Attack{
 			{Name: "Bite", ToHit: 4, ReachFt: 5, Damage: "2d4", DamageBonus: 2, DamageType: "piercing"},
 		}}, nil
+	case "bat":
+		return "Bat", domain.Stats{Source: "monster:bat", AC: 12, HP: 1, HPMax: 1, Intelligence: 2, Senses: map[string]int{"blindsight": 60}, Attacks: []domain.Attack{}}, nil
 	case "goblin":
 	default:
 		return "", domain.Stats{}, errors.New("no such monster")
 	}
-	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Stealth: 6, Perception: -1, Initiative: 2, SpeedFt: 30, Attacks: []domain.Attack{
+	return "Goblin", domain.Stats{Source: "monster:goblin", AC: 15, HP: 7, HPMax: 7, Intelligence: 10, Stealth: 6, Perception: -1, Initiative: 2, SpeedFt: 30, UnarmedDC: 12, Attacks: []domain.Attack{
 		{Name: "Scimitar", ToHit: 4, ReachFt: 5, Damage: "1d6", DamageBonus: 2, DamageType: "slashing"},
 		{Name: "Shortbow", ToHit: 4, RangeFt: 80, LongRangeFt: 320, Damage: "1d6", DamageBonus: 2, DamageType: "piercing"},
 		{Name: "Slam", ToHit: 4, ReachFt: 5, DamageBonus: 3, DamageType: "bludgeoning"},
@@ -168,7 +170,7 @@ func TestAttacksFromPreviewToDamageAndUndo(t *testing.T) {
 	if token(p.View, "Goblin").Health != "down" || p.View.Combat.Attack != nil {
 		t.Fatalf("9 damage fells the goblin = %+v", token(p.View, "Goblin"))
 	}
-	if u := tb.playerSays(aim(live.CmdAttack, "Aria", 0, "Goblin")); !strings.Contains(u.Reason, "already used their action") {
+	if u := tb.playerSays(aim(live.CmdAttack, "Aria", 0, "Goblin")); !strings.Contains(u.Reason, "no attacks left this turn") {
 		t.Fatalf("a second action = %+v", u)
 	}
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(p.View, "Aria").ID})
@@ -193,9 +195,9 @@ func TestAttacksFromPreviewToDamageAndUndo(t *testing.T) {
 	if roll.Notation != "2d6" || !strings.HasSuffix(roll.Purpose, "(critical)") || roll.Roller.ID != w.dm.ID {
 		t.Fatalf("critical damage roll = %+v", roll)
 	}
-	fill(p.View.Combat.Attack.RollID, w.dm, 6, 6)
-	if hp := *token(tb.party[len(tb.party)-1].View, "Aria").HP; hp != 0 {
-		t.Fatalf("14 damage drops Aria to 0: hp %d", hp)
+	fill(p.View.Combat.Attack.RollID, w.dm, 1, 1)
+	if hp := *token(tb.party[len(tb.party)-1].View, "Aria").HP; hp != 5 {
+		t.Fatalf("4 critical damage leaves Aria on 5: hp %d", hp)
 	}
 	tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Archer").ID})
 

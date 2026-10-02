@@ -43,6 +43,8 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 		return areaPlan{}, "That is not an area spell the rules know."
 	case r.st.cast != nil:
 		return areaPlan{}, "An area spell is still waiting on its rolls."
+	case r.st.catalog.Incapacitated(r.st.actives(caster.ID)):
+		return areaPlan{}, caster.Label + " can't act while Incapacitated."
 	}
 	if c := r.st.combat; c == nil || c.Status != domain.CombatActive {
 		return areaPlan{}, "Spells happen in combat, once initiative is rolled."
@@ -58,15 +60,18 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 		return areaPlan{}, "That hex is off the map."
 	case spell.Area.RangeFt > 0 && hex.Distance(from, point)*hex.FeetPerHex > spell.Area.RangeFt:
 		return areaPlan{}, "The point is out of range."
-	case spell.Area.RangeFt == 0 && point == from:
+	case spell.Area.RangeFt == 0 && point == from && spell.Area.Shape != hex.EmanationArea:
 		return areaPlan{}, "Aim away from the caster."
 	}
-	origin := point
-	if spell.Area.RangeFt == 0 {
+	origin, aim := point, point
+	switch {
+	case spell.Area.RangeFt == 0:
 		origin = from
+	case spell.Area.Shape == hex.WallArea:
+		aim = hex.Coord{Q: 2*point.Q - from.Q, R: 2*point.R - from.R}
 	}
 	p := areaPlan{caster: caster, slug: strings.ToLower(strings.TrimSpace(cmd.Effect)), spell: spell}
-	p.hexes = slices.DeleteFunc(hex.Area(spell.Area.Shape, origin, point, spell.Area.SizeFt), func(c hex.Coord) bool { return !r.st.onBoard(c) })
+	p.hexes = slices.DeleteFunc(hex.Area(spell.Area.Shape, origin, aim, spell.Area.SizeFt), func(c hex.Coord) bool { return !r.st.onBoard(c) })
 	for _, t := range r.st.tokens {
 		if standing(t) && slices.Contains(p.hexes, hex.Coord{Q: t.Q, R: t.R}) {
 			p.targets = append(p.targets, t)
@@ -76,6 +81,21 @@ func (r *runtime) aimArea(m domain.Member, cmd Command) (areaPlan, string) {
 	return p, ""
 }
 
+// upcast scales an area spell's damage to the slot it is cast with: no lower than the spell's own
+// level, no higher than 9.
+func (p *areaPlan) upcast(cat effects.Catalog, slot int) string {
+	def, _ := cat.Lookup(p.slug)
+	sc := def.Scaling
+	if slot == 0 || sc == nil || sc.Axis != effects.SlotLevel {
+		return ""
+	}
+	if slot < sc.Base || slot > 9 {
+		return fmt.Sprintf("Cast %s with a slot of level %d to 9.", p.spell.Name, sc.Base)
+	}
+	p.spell.Damage.Dice = sc.Apply(p.spell.Damage.Dice, effects.Level{Slot: slot})
+	return ""
+}
+
 func spellDC(t domain.Token) int {
 	if t.Stats.SpellDC > 0 {
 		return t.Stats.SpellDC
@@ -83,18 +103,36 @@ func spellDC(t domain.Token) int {
 	return DefaultSpellDC
 }
 
+// aimCast aims an area spell and scales it to the slot it is cast with.
+func (r *runtime) aimCast(m domain.Member, cmd Command) (areaPlan, string) {
+	p, reason := r.aimArea(m, cmd)
+	if reason == "" {
+		reason = p.upcast(r.st.catalog, cmd.Slot)
+	}
+	return p, reason
+}
+
 func (r *runtime) previewArea(req request) {
-	p, reason := r.aimArea(req.from.Member, req.cmd)
+	p, reason := r.aimCast(req.from.Member, req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
 	}
 	out := &AreaPreview{TokenID: req.cmd.TokenID, Effect: p.slug, Name: p.spell.Name, DC: spellDC(p.caster), Hexes: wireHexes(p.hexes), Targets: []AreaTarget{}}
+	if def, _ := r.st.catalog.Lookup(p.slug); def.Concentration {
+		for _, e := range r.st.held(p.caster.ID) {
+			out.Ends = append(out.Ends, e.Name)
+		}
+	}
 	seen := r.st.vision()
 	for _, t := range p.targets {
 		if req.from.Member.DM || r.st.shows(t, seen) {
 			ally := (t.Kind == domain.TokenParty) == (p.caster.Kind == domain.TokenParty)
-			out.Targets = append(out.Targets, AreaTarget{TokenID: uuid.UUID(t.ID).String(), Ally: ally})
+			target := AreaTarget{TokenID: uuid.UUID(t.ID).String(), Ally: ally, PushedTo: nil}
+			if moved := r.st.forced(p.caster, t, p.spell.Push); p.spell.Push.Ft > 0 && moved != nil {
+				target.PushedTo = &Hex{Q: moved.Q, R: moved.R}
+			}
+			out.Targets = append(out.Targets, target)
 			if ally {
 				out.Allies++
 			}
@@ -105,7 +143,7 @@ func (r *runtime) previewArea(req request) {
 
 // planCast spends the caster's action and opens the damage roll and every target's saving throw.
 func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
-	p, reason := r.aimArea(m, cmd)
+	p, reason := r.aimCast(m, cmd)
 	if reason != "" {
 		return Write{}, reason
 	}
@@ -120,11 +158,7 @@ func (r *runtime) planCast(m domain.Member, cmd Command) (Write, string) {
 	ability := p.spell.Save
 	for _, t := range p.targets {
 		target := domain.AreaTarget{Token: t.ID}
-		if ability != "" {
-			name := strings.ToUpper(ability[:1]) + ability[1:]
-			roll := r.request(m, t, fmt.Sprintf("%s save against %s (DC %d)", name, p.spell.Name, cast.DC),
-				strings.Join(append([]string{"1d20"}, r.st.catalog.SaveDice(r.st.actives(t.ID))...), "+"),
-				domain.Modifier{Label: name + " save", Value: t.Stats.Saves[ability]})
+		if roll, ok := r.saveRoll(m, t, ability, fmt.Sprintf("save against %s (DC %d)", p.spell.Name, cast.DC)); ok {
 			target.SaveRoll = &roll.ID
 			w.Rolls = append(w.Rolls, roll)
 		}
@@ -147,9 +181,13 @@ func castRolls(c *domain.AreaCast) []domain.RollID {
 	return out
 }
 
-// areaRolled resolves an area spell once its last roll is in: the ground reacts to the damage and takes
-// any new Surface, then every target takes full or half damage and those who failed get its condition.
+// areaRolled resolves an area spell once its last roll is in and no Counterspell is pending: the ground
+// reacts to the damage and takes any new Surface, every target takes full or half damage, those who
+// failed are pushed and get its condition, and a concentration spell stays on its caster.
 func (r *runtime) areaRolled() {
+	if r.st.cast == nil || r.st.awaitingCounter() {
+		return
+	}
 	c := *r.st.cast
 	totals, actor, ok := r.castTotals(&c)
 	if !ok {
@@ -159,10 +197,25 @@ func (r *runtime) areaRolled() {
 	sys := caller.Caller{Subject: actor.Subject, Origin: caller.OriginSystem, Client: ""}
 	caster := r.st.tokens[c.Caster]
 	failed, hits := r.st.outcomes(&c, spell, totals)
-	w := Write{Kind: domain.ActionAreaResolved, Token: caster, terrain: true, Hexes: c.Hexes, damageType: spell.Damage.Type, created: spell.Surface, manuals: notes(spell, failed)}
+	extra, branchNotes := r.st.branched(&c, totals)
+	w := Write{Kind: domain.ActionAreaResolved, Token: caster, terrain: true, Hexes: c.Hexes, damageType: spell.Damage.Type, created: spell.Surface, manuals: append(notes(spell, failed), branchNotes...)}
 	r.commit(request{}, w, actor, sys)
 	for _, h := range hits {
 		r.commit(request{}, Write{Kind: domain.ActionDamageDealt, Token: caster, HP: &h}, actor, sys)
+	}
+	for _, t := range failed {
+		if moved := r.st.forced(caster, r.st.tokens[t.ID], spell.Push); spell.Push.Ft > 0 && moved != nil {
+			r.commit(request{}, Write{Kind: domain.ActionTokenMoved, Token: *moved, forced: true}, actor, sys)
+		}
+	}
+	if w := r.st.sustained(r.st.tokens[caster.ID], c.Spell); w != nil {
+		r.commit(request{}, *w, actor, sys)
+	}
+	for _, e := range extra {
+		r.commit(request{}, Write{Kind: domain.ActionEffectApplied, Token: r.st.tokens[e.Target], effect: &e}, actor, sys)
+	}
+	for _, t := range r.st.revealed(c.Hexes, spell.Reveals) {
+		r.commit(request{}, Write{Kind: domain.ActionVisibilitySet, Token: t}, actor, sys)
 	}
 	if spell.Condition == "" {
 		return
@@ -214,10 +267,40 @@ func (s *state) outcomes(c *domain.AreaCast, spell effects.AreaSpell, totals map
 			amount = map[bool]int{true: amount / 2, false: 0}[spell.Damage.Half]
 		}
 		if amount > 0 {
-			hits = append(hits, HPChange{Token: t.ID, Before: t.Stats.HP, After: max(t.Stats.HP-amount, 0)})
+			hits = append(hits, damage(t, amount, false))
 		}
 	}
 	return failed, hits
+}
+
+// branched works out what an area spell's branches add for each target as the save came out and the
+// target's hit points stood before the damage: conditions to put on, and parts the DM resolves.
+func (s *state) branched(c *domain.AreaCast, totals map[domain.RollID]int) ([]domain.Effect, []domain.ManualPrompt) {
+	def, _ := s.catalog.Lookup(c.Spell)
+	var fx []domain.Effect
+	var out []domain.ManualPrompt
+	for _, target := range c.Targets {
+		t, ok := s.tokens[target.Token]
+		if !ok || t.Stats == nil {
+			continue
+		}
+		at := effects.Situation{Saved: true, Margin: 0, HP: t.Stats.HP, First: true, Type: ""}
+		if target.SaveRoll != nil {
+			total := totals[*target.SaveRoll]
+			at.Saved, at.Margin = total >= c.DC, c.DC-total
+		}
+		for _, part := range def.Branches("", at) {
+			switch part := part.(type) {
+			case effects.SaveCondition:
+				cond, _ := s.catalog.Lookup(part.Slug)
+				fx = append(fx, domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: part.Slug, Name: cond.Name, Level: 1})
+			case effects.Manual:
+				out = append(out, domain.ManualPrompt{ID: uuid.New(), Text: t.Label + ": " + part.Instruction})
+			default:
+			}
+		}
+	}
+	return fx, out
 }
 
 // notes hands the DM a spell's unmodelled parts, naming who failed the save.
@@ -252,8 +335,8 @@ func (r *runtime) planTerrain(cmd Command) (Write, string) {
 	}
 	k := surface.Kind(cmd.Surface)
 	switch {
-	case k != surface.None && !surface.Valid(k):
-		return Write{}, "Surfaces are fire, grease, water, ice, web or electrified."
+	case k != surface.None && !r.st.terrainKinds.Valid(k):
+		return Write{}, "There is no such Surface."
 	case cmd.Rounds < 0 || cmd.Rounds > 100:
 		return Write{}, "Surfaces last 0 to 100 rounds."
 	}
@@ -285,7 +368,7 @@ func applyTerrain(s *state, w *Write) {
 	}
 	for _, c := range w.Hexes {
 		now := s.surfaces[c]
-		now.Kind = surface.React(now.Kind, w.damageType)
+		now.Kind = s.terrainKinds.React(now.Kind, w.damageType)
 		if w.Kind == domain.ActionSurfacesSet || w.created.Kind != surface.None {
 			now = domain.Surface{Kind: w.created.Kind, RoundsLeft: w.created.Rounds}
 		}
@@ -313,28 +396,73 @@ func (s *state) weather() bool {
 	return changed
 }
 
-// hazards hands the DM the damage of creatures that start their turn in, or walk into, a harmful Surface.
+// hazards hands the DM the damage of creatures that start their turn in, or walk into, a harmful
+// Surface; spikes strike on every step. The Effects such Surfaces put on those creatures wait for the
+// change to commit.
 func (s *state) hazards(started map[domain.TokenID]bool, w *Write) bool {
 	var texts []string
 	for id, now := range started {
 		t := s.tokens[id]
-		if dice, kind, ok := surface.Hazard(s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind); now && ok {
-			texts = append(texts, fmt.Sprintf("%s starts its turn in %s: %s %s damage.", t.Label, s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind, dice, kind))
+		k := s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind
+		if dice, kind, _, ok := s.terrainKinds.Hazard(k); now && ok {
+			texts = append(texts, fmt.Sprintf("%s starts its turn in %s: %s %s damage.", t.Label, strings.ToLower(s.terrainKinds[k].Name), dice, kind))
+		}
+		if e := s.terrainKinds.Effect(k); now && e != "" {
+			w.grounded = append(w.grounded, grounding{token: id, effect: e})
 		}
 	}
 	if w.Kind == domain.ActionTokenWalked {
-		for _, c := range w.Path[min(1, len(w.Path)):] {
-			if dice, kind, ok := surface.Hazard(s.surfaces[c].Kind); ok {
-				texts = append(texts, fmt.Sprintf("%s walks into %s: %s %s damage.", w.Token.Label, s.surfaces[c].Kind, dice, kind))
-				break
-			}
-		}
+		texts = append(texts, s.walkedThrough(w)...)
 	}
 	slices.Sort(texts)
 	for _, t := range texts {
 		s.fx.Manual = append(s.fx.Manual, domain.ManualPrompt{ID: uuid.New(), Text: t})
 	}
 	return len(texts) > 0
+}
+
+// grounding is an Effect a Surface puts on a creature in it.
+type grounding struct {
+	token  domain.TokenID
+	effect string
+}
+
+// walkedThrough is what a walk through Surfaces costs the walker: the first harmful Surface it enters,
+// every step through spikes, and the Effects of the Surfaces it enters.
+func (s *state) walkedThrough(w *Write) []string {
+	var texts []string
+	steps, hurt := map[surface.Kind]int{}, false
+	for _, c := range w.Path[min(1, len(w.Path)):] {
+		k := s.surfaces[c].Kind
+		dice, kind, every, ok := s.terrainKinds.Hazard(k)
+		switch {
+		case ok && every:
+			steps[k]++
+		case ok && !hurt:
+			texts, hurt = append(texts, fmt.Sprintf("%s walks into %s: %s %s damage.", w.Token.Label, strings.ToLower(s.terrainKinds[k].Name), dice, kind)), true
+		}
+		if e := s.terrainKinds.Effect(k); e != "" && !slices.ContainsFunc(w.grounded, func(g grounding) bool { return g.effect == e && g.token == w.Token.ID }) {
+			w.grounded = append(w.grounded, grounding{token: w.Token.ID, effect: e})
+		}
+	}
+	for k, n := range steps {
+		dice, kind, _, _ := s.terrainKinds.Hazard(k)
+		texts = append(texts, fmt.Sprintf("%s moves %d feet through %s: %s %s damage for every 5 feet.", w.Token.Label, n*hex.FeetPerHex, strings.ToLower(s.terrainKinds[k].Name), dice, kind))
+	}
+	return texts
+}
+
+// groundEffects puts the Effects Surfaces give on the creatures in them, as if the DM applied each.
+func (r *runtime) groundEffects(w Write, actor domain.Member, c caller.Caller) {
+	sys := caller.Caller{Subject: c.Subject, Origin: caller.OriginSystem, Client: ""}
+	for _, g := range w.grounded {
+		if r.st.stacked(g.token, g.effect) < 0 && slices.ContainsFunc(r.st.fx.Active, func(e domain.Effect) bool { return e.Target == g.token && e.Slug == g.effect }) {
+			continue
+		}
+		if next, reason := r.planApply(Command{Kind: CmdApplyEffect, TargetID: uuid.UUID(g.token).String(), Effect: g.effect}); reason == "" {
+			r.commit(request{}, next, actor, sys)
+		}
+	}
 }
 
 // terrainViews shows Surfaces and height where the audience knows the ground, and the area spell on

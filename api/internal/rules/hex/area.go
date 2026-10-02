@@ -9,14 +9,17 @@ import (
 type Shape string
 
 // Shapes. A sphere or cylinder is centred on its point; an emanation surrounds its origin and leaves it
-// out; a cone, cube or line starts at its origin and extends toward the aim point.
+// out; a ring is the hexes exactly its size from its point; a cone, cube or line starts at its origin
+// and extends toward the aim point; a wall is a line that includes the hex it starts on.
 const (
 	SphereArea    Shape = "sphere"
 	CylinderArea  Shape = "cylinder"
 	EmanationArea Shape = "emanation"
+	RingArea      Shape = "ring"
 	ConeArea      Shape = "cone"
 	CubeArea      Shape = "cube"
 	LineArea      Shape = "line"
+	WallArea      Shape = "wall"
 )
 
 // feet places a hex centre on a plane where neighbouring centres are 5 feet apart.
@@ -50,6 +53,12 @@ func covers(shape Shape, origin, aim, c Coord, size float64) bool {
 		return d <= size
 	case EmanationArea:
 		return d <= size && c != origin
+	case RingArea:
+		return size > 0 && d == size
+	case WallArea:
+		if c == origin {
+			return aim != origin
+		}
 	case ConeArea, CubeArea, LineArea:
 	}
 	ox, oy := feet(origin)
@@ -70,7 +79,29 @@ func covers(shape Shape, origin, aim, c Coord, size float64) bool {
 		return across <= along/2+epsilon
 	case CubeArea:
 		return across <= size/2+epsilon
-	case LineArea, SphereArea, CylinderArea, EmanationArea:
+	case LineArea, WallArea, SphereArea, CylinderArea, EmanationArea, RingArea:
 	}
 	return across <= FeetPerHex/2+epsilon
+}
+
+// Push is the hex next to at that lies straight away from from, or straight toward it: the neighbour
+// most in line with the two. Nothing moves a hex away from or toward itself.
+func Push(from, at Coord, toward bool) Coord {
+	if from == at {
+		return at
+	}
+	fx, fy := feet(from)
+	ax, ay := feet(at)
+	dx, dy := ax-fx, ay-fy
+	if toward {
+		dx, dy = -dx, -dy
+	}
+	best, score := at, math.Inf(-1)
+	for _, n := range at.Neighbors() {
+		nx, ny := feet(n)
+		if s := (nx-ax)*dx + (ny-ay)*dy; s > score {
+			best, score = n, s
+		}
+	}
+	return best
 }

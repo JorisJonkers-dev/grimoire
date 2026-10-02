@@ -4,21 +4,26 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
-import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
+import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
 import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
-import { board, describe, hexes, zoneHexes } from './board'
+import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
+import VisibilityPanel from './VisibilityPanel.vue'
+import ObjectsPanel from './ObjectsPanel.vue'
 import ActionLog from './ActionLog.vue'
+import DyingPanel from './DyingPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
+import ReactionSettings from './ReactionSettings.vue'
+import RestPanel from './RestPanel.vue'
 import Hotbar from './Hotbar.vue'
 import InitiativeRail from './InitiativeRail.vue'
 import LiveRoll from './LiveRoll.vue'
@@ -31,7 +36,7 @@ import TurnPanel from './TurnPanel.vue'
 import WorldPanel from './WorldPanel.vue'
 import ZonesPanel from './ZonesPanel.vue'
 
-type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'zone' | 'camera' | 'ping'
+type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'zone' | 'object' | 'camera' | 'ping'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,6 +92,7 @@ const cells = computed(() =>
     surfaces: view.value?.surfaces,
     area: areaHexes.value,
     zone: zoneCells.value,
+    reach: view.value?.sneak?.reach,
   }),
 )
 const chosen = computed(() => view.value?.tokens.find((t) => t.id === selected.value) ?? null)
@@ -110,7 +116,9 @@ async function rollAll() {
 }
 const tokenById = (id: string) => view.value?.tokens.find((t) => t.id === id)
 const pending = computed(() => combat.value?.attack ?? null)
-const aiming = ref<{ tokenId: string; attackNo: number } | null>(null)
+const aiming = ref<{ tokenId: string; attackNo: number; offHand?: boolean; cleave?: boolean } | null>(null)
+// grabbing is an Unarmed Strike waiting for its target: the next creature tapped is grappled or shoved.
+const grabbing = ref<{ tokenId: string; option: string } | null>(null)
 const bars = computed(() =>
   turns.value.flatMap((c) => {
     const token = tokenById(c.tokenId)
@@ -119,15 +127,21 @@ const bars = computed(() =>
 )
 const blockedFor = (c: LiveCombatant) => (pending.value ? 'An attack is waiting on its roll.' : c.action ? '' : 'The action is used this turn.')
 function arm(token: LiveToken, attackNo: number) {
-  const same = aiming.value?.tokenId === token.id && aiming.value.attackNo === attackNo
+  const same = aiming.value?.tokenId === token.id && aiming.value.attackNo === attackNo && !aiming.value.offHand
   aiming.value = same ? null : { tokenId: token.id, attackNo }
+}
+function armOffHand(token: LiveToken, attackNo: number) {
+  aiming.value = { tokenId: token.id, attackNo, offHand: true }
+}
+function armCleave(token: LiveToken, attackNo: number) {
+  aiming.value = { tokenId: token.id, attackNo, cleave: true }
 }
 const preview = computed(() => {
   const p = state.value?.preview
   return p && p.tokenId === aiming.value?.tokenId && p.attackNo === aiming.value.attackNo ? p : null
 })
 function confirmAttack(p: { tokenId: string; attackNo: number; targetId: string }) {
-  live.value?.send({ kind: 'attack', tokenId: p.tokenId, attackNo: p.attackNo, targetId: p.targetId })
+  live.value?.send({ kind: 'attack', tokenId: p.tokenId, attackNo: p.attackNo, targetId: p.targetId, ...(aiming.value?.offHand ? { offHand: true } : {}), ...(aiming.value?.cleave ? { cleave: true } : {}) })
   aiming.value = null
 }
 function useSuggestion(tokenId: string, s?: LiveSuggestion) {
@@ -140,16 +154,30 @@ const mySaves = computed(() =>
     return isDM.value ? !owner : owner === campaign.data.value?.me.id
   }),
 )
-const areaAiming = ref<{ tokenId: string; effect: string; q?: number; r?: number } | null>(null)
-function aimArea(token: LiveToken, effect: string) {
+const areaAiming = ref<{ tokenId: string; effect: string; slot?: number; q?: number; r?: number } | null>(null)
+function aimArea(token: LiveToken, effect: string, slot = 0) {
   aiming.value = null
-  areaAiming.value = effect ? { tokenId: token.id, effect } : null
+  areaAiming.value = effect ? { tokenId: token.id, effect, ...(slot ? { slot } : {}) } : null
 }
 const areaPreview = computed(() => {
   const p = state.value?.areaPreview
   return p && p.tokenId === areaAiming.value?.tokenId && p.effect === areaAiming.value.effect ? p : null
 })
-const areaHexes = computed(() => areaPreview.value?.hexes ?? view.value?.area?.hexes ?? [])
+const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
+const teleporting = ref<string | null>(null)
+const jumping = ref<string | null>(null)
+// throwing is the thrower, then what it throws: a creature it grapples or an object next to it.
+const throwing = ref<{ tokenId: string; targetId?: string; objectId?: string } | null>(null)
+const surfaceKinds = computed(
+  () => view.value?.surfaceKinds ?? ['fire', 'grease', 'water', 'ice', 'web', 'electrified'].map((kind) => ({ kind, name: (kind[0] ?? '').toUpperCase() + kind.slice(1) })),
+)
+const objectForm = ref<{ kind: MapObjectKind; name: string; secret: boolean; effect: string; radiusFt: number; detectDc: number; disarmDc: number; triggerFt: number; lockDc: number; key: string }>({
+  kind: 'door', name: '', secret: false, effect: '', radiusFt: 0, detectDc: 0, disarmDc: 0, triggerFt: 0, lockDc: 0, key: '',
+})
+const summoning = ref<{ tokenId: string; effect: string } | null>(null)
+// The creatures a Combatant summoned that wait for its command this round.
+const awaitingOrders = (owner: string) =>
+  (combat.value?.combatants ?? []).filter((c) => c.ownerId === owner && c.awaitingCommand).map((c) => ({ tokenId: c.tokenId, label: c.label }))
 const zoneName = ref('')
 const zoneRadius = ref(3)
 const zoneDMOnly = ref(false)
@@ -169,7 +197,7 @@ const names = computed(() => Object.fromEntries((view.value?.tokens ?? []).map((
 function castArea() {
   const a = areaAiming.value
   if (!a) return
-  live.value?.send({ kind: 'cast_area', tokenId: a.tokenId, effect: a.effect, q: a.q ?? 0, r: a.r ?? 0 })
+  live.value?.send({ kind: 'cast_area', tokenId: a.tokenId, effect: a.effect, q: a.q ?? 0, r: a.r ?? 0, ...(a.slot ? { slot: a.slot } : {}) })
   areaAiming.value = null
 }
 // Whoever rolls a creature's dice sees the Roll Cards of an area spell: its damage and each save.
@@ -229,12 +257,45 @@ function explore(c: Coord) {
 }
 function pick(c: Coord) {
   if (!live.value) return
+  if (jumping.value) {
+    live.value.send({ kind: 'jump', tokenId: jumping.value, q: c.q, r: c.r })
+    jumping.value = null
+    return
+  }
+  if (throwing.value) {
+    const t = throwing.value
+    if (t.targetId || t.objectId) {
+      live.value.send({ kind: 'throw', ...t, q: c.q, r: c.r })
+      throwing.value = null
+      return
+    }
+    const thing = tokenAt(c)
+    const object = view.value?.objects?.find((o) => o.q === c.q && o.r === c.r)
+    throwing.value = thing ? { ...t, targetId: thing.id } : object ? { ...t, objectId: object.id } : t
+    return
+  }
+  if (summoning.value) {
+    live.value.send({ kind: 'summon', ...summoning.value, q: c.q, r: c.r })
+    summoning.value = null
+    return
+  }
+  if (teleporting.value) {
+    live.value.send({ kind: 'teleport', tokenId: teleporting.value, effect: 'misty-step', q: c.q, r: c.r })
+    teleporting.value = null
+    return
+  }
   if (areaAiming.value) {
     areaAiming.value = { ...areaAiming.value, q: c.q, r: c.r }
-    live.value.send({ kind: 'preview_area', tokenId: areaAiming.value.tokenId, effect: areaAiming.value.effect, q: c.q, r: c.r })
+    const { tokenId, effect, slot } = areaAiming.value
+    live.value.send({ kind: 'preview_area', tokenId, effect, q: c.q, r: c.r, ...(slot ? { slot } : {}) })
     return
   }
   const target = tokenAt(c)
+  if (grabbing.value && target) {
+    live.value.send({ kind: 'unarmed', tokenId: grabbing.value.tokenId, targetId: target.id, option: grabbing.value.option as 'grapple' })
+    grabbing.value = null
+    return
+  }
   if (aiming.value && target) {
     live.value.send({ kind: 'preview_attack', ...aiming.value, targetId: target.id })
     return
@@ -256,7 +317,7 @@ function pick(c: Coord) {
       live.value.send({ kind: 'set_walls', hexes: [c], on: tool.value === 'wall' })
       return
     case 'surface':
-      live.value.send({ kind: 'paint_surface', hexes: [c], ...(surfaceKind.value ? { surface: surfaceKind.value as LiveSurface['kind'] } : {}), ...(surfaceRounds.value ? { rounds: surfaceRounds.value } : {}) })
+      live.value.send({ kind: 'paint_surface', hexes: [c], ...(surfaceKind.value ? { surface: surfaceKind.value } : {}), ...(surfaceRounds.value ? { rounds: surfaceRounds.value } : {}) })
       return
     case 'elevation':
       live.value.send({ kind: 'set_elevation', hexes: [c], elevationFt: elevationFt.value })
@@ -267,6 +328,16 @@ function pick(c: Coord) {
     case 'ping':
       live.value.send({ kind: 'ping', q: c.q, r: c.r })
       return
+    case 'object': {
+      const f = objectForm.value
+      live.value.send({
+        kind: 'place_object', objectKind: f.kind, q: c.q, r: c.r, ...(f.name.trim() ? { objectName: f.name.trim() } : {}), ...(f.secret ? { secret: true } : {}),
+        ...(f.effect.trim() ? { effect: f.effect.trim() } : {}), ...(f.radiusFt ? { radiusFt: f.radiusFt } : {}),
+        ...(f.detectDc ? { detectDc: f.detectDc } : {}), ...(f.disarmDc ? { disarmDc: f.disarmDc } : {}), ...(f.triggerFt ? { triggerFt: f.triggerFt } : {}),
+        ...(f.lockDc ? { lockDc: f.lockDc } : {}), ...(f.key.trim() ? { key: f.key.trim() } : {}),
+      })
+      return
+    }
     case 'zone':
       if (zoneName.value.trim()) live.value.send({ kind: 'add_zone', label: zoneName.value.trim(), q: c.q, r: c.r, radiusHexes: zoneRadius.value, dmOnly: zoneDMOnly.value })
       return
@@ -309,8 +380,33 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <NotifyToggle />
       </header>
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
-      <InitiativeRail v-if="combat" :combat="combat" />
+      <InitiativeRail v-if="combat" :combat="combat" :tokens="view?.tokens ?? []" />
       <p v-if="!isDM && turns.length > 0" role="status" class="banner" data-testid="your-turn">Your turn</p>
+      <div v-if="view && !combat && (isDM || view.exploration)" class="row" data-testid="exploration">
+        <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
+          {{ view.exploration ? 'End exploration turns' : 'Explore in turns' }}
+        </GButton>
+        <template v-if="view.exploration">
+          <span role="status" data-testid="exploration-turn">
+            {{ names[view.exploration.turn] ?? 'Someone' }} explores · {{ view.exploration.leftFt }} ft left
+          </span>
+          <GButton
+            v-if="isDM || tokenById(view.exploration.turn)?.controllerId === campaign.data.value?.me.id"
+            data-testid="pass-turn"
+            @click="live?.send({ kind: 'pass_turn' })"
+          >
+            Pass the turn
+          </GButton>
+        </template>
+      </div>
+      <div v-if="view && !combat" class="row" data-testid="sneak">
+        <GButton :data-testid="view.sneak ? 'stop-sneaking' : 'start-sneaking'" @click="live?.send({ kind: 'sneak', on: !view.sneak })">
+          {{ view.sneak ? 'Stop sneaking' : 'Sneak' }}
+        </GButton>
+        <span v-if="view.sneak" role="status" data-testid="sneak-status">
+          {{ view.sneak.waiting ? 'Sneaking: roll Stealth.' : 'Sneaking. Tinted hexes are watched.' }}
+        </span>
+      </div>
       <section v-if="toRoll.length > 0" class="rolls" aria-label="Initiative to roll">
         <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
         <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
@@ -331,11 +427,34 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :suggestion="b.c.suggestion"
         :target="b.c.suggestion ? tokenById(b.c.suggestion.targetId)?.label : undefined"
         :tactics="b.c.tactics"
+        :attacks-left="b.c.attacksLeft ?? 0"
+        :off-hand="b.c.offHand ?? false"
+        :interaction="b.c.interaction ?? false"
+        :cleave="b.c.cleave ?? false"
+        :summons="awaitingOrders(b.c.id)"
         @arm="(n) => arm(b.token, n)"
         @use="useSuggestion(b.token.id, b.c.suggestion)"
         @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
-        @area="(e) => aimArea(b.token, e)"
+        @area="(e, n) => aimArea(b.token, e, n)"
+        @action="(a) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: a as 'dash' })"
+        @ready="(n) => live?.send({ kind: 'take_action', tokenId: b.token.id, action: 'ready', trigger: 'enters_reach', attackNo: n })"
+        @unarmed="(o) => (grabbing = { tokenId: b.token.id, option: o })"
+        @off-hand="(n) => armOffHand(b.token, n)"
+        @cleave="(n) => armCleave(b.token, n)"
+        @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
+        @teleport="teleporting = b.token.id"
+        @jump="jumping = b.token.id"
+        @throw="throwing = { tokenId: b.token.id }"
+        @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
+        @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
       />
+      <p v-if="summoning" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
+      <p v-if="teleporting" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
+      <p v-if="jumping" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
+      <p v-if="throwing" role="status" class="walk" data-testid="throwing">
+        {{ throwing.targetId || throwing.objectId ? 'Tap where it lands.' : 'Tap the creature or object to throw.' }}
+      </p>
+      <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
       <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
       <AreaPreviewCard v-if="areaPreview" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
       <LiveRoll v-for="id in areaRolls" :key="id" :campaign-id="campaignId" :roll-id="id" />
@@ -378,7 +497,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </label>
       </fieldset>
       <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
-      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :zone="zoneCells" :title="view.map.name" @select="pick" />
+      <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
       <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
       <p v-if="state.path" role="status" class="walk" data-testid="walk-preview">
         Walk {{ state.path.costFt }} ft. Tap the same hex again to go.
@@ -398,9 +517,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <fieldset class="tools">
           <legend>Tap the map to</legend>
-          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'camera', 'ping'] as const)" :key="t" class="tool">
+          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'object', 'camera', 'ping'] as const)" :key="t" class="tool">
             <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
+            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', object: 'Place objects', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
           </label>
         </fieldset>
         <div v-if="view?.map" class="row">
@@ -414,7 +533,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             <span>Surface</span>
             <select v-model="surfaceKind" data-testid="surface-kind">
               <option value="">Clear</option>
-              <option v-for="k in ['fire', 'grease', 'water', 'ice', 'web', 'electrified']" :key="k" :value="k">{{ k }}</option>
+              <option v-for="k in surfaceKinds" :key="k.kind" :value="k.kind">{{ k.name }}</option>
             </select>
           </label>
           <label class="g-field"><span>Rounds</span><input v-model.number="surfaceRounds" type="number" min="0" max="100" data-testid="surface-rounds" /></label>
@@ -425,6 +544,23 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <label class="check"><input v-model="zoneDMOnly" type="checkbox" data-testid="zone-dm-only" /><span>Only when I spring it</span></label>
         </div>
         <ZonesPanel v-if="view?.zones?.length" :zones="view.zones" :names="names" @send="(cmd) => live?.send(cmd)" />
+        <div v-if="tool === 'object'" class="row">
+          <label class="g-field">
+            <span>Object</span>
+            <select v-model="objectForm.kind" data-testid="object-kind">
+              <option v-for="k in ['door', 'lever', 'chest', 'barrel', 'curtain', 'destructible', 'trap'] as const" :key="k" :value="k">{{ k }}</option>
+            </select>
+          </label>
+          <label class="g-field"><span>Name</span><input v-model="objectForm.name" maxlength="40" data-testid="object-name" /></label>
+          <label class="g-field"><span>Triggers</span><input v-model="objectForm.effect" maxlength="80" placeholder="prone" data-testid="object-effect" /></label>
+          <label class="g-field"><span>Reach (ft)</span><input v-model.number="objectForm.radiusFt" type="number" min="0" max="60" step="5" data-testid="object-radius" /></label>
+          <label class="check"><input v-model="objectForm.secret" type="checkbox" data-testid="object-secret" /><span>Secret</span></label>
+          <label class="g-field"><span>Spot DC</span><input v-model.number="objectForm.detectDc" type="number" min="0" max="40" data-testid="object-detect" /></label>
+          <label class="g-field"><span>Disarm DC</span><input v-model.number="objectForm.disarmDc" type="number" min="0" max="40" data-testid="object-disarm" /></label>
+          <label class="g-field"><span>Sets off within (ft)</span><input v-model.number="objectForm.triggerFt" type="number" min="0" max="60" step="5" data-testid="object-trigger" /></label>
+          <label class="g-field"><span>Lock DC</span><input v-model.number="objectForm.lockDc" type="number" min="0" max="40" data-testid="object-lock" /></label>
+          <label class="g-field"><span>Key</span><input v-model="objectForm.key" maxlength="80" placeholder="iron-key" data-testid="object-key" /></label>
+        </div>
         <div v-if="tool === 'elevation'" class="row">
           <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>
         </div>
@@ -472,6 +608,12 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :tokens="view?.tokens ?? []"
           @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
           @end="(id) => live?.send({ kind: 'end_effect', effectId: id })"
+        />
+        <VisibilityPanel
+          v-if="chosen && isDM"
+          :key="`vis-${chosen.id}`"
+          :token="chosen"
+          @set="(v) => live?.send({ kind: 'set_visibility', tokenId: chosen!.id, ...v })"
         />
         <div v-if="chosen" class="row" data-testid="selected-token">
           <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
@@ -523,6 +665,22 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :me="campaign.data.value?.me.id ?? ''"
         :campaign-id="campaignId"
         :game-day="view?.gameDay ?? 0"
+        @send="(cmd) => live?.send(cmd)"
+      />
+      <DyingPanel v-if="view" :tokens="view.tokens" :dm="isDM" :helper="walker" @send="(cmd) => live?.send(cmd)" />
+      <ReactionSettings
+        v-if="walker?.attacks"
+        :token="walker"
+        @set="(kind, mode, condition) => live?.send({ kind: 'set_reaction', tokenId: walker?.id ?? '', reactionKind: kind, reactionMode: mode, condition })"
+      />
+      <ObjectsPanel v-if="view?.objects?.length" :objects="view.objects" :dm="isDM" :user="walker?.id" @send="(cmd) => live?.send(cmd)" />
+      <RestPanel
+        v-if="view"
+        :rest="view.rest"
+        :dm="isDM"
+        :me="campaign.data.value?.me.id ?? ''"
+        :tokens="view.tokens"
+        :in-combat="Boolean(view.combat)"
         @send="(cmd) => live?.send(cmd)"
       />
       <EncounterChecks

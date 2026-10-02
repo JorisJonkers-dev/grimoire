@@ -28,6 +28,9 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 	if start == to {
 		return domain.Token{}, nil, 0, "The token is already there."
 	}
+	if r.st.catalog.Immobile(r.st.actives(t.ID)) {
+		return domain.Token{}, nil, 0, t.Label + " can't move."
+	}
 	reach := hex.Reachable(r.st.walkGrid(m.DM, t, seen), start, hex.MoveOptions{SpeedFt: MaxWalkFt, ClimbSpeed: false})
 	path, ok := reach.Path(to)
 	if !ok {
@@ -55,7 +58,7 @@ func (r *runtime) previewWalk(req request) {
 // moveLeft refuses a walk a Combatant cannot make now: out of turn, or longer than its movement left.
 func (s *state) moveLeft(t domain.Token, cost int) string {
 	if s.combat == nil {
-		return ""
+		return s.exploreLeft(t, cost)
 	}
 	for _, x := range s.combat.Combatants {
 		switch {
@@ -72,7 +75,7 @@ func (s *state) moveLeft(t domain.Token, cost int) string {
 
 // shows reports whether the party sees a token right now.
 func (s *state) shows(t domain.Token, seen map[hex.Coord]bool) bool {
-	return !t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])
+	return !t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}]) && s.perceived(t).Seen
 }
 
 // walkGrid is the ground a mover walks on: every hex for the DM, the hexes the party knows for a Player.

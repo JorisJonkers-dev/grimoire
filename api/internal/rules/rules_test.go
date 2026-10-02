@@ -221,3 +221,34 @@ func TestBuildSheet(t *testing.T) {
 		t.Fatalf("unarmoured = %+v", light)
 	}
 }
+
+func TestProficiencyByChallenge(t *testing.T) {
+	t.Parallel()
+	for cr, want := range map[float64]int{0: 2, 0.25: 2, 4: 2, 5: 3, 8: 3, 9: 4, 12: 4, 13: 5, 17: 6, 21: 7, 25: 8, 29: 9, 30: 9} {
+		if got := rules.ProficiencyByChallenge(cr); got != want {
+			t.Errorf("ProficiencyByChallenge(%v) = %d, want %d", cr, got, want)
+		}
+	}
+}
+
+func TestGroupChecks(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct {
+		totals []int
+		dc     int
+		want   bool
+	}{
+		{[]int{15, 9}, 12, true},
+		{[]int{15, 9, 8}, 12, false},
+		{[]int{12, 12, 1, 1}, 12, true},
+		{[]int{11}, 12, false},
+		{nil, 1, false},
+	} {
+		if got := rules.GroupCheck(c.totals, c.dc); got != c.want {
+			t.Errorf("%v against %d = %v", c.totals, c.dc, got)
+		}
+	}
+	if rules.PassivePerception(3) != 13 {
+		t.Error("passive Perception")
+	}
+}

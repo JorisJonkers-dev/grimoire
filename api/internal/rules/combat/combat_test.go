@@ -10,7 +10,7 @@ import (
 func TestEconomy(t *testing.T) {
 	t.Parallel()
 	e := combat.Fresh(30)
-	if e != (combat.Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: 30}) {
+	if e != (combat.Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: 30, Interaction: true}) {
 		t.Fatalf("fresh = %+v", e)
 	}
 	for _, r := range []combat.Resource{combat.Action, combat.BonusAction, combat.Reaction} {
@@ -22,7 +22,7 @@ func TestEconomy(t *testing.T) {
 			t.Fatalf("second spend of %d allowed", r)
 		}
 	}
-	if e != (combat.Economy{MovementFt: 30}) {
+	if e != (combat.Economy{MovementFt: 30, Interaction: true}) {
 		t.Fatalf("spent = %+v", e)
 	}
 	if _, ok := e.Spend(combat.Resource(9)); ok {
@@ -68,5 +68,57 @@ func TestInitiative(t *testing.T) {
 	}
 	if combat.Counts(nil) != nil {
 		t.Fatal("no totals, no counts")
+	}
+}
+
+func TestTheAttackActionsAttacks(t *testing.T) {
+	t.Parallel()
+	e := combat.Fresh(30)
+	if !e.CanAttack() || !e.Interaction || e.AttacksLeft != 0 {
+		t.Fatalf("fresh = %+v", e)
+	}
+	e, ok := e.Attack(2, false)
+	if !ok || e.Action || e.AttacksLeft != 1 || e.LightAttack || !e.CanAttack() {
+		t.Fatalf("the first of two attacks = %+v", e)
+	}
+	if e.CanOffHand(false) {
+		t.Fatal("no off-hand attack before a Light weapon attack")
+	}
+	e, ok = e.Attack(2, true)
+	if !ok || e.AttacksLeft != 0 || !e.LightAttack || e.CanAttack() {
+		t.Fatalf("the second attack, with a Light weapon = %+v", e)
+	}
+	if _, ok := e.Attack(2, false); ok {
+		t.Fatal("no third attack")
+	}
+	if !e.CanOffHand(false) || !e.CanOffHand(true) {
+		t.Fatal("the off-hand attack opens")
+	}
+	paid, ok := e.OffHandAttack(false)
+	if !ok || paid.BonusAction || !paid.OffHand || paid.CanOffHand(true) {
+		t.Fatalf("the off-hand attack costs the bonus action = %+v", paid)
+	}
+	if _, ok := paid.OffHandAttack(true); ok {
+		t.Fatal("one off-hand attack a turn")
+	}
+	nick, ok := e.OffHandAttack(true)
+	if !ok || !nick.BonusAction || !nick.OffHand {
+		t.Fatalf("Nick folds it into the Attack action = %+v", nick)
+	}
+	spent := e
+	spent.BonusAction = false
+	if spent.CanOffHand(false) || !spent.CanOffHand(true) {
+		t.Fatal("without a bonus action only Nick makes it")
+	}
+	one, ok := combat.Fresh(30).Attack(0, false)
+	if !ok || one.AttacksLeft != 0 {
+		t.Fatalf("one attack when nothing says more = %+v", one)
+	}
+	used, ok := combat.Fresh(30).Interact()
+	if !ok || used.Interaction {
+		t.Fatalf("interact = %+v", used)
+	}
+	if _, ok := used.Interact(); ok {
+		t.Fatal("one free interaction a turn")
 	}
 }

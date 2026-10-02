@@ -3332,6 +3332,9 @@ components:
         createdAt: { type: string, format: date-time, maxLength: 40 }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
+        restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
+        initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
       type: object
       description: One page of campaigns.
@@ -3371,6 +3374,9 @@ components:
         createdAt: { type: string, format: date-time, maxLength: 40 }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
+        restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
+        initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
         members:
           type: array
@@ -3394,6 +3400,13 @@ components:
         ruleset: { $ref: "#/components/schemas/CampaignRuleset" }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
+        restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
+        initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
+    InitiativeMode:
+      type: string
+      description: How a fight rolls initiative, each Combatant for itself or one roll per side.
+      enum: [individual, side]
     ReactionTimeout:
       type: integer
       format: int32
@@ -4393,6 +4406,14 @@ components:
         ac: { type: integer, format: int32, minimum: 0, maximum: 40 }
         hp: { type: integer, format: int32, minimum: 0, maximum: 10000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 10000 }
+        tempHp: { type: integer, format: int32, minimum: 1, maximum: 999, description: "Temporary hit points, lost before hit points." }
+        form: { type: string, maxLength: 80, description: "The creature whose shape the token has taken." }
+        qualities:
+          type: array
+          description: The token's Visibility Qualities, for the DM only.
+          maxItems: 8
+          items: { $ref: "#/components/schemas/LiveQuality" }
+        disguise: { type: string, maxLength: 40, description: "The name a Disguised token shows, for the DM only." }
         health:
           type: string
           description: What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -4406,6 +4427,31 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveEffect" }
+        reactions:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/LiveReactionSetting" }
+        dying: { $ref: "#/components/schemas/LiveDying" }
+    LiveDying:
+      type: object
+      description: A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
+      additionalProperties: false
+      required: [successes, failures]
+      properties:
+        successes: { type: integer, format: int32, minimum: 0, maximum: 3 }
+        failures: { type: integer, format: int32, minimum: 0, maximum: 3 }
+        stable: { type: boolean }
+        dead: { type: boolean }
+        rollId: { $ref: "#/components/schemas/Id" }
+    LiveReactionSetting:
+      type: object
+      description: A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
+      additionalProperties: false
+      required: [kind, mode]
+      properties:
+        kind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
+        mode: { type: string, enum: [ask, always, never] }
+        condition: { type: string, enum: [target_bloodied] }
     LiveAttack:
       type: object
       description: One attack on a token's hotbar.
@@ -4420,6 +4466,8 @@ components:
         damage: { type: string, maxLength: 40 }
         damageBonus: { type: integer, format: int32, minimum: -10, maximum: 50 }
         damageType: { type: string, maxLength: 80 }
+        light: { type: boolean, description: "A Light weapon, which opens the off-hand attack." }
+        mastery: { type: string, enum: [cleave, graze, nick, push, sap, slow, topple, vex], description: "The weapon's mastery, when the creature has mastered it." }
     LiveAttackPreview:
       type: object
       description: What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name every source behind it.
@@ -4468,7 +4516,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -4504,11 +4552,31 @@ components:
         effectName: { type: string, maxLength: 80 }
         sourceId: { $ref: "#/components/schemas/Id" }
         rounds: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        slot: { type: integer, format: int32, minimum: 1, maximum: 9, description: "The spell slot level an area spell is cast with; left out, it is cast at its lowest." }
+        effectMode: { type: string, maxLength: 80, description: "The option an Effect that offers a choice is applied in." }
+        tempHp: { type: integer, format: int32, minimum: 1, maximum: 999, description: "Temporary Hit Points a form gives, such as a druid's level for Wild Shape." }
+        qualities: { type: array, maxItems: 8, items: { $ref: "#/components/schemas/VisibilityQuality" } }
+        seenThrough: { type: array, maxItems: 8, items: { $ref: "#/components/schemas/VisibilityQuality" } }
+        disguise: { type: string, maxLength: 40 }
+        objectId: { $ref: "#/components/schemas/Id" }
+        objectKind: { $ref: "#/components/schemas/MapObjectKind" }
+        objectName: { type: string, maxLength: 40 }
+        armorClass: { type: integer, format: int32, minimum: 1, maximum: 30 }
+        hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        secret: { type: boolean }
+        radiusFt: { type: integer, format: int32, minimum: 0, maximum: 60 }
+        links: { type: array, maxItems: 20, items: { $ref: "#/components/schemas/Id" } }
+        detectDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        disarmDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        triggerFt: { type: integer, format: int32, minimum: 1, maximum: 60 }
+        lockDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        key: { type: string, maxLength: 80 }
+        method: { type: string, enum: [key, tools, force, knock] }
         saveAbility: { $ref: "#/components/schemas/Ability" }
         saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
         effectId: { $ref: "#/components/schemas/Id" }
         manualId: { $ref: "#/components/schemas/Id" }
-        surface: { type: string, enum: [fire, grease, water, ice, web, electrified], description: "With paint_surface; leave it out to clear." }
+        surface: { type: string, maxLength: 40, pattern: "^[a-z][a-z0-9-]{0,39}$", description: "With paint_surface, a Surface from the catalogue; leave it out to clear." }
         elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
         camera: { $ref: "#/components/schemas/TableCamera" }
         zoomPct: { type: integer, format: int32, minimum: 50, maximum: 300 }
@@ -4531,6 +4599,15 @@ components:
         lootTableId: { $ref: "#/components/schemas/Id" }
         fromId: { $ref: "#/components/schemas/Id" }
         instanceId: { $ref: "#/components/schemas/Id" }
+        action: { type: string, enum: [dash, disengage, dodge, help, hide, influence, magic, ready, search, study, utilize] }
+        detail: { type: string, maxLength: 200 }
+        trigger: { type: string, enum: [enters_reach] }
+        option: { type: string, enum: [grapple, shove_push, shove_prone, medicine, spell, revivify, raise_dead, resurrection] }
+        offHand: { type: boolean, description: "Makes the attack the off-hand attack of a Light weapon." }
+        cleave: { type: boolean, description: "Makes the attack the second attack a Cleave hit allows." }
+        reactionKind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
+        reactionMode: { type: string, enum: [ask, always, never] }
+        condition: { type: string, enum: ["", target_bloodied] }
         toId: { $ref: "#/components/schemas/Id" }
         itemSlug: { $ref: "#/components/schemas/Slug" }
         coin: { $ref: "#/components/schemas/Coin" }
@@ -4612,6 +4689,40 @@ components:
         name: { type: string, maxLength: 120 }
         count: { type: integer, format: int32, minimum: 1, maximum: 100000 }
         weightLb: { type: number, format: double, minimum: 0, maximum: 100000000 }
+    LiveRest:
+      type: object
+      description: The rest the party proposed or is taking. It starts once the DM and every Player resting a Character agree; a Short Rest spends Hit Dice.
+      additionalProperties: false
+      required: [kind, status, proposedBy, agreed, waiting, waitingOnDm, resters]
+      properties:
+        kind: { type: string, enum: [short, long] }
+        status: { type: string, enum: [proposed, resting] }
+        proposedBy: { $ref: "#/components/schemas/Id" }
+        agreed:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Id" }
+        waiting:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/Id" }
+        waitingOnDm: { type: boolean }
+        resters:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/LiveRester" }
+    LiveRester:
+      type: object
+      description: A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+      additionalProperties: false
+      required: [characterId, tokenId, name, hitDie, hitDiceLeft]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        tokenId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        hitDie: { type: string, enum: [d6, d8, d10, d12] }
+        hitDiceLeft: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        rollId: { $ref: "#/components/schemas/Id" }
     LiveItemInstance:
       type: object
       description: One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
@@ -4855,6 +4966,11 @@ components:
           maxItems: 200
           items: { $ref: "#/components/schemas/LiveAreaTarget" }
         allies: { type: integer, format: int32, minimum: 0, maximum: 200 }
+        ends:
+          type: array
+          description: The Effects the caster concentrates on that casting this spell would end.
+          maxItems: 10
+          items: { type: string, maxLength: 80 }
     LiveAreaTarget:
       type: object
       description: A creature an area catches.
@@ -4863,6 +4979,7 @@ components:
       properties:
         tokenId: { $ref: "#/components/schemas/Id" }
         ally: { type: boolean }
+        pushedTo: { $ref: "#/components/schemas/HexCoord" }
     LiveArea:
       type: object
       description: An area spell waiting on its damage roll and saving throws.
@@ -4896,7 +5013,7 @@ components:
       properties:
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
-        kind: { type: string, enum: [fire, grease, water, ice, web, electrified] }
+        kind: { type: string, maxLength: 40, pattern: "^[a-z][a-z0-9-]{0,39}$", description: "A Surface from the catalogue." }
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
     LiveElevation:
       type: object
@@ -4907,6 +5024,47 @@ components:
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
+    LiveObject:
+      type: object
+      description: A Map Object; its numbers, trigger and secrecy go to the DM only.
+      additionalProperties: false
+      required: [id, kind, name, q, r, open, broken]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { $ref: "#/components/schemas/MapObjectKind" }
+        name: { type: string, maxLength: 40 }
+        q: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        r: { type: integer, format: int32, minimum: -500, maximum: 500 }
+        open: { type: boolean, description: "Open, or pulled for a lever." }
+        broken: { type: boolean }
+        secret: { type: boolean }
+        ac: { type: integer, format: int32, minimum: 1, maximum: 30 }
+        hp: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        effect: { type: string, maxLength: 80 }
+        radiusFt: { type: integer, format: int32, minimum: 0, maximum: 60 }
+        locked: { type: boolean }
+        armed: { type: boolean }
+        detectDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        disarmDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        triggerFt: { type: integer, format: int32, minimum: 1, maximum: 60 }
+        lockDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
+        key: { type: string, maxLength: 80 }
+    MapObjectKind:
+      type: string
+      enum: [door, lever, chest, barrel, curtain, destructible, trap]
+    LiveQuality:
+      type: object
+      description: One Visibility Quality of a token, and whether the party has seen through it with a check.
+      additionalProperties: false
+      required: [quality]
+      properties:
+        quality: { $ref: "#/components/schemas/VisibilityQuality" }
+        seenThrough: { type: boolean }
+    VisibilityQuality:
+      type: string
+      description: Something that keeps a creature or object from being seen for what it is.
+      enum: [hidden, invisible, disguised, illusory, ethereal, darkness, heavy, secret]
     LiveEffect:
       type: object
       description: An Effect on a token, which everyone who sees the token sees.
@@ -4919,6 +5077,13 @@ components:
         sourceId: { $ref: "#/components/schemas/Id" }
         concentration: { type: boolean }
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
+        level: { type: integer, format: int32, minimum: 1, maximum: 10, description: "Levels of a stacking Effect, such as exhaustion." }
+        mode: { type: string, maxLength: 80, description: "The option chosen when the Effect offers a choice." }
+        hexes:
+          type: array
+          description: The hexes an emanation covers around the token where it stands now; it moves with the token.
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/HexCoord" }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.
@@ -4980,7 +5145,7 @@ components:
       required: [id, kind, reactorId, triggerId, effect, secondsLeft]
       properties:
         id: { $ref: "#/components/schemas/Id" }
-        kind: { type: string, enum: [opportunity_attack, shield] }
+        kind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
         reactorId: { $ref: "#/components/schemas/Id" }
         triggerId: { $ref: "#/components/schemas/Id" }
         effect: { type: string, maxLength: 300 }
@@ -5007,6 +5172,14 @@ components:
         movementFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
         speedFt: { type: integer, format: int32, minimum: 0, maximum: 120 }
         surprised: { type: boolean, description: "Did not notice the ambush and rolled initiative at disadvantage." }
+        disengaged: { type: boolean, description: "Moves without provoking opportunity attacks until its next turn." }
+        readied: { type: boolean, description: "Has a readied attack waiting on its trigger; the party sees only its own." }
+        attacksLeft: { type: integer, format: int32, minimum: 0, maximum: 10, description: "Attacks left of an Attack action already begun (Extra Attack)." }
+        offHand: { type: boolean, description: "The off-hand attack of a Light weapon is open." }
+        interaction: { type: boolean, description: "The turn's free object interaction is unused." }
+        cleave: { type: boolean, description: "A Cleave hit leaves a second attack open." }
+        ownerId: { $ref: "#/components/schemas/Id" }
+        awaitingCommand: { type: boolean, description: "A summoned creature that only Dodges until its owner commands it with a Bonus Action." }
         tactics: { $ref: "#/components/schemas/Tactics" }
         suggestion: { $ref: "#/components/schemas/LiveSuggestion" }
     LiveUpdate:
@@ -5117,6 +5290,47 @@ components:
         area: { $ref: "#/components/schemas/LiveArea" }
         table: { $ref: "#/components/schemas/LiveTable" }
         world: { $ref: "#/components/schemas/LiveWorld" }
+        sneak:
+          type: object
+          description: The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would notice it.
+          additionalProperties: false
+          required: [waiting, reach]
+          properties:
+            waiting: { type: boolean, description: "Stealth rolls are still out." }
+            reach:
+              type: array
+              maxItems: 4000
+              items: { $ref: "#/components/schemas/HexCoord" }
+            totals:
+              type: object
+              description: Each member's Stealth total by token id, for the DM only.
+              maxProperties: 50
+              additionalProperties: { type: integer, format: int32, minimum: -20, maximum: 80 }
+        exploration:
+          type: object
+          description: Exploration in turns, outside a fight.
+          additionalProperties: false
+          required: [order, turn, leftFt]
+          properties:
+            order: { type: array, maxItems: 50, items: { $ref: "#/components/schemas/Id" } }
+            turn: { $ref: "#/components/schemas/Id" }
+            leftFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        surfaceKinds:
+          type: array
+          description: The Surface catalogue, for the DM's paint tool.
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [kind, name]
+            properties:
+              kind: { type: string, maxLength: 40 }
+              name: { type: string, maxLength: 40 }
+        objects:
+          type: array
+          description: The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.
+          maxItems: 500
+          items: { $ref: "#/components/schemas/LiveObject" }
         zones:
           type: array
           maxItems: 200
@@ -5134,6 +5348,7 @@ components:
           maxItems: 1000
           items: { $ref: "#/components/schemas/LiveContainer" }
         shop: { $ref: "#/components/schemas/LiveShop" }
+        rest: { $ref: "#/components/schemas/LiveRest" }
         gameDay: { type: integer, format: int32, minimum: 0, maximum: 1000000, description: "Days passed in the Campaign; a long rest or travel moves it on." }
         walls:
           type: array

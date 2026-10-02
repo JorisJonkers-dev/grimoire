@@ -1445,9 +1445,14 @@ type Campaign struct {
 	CreatedAt        time.Time          `json:"createdAt"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
-	HighGround OptBool  `json:"highGround"`
-	Me         Member   `json:"me"`
-	Members    []Member `json:"members"`
+	HighGround OptBool `json:"highGround"`
+	// Optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies   OptBool           `json:"restSupplies"`
+	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// Identical monsters share one initiative roll.
+	ShareInitiative OptBool  `json:"shareInitiative"`
+	Me              Member   `json:"me"`
+	Members         []Member `json:"members"`
 }
 
 // GetID returns the value of ID.
@@ -1488,6 +1493,21 @@ func (s *Campaign) GetReactionTimeoutS() OptReactionTimeout {
 // GetHighGround returns the value of HighGround.
 func (s *Campaign) GetHighGround() OptBool {
 	return s.HighGround
+}
+
+// GetRestSupplies returns the value of RestSupplies.
+func (s *Campaign) GetRestSupplies() OptBool {
+	return s.RestSupplies
+}
+
+// GetInitiativeMode returns the value of InitiativeMode.
+func (s *Campaign) GetInitiativeMode() OptInitiativeMode {
+	return s.InitiativeMode
+}
+
+// GetShareInitiative returns the value of ShareInitiative.
+func (s *Campaign) GetShareInitiative() OptBool {
+	return s.ShareInitiative
 }
 
 // GetMe returns the value of Me.
@@ -1538,6 +1558,21 @@ func (s *Campaign) SetReactionTimeoutS(val OptReactionTimeout) {
 // SetHighGround sets the value of HighGround.
 func (s *Campaign) SetHighGround(val OptBool) {
 	s.HighGround = val
+}
+
+// SetRestSupplies sets the value of RestSupplies.
+func (s *Campaign) SetRestSupplies(val OptBool) {
+	s.RestSupplies = val
+}
+
+// SetInitiativeMode sets the value of InitiativeMode.
+func (s *Campaign) SetInitiativeMode(val OptInitiativeMode) {
+	s.InitiativeMode = val
+}
+
+// SetShareInitiative sets the value of ShareInitiative.
+func (s *Campaign) SetShareInitiative(val OptBool) {
+	s.ShareInitiative = val
 }
 
 // SetMe sets the value of Me.
@@ -1833,6 +1868,11 @@ type CampaignSummary struct {
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
+	// Optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies   OptBool           `json:"restSupplies"`
+	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// Identical monsters share one initiative roll.
+	ShareInitiative OptBool `json:"shareInitiative"`
 }
 
 // GetID returns the value of ID.
@@ -1875,6 +1915,21 @@ func (s *CampaignSummary) GetHighGround() OptBool {
 	return s.HighGround
 }
 
+// GetRestSupplies returns the value of RestSupplies.
+func (s *CampaignSummary) GetRestSupplies() OptBool {
+	return s.RestSupplies
+}
+
+// GetInitiativeMode returns the value of InitiativeMode.
+func (s *CampaignSummary) GetInitiativeMode() OptInitiativeMode {
+	return s.InitiativeMode
+}
+
+// GetShareInitiative returns the value of ShareInitiative.
+func (s *CampaignSummary) GetShareInitiative() OptBool {
+	return s.ShareInitiative
+}
+
 // SetID sets the value of ID.
 func (s *CampaignSummary) SetID(val ID) {
 	s.ID = val
@@ -1913,6 +1968,21 @@ func (s *CampaignSummary) SetReactionTimeoutS(val OptReactionTimeout) {
 // SetHighGround sets the value of HighGround.
 func (s *CampaignSummary) SetHighGround(val OptBool) {
 	s.HighGround = val
+}
+
+// SetRestSupplies sets the value of RestSupplies.
+func (s *CampaignSummary) SetRestSupplies(val OptBool) {
+	s.RestSupplies = val
+}
+
+// SetInitiativeMode sets the value of InitiativeMode.
+func (s *CampaignSummary) SetInitiativeMode(val OptInitiativeMode) {
+	s.InitiativeMode = val
+}
+
+// SetShareInitiative sets the value of ShareInitiative.
+func (s *CampaignSummary) SetShareInitiative(val OptBool) {
+	s.ShareInitiative = val
 }
 
 // CampaignSummaryHeaders wraps CampaignSummary with response headers.
@@ -1973,6 +2043,11 @@ type CampaignUpdate struct {
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
+	// Optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies   OptBool           `json:"restSupplies"`
+	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// Identical monsters share one initiative roll.
+	ShareInitiative OptBool `json:"shareInitiative"`
 }
 
 // GetName returns the value of Name.
@@ -1995,6 +2070,21 @@ func (s *CampaignUpdate) GetHighGround() OptBool {
 	return s.HighGround
 }
 
+// GetRestSupplies returns the value of RestSupplies.
+func (s *CampaignUpdate) GetRestSupplies() OptBool {
+	return s.RestSupplies
+}
+
+// GetInitiativeMode returns the value of InitiativeMode.
+func (s *CampaignUpdate) GetInitiativeMode() OptInitiativeMode {
+	return s.InitiativeMode
+}
+
+// GetShareInitiative returns the value of ShareInitiative.
+func (s *CampaignUpdate) GetShareInitiative() OptBool {
+	return s.ShareInitiative
+}
+
 // SetName sets the value of Name.
 func (s *CampaignUpdate) SetName(val OptCampaignName) {
 	s.Name = val
@@ -2013,6 +2103,21 @@ func (s *CampaignUpdate) SetReactionTimeoutS(val OptReactionTimeout) {
 // SetHighGround sets the value of HighGround.
 func (s *CampaignUpdate) SetHighGround(val OptBool) {
 	s.HighGround = val
+}
+
+// SetRestSupplies sets the value of RestSupplies.
+func (s *CampaignUpdate) SetRestSupplies(val OptBool) {
+	s.RestSupplies = val
+}
+
+// SetInitiativeMode sets the value of InitiativeMode.
+func (s *CampaignUpdate) SetInitiativeMode(val OptInitiativeMode) {
+	s.InitiativeMode = val
+}
+
+// SetShareInitiative sets the value of ShareInitiative.
+func (s *CampaignUpdate) SetShareInitiative(val OptBool) {
+	s.ShareInitiative = val
 }
 
 // The choices for a first-level Character.
@@ -6401,6 +6506,49 @@ func (s *HexOccupantSide) UnmarshalText(data []byte) error {
 
 type ID uuid.UUID
 
+// How a fight rolls initiative, each Combatant for itself or one roll per side.
+// Ref: #/components/schemas/InitiativeMode
+type InitiativeMode string
+
+const (
+	InitiativeModeIndividual InitiativeMode = "individual"
+	InitiativeModeSide       InitiativeMode = "side"
+)
+
+// AllValues returns all InitiativeMode values.
+func (InitiativeMode) AllValues() []InitiativeMode {
+	return []InitiativeMode{
+		InitiativeModeIndividual,
+		InitiativeModeSide,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s InitiativeMode) MarshalText() ([]byte, error) {
+	switch s {
+	case InitiativeModeIndividual:
+		return []byte(s), nil
+	case InitiativeModeSide:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *InitiativeMode) UnmarshalText(data []byte) error {
+	switch InitiativeMode(data) {
+	case InitiativeModeIndividual:
+		*s = InitiativeModeIndividual
+		return nil
+	case InitiativeModeSide:
+		*s = InitiativeModeSide
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // An open invite link.
 // Ref: #/components/schemas/Invite
 type Invite struct {
@@ -7774,6 +7922,8 @@ type LiveAreaPreview struct {
 	Hexes   []HexCoord       `json:"hexes"`
 	Targets []LiveAreaTarget `json:"targets"`
 	Allies  int32            `json:"allies"`
+	// The Effects the caster concentrates on that casting this spell would end.
+	Ends []string `json:"ends"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -7811,6 +7961,11 @@ func (s *LiveAreaPreview) GetAllies() int32 {
 	return s.Allies
 }
 
+// GetEnds returns the value of Ends.
+func (s *LiveAreaPreview) GetEnds() []string {
+	return s.Ends
+}
+
 // SetTokenId sets the value of TokenId.
 func (s *LiveAreaPreview) SetTokenId(val ID) {
 	s.TokenId = val
@@ -7846,6 +8001,11 @@ func (s *LiveAreaPreview) SetAllies(val int32) {
 	s.Allies = val
 }
 
+// SetEnds sets the value of Ends.
+func (s *LiveAreaPreview) SetEnds(val []string) {
+	s.Ends = val
+}
+
 // One target's saving throw against an area.
 // Ref: #/components/schemas/LiveAreaSave
 type LiveAreaSave struct {
@@ -7876,8 +8036,9 @@ func (s *LiveAreaSave) SetRollId(val OptID) {
 // A creature an area catches.
 // Ref: #/components/schemas/LiveAreaTarget
 type LiveAreaTarget struct {
-	TokenId ID   `json:"tokenId"`
-	Ally    bool `json:"ally"`
+	TokenId  ID          `json:"tokenId"`
+	Ally     bool        `json:"ally"`
+	PushedTo OptHexCoord `json:"pushedTo"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -7890,6 +8051,11 @@ func (s *LiveAreaTarget) GetAlly() bool {
 	return s.Ally
 }
 
+// GetPushedTo returns the value of PushedTo.
+func (s *LiveAreaTarget) GetPushedTo() OptHexCoord {
+	return s.PushedTo
+}
+
 // SetTokenId sets the value of TokenId.
 func (s *LiveAreaTarget) SetTokenId(val ID) {
 	s.TokenId = val
@@ -7898,6 +8064,11 @@ func (s *LiveAreaTarget) SetTokenId(val ID) {
 // SetAlly sets the value of Ally.
 func (s *LiveAreaTarget) SetAlly(val bool) {
 	s.Ally = val
+}
+
+// SetPushedTo sets the value of PushedTo.
+func (s *LiveAreaTarget) SetPushedTo(val OptHexCoord) {
+	s.PushedTo = val
 }
 
 // One attack on a token's hotbar.
@@ -7911,6 +8082,10 @@ type LiveAttack struct {
 	Damage      OptString `json:"damage"`
 	DamageBonus int32     `json:"damageBonus"`
 	DamageType  OptString `json:"damageType"`
+	// A Light weapon, which opens the off-hand attack.
+	Light OptBool `json:"light"`
+	// The weapon's mastery, when the creature has mastered it.
+	Mastery OptLiveAttackMastery `json:"mastery"`
 }
 
 // GetName returns the value of Name.
@@ -7953,6 +8128,16 @@ func (s *LiveAttack) GetDamageType() OptString {
 	return s.DamageType
 }
 
+// GetLight returns the value of Light.
+func (s *LiveAttack) GetLight() OptBool {
+	return s.Light
+}
+
+// GetMastery returns the value of Mastery.
+func (s *LiveAttack) GetMastery() OptLiveAttackMastery {
+	return s.Mastery
+}
+
 // SetName sets the value of Name.
 func (s *LiveAttack) SetName(val string) {
 	s.Name = val
@@ -7991,6 +8176,100 @@ func (s *LiveAttack) SetDamageBonus(val int32) {
 // SetDamageType sets the value of DamageType.
 func (s *LiveAttack) SetDamageType(val OptString) {
 	s.DamageType = val
+}
+
+// SetLight sets the value of Light.
+func (s *LiveAttack) SetLight(val OptBool) {
+	s.Light = val
+}
+
+// SetMastery sets the value of Mastery.
+func (s *LiveAttack) SetMastery(val OptLiveAttackMastery) {
+	s.Mastery = val
+}
+
+// The weapon's mastery, when the creature has mastered it.
+type LiveAttackMastery string
+
+const (
+	LiveAttackMasteryCleave LiveAttackMastery = "cleave"
+	LiveAttackMasteryGraze  LiveAttackMastery = "graze"
+	LiveAttackMasteryNick   LiveAttackMastery = "nick"
+	LiveAttackMasteryPush   LiveAttackMastery = "push"
+	LiveAttackMasterySap    LiveAttackMastery = "sap"
+	LiveAttackMasterySlow   LiveAttackMastery = "slow"
+	LiveAttackMasteryTopple LiveAttackMastery = "topple"
+	LiveAttackMasteryVex    LiveAttackMastery = "vex"
+)
+
+// AllValues returns all LiveAttackMastery values.
+func (LiveAttackMastery) AllValues() []LiveAttackMastery {
+	return []LiveAttackMastery{
+		LiveAttackMasteryCleave,
+		LiveAttackMasteryGraze,
+		LiveAttackMasteryNick,
+		LiveAttackMasteryPush,
+		LiveAttackMasterySap,
+		LiveAttackMasterySlow,
+		LiveAttackMasteryTopple,
+		LiveAttackMasteryVex,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveAttackMastery) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveAttackMasteryCleave:
+		return []byte(s), nil
+	case LiveAttackMasteryGraze:
+		return []byte(s), nil
+	case LiveAttackMasteryNick:
+		return []byte(s), nil
+	case LiveAttackMasteryPush:
+		return []byte(s), nil
+	case LiveAttackMasterySap:
+		return []byte(s), nil
+	case LiveAttackMasterySlow:
+		return []byte(s), nil
+	case LiveAttackMasteryTopple:
+		return []byte(s), nil
+	case LiveAttackMasteryVex:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveAttackMastery) UnmarshalText(data []byte) error {
+	switch LiveAttackMastery(data) {
+	case LiveAttackMasteryCleave:
+		*s = LiveAttackMasteryCleave
+		return nil
+	case LiveAttackMasteryGraze:
+		*s = LiveAttackMasteryGraze
+		return nil
+	case LiveAttackMasteryNick:
+		*s = LiveAttackMasteryNick
+		return nil
+	case LiveAttackMasteryPush:
+		*s = LiveAttackMasteryPush
+		return nil
+	case LiveAttackMasterySap:
+		*s = LiveAttackMasterySap
+		return nil
+	case LiveAttackMasterySlow:
+		*s = LiveAttackMasterySlow
+		return nil
+	case LiveAttackMasteryTopple:
+		*s = LiveAttackMasteryTopple
+		return nil
+	case LiveAttackMasteryVex:
+		*s = LiveAttackMasteryVex
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // What an attack would do, sent only to whoever asked. The hit chance is a percentage; reasons name
@@ -8563,9 +8842,24 @@ type LiveCombatant struct {
 	MovementFt   int32     `json:"movementFt"`
 	SpeedFt      int32     `json:"speedFt"`
 	// Did not notice the ambush and rolled initiative at disadvantage.
-	Surprised  OptBool           `json:"surprised"`
-	Tactics    OptTactics        `json:"tactics"`
-	Suggestion OptLiveSuggestion `json:"suggestion"`
+	Surprised OptBool `json:"surprised"`
+	// Moves without provoking opportunity attacks until its next turn.
+	Disengaged OptBool `json:"disengaged"`
+	// Has a readied attack waiting on its trigger; the party sees only its own.
+	Readied OptBool `json:"readied"`
+	// Attacks left of an Attack action already begun (Extra Attack).
+	AttacksLeft OptInt32 `json:"attacksLeft"`
+	// The off-hand attack of a Light weapon is open.
+	OffHand OptBool `json:"offHand"`
+	// The turn's free object interaction is unused.
+	Interaction OptBool `json:"interaction"`
+	// A Cleave hit leaves a second attack open.
+	Cleave  OptBool `json:"cleave"`
+	OwnerId OptID   `json:"ownerId"`
+	// A summoned creature that only Dodges until its owner commands it with a Bonus Action.
+	AwaitingCommand OptBool           `json:"awaitingCommand"`
+	Tactics         OptTactics        `json:"tactics"`
+	Suggestion      OptLiveSuggestion `json:"suggestion"`
 }
 
 // GetID returns the value of ID.
@@ -8646,6 +8940,46 @@ func (s *LiveCombatant) GetSpeedFt() int32 {
 // GetSurprised returns the value of Surprised.
 func (s *LiveCombatant) GetSurprised() OptBool {
 	return s.Surprised
+}
+
+// GetDisengaged returns the value of Disengaged.
+func (s *LiveCombatant) GetDisengaged() OptBool {
+	return s.Disengaged
+}
+
+// GetReadied returns the value of Readied.
+func (s *LiveCombatant) GetReadied() OptBool {
+	return s.Readied
+}
+
+// GetAttacksLeft returns the value of AttacksLeft.
+func (s *LiveCombatant) GetAttacksLeft() OptInt32 {
+	return s.AttacksLeft
+}
+
+// GetOffHand returns the value of OffHand.
+func (s *LiveCombatant) GetOffHand() OptBool {
+	return s.OffHand
+}
+
+// GetInteraction returns the value of Interaction.
+func (s *LiveCombatant) GetInteraction() OptBool {
+	return s.Interaction
+}
+
+// GetCleave returns the value of Cleave.
+func (s *LiveCombatant) GetCleave() OptBool {
+	return s.Cleave
+}
+
+// GetOwnerId returns the value of OwnerId.
+func (s *LiveCombatant) GetOwnerId() OptID {
+	return s.OwnerId
+}
+
+// GetAwaitingCommand returns the value of AwaitingCommand.
+func (s *LiveCombatant) GetAwaitingCommand() OptBool {
+	return s.AwaitingCommand
 }
 
 // GetTactics returns the value of Tactics.
@@ -8738,6 +9072,46 @@ func (s *LiveCombatant) SetSurprised(val OptBool) {
 	s.Surprised = val
 }
 
+// SetDisengaged sets the value of Disengaged.
+func (s *LiveCombatant) SetDisengaged(val OptBool) {
+	s.Disengaged = val
+}
+
+// SetReadied sets the value of Readied.
+func (s *LiveCombatant) SetReadied(val OptBool) {
+	s.Readied = val
+}
+
+// SetAttacksLeft sets the value of AttacksLeft.
+func (s *LiveCombatant) SetAttacksLeft(val OptInt32) {
+	s.AttacksLeft = val
+}
+
+// SetOffHand sets the value of OffHand.
+func (s *LiveCombatant) SetOffHand(val OptBool) {
+	s.OffHand = val
+}
+
+// SetInteraction sets the value of Interaction.
+func (s *LiveCombatant) SetInteraction(val OptBool) {
+	s.Interaction = val
+}
+
+// SetCleave sets the value of Cleave.
+func (s *LiveCombatant) SetCleave(val OptBool) {
+	s.Cleave = val
+}
+
+// SetOwnerId sets the value of OwnerId.
+func (s *LiveCombatant) SetOwnerId(val OptID) {
+	s.OwnerId = val
+}
+
+// SetAwaitingCommand sets the value of AwaitingCommand.
+func (s *LiveCombatant) SetAwaitingCommand(val OptBool) {
+	s.AwaitingCommand = val
+}
+
 // SetTactics sets the value of Tactics.
 func (s *LiveCombatant) SetTactics(val OptTactics) {
 	s.Tactics = val
@@ -8819,46 +9193,80 @@ type LiveCommand struct {
 	// With place_token, the token can cast Shield.
 	Shield OptBool `json:"shield"`
 	// With apply_effect, the Effect's compendium slug.
-	Effect      OptString  `json:"effect"`
-	EffectName  OptString  `json:"effectName"`
-	SourceId    OptID      `json:"sourceId"`
-	Rounds      OptInt32   `json:"rounds"`
-	SaveAbility OptAbility `json:"saveAbility"`
-	SaveDc      OptInt32   `json:"saveDc"`
-	EffectId    OptID      `json:"effectId"`
-	ManualId    OptID      `json:"manualId"`
-	// With paint_surface; leave it out to clear.
-	Surface     OptLiveCommandSurface `json:"surface"`
-	ElevationFt OptInt32              `json:"elevationFt"`
-	Camera      OptTableCamera        `json:"camera"`
-	ZoomPct     OptInt32              `json:"zoomPct"`
-	Scene       OptTableScene         `json:"scene"`
-	Title       OptString             `json:"title"`
-	Body        OptString             `json:"body"`
-	NodeId      OptID                 `json:"nodeId"`
-	ToNodeId    OptID                 `json:"toNodeId"`
-	RouteId     OptID                 `json:"routeId"`
-	DistanceMi  OptInt32              `json:"distanceMi"`
-	Pace        OptTravelPace         `json:"pace"`
-	ZoneId      OptID                 `json:"zoneId"`
-	RadiusHexes OptInt32              `json:"radiusHexes"`
+	Effect     OptString `json:"effect"`
+	EffectName OptString `json:"effectName"`
+	SourceId   OptID     `json:"sourceId"`
+	Rounds     OptInt32  `json:"rounds"`
+	// The spell slot level an area spell is cast with; left out, it is cast at its lowest.
+	Slot OptInt32 `json:"slot"`
+	// The option an Effect that offers a choice is applied in.
+	EffectMode OptString `json:"effectMode"`
+	// Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
+	TempHp      OptInt32             `json:"tempHp"`
+	Qualities   []VisibilityQuality  `json:"qualities"`
+	SeenThrough []VisibilityQuality  `json:"seenThrough"`
+	Disguise    OptString            `json:"disguise"`
+	ObjectId    OptID                `json:"objectId"`
+	ObjectKind  OptMapObjectKind     `json:"objectKind"`
+	ObjectName  OptString            `json:"objectName"`
+	ArmorClass  OptInt32             `json:"armorClass"`
+	HpMax       OptInt32             `json:"hpMax"`
+	Secret      OptBool              `json:"secret"`
+	RadiusFt    OptInt32             `json:"radiusFt"`
+	Links       []ID                 `json:"links"`
+	DetectDc    OptInt32             `json:"detectDc"`
+	DisarmDc    OptInt32             `json:"disarmDc"`
+	TriggerFt   OptInt32             `json:"triggerFt"`
+	LockDc      OptInt32             `json:"lockDc"`
+	Key         OptString            `json:"key"`
+	Method      OptLiveCommandMethod `json:"method"`
+	SaveAbility OptAbility           `json:"saveAbility"`
+	SaveDc      OptInt32             `json:"saveDc"`
+	EffectId    OptID                `json:"effectId"`
+	ManualId    OptID                `json:"manualId"`
+	// With paint_surface, a Surface from the catalogue; leave it out to clear.
+	Surface     OptString      `json:"surface"`
+	ElevationFt OptInt32       `json:"elevationFt"`
+	Camera      OptTableCamera `json:"camera"`
+	ZoomPct     OptInt32       `json:"zoomPct"`
+	Scene       OptTableScene  `json:"scene"`
+	Title       OptString      `json:"title"`
+	Body        OptString      `json:"body"`
+	NodeId      OptID          `json:"nodeId"`
+	ToNodeId    OptID          `json:"toNodeId"`
+	RouteId     OptID          `json:"routeId"`
+	DistanceMi  OptInt32       `json:"distanceMi"`
+	Pace        OptTravelPace  `json:"pace"`
+	ZoneId      OptID          `json:"zoneId"`
+	RadiusHexes OptInt32       `json:"radiusHexes"`
 	// With add_zone, the zone springs only when the DM springs it.
 	DmOnly  OptBool            `json:"dmOnly"`
 	Rest    OptLiveCommandRest `json:"rest"`
 	TableId OptID              `json:"tableId"`
 	Mode    OptEncounterMode   `json:"mode"`
 	// With a pick check, the index of the table entry.
-	Entry       OptInt32          `json:"entry"`
-	Due         OptLiveCommandDue `json:"due"`
-	LootTableId OptID             `json:"lootTableId"`
-	FromId      OptID             `json:"fromId"`
-	InstanceId  OptID             `json:"instanceId"`
-	ToId        OptID             `json:"toId"`
-	ItemSlug    OptSlug           `json:"itemSlug"`
-	Coin        OptCoin           `json:"coin"`
-	Count       OptInt32          `json:"count"`
-	ShopId      OptID             `json:"shopId"`
-	Monsters    []SpawnMonster    `json:"monsters"`
+	Entry       OptInt32              `json:"entry"`
+	Due         OptLiveCommandDue     `json:"due"`
+	LootTableId OptID                 `json:"lootTableId"`
+	FromId      OptID                 `json:"fromId"`
+	InstanceId  OptID                 `json:"instanceId"`
+	Action      OptLiveCommandAction  `json:"action"`
+	Detail      OptString             `json:"detail"`
+	Trigger     OptLiveCommandTrigger `json:"trigger"`
+	Option      OptLiveCommandOption  `json:"option"`
+	// Makes the attack the off-hand attack of a Light weapon.
+	OffHand OptBool `json:"offHand"`
+	// Makes the attack the second attack a Cleave hit allows.
+	Cleave       OptBool                    `json:"cleave"`
+	ReactionKind OptLiveCommandReactionKind `json:"reactionKind"`
+	ReactionMode OptLiveCommandReactionMode `json:"reactionMode"`
+	Condition    OptLiveCommandCondition    `json:"condition"`
+	ToId         OptID                      `json:"toId"`
+	ItemSlug     OptSlug                    `json:"itemSlug"`
+	Coin         OptCoin                    `json:"coin"`
+	Count        OptInt32                   `json:"count"`
+	ShopId       OptID                      `json:"shopId"`
+	Monsters     []SpawnMonster             `json:"monsters"`
 	// With adjust_hp, hit points to add; negative takes them away.
 	HpDelta OptInt32 `json:"hpDelta"`
 	// With undo, the Action Log sequence of the Action to undo.
@@ -9020,6 +9428,106 @@ func (s *LiveCommand) GetRounds() OptInt32 {
 	return s.Rounds
 }
 
+// GetSlot returns the value of Slot.
+func (s *LiveCommand) GetSlot() OptInt32 {
+	return s.Slot
+}
+
+// GetEffectMode returns the value of EffectMode.
+func (s *LiveCommand) GetEffectMode() OptString {
+	return s.EffectMode
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *LiveCommand) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
+// GetQualities returns the value of Qualities.
+func (s *LiveCommand) GetQualities() []VisibilityQuality {
+	return s.Qualities
+}
+
+// GetSeenThrough returns the value of SeenThrough.
+func (s *LiveCommand) GetSeenThrough() []VisibilityQuality {
+	return s.SeenThrough
+}
+
+// GetDisguise returns the value of Disguise.
+func (s *LiveCommand) GetDisguise() OptString {
+	return s.Disguise
+}
+
+// GetObjectId returns the value of ObjectId.
+func (s *LiveCommand) GetObjectId() OptID {
+	return s.ObjectId
+}
+
+// GetObjectKind returns the value of ObjectKind.
+func (s *LiveCommand) GetObjectKind() OptMapObjectKind {
+	return s.ObjectKind
+}
+
+// GetObjectName returns the value of ObjectName.
+func (s *LiveCommand) GetObjectName() OptString {
+	return s.ObjectName
+}
+
+// GetArmorClass returns the value of ArmorClass.
+func (s *LiveCommand) GetArmorClass() OptInt32 {
+	return s.ArmorClass
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveCommand) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetSecret returns the value of Secret.
+func (s *LiveCommand) GetSecret() OptBool {
+	return s.Secret
+}
+
+// GetRadiusFt returns the value of RadiusFt.
+func (s *LiveCommand) GetRadiusFt() OptInt32 {
+	return s.RadiusFt
+}
+
+// GetLinks returns the value of Links.
+func (s *LiveCommand) GetLinks() []ID {
+	return s.Links
+}
+
+// GetDetectDc returns the value of DetectDc.
+func (s *LiveCommand) GetDetectDc() OptInt32 {
+	return s.DetectDc
+}
+
+// GetDisarmDc returns the value of DisarmDc.
+func (s *LiveCommand) GetDisarmDc() OptInt32 {
+	return s.DisarmDc
+}
+
+// GetTriggerFt returns the value of TriggerFt.
+func (s *LiveCommand) GetTriggerFt() OptInt32 {
+	return s.TriggerFt
+}
+
+// GetLockDc returns the value of LockDc.
+func (s *LiveCommand) GetLockDc() OptInt32 {
+	return s.LockDc
+}
+
+// GetKey returns the value of Key.
+func (s *LiveCommand) GetKey() OptString {
+	return s.Key
+}
+
+// GetMethod returns the value of Method.
+func (s *LiveCommand) GetMethod() OptLiveCommandMethod {
+	return s.Method
+}
+
 // GetSaveAbility returns the value of SaveAbility.
 func (s *LiveCommand) GetSaveAbility() OptAbility {
 	return s.SaveAbility
@@ -9041,7 +9549,7 @@ func (s *LiveCommand) GetManualId() OptID {
 }
 
 // GetSurface returns the value of Surface.
-func (s *LiveCommand) GetSurface() OptLiveCommandSurface {
+func (s *LiveCommand) GetSurface() OptString {
 	return s.Surface
 }
 
@@ -9153,6 +9661,51 @@ func (s *LiveCommand) GetFromId() OptID {
 // GetInstanceId returns the value of InstanceId.
 func (s *LiveCommand) GetInstanceId() OptID {
 	return s.InstanceId
+}
+
+// GetAction returns the value of Action.
+func (s *LiveCommand) GetAction() OptLiveCommandAction {
+	return s.Action
+}
+
+// GetDetail returns the value of Detail.
+func (s *LiveCommand) GetDetail() OptString {
+	return s.Detail
+}
+
+// GetTrigger returns the value of Trigger.
+func (s *LiveCommand) GetTrigger() OptLiveCommandTrigger {
+	return s.Trigger
+}
+
+// GetOption returns the value of Option.
+func (s *LiveCommand) GetOption() OptLiveCommandOption {
+	return s.Option
+}
+
+// GetOffHand returns the value of OffHand.
+func (s *LiveCommand) GetOffHand() OptBool {
+	return s.OffHand
+}
+
+// GetCleave returns the value of Cleave.
+func (s *LiveCommand) GetCleave() OptBool {
+	return s.Cleave
+}
+
+// GetReactionKind returns the value of ReactionKind.
+func (s *LiveCommand) GetReactionKind() OptLiveCommandReactionKind {
+	return s.ReactionKind
+}
+
+// GetReactionMode returns the value of ReactionMode.
+func (s *LiveCommand) GetReactionMode() OptLiveCommandReactionMode {
+	return s.ReactionMode
+}
+
+// GetCondition returns the value of Condition.
+func (s *LiveCommand) GetCondition() OptLiveCommandCondition {
+	return s.Condition
 }
 
 // GetToId returns the value of ToId.
@@ -9350,6 +9903,106 @@ func (s *LiveCommand) SetRounds(val OptInt32) {
 	s.Rounds = val
 }
 
+// SetSlot sets the value of Slot.
+func (s *LiveCommand) SetSlot(val OptInt32) {
+	s.Slot = val
+}
+
+// SetEffectMode sets the value of EffectMode.
+func (s *LiveCommand) SetEffectMode(val OptString) {
+	s.EffectMode = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *LiveCommand) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
+// SetQualities sets the value of Qualities.
+func (s *LiveCommand) SetQualities(val []VisibilityQuality) {
+	s.Qualities = val
+}
+
+// SetSeenThrough sets the value of SeenThrough.
+func (s *LiveCommand) SetSeenThrough(val []VisibilityQuality) {
+	s.SeenThrough = val
+}
+
+// SetDisguise sets the value of Disguise.
+func (s *LiveCommand) SetDisguise(val OptString) {
+	s.Disguise = val
+}
+
+// SetObjectId sets the value of ObjectId.
+func (s *LiveCommand) SetObjectId(val OptID) {
+	s.ObjectId = val
+}
+
+// SetObjectKind sets the value of ObjectKind.
+func (s *LiveCommand) SetObjectKind(val OptMapObjectKind) {
+	s.ObjectKind = val
+}
+
+// SetObjectName sets the value of ObjectName.
+func (s *LiveCommand) SetObjectName(val OptString) {
+	s.ObjectName = val
+}
+
+// SetArmorClass sets the value of ArmorClass.
+func (s *LiveCommand) SetArmorClass(val OptInt32) {
+	s.ArmorClass = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveCommand) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetSecret sets the value of Secret.
+func (s *LiveCommand) SetSecret(val OptBool) {
+	s.Secret = val
+}
+
+// SetRadiusFt sets the value of RadiusFt.
+func (s *LiveCommand) SetRadiusFt(val OptInt32) {
+	s.RadiusFt = val
+}
+
+// SetLinks sets the value of Links.
+func (s *LiveCommand) SetLinks(val []ID) {
+	s.Links = val
+}
+
+// SetDetectDc sets the value of DetectDc.
+func (s *LiveCommand) SetDetectDc(val OptInt32) {
+	s.DetectDc = val
+}
+
+// SetDisarmDc sets the value of DisarmDc.
+func (s *LiveCommand) SetDisarmDc(val OptInt32) {
+	s.DisarmDc = val
+}
+
+// SetTriggerFt sets the value of TriggerFt.
+func (s *LiveCommand) SetTriggerFt(val OptInt32) {
+	s.TriggerFt = val
+}
+
+// SetLockDc sets the value of LockDc.
+func (s *LiveCommand) SetLockDc(val OptInt32) {
+	s.LockDc = val
+}
+
+// SetKey sets the value of Key.
+func (s *LiveCommand) SetKey(val OptString) {
+	s.Key = val
+}
+
+// SetMethod sets the value of Method.
+func (s *LiveCommand) SetMethod(val OptLiveCommandMethod) {
+	s.Method = val
+}
+
 // SetSaveAbility sets the value of SaveAbility.
 func (s *LiveCommand) SetSaveAbility(val OptAbility) {
 	s.SaveAbility = val
@@ -9371,7 +10024,7 @@ func (s *LiveCommand) SetManualId(val OptID) {
 }
 
 // SetSurface sets the value of Surface.
-func (s *LiveCommand) SetSurface(val OptLiveCommandSurface) {
+func (s *LiveCommand) SetSurface(val OptString) {
 	s.Surface = val
 }
 
@@ -9485,6 +10138,51 @@ func (s *LiveCommand) SetInstanceId(val OptID) {
 	s.InstanceId = val
 }
 
+// SetAction sets the value of Action.
+func (s *LiveCommand) SetAction(val OptLiveCommandAction) {
+	s.Action = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *LiveCommand) SetDetail(val OptString) {
+	s.Detail = val
+}
+
+// SetTrigger sets the value of Trigger.
+func (s *LiveCommand) SetTrigger(val OptLiveCommandTrigger) {
+	s.Trigger = val
+}
+
+// SetOption sets the value of Option.
+func (s *LiveCommand) SetOption(val OptLiveCommandOption) {
+	s.Option = val
+}
+
+// SetOffHand sets the value of OffHand.
+func (s *LiveCommand) SetOffHand(val OptBool) {
+	s.OffHand = val
+}
+
+// SetCleave sets the value of Cleave.
+func (s *LiveCommand) SetCleave(val OptBool) {
+	s.Cleave = val
+}
+
+// SetReactionKind sets the value of ReactionKind.
+func (s *LiveCommand) SetReactionKind(val OptLiveCommandReactionKind) {
+	s.ReactionKind = val
+}
+
+// SetReactionMode sets the value of ReactionMode.
+func (s *LiveCommand) SetReactionMode(val OptLiveCommandReactionMode) {
+	s.ReactionMode = val
+}
+
+// SetCondition sets the value of Condition.
+func (s *LiveCommand) SetCondition(val OptLiveCommandCondition) {
+	s.Condition = val
+}
+
 // SetToId sets the value of ToId.
 func (s *LiveCommand) SetToId(val OptID) {
 	s.ToId = val
@@ -9523,6 +10221,151 @@ func (s *LiveCommand) SetHpDelta(val OptInt32) {
 // SetSeq sets the value of Seq.
 func (s *LiveCommand) SetSeq(val OptInt32) {
 	s.Seq = val
+}
+
+type LiveCommandAction string
+
+const (
+	LiveCommandActionDash      LiveCommandAction = "dash"
+	LiveCommandActionDisengage LiveCommandAction = "disengage"
+	LiveCommandActionDodge     LiveCommandAction = "dodge"
+	LiveCommandActionHelp      LiveCommandAction = "help"
+	LiveCommandActionHide      LiveCommandAction = "hide"
+	LiveCommandActionInfluence LiveCommandAction = "influence"
+	LiveCommandActionMagic     LiveCommandAction = "magic"
+	LiveCommandActionReady     LiveCommandAction = "ready"
+	LiveCommandActionSearch    LiveCommandAction = "search"
+	LiveCommandActionStudy     LiveCommandAction = "study"
+	LiveCommandActionUtilize   LiveCommandAction = "utilize"
+)
+
+// AllValues returns all LiveCommandAction values.
+func (LiveCommandAction) AllValues() []LiveCommandAction {
+	return []LiveCommandAction{
+		LiveCommandActionDash,
+		LiveCommandActionDisengage,
+		LiveCommandActionDodge,
+		LiveCommandActionHelp,
+		LiveCommandActionHide,
+		LiveCommandActionInfluence,
+		LiveCommandActionMagic,
+		LiveCommandActionReady,
+		LiveCommandActionSearch,
+		LiveCommandActionStudy,
+		LiveCommandActionUtilize,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandAction) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandActionDash:
+		return []byte(s), nil
+	case LiveCommandActionDisengage:
+		return []byte(s), nil
+	case LiveCommandActionDodge:
+		return []byte(s), nil
+	case LiveCommandActionHelp:
+		return []byte(s), nil
+	case LiveCommandActionHide:
+		return []byte(s), nil
+	case LiveCommandActionInfluence:
+		return []byte(s), nil
+	case LiveCommandActionMagic:
+		return []byte(s), nil
+	case LiveCommandActionReady:
+		return []byte(s), nil
+	case LiveCommandActionSearch:
+		return []byte(s), nil
+	case LiveCommandActionStudy:
+		return []byte(s), nil
+	case LiveCommandActionUtilize:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandAction) UnmarshalText(data []byte) error {
+	switch LiveCommandAction(data) {
+	case LiveCommandActionDash:
+		*s = LiveCommandActionDash
+		return nil
+	case LiveCommandActionDisengage:
+		*s = LiveCommandActionDisengage
+		return nil
+	case LiveCommandActionDodge:
+		*s = LiveCommandActionDodge
+		return nil
+	case LiveCommandActionHelp:
+		*s = LiveCommandActionHelp
+		return nil
+	case LiveCommandActionHide:
+		*s = LiveCommandActionHide
+		return nil
+	case LiveCommandActionInfluence:
+		*s = LiveCommandActionInfluence
+		return nil
+	case LiveCommandActionMagic:
+		*s = LiveCommandActionMagic
+		return nil
+	case LiveCommandActionReady:
+		*s = LiveCommandActionReady
+		return nil
+	case LiveCommandActionSearch:
+		*s = LiveCommandActionSearch
+		return nil
+	case LiveCommandActionStudy:
+		*s = LiveCommandActionStudy
+		return nil
+	case LiveCommandActionUtilize:
+		*s = LiveCommandActionUtilize
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandCondition string
+
+const (
+	LiveCommandConditionEmpty          LiveCommandCondition = ""
+	LiveCommandConditionTargetBloodied LiveCommandCondition = "target_bloodied"
+)
+
+// AllValues returns all LiveCommandCondition values.
+func (LiveCommandCondition) AllValues() []LiveCommandCondition {
+	return []LiveCommandCondition{
+		LiveCommandConditionEmpty,
+		LiveCommandConditionTargetBloodied,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandCondition) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandConditionEmpty:
+		return []byte(s), nil
+	case LiveCommandConditionTargetBloodied:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandCondition) UnmarshalText(data []byte) error {
+	switch LiveCommandCondition(data) {
+	case LiveCommandConditionEmpty:
+		*s = LiveCommandConditionEmpty
+		return nil
+	case LiveCommandConditionTargetBloodied:
+		*s = LiveCommandConditionTargetBloodied
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 type LiveCommandDue string
@@ -9627,6 +10470,33 @@ const (
 	LiveCommandKindSpawnEncounter LiveCommandKind = "spawn_encounter"
 	LiveCommandKindAdjustHp       LiveCommandKind = "adjust_hp"
 	LiveCommandKindUndo           LiveCommandKind = "undo"
+	LiveCommandKindProposeRest    LiveCommandKind = "propose_rest"
+	LiveCommandKindAgreeRest      LiveCommandKind = "agree_rest"
+	LiveCommandKindSpendHitDie    LiveCommandKind = "spend_hit_die"
+	LiveCommandKindFinishRest     LiveCommandKind = "finish_rest"
+	LiveCommandKindInterruptRest  LiveCommandKind = "interrupt_rest"
+	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
+	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
+	LiveCommandKindInteract       LiveCommandKind = "interact"
+	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
+	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
+	LiveCommandKindRevive         LiveCommandKind = "revive"
+	LiveCommandKindTeleport       LiveCommandKind = "teleport"
+	LiveCommandKindSummon         LiveCommandKind = "summon"
+	LiveCommandKindCommand        LiveCommandKind = "command"
+	LiveCommandKindSetVisibility  LiveCommandKind = "set_visibility"
+	LiveCommandKindPlaceObject    LiveCommandKind = "place_object"
+	LiveCommandKindRemoveObject   LiveCommandKind = "remove_object"
+	LiveCommandKindUseObject      LiveCommandKind = "use_object"
+	LiveCommandKindDamageObject   LiveCommandKind = "damage_object"
+	LiveCommandKindFindObject     LiveCommandKind = "find_object"
+	LiveCommandKindUnlock         LiveCommandKind = "unlock"
+	LiveCommandKindDisarm         LiveCommandKind = "disarm"
+	LiveCommandKindJump           LiveCommandKind = "jump"
+	LiveCommandKindThrow          LiveCommandKind = "throw"
+	LiveCommandKindSneak          LiveCommandKind = "sneak"
+	LiveCommandKindExplore        LiveCommandKind = "explore"
+	LiveCommandKindPassTurn       LiveCommandKind = "pass_turn"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -9690,6 +10560,33 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSpawnEncounter,
 		LiveCommandKindAdjustHp,
 		LiveCommandKindUndo,
+		LiveCommandKindProposeRest,
+		LiveCommandKindAgreeRest,
+		LiveCommandKindSpendHitDie,
+		LiveCommandKindFinishRest,
+		LiveCommandKindInterruptRest,
+		LiveCommandKindTakeAction,
+		LiveCommandKindUnarmed,
+		LiveCommandKindInteract,
+		LiveCommandKindSetReaction,
+		LiveCommandKindStabilise,
+		LiveCommandKindRevive,
+		LiveCommandKindTeleport,
+		LiveCommandKindSummon,
+		LiveCommandKindCommand,
+		LiveCommandKindSetVisibility,
+		LiveCommandKindPlaceObject,
+		LiveCommandKindRemoveObject,
+		LiveCommandKindUseObject,
+		LiveCommandKindDamageObject,
+		LiveCommandKindFindObject,
+		LiveCommandKindUnlock,
+		LiveCommandKindDisarm,
+		LiveCommandKindJump,
+		LiveCommandKindThrow,
+		LiveCommandKindSneak,
+		LiveCommandKindExplore,
+		LiveCommandKindPassTurn,
 	}
 }
 
@@ -9811,6 +10708,60 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindAdjustHp:
 		return []byte(s), nil
 	case LiveCommandKindUndo:
+		return []byte(s), nil
+	case LiveCommandKindProposeRest:
+		return []byte(s), nil
+	case LiveCommandKindAgreeRest:
+		return []byte(s), nil
+	case LiveCommandKindSpendHitDie:
+		return []byte(s), nil
+	case LiveCommandKindFinishRest:
+		return []byte(s), nil
+	case LiveCommandKindInterruptRest:
+		return []byte(s), nil
+	case LiveCommandKindTakeAction:
+		return []byte(s), nil
+	case LiveCommandKindUnarmed:
+		return []byte(s), nil
+	case LiveCommandKindInteract:
+		return []byte(s), nil
+	case LiveCommandKindSetReaction:
+		return []byte(s), nil
+	case LiveCommandKindStabilise:
+		return []byte(s), nil
+	case LiveCommandKindRevive:
+		return []byte(s), nil
+	case LiveCommandKindTeleport:
+		return []byte(s), nil
+	case LiveCommandKindSummon:
+		return []byte(s), nil
+	case LiveCommandKindCommand:
+		return []byte(s), nil
+	case LiveCommandKindSetVisibility:
+		return []byte(s), nil
+	case LiveCommandKindPlaceObject:
+		return []byte(s), nil
+	case LiveCommandKindRemoveObject:
+		return []byte(s), nil
+	case LiveCommandKindUseObject:
+		return []byte(s), nil
+	case LiveCommandKindDamageObject:
+		return []byte(s), nil
+	case LiveCommandKindFindObject:
+		return []byte(s), nil
+	case LiveCommandKindUnlock:
+		return []byte(s), nil
+	case LiveCommandKindDisarm:
+		return []byte(s), nil
+	case LiveCommandKindJump:
+		return []byte(s), nil
+	case LiveCommandKindThrow:
+		return []byte(s), nil
+	case LiveCommandKindSneak:
+		return []byte(s), nil
+	case LiveCommandKindExplore:
+		return []byte(s), nil
+	case LiveCommandKindPassTurn:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -9994,6 +10945,142 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindUndo:
 		*s = LiveCommandKindUndo
 		return nil
+	case LiveCommandKindProposeRest:
+		*s = LiveCommandKindProposeRest
+		return nil
+	case LiveCommandKindAgreeRest:
+		*s = LiveCommandKindAgreeRest
+		return nil
+	case LiveCommandKindSpendHitDie:
+		*s = LiveCommandKindSpendHitDie
+		return nil
+	case LiveCommandKindFinishRest:
+		*s = LiveCommandKindFinishRest
+		return nil
+	case LiveCommandKindInterruptRest:
+		*s = LiveCommandKindInterruptRest
+		return nil
+	case LiveCommandKindTakeAction:
+		*s = LiveCommandKindTakeAction
+		return nil
+	case LiveCommandKindUnarmed:
+		*s = LiveCommandKindUnarmed
+		return nil
+	case LiveCommandKindInteract:
+		*s = LiveCommandKindInteract
+		return nil
+	case LiveCommandKindSetReaction:
+		*s = LiveCommandKindSetReaction
+		return nil
+	case LiveCommandKindStabilise:
+		*s = LiveCommandKindStabilise
+		return nil
+	case LiveCommandKindRevive:
+		*s = LiveCommandKindRevive
+		return nil
+	case LiveCommandKindTeleport:
+		*s = LiveCommandKindTeleport
+		return nil
+	case LiveCommandKindSummon:
+		*s = LiveCommandKindSummon
+		return nil
+	case LiveCommandKindCommand:
+		*s = LiveCommandKindCommand
+		return nil
+	case LiveCommandKindSetVisibility:
+		*s = LiveCommandKindSetVisibility
+		return nil
+	case LiveCommandKindPlaceObject:
+		*s = LiveCommandKindPlaceObject
+		return nil
+	case LiveCommandKindRemoveObject:
+		*s = LiveCommandKindRemoveObject
+		return nil
+	case LiveCommandKindUseObject:
+		*s = LiveCommandKindUseObject
+		return nil
+	case LiveCommandKindDamageObject:
+		*s = LiveCommandKindDamageObject
+		return nil
+	case LiveCommandKindFindObject:
+		*s = LiveCommandKindFindObject
+		return nil
+	case LiveCommandKindUnlock:
+		*s = LiveCommandKindUnlock
+		return nil
+	case LiveCommandKindDisarm:
+		*s = LiveCommandKindDisarm
+		return nil
+	case LiveCommandKindJump:
+		*s = LiveCommandKindJump
+		return nil
+	case LiveCommandKindThrow:
+		*s = LiveCommandKindThrow
+		return nil
+	case LiveCommandKindSneak:
+		*s = LiveCommandKindSneak
+		return nil
+	case LiveCommandKindExplore:
+		*s = LiveCommandKindExplore
+		return nil
+	case LiveCommandKindPassTurn:
+		*s = LiveCommandKindPassTurn
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandMethod string
+
+const (
+	LiveCommandMethodKey   LiveCommandMethod = "key"
+	LiveCommandMethodTools LiveCommandMethod = "tools"
+	LiveCommandMethodForce LiveCommandMethod = "force"
+	LiveCommandMethodKnock LiveCommandMethod = "knock"
+)
+
+// AllValues returns all LiveCommandMethod values.
+func (LiveCommandMethod) AllValues() []LiveCommandMethod {
+	return []LiveCommandMethod{
+		LiveCommandMethodKey,
+		LiveCommandMethodTools,
+		LiveCommandMethodForce,
+		LiveCommandMethodKnock,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandMethodKey:
+		return []byte(s), nil
+	case LiveCommandMethodTools:
+		return []byte(s), nil
+	case LiveCommandMethodForce:
+		return []byte(s), nil
+	case LiveCommandMethodKnock:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandMethod) UnmarshalText(data []byte) error {
+	switch LiveCommandMethod(data) {
+	case LiveCommandMethodKey:
+		*s = LiveCommandMethodKey
+		return nil
+	case LiveCommandMethodTools:
+		*s = LiveCommandMethodTools
+		return nil
+	case LiveCommandMethodForce:
+		*s = LiveCommandMethodForce
+		return nil
+	case LiveCommandMethodKnock:
+		*s = LiveCommandMethodKnock
+		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
@@ -10001,6 +11088,192 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 
 // LiveCommandNoContent is response for LiveCommand operation.
 type LiveCommandNoContent struct{}
+
+type LiveCommandOption string
+
+const (
+	LiveCommandOptionGrapple      LiveCommandOption = "grapple"
+	LiveCommandOptionShovePush    LiveCommandOption = "shove_push"
+	LiveCommandOptionShoveProne   LiveCommandOption = "shove_prone"
+	LiveCommandOptionMedicine     LiveCommandOption = "medicine"
+	LiveCommandOptionSpell        LiveCommandOption = "spell"
+	LiveCommandOptionRevivify     LiveCommandOption = "revivify"
+	LiveCommandOptionRaiseDead    LiveCommandOption = "raise_dead"
+	LiveCommandOptionResurrection LiveCommandOption = "resurrection"
+)
+
+// AllValues returns all LiveCommandOption values.
+func (LiveCommandOption) AllValues() []LiveCommandOption {
+	return []LiveCommandOption{
+		LiveCommandOptionGrapple,
+		LiveCommandOptionShovePush,
+		LiveCommandOptionShoveProne,
+		LiveCommandOptionMedicine,
+		LiveCommandOptionSpell,
+		LiveCommandOptionRevivify,
+		LiveCommandOptionRaiseDead,
+		LiveCommandOptionResurrection,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandOption) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandOptionGrapple:
+		return []byte(s), nil
+	case LiveCommandOptionShovePush:
+		return []byte(s), nil
+	case LiveCommandOptionShoveProne:
+		return []byte(s), nil
+	case LiveCommandOptionMedicine:
+		return []byte(s), nil
+	case LiveCommandOptionSpell:
+		return []byte(s), nil
+	case LiveCommandOptionRevivify:
+		return []byte(s), nil
+	case LiveCommandOptionRaiseDead:
+		return []byte(s), nil
+	case LiveCommandOptionResurrection:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandOption) UnmarshalText(data []byte) error {
+	switch LiveCommandOption(data) {
+	case LiveCommandOptionGrapple:
+		*s = LiveCommandOptionGrapple
+		return nil
+	case LiveCommandOptionShovePush:
+		*s = LiveCommandOptionShovePush
+		return nil
+	case LiveCommandOptionShoveProne:
+		*s = LiveCommandOptionShoveProne
+		return nil
+	case LiveCommandOptionMedicine:
+		*s = LiveCommandOptionMedicine
+		return nil
+	case LiveCommandOptionSpell:
+		*s = LiveCommandOptionSpell
+		return nil
+	case LiveCommandOptionRevivify:
+		*s = LiveCommandOptionRevivify
+		return nil
+	case LiveCommandOptionRaiseDead:
+		*s = LiveCommandOptionRaiseDead
+		return nil
+	case LiveCommandOptionResurrection:
+		*s = LiveCommandOptionResurrection
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandReactionKind string
+
+const (
+	LiveCommandReactionKindOpportunityAttack LiveCommandReactionKind = "opportunity_attack"
+	LiveCommandReactionKindShield            LiveCommandReactionKind = "shield"
+	LiveCommandReactionKindReadied           LiveCommandReactionKind = "readied"
+	LiveCommandReactionKindEffect            LiveCommandReactionKind = "effect"
+)
+
+// AllValues returns all LiveCommandReactionKind values.
+func (LiveCommandReactionKind) AllValues() []LiveCommandReactionKind {
+	return []LiveCommandReactionKind{
+		LiveCommandReactionKindOpportunityAttack,
+		LiveCommandReactionKindShield,
+		LiveCommandReactionKindReadied,
+		LiveCommandReactionKindEffect,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandReactionKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandReactionKindOpportunityAttack:
+		return []byte(s), nil
+	case LiveCommandReactionKindShield:
+		return []byte(s), nil
+	case LiveCommandReactionKindReadied:
+		return []byte(s), nil
+	case LiveCommandReactionKindEffect:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandReactionKind) UnmarshalText(data []byte) error {
+	switch LiveCommandReactionKind(data) {
+	case LiveCommandReactionKindOpportunityAttack:
+		*s = LiveCommandReactionKindOpportunityAttack
+		return nil
+	case LiveCommandReactionKindShield:
+		*s = LiveCommandReactionKindShield
+		return nil
+	case LiveCommandReactionKindReadied:
+		*s = LiveCommandReactionKindReadied
+		return nil
+	case LiveCommandReactionKindEffect:
+		*s = LiveCommandReactionKindEffect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveCommandReactionMode string
+
+const (
+	LiveCommandReactionModeAsk    LiveCommandReactionMode = "ask"
+	LiveCommandReactionModeAlways LiveCommandReactionMode = "always"
+	LiveCommandReactionModeNever  LiveCommandReactionMode = "never"
+)
+
+// AllValues returns all LiveCommandReactionMode values.
+func (LiveCommandReactionMode) AllValues() []LiveCommandReactionMode {
+	return []LiveCommandReactionMode{
+		LiveCommandReactionModeAsk,
+		LiveCommandReactionModeAlways,
+		LiveCommandReactionModeNever,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCommandReactionMode) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCommandReactionModeAsk:
+		return []byte(s), nil
+	case LiveCommandReactionModeAlways:
+		return []byte(s), nil
+	case LiveCommandReactionModeNever:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCommandReactionMode) UnmarshalText(data []byte) error {
+	switch LiveCommandReactionMode(data) {
+	case LiveCommandReactionModeAsk:
+		*s = LiveCommandReactionModeAsk
+		return nil
+	case LiveCommandReactionModeAlways:
+		*s = LiveCommandReactionModeAlways
+		return nil
+	case LiveCommandReactionModeNever:
+		*s = LiveCommandReactionModeNever
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 type LiveCommandResource string
 
@@ -10202,44 +11475,23 @@ func (s *LiveCommandResultHeaders) SetResponse(val LiveCommandResult) {
 
 func (*LiveCommandResultHeaders) sendLiveCommandRes() {}
 
-// With paint_surface; leave it out to clear.
-type LiveCommandSurface string
+type LiveCommandTrigger string
 
 const (
-	LiveCommandSurfaceFire        LiveCommandSurface = "fire"
-	LiveCommandSurfaceGrease      LiveCommandSurface = "grease"
-	LiveCommandSurfaceWater       LiveCommandSurface = "water"
-	LiveCommandSurfaceIce         LiveCommandSurface = "ice"
-	LiveCommandSurfaceWeb         LiveCommandSurface = "web"
-	LiveCommandSurfaceElectrified LiveCommandSurface = "electrified"
+	LiveCommandTriggerEntersReach LiveCommandTrigger = "enters_reach"
 )
 
-// AllValues returns all LiveCommandSurface values.
-func (LiveCommandSurface) AllValues() []LiveCommandSurface {
-	return []LiveCommandSurface{
-		LiveCommandSurfaceFire,
-		LiveCommandSurfaceGrease,
-		LiveCommandSurfaceWater,
-		LiveCommandSurfaceIce,
-		LiveCommandSurfaceWeb,
-		LiveCommandSurfaceElectrified,
+// AllValues returns all LiveCommandTrigger values.
+func (LiveCommandTrigger) AllValues() []LiveCommandTrigger {
+	return []LiveCommandTrigger{
+		LiveCommandTriggerEntersReach,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s LiveCommandSurface) MarshalText() ([]byte, error) {
+func (s LiveCommandTrigger) MarshalText() ([]byte, error) {
 	switch s {
-	case LiveCommandSurfaceFire:
-		return []byte(s), nil
-	case LiveCommandSurfaceGrease:
-		return []byte(s), nil
-	case LiveCommandSurfaceWater:
-		return []byte(s), nil
-	case LiveCommandSurfaceIce:
-		return []byte(s), nil
-	case LiveCommandSurfaceWeb:
-		return []byte(s), nil
-	case LiveCommandSurfaceElectrified:
+	case LiveCommandTriggerEntersReach:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10247,25 +11499,10 @@ func (s LiveCommandSurface) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *LiveCommandSurface) UnmarshalText(data []byte) error {
-	switch LiveCommandSurface(data) {
-	case LiveCommandSurfaceFire:
-		*s = LiveCommandSurfaceFire
-		return nil
-	case LiveCommandSurfaceGrease:
-		*s = LiveCommandSurfaceGrease
-		return nil
-	case LiveCommandSurfaceWater:
-		*s = LiveCommandSurfaceWater
-		return nil
-	case LiveCommandSurfaceIce:
-		*s = LiveCommandSurfaceIce
-		return nil
-	case LiveCommandSurfaceWeb:
-		*s = LiveCommandSurfaceWeb
-		return nil
-	case LiveCommandSurfaceElectrified:
-		*s = LiveCommandSurfaceElectrified
+func (s *LiveCommandTrigger) UnmarshalText(data []byte) error {
+	switch LiveCommandTrigger(data) {
+	case LiveCommandTriggerEntersReach:
+		*s = LiveCommandTriggerEntersReach
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -10465,6 +11702,67 @@ func (s *LiveContainerKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and
+// for the party's tokens.
+// Ref: #/components/schemas/LiveDying
+type LiveDying struct {
+	Successes int32   `json:"successes"`
+	Failures  int32   `json:"failures"`
+	Stable    OptBool `json:"stable"`
+	Dead      OptBool `json:"dead"`
+	RollId    OptID   `json:"rollId"`
+}
+
+// GetSuccesses returns the value of Successes.
+func (s *LiveDying) GetSuccesses() int32 {
+	return s.Successes
+}
+
+// GetFailures returns the value of Failures.
+func (s *LiveDying) GetFailures() int32 {
+	return s.Failures
+}
+
+// GetStable returns the value of Stable.
+func (s *LiveDying) GetStable() OptBool {
+	return s.Stable
+}
+
+// GetDead returns the value of Dead.
+func (s *LiveDying) GetDead() OptBool {
+	return s.Dead
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveDying) GetRollId() OptID {
+	return s.RollId
+}
+
+// SetSuccesses sets the value of Successes.
+func (s *LiveDying) SetSuccesses(val int32) {
+	s.Successes = val
+}
+
+// SetFailures sets the value of Failures.
+func (s *LiveDying) SetFailures(val int32) {
+	s.Failures = val
+}
+
+// SetStable sets the value of Stable.
+func (s *LiveDying) SetStable(val OptBool) {
+	s.Stable = val
+}
+
+// SetDead sets the value of Dead.
+func (s *LiveDying) SetDead(val OptBool) {
+	s.Dead = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveDying) SetRollId(val OptID) {
+	s.RollId = val
+}
+
 // An Effect on a token, which everyone who sees the token sees.
 // Ref: #/components/schemas/LiveEffect
 type LiveEffect struct {
@@ -10474,6 +11772,12 @@ type LiveEffect struct {
 	SourceId      OptID    `json:"sourceId"`
 	Concentration bool     `json:"concentration"`
 	RoundsLeft    OptInt32 `json:"roundsLeft"`
+	// Levels of a stacking Effect, such as exhaustion.
+	Level OptInt32 `json:"level"`
+	// The option chosen when the Effect offers a choice.
+	Mode OptString `json:"mode"`
+	// The hexes an emanation covers around the token where it stands now; it moves with the token.
+	Hexes []HexCoord `json:"hexes"`
 }
 
 // GetID returns the value of ID.
@@ -10506,6 +11810,21 @@ func (s *LiveEffect) GetRoundsLeft() OptInt32 {
 	return s.RoundsLeft
 }
 
+// GetLevel returns the value of Level.
+func (s *LiveEffect) GetLevel() OptInt32 {
+	return s.Level
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveEffect) GetMode() OptString {
+	return s.Mode
+}
+
+// GetHexes returns the value of Hexes.
+func (s *LiveEffect) GetHexes() []HexCoord {
+	return s.Hexes
+}
+
 // SetID sets the value of ID.
 func (s *LiveEffect) SetID(val ID) {
 	s.ID = val
@@ -10534,6 +11853,21 @@ func (s *LiveEffect) SetConcentration(val bool) {
 // SetRoundsLeft sets the value of RoundsLeft.
 func (s *LiveEffect) SetRoundsLeft(val OptInt32) {
 	s.RoundsLeft = val
+}
+
+// SetLevel sets the value of Level.
+func (s *LiveEffect) SetLevel(val OptInt32) {
+	s.Level = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveEffect) SetMode(val OptString) {
+	s.Mode = val
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LiveEffect) SetHexes(val []HexCoord) {
+	s.Hexes = val
 }
 
 // A raised or sunken hex.
@@ -11069,6 +12403,232 @@ func (s *LiveMap) SetImageVersion(val int32) {
 	s.ImageVersion = val
 }
 
+// A Map Object; its numbers, trigger and secrecy go to the DM only.
+// Ref: #/components/schemas/LiveObject
+type LiveObject struct {
+	ID   ID            `json:"id"`
+	Kind MapObjectKind `json:"kind"`
+	Name string        `json:"name"`
+	Q    int32         `json:"q"`
+	R    int32         `json:"r"`
+	// Open, or pulled for a lever.
+	Open      bool      `json:"open"`
+	Broken    bool      `json:"broken"`
+	Secret    OptBool   `json:"secret"`
+	Ac        OptInt32  `json:"ac"`
+	Hp        OptInt32  `json:"hp"`
+	HpMax     OptInt32  `json:"hpMax"`
+	Effect    OptString `json:"effect"`
+	RadiusFt  OptInt32  `json:"radiusFt"`
+	Locked    OptBool   `json:"locked"`
+	Armed     OptBool   `json:"armed"`
+	DetectDc  OptInt32  `json:"detectDc"`
+	DisarmDc  OptInt32  `json:"disarmDc"`
+	TriggerFt OptInt32  `json:"triggerFt"`
+	LockDc    OptInt32  `json:"lockDc"`
+	Key       OptString `json:"key"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveObject) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveObject) GetKind() MapObjectKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *LiveObject) GetName() string {
+	return s.Name
+}
+
+// GetQ returns the value of Q.
+func (s *LiveObject) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveObject) GetR() int32 {
+	return s.R
+}
+
+// GetOpen returns the value of Open.
+func (s *LiveObject) GetOpen() bool {
+	return s.Open
+}
+
+// GetBroken returns the value of Broken.
+func (s *LiveObject) GetBroken() bool {
+	return s.Broken
+}
+
+// GetSecret returns the value of Secret.
+func (s *LiveObject) GetSecret() OptBool {
+	return s.Secret
+}
+
+// GetAc returns the value of Ac.
+func (s *LiveObject) GetAc() OptInt32 {
+	return s.Ac
+}
+
+// GetHp returns the value of Hp.
+func (s *LiveObject) GetHp() OptInt32 {
+	return s.Hp
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveObject) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetEffect returns the value of Effect.
+func (s *LiveObject) GetEffect() OptString {
+	return s.Effect
+}
+
+// GetRadiusFt returns the value of RadiusFt.
+func (s *LiveObject) GetRadiusFt() OptInt32 {
+	return s.RadiusFt
+}
+
+// GetLocked returns the value of Locked.
+func (s *LiveObject) GetLocked() OptBool {
+	return s.Locked
+}
+
+// GetArmed returns the value of Armed.
+func (s *LiveObject) GetArmed() OptBool {
+	return s.Armed
+}
+
+// GetDetectDc returns the value of DetectDc.
+func (s *LiveObject) GetDetectDc() OptInt32 {
+	return s.DetectDc
+}
+
+// GetDisarmDc returns the value of DisarmDc.
+func (s *LiveObject) GetDisarmDc() OptInt32 {
+	return s.DisarmDc
+}
+
+// GetTriggerFt returns the value of TriggerFt.
+func (s *LiveObject) GetTriggerFt() OptInt32 {
+	return s.TriggerFt
+}
+
+// GetLockDc returns the value of LockDc.
+func (s *LiveObject) GetLockDc() OptInt32 {
+	return s.LockDc
+}
+
+// GetKey returns the value of Key.
+func (s *LiveObject) GetKey() OptString {
+	return s.Key
+}
+
+// SetID sets the value of ID.
+func (s *LiveObject) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveObject) SetKind(val MapObjectKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveObject) SetName(val string) {
+	s.Name = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveObject) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveObject) SetR(val int32) {
+	s.R = val
+}
+
+// SetOpen sets the value of Open.
+func (s *LiveObject) SetOpen(val bool) {
+	s.Open = val
+}
+
+// SetBroken sets the value of Broken.
+func (s *LiveObject) SetBroken(val bool) {
+	s.Broken = val
+}
+
+// SetSecret sets the value of Secret.
+func (s *LiveObject) SetSecret(val OptBool) {
+	s.Secret = val
+}
+
+// SetAc sets the value of Ac.
+func (s *LiveObject) SetAc(val OptInt32) {
+	s.Ac = val
+}
+
+// SetHp sets the value of Hp.
+func (s *LiveObject) SetHp(val OptInt32) {
+	s.Hp = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveObject) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *LiveObject) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// SetRadiusFt sets the value of RadiusFt.
+func (s *LiveObject) SetRadiusFt(val OptInt32) {
+	s.RadiusFt = val
+}
+
+// SetLocked sets the value of Locked.
+func (s *LiveObject) SetLocked(val OptBool) {
+	s.Locked = val
+}
+
+// SetArmed sets the value of Armed.
+func (s *LiveObject) SetArmed(val OptBool) {
+	s.Armed = val
+}
+
+// SetDetectDc sets the value of DetectDc.
+func (s *LiveObject) SetDetectDc(val OptInt32) {
+	s.DetectDc = val
+}
+
+// SetDisarmDc sets the value of DisarmDc.
+func (s *LiveObject) SetDisarmDc(val OptInt32) {
+	s.DisarmDc = val
+}
+
+// SetTriggerFt sets the value of TriggerFt.
+func (s *LiveObject) SetTriggerFt(val OptInt32) {
+	s.TriggerFt = val
+}
+
+// SetLockDc sets the value of LockDc.
+func (s *LiveObject) SetLockDc(val OptInt32) {
+	s.LockDc = val
+}
+
+// SetKey sets the value of Key.
+func (s *LiveObject) SetKey(val OptString) {
+	s.Key = val
+}
+
 // The route a walk would take, start first, and the movement it costs.
 // Ref: #/components/schemas/LivePath
 type LivePath struct {
@@ -11330,6 +12890,8 @@ type LivePromptKind string
 const (
 	LivePromptKindOpportunityAttack LivePromptKind = "opportunity_attack"
 	LivePromptKindShield            LivePromptKind = "shield"
+	LivePromptKindReadied           LivePromptKind = "readied"
+	LivePromptKindEffect            LivePromptKind = "effect"
 )
 
 // AllValues returns all LivePromptKind values.
@@ -11337,6 +12899,8 @@ func (LivePromptKind) AllValues() []LivePromptKind {
 	return []LivePromptKind{
 		LivePromptKindOpportunityAttack,
 		LivePromptKindShield,
+		LivePromptKindReadied,
+		LivePromptKindEffect,
 	}
 }
 
@@ -11346,6 +12910,10 @@ func (s LivePromptKind) MarshalText() ([]byte, error) {
 	case LivePromptKindOpportunityAttack:
 		return []byte(s), nil
 	case LivePromptKindShield:
+		return []byte(s), nil
+	case LivePromptKindReadied:
+		return []byte(s), nil
+	case LivePromptKindEffect:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -11360,6 +12928,506 @@ func (s *LivePromptKind) UnmarshalText(data []byte) error {
 		return nil
 	case LivePromptKindShield:
 		*s = LivePromptKindShield
+		return nil
+	case LivePromptKindReadied:
+		*s = LivePromptKindReadied
+		return nil
+	case LivePromptKindEffect:
+		*s = LivePromptKindEffect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One Visibility Quality of a token, and whether the party has seen through it with a check.
+// Ref: #/components/schemas/LiveQuality
+type LiveQuality struct {
+	Quality     VisibilityQuality `json:"quality"`
+	SeenThrough OptBool           `json:"seenThrough"`
+}
+
+// GetQuality returns the value of Quality.
+func (s *LiveQuality) GetQuality() VisibilityQuality {
+	return s.Quality
+}
+
+// GetSeenThrough returns the value of SeenThrough.
+func (s *LiveQuality) GetSeenThrough() OptBool {
+	return s.SeenThrough
+}
+
+// SetQuality sets the value of Quality.
+func (s *LiveQuality) SetQuality(val VisibilityQuality) {
+	s.Quality = val
+}
+
+// SetSeenThrough sets the value of SeenThrough.
+func (s *LiveQuality) SetSeenThrough(val OptBool) {
+	s.SeenThrough = val
+}
+
+// A Controller's choice for one kind of reaction. Always takes it without asking while its condition
+// holds, and asks otherwise.
+// Ref: #/components/schemas/LiveReactionSetting
+type LiveReactionSetting struct {
+	Kind      LiveReactionSettingKind         `json:"kind"`
+	Mode      LiveReactionSettingMode         `json:"mode"`
+	Condition OptLiveReactionSettingCondition `json:"condition"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveReactionSetting) GetKind() LiveReactionSettingKind {
+	return s.Kind
+}
+
+// GetMode returns the value of Mode.
+func (s *LiveReactionSetting) GetMode() LiveReactionSettingMode {
+	return s.Mode
+}
+
+// GetCondition returns the value of Condition.
+func (s *LiveReactionSetting) GetCondition() OptLiveReactionSettingCondition {
+	return s.Condition
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveReactionSetting) SetKind(val LiveReactionSettingKind) {
+	s.Kind = val
+}
+
+// SetMode sets the value of Mode.
+func (s *LiveReactionSetting) SetMode(val LiveReactionSettingMode) {
+	s.Mode = val
+}
+
+// SetCondition sets the value of Condition.
+func (s *LiveReactionSetting) SetCondition(val OptLiveReactionSettingCondition) {
+	s.Condition = val
+}
+
+type LiveReactionSettingCondition string
+
+const (
+	LiveReactionSettingConditionTargetBloodied LiveReactionSettingCondition = "target_bloodied"
+)
+
+// AllValues returns all LiveReactionSettingCondition values.
+func (LiveReactionSettingCondition) AllValues() []LiveReactionSettingCondition {
+	return []LiveReactionSettingCondition{
+		LiveReactionSettingConditionTargetBloodied,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveReactionSettingCondition) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveReactionSettingConditionTargetBloodied:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveReactionSettingCondition) UnmarshalText(data []byte) error {
+	switch LiveReactionSettingCondition(data) {
+	case LiveReactionSettingConditionTargetBloodied:
+		*s = LiveReactionSettingConditionTargetBloodied
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveReactionSettingKind string
+
+const (
+	LiveReactionSettingKindOpportunityAttack LiveReactionSettingKind = "opportunity_attack"
+	LiveReactionSettingKindShield            LiveReactionSettingKind = "shield"
+	LiveReactionSettingKindReadied           LiveReactionSettingKind = "readied"
+	LiveReactionSettingKindEffect            LiveReactionSettingKind = "effect"
+)
+
+// AllValues returns all LiveReactionSettingKind values.
+func (LiveReactionSettingKind) AllValues() []LiveReactionSettingKind {
+	return []LiveReactionSettingKind{
+		LiveReactionSettingKindOpportunityAttack,
+		LiveReactionSettingKindShield,
+		LiveReactionSettingKindReadied,
+		LiveReactionSettingKindEffect,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveReactionSettingKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveReactionSettingKindOpportunityAttack:
+		return []byte(s), nil
+	case LiveReactionSettingKindShield:
+		return []byte(s), nil
+	case LiveReactionSettingKindReadied:
+		return []byte(s), nil
+	case LiveReactionSettingKindEffect:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveReactionSettingKind) UnmarshalText(data []byte) error {
+	switch LiveReactionSettingKind(data) {
+	case LiveReactionSettingKindOpportunityAttack:
+		*s = LiveReactionSettingKindOpportunityAttack
+		return nil
+	case LiveReactionSettingKindShield:
+		*s = LiveReactionSettingKindShield
+		return nil
+	case LiveReactionSettingKindReadied:
+		*s = LiveReactionSettingKindReadied
+		return nil
+	case LiveReactionSettingKindEffect:
+		*s = LiveReactionSettingKindEffect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveReactionSettingMode string
+
+const (
+	LiveReactionSettingModeAsk    LiveReactionSettingMode = "ask"
+	LiveReactionSettingModeAlways LiveReactionSettingMode = "always"
+	LiveReactionSettingModeNever  LiveReactionSettingMode = "never"
+)
+
+// AllValues returns all LiveReactionSettingMode values.
+func (LiveReactionSettingMode) AllValues() []LiveReactionSettingMode {
+	return []LiveReactionSettingMode{
+		LiveReactionSettingModeAsk,
+		LiveReactionSettingModeAlways,
+		LiveReactionSettingModeNever,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveReactionSettingMode) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveReactionSettingModeAsk:
+		return []byte(s), nil
+	case LiveReactionSettingModeAlways:
+		return []byte(s), nil
+	case LiveReactionSettingModeNever:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveReactionSettingMode) UnmarshalText(data []byte) error {
+	switch LiveReactionSettingMode(data) {
+	case LiveReactionSettingModeAsk:
+		*s = LiveReactionSettingModeAsk
+		return nil
+	case LiveReactionSettingModeAlways:
+		*s = LiveReactionSettingModeAlways
+		return nil
+	case LiveReactionSettingModeNever:
+		*s = LiveReactionSettingModeNever
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The rest the party proposed or is taking. It starts once the DM and every Player resting a Character
+// agree; a Short Rest spends Hit Dice.
+// Ref: #/components/schemas/LiveRest
+type LiveRest struct {
+	Kind        LiveRestKind   `json:"kind"`
+	Status      LiveRestStatus `json:"status"`
+	ProposedBy  ID             `json:"proposedBy"`
+	Agreed      []ID           `json:"agreed"`
+	Waiting     []ID           `json:"waiting"`
+	WaitingOnDm bool           `json:"waitingOnDm"`
+	Resters     []LiveRester   `json:"resters"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveRest) GetKind() LiveRestKind {
+	return s.Kind
+}
+
+// GetStatus returns the value of Status.
+func (s *LiveRest) GetStatus() LiveRestStatus {
+	return s.Status
+}
+
+// GetProposedBy returns the value of ProposedBy.
+func (s *LiveRest) GetProposedBy() ID {
+	return s.ProposedBy
+}
+
+// GetAgreed returns the value of Agreed.
+func (s *LiveRest) GetAgreed() []ID {
+	return s.Agreed
+}
+
+// GetWaiting returns the value of Waiting.
+func (s *LiveRest) GetWaiting() []ID {
+	return s.Waiting
+}
+
+// GetWaitingOnDm returns the value of WaitingOnDm.
+func (s *LiveRest) GetWaitingOnDm() bool {
+	return s.WaitingOnDm
+}
+
+// GetResters returns the value of Resters.
+func (s *LiveRest) GetResters() []LiveRester {
+	return s.Resters
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveRest) SetKind(val LiveRestKind) {
+	s.Kind = val
+}
+
+// SetStatus sets the value of Status.
+func (s *LiveRest) SetStatus(val LiveRestStatus) {
+	s.Status = val
+}
+
+// SetProposedBy sets the value of ProposedBy.
+func (s *LiveRest) SetProposedBy(val ID) {
+	s.ProposedBy = val
+}
+
+// SetAgreed sets the value of Agreed.
+func (s *LiveRest) SetAgreed(val []ID) {
+	s.Agreed = val
+}
+
+// SetWaiting sets the value of Waiting.
+func (s *LiveRest) SetWaiting(val []ID) {
+	s.Waiting = val
+}
+
+// SetWaitingOnDm sets the value of WaitingOnDm.
+func (s *LiveRest) SetWaitingOnDm(val bool) {
+	s.WaitingOnDm = val
+}
+
+// SetResters sets the value of Resters.
+func (s *LiveRest) SetResters(val []LiveRester) {
+	s.Resters = val
+}
+
+type LiveRestKind string
+
+const (
+	LiveRestKindShort LiveRestKind = "short"
+	LiveRestKindLong  LiveRestKind = "long"
+)
+
+// AllValues returns all LiveRestKind values.
+func (LiveRestKind) AllValues() []LiveRestKind {
+	return []LiveRestKind{
+		LiveRestKindShort,
+		LiveRestKindLong,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveRestKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveRestKindShort:
+		return []byte(s), nil
+	case LiveRestKindLong:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveRestKind) UnmarshalText(data []byte) error {
+	switch LiveRestKind(data) {
+	case LiveRestKindShort:
+		*s = LiveRestKindShort
+		return nil
+	case LiveRestKindLong:
+		*s = LiveRestKindLong
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type LiveRestStatus string
+
+const (
+	LiveRestStatusProposed LiveRestStatus = "proposed"
+	LiveRestStatusResting  LiveRestStatus = "resting"
+)
+
+// AllValues returns all LiveRestStatus values.
+func (LiveRestStatus) AllValues() []LiveRestStatus {
+	return []LiveRestStatus{
+		LiveRestStatusProposed,
+		LiveRestStatusResting,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveRestStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveRestStatusProposed:
+		return []byte(s), nil
+	case LiveRestStatusResting:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveRestStatus) UnmarshalText(data []byte) error {
+	switch LiveRestStatus(data) {
+	case LiveRestStatusProposed:
+		*s = LiveRestStatusProposed
+		return nil
+	case LiveRestStatusResting:
+		*s = LiveRestStatusResting
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+// Ref: #/components/schemas/LiveRester
+type LiveRester struct {
+	CharacterId ID               `json:"characterId"`
+	TokenId     ID               `json:"tokenId"`
+	Name        string           `json:"name"`
+	HitDie      LiveResterHitDie `json:"hitDie"`
+	HitDiceLeft int32            `json:"hitDiceLeft"`
+	RollId      OptID            `json:"rollId"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveRester) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveRester) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetName returns the value of Name.
+func (s *LiveRester) GetName() string {
+	return s.Name
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *LiveRester) GetHitDie() LiveResterHitDie {
+	return s.HitDie
+}
+
+// GetHitDiceLeft returns the value of HitDiceLeft.
+func (s *LiveRester) GetHitDiceLeft() int32 {
+	return s.HitDiceLeft
+}
+
+// GetRollId returns the value of RollId.
+func (s *LiveRester) GetRollId() OptID {
+	return s.RollId
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveRester) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveRester) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveRester) SetName(val string) {
+	s.Name = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *LiveRester) SetHitDie(val LiveResterHitDie) {
+	s.HitDie = val
+}
+
+// SetHitDiceLeft sets the value of HitDiceLeft.
+func (s *LiveRester) SetHitDiceLeft(val int32) {
+	s.HitDiceLeft = val
+}
+
+// SetRollId sets the value of RollId.
+func (s *LiveRester) SetRollId(val OptID) {
+	s.RollId = val
+}
+
+type LiveResterHitDie string
+
+const (
+	LiveResterHitDieD6  LiveResterHitDie = "d6"
+	LiveResterHitDieD8  LiveResterHitDie = "d8"
+	LiveResterHitDieD10 LiveResterHitDie = "d10"
+	LiveResterHitDieD12 LiveResterHitDie = "d12"
+)
+
+// AllValues returns all LiveResterHitDie values.
+func (LiveResterHitDie) AllValues() []LiveResterHitDie {
+	return []LiveResterHitDie{
+		LiveResterHitDieD6,
+		LiveResterHitDieD8,
+		LiveResterHitDieD10,
+		LiveResterHitDieD12,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveResterHitDie) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveResterHitDieD6:
+		return []byte(s), nil
+	case LiveResterHitDieD8:
+		return []byte(s), nil
+	case LiveResterHitDieD10:
+		return []byte(s), nil
+	case LiveResterHitDieD12:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveResterHitDie) UnmarshalText(data []byte) error {
+	switch LiveResterHitDie(data) {
+	case LiveResterHitDieD6:
+		*s = LiveResterHitDieD6
+		return nil
+	case LiveResterHitDieD8:
+		*s = LiveResterHitDieD8
+		return nil
+	case LiveResterHitDieD10:
+		*s = LiveResterHitDieD10
+		return nil
+	case LiveResterHitDieD12:
+		*s = LiveResterHitDieD12
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11696,10 +13764,11 @@ func (s *LiveSuggestion) SetReason(val string) {
 // A Surface on a hex.
 // Ref: #/components/schemas/LiveSurface
 type LiveSurface struct {
-	Q          int32           `json:"q"`
-	R          int32           `json:"r"`
-	Kind       LiveSurfaceKind `json:"kind"`
-	RoundsLeft OptInt32        `json:"roundsLeft"`
+	Q int32 `json:"q"`
+	R int32 `json:"r"`
+	// A Surface from the catalogue.
+	Kind       string   `json:"kind"`
+	RoundsLeft OptInt32 `json:"roundsLeft"`
 }
 
 // GetQ returns the value of Q.
@@ -11713,7 +13782,7 @@ func (s *LiveSurface) GetR() int32 {
 }
 
 // GetKind returns the value of Kind.
-func (s *LiveSurface) GetKind() LiveSurfaceKind {
+func (s *LiveSurface) GetKind() string {
 	return s.Kind
 }
 
@@ -11733,82 +13802,13 @@ func (s *LiveSurface) SetR(val int32) {
 }
 
 // SetKind sets the value of Kind.
-func (s *LiveSurface) SetKind(val LiveSurfaceKind) {
+func (s *LiveSurface) SetKind(val string) {
 	s.Kind = val
 }
 
 // SetRoundsLeft sets the value of RoundsLeft.
 func (s *LiveSurface) SetRoundsLeft(val OptInt32) {
 	s.RoundsLeft = val
-}
-
-type LiveSurfaceKind string
-
-const (
-	LiveSurfaceKindFire        LiveSurfaceKind = "fire"
-	LiveSurfaceKindGrease      LiveSurfaceKind = "grease"
-	LiveSurfaceKindWater       LiveSurfaceKind = "water"
-	LiveSurfaceKindIce         LiveSurfaceKind = "ice"
-	LiveSurfaceKindWeb         LiveSurfaceKind = "web"
-	LiveSurfaceKindElectrified LiveSurfaceKind = "electrified"
-)
-
-// AllValues returns all LiveSurfaceKind values.
-func (LiveSurfaceKind) AllValues() []LiveSurfaceKind {
-	return []LiveSurfaceKind{
-		LiveSurfaceKindFire,
-		LiveSurfaceKindGrease,
-		LiveSurfaceKindWater,
-		LiveSurfaceKindIce,
-		LiveSurfaceKindWeb,
-		LiveSurfaceKindElectrified,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s LiveSurfaceKind) MarshalText() ([]byte, error) {
-	switch s {
-	case LiveSurfaceKindFire:
-		return []byte(s), nil
-	case LiveSurfaceKindGrease:
-		return []byte(s), nil
-	case LiveSurfaceKindWater:
-		return []byte(s), nil
-	case LiveSurfaceKindIce:
-		return []byte(s), nil
-	case LiveSurfaceKindWeb:
-		return []byte(s), nil
-	case LiveSurfaceKindElectrified:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *LiveSurfaceKind) UnmarshalText(data []byte) error {
-	switch LiveSurfaceKind(data) {
-	case LiveSurfaceKindFire:
-		*s = LiveSurfaceKindFire
-		return nil
-	case LiveSurfaceKindGrease:
-		*s = LiveSurfaceKindGrease
-		return nil
-	case LiveSurfaceKindWater:
-		*s = LiveSurfaceKindWater
-		return nil
-	case LiveSurfaceKindIce:
-		*s = LiveSurfaceKindIce
-		return nil
-	case LiveSurfaceKindWeb:
-		*s = LiveSurfaceKindWeb
-		return nil
-	case LiveSurfaceKindElectrified:
-		*s = LiveSurfaceKindElectrified
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
 }
 
 // What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows
@@ -11930,11 +13930,21 @@ type LiveToken struct {
 	Ac           OptInt32  `json:"ac"`
 	Hp           OptInt32  `json:"hp"`
 	HpMax        OptInt32  `json:"hpMax"`
+	// Temporary hit points, lost before hit points.
+	TempHp OptInt32 `json:"tempHp"`
+	// The creature whose shape the token has taken.
+	Form OptString `json:"form"`
+	// The token's Visibility Qualities, for the DM only.
+	Qualities []LiveQuality `json:"qualities"`
+	// The name a Disguised token shows, for the DM only.
+	Disguise OptString `json:"disguise"`
 	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
-	Health  OptLiveTokenHealth `json:"health"`
-	Attacks []LiveAttack       `json:"attacks"`
-	Shield  OptBool            `json:"shield"`
-	Effects []LiveEffect       `json:"effects"`
+	Health    OptLiveTokenHealth    `json:"health"`
+	Attacks   []LiveAttack          `json:"attacks"`
+	Shield    OptBool               `json:"shield"`
+	Effects   []LiveEffect          `json:"effects"`
+	Reactions []LiveReactionSetting `json:"reactions"`
+	Dying     OptLiveDying          `json:"dying"`
 }
 
 // GetID returns the value of ID.
@@ -11992,6 +14002,26 @@ func (s *LiveToken) GetHpMax() OptInt32 {
 	return s.HpMax
 }
 
+// GetTempHp returns the value of TempHp.
+func (s *LiveToken) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
+// GetForm returns the value of Form.
+func (s *LiveToken) GetForm() OptString {
+	return s.Form
+}
+
+// GetQualities returns the value of Qualities.
+func (s *LiveToken) GetQualities() []LiveQuality {
+	return s.Qualities
+}
+
+// GetDisguise returns the value of Disguise.
+func (s *LiveToken) GetDisguise() OptString {
+	return s.Disguise
+}
+
 // GetHealth returns the value of Health.
 func (s *LiveToken) GetHealth() OptLiveTokenHealth {
 	return s.Health
@@ -12010,6 +14040,16 @@ func (s *LiveToken) GetShield() OptBool {
 // GetEffects returns the value of Effects.
 func (s *LiveToken) GetEffects() []LiveEffect {
 	return s.Effects
+}
+
+// GetReactions returns the value of Reactions.
+func (s *LiveToken) GetReactions() []LiveReactionSetting {
+	return s.Reactions
+}
+
+// GetDying returns the value of Dying.
+func (s *LiveToken) GetDying() OptLiveDying {
+	return s.Dying
 }
 
 // SetID sets the value of ID.
@@ -12067,6 +14107,26 @@ func (s *LiveToken) SetHpMax(val OptInt32) {
 	s.HpMax = val
 }
 
+// SetTempHp sets the value of TempHp.
+func (s *LiveToken) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
+// SetForm sets the value of Form.
+func (s *LiveToken) SetForm(val OptString) {
+	s.Form = val
+}
+
+// SetQualities sets the value of Qualities.
+func (s *LiveToken) SetQualities(val []LiveQuality) {
+	s.Qualities = val
+}
+
+// SetDisguise sets the value of Disguise.
+func (s *LiveToken) SetDisguise(val OptString) {
+	s.Disguise = val
+}
+
 // SetHealth sets the value of Health.
 func (s *LiveToken) SetHealth(val OptLiveTokenHealth) {
 	s.Health = val
@@ -12085,6 +14145,16 @@ func (s *LiveToken) SetShield(val OptBool) {
 // SetEffects sets the value of Effects.
 func (s *LiveToken) SetEffects(val []LiveEffect) {
 	s.Effects = val
+}
+
+// SetReactions sets the value of Reactions.
+func (s *LiveToken) SetReactions(val []LiveReactionSetting) {
+	s.Reactions = val
+}
+
+// SetDying sets the value of Dying.
+func (s *LiveToken) SetDying(val OptLiveDying) {
+	s.Dying = val
 }
 
 // What anyone can tell by looking, for creatures whose hit points the audience may not see.
@@ -12489,18 +14559,29 @@ type LiveView struct {
 	Combat     OptLiveCombat `json:"combat"`
 	Manual     []LiveManual  `json:"manual"`
 	// The DM is resolving part of an Effect by hand.
-	Resolving  OptBool          `json:"resolving"`
-	Saves      []LiveSave       `json:"saves"`
-	Surfaces   []LiveSurface    `json:"surfaces"`
-	Elevation  []LiveElevation  `json:"elevation"`
-	Area       OptLiveArea      `json:"area"`
-	Table      OptLiveTable     `json:"table"`
-	World      OptLiveWorld     `json:"world"`
+	Resolving OptBool         `json:"resolving"`
+	Saves     []LiveSave      `json:"saves"`
+	Surfaces  []LiveSurface   `json:"surfaces"`
+	Elevation []LiveElevation `json:"elevation"`
+	Area      OptLiveArea     `json:"area"`
+	Table     OptLiveTable    `json:"table"`
+	World     OptLiveWorld    `json:"world"`
+	// The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would
+	// notice it.
+	Sneak OptLiveViewSneak `json:"sneak"`
+	// Exploration in turns, outside a fight.
+	Exploration OptLiveViewExploration `json:"exploration"`
+	// The Surface catalogue, for the DM's paint tool.
+	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
+	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
+	// seen.
+	Objects    []LiveObject     `json:"objects"`
 	Zones      []LiveZone       `json:"zones"`
 	Perception []LivePerception `json:"perception"`
 	Checks     []LiveCheck      `json:"checks"`
 	Inventory  []LiveContainer  `json:"inventory"`
 	Shop       OptLiveShop      `json:"shop"`
+	Rest       OptLiveRest      `json:"rest"`
 	// Days passed in the Campaign; a long rest or travel moves it on.
 	GameDay OptInt32        `json:"gameDay"`
 	Walls   []HexCoord      `json:"walls"`
@@ -12578,6 +14659,26 @@ func (s *LiveView) GetWorld() OptLiveWorld {
 	return s.World
 }
 
+// GetSneak returns the value of Sneak.
+func (s *LiveView) GetSneak() OptLiveViewSneak {
+	return s.Sneak
+}
+
+// GetExploration returns the value of Exploration.
+func (s *LiveView) GetExploration() OptLiveViewExploration {
+	return s.Exploration
+}
+
+// GetSurfaceKinds returns the value of SurfaceKinds.
+func (s *LiveView) GetSurfaceKinds() []LiveViewSurfaceKindsItem {
+	return s.SurfaceKinds
+}
+
+// GetObjects returns the value of Objects.
+func (s *LiveView) GetObjects() []LiveObject {
+	return s.Objects
+}
+
 // GetZones returns the value of Zones.
 func (s *LiveView) GetZones() []LiveZone {
 	return s.Zones
@@ -12601,6 +14702,11 @@ func (s *LiveView) GetInventory() []LiveContainer {
 // GetShop returns the value of Shop.
 func (s *LiveView) GetShop() OptLiveShop {
 	return s.Shop
+}
+
+// GetRest returns the value of Rest.
+func (s *LiveView) GetRest() OptLiveRest {
+	return s.Rest
 }
 
 // GetGameDay returns the value of GameDay.
@@ -12693,6 +14799,26 @@ func (s *LiveView) SetWorld(val OptLiveWorld) {
 	s.World = val
 }
 
+// SetSneak sets the value of Sneak.
+func (s *LiveView) SetSneak(val OptLiveViewSneak) {
+	s.Sneak = val
+}
+
+// SetExploration sets the value of Exploration.
+func (s *LiveView) SetExploration(val OptLiveViewExploration) {
+	s.Exploration = val
+}
+
+// SetSurfaceKinds sets the value of SurfaceKinds.
+func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
+	s.SurfaceKinds = val
+}
+
+// SetObjects sets the value of Objects.
+func (s *LiveView) SetObjects(val []LiveObject) {
+	s.Objects = val
+}
+
 // SetZones sets the value of Zones.
 func (s *LiveView) SetZones(val []LiveZone) {
 	s.Zones = val
@@ -12718,6 +14844,11 @@ func (s *LiveView) SetShop(val OptLiveShop) {
 	s.Shop = val
 }
 
+// SetRest sets the value of Rest.
+func (s *LiveView) SetRest(val OptLiveRest) {
+	s.Rest = val
+}
+
 // SetGameDay sets the value of GameDay.
 func (s *LiveView) SetGameDay(val OptInt32) {
 	s.GameDay = val
@@ -12736,6 +14867,43 @@ func (s *LiveView) SetLights(val []LiveLight) {
 // SetAmbient sets the value of Ambient.
 func (s *LiveView) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
+}
+
+// Exploration in turns, outside a fight.
+type LiveViewExploration struct {
+	Order  []ID  `json:"order"`
+	Turn   ID    `json:"turn"`
+	LeftFt int32 `json:"leftFt"`
+}
+
+// GetOrder returns the value of Order.
+func (s *LiveViewExploration) GetOrder() []ID {
+	return s.Order
+}
+
+// GetTurn returns the value of Turn.
+func (s *LiveViewExploration) GetTurn() ID {
+	return s.Turn
+}
+
+// GetLeftFt returns the value of LeftFt.
+func (s *LiveViewExploration) GetLeftFt() int32 {
+	return s.LeftFt
+}
+
+// SetOrder sets the value of Order.
+func (s *LiveViewExploration) SetOrder(val []ID) {
+	s.Order = val
+}
+
+// SetTurn sets the value of Turn.
+func (s *LiveViewExploration) SetTurn(val ID) {
+	s.Turn = val
+}
+
+// SetLeftFt sets the value of LeftFt.
+func (s *LiveViewExploration) SetLeftFt(val int32) {
+	s.LeftFt = val
 }
 
 // LiveViewHeaders wraps LiveView with response headers.
@@ -12787,6 +14955,83 @@ func (s *LiveViewHeaders) SetResponse(val LiveView) {
 }
 
 func (*LiveViewHeaders) getSessionViewRes() {}
+
+// The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would
+// notice it.
+type LiveViewSneak struct {
+	// Stealth rolls are still out.
+	Waiting bool       `json:"waiting"`
+	Reach   []HexCoord `json:"reach"`
+	// Each member's Stealth total by token id, for the DM only.
+	Totals OptLiveViewSneakTotals `json:"totals"`
+}
+
+// GetWaiting returns the value of Waiting.
+func (s *LiveViewSneak) GetWaiting() bool {
+	return s.Waiting
+}
+
+// GetReach returns the value of Reach.
+func (s *LiveViewSneak) GetReach() []HexCoord {
+	return s.Reach
+}
+
+// GetTotals returns the value of Totals.
+func (s *LiveViewSneak) GetTotals() OptLiveViewSneakTotals {
+	return s.Totals
+}
+
+// SetWaiting sets the value of Waiting.
+func (s *LiveViewSneak) SetWaiting(val bool) {
+	s.Waiting = val
+}
+
+// SetReach sets the value of Reach.
+func (s *LiveViewSneak) SetReach(val []HexCoord) {
+	s.Reach = val
+}
+
+// SetTotals sets the value of Totals.
+func (s *LiveViewSneak) SetTotals(val OptLiveViewSneakTotals) {
+	s.Totals = val
+}
+
+// Each member's Stealth total by token id, for the DM only.
+type LiveViewSneakTotals map[string]int32
+
+func (s *LiveViewSneakTotals) init() LiveViewSneakTotals {
+	m := *s
+	if m == nil {
+		m = map[string]int32{}
+		*s = m
+	}
+	return m
+}
+
+type LiveViewSurfaceKindsItem struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveViewSurfaceKindsItem) GetKind() string {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *LiveViewSurfaceKindsItem) GetName() string {
+	return s.Name
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveViewSurfaceKindsItem) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveViewSurfaceKindsItem) SetName(val string) {
+	s.Name = val
+}
 
 // The world map the party travels. The DM gets every location and route; players and the Table get the
 // locations the party has seen or can reach from where it stands, and the routes between them.
@@ -13750,6 +15995,83 @@ func (s *MapKind) UnmarshalText(data []byte) error {
 		return nil
 	case MapKindWorld:
 		*s = MapKindWorld
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Ref: #/components/schemas/MapObjectKind
+type MapObjectKind string
+
+const (
+	MapObjectKindDoor         MapObjectKind = "door"
+	MapObjectKindLever        MapObjectKind = "lever"
+	MapObjectKindChest        MapObjectKind = "chest"
+	MapObjectKindBarrel       MapObjectKind = "barrel"
+	MapObjectKindCurtain      MapObjectKind = "curtain"
+	MapObjectKindDestructible MapObjectKind = "destructible"
+	MapObjectKindTrap         MapObjectKind = "trap"
+)
+
+// AllValues returns all MapObjectKind values.
+func (MapObjectKind) AllValues() []MapObjectKind {
+	return []MapObjectKind{
+		MapObjectKindDoor,
+		MapObjectKindLever,
+		MapObjectKindChest,
+		MapObjectKindBarrel,
+		MapObjectKindCurtain,
+		MapObjectKindDestructible,
+		MapObjectKindTrap,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MapObjectKind) MarshalText() ([]byte, error) {
+	switch s {
+	case MapObjectKindDoor:
+		return []byte(s), nil
+	case MapObjectKindLever:
+		return []byte(s), nil
+	case MapObjectKindChest:
+		return []byte(s), nil
+	case MapObjectKindBarrel:
+		return []byte(s), nil
+	case MapObjectKindCurtain:
+		return []byte(s), nil
+	case MapObjectKindDestructible:
+		return []byte(s), nil
+	case MapObjectKindTrap:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MapObjectKind) UnmarshalText(data []byte) error {
+	switch MapObjectKind(data) {
+	case MapObjectKindDoor:
+		*s = MapObjectKindDoor
+		return nil
+	case MapObjectKindLever:
+		*s = MapObjectKindLever
+		return nil
+	case MapObjectKindChest:
+		*s = MapObjectKindChest
+		return nil
+	case MapObjectKindBarrel:
+		*s = MapObjectKindBarrel
+		return nil
+	case MapObjectKindCurtain:
+		*s = MapObjectKindCurtain
+		return nil
+	case MapObjectKindDestructible:
+		*s = MapObjectKindDestructible
+		return nil
+	case MapObjectKindTrap:
+		*s = MapObjectKindTrap
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -15090,6 +17412,52 @@ func (o OptID) Or(d ID) ID {
 	return d
 }
 
+// NewOptInitiativeMode returns new OptInitiativeMode with value set to v.
+func NewOptInitiativeMode(v InitiativeMode) OptInitiativeMode {
+	return OptInitiativeMode{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInitiativeMode is optional InitiativeMode.
+type OptInitiativeMode struct {
+	Value InitiativeMode
+	Set   bool
+}
+
+// IsSet returns true if OptInitiativeMode was set.
+func (o OptInitiativeMode) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInitiativeMode) Reset() {
+	var v InitiativeMode
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInitiativeMode) SetTo(v InitiativeMode) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInitiativeMode) Get() (v InitiativeMode, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInitiativeMode) Or(d InitiativeMode) InitiativeMode {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt32 returns new OptInt32 with value set to v.
 func NewOptInt32(v int32) OptInt32 {
 	return OptInt32{
@@ -15222,6 +17590,52 @@ func (o OptLiveAreaPreview) Get() (v LiveAreaPreview, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveAreaPreview) Or(d LiveAreaPreview) LiveAreaPreview {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveAttackMastery returns new OptLiveAttackMastery with value set to v.
+func NewOptLiveAttackMastery(v LiveAttackMastery) OptLiveAttackMastery {
+	return OptLiveAttackMastery{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveAttackMastery is optional LiveAttackMastery.
+type OptLiveAttackMastery struct {
+	Value LiveAttackMastery
+	Set   bool
+}
+
+// IsSet returns true if OptLiveAttackMastery was set.
+func (o OptLiveAttackMastery) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveAttackMastery) Reset() {
+	var v LiveAttackMastery
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveAttackMastery) SetTo(v LiveAttackMastery) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveAttackMastery) Get() (v LiveAttackMastery, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveAttackMastery) Or(d LiveAttackMastery) LiveAttackMastery {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -15366,6 +17780,98 @@ func (o OptLiveCombat) Or(d LiveCombat) LiveCombat {
 	return d
 }
 
+// NewOptLiveCommandAction returns new OptLiveCommandAction with value set to v.
+func NewOptLiveCommandAction(v LiveCommandAction) OptLiveCommandAction {
+	return OptLiveCommandAction{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandAction is optional LiveCommandAction.
+type OptLiveCommandAction struct {
+	Value LiveCommandAction
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandAction was set.
+func (o OptLiveCommandAction) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandAction) Reset() {
+	var v LiveCommandAction
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandAction) SetTo(v LiveCommandAction) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandAction) Get() (v LiveCommandAction, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandAction) Or(d LiveCommandAction) LiveCommandAction {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandCondition returns new OptLiveCommandCondition with value set to v.
+func NewOptLiveCommandCondition(v LiveCommandCondition) OptLiveCommandCondition {
+	return OptLiveCommandCondition{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandCondition is optional LiveCommandCondition.
+type OptLiveCommandCondition struct {
+	Value LiveCommandCondition
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandCondition was set.
+func (o OptLiveCommandCondition) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandCondition) Reset() {
+	var v LiveCommandCondition
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandCondition) SetTo(v LiveCommandCondition) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandCondition) Get() (v LiveCommandCondition, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandCondition) Or(d LiveCommandCondition) LiveCommandCondition {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveCommandDue returns new OptLiveCommandDue with value set to v.
 func NewOptLiveCommandDue(v LiveCommandDue) OptLiveCommandDue {
 	return OptLiveCommandDue{
@@ -15406,6 +17912,190 @@ func (o OptLiveCommandDue) Get() (v LiveCommandDue, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandDue) Or(d LiveCommandDue) LiveCommandDue {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandMethod returns new OptLiveCommandMethod with value set to v.
+func NewOptLiveCommandMethod(v LiveCommandMethod) OptLiveCommandMethod {
+	return OptLiveCommandMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandMethod is optional LiveCommandMethod.
+type OptLiveCommandMethod struct {
+	Value LiveCommandMethod
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandMethod was set.
+func (o OptLiveCommandMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandMethod) Reset() {
+	var v LiveCommandMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandMethod) SetTo(v LiveCommandMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandMethod) Get() (v LiveCommandMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandMethod) Or(d LiveCommandMethod) LiveCommandMethod {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandOption returns new OptLiveCommandOption with value set to v.
+func NewOptLiveCommandOption(v LiveCommandOption) OptLiveCommandOption {
+	return OptLiveCommandOption{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandOption is optional LiveCommandOption.
+type OptLiveCommandOption struct {
+	Value LiveCommandOption
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandOption was set.
+func (o OptLiveCommandOption) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandOption) Reset() {
+	var v LiveCommandOption
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandOption) SetTo(v LiveCommandOption) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandOption) Get() (v LiveCommandOption, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandOption) Or(d LiveCommandOption) LiveCommandOption {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandReactionKind returns new OptLiveCommandReactionKind with value set to v.
+func NewOptLiveCommandReactionKind(v LiveCommandReactionKind) OptLiveCommandReactionKind {
+	return OptLiveCommandReactionKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandReactionKind is optional LiveCommandReactionKind.
+type OptLiveCommandReactionKind struct {
+	Value LiveCommandReactionKind
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandReactionKind was set.
+func (o OptLiveCommandReactionKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandReactionKind) Reset() {
+	var v LiveCommandReactionKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandReactionKind) SetTo(v LiveCommandReactionKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandReactionKind) Get() (v LiveCommandReactionKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandReactionKind) Or(d LiveCommandReactionKind) LiveCommandReactionKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveCommandReactionMode returns new OptLiveCommandReactionMode with value set to v.
+func NewOptLiveCommandReactionMode(v LiveCommandReactionMode) OptLiveCommandReactionMode {
+	return OptLiveCommandReactionMode{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveCommandReactionMode is optional LiveCommandReactionMode.
+type OptLiveCommandReactionMode struct {
+	Value LiveCommandReactionMode
+	Set   bool
+}
+
+// IsSet returns true if OptLiveCommandReactionMode was set.
+func (o OptLiveCommandReactionMode) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveCommandReactionMode) Reset() {
+	var v LiveCommandReactionMode
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveCommandReactionMode) SetTo(v LiveCommandReactionMode) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveCommandReactionMode) Get() (v LiveCommandReactionMode, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveCommandReactionMode) Or(d LiveCommandReactionMode) LiveCommandReactionMode {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -15504,38 +18194,38 @@ func (o OptLiveCommandRest) Or(d LiveCommandRest) LiveCommandRest {
 	return d
 }
 
-// NewOptLiveCommandSurface returns new OptLiveCommandSurface with value set to v.
-func NewOptLiveCommandSurface(v LiveCommandSurface) OptLiveCommandSurface {
-	return OptLiveCommandSurface{
+// NewOptLiveCommandTrigger returns new OptLiveCommandTrigger with value set to v.
+func NewOptLiveCommandTrigger(v LiveCommandTrigger) OptLiveCommandTrigger {
+	return OptLiveCommandTrigger{
 		Value: v,
 		Set:   true,
 	}
 }
 
-// OptLiveCommandSurface is optional LiveCommandSurface.
-type OptLiveCommandSurface struct {
-	Value LiveCommandSurface
+// OptLiveCommandTrigger is optional LiveCommandTrigger.
+type OptLiveCommandTrigger struct {
+	Value LiveCommandTrigger
 	Set   bool
 }
 
-// IsSet returns true if OptLiveCommandSurface was set.
-func (o OptLiveCommandSurface) IsSet() bool { return o.Set }
+// IsSet returns true if OptLiveCommandTrigger was set.
+func (o OptLiveCommandTrigger) IsSet() bool { return o.Set }
 
 // Reset unsets value.
-func (o *OptLiveCommandSurface) Reset() {
-	var v LiveCommandSurface
+func (o *OptLiveCommandTrigger) Reset() {
+	var v LiveCommandTrigger
 	o.Value = v
 	o.Set = false
 }
 
 // SetTo sets value to v.
-func (o *OptLiveCommandSurface) SetTo(v LiveCommandSurface) {
+func (o *OptLiveCommandTrigger) SetTo(v LiveCommandTrigger) {
 	o.Set = true
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o OptLiveCommandSurface) Get() (v LiveCommandSurface, ok bool) {
+func (o OptLiveCommandTrigger) Get() (v LiveCommandTrigger, ok bool) {
 	if !o.Set {
 		return v, false
 	}
@@ -15543,7 +18233,53 @@ func (o OptLiveCommandSurface) Get() (v LiveCommandSurface, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o OptLiveCommandSurface) Or(d LiveCommandSurface) LiveCommandSurface {
+func (o OptLiveCommandTrigger) Or(d LiveCommandTrigger) LiveCommandTrigger {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveDying returns new OptLiveDying with value set to v.
+func NewOptLiveDying(v LiveDying) OptLiveDying {
+	return OptLiveDying{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveDying is optional LiveDying.
+type OptLiveDying struct {
+	Value LiveDying
+	Set   bool
+}
+
+// IsSet returns true if OptLiveDying was set.
+func (o OptLiveDying) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveDying) Reset() {
+	var v LiveDying
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveDying) SetTo(v LiveDying) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveDying) Get() (v LiveDying, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveDying) Or(d LiveDying) LiveDying {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -15774,6 +18510,98 @@ func (o OptLivePrompt) Get() (v LivePrompt, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLivePrompt) Or(d LivePrompt) LivePrompt {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveReactionSettingCondition returns new OptLiveReactionSettingCondition with value set to v.
+func NewOptLiveReactionSettingCondition(v LiveReactionSettingCondition) OptLiveReactionSettingCondition {
+	return OptLiveReactionSettingCondition{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveReactionSettingCondition is optional LiveReactionSettingCondition.
+type OptLiveReactionSettingCondition struct {
+	Value LiveReactionSettingCondition
+	Set   bool
+}
+
+// IsSet returns true if OptLiveReactionSettingCondition was set.
+func (o OptLiveReactionSettingCondition) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveReactionSettingCondition) Reset() {
+	var v LiveReactionSettingCondition
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveReactionSettingCondition) SetTo(v LiveReactionSettingCondition) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveReactionSettingCondition) Get() (v LiveReactionSettingCondition, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveReactionSettingCondition) Or(d LiveReactionSettingCondition) LiveReactionSettingCondition {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveRest returns new OptLiveRest with value set to v.
+func NewOptLiveRest(v LiveRest) OptLiveRest {
+	return OptLiveRest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveRest is optional LiveRest.
+type OptLiveRest struct {
+	Value LiveRest
+	Set   bool
+}
+
+// IsSet returns true if OptLiveRest was set.
+func (o OptLiveRest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveRest) Reset() {
+	var v LiveRest
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveRest) SetTo(v LiveRest) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveRest) Get() (v LiveRest, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveRest) Or(d LiveRest) LiveRest {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -16056,6 +18884,144 @@ func (o OptLiveView) Or(d LiveView) LiveView {
 	return d
 }
 
+// NewOptLiveViewExploration returns new OptLiveViewExploration with value set to v.
+func NewOptLiveViewExploration(v LiveViewExploration) OptLiveViewExploration {
+	return OptLiveViewExploration{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveViewExploration is optional LiveViewExploration.
+type OptLiveViewExploration struct {
+	Value LiveViewExploration
+	Set   bool
+}
+
+// IsSet returns true if OptLiveViewExploration was set.
+func (o OptLiveViewExploration) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveViewExploration) Reset() {
+	var v LiveViewExploration
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveViewExploration) SetTo(v LiveViewExploration) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveViewExploration) Get() (v LiveViewExploration, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveViewExploration) Or(d LiveViewExploration) LiveViewExploration {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveViewSneak returns new OptLiveViewSneak with value set to v.
+func NewOptLiveViewSneak(v LiveViewSneak) OptLiveViewSneak {
+	return OptLiveViewSneak{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveViewSneak is optional LiveViewSneak.
+type OptLiveViewSneak struct {
+	Value LiveViewSneak
+	Set   bool
+}
+
+// IsSet returns true if OptLiveViewSneak was set.
+func (o OptLiveViewSneak) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveViewSneak) Reset() {
+	var v LiveViewSneak
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveViewSneak) SetTo(v LiveViewSneak) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveViewSneak) Get() (v LiveViewSneak, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveViewSneak) Or(d LiveViewSneak) LiveViewSneak {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveViewSneakTotals returns new OptLiveViewSneakTotals with value set to v.
+func NewOptLiveViewSneakTotals(v LiveViewSneakTotals) OptLiveViewSneakTotals {
+	return OptLiveViewSneakTotals{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveViewSneakTotals is optional LiveViewSneakTotals.
+type OptLiveViewSneakTotals struct {
+	Value LiveViewSneakTotals
+	Set   bool
+}
+
+// IsSet returns true if OptLiveViewSneakTotals was set.
+func (o OptLiveViewSneakTotals) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveViewSneakTotals) Reset() {
+	var v LiveViewSneakTotals
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveViewSneakTotals) SetTo(v LiveViewSneakTotals) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveViewSneakTotals) Get() (v LiveViewSneakTotals, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveViewSneakTotals) Or(d LiveViewSneakTotals) LiveViewSneakTotals {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveWorld returns new OptLiveWorld with value set to v.
 func NewOptLiveWorld(v LiveWorld) OptLiveWorld {
 	return OptLiveWorld{
@@ -16142,6 +19108,52 @@ func (o OptMapKind) Get() (v MapKind, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptMapKind) Or(d MapKind) MapKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMapObjectKind returns new OptMapObjectKind with value set to v.
+func NewOptMapObjectKind(v MapObjectKind) OptMapObjectKind {
+	return OptMapObjectKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMapObjectKind is optional MapObjectKind.
+type OptMapObjectKind struct {
+	Value MapObjectKind
+	Set   bool
+}
+
+// IsSet returns true if OptMapObjectKind was set.
+func (o OptMapObjectKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMapObjectKind) Reset() {
+	var v MapObjectKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMapObjectKind) SetTo(v MapObjectKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMapObjectKind) Get() (v MapObjectKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMapObjectKind) Or(d MapObjectKind) MapObjectKind {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -20721,6 +23733,91 @@ func (s UploadMapReq) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 	return s.Data.Read(p)
+}
+
+// Something that keeps a creature or object from being seen for what it is.
+// Ref: #/components/schemas/VisibilityQuality
+type VisibilityQuality string
+
+const (
+	VisibilityQualityHidden    VisibilityQuality = "hidden"
+	VisibilityQualityInvisible VisibilityQuality = "invisible"
+	VisibilityQualityDisguised VisibilityQuality = "disguised"
+	VisibilityQualityIllusory  VisibilityQuality = "illusory"
+	VisibilityQualityEthereal  VisibilityQuality = "ethereal"
+	VisibilityQualityDarkness  VisibilityQuality = "darkness"
+	VisibilityQualityHeavy     VisibilityQuality = "heavy"
+	VisibilityQualitySecret    VisibilityQuality = "secret"
+)
+
+// AllValues returns all VisibilityQuality values.
+func (VisibilityQuality) AllValues() []VisibilityQuality {
+	return []VisibilityQuality{
+		VisibilityQualityHidden,
+		VisibilityQualityInvisible,
+		VisibilityQualityDisguised,
+		VisibilityQualityIllusory,
+		VisibilityQualityEthereal,
+		VisibilityQualityDarkness,
+		VisibilityQualityHeavy,
+		VisibilityQualitySecret,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s VisibilityQuality) MarshalText() ([]byte, error) {
+	switch s {
+	case VisibilityQualityHidden:
+		return []byte(s), nil
+	case VisibilityQualityInvisible:
+		return []byte(s), nil
+	case VisibilityQualityDisguised:
+		return []byte(s), nil
+	case VisibilityQualityIllusory:
+		return []byte(s), nil
+	case VisibilityQualityEthereal:
+		return []byte(s), nil
+	case VisibilityQualityDarkness:
+		return []byte(s), nil
+	case VisibilityQualityHeavy:
+		return []byte(s), nil
+	case VisibilityQualitySecret:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *VisibilityQuality) UnmarshalText(data []byte) error {
+	switch VisibilityQuality(data) {
+	case VisibilityQualityHidden:
+		*s = VisibilityQualityHidden
+		return nil
+	case VisibilityQualityInvisible:
+		*s = VisibilityQualityInvisible
+		return nil
+	case VisibilityQualityDisguised:
+		*s = VisibilityQualityDisguised
+		return nil
+	case VisibilityQualityIllusory:
+		*s = VisibilityQualityIllusory
+		return nil
+	case VisibilityQualityEthereal:
+		*s = VisibilityQualityEthereal
+		return nil
+	case VisibilityQualityDarkness:
+		*s = VisibilityQualityDarkness
+		return nil
+	case VisibilityQualityHeavy:
+		*s = VisibilityQualityHeavy
+		return nil
+	case VisibilityQualitySecret:
+		*s = VisibilityQualitySecret
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // A carried weapon.

@@ -13,17 +13,69 @@ const (
 	Reaction
 )
 
-// Economy is what a Combatant has left: true means still available.
+// Economy is what a Combatant has left: true means still available. AttacksLeft are the attacks of an
+// Attack action already begun; LightAttack is set once one of them was made with a Light weapon, which
+// opens the off-hand attack, and OffHand once that is made. Interaction is the free object interaction.
 type Economy struct {
 	Action      bool
 	BonusAction bool
 	Reaction    bool
 	MovementFt  int
+	AttacksLeft int
+	LightAttack bool
+	OffHand     bool
+	Interaction bool
 }
 
 // Fresh is the economy at the start of a turn.
 func Fresh(speedFt int) Economy {
-	return Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: speedFt}
+	return Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: speedFt, AttacksLeft: 0, LightAttack: false, OffHand: false, Interaction: true}
+}
+
+// CanAttack reports whether an attack of the Attack action can still be made: one already begun, or the
+// action itself.
+func (e Economy) CanAttack() bool {
+	return e.AttacksLeft > 0 || e.Action
+}
+
+// Attack makes one attack of the Attack action: the first spends the action and leaves the rest of the
+// attacks that action allows; ok is false when no attack is left.
+func (e Economy) Attack(perAction int, light bool) (Economy, bool) {
+	switch {
+	case e.AttacksLeft > 0:
+		e.AttacksLeft--
+	case e.Action:
+		e.Action, e.AttacksLeft = false, max(1, perAction)-1
+	default:
+		return e, false
+	}
+	e.LightAttack = e.LightAttack || light
+	return e, true
+}
+
+// CanOffHand reports whether the off-hand attack is open: after a Light weapon attack, once a turn, for
+// a Bonus Action unless free says the weapon's Nick mastery folds it into the Attack action.
+func (e Economy) CanOffHand(free bool) bool {
+	return e.LightAttack && !e.OffHand && (free || e.BonusAction)
+}
+
+// OffHandAttack makes the off-hand attack; ok is false when it is not open.
+func (e Economy) OffHandAttack(free bool) (Economy, bool) {
+	if !e.CanOffHand(free) {
+		return e, false
+	}
+	e.OffHand = true
+	if !free {
+		e.BonusAction = false
+	}
+	return e, true
+}
+
+// Interact uses the turn's free object interaction; ok is false when it is already used.
+func (e Economy) Interact() (Economy, bool) {
+	ok := e.Interaction
+	e.Interaction = false
+	return e, ok
 }
 
 // Spend uses one resource; ok is false when it is already spent.

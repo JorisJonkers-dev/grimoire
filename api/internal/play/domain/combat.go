@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
@@ -57,13 +58,70 @@ type Combatant struct {
 	Shielded bool
 	// Surprised Combatants did not notice the ambush and rolled initiative at disadvantage.
 	Surprised bool
+	// Disengaged movement provokes no opportunity attacks until the Combatant's next turn.
+	Disengaged bool
+	// Readied is an attack waiting on its trigger until the Combatant's next turn.
+	Readied *Readied
+	// CleaveFrom is the creature a Cleave hit struck this turn, opening a second attack against one next
+	// to it; Cleaved is set once that attack is made.
+	CleaveFrom *TokenID
+	Cleaved    bool
+	// Owner is the Combatant whose summon this is; Commanded is set once the owner spends a Bonus Action
+	// to command it this round.
+	Owner     *CombatantID
+	Commanded bool
 }
+
+// Readied is a readied attack: what sets it off, and which attack it makes.
+type Readied struct {
+	Trigger  actions.Trigger
+	AttackNo int
+}
+
+// PendingAction is a Hide, Grapple or Shove waiting on its roll.
+type PendingAction struct {
+	RollID RollID
+	Actor  TokenID
+	Target *TokenID
+	Action string
+	DC     int
+	// Object is the Map Object a disarm, pick or force check works on.
+	Object *ObjectID
+}
+
+// Action kinds for the 2024 actions in the Action Log.
+const (
+	ActionTaken    = "action_taken"
+	ActionUnarmed  = "unarmed_strike"
+	ActionResolved = "action_resolved"
+	// ActionObjectUsed is the turn's free object interaction.
+	ActionObjectUsed = "object_used"
+	// ActionMasteryUsed is what a Weapon Mastery did after an attack.
+	ActionMasteryUsed = "mastery_used"
+	// ActionReactionSet is a Controller changing a token's reaction settings.
+	ActionReactionSet = "reaction_set"
+	// ActionConcentrationChecked is damage opening a concentration save.
+	ActionConcentrationChecked = "concentration_checked"
+	// ActionTeleported is a creature moved by magic, without walking (Misty Step).
+	ActionTeleported = "teleported"
+	// ActionCountered is a reaction that stops a spell being cast (Counterspell).
+	ActionCountered = "countered"
+	// ActionSummoned is an Effect bringing creatures in under its caster's control; ActionCommanded the
+	// caster spending a Bonus Action to command one.
+	ActionSummoned  = "summoned"
+	ActionCommanded = "commanded"
+	// ActionVisibilitySet is a token's Visibility Qualities or disguise changing.
+	ActionVisibilitySet = "visibility_set"
+)
 
 // Reaction kinds and the stage an attack waits in while its target decides.
 const (
 	PromptOpportunity = "opportunity_attack"
 	PromptShield      = "shield"
-	StageReaction     = "reaction"
+	PromptReadied     = "readied"
+	// PromptEffect is a reaction an Effect gives, resolved by the DM.
+	PromptEffect  = "effect"
+	StageReaction = "reaction"
 )
 
 // ReactionPrompt asks a Controller, or the DM, whether a creature uses its reaction before the
@@ -115,6 +173,9 @@ type PendingAttack struct {
 	Total int
 	// Opportunity marks an opportunity attack; the interrupted walk resumes after it.
 	Opportunity bool
+	// OffHand marks the off-hand attack of a Light weapon; Cleave the second attack Cleave allows.
+	OffHand bool
+	Cleave  bool
 }
 
 // Totals lists every rolled initiative.

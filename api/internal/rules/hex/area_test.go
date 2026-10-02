@@ -67,3 +67,48 @@ func TestDirectionalAreas(t *testing.T) {
 		t.Fatalf("a line south-east = %v", diagonal)
 	}
 }
+
+func TestRingsAndWalls(t *testing.T) {
+	t.Parallel()
+	o, east := hex.Coord{Q: 0, R: 0}, hex.Coord{Q: 1, R: 0}
+	ring := hex.Area(hex.RingArea, o, o, 10)
+	if len(ring) != 12 || has(ring, o) || has(ring, east) || !has(ring, hex.Coord{Q: 2, R: 0}) {
+		t.Fatalf("a 10 ft ring is the twelve hexes two away = %v", ring)
+	}
+	if got := hex.Area(hex.RingArea, o, o, 0); got != nil {
+		t.Fatalf("a ring of no size = %v", got)
+	}
+	wall := hex.Area(hex.WallArea, o, east, 20)
+	if !reflect.DeepEqual(wall, []hex.Coord{{Q: 0, R: 0}, {Q: 1, R: 0}, {Q: 2, R: 0}, {Q: 3, R: 0}, {Q: 4, R: 0}}) {
+		t.Fatalf("a 20 ft wall starts on its own hex = %v", wall)
+	}
+	if got := hex.Area(hex.WallArea, o, o, 20); got != nil {
+		t.Fatalf("a wall needs a direction = %v", got)
+	}
+}
+
+func TestPushingAwayAndToward(t *testing.T) {
+	t.Parallel()
+	o := hex.Coord{Q: 0, R: 0}
+	for _, c := range []struct {
+		at, away, toward hex.Coord
+	}{
+		{hex.Coord{Q: 1, R: 0}, hex.Coord{Q: 2, R: 0}, hex.Coord{Q: 0, R: 0}},
+		{hex.Coord{Q: 0, R: 2}, hex.Coord{Q: 0, R: 3}, hex.Coord{Q: 0, R: 1}},
+		{hex.Coord{Q: -2, R: 1}, hex.Coord{Q: -3, R: 1}, hex.Coord{Q: -1, R: 1}},
+		{hex.Coord{Q: 2, R: -1}, hex.Coord{Q: 3, R: -1}, hex.Coord{Q: 1, R: -1}},
+	} {
+		if got := hex.Push(o, c.at, false); got != c.away {
+			t.Errorf("away from the origin at %v = %v", c.at, got)
+		}
+		if got := hex.Push(o, c.at, true); got != c.toward {
+			t.Errorf("toward the origin at %v = %v", c.at, got)
+		}
+		if hex.Distance(o, hex.Push(o, c.at, false)) != hex.Distance(o, c.at)+1 {
+			t.Errorf("a push from %v does not go farther", c.at)
+		}
+	}
+	if got := hex.Push(o, o, false); got != o {
+		t.Errorf("a hex pushed from itself = %v", got)
+	}
+}

@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/reactions"
 )
 
 // SessionID identifies a Session.
@@ -59,15 +61,39 @@ type Token struct {
 	Tactics string
 	// CanShield offers the Shield reaction when the token is hit.
 	CanShield bool
+	// Reactions are the Controller's settings, by kind of reaction prompt.
+	Reactions map[string]reactions.Setting
+	// Summon is the Effect that keeps a summoned creature here; it leaves when the Effect ends.
+	Summon *EffectID
+	// Form is the creature the token has taken the shape of, if any; Stats are then the form's.
+	Form *Form
+	// Qualities are the token's Visibility Qualities, each marked when the party has seen through it
+	// with a check; Disguise is the name a Disguised token shows until then.
+	Qualities map[string]bool
+	Disguise  string
+}
+
+// Form is a shape a token has taken: the Effect keeping it, the creature's name, and the token's own
+// statistics to revert to.
+type Form struct {
+	Effect EffectID
+	Name   string
+	Own    Stats
 }
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.
 type Stats struct {
-	Source  string
-	AC      int
-	HP      int
-	HPMax   int
-	Attacks []Attack
+	Source string
+	AC     int
+	HP     int
+	HPMax  int
+	// TempHP is temporary hit points, lost before hit points.
+	TempHP int
+	// Senses are blindsight, tremorsense and truesight ranges in feet; Strength is the Strength score
+	// jumping and throwing use, 10 when the statblock gives none.
+	Senses   map[string]int
+	Strength int
+	Attacks  []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int
 	// Shield is set for statblocks that can cast the Shield spell.
@@ -81,6 +107,10 @@ type Stats struct {
 	Perception int
 	Initiative int
 	SpeedFt    int
+	// UnarmedDC is the save a Grapple or Shove from this creature forces; AttacksPerAction is how many
+	// attacks one Attack action holds (Extra Attack).
+	UnarmedDC        int
+	AttacksPerAction int
 }
 
 // Attack is one attack on a token's hotbar. Damage is dice notation, empty for flat damage.
@@ -93,6 +123,12 @@ type Attack struct {
 	Damage      string
 	DamageBonus int
 	DamageType  string
+	// Light weapons open the off-hand attack; DamageMod is the ability modifier inside DamageBonus,
+	// which an off-hand attack leaves out.
+	Light     bool
+	DamageMod int
+	// Mastery is the weapon's mastery, when the creature has mastered it.
+	Mastery string
 }
 
 // Attack action kinds in the Action Log.

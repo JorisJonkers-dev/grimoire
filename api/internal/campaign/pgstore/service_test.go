@@ -176,6 +176,13 @@ func TestUpdateChangesSettings(t *testing.T) {
 			t.Fatalf("%d seconds accepted", n)
 		}
 	}
+	side, odd := "side", "dexterity"
+	if got, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{InitiativeMode: &side, ShareInitiative: &on}); err != nil || got.InitiativeMode != "side" || !got.ShareInitiative {
+		t.Fatalf("side initiative = %+v %v", got, err)
+	}
+	if _, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{InitiativeMode: &odd}); err == nil {
+		t.Fatal("an unknown initiative mode accepted")
+	}
 }
 
 func TestRolesKeepAtLeastOneDM(t *testing.T) {

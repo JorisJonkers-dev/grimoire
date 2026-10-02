@@ -3,6 +3,9 @@
 package live
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
@@ -79,6 +82,33 @@ const (
 	CmdBuy            = "buy"
 	CmdSell           = "sell"
 	CmdHaggle         = "haggle"
+	CmdProposeRest    = "propose_rest"
+	CmdAgreeRest      = "agree_rest"
+	CmdSpendHitDie    = "spend_hit_die"
+	CmdFinishRest     = "finish_rest"
+	CmdInterruptRest  = "interrupt_rest"
+	CmdTakeAction     = "take_action"
+	CmdUnarmed        = "unarmed"
+	CmdInteract       = "interact"
+	CmdTeleport       = "teleport"
+	CmdSummon         = "summon"
+	CmdCommand        = "command"
+	CmdSetVisibility  = "set_visibility"
+	CmdPlaceObject    = "place_object"
+	CmdRemoveObject   = "remove_object"
+	CmdUseObject      = "use_object"
+	CmdDamageObject   = "damage_object"
+	CmdFindObject     = "find_object"
+	CmdUnlock         = "unlock"
+	CmdDisarm         = "disarm"
+	CmdJump           = "jump"
+	CmdThrow          = "throw"
+	CmdSneak          = "sneak"
+	CmdExplore        = "explore"
+	CmdPassTurn       = "pass_turn"
+	CmdSetReaction    = "set_reaction"
+	CmdStabilise      = "stabilise"
+	CmdRevive         = "revive"
 	// cmdPromptTimeout declines a Reaction Prompt nobody answered in time.
 	cmdPromptTimeout = "prompt_timeout"
 	// cmdRollResolved comes from the rolls service, never from a client.
@@ -138,38 +168,81 @@ type Command struct {
 	EffectName   string           `json:"effectName,omitempty"`
 	SourceID     string           `json:"sourceId,omitempty"`
 	Rounds       int              `json:"rounds,omitempty"`
-	SaveAbility  string           `json:"saveAbility,omitempty"`
-	SaveDC       int              `json:"saveDc,omitempty"`
-	EffectID     string           `json:"effectId,omitempty"`
-	ManualID     string           `json:"manualId,omitempty"`
-	Surface      string           `json:"surface,omitempty"`
-	ElevationFt  int              `json:"elevationFt,omitempty"`
-	Camera       string           `json:"camera,omitempty"`
-	ZoomPct      int              `json:"zoomPct,omitempty"`
-	Scene        string           `json:"scene,omitempty"`
-	Title        string           `json:"title,omitempty"`
-	Body         string           `json:"body,omitempty"`
-	NodeID       string           `json:"nodeId,omitempty"`
-	ToNodeID     string           `json:"toNodeId,omitempty"`
-	RouteID      string           `json:"routeId,omitempty"`
-	DistanceMi   int              `json:"distanceMi,omitempty"`
-	Pace         string           `json:"pace,omitempty"`
-	ZoneID       string           `json:"zoneId,omitempty"`
-	RadiusHexes  int              `json:"radiusHexes,omitempty"`
-	DMOnly       bool             `json:"dmOnly,omitempty"`
-	Rest         string           `json:"rest,omitempty"`
-	TableID      string           `json:"tableId,omitempty"`
-	Mode         string           `json:"mode,omitempty"`
-	Entry        int              `json:"entry,omitempty"`
-	Due          string           `json:"due,omitempty"`
-	LootTableID  string           `json:"lootTableId,omitempty"`
-	FromID       string           `json:"fromId,omitempty"`
-	ToID         string           `json:"toId,omitempty"`
-	ItemSlug     string           `json:"itemSlug,omitempty"`
-	InstanceID   string           `json:"instanceId,omitempty"`
-	Coin         string           `json:"coin,omitempty"`
-	Count        int              `json:"count,omitempty"`
-	ShopID       string           `json:"shopId,omitempty"`
+	// Slot is the spell slot level an area spell is cast with; 0 casts it at its lowest.
+	Slot int `json:"slot,omitempty"`
+	// EffectMode is the option an Effect that offers a choice is applied in.
+	EffectMode string `json:"effectMode,omitempty"`
+	// TempHP sets the Temporary Hit Points of a form, such as a druid's level for Wild Shape.
+	TempHP int `json:"tempHp,omitempty"`
+	// Qualities, SeenThrough and Disguise set a token's Visibility: its Qualities, the ones the party has
+	// beaten with a check, and the name a Disguised token shows.
+	Qualities   []string `json:"qualities,omitempty"`
+	SeenThrough []string `json:"seenThrough,omitempty"`
+	Disguise    string   `json:"disguise,omitempty"`
+	// ObjectID, ObjectKind, ObjectName, ArmorClass, HPMax, Secret, RadiusFt and Links place or work a Map
+	// Object; Effect names what it triggers.
+	ObjectID   string   `json:"objectId,omitempty"`
+	ObjectKind string   `json:"objectKind,omitempty"`
+	ObjectName string   `json:"objectName,omitempty"`
+	ArmorClass int      `json:"armorClass,omitempty"`
+	HPMax      int      `json:"hpMax,omitempty"`
+	Secret     bool     `json:"secret,omitempty"`
+	RadiusFt   int      `json:"radiusFt,omitempty"`
+	Links      []string `json:"links,omitempty"`
+	// DetectDC, DisarmDC and TriggerFt make a trap; LockDC and Key lock an object; Method is how unlock
+	// gets through: key, tools, force or knock.
+	DetectDC    int    `json:"detectDc,omitempty"`
+	DisarmDC    int    `json:"disarmDc,omitempty"`
+	TriggerFt   int    `json:"triggerFt,omitempty"`
+	LockDC      int    `json:"lockDc,omitempty"`
+	Key         string `json:"key,omitempty"`
+	Method      string `json:"method,omitempty"`
+	SaveAbility string `json:"saveAbility,omitempty"`
+	SaveDC      int    `json:"saveDc,omitempty"`
+	EffectID    string `json:"effectId,omitempty"`
+	ManualID    string `json:"manualId,omitempty"`
+	Surface     string `json:"surface,omitempty"`
+	ElevationFt int    `json:"elevationFt,omitempty"`
+	Camera      string `json:"camera,omitempty"`
+	ZoomPct     int    `json:"zoomPct,omitempty"`
+	Scene       string `json:"scene,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Body        string `json:"body,omitempty"`
+	NodeID      string `json:"nodeId,omitempty"`
+	ToNodeID    string `json:"toNodeId,omitempty"`
+	RouteID     string `json:"routeId,omitempty"`
+	DistanceMi  int    `json:"distanceMi,omitempty"`
+	Pace        string `json:"pace,omitempty"`
+	ZoneID      string `json:"zoneId,omitempty"`
+	RadiusHexes int    `json:"radiusHexes,omitempty"`
+	DMOnly      bool   `json:"dmOnly,omitempty"`
+	Rest        string `json:"rest,omitempty"`
+	TableID     string `json:"tableId,omitempty"`
+	Mode        string `json:"mode,omitempty"`
+	Entry       int    `json:"entry,omitempty"`
+	Due         string `json:"due,omitempty"`
+	LootTableID string `json:"lootTableId,omitempty"`
+	FromID      string `json:"fromId,omitempty"`
+	ToID        string `json:"toId,omitempty"`
+	ItemSlug    string `json:"itemSlug,omitempty"`
+	InstanceID  string `json:"instanceId,omitempty"`
+	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
+	// Trigger sets off a readied attack; Option is a Grapple or Shove.
+	Action  string `json:"action,omitempty"`
+	Detail  string `json:"detail,omitempty"`
+	Trigger string `json:"trigger,omitempty"`
+	Option  string `json:"option,omitempty"`
+	// OffHand makes an attack the off-hand attack of a Light weapon.
+	OffHand bool `json:"offHand,omitempty"`
+	// Cleave makes an attack the second attack of a Cleave hit.
+	Cleave bool `json:"cleave,omitempty"`
+	// ReactionKind, ReactionMode and Condition are a reaction setting set_reaction stores.
+	ReactionKind string `json:"reactionKind,omitempty"`
+	ReactionMode string `json:"reactionMode,omitempty"`
+	Condition    string `json:"condition,omitempty"`
+	Coin         string `json:"coin,omitempty"`
+	Count        int    `json:"count,omitempty"`
+	ShopID       string `json:"shopId,omitempty"`
 	// Monsters are what spawn_encounter places; HPDelta is what adjust_hp adds; Seq is the Action undo reverts.
 	Monsters []SpawnMonster `json:"monsters,omitempty"`
 	HPDelta  int            `json:"hpDelta,omitempty"`
@@ -209,13 +282,35 @@ type TokenView struct {
 	DarkvisionFt int    `json:"darkvisionFt"`
 	ControllerID string `json:"controllerId,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
-	AC      *int         `json:"ac,omitempty"`
-	HP      *int         `json:"hp,omitempty"`
-	HPMax   *int         `json:"hpMax,omitempty"`
-	Health  string       `json:"health,omitempty"`
-	Attacks []AttackView `json:"attacks,omitempty"`
-	Shield  bool         `json:"shield,omitempty"`
-	Effects []EffectView `json:"effects,omitempty"`
+	AC     *int   `json:"ac,omitempty"`
+	HP     *int   `json:"hp,omitempty"`
+	HPMax  *int   `json:"hpMax,omitempty"`
+	TempHP int    `json:"tempHp,omitempty"`
+	Form   string `json:"form,omitempty"`
+	// Qualities and Disguise go to the DM only: the token's Visibility Qualities, with seen-through
+	// ones marked, and the name a Disguised token shows.
+	Qualities []QualityView `json:"qualities,omitempty"`
+	Disguise  string        `json:"disguise,omitempty"`
+	Health    string        `json:"health,omitempty"`
+	Attacks   []AttackView  `json:"attacks,omitempty"`
+	Shield    bool          `json:"shield,omitempty"`
+	Effects   []EffectView  `json:"effects,omitempty"`
+	// Reactions are the Controller's reaction settings, shown to the DM and for the party's tokens;
+	// Dying is a Character's death saves at 0 hit points.
+	Reactions []ReactionSettingView `json:"reactions,omitempty"`
+	Dying     *DyingView            `json:"dying,omitempty"`
+}
+
+// SurfaceKindView is one Surface the DM can paint.
+type SurfaceKindView struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+// QualityView is one Visibility Quality of a token, and whether the party has seen through it.
+type QualityView struct {
+	Quality     string `json:"quality"`
+	SeenThrough bool   `json:"seenThrough,omitempty"`
 }
 
 // EffectView is an Effect on a token, which everyone who sees the token sees.
@@ -226,6 +321,11 @@ type EffectView struct {
 	SourceID      string `json:"sourceId,omitempty"`
 	Concentration bool   `json:"concentration"`
 	RoundsLeft    int    `json:"roundsLeft,omitempty"`
+	// Level is how many levels of a stacking Effect (exhaustion) the token has; Hexes the area an
+	// emanation covers around the token where it stands.
+	Level int    `json:"level,omitempty"`
+	Mode  string `json:"mode,omitempty"`
+	Hexes []Hex  `json:"hexes,omitempty"`
 }
 
 // ManualView is part of an Effect the DM resolves by hand.
@@ -244,6 +344,9 @@ type AttackView struct {
 	Damage      string `json:"damage,omitempty"`
 	DamageBonus int    `json:"damageBonus"`
 	DamageType  string `json:"damageType,omitempty"`
+	// Light weapons open the off-hand attack; Mastery is the weapon's mastery, when it is mastered.
+	Light   bool   `json:"light,omitempty"`
+	Mastery string `json:"mastery,omitempty"`
 }
 
 // AttackPreview is what an attack would do, sent only to whoever asked: the chance to hit, the damage
@@ -322,12 +425,41 @@ type View struct {
 	Table     *TableView      `json:"table,omitempty"`
 	World     *WorldView      `json:"world,omitempty"`
 	// Zones go to the DM only; Perception lists the party's Perception Roll Cards, never the DC.
-	Zones      []ZoneView       `json:"zones,omitempty"`
-	Perception []PerceptionView `json:"perception,omitempty"`
-	Checks     []CheckView      `json:"checks,omitempty"`
-	Inventory  []ContainerView  `json:"inventory,omitempty"`
-	Shop       *ShopView        `json:"shop,omitempty"`
-	GameDay    int              `json:"gameDay"`
+	Zones   []ZoneView   `json:"zones,omitempty"`
+	Objects []ObjectView `json:"objects,omitempty"`
+	// Sneak is the party's sneaking, while it is; Exploration the turns of Exploration, while it has them.
+	Sneak       *SneakView       `json:"sneak,omitempty"`
+	Exploration *ExplorationView `json:"exploration,omitempty"`
+	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
+	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
+	Perception   []PerceptionView  `json:"perception,omitempty"`
+	Checks       []CheckView       `json:"checks,omitempty"`
+	Inventory    []ContainerView   `json:"inventory,omitempty"`
+	Shop         *ShopView         `json:"shop,omitempty"`
+	Rest         *RestView         `json:"rest,omitempty"`
+	GameDay      int               `json:"gameDay"`
+}
+
+// RestView is the rest the party proposed or is taking: who agreed, who the rest still waits on, and
+// each resting Character's Hit Dice.
+type RestView struct {
+	Kind        string       `json:"kind"`
+	Status      string       `json:"status"`
+	ProposedBy  string       `json:"proposedBy"`
+	Agreed      []string     `json:"agreed"`
+	Waiting     []string     `json:"waiting"`
+	WaitingOnDM bool         `json:"waitingOnDm"`
+	Resters     []ResterView `json:"resters"`
+}
+
+// ResterView is a resting Character: their Hit Die, how many are left, and the roll of one being spent.
+type ResterView struct {
+	CharacterID string `json:"characterId"`
+	TokenID     string `json:"tokenId"`
+	Name        string `json:"name"`
+	HitDie      string `json:"hitDie"`
+	HitDiceLeft int    `json:"hitDiceLeft"`
+	RollID      string `json:"rollId,omitempty"`
 }
 
 // ContainerView is a Character's Inventory, the Party Stash or a drop of loot, with what it weighs.
@@ -515,6 +647,21 @@ type CombatantView struct {
 	Reaction     bool   `json:"reaction"`
 	MovementFt   int    `json:"movementFt"`
 	SpeedFt      int    `json:"speedFt"`
+	// Disengaged movement provokes no opportunity attacks; a Readied attack is shown to the DM and,
+	// for the party's own Combatants, to the party.
+	Disengaged bool `json:"disengaged,omitempty"`
+	Readied    bool `json:"readied,omitempty"`
+	// AttacksLeft are the attacks of an Attack action already begun; OffHand is set while the off-hand
+	// attack is open; Interaction while the free object interaction is unused.
+	AttacksLeft int  `json:"attacksLeft,omitempty"`
+	OffHand     bool `json:"offHand,omitempty"`
+	Interaction bool `json:"interaction,omitempty"`
+	// Cleave is set while a Cleave hit leaves a second attack open.
+	Cleave bool `json:"cleave,omitempty"`
+	// OwnerID is the Combatant who summoned this one; AwaitingCommand is set while it can only Dodge
+	// until its owner commands it.
+	OwnerID         string `json:"ownerId,omitempty"`
+	AwaitingCommand bool   `json:"awaitingCommand,omitempty"`
 	// Tactics and Suggestion go to the DM only.
 	Surprised  bool            `json:"surprised,omitempty"`
 	Tactics    string          `json:"tactics,omitempty"`
@@ -569,12 +716,16 @@ type AreaPreview struct {
 	Hexes   []Hex        `json:"hexes"`
 	Targets []AreaTarget `json:"targets"`
 	Allies  int          `json:"allies"`
+	// Ends names the Effects the caster concentrates on that casting this one would end.
+	Ends []string `json:"ends,omitempty"`
 }
 
 // AreaTarget is a creature an area catches.
 type AreaTarget struct {
 	TokenID string `json:"tokenId"`
 	Ally    bool   `json:"ally"`
+	// PushedTo is where the spell would push the target if it fails its save.
+	PushedTo *Hex `json:"pushedTo,omitempty"`
 }
 
 // AreaView is an area spell waiting on its rolls.
@@ -612,15 +763,24 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	if t.Controller != nil {
 		v.ControllerID = t.Controller.String()
 	}
+	if t.Form != nil {
+		v.Form = t.Form.Name
+	}
+	if a == AudienceDM {
+		v.Disguise = t.Disguise
+		for _, q := range slices.Sorted(maps.Keys(t.Qualities)) {
+			v.Qualities = append(v.Qualities, QualityView{Quality: q, SeenThrough: t.Qualities[q]})
+		}
+	}
 	s := t.Stats
 	switch {
 	case s == nil:
 	case a == AudienceDM || t.Kind == domain.TokenParty:
-		v.AC, v.HP, v.HPMax, v.Attacks, v.Shield = &s.AC, &s.HP, &s.HPMax, []AttackView{}, t.CanShield
+		v.AC, v.HP, v.HPMax, v.TempHP, v.Attacks, v.Shield, v.Reactions = &s.AC, &s.HP, &s.HPMax, s.TempHP, []AttackView{}, t.CanShield, reactionViews(t)
 		for _, x := range s.Attacks {
 			v.Attacks = append(v.Attacks, AttackView{
 				Name: x.Name, ToHit: x.ToHit, ReachFt: x.ReachFt, RangeFt: x.RangeFt, LongRangeFt: x.LongRangeFt, Damage: x.Damage,
-				DamageBonus: x.DamageBonus, DamageType: x.DamageType,
+				DamageBonus: x.DamageBonus, DamageType: x.DamageType, Light: x.Light, Mastery: x.Mastery,
 			})
 		}
 	default:

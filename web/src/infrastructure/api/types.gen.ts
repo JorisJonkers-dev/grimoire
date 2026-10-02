@@ -41,6 +41,15 @@ export type CampaignSummary = {
      * Optional rule: attacks from higher ground get +2 to hit.
      */
     highGround?: boolean;
+    /**
+     * Optional rule: a Long Rest costs each resting Character a day of Rations.
+     */
+    restSupplies?: boolean;
+    initiativeMode?: InitiativeMode;
+    /**
+     * Identical monsters share one initiative roll.
+     */
+    shareInitiative?: boolean;
 };
 
 /**
@@ -77,6 +86,15 @@ export type Campaign = {
      * Optional rule: attacks from higher ground get +2 to hit.
      */
     highGround?: boolean;
+    /**
+     * Optional rule: a Long Rest costs each resting Character a day of Rations.
+     */
+    restSupplies?: boolean;
+    initiativeMode?: InitiativeMode;
+    /**
+     * Identical monsters share one initiative roll.
+     */
+    shareInitiative?: boolean;
     me: Member;
     members: Array<Member>;
 };
@@ -101,7 +119,21 @@ export type CampaignUpdate = {
      * Optional rule: attacks from higher ground get +2 to hit.
      */
     highGround?: boolean;
+    /**
+     * Optional rule: a Long Rest costs each resting Character a day of Rations.
+     */
+    restSupplies?: boolean;
+    initiativeMode?: InitiativeMode;
+    /**
+     * Identical monsters share one initiative roll.
+     */
+    shareInitiative?: boolean;
 };
+
+/**
+ * How a fight rolls initiative, each Combatant for itself or one roll per side.
+ */
+export type InitiativeMode = 'individual' | 'side';
 
 /**
  * Seconds a Reaction Prompt waits before it counts as declined.
@@ -988,12 +1020,50 @@ export type LiveToken = {
     hp?: number;
     hpMax?: number;
     /**
+     * Temporary hit points, lost before hit points.
+     */
+    tempHp?: number;
+    /**
+     * The creature whose shape the token has taken.
+     */
+    form?: string;
+    /**
+     * The token's Visibility Qualities, for the DM only.
+     */
+    qualities?: Array<LiveQuality>;
+    /**
+     * The name a Disguised token shows, for the DM only.
+     */
+    disguise?: string;
+    /**
      * What anyone can tell by looking, for creatures whose hit points the audience may not see.
      */
     health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
     attacks?: Array<LiveAttack>;
     shield?: boolean;
     effects?: Array<LiveEffect>;
+    reactions?: Array<LiveReactionSetting>;
+    dying?: LiveDying;
+};
+
+/**
+ * A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and for the party's tokens.
+ */
+export type LiveDying = {
+    successes: number;
+    failures: number;
+    stable?: boolean;
+    dead?: boolean;
+    rollId?: Id;
+};
+
+/**
+ * A Controller's choice for one kind of reaction. Always takes it without asking while its condition holds, and asks otherwise.
+ */
+export type LiveReactionSetting = {
+    kind: 'opportunity_attack' | 'shield' | 'readied' | 'effect';
+    mode: 'ask' | 'always' | 'never';
+    condition?: 'target_bloodied';
 };
 
 /**
@@ -1008,6 +1078,14 @@ export type LiveAttack = {
     damage?: string;
     damageBonus: number;
     damageType?: string;
+    /**
+     * A Light weapon, which opens the off-hand attack.
+     */
+    light?: boolean;
+    /**
+     * The weapon's mastery, when the creature has mastered it.
+     */
+    mastery?: 'cleave' | 'graze' | 'nick' | 'push' | 'sap' | 'slow' | 'topple' | 'vex';
 };
 
 /**
@@ -1053,7 +1131,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1092,14 +1170,43 @@ export type LiveCommand = {
     effectName?: string;
     sourceId?: Id;
     rounds?: number;
+    /**
+     * The spell slot level an area spell is cast with; left out, it is cast at its lowest.
+     */
+    slot?: number;
+    /**
+     * The option an Effect that offers a choice is applied in.
+     */
+    effectMode?: string;
+    /**
+     * Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
+     */
+    tempHp?: number;
+    qualities?: Array<VisibilityQuality>;
+    seenThrough?: Array<VisibilityQuality>;
+    disguise?: string;
+    objectId?: Id;
+    objectKind?: MapObjectKind;
+    objectName?: string;
+    armorClass?: number;
+    hpMax?: number;
+    secret?: boolean;
+    radiusFt?: number;
+    links?: Array<Id>;
+    detectDc?: number;
+    disarmDc?: number;
+    triggerFt?: number;
+    lockDc?: number;
+    key?: string;
+    method?: 'key' | 'tools' | 'force' | 'knock';
     saveAbility?: Ability;
     saveDc?: number;
     effectId?: Id;
     manualId?: Id;
     /**
-     * With paint_surface; leave it out to clear.
+     * With paint_surface, a Surface from the catalogue; leave it out to clear.
      */
-    surface?: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
+    surface?: string;
     elevationFt?: number;
     camera?: TableCamera;
     zoomPct?: number;
@@ -1128,6 +1235,21 @@ export type LiveCommand = {
     lootTableId?: Id;
     fromId?: Id;
     instanceId?: Id;
+    action?: 'dash' | 'disengage' | 'dodge' | 'help' | 'hide' | 'influence' | 'magic' | 'ready' | 'search' | 'study' | 'utilize';
+    detail?: string;
+    trigger?: 'enters_reach';
+    option?: 'grapple' | 'shove_push' | 'shove_prone' | 'medicine' | 'spell' | 'revivify' | 'raise_dead' | 'resurrection';
+    /**
+     * Makes the attack the off-hand attack of a Light weapon.
+     */
+    offHand?: boolean;
+    /**
+     * Makes the attack the second attack a Cleave hit allows.
+     */
+    cleave?: boolean;
+    reactionKind?: 'opportunity_attack' | 'shield' | 'readied' | 'effect';
+    reactionMode?: 'ask' | 'always' | 'never';
+    condition?: '' | 'target_bloodied';
     toId?: Id;
     itemSlug?: Slug;
     coin?: Coin;
@@ -1203,6 +1325,31 @@ export type LiveItem = {
     name: string;
     count: number;
     weightLb: number;
+};
+
+/**
+ * The rest the party proposed or is taking. It starts once the DM and every Player resting a Character agree; a Short Rest spends Hit Dice.
+ */
+export type LiveRest = {
+    kind: 'short' | 'long';
+    status: 'proposed' | 'resting';
+    proposedBy: Id;
+    agreed: Array<Id>;
+    waiting: Array<Id>;
+    waitingOnDm: boolean;
+    resters: Array<LiveRester>;
+};
+
+/**
+ * A resting Character, their Hit Die, how many are left, and the roll of one being spent.
+ */
+export type LiveRester = {
+    characterId: Id;
+    tokenId: Id;
+    name: string;
+    hitDie: 'd6' | 'd8' | 'd10' | 'd12';
+    hitDiceLeft: number;
+    rollId?: Id;
 };
 
 /**
@@ -1416,6 +1563,10 @@ export type LiveAreaPreview = {
     hexes: Array<HexCoord>;
     targets: Array<LiveAreaTarget>;
     allies: number;
+    /**
+     * The Effects the caster concentrates on that casting this spell would end.
+     */
+    ends?: Array<string>;
 };
 
 /**
@@ -1424,6 +1575,7 @@ export type LiveAreaPreview = {
 export type LiveAreaTarget = {
     tokenId: Id;
     ally: boolean;
+    pushedTo?: HexCoord;
 };
 
 /**
@@ -1451,7 +1603,10 @@ export type LiveAreaSave = {
 export type LiveSurface = {
     q: number;
     r: number;
-    kind: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
+    /**
+     * A Surface from the catalogue.
+     */
+    kind: string;
     roundsLeft?: number;
 };
 
@@ -1465,6 +1620,50 @@ export type LiveElevation = {
 };
 
 /**
+ * A Map Object; its numbers, trigger and secrecy go to the DM only.
+ */
+export type LiveObject = {
+    id: Id;
+    kind: MapObjectKind;
+    name: string;
+    q: number;
+    r: number;
+    /**
+     * Open, or pulled for a lever.
+     */
+    open: boolean;
+    broken: boolean;
+    secret?: boolean;
+    ac?: number;
+    hp?: number;
+    hpMax?: number;
+    effect?: string;
+    radiusFt?: number;
+    locked?: boolean;
+    armed?: boolean;
+    detectDc?: number;
+    disarmDc?: number;
+    triggerFt?: number;
+    lockDc?: number;
+    key?: string;
+};
+
+export type MapObjectKind = 'door' | 'lever' | 'chest' | 'barrel' | 'curtain' | 'destructible' | 'trap';
+
+/**
+ * One Visibility Quality of a token, and whether the party has seen through it with a check.
+ */
+export type LiveQuality = {
+    quality: VisibilityQuality;
+    seenThrough?: boolean;
+};
+
+/**
+ * Something that keeps a creature or object from being seen for what it is.
+ */
+export type VisibilityQuality = 'hidden' | 'invisible' | 'disguised' | 'illusory' | 'ethereal' | 'darkness' | 'heavy' | 'secret';
+
+/**
  * An Effect on a token, which everyone who sees the token sees.
  */
 export type LiveEffect = {
@@ -1474,6 +1673,18 @@ export type LiveEffect = {
     sourceId?: Id;
     concentration: boolean;
     roundsLeft?: number;
+    /**
+     * Levels of a stacking Effect, such as exhaustion.
+     */
+    level?: number;
+    /**
+     * The option chosen when the Effect offers a choice.
+     */
+    mode?: string;
+    /**
+     * The hexes an emanation covers around the token where it stands now; it moves with the token.
+     */
+    hexes?: Array<HexCoord>;
 };
 
 /**
@@ -1533,7 +1744,7 @@ export type LiveCombat = {
  */
 export type LivePrompt = {
     id: Id;
-    kind: 'opportunity_attack' | 'shield';
+    kind: 'opportunity_attack' | 'shield' | 'readied' | 'effect';
     reactorId: Id;
     triggerId: Id;
     effect: string;
@@ -1563,6 +1774,35 @@ export type LiveCombatant = {
      * Did not notice the ambush and rolled initiative at disadvantage.
      */
     surprised?: boolean;
+    /**
+     * Moves without provoking opportunity attacks until its next turn.
+     */
+    disengaged?: boolean;
+    /**
+     * Has a readied attack waiting on its trigger; the party sees only its own.
+     */
+    readied?: boolean;
+    /**
+     * Attacks left of an Attack action already begun (Extra Attack).
+     */
+    attacksLeft?: number;
+    /**
+     * The off-hand attack of a Light weapon is open.
+     */
+    offHand?: boolean;
+    /**
+     * The turn's free object interaction is unused.
+     */
+    interaction?: boolean;
+    /**
+     * A Cleave hit leaves a second attack open.
+     */
+    cleave?: boolean;
+    ownerId?: Id;
+    /**
+     * A summoned creature that only Dodges until its owner commands it with a Bonus Action.
+     */
+    awaitingCommand?: boolean;
     tactics?: Tactics;
     suggestion?: LiveSuggestion;
 };
@@ -1651,11 +1891,47 @@ export type LiveView = {
     area?: LiveArea;
     table?: LiveTable;
     world?: LiveWorld;
+    /**
+     * The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would notice it.
+     */
+    sneak?: {
+        /**
+         * Stealth rolls are still out.
+         */
+        waiting: boolean;
+        reach: Array<HexCoord>;
+        /**
+         * Each member's Stealth total by token id, for the DM only.
+         */
+        totals?: {
+            [key: string]: number;
+        };
+    };
+    /**
+     * Exploration in turns, outside a fight.
+     */
+    exploration?: {
+        order: Array<Id>;
+        turn: Id;
+        leftFt: number;
+    };
+    /**
+     * The Surface catalogue, for the DM's paint tool.
+     */
+    surfaceKinds?: Array<{
+        kind: string;
+        name: string;
+    }>;
+    /**
+     * The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.
+     */
+    objects?: Array<LiveObject>;
     zones?: Array<LiveZone>;
     perception?: Array<LivePerception>;
     checks?: Array<LiveCheck>;
     inventory?: Array<LiveContainer>;
     shop?: LiveShop;
+    rest?: LiveRest;
     /**
      * Days passed in the Campaign; a long rest or travel moves it on.
      */

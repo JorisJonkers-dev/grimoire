@@ -2,6 +2,7 @@ package pgstore
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"time"
@@ -15,9 +16,11 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/reactions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -138,22 +141,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	}
 	tokens := make([]domain.Token, 0, len(rows))
 	for _, t := range rows {
-		tok := domain.Token{
-			ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
-			Tactics: t.Tactics, CanShield: t.CanShield,
-		}
-		if t.ControllerMemberID.Valid {
-			id := uuid.UUID(t.ControllerMemberID.Bytes)
-			tok.Controller = &id
-		}
-		if t.StatSource.Valid {
-			tok.Stats = &domain.Stats{
-				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
-				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
-				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt),
-			}
-		}
-		tokens = append(tokens, tok)
+		tokens = append(tokens, tokenFrom(t))
 	}
 	saves, err := s.q.SessionTokenSaves(ctx, row.ID)
 	if err != nil {
@@ -174,8 +162,18 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == a.TokenID })
 		tokens[i].Stats.Attacks = append(tokens[i].Stats.Attacks, domain.Attack{
 			Name: a.Name, ToHit: int(a.ToHit), ReachFt: int(a.ReachFt), RangeFt: int(a.RangeFt), LongRangeFt: int(a.LongRangeFt),
-			Damage: a.DamageDice, DamageBonus: int(a.DamageBonus), DamageType: a.DamageType,
+			Damage: a.DamageDice, DamageBonus: int(a.DamageBonus), DamageType: a.DamageType, Light: a.Light, DamageMod: int(a.DamageMod),
+			Mastery: a.Mastery.String,
 		})
+	}
+	if err := s.loadReactionSettings(ctx, row.ID, tokens); err != nil {
+		return domain.Session{}, nil, nil, err
+	}
+	if err := s.loadVisibility(ctx, row.ID, tokens); err != nil {
+		return domain.Session{}, nil, nil, err
+	}
+	if err := s.loadForms(ctx, row.ID, tokens); err != nil {
+		return domain.Session{}, nil, nil, err
 	}
 	sess := session(row)
 	if sess.MapID == nil {
@@ -197,6 +195,9 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 		}
 		steps := []func() error{
 			func() error { return tx.write(ctx, sid, board, w, now) },
+			func() error { return tx.dismiss(ctx, sid, w.Dismissed) },
+			func() error { return tx.saveForms(ctx, sid, w) },
+			func() error { return tx.saveObjects(ctx, board, w) },
 			func() error { return tx.saveCombat(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
 			func() error { return tx.saveTerrain(ctx, sid, board, w) },
@@ -205,6 +206,8 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveCheck(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
 			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
+			func() error { return tx.saveRest(ctx, sess, w, actor, c, now) },
+			func() error { return tx.saveActions(ctx, sess, w, actor, c, now) },
 			func() error {
 				if board == nil {
 					return nil
@@ -256,25 +259,43 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.insertToken(ctx, sid, t)
 	case domain.ActionTokenRemoved:
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
-	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed:
+	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTeleported, domain.ActionJumped:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
+	case domain.ActionEffectApplied:
+		return s.writeLanding(ctx, sid, w)
 	case domain.ActionCombatStarted, domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionCombatEnded,
 		domain.ActionAttackDeclared, domain.ActionAttackHit, domain.ActionAttackMissed, domain.ActionReactionOffered, domain.ActionReactionUsed,
-		domain.ActionReactionDeclined, domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
+		domain.ActionReactionDeclined, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed,
 		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet,
 		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
 		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
-		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled:
-		return nil
-	case domain.ActionEncounterSpawned:
+		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
+		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
+		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
+		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded,
+		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
+		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung, domain.ActionThrown,
+		domain.ActionSneakStarted, domain.ActionSneakEnded, domain.ActionStealthRolled, domain.ActionPartyNoticed,
+		domain.ActionExplorationStarted, domain.ActionExplorationTurn, domain.ActionExplorationEnded:
+		return s.writeThrown(ctx, sid, w)
+	case domain.ActionDyingChanged, domain.ActionRevived:
+		if w.HP == nil {
+			return nil
+		}
+		return s.setHP(ctx, sid, *w.HP)
+	case domain.ActionReactionSet:
+		return s.saveReactionSettings(ctx, w.Token)
+	case domain.ActionVisibilitySet:
+		return s.saveVisibility(ctx, sid, w.Token)
+	case domain.ActionEncounterSpawned, domain.ActionSummoned:
 		for _, t := range w.Spawned {
 			if err := s.insertToken(ctx, sid, t); err != nil {
 				return err
 			}
 		}
 		return nil
-	case domain.ActionDamageDealt, domain.ActionDamageUndone, domain.ActionHPAdjusted:
+	case domain.ActionDamageDealt, domain.ActionDamageUndone, domain.ActionHPAdjusted, domain.ActionHitDieHealed:
 		return s.writeHP(ctx, sid, w)
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg:
@@ -301,14 +322,29 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	if t.Controller != nil {
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
 	}
+	if t.Summon != nil {
+		p.SummonEffectID = pgtype.UUID{Bytes: *t.Summon, Valid: true}
+	}
+	p.Strength = 10
 	if t.Stats == nil {
-		p.SpeedFt = 30
-		return s.q.InsertToken(ctx, p)
+		p.SpeedFt, p.UnarmedDc, p.AttacksPerAction = 30, 10, 1
+		if err := s.q.InsertToken(ctx, p); err != nil {
+			return err
+		}
+		return s.saveVisibility(ctx, sid, t)
 	}
 	st := t.Stats
 	p.StatSource = pgtype.Text{String: st.Source, Valid: true}
 	p.ArmorClass, p.Hp, p.HpMax = pgInt(st.AC), pgInt(st.HP), pgInt(st.HPMax)
 	p.Stealth, p.Perception, p.Initiative, p.SpeedFt = int32(st.Stealth), int32(st.Perception), int32(st.Initiative), int32(st.SpeedFt)
+	p.UnarmedDc = int32(max(1, min(40, st.UnarmedDC)))
+	if st.UnarmedDC == 0 {
+		p.UnarmedDc = 10
+	}
+	p.AttacksPerAction = int32(max(1, min(4, st.AttacksPerAction)))
+	if st.Strength > 0 {
+		p.Strength = int32(min(30, st.Strength))
+	}
 	if st.SpellDC > 0 {
 		p.SpellDc = pgInt(st.SpellDC)
 	}
@@ -318,27 +354,186 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	if err := s.q.InsertToken(ctx, p); err != nil {
 		return err
 	}
+	if err := s.insertStatRows(ctx, t.ID, st); err != nil {
+		return err
+	}
+	return s.saveVisibility(ctx, sid, t)
+}
+
+// insertStatRows writes a token's attacks, saves and Senses.
+//
+//nolint:gosec // statblock numbers are bounded by the rules
+func (s *Store) insertStatRows(ctx context.Context, id domain.TokenID, st *domain.Stats) error {
 	for i, a := range st.Attacks {
 		if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
-			TokenID: uuid.UUID(t.ID), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
+			TokenID: uuid.UUID(id), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
 			LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
+			Light: a.Light, DamageMod: int32(a.DamageMod), Mastery: pgtype.Text{String: a.Mastery, Valid: a.Mastery != ""},
 		}); err != nil {
 			return err
 		}
 	}
 	for ability, bonus := range st.Saves {
-		if err := s.q.InsertTokenSave(ctx, queries.InsertTokenSaveParams{TokenID: uuid.UUID(t.ID), Ability: ability, Bonus: int32(bonus)}); err != nil {
+		if err := s.q.InsertTokenSave(ctx, queries.InsertTokenSaveParams{TokenID: uuid.UUID(id), Ability: ability, Bonus: int32(bonus)}); err != nil {
+			return err
+		}
+	}
+	for sense, ft := range st.Senses {
+		if err := s.q.AddTokenSense(ctx, queries.AddTokenSenseParams{TokenID: uuid.UUID(id), Sense: sense, RangeFt: int32(ft)}); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+// saveVisibility writes a token's Visibility Qualities, which the party has seen through, and its disguise.
+func (s *Store) saveVisibility(ctx context.Context, sid uuid.UUID, t domain.Token) error {
+	p := queries.SetTokenDisguiseParams{SessionID: sid, ID: uuid.UUID(t.ID), Disguise: pgtype.Text{String: t.Disguise, Valid: t.Disguise != ""}}
+	if err := s.q.SetTokenDisguise(ctx, p); err != nil {
+		return err
+	}
+	if err := s.q.ClearTokenQualities(ctx, uuid.UUID(t.ID)); err != nil {
+		return err
+	}
+	for q, through := range t.Qualities {
+		if err := s.q.AddTokenQuality(ctx, queries.AddTokenQualityParams{TokenID: uuid.UUID(t.ID), Quality: q, SeenThrough: through}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// loadVisibility reads every token's Visibility Qualities and Senses.
+func (s *Store) loadVisibility(ctx context.Context, sid uuid.UUID, tokens []domain.Token) error {
+	qualities, err := s.q.SessionTokenQualities(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, q := range qualities {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == q.TokenID })
+		if tokens[i].Qualities == nil {
+			tokens[i].Qualities = map[string]bool{}
+		}
+		tokens[i].Qualities[q.Quality] = q.SeenThrough
+	}
+	senses, err := s.q.SessionTokenSenses(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, sn := range senses {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == sn.TokenID && t.Stats != nil })
+		if i < 0 {
+			continue
+		}
+		if tokens[i].Stats.Senses == nil {
+			tokens[i].Stats.Senses = map[string]int{}
+		}
+		tokens[i].Stats.Senses[sn.Sense] = int(sn.RangeFt)
+	}
+	return nil
+}
+
+// writeLanding writes what an Effect changed as it landed: hit points and Resources.
+//
+//nolint:gosec // deltas are bounded by a check
+func (s *Store) writeLanding(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if w.HP != nil {
+		if err := s.setHP(ctx, sid, *w.HP); err != nil {
+			return err
+		}
+	}
+	if w.Unveiled {
+		if err := s.saveVisibility(ctx, sid, w.Token); err != nil {
+			return err
+		}
+	}
+	for _, r := range w.Resources {
+		if err := s.q.ChangeResourceUsed(ctx, queries.ChangeResourceUsedParams{CharacterID: r.Character, ResourceSlug: r.Resource, Delta: int32(r.Delta)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// loadForms lays each stored form over its token. The token's row keeps its own statistics; its hit
+// points are its own and its temporary hit points the form's.
+func (s *Store) loadForms(ctx context.Context, sid uuid.UUID, tokens []domain.Token) error {
+	forms, err := s.q.SessionTokenForms(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, f := range forms {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == f.TokenID })
+		if i < 0 || tokens[i].Stats == nil {
+			continue
+		}
+		var shaped domain.Stats
+		if err := json.Unmarshal(f.Stats, &shaped); err != nil {
+			return err
+		}
+		own := *tokens[i].Stats
+		shaped.HP, shaped.HPMax, shaped.TempHP = own.HP, own.HPMax, own.TempHP
+		own.TempHP = 0
+		tokens[i].Stats, tokens[i].Form = &shaped, &domain.Form{Effect: domain.EffectID(f.EffectID), Name: f.Name, Own: own}
+	}
+	return nil
+}
+
+// saveForms writes a form a token takes and drops the forms of tokens that reverted.
+func (s *Store) saveForms(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if t := w.Formed; t != nil {
+		stats, err := json.Marshal(t.Stats)
+		if err != nil {
+			return err
+		}
+		p := queries.SaveTokenFormParams{TokenID: uuid.UUID(t.ID), EffectID: uuid.UUID(t.Form.Effect), Name: t.Form.Name, Stats: stats}
+		if err := s.q.SaveTokenForm(ctx, p); err != nil {
+			return err
+		}
+	}
+	for _, id := range w.Reverted {
+		if err := s.q.DeleteTokenForm(ctx, uuid.UUID(id)); err != nil {
+			return err
+		}
+		if err := s.q.SetTokenTempHP(ctx, queries.SetTokenTempHPParams{SessionID: sid, ID: uuid.UUID(id), TempHp: 0}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// writeThrown moves a thrown creature; every other Map Object change is written with the objects.
+func (s *Store) writeThrown(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if w.Kind != domain.ActionThrown || w.Pushed == nil {
+		return nil
+	}
+	t := w.Pushed
+	return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden}) //nolint:gosec // map coordinates
+}
+
+// dismiss deletes summoned tokens whose Effect ended; their Combatants go with them.
+func (s *Store) dismiss(ctx context.Context, sid uuid.UUID, ids []domain.TokenID) error {
+	for _, id := range ids {
+		if err := s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(id)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// setHP writes a token's hit points, and its temporary hit points when the change touches them.
+func (s *Store) setHP(ctx context.Context, sid uuid.UUID, h live.HPChange) error {
+	if err := s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(h.Token), Hp: pgInt(h.After)}); err != nil || h.Temp == nil {
+		return err
+	}
+	return s.q.SetTokenTempHP(ctx, queries.SetTokenTempHPParams{SessionID: sid, ID: uuid.UUID(h.Token), TempHp: int32(*h.Temp)}) //nolint:gosec // bounded by a check
+}
+
 // writeHP sets a token's hit points and records who watched a ranged attacker deal the damage.
 //
 //nolint:gosec // hit points are bounded by the rules
 func (s *Store) writeHP(ctx context.Context, sid uuid.UUID, w live.Write) error {
-	if err := s.q.SetTokenHP(ctx, queries.SetTokenHPParams{SessionID: sid, ID: uuid.UUID(w.HP.Token), Hp: pgInt(w.HP.After)}); err != nil {
+	if err := s.setHP(ctx, sid, *w.HP); err != nil {
 		return err
 	}
 	for _, o := range w.Observers {
@@ -401,7 +596,9 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionInitiativeRolled, domain.ActionTurnEnded, domain.ActionResourceSpent, domain.ActionAttackDeclared, domain.ActionAttackHit,
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
-		domain.ActionAreaResolved:
+		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet, domain.ActionConcentrationChecked,
+		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered, domain.ActionVisibilitySet,
+		domain.ActionJumped, domain.ActionThrown:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -471,7 +668,22 @@ func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
 			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
 			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt), Shielded: x.Shielded,
-			Surprised: x.Surprised,
+			AttacksLeft: int32(x.Economy.AttacksLeft), LightAttack: x.Economy.LightAttack, OffHand: x.Economy.OffHand, Interaction: x.Economy.Interaction,
+			Cleaved:   x.Cleaved,
+			Surprised: x.Surprised, Disengaged: x.Disengaged,
+		}
+		if x.CleaveFrom != nil {
+			cp.CleaveFrom = pgtype.UUID{Bytes: *x.CleaveFrom, Valid: true}
+		}
+		if x.Owner != nil {
+			cp.OwnerCombatantID = pgtype.UUID{Bytes: *x.Owner, Valid: true}
+		}
+		cp.Commanded = x.Commanded
+		if r := x.Readied; r != nil {
+			cp.ReadiedTrigger, cp.ReadiedAttack = pgtype.Text{String: string(r.Trigger.Kind), Valid: true}, pgInt(r.AttackNo)
+			if who, err := uuid.Parse(r.Trigger.Who); err == nil {
+				cp.ReadiedWho = pgtype.UUID{Bytes: who, Valid: true}
+			}
 		}
 		if x.Initiative != nil {
 			cp.Initiative = pgtype.Int4{Int32: int32(*x.Initiative), Valid: true}
@@ -522,7 +734,7 @@ func (s *Store) saveAttack(ctx context.Context, f *domain.Combat) error {
 	return s.q.SaveAttack(ctx, queries.SaveAttackParams{
 		ID: a.ID, CombatID: uuid.UUID(f.ID), AttackerTokenID: uuid.UUID(a.Attacker), TargetTokenID: uuid.UUID(a.Target), AttackNo: int32(a.AttackNo),
 		Mode: a.Mode.String(), CoverBonus: int32(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: uuid.UUID(a.RollID), Ranged: a.Ranged,
-		Total: pgtype.Int4{Int32: int32(a.Total), Valid: a.Stage == domain.StageReaction}, Opportunity: a.Opportunity,
+		Total: pgtype.Int4{Int32: int32(a.Total), Valid: a.Stage == domain.StageReaction}, Opportunity: a.Opportunity, OffHand: a.OffHand, Cleave: a.Cleave,
 	})
 }
 
@@ -576,6 +788,7 @@ func (s *Store) saveEffects(ctx context.Context, sid uuid.UUID, fx *domain.Effec
 func (s *Store) insertEffect(ctx context.Context, sid uuid.UUID, e domain.Effect) error {
 	p := queries.InsertEffectParams{
 		ID: uuid.UUID(e.ID), SessionID: sid, TargetTokenID: uuid.UUID(e.Target), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration,
+		Level: int32(max(1, e.Level)), //nolint:gosec // at most ten levels
 	}
 	if e.Source != nil {
 		p.SourceTokenID = pgtype.UUID{Bytes: *e.Source, Valid: true}
@@ -586,6 +799,7 @@ func (s *Store) insertEffect(ctx context.Context, sid uuid.UUID, e domain.Effect
 	if e.SaveAbility != "" {
 		p.SaveAbility, p.SaveDc = pgtype.Text{String: e.SaveAbility, Valid: true}, pgInt(e.SaveDC)
 	}
+	p.Mode = pgtype.Text{String: e.Mode, Valid: e.Mode != ""}
 	return s.q.InsertEffect(ctx, p)
 }
 
@@ -600,7 +814,8 @@ func (s *Store) LoadEffects(ctx context.Context, id domain.SessionID) (domain.Ef
 	for _, r := range rows {
 		e := domain.Effect{
 			ID: domain.EffectID(r.ID), Target: domain.TokenID(r.TargetTokenID), Slug: r.Slug, Name: r.Name, Concentration: r.Concentration,
-			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32),
+			RoundsLeft: int(r.RoundsLeft.Int32), SaveAbility: r.SaveAbility.String, SaveDC: int(r.SaveDc.Int32), Level: int(r.Level),
+			Mode: r.Mode.String,
 		}
 		if r.SourceTokenID.Valid {
 			src := domain.TokenID(r.SourceTokenID.Bytes)
@@ -686,16 +901,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 		return nil, err
 	}
 	for _, x := range rows {
-		c := domain.Combatant{
-			ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
-			SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised,
-			Economy: combat.Economy{Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt)},
-		}
-		if x.Initiative.Valid {
-			n := int(x.Initiative.Int32)
-			c.Initiative = &n
-		}
-		out.Combatants = append(out.Combatants, c)
+		out.Combatants = append(out.Combatants, combatantFrom(x))
 	}
 	if err := s.loadReactions(ctx, row, out); err != nil {
 		return nil, err
@@ -711,7 +917,7 @@ func (s *Store) LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Co
 	out.Attack = &domain.PendingAttack{
 		ID: a.ID, Attacker: domain.TokenID(a.AttackerTokenID), Target: domain.TokenID(a.TargetTokenID), AttackNo: int(a.AttackNo),
 		Mode: attack.Mode(mode), CoverBonus: int(a.CoverBonus), Stage: a.Stage, Critical: a.Critical, RollID: domain.RollID(a.RollID),
-		Ranged: a.Ranged, Total: int(a.Total.Int32), Opportunity: a.Opportunity,
+		Ranged: a.Ranged, Total: int(a.Total.Int32), Opportunity: a.Opportunity, OffHand: a.OffHand, Cleave: a.Cleave,
 	}
 	return out, nil
 }
@@ -751,7 +957,67 @@ func (s *Store) LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID
 	for _, rv := range reveals {
 		out.Reveals[hex.Coord{Q: int(rv.Q), R: int(rv.R)}] = true
 	}
-	return out, nil
+	return out, s.loadObjects(ctx, m.ID, out)
+}
+
+// loadObjects reads a Map's objects and the links between them.
+func (s *Store) loadObjects(ctx context.Context, mapID uuid.UUID, out *domain.MapState) error {
+	rows, err := s.q.MapObjects(ctx, mapID)
+	if err != nil {
+		return err
+	}
+	out.Objects = map[domain.ObjectID]domain.MapObject{}
+	for _, o := range rows {
+		out.Objects[o.ID] = domain.MapObject{
+			ID: o.ID, Kind: o.Kind, Name: o.Name, At: hex.Coord{Q: int(o.Q), R: int(o.R)}, AC: int(o.ArmorClass), HP: int(o.Hp), HPMax: int(o.HpMax),
+			Open: o.Open, Broken: o.Broken, Secret: o.Secret, Effect: o.EffectSlug.String, RadiusFt: int(o.RadiusFt),
+			Armed: o.Armed, DetectDC: int(o.DetectDc), DisarmDC: int(o.DisarmDc), TriggerFt: int(o.TriggerFt), Locked: o.Locked, LockDC: int(o.LockDc), Key: o.KeySlug.String,
+		}
+	}
+	links, err := s.q.MapObjectLinks(ctx, mapID)
+	if err != nil {
+		return err
+	}
+	for _, l := range links {
+		o := out.Objects[l.ObjectID]
+		o.Links = append(o.Links, l.TargetID)
+		out.Objects[l.ObjectID] = o
+	}
+	return nil
+}
+
+// saveObjects writes the Map Objects a change touched, or deletes a removed one.
+//
+//nolint:gosec // object numbers are bounded by checks
+func (s *Store) saveObjects(ctx context.Context, board *domain.MapState, w live.Write) error {
+	if board == nil {
+		return nil
+	}
+	mapID := uuid.UUID(board.Map.ID)
+	if w.Kind == domain.ActionObjectRemoved {
+		return s.q.DeleteMapObject(ctx, queries.DeleteMapObjectParams{ID: w.Object, MapID: mapID})
+	}
+	for _, id := range w.Objects {
+		o := board.Objects[id]
+		p := queries.SaveMapObjectParams{
+			ID: o.ID, MapID: mapID, Kind: o.Kind, Name: o.Name, Q: int32(o.At.Q), R: int32(o.At.R), ArmorClass: int32(o.AC), Hp: int32(o.HP), HpMax: int32(o.HPMax),
+			Open: o.Open, Broken: o.Broken, Secret: o.Secret, EffectSlug: pgtype.Text{String: o.Effect, Valid: o.Effect != ""}, RadiusFt: int32(o.RadiusFt),
+			DetectDc: int32(o.DetectDC), DisarmDc: int32(o.DisarmDC), TriggerFt: int32(o.TriggerFt), Armed: o.Armed, Locked: o.Locked, LockDc: int32(o.LockDC),
+			KeySlug: pgtype.Text{String: o.Key, Valid: o.Key != ""},
+		}
+		if err := s.q.SaveMapObject(ctx, p); err != nil {
+			return err
+		}
+		if err := s.q.ClearMapObjectLinks(ctx, o.ID); err != nil {
+			return err
+		}
+		for _, target := range o.Links {
+			if err := s.q.AddMapObjectLink(ctx, queries.AddMapObjectLinkParams{ObjectID: o.ID, TargetID: target}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func mapRow(m queries.CampaignMap) domain.Map {
@@ -788,4 +1054,88 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 		_, _ = q.UnlockSessionOwner(context.Background(), key)
 		_ = conn.Close(context.Background())
 	}, nil
+}
+
+// tokenFrom reads one stored token, without its attacks, saves and reaction settings.
+func tokenFrom(t queries.SessionTokensRow) domain.Token {
+	tok := domain.Token{
+		ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
+		Tactics: t.Tactics, CanShield: t.CanShield, Disguise: t.Disguise.String,
+	}
+	if t.ControllerMemberID.Valid {
+		id := uuid.UUID(t.ControllerMemberID.Bytes)
+		tok.Controller = &id
+	}
+	if t.SummonEffectID.Valid {
+		e := domain.EffectID(t.SummonEffectID.Bytes)
+		tok.Summon = &e
+	}
+	if t.StatSource.Valid {
+		tok.Stats = &domain.Stats{
+			Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
+			Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
+			Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
+			Strength: int(t.Strength),
+		}
+	}
+	return tok
+}
+
+// combatantFrom reads one stored Combatant.
+func combatantFrom(x queries.PlayCombatant) domain.Combatant {
+	c := domain.Combatant{
+		ID: domain.CombatantID(x.ID), TokenID: domain.TokenID(x.TokenID), RollID: domain.RollID(x.RollID), InitiativeBonus: int(x.InitiativeBonus),
+		SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised, Disengaged: x.Disengaged,
+		Economy: combat.Economy{
+			Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt),
+			AttacksLeft: int(x.AttacksLeft), LightAttack: x.LightAttack, OffHand: x.OffHand, Interaction: x.Interaction,
+		},
+	}
+	if x.Initiative.Valid {
+		n := int(x.Initiative.Int32)
+		c.Initiative = &n
+	}
+	c.Cleaved, c.Commanded = x.Cleaved, x.Commanded
+	if x.OwnerCombatantID.Valid {
+		owner := domain.CombatantID(x.OwnerCombatantID.Bytes)
+		c.Owner = &owner
+	}
+	if x.CleaveFrom.Valid {
+		from := domain.TokenID(x.CleaveFrom.Bytes)
+		c.CleaveFrom = &from
+	}
+	if x.ReadiedTrigger.Valid {
+		c.Readied = &domain.Readied{Trigger: actions.Trigger{Kind: actions.TriggerKind(x.ReadiedTrigger.String), Who: ""}, AttackNo: int(x.ReadiedAttack.Int32)}
+		if x.ReadiedWho.Valid {
+			c.Readied.Trigger.Who = uuid.UUID(x.ReadiedWho.Bytes).String()
+		}
+	}
+	return c
+}
+
+// loadReactionSettings reads every token's reaction settings.
+func (s *Store) loadReactionSettings(ctx context.Context, sid uuid.UUID, tokens []domain.Token) error {
+	rows, err := s.q.SessionTokenReactions(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, r := range rows {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == r.TokenID })
+		if tokens[i].Reactions == nil {
+			tokens[i].Reactions = map[string]reactions.Setting{}
+		}
+		tokens[i].Reactions[r.Kind] = reactions.Setting{Mode: reactions.Mode(r.Mode), Condition: reactions.Condition(r.Condition)}
+	}
+	return nil
+}
+
+// saveReactionSettings writes a token's reaction settings.
+func (s *Store) saveReactionSettings(ctx context.Context, t domain.Token) error {
+	for kind, set := range t.Reactions {
+		p := queries.SetTokenReactionParams{TokenID: uuid.UUID(t.ID), Kind: kind, Mode: string(set.Mode), Condition: string(set.Condition)}
+		if err := s.q.SetTokenReaction(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
 }

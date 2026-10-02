@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -56,28 +57,153 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	if reason != "" {
 		return Write{}, reason
 	}
-	def, known := r.st.catalog.Lookup(slug)
-	name := def.Name
-	if !known {
-		name = strings.TrimSpace(cmd.EffectName)
-		if name == "" || len([]rune(name)) > 80 {
-			name = slug
-		}
+	land := r.st.catalog.LandingOf(slug, cmd.EffectMode)
+	if land.Dispels {
+		return r.st.dispel(target)
+	}
+	def, name := r.st.effectName(slug, cmd.EffectName)
+	if modes := def.Modes(); len(modes) > 0 && !slices.Contains(modes, cmd.EffectMode) {
+		return Write{}, "Choose " + strings.Join(modes, " or ") + "."
 	}
 	e := domain.Effect{
 		ID: domain.EffectID(uuid.New()), Target: target.ID, Source: source, Slug: slug, Name: name, Concentration: def.Concentration && source != nil,
-		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC,
+		RoundsLeft: cmd.Rounds, SaveAbility: cmd.SaveAbility, SaveDC: cmd.SaveDC, Level: 1, Mode: cmd.EffectMode,
+	}
+	r.st.lasting(&e, def.Duration)
+	if i := r.st.stacked(target.ID, slug); i >= 0 {
+		e = r.st.fx.Active[i]
+		e.Level++
 	}
 	w := Write{Kind: domain.ActionEffectApplied, Token: target, effect: &e}
+	r.st.land(&w, land, target)
+	unveil(&w, land.Reveals)
+	if land.Form != nil {
+		if reason := r.shape(&w, *land.Form, cmd, target, e.ID); reason != "" {
+			return Write{}, reason
+		}
+	}
+	r.st.afflict(&w, e, target)
 	for _, old := range r.st.fx.Active {
 		if e.Concentration && old.Concentration && old.Source != nil && *old.Source == *source {
 			w.ended = append(w.ended, old.ID)
 		}
 	}
-	for _, text := range r.st.catalog.Instructions(slug, name) {
+	for _, text := range r.st.catalog.Instructions(slug, name, e.Mode) {
 		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + ": " + text})
 	}
 	return w, ""
+}
+
+// effectName is an Effect's definition and the name it shows: its own, or the one given for an Effect
+// the rules do not know.
+func (s *state) effectName(slug, given string) (effects.Definition, string) {
+	def, known := s.catalog.Lookup(slug)
+	if known {
+		return def, def.Name
+	}
+	name := strings.TrimSpace(given)
+	if name == "" || len([]rune(name)) > 80 {
+		name = slug
+	}
+	return def, name
+}
+
+// land adds what an Effect gives the moment it lands: temporary hit points, which replace smaller ones
+// rather than adding to them, features the DM notes down, and Resources spent or regained.
+func (s *state) land(w *Write, land effects.Landing, target domain.Token) {
+	if target.Stats != nil && land.TempHP > target.Stats.TempHP {
+		temp := land.TempHP
+		w.HP = &HPChange{Token: target.ID, Before: target.Stats.HP, After: target.Stats.HP, Temp: &temp}
+	}
+	for _, name := range land.Grants {
+		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + " gains " + name + "."})
+	}
+	character, ok := characterOf(target)
+	for _, c := range land.Resources {
+		if ok {
+			w.Resources = append(w.Resources, ResourceDelta{Character: character, Resource: c.Resource, Delta: c.Delta})
+		}
+	}
+}
+
+// ResourceDelta is a Character's Resource an Effect spends (negative) or gives back (positive).
+type ResourceDelta struct {
+	Character uuid.UUID
+	Resource  string
+	Delta     int
+}
+
+// characterOf is the Character a token was placed from.
+func characterOf(t domain.Token) (uuid.UUID, bool) {
+	if t.Stats == nil || !strings.HasPrefix(t.Stats.Source, "character:") {
+		return uuid.Nil, false
+	}
+	id, err := uuid.Parse(strings.TrimPrefix(t.Stats.Source, "character:"))
+	return id, err == nil
+}
+
+// dispel ends every spell's Effect on a target.
+func (s *state) dispel(target domain.Token) (Write, string) {
+	var ended []domain.EffectID
+	for _, e := range s.fx.Active {
+		if e.Target == target.ID && s.catalog.Spell(e.Slug) {
+			ended = append(ended, e.ID)
+		}
+	}
+	if len(ended) == 0 {
+		return Write{}, "No spell on " + target.Label + " to dispel."
+	}
+	return Write{Kind: domain.ActionEffectEnded, Token: target, ended: ended}, ""
+}
+
+// lasting fills in what an Effect's Duration says when whoever applied it left it out: how many rounds
+// it lasts, and the save its bearer repeats against its source's spell DC.
+func (s *state) lasting(e *domain.Effect, d effects.Duration) {
+	if e.RoundsLeft == 0 {
+		e.RoundsLeft = d.Rounds()
+	}
+	if e.SaveAbility != "" || d.RepeatSave == "" || e.Source == nil {
+		return
+	}
+	if src, ok := s.tokens[*e.Source]; ok && src.Stats != nil {
+		e.SaveAbility, e.SaveDC = d.RepeatSave, spellDC(src)
+	}
+}
+
+// restEnded lists the Effects that end when a rest finishes.
+func (s *state) restEnded() []domain.EffectID {
+	var out []domain.EffectID
+	for _, e := range s.fx.Active {
+		if def, ok := s.catalog.Lookup(e.Slug); ok && def.Duration.EndsOnRest() {
+			out = append(out, e.ID)
+		}
+	}
+	return out
+}
+
+// stacked finds the Effect a stacking Effect adds a level to, or -1.
+func (s *state) stacked(target domain.TokenID, slug string) int {
+	if !s.catalog.Stacks(slug) {
+		return -1
+	}
+	return slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.Target == target && e.Slug == slug })
+}
+
+// afflict adds what an Effect does the moment it lands: an incapacitated creature loses its
+// concentration, and a fatal level of exhaustion drops it to 0 hit points.
+func (s *state) afflict(w *Write, e domain.Effect, target domain.Token) {
+	one := []effects.Active{{Slug: e.Slug, Source: "", Level: e.Level}}
+	if s.catalog.Incapacitated(one) {
+		for _, old := range s.fx.Active {
+			if old.Concentration && old.Source != nil && *old.Source == target.ID {
+				w.ended = append(w.ended, old.ID)
+			}
+		}
+	}
+	if name, dead := s.catalog.Fatal(one); dead && target.Stats != nil {
+		w.HP = &HPChange{Token: target.ID, Before: target.Stats.HP, After: 0}
+		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + " dies of " + name + "."})
+	}
 }
 
 // checkEffect validates an Effect's target, name, duration, ending save and source.
@@ -111,7 +237,7 @@ func (s *state) actives(id domain.TokenID) []effects.Active {
 	var out []effects.Active
 	for _, e := range s.fx.Active {
 		if e.Target == id {
-			a := effects.Active{Slug: e.Slug, Source: ""}
+			a := effects.Active{Slug: e.Slug, Source: "", Level: e.Level, Mode: e.Mode}
 			if e.Source != nil {
 				a.Source = uuid.UUID(*e.Source).String()
 			}
@@ -125,22 +251,37 @@ func (s *state) actives(id domain.TokenID) []effects.Active {
 func (r *runtime) saves(dm domain.Member, t domain.Token) ([]domain.Roll, []domain.PendingSave) {
 	var rolls []domain.Roll
 	var pending []domain.PendingSave
-	extra := r.st.catalog.SaveDice(r.st.actives(t.ID))
 	for _, e := range r.st.fx.Active {
 		if e.Target != t.ID || e.SaveAbility == "" || slices.ContainsFunc(r.st.fx.Saves, func(p domain.PendingSave) bool { return p.Effect == e.ID }) {
 			continue
 		}
-		bonus := 0
-		if t.Stats != nil {
-			bonus = t.Stats.Saves[e.SaveAbility]
+		roll, ok := r.saveRoll(dm, t, e.SaveAbility, fmt.Sprintf("save to end %s (DC %d)", e.Name, e.SaveDC))
+		if !ok {
+			continue
 		}
-		ability := strings.ToUpper(e.SaveAbility[:1]) + e.SaveAbility[1:]
-		roll := r.request(dm, t, fmt.Sprintf("%s save to end %s (DC %d)", ability, e.Name, e.SaveDC), strings.Join(append([]string{"1d20"}, extra...), "+"),
-			domain.Modifier{Label: ability + " save", Value: bonus})
 		rolls = append(rolls, roll)
 		pending = append(pending, domain.PendingSave{RollID: roll.ID, Effect: e.ID, DC: e.SaveDC})
 	}
 	return rolls, pending
+}
+
+// saveRoll opens a saving throw folded with the bearer's effects: advantage, disadvantage, added dice
+// and penalties. A save its effects make fail is never rolled.
+func (r *runtime) saveRoll(m domain.Member, t domain.Token, ability, purpose string) (domain.Roll, bool) {
+	if ability == "" {
+		return domain.Roll{}, false
+	}
+	p := r.st.catalog.ForSave(r.st.actives(t.ID), ability)
+	if p.Fails {
+		return domain.Roll{}, false
+	}
+	bonus := 0
+	if t.Stats != nil {
+		bonus = t.Stats.Saves[ability]
+	}
+	name := strings.ToUpper(ability[:1]) + ability[1:]
+	notation := strings.Join(append([]string{attack.D20(attack.ModeOf(len(p.Advantages), len(p.Disadvantages)))}, p.Dice...), "+")
+	return r.request(m, t, name+" "+purpose, notation, domain.Modifier{Label: name + " save", Value: bonus}, domain.Modifier{Label: "Exhaustion", Value: -p.Penalty}), true
 }
 
 // saveRolled ends an Effect whose saving throw met its DC.
@@ -161,7 +302,20 @@ func (r *runtime) saveRolled(p domain.PendingSave) {
 func applyEffects(s *state, w *Write) {
 	fx := &s.fx
 	if w.effect != nil {
-		fx.Active = append(fx.Active, *w.effect)
+		if i := slices.IndexFunc(fx.Active, func(e domain.Effect) bool { return e.ID == w.effect.ID }); i >= 0 {
+			fx.Active[i] = *w.effect
+		} else {
+			fx.Active = append(fx.Active, *w.effect)
+		}
+	}
+	if w.Formed != nil {
+		s.tokens[w.Formed.ID] = *w.Formed
+	}
+	if w.Unveiled {
+		s.tokens[w.Token.ID] = w.Token
+	}
+	if w.Kind == domain.ActionEffectApplied && w.HP != nil {
+		s.setHP(*w.HP)
 	}
 	fx.Manual = append(fx.Manual, w.manuals...)
 	fx.Saves = append(fx.Saves, w.newSaves...)
@@ -220,19 +374,57 @@ func (s *state) concentrate(h HPChange) bool {
 	if len(held) == 0 || h.After >= h.Before {
 		return false
 	}
-	if h.After == 0 {
-		ids := make([]domain.EffectID, 0, len(held))
-		for _, e := range held {
-			ids = append(ids, e.ID)
-		}
-		s.endEffects(ids)
-		return true
+	if h.After > 0 {
+		return false
 	}
-	taken := h.Before - h.After
-	s.fx.Manual = append(s.fx.Manual, domain.ManualPrompt{ID: uuid.New(), Text: fmt.Sprintf(
-		"%s took %d damage while concentrating on %s: Constitution save DC %d to keep it.", s.tokens[h.Token].Label, taken, held[0].Name, max(10, taken/2))})
+	ids := make([]domain.EffectID, 0, len(held))
+	for _, e := range held {
+		ids = append(ids, e.ID)
+	}
+	s.endEffects(ids)
 	return true
 }
+
+// held lists the concentration Effects a creature keeps up.
+func (s *state) held(id domain.TokenID) []domain.Effect {
+	var out []domain.Effect
+	for _, e := range s.fx.Active {
+		if e.Concentration && e.Source != nil && *e.Source == id {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+// concentrationSave opens the Constitution save a creature makes to keep concentrating once damage
+// leaves it standing: DC 10 or half the damage, at most 30. A save its effects make fail ends every
+// Effect it concentrates on at once.
+func (r *runtime) concentrationSave(w Write, actor domain.Member, c caller.Caller) {
+	h := w.HP
+	if h == nil || h.After >= h.Before || h.After == 0 || (w.Kind != domain.ActionDamageDealt && w.Kind != domain.ActionHPAdjusted) {
+		return
+	}
+	held := r.st.held(h.Token)
+	if len(held) == 0 {
+		return
+	}
+	t := r.st.tokens[h.Token]
+	dc := min(30, max(10, (h.Before-h.After)/2))
+	next := Write{Kind: domain.ActionConcentrationChecked, Token: t}
+	roll, ok := r.saveRoll(actor, t, "constitution", fmt.Sprintf("save to keep concentrating on %s (DC %d)", held[0].Name, dc))
+	if !ok {
+		for _, e := range held {
+			next.ended = append(next.ended, e.ID)
+		}
+	} else {
+		target := t.ID
+		next.Rolls, next.Pending = []domain.Roll{roll}, &domain.PendingAction{RollID: roll.ID, Actor: t.ID, Target: &target, Action: concentrating, DC: dc}
+	}
+	r.commit(request{}, next, actor, c)
+}
+
+// concentrating is the pending concentration save.
+const concentrating = "concentration"
 
 // forget drops a removed token's Effects and the source it gave to others.
 func (s *state) forget(id domain.TokenID) {
@@ -255,10 +447,14 @@ func (s *state) effectViews(id domain.TokenID) []EffectView {
 		if e.Target != id {
 			continue
 		}
-		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft}
+		v := EffectView{ID: uuid.UUID(e.ID).String(), Slug: e.Slug, Name: e.Name, Concentration: e.Concentration, RoundsLeft: e.RoundsLeft, Mode: e.Mode}
+		if s.catalog.Stacks(e.Slug) {
+			v.Level = max(1, e.Level)
+		}
 		if e.Source != nil {
 			v.SourceID = uuid.UUID(*e.Source).String()
 		}
+		v.Hexes = s.emanation(e)
 		out = append(out, v)
 	}
 	return out

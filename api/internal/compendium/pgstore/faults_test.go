@@ -121,3 +121,18 @@ func TestEveryEffectFaultSurfaces(t *testing.T) {
 		})
 	})
 }
+
+func TestEveryFeatureFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	store, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(store.Close)
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		f.DB = store.Pool()
+		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).Features(ctx)
+		return err
+	})
+}

@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { LiveCombat } from '@/infrastructure/api/types.gen'
+import type { LiveCombat, LiveToken } from '@/infrastructure/api/types.gen'
+import { StatusIcon } from '@/shared/ui'
 import { initials } from './board'
+import { effectLabel } from './conditions'
 
-const props = defineProps<{ combat: LiveCombat }>()
+const props = withDefaults(defineProps<{ combat: LiveCombat; tokens?: LiveToken[] }>(), { tokens: () => [] })
+const effectsOf = (tokenId: string) => props.tokens.find((t) => t.id === tokenId)?.effects ?? []
+const dyingOf = (tokenId: string) => {
+  const d = props.tokens.find((t) => t.id === tokenId)?.dying
+  if (!d) return ''
+  if (d.dead) return 'Dead'
+  return d.stable ? 'Stable' : `Dying ${String(d.successes)}✓ ${String(d.failures)}✗`
+}
+const ownerName = (id: string) => props.combat.combatants.find((c) => c.id === id)?.label ?? 'someone'
 const tied = computed(() => {
   const ranks = props.combat.combatants.map((c) => c.rank)
   return (rank?: number) => ranks.filter((r) => r === rank).length > 1
@@ -28,6 +38,13 @@ const tied = computed(() => {
           <template v-else>rolling…</template>
         </span>
         <span v-if="c.surprised" class="surprised" data-testid="surprised">Surprised</span>
+        <span v-if="c.ownerId" class="summoned" :data-testid="`summoned-${c.label}`">
+          Summoned by {{ ownerName(c.ownerId) }}<template v-if="c.awaitingCommand"> · awaiting orders</template>
+        </span>
+        <span v-if="dyingOf(c.tokenId)" class="fallen" data-testid="fallen">{{ dyingOf(c.tokenId) }}</span>
+        <span v-if="effectsOf(c.tokenId).length" class="statuses" data-testid="statuses">
+          <StatusIcon v-for="e in effectsOf(c.tokenId)" :key="e.id" :slug="e.slug" :label="effectLabel(e)" :size="12" />
+        </span>
         <span v-if="c.acting" class="sr-only">acting now</span>
       </li>
     </ol>
@@ -35,6 +52,20 @@ const tied = computed(() => {
 </template>
 
 <style scoped>
+.fallen {
+  font-size: 12px;
+  color: var(--color-enemy-soft);
+}
+.statuses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+.summoned {
+  font-size: 11px;
+  color: var(--color-text-3);
+}
 .surprised {
   font-size: 12px;
   color: var(--color-enemy-soft);

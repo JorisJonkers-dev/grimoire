@@ -16,8 +16,10 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/actions"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/mastery"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -48,7 +50,8 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	}
 	stats := domain.Stats{
 		Source: "monster:" + slug, AC: int(m.ArmorClass), HP: int(m.HitPoints), HPMax: int(m.HitPoints), Attacks: []domain.Attack{},
-		Intelligence: int(m.Intelligence), Saves: map[string]int{},
+		Intelligence: int(m.Intelligence), Saves: map[string]int{}, Strength: int(m.Strength),
+		UnarmedDC: actions.UnarmedDC(rules.Modifier(int(m.Strength)), rules.ProficiencyByChallenge(m.ChallengeRating)),
 	}
 	scores := map[string]int32{
 		"strength": m.Strength, "dexterity": m.Dexterity, "constitution": m.Constitution, "intelligence": m.Intelligence, "wisdom": m.Wisdom,
@@ -63,6 +66,9 @@ func (s Statblocks) Monster(ctx context.Context, campaign uuid.UUID, slug string
 	}
 	for _, sv := range saves {
 		stats.Saves[sv.Name] = int(sv.Value)
+	}
+	if stats.Senses, err = s.senses(ctx, m.ID); err != nil {
+		return "", domain.Stats{}, err
 	}
 	if err := s.ambush(ctx, m, &stats); err != nil {
 		return "", domain.Stats{}, err
@@ -93,8 +99,9 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	pb := sheet.Derived.ProficiencyBonus
 	stats := domain.Stats{
 		Source: "character:" + id.String(), AC: sheet.Derived.ArmorClass, HP: sheet.HPCurrent, HPMax: sheet.HPMax,
-		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{},
-		Attacks: []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning"}},
+		Shield: sheet.Class == "wizard" || sheet.Class == "sorcerer", Saves: map[string]int{}, UnarmedDC: actions.UnarmedDC(str, pb),
+		Attacks:          []domain.Attack{{Name: "Unarmed Strike", ToHit: str + pb, ReachFt: 5, DamageBonus: 1 + str, DamageType: "bludgeoning", DamageMod: str}},
+		AttacksPerAction: s.attacksPerAction(ctx, sheet.Class, sheet.Level), Strength: sheet.Scores[rules.Strength],
 	}
 	for _, sv := range sheet.Derived.Saves {
 		stats.Saves[string(sv.Ability)] = sv.Bonus
@@ -111,6 +118,11 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	if ability, casts := spellcasting()[sheet.Class]; casts {
 		stats.SpellDC = 8 + pb + rules.Modifier(sheet.Scores[ability])
 	}
+	var carried []string
+	for _, w := range sheet.Weapons {
+		carried = append(carried, w.Slug)
+	}
+	mastered := mastery.Mastered(carried, s.masteryCount(ctx, sheet.Class, sheet.Level))
 	for _, w := range sheet.Weapons {
 		props := attack.Weapon{
 			Finesse: slices.Contains(w.Properties, "Finesse"), Ammunition: slices.Contains(w.Properties, "Ammunition"),
@@ -123,7 +135,8 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 		dmg, flat := damage(w.DamageDice, bonus)
 		stats.Attacks = append(stats.Attacks, domain.Attack{
 			Name: w.Name, ToHit: toHit, ReachFt: reach, RangeFt: w.RangeFeet, LongRangeFt: w.LongRangeFeet, Damage: dmg,
-			DamageBonus: flat, DamageType: w.DamageType,
+			DamageBonus: flat, DamageType: w.DamageType, Light: slices.Contains(w.Properties, "Light"), DamageMod: bonus,
+			Mastery: masteryOf(w.Properties, slices.Contains(mastered, w.Slug)),
 		})
 	}
 	return sheet.Name, uuid.UUID(sheet.Owner.ID), stats, nil
@@ -167,4 +180,53 @@ func (s Statblocks) ambush(ctx context.Context, m queries.MonsterStatblockRow, s
 		}
 	}
 	return nil
+}
+
+// attacksPerAction is how many attacks a Character's Attack action holds: one, or what their class's
+// Extra Attack gives at their level.
+func (s Statblocks) attacksPerAction(ctx context.Context, class string, level int) int {
+	cat, err := s.Store.Features(ctx)
+	if err != nil {
+		return 1
+	}
+	n, _ := cat.Scales[class+"-extra-attack"].Steps.At(level)
+	if v, err := strconv.Atoi(n); err == nil {
+		return v
+	}
+	return 1
+}
+
+// masteryCount is how many weapons a Character's class lets it master at its level.
+func (s Statblocks) masteryCount(ctx context.Context, class string, level int) int {
+	cat, err := s.Store.Features(ctx)
+	if err != nil {
+		return 0
+	}
+	n, _ := cat.Scales[class+"-weapon-mastery"].Steps.At(level)
+	count, _ := strconv.Atoi(n)
+	return count
+}
+
+// masteryOf is a weapon's mastery when the Character has mastered it.
+func masteryOf(properties []string, mastered bool) string {
+	m, ok := mastery.Of(properties)
+	if !ok || !mastered {
+		return ""
+	}
+	return string(m)
+}
+
+// senses reads the blindsight, tremorsense and truesight a monster has, in feet.
+func (s Statblocks) senses(ctx context.Context, id int64) (map[string]int, error) {
+	rows, err := s.Store.q.MonsterStats(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]int{}
+	for _, r := range rows {
+		if r.Kind == "sense" && slices.Contains([]string{"blindsight", "tremorsense", "truesight"}, r.Name) && r.Value >= 5 {
+			out[r.Name] = int(min(r.Value, 1000))
+		}
+	}
+	return out, nil
 }

@@ -59,6 +59,23 @@ type Campaign struct {
 	ReactionTimeoutS int
 	// HighGround turns on the optional rule: +2 to hit from higher ground.
 	HighGround bool
+	// RestSupplies turns on the optional rule: a Long Rest costs each resting Character a day of Rations.
+	RestSupplies bool
+	// InitiativeMode is "individual" or "side" (one roll per side); ShareInitiative gives identical
+	// monsters one roll.
+	InitiativeMode  string
+	ShareInitiative bool
+}
+
+// SettingsChange is a change to a Campaign's settings; nil leaves a field alone.
+type SettingsChange struct {
+	Name             *string
+	Ruleset          *string
+	ReactionTimeoutS *int
+	HighGround       *bool
+	RestSupplies     *bool
+	InitiativeMode   *string
+	ShareInitiative  *bool
 }
 
 // Member is an account's participation in a Campaign.

@@ -323,8 +323,11 @@ describe('combat', () => {
         fighter('Lurker', { initiative: 5, rank: 3, done: true }),
       ],
     }
-    s.receive({ kind: 'view', seq: 3, view: { tokens: [goblin, lurker], fog: false, visible: [], remembered: [], combat: active } })
+    const tired = { ...goblin, effects: [{ id: '0190c7a8-0000-7000-8000-000000000301', slug: 'exhaustion', name: 'Exhaustion', concentration: false, level: 2 },
+      { id: '0190c7a8-0000-7000-8000-000000000302', slug: 'homebrew-hex', name: 'Hex', concentration: false }] }
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [tired, lurker], fog: false, visible: [], remembered: [], combat: active } })
     await flushPromises()
+    expect(wrapper.get('[data-testid="rail-Goblin Boss"] [data-testid="statuses"]').findAll('[role="img"]').map((i) => i.attributes('aria-label'))).toEqual(['Exhaustion 2', 'Hex'])
     expect(wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Round 1')
     expect(wrapper.get('[data-testid="rail-Goblin Boss"]').text()).toContain('17 · tied')
     expect(wrapper.get('[data-testid="rail-Goblin Boss"]').attributes('aria-current')).toBe('step')
@@ -401,6 +404,16 @@ describe('attacks', () => {
     const bar = wrapper.get('[data-testid="hotbar-Goblin Boss"]')
     expect(bar.get('[data-testid="attack-0"]').text()).toContain('+4 · 1d6+2 · reach 5 ft')
     expect(bar.get('[data-testid="attack-1"]').text()).toContain('+4 · 3 · range 20/60 ft')
+    await bar.get('[data-testid="action-dash"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'take_action', tokenId: boss.id, action: 'dash' })
+    expect(bar.get('[data-testid="action-hide"]').attributes('title')).toContain('DC 15')
+    await bar.get('[data-testid="ready"]').setValue('0')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'take_action', tokenId: boss.id, action: 'ready', trigger: 'enters_reach', attackNo: 0 })
+    await bar.get('[data-testid="unarmed-grapple"]').trigger('click')
+    expect(wrapper.get('[data-testid="grabbing"]').text()).toBe('Tap the creature to grapple or shove.')
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'unarmed', tokenId: boss.id, targetId: aria.id, option: 'grapple' })
+    expect(wrapper.find('[data-testid="grabbing"]').exists()).toBe(false)
     await bar.get('[data-testid="attack-0"]').trigger('click')
     await bar.get('[data-testid="attack-0"]').trigger('click')
     expect(wrapper.find('[data-testid="hotbar-Goblin Boss"] [role="status"]').exists()).toBe(false)
@@ -586,7 +599,8 @@ describe('effects', () => {
     const s = FakeSocket.last()
     const manual = [{ id: '0190c7a8-0000-7000-8000-000000000062', text: 'Goblin Boss: Resolve Hold Person by hand.' }]
     const saves = [{ rollId: '0190c7a8-0000-7000-8000-000000000063', tokenId: goblin.id, effect: 'Hold Person', dc: 13 }]
-    s.receive(snapshot([aria, goblin], 'dm', { manual, saves }))
+    const reduced = { id: '0190c7a8-0000-7000-8000-000000000066', slug: 'enlarge-reduce', name: 'Enlarge/Reduce', concentration: false, mode: 'Reduce' }
+    s.receive(snapshot([{ ...aria, effects: [...(aria.effects ?? []), reduced], qualities: [{ quality: 'hidden', seenThrough: true }] }, goblin], 'dm', { manual, saves }))
     await flushPromises()
     expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (12/12 HP) · Bless')
     expect(wrapper.get('[data-testid="manual"]').text()).toContain('Resolve Hold Person by hand.')
@@ -596,13 +610,17 @@ describe('effects', () => {
     await wrapper.get('[data-hex="0,0"]').trigger('click')
     const panel = wrapper.get('[data-testid="effects-panel"]')
     expect(panel.text()).toContain('Bless · 9 rounds · concentration')
+    expect(panel.text()).toContain('Enlarge/Reduce (Reduce)')
     await panel.get('[data-testid="end-effect-bless"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'end_effect', effectId: aria.effects?.[0]?.id })
     const sent = s.sent.length
     await panel.get('form').trigger('submit')
     expect(s.sent).toHaveLength(sent)
-    await panel.get('[data-testid="effect-name"]').setValue('hold-person')
+    await panel.get('[data-testid="effect-name"]').setValue('faerie-fire')
     await panel.get('[data-testid="effect-source"]').setValue(aria.id)
+    expect(panel.get('[data-testid="concentration-warning"]').text()).toBe('Aria stops concentrating on Bless.')
+    await panel.get('[data-testid="effect-name"]').setValue('hold-person')
+    expect(panel.find('[data-testid="concentration-warning"]').exists()).toBe(false)
     await panel.get('[data-testid="effect-rounds"]').setValue(10)
     await panel.get('[data-testid="effect-save"]').setValue('wisdom')
     await panel.get('[data-testid="effect-dc"]').setValue(13)
@@ -618,6 +636,30 @@ describe('effects', () => {
     await panel.get('[data-testid="effect-save"]').setValue('')
     await panel.get('form').trigger('submit')
     expect(s.sent.at(-1)).toEqual({ kind: 'apply_effect', targetId: aria.id, effect: 'prone', q: 0, r: 0, hidden: false, nonce: String(sent + 2) })
+    await panel.get('[data-testid="effect-name"]').setValue('enlarge-reduce')
+    await panel.get('[data-testid="effect-mode"]').setValue(' Reduce ')
+    await panel.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'apply_effect', effect: 'enlarge-reduce', effectMode: 'Reduce' })
+    await panel.get('[data-testid="effect-name"]').setValue('wild-shape')
+    await panel.get('[data-testid="effect-creature"]').setValue(' wolf ')
+    await panel.get('[data-testid="effect-temp"]').setValue(4)
+    await panel.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'apply_effect', effect: 'wild-shape', monsterSlug: 'wolf', tempHp: 4 })
+    const vis = wrapper.get('[data-testid="visibility-panel"]')
+    expect((vis.get('[data-testid="quality-hidden"]').element as HTMLInputElement).checked).toBe(true)
+    expect((vis.get('[data-testid="seen-through-hidden"]').element as HTMLInputElement).checked).toBe(true)
+    await vis.get('[data-testid="quality-hidden"]').setValue(false)
+    await vis.get('[data-testid="quality-invisible"]').setValue(true)
+    await vis.get('[data-testid="quality-disguised"]').setValue(true)
+    await vis.get('[data-testid="disguise"]').setValue(' Old woman ')
+    await vis.get('[data-testid="seen-through-disguised"]').setValue(true)
+    await vis.get('[data-testid="save-visibility"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'set_visibility', tokenId: aria.id, qualities: ['invisible', 'disguised'], seenThrough: ['disguised'], disguise: 'Old woman' })
+    await vis.get('[data-testid="quality-disguised"]').setValue(false)
+    await vis.get('[data-testid="save-visibility"]').trigger('click')
+    expect(s.sent.at(-1)).toEqual(expect.objectContaining({ qualities: ['invisible'], seenThrough: [] }))
+    expect(s.sent.at(-1)).not.toHaveProperty('disguise')
+    expect((panel.get('[data-testid="effect-mode"]').element as HTMLInputElement).value).toBe('')
   })
 
   it('tells players the DM is resolving and hands them their own saves', async () => {
@@ -656,6 +698,70 @@ describe('areas and terrain', () => {
     saves: [{ tokenId: aria.id, rollId: '0190c7a8-0000-7000-8000-000000000072' }, { tokenId: boss.id, rollId: '0190c7a8-0000-7000-8000-000000000073' }],
   }
 
+  it('teleports with Misty Step and shows temporary hit points and emanations that follow their bearer', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const combat = { status: 'active', round: 1, combatants: [fighter(boss, { acting: true }), fighter(aria)] }
+    const guarded: LiveToken = { ...boss, effects: [{ id: '0190c7a8-0000-7000-8000-000000000091', slug: 'spirit-guardians', name: 'Spirit Guardians', concentration: true, hexes: [{ q: 1, r: 0 }] }] }
+    s.receive(snapshot([{ ...aria, tempHp: 3, form: 'Wolf' }, guarded], 'dm', { combat }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria as Wolf (12/12 HP +3 temp)')
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in the area')
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="misty-step"]').trigger('click')
+    expect(wrapper.get('[data-testid="teleporting"]').text()).toBe('Tap a free hex within 30 feet.')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'teleport', tokenId: boss.id, effect: 'misty-step', q: 2, r: 0 })
+    expect(wrapper.find('[data-testid="teleporting"]').exists()).toBe(false)
+    const bar = '[data-testid="hotbar-Goblin Boss"]'
+    await wrapper.get(`${bar} [data-testid="jump"]`).trigger('click')
+    expect(wrapper.get('[data-testid="jumping"]').text()).toBe('Tap where to land.')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'jump', tokenId: boss.id, q: 2, r: 0 })
+    await wrapper.get(`${bar} [data-testid="throw"]`).trigger('click')
+    expect(wrapper.get('[data-testid="throwing"]').text()).toBe('Tap the creature or object to throw.')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(wrapper.get('[data-testid="throwing"]').text()).toBe('Tap the creature or object to throw.')
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(wrapper.get('[data-testid="throwing"]').text()).toBe('Tap where it lands.')
+    await wrapper.get('[data-hex="0,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'throw', tokenId: boss.id, targetId: aria.id, q: 0, r: 1 })
+    s.receive(snapshot([aria, guarded], 'dm', { combat, objects: [{ id: '0190c7a8-0000-7000-8000-0000000000b1', kind: 'barrel', name: 'Barrel', q: 1, r: 1, open: false, broken: false }] }))
+    await flushPromises()
+    await wrapper.get(`${bar} [data-testid="throw"]`).trigger('click')
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    await wrapper.get('[data-hex="0,1"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'throw', tokenId: boss.id, objectId: '0190c7a8-0000-7000-8000-0000000000b1', q: 0, r: 1 })
+  })
+
+  it('summons creatures, marks them in the roster and commands them', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const wolf: LiveToken = { ...boss, id: '0190c7a8-0000-7000-8000-000000000093', label: 'Wolf', q: 1, r: 1 }
+    const owner = fighter(boss, { acting: true })
+    const combat = { status: 'active', round: 1, combatants: [owner, fighter(aria), fighter(wolf, { acting: true, ownerId: owner.id, awaitingCommand: true })] }
+    s.receive(snapshot([aria, boss, wolf], 'dm', { combat }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="summoned-Wolf"]').text()).toBe('Summoned by Goblin Boss · awaiting orders')
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="command-Wolf"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'command', tokenId: boss.id, targetId: wolf.id })
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="summon"]').setValue('animate-dead')
+    expect(wrapper.get('[data-testid="summoning"]').text()).toBe('Tap where they appear.')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'summon', tokenId: boss.id, effect: 'animate-dead', q: 2, r: 0 })
+    expect(wrapper.find('[data-testid="summoning"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="summon"]').setValue('')
+    expect(wrapper.find('[data-testid="summoning"]').exists()).toBe(false)
+    s.receive(snapshot([aria, boss, wolf], 'dm', { combat: { ...combat, combatants: [owner, fighter(aria), fighter(wolf, { ownerId: '0190c7a8-0000-7000-8000-000000000000' })] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="summoned-Wolf"]').text()).toBe('Summoned by someone')
+  })
+
   it('lets the DM aim an area spell, see who it catches and cast it', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pending(u.pathname.split('/')[6] ?? ''),
@@ -671,7 +777,7 @@ describe('areas and terrain', () => {
     expect(wrapper.get('[data-testid="area-aiming"]').text()).toBe('Tap where the spell goes.')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'preview_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0 })
-    const preview = { tokenId: boss.id, effect: 'fireball', name: 'Fireball', dc: 13, hexes: area.hexes, targets: [{ tokenId: aria.id, ally: false }, { tokenId: boss.id, ally: true }, { tokenId: '0190c7a8-0000-7000-8000-000000000099', ally: false }], allies: 1 }
+    const preview = { tokenId: boss.id, effect: 'fireball', name: 'Fireball', dc: 13, hexes: area.hexes, targets: [{ tokenId: aria.id, ally: false, pushedTo: { q: -1, r: 0 } }, { tokenId: boss.id, ally: true }, { tokenId: '0190c7a8-0000-7000-8000-000000000099', ally: false }], allies: 1, ends: ['Bless'] }
     s.receive({ kind: 'area_preview', seq: 1, area: { ...preview, effect: 'shatter' } })
     await flushPromises()
     expect(wrapper.find('[data-testid="area-preview"]').exists()).toBe(false)
@@ -680,7 +786,9 @@ describe('areas and terrain', () => {
     const card = wrapper.get('[data-testid="area-preview"]')
     expect(card.get('h2').text()).toBe('Fireball · DC 13')
     expect(card.get('[data-testid="ally-warning"]').text()).toBe('This catches 1 ally.')
+    expect(card.get('[data-testid="concentration-warning"]').text()).toBe('Casting this ends your concentration on Bless.')
     expect(card.text()).toContain('Goblin Boss (ally)')
+    expect(card.text()).toContain('Aria · pushed to -1, 0 on a failed save')
     expect(card.text()).toContain('Someone')
     expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in the area')
     await expectAccessible(wrapper.element as Element)
@@ -688,14 +796,16 @@ describe('areas and terrain', () => {
     expect(wrapper.find('[data-testid="area-preview"]').exists()).toBe(false)
     await wrapper.get('[data-testid="area-spell"]').setValue('')
     expect(wrapper.find('[data-testid="area-aiming"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="area-slot"]').setValue(5)
     await wrapper.get('[data-testid="area-spell"]').setValue('fireball')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'preview_area', effect: 'fireball', slot: 5 })
     s.receive({ kind: 'area_preview', seq: 1, area: { ...preview, allies: 2, targets: [] } })
     await flushPromises()
     expect(wrapper.get('[data-testid="ally-warning"]').text()).toBe('This catches 2 allies.')
     expect(wrapper.find('[data-testid="area-empty"]').exists()).toBe(true)
     await wrapper.get('[data-testid="confirm-area"]').trigger('click')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'cast_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0 })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'cast_area', tokenId: boss.id, effect: 'fireball', q: 1, r: 0, slot: 5 })
     s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, boss], fog: false, visible: [], remembered: [], combat, area } })
     await flushPromises()
     expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(2)
@@ -732,6 +842,145 @@ describe('areas and terrain', () => {
     expect(wrapper.get('[data-hex="1,1"]').classes()).toContain('cell--surface-ice')
     expect(wrapper.get('[data-hex="1,0"]').classes()).toContain('cell--area')
     expect(wrapper.findAll('[data-testid="roll-card"]')).toHaveLength(1)
+  })
+})
+
+describe('map objects', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
+  const door = { id: '0190c7a8-0000-7000-8000-0000000000a1', kind: 'door' as const, name: 'Door', q: 1, r: 0, open: false, broken: false, ac: 15, hp: 18, hpMax: 18 }
+  const lever = { id: '0190c7a8-0000-7000-8000-0000000000a2', kind: 'lever' as const, name: 'Lever', q: 0, r: 1, open: true, broken: false, secret: true, ac: 19, hp: 5, hpMax: 5 }
+  const barrel = { id: '0190c7a8-0000-7000-8000-0000000000a3', kind: 'barrel' as const, name: 'Barrel', q: 1, r: 1, open: false, broken: true }
+
+  it('lets the DM place, find, damage and remove objects, and anyone next to one use it', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [door, lever, barrel], surfaceKinds: [{ kind: 'stinking-cloud', name: 'Stinking cloud' }], elevation: [{ q: 0, r: 1, elevationFt: -10 }, { q: 1, r: 1, elevationFt: 20 }] }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('Door (closed)')
+    expect(wrapper.find('[data-hex="0,1"] [data-height="-10"]').exists()).toBe(true)
+    expect(wrapper.get('[data-hex="1,1"] [data-height="20"]').attributes('style')).toContain('opacity: 0.52')
+    await wrapper.get('[data-testid="tool-surface"]').setValue(true)
+    expect(wrapper.get('[data-testid="surface-kind"]').text()).toContain('Stinking cloud')
+    await wrapper.get('[data-testid="tool-tokens"]').setValue(true)
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('Lever (pulled)')
+    expect(wrapper.get('[data-testid="object-Door"]').text()).toContain('Door · closed · 18/18 HP, AC 15')
+    expect(wrapper.get('[data-testid="object-Lever"]').text()).toContain('secret')
+    expect(wrapper.get('[data-testid="object-Barrel"]').text()).toContain('broken')
+    expect(wrapper.find('[data-testid="use-Door"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="find-Lever"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'find_object', objectId: lever.id })
+    await wrapper.get('[data-testid="hit-Door"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'find_object' })
+    await wrapper.get('[data-testid="damage-Door"]').setValue(5)
+    await wrapper.get('[data-testid="hit-Door"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'damage_object', objectId: door.id, hpDelta: -5 })
+    await wrapper.get('[data-testid="remove-Barrel"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'remove_object', objectId: barrel.id })
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    await wrapper.get('[data-testid="use-Door"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'use_object', tokenId: aria.id, objectId: door.id })
+    expect(wrapper.get('[data-testid="use-Lever"]').text()).toBe('Pull')
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [{ ...door, open: true }] }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="use-Door"]').text()).toBe('Close')
+    await wrapper.get('[data-testid="tool-object"]').setValue(true)
+    await wrapper.get('[data-testid="object-kind"]').setValue('barrel')
+    await wrapper.get('[data-testid="object-name"]').setValue(' Powder keg ')
+    await wrapper.get('[data-testid="object-effect"]').setValue('prone')
+    await wrapper.get('[data-testid="object-radius"]').setValue(5)
+    await wrapper.get('[data-testid="object-secret"]').setValue(true)
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_object', objectKind: 'barrel', objectName: 'Powder keg', effect: 'prone', radiusFt: 5, secret: true, q: 2, r: 0 })
+    await wrapper.get('[data-testid="object-kind"]').setValue('trap')
+    for (const [id, value] of [['object-detect', 12], ['object-disarm', 15], ['object-trigger', 5], ['object-lock', 0]] as const) {
+      await wrapper.get(`[data-testid="${id}"]`).setValue(value)
+    }
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_object', objectKind: 'trap', detectDc: 12, disarmDc: 15, triggerFt: 5 })
+    await wrapper.get('[data-testid="object-kind"]').setValue('chest')
+    for (const id of ['object-detect', 'object-disarm', 'object-trigger']) await wrapper.get(`[data-testid="${id}"]`).setValue(0)
+    await wrapper.get('[data-testid="object-lock"]').setValue(14)
+    await wrapper.get('[data-testid="object-key"]').setValue(' iron-key ')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_object', objectKind: 'chest', lockDc: 14, key: 'iron-key' })
+    await wrapper.get('[data-testid="object-key"]').setValue('')
+    await wrapper.get('[data-testid="object-lock"]').setValue(0)
+    await wrapper.get('[data-testid="object-name"]').setValue('')
+    await wrapper.get('[data-testid="object-effect"]').setValue('')
+    await wrapper.get('[data-testid="object-radius"]').setValue(0)
+    await wrapper.get('[data-testid="object-secret"]').setValue(false)
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toEqual(expect.objectContaining({ kind: 'place_object', objectKind: 'chest', q: 1, r: 1 }))
+    expect(s.sent.at(-1)).not.toHaveProperty('objectName')
+    const trap = { id: '0190c7a8-0000-7000-8000-0000000000a4', kind: 'trap' as const, name: 'Pit', q: 2, r: 0, open: false, broken: false, armed: true }
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [{ ...lever, open: false, secret: false }, { ...barrel, broken: false }, { ...door, locked: true }, trap] }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('Lever (up)')
+    expect(wrapper.get('[data-hex="1,1"]').attributes('aria-label')).toContain('Barrel (closed)')
+    expect(wrapper.get('[data-testid="object-Door"]').text()).toContain('closed, locked')
+    expect(wrapper.find('[data-testid="use-Door"]').exists()).toBe(false)
+    for (const m of ['key', 'tools', 'force', 'knock']) {
+      await wrapper.get(`[data-testid="unlock-${m}-Door"]`).trigger('click')
+      expect(s.sent.at(-1)).toMatchObject({ kind: 'unlock', tokenId: aria.id, objectId: door.id, method: m })
+    }
+    expect(wrapper.get('[data-testid="object-Pit"]').text()).toContain('Pit · trap')
+    await wrapper.get('[data-testid="disarm-Pit"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'disarm', tokenId: aria.id, objectId: trap.id })
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [{ ...trap, armed: false }] }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="object-Pit"]').text()).toContain('spent')
+    expect(wrapper.find('[data-testid="disarm-Pit"]').exists()).toBe(false)
+  })
+})
+
+describe('sneaking', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
+
+  it('lets the party sneak and tints the hexes watched creatures can notice it in', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria], 'party'))
+    await flushPromises()
+    await wrapper.get('[data-testid="start-sneaking"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'sneak', on: true })
+    s.receive(snapshot([aria], 'party', { sneak: { waiting: true, reach: [{ q: 1, r: 0 }] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="sneak-status"]').text()).toBe('Sneaking: roll Stealth.')
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('watched')
+    s.receive(snapshot([aria], 'party', { sneak: { waiting: false, reach: [] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="sneak-status"]').text()).toBe('Sneaking. Tinted hexes are watched.')
+    await wrapper.get('[data-testid="stop-sneaking"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'sneak', on: false })
+    s.receive(snapshot([aria], 'party', { map: liveMap, sneak: { waiting: false, reach: [{ q: 0, r: 0 }] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('watched')
+    expect(wrapper.find('[data-testid="start-turns"]').exists()).toBe(false)
+    s.receive(snapshot([aria], 'party', { exploration: { order: [aria.id], turn: aria.id, leftFt: 20 } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="exploration-turn"]').text()).toBe('Aria explores · 20 ft left')
+    await wrapper.get('[data-testid="pass-turn"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'pass_turn' })
+  })
+
+  it('lets the DM put exploration into turns', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria], 'dm'))
+    await flushPromises()
+    await wrapper.get('[data-testid="start-turns"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'explore', on: true })
+    s.receive(snapshot([aria], 'dm', { exploration: { order: [aria.id], turn: '0190c7a8-0000-7000-8000-000000000099', leftFt: 30 } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="exploration-turn"]').text()).toBe('Someone explores · 30 ft left')
+    await wrapper.get('[data-testid="stop-turns"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'explore', on: false })
   })
 })
 
@@ -1506,5 +1755,178 @@ describe('action log', () => {
     FakeSocket.last().receive(snapshot([], 'party'))
     await flushPromises()
     expect(player.wrapper.find('[data-testid="action-log"]').exists()).toBe(false)
+  })
+})
+
+describe('rest', () => {
+  const ARIA = '0190c7a8-0000-7000-8000-000000000071'
+  const BROM = '0190c7a8-0000-7000-8000-000000000072'
+  const ROLL = '0190c7a8-0000-7000-8000-000000000073'
+  const tokens: LiveToken[] = [
+    { id: ARIA, label: 'Aria', kind: 'party', q: 0, r: 0, hidden: false, darkvisionFt: 0, controllerId: player.id },
+    { id: BROM, label: 'Brom', kind: 'party', q: 1, r: 0, hidden: false, darkvisionFt: 0, controllerId: member.id },
+  ]
+  const resters = [
+    { characterId: ARIA, tokenId: ARIA, name: 'Aria', hitDie: 'd10' as const, hitDiceLeft: 2 },
+    { characterId: BROM, tokenId: BROM, name: 'Brom', hitDie: 'd12' as const, hitDiceLeft: 1, rollId: ROLL },
+  ]
+
+  it('lets a player propose a rest and spend their own Hit Dice', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot(tokens, 'party'))
+    await flushPromises()
+    await wrapper.get('[data-testid="propose-short"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'propose_rest', rest: 'short' })
+    await wrapper.get('[data-testid="propose-long"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'propose_rest', rest: 'long' })
+    s.receive(snapshot(tokens, 'party', { rest: { kind: 'short', status: 'proposed', proposedBy: player.id, agreed: [player.id], waiting: [], waitingOnDm: true, resters } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Short Rest proposed. Waiting on the DM.')
+    expect(wrapper.find('[data-testid="agree-rest"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="finish-rest"]').exists()).toBe(false)
+    s.receive(snapshot(tokens, 'party', { rest: { kind: 'short', status: 'resting', proposedBy: player.id, agreed: [player.id, member.id], waiting: [], waitingOnDm: false, resters } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Short Rest under way.')
+    expect(wrapper.get('[data-testid="rester-Brom"]').text()).toContain('Rolling…')
+    expect(wrapper.find('[aria-label="Spend a Hit Die for Brom"]').exists()).toBe(false)
+    await wrapper.get('[aria-label="Spend a Hit Die for Aria"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend_hit_die', tokenId: ARIA })
+    await expectAccessible(wrapper.get('[data-testid="rest"]').element)
+  })
+
+  it('lets the DM agree, finish, call off or interrupt, and never rest mid-fight', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign() })
+    const s = FakeSocket.last()
+    const proposed = { kind: 'long', status: 'proposed', proposedBy: player.id, agreed: [player.id], waiting: [BROM], waitingOnDm: true, resters }
+    s.receive(snapshot(tokens, 'dm', { rest: proposed }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Long Rest proposed. Waiting on the DM and 1 player.')
+    await wrapper.get('[data-testid="agree-rest"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'agree_rest' })
+    expect(wrapper.get('[data-testid="interrupt-rest"]').text()).toBe('Call it off')
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, waiting: [BROM, ARIA], waitingOnDm: false } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Long Rest proposed. Waiting on 2 players.')
+    expect(wrapper.find('[data-testid="agree-rest"]').exists()).toBe(false)
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, waiting: [], waitingOnDm: false } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest-status"]').text()).toBe('Long Rest proposed.')
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, status: 'resting', waiting: [], waitingOnDm: false } }))
+    await flushPromises()
+    expect(wrapper.find('[aria-label="Spend a Hit Die for Aria"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="finish-rest"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'finish_rest' })
+    expect(wrapper.get('[data-testid="interrupt-rest"]').text()).toBe('Interrupt')
+    await wrapper.get('[data-testid="interrupt-rest"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'interrupt_rest' })
+    s.receive(snapshot(tokens, 'dm', { rest: { ...proposed, kind: 'short', status: 'resting', waiting: [], waitingOnDm: false } }))
+    await flushPromises()
+    await wrapper.get('[aria-label="Spend a Hit Die for Aria"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'spend_hit_die', tokenId: ARIA })
+    s.receive(snapshot(tokens, 'dm', { combat: { status: 'active', round: 1, combatants: [] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="rest"]').text()).toContain('Nobody rests in the middle of a fight.')
+  })
+})
+
+describe('hotbar', () => {
+  it('counts attacks left, opens the off-hand attack and the free object interaction', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const Hotbar = (await import('./Hotbar.vue')).default
+    const token: LiveToken = {
+      ...goblin, attacks: [
+        { name: 'Longsword', toHit: 6, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d8', damageBonus: 3 },
+        { name: 'Dagger', toHit: 6, reachFt: 5, rangeFt: 20, longRangeFt: 60, damage: '1d4', damageBonus: 3, light: true, mastery: 'nick' },
+        { name: 'Greataxe', toHit: 6, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d12', damageBonus: 3, mastery: 'cleave' },
+      ],
+    }
+    const w = mount(Hotbar, { props: { token, armed: null, blocked: '', attacksLeft: 1, offHand: true, interaction: true, cleave: true } })
+    expect(w.get('[data-testid="mastery-1"]').text()).toBe('nick')
+    expect(w.get('[data-testid="mastery-2"]').attributes('title')).toContain('second creature')
+    expect(w.find('[data-testid="mastery-0"]').exists()).toBe(false)
+    await w.get('[data-testid="cleave"]').trigger('click')
+    expect(w.emitted('cleave')?.at(-1)).toEqual([2])
+    expect(w.get('[data-testid="attacks-left"]').text()).toBe('1 attack left this action')
+    expect(w.find('[data-testid="off-hand-0"]').isVisible()).toBe(false)
+    await w.get('[data-testid="off-hand-1"]').trigger('click')
+    expect(w.emitted('offHand')?.at(-1)).toEqual([1])
+    await w.get('form.interact').trigger('submit')
+    expect(w.emitted('interact')).toBeUndefined()
+    await w.get('[data-testid="interact-what"]').setValue(' draws a dagger ')
+    await w.get('form.interact').trigger('submit')
+    expect(w.emitted('interact')?.at(-1)).toEqual(['draws a dagger'])
+    await w.setProps({ attacksLeft: 2, offHand: false, interaction: false })
+    expect(w.get('[data-testid="attacks-left"]').text()).toBe('2 attacks left this action')
+    expect(w.find('[data-testid="off-hand-1"]').exists()).toBe(false)
+    expect(w.find('form.interact').exists()).toBe(false)
+  })
+})
+
+describe('reaction settings', () => {
+  it('asks, always takes or never takes each kind of reaction', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const ReactionSettings = (await import('./ReactionSettings.vue')).default
+    const token: LiveToken = { ...goblin, label: 'Aria', reactions: [{ kind: 'opportunity_attack', mode: 'always', condition: 'target_bloodied' }] }
+    const w = mount(ReactionSettings, { props: { token }, attachTo: document.body })
+    expect((w.get('[data-testid="reaction-opportunity_attack"]').element as HTMLSelectElement).value).toBe('always')
+    expect((w.get('[data-testid="reaction-opportunity_attack-bloodied"]').element as HTMLInputElement).checked).toBe(true)
+    expect((w.get('[data-testid="reaction-shield"]').element as HTMLSelectElement).value).toBe('ask')
+    await w.get('[data-testid="reaction-shield"]').setValue('always')
+    expect(w.emitted('set')?.at(-1)).toEqual(['shield', 'always', ''])
+    await w.get('[data-testid="reaction-opportunity_attack-bloodied"]').setValue(false)
+    expect(w.emitted('set')?.at(-1)).toEqual(['opportunity_attack', 'always', ''])
+    await w.get('[data-testid="reaction-readied"]').setValue('never')
+    expect(w.emitted('set')?.at(-1)).toEqual(['readied', 'never', ''])
+    await w.get('[data-testid="reaction-opportunity_attack"]').setValue('always')
+    expect(w.emitted('set')?.at(-1)).toEqual(['opportunity_attack', 'always', 'target_bloodied'])
+    expect(w.find('[data-testid="reaction-shield-bloodied"]').exists()).toBe(false)
+    await expectAccessible(w.element as Element)
+    w.unmount()
+  })
+})
+
+describe('the fallen', () => {
+  it('shows death saves and offers stabilising and revival', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const DyingPanel = (await import('./DyingPanel.vue')).default
+    const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000081', label: 'Aria', kind: 'party', dying: { successes: 1, failures: 2 } }
+    const brom: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000082', label: 'Brom', kind: 'party', dying: { successes: 0, failures: 0, dead: true } }
+    const nim: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000083', label: 'Nim', kind: 'party', dying: { successes: 0, failures: 0, stable: true } }
+    const helper: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-000000000084', label: 'Mira', kind: 'party' }
+    const w = mount(DyingPanel, { props: { tokens: [aria, brom, nim, helper], dm: true, helper }, attachTo: document.body })
+    expect(w.get('[data-testid="dying-Aria"]').text()).toContain('Aria: 1 success, 2 failures')
+    expect(w.get('[data-testid="dying-Brom"]').text()).toContain('Dead')
+    expect(w.get('[data-testid="dying-Nim"]').text()).toContain('Stable')
+    await w.get('[aria-label="Stabilise Aria with Medicine"]').trigger('click')
+    expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'stabilise', tokenId: helper.id, targetId: aria.id, option: 'medicine' }])
+    await w.get('[aria-label="Stabilise Aria with a spell"]').trigger('click')
+    expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'stabilise', tokenId: helper.id, targetId: aria.id, option: 'spell' }])
+    await w.get('[aria-label="Revive Brom with raise dead"]').trigger('click')
+    expect(w.emitted('send')?.at(-1)).toEqual([{ kind: 'revive', targetId: brom.id, option: 'raise_dead' }])
+    expect(w.find('[aria-label="Stabilise Nim with Medicine"]').exists()).toBe(false)
+    await expectAccessible(w.element as Element)
+    await w.setProps({ tokens: [{ ...aria, dying: { successes: 2, failures: 1 } }], dm: false, helper: null })
+    expect(w.text()).toContain('2 successes, 1 failure')
+    expect(w.find('button').exists()).toBe(false)
+    await w.setProps({ tokens: [helper] })
+    expect(w.find('[data-testid="dying"]').exists()).toBe(false)
+    w.unmount()
+  })
+
+  it('marks the fallen on the initiative rail', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const InitiativeRail = (await import('./InitiativeRail.vue')).default
+    const tokens: LiveToken[] = [
+      { ...goblin, id: '0190c7a8-0000-7000-8000-000000000091', dying: { successes: 1, failures: 2 } },
+      { ...goblin, id: '0190c7a8-0000-7000-8000-000000000092', dying: { successes: 0, failures: 0, stable: true } },
+      { ...goblin, id: '0190c7a8-0000-7000-8000-000000000093', dying: { successes: 0, failures: 3, dead: true } },
+    ]
+    const c = (n: number, label: string) => ({
+      id: `0190c7a8-0000-7000-8000-00000000010${String(n)}`, tokenId: tokens[n]?.id ?? '', label, kind: 'party' as const, rollId: goblin.id,
+      acting: false, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30,
+    })
+    const w = mount(InitiativeRail, { props: { combat: { status: 'active', round: 1, combatants: [c(0, 'A'), c(1, 'B'), c(2, 'C')] }, tokens } })
+    expect(w.findAll('[data-testid="fallen"]').map((f) => f.text())).toEqual(['Dying 1✓ 2✗', 'Stable', 'Dead'])
   })
 })

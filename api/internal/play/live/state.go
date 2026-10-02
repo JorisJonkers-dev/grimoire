@@ -27,6 +27,10 @@ type state struct {
 	// surfaces is terrain on hexes this Session; cast is the area spell waiting on its rolls.
 	surfaces map[hex.Coord]domain.Surface
 	cast     *domain.AreaCast
+	// terrainKinds is the Surface catalogue; sneak the party's sneaking, nil when it is not.
+	terrainKinds surface.Catalog
+	sneak        *domain.Sneak
+	explore      *domain.Exploration
 	// table is what the Table Display shows; tableMap is the map of its world scene.
 	table    domain.TableDisplay
 	tableMap *domain.Map
@@ -47,6 +51,11 @@ type state struct {
 	fx       domain.Effects
 	// catalog is every Effect the rules know.
 	catalog effects.Catalog
+	// rest is the rest proposed or under way; pending the Hides, Grapples and Shoves waiting on rolls.
+	rest    *domain.Rest
+	pending []domain.PendingAction
+	// dying are the Characters at 0 hit points.
+	dying map[domain.TokenID]domain.Dying
 }
 
 // cloneEffects copies a Session's Effects so a change never touches the committed state.
@@ -55,7 +64,7 @@ func cloneEffects(fx domain.Effects) domain.Effects {
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog, terrainKinds: s.terrainKinds}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
@@ -67,7 +76,14 @@ func (s *state) clone() *state {
 		next.zones = append(next.zones, cloneZone(z))
 	}
 	next.checks = slices.Clone(s.checks)
+	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
 	next.inventory, next.day = cloneInventory(s.inventory), s.day
+	if s.sneak != nil {
+		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
+	}
+	if s.explore != nil {
+		next.explore = &domain.Exploration{Order: slices.Clone(s.explore.Order), Turn: s.explore.Turn, MovedFt: s.explore.MovedFt}
+	}
 	if s.shop != nil {
 		next.shop = s.shop.Clone()
 	}
@@ -84,6 +100,7 @@ func (s *state) clone() *state {
 		b := *s.board
 		b.Walls, b.Reveals, b.Elevation = maps.Clone(b.Walls), maps.Clone(b.Reveals), maps.Clone(b.Elevation)
 		b.Lights = append([]domain.MapLight(nil), b.Lights...)
+		b.Objects = maps.Clone(b.Objects)
 		next.board = &b
 	}
 	return next
@@ -152,11 +169,15 @@ func (s *state) project(a Audience) View {
 	seen := s.vision()
 	if s.board != nil {
 		s.projectBoard(&v, a, seen)
+		v.Objects = s.objectViews(a, seen)
 	}
 	for _, t := range s.tokens {
-		if a == AudienceDM || (!t.Hidden && (s.board == nil || seen[hex.Coord{Q: t.Q, R: t.R}])) {
-			tv := tokenView(t, a)
+		if a == AudienceDM || s.shows(t, seen) {
+			tv := tokenView(s.masked(t, a), a)
 			tv.Effects = s.effectViews(t.ID)
+			if a == AudienceDM || t.Kind == domain.TokenParty {
+				tv.Dying = s.dyingView(t.ID)
+			}
 			v.Tokens = append(v.Tokens, tv)
 		}
 	}
@@ -165,11 +186,22 @@ func (s *state) project(a Audience) View {
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
-	v.Shop, v.GameDay = s.shopView(), s.day
+	v.Shop, v.Rest, v.GameDay, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen), s.explorationView()
 	if a == AudienceDM {
-		v.Zones = s.zoneViews()
+		v.Zones, v.SurfaceKinds = s.zoneViews(), s.surfaceKindViews()
 	}
 	return v
+}
+
+// surfaceKindViews lists the Surface catalogue for the DM's paint tool.
+func (s *state) surfaceKindViews() []SurfaceKindView {
+	var out []SurfaceKindView
+	for _, k := range s.terrainKinds.Kinds() {
+		if k != surface.None {
+			out = append(out, SurfaceKindView{Kind: string(k), Name: s.terrainKinds[k].Name})
+		}
+	}
+	return out
 }
 
 func (s *state) projectPending(v *View, a Audience, seen map[hex.Coord]bool) {
@@ -218,9 +250,12 @@ func sortHexes(hs []Hex) {
 
 // cell is what the rules see of a hex: walls, difficult Surfaces and height.
 func (s *state) cell(c hex.Coord) hex.Cell {
-	out := hex.Cell{Difficult: surface.Difficult(s.surfaces[c].Kind), Blocked: false, BlocksSight: false, ElevationFt: 0, Cover: hex.NoCover}
+	cost := s.terrainKinds.Cost(s.surfaces[c].Kind)
+	out := hex.Cell{Difficult: cost == 2, Multiplier: cost, Blocked: false, BlocksSight: false, ElevationFt: 0, Cover: hex.NoCover}
 	if s.board != nil {
 		out.Blocked, out.BlocksSight, out.ElevationFt = s.board.Walls[c], s.board.Walls[c], s.board.Elevation[c]
+		sight, move := s.objectBlocks(c)
+		out.Blocked, out.BlocksSight = out.Blocked || move, out.BlocksSight || sight
 	}
 	return out
 }

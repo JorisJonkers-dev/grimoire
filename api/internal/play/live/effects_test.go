@@ -225,15 +225,39 @@ func TestDamageTestsConcentration(t *testing.T) {
 		u := fill(d.View.Combat.Attack.RollID, faces[0])
 		return fill(u.View.Combat.Attack.RollID, faces[1:]...)
 	}
-	u := strike(15, 1)
-	if len(u.View.Manual) != 1 || u.View.Manual[0].Text != "Aria took 3 damage while concentrating on Bless: Constitution save DC 10 to keep it." ||
-		effect(token(u.View, "Aria"), "Bless") == nil {
-		t.Fatalf("damage asks for a concentration save = %+v", u.View.Manual)
+	strike(15, 1)
+	next(t, tb.player)
+	next(t, tb.dm)
+	save := lastRoll(t, w, "Constitution save to keep concentrating on Bless (DC 10)")
+	if save.Roller.ID != w.player.ID || save.Notation != "1d20+1d4" || effect(token(look(t, w, tb.dm), "Aria"), "Bless") == nil {
+		t.Fatalf("damage opens Aria's concentration save = %+v", save)
 	}
+	tb.fill(uuid.UUID(save.ID).String(), w.player, 12, 1)
+	drain(tb.dm)
+	drain(tb.player)
+	u := live.Update{View: look(t, w, tb.dm)}
+	if effect(token(u.View, "Aria"), "Bless") == nil || lastRoll(t, w, "Constitution save").Status != domain.StatusResolved {
+		t.Fatalf("a 12 keeps Bless = %+v", token(u.View, "Aria").Effects)
+	}
+	tb.dmSays(live.Command{Kind: live.CmdAdjustHP, TokenID: ids["Aria"], HPDelta: -2})
+	drain(tb.dm)
+	drain(tb.player)
+	second := lastRoll(t, w, "Constitution save to keep concentrating on")
+	if second.ID == save.ID || second.Status == domain.StatusResolved {
+		t.Fatalf("lost hit points open a second save = %+v", second)
+	}
+	tb.fill(uuid.UUID(second.ID).String(), w.player, 2, 1)
+	drain(tb.dm)
+	drain(tb.player)
+	u = live.Update{View: look(t, w, tb.dm)}
+	if effect(token(u.View, "Aria"), "Bless") != nil {
+		t.Fatalf("a failed save ends her concentration = %+v", token(u.View, "Aria").Effects)
+	}
+	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Aria"], SourceID: ids["Aria"], Effect: "bless"})
 	tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Goblin").ID})
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Aria").ID})
 	u = strike(20, 6, 6)
-	if *token(u.View, "Aria").HP != 0 || effect(token(u.View, "Aria"), "Bless") != nil || len(u.View.Manual) != 1 {
+	if *token(u.View, "Aria").HP != 0 || effect(token(u.View, "Aria"), "Bless") != nil {
 		t.Fatalf("dropping to 0 hit points ends concentration = %+v", token(u.View, "Aria"))
 	}
 }

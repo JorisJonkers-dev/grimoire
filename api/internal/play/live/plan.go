@@ -43,6 +43,44 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planLoot(cmd.LootTableID)
 	case CmdMoveItem, CmdMoveCoins:
 		return r.planMove(m, cmd)
+	case CmdTakeAction:
+		return r.planAction(m, cmd)
+	case CmdUnarmed:
+		return r.planUnarmed(m, cmd)
+	case CmdInteract:
+		return r.planInteract(m, cmd)
+	case CmdTeleport:
+		return r.planTeleport(m, cmd)
+	case CmdSummon:
+		return r.planSummon(m, cmd)
+	case CmdSetVisibility:
+		return r.planVisibility(cmd)
+	case CmdPlaceObject, CmdRemoveObject, CmdDamageObject, CmdFindObject:
+		return r.planObject(cmd)
+	case CmdUseObject:
+		return r.planUse(m, cmd)
+	case CmdUnlock:
+		return r.planUnlock(m, cmd)
+	case CmdDisarm:
+		return r.planDisarm(m, cmd)
+	case CmdJump:
+		return r.planJump(m, cmd)
+	case CmdSneak:
+		return r.planSneak(m, cmd)
+	case CmdExplore, CmdPassTurn:
+		return r.planExplore(m, cmd)
+	case CmdThrow:
+		return r.planThrow(m, cmd)
+	case CmdCommand:
+		return r.planCommand(m, cmd)
+	case CmdSetReaction:
+		return r.planReaction(m, cmd)
+	case CmdStabilise:
+		return r.planStabilise(m, cmd)
+	case CmdRevive:
+		return r.planRevive(m, cmd)
+	case CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdFinishRest, CmdInterruptRest:
+		return r.planRest(m, cmd)
 	case CmdRest, CmdEncounterCheck, CmdScheduleCheck:
 		return r.planEncounter(m, cmd)
 	case CmdAddZone, CmdRemoveZone, CmdHoldZone, CmdSpringZone:

@@ -20,7 +20,7 @@ import (
 type Repository interface {
 	InTx(ctx context.Context, fn func(Repository) error) error
 	CreateCampaign(ctx context.Context, name, ruleset, subject string, now time.Time) (domain.Campaign, error)
-	UpdateCampaign(ctx context.Context, id domain.CampaignID, name, ruleset *string, reactionTimeoutS *int, highGround *bool, now time.Time) (domain.Campaign, error)
+	UpdateCampaign(ctx context.Context, id domain.CampaignID, change domain.SettingsChange, now time.Time) (domain.Campaign, error)
 	GetCampaign(ctx context.Context, id domain.CampaignID) (domain.Campaign, error)
 	ListCampaigns(ctx context.Context, subject string, after *domain.ListCursor, pageSize int) ([]domain.Summary, error)
 	LockCampaign(ctx context.Context, id domain.CampaignID) error
@@ -178,6 +178,11 @@ type UpdateInput struct {
 	ReactionTimeoutS *int
 	// HighGround turns the high-ground optional rule on or off.
 	HighGround *bool
+	// RestSupplies makes a Long Rest cost each resting Character a day of Rations.
+	RestSupplies *bool
+	// InitiativeMode is individual or side initiative; ShareInitiative gives identical monsters one roll.
+	InitiativeMode  *string
+	ShareInitiative *bool
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -198,7 +203,14 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	if t := in.ReactionTimeoutS; t != nil && (*t < 3 || *t > 120) {
 		return domain.Campaign{}, refuse("reactions wait between 3 and 120 seconds")
 	}
-	return s.Repo.UpdateCampaign(ctx, id, in.Name, in.Ruleset, in.ReactionTimeoutS, in.HighGround, s.Now())
+	if m := in.InitiativeMode; m != nil && *m != "individual" && *m != "side" {
+		return domain.Campaign{}, refuse("initiative is individual or by side")
+	}
+	change := domain.SettingsChange{
+		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
+		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative,
+	}
+	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
 }
 
 // SetRole makes a Member a DM or a Player. DM only; the last DM cannot step down.

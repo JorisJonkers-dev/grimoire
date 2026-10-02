@@ -9,12 +9,15 @@ import (
 	"github.com/google/uuid"
 
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
+	comppg "github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
 func surfaceAt(v *live.View, q, r int) string {
@@ -31,6 +34,12 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	ctx := context.Background()
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
+	storm := effects.Definition{Slug: "storm-sphere", Name: "Storm Sphere", Concentration: true, Components: []effects.Component{
+		effects.Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, effects.SaveDamage{Ability: "strength", Dice: "2d6", Type: "bludgeoning", Half: false},
+	}}
+	if err := comppg.New(w.pool).SaveEffect(ctx, effects.Owner{Kind: effects.OwnedBySpell, Slug: storm.Slug}, storm); err != nil {
+		t.Fatal(err)
+	}
 	rolls := &app.Rolls{
 		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },
 		Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: w.hub.RollResolved,
@@ -66,6 +75,14 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	if pv == nil || pv.Name != "Shatter" || pv.DC != 14 || len(pv.Hexes) != 19 || len(pv.Targets) != 3 || pv.Allies != 1 {
 		t.Fatalf("shatter preview = %+v", pv)
 	}
+	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Brom"], SourceID: ids["Aria"], Effect: "bless"})
+	if u := tb.playerSays(cast(live.CmdPreviewArea, "storm-sphere", 4, 0)); u.Area == nil || len(u.Area.Ends) != 1 || u.Area.Ends[0] != "Bless" {
+		t.Fatalf("a concentration area warns it ends Bless = %+v", u.Area)
+	}
+	if u := tb.playerSays(cast(live.CmdPreviewArea, "shatter", 4, 0)); u.Area.Ends != nil {
+		t.Fatalf("shatter needs no concentration = %+v", u.Area)
+	}
+	tb.dmSays(live.Command{Kind: live.CmdEndEffect, EffectID: effect(token(look(t, w, tb.dm), "Brom"), "Bless").ID})
 	if u := tb.playerSays(cast(live.CmdPreviewArea, "burning-hands", 1, 0)); len(u.Area.Targets) != 1 || u.Area.Targets[0].TokenID != ids["Goblin"] || u.Area.Allies != 0 {
 		t.Fatalf("burning hands east = %+v", u.Area)
 	}
@@ -119,15 +136,12 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 	if a := v().Area; a == nil || len(a.Saves) != 3 {
 		t.Fatalf("the cast survives a restart = %+v", a)
 	}
-	fill(saves[ids["Brom"]], 9)
-	var last live.Update
-	for range 4 {
-		last = next(t, tb.dm)
-		next(t, tb.player)
-	}
-	now := last.View
-	if now.Area != nil || *token(now, "Goblin").HP != 0 || *token(now, "Archer").HP != 1 || *token(now, "Brom").HP != 0 {
-		t.Fatalf("12 thunder: the goblin fails, the archer halves it to 6, brom fails = %+v %+v %+v", token(now, "Goblin"), token(now, "Archer"), token(now, "Brom"))
+	fill(saves[ids["Brom"]], 13)
+	drain(tb.dm)
+	drain(tb.player)
+	now := look(t, w, tb.dm)
+	if now.Area != nil || *token(now, "Goblin").HP != 0 || *token(now, "Archer").HP != 1 || *token(now, "Brom").HP != 6 {
+		t.Fatalf("12 thunder: the goblin fails, the archer and brom halve it to 6 = %+v %+v %+v", token(now, "Goblin"), token(now, "Archer"), token(now, "Brom"))
 	}
 
 	tb.dmSays(live.Command{Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 3, R: 0}}, Surface: "grease"})
@@ -141,7 +155,7 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 		t.Fatalf("bare ground = %+v", u.Path)
 	}
 	for want, cmd := range map[string]live.Command{
-		"surfaces are fire":  {Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "lava"},
+		"no such surface":    {Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "quicksand"},
 		"surfaces last":      {Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "fire", Rounds: 101},
 		"choose a map":       {Kind: live.CmdSetElevation, Hexes: []live.Hex{{Q: 1, R: 1}}, ElevationFt: 10},
 		"between 1 and 2000": {Kind: live.CmdPaintSurface, Surface: "fire"},
@@ -251,17 +265,19 @@ func TestElevationHighGroundAndAreaEdges(t *testing.T) {
 	fill(d.View.Area.DamageRollID, 1, 1)
 	fill(d.View.Area.Saves[0].RollID, 1)
 	var last live.Update
-	for range 2 {
+	for range 4 {
 		next(t, tb.player)
 		last = next(t, tb.dm)
 	}
-	if !strings.Contains(last.View.Manual[0].Text, "pushed 10 feet away. (Aria)") || *token(last.View, "Aria").HP != 10 {
-		t.Fatalf("thunderwave = %+v %+v", last.View.Manual, token(last.View, "Aria"))
+	aria := token(last.View, "Aria")
+	if len(last.View.Manual) != 1 || last.View.Manual[0].Text != "Aria falls 10 feet: 1d6 bludgeoning damage." || *aria.HP != 10 || aria.Q != 0 || aria.R != 0 || effect(aria, "Prone") == nil {
+		t.Fatalf("thunderwave pushes Aria off the 10-foot rise, and she falls = %+v %+v", last.View.Manual, aria)
 	}
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Goblin").ID})
 	if surfaceAt(d.View, 0, 1) != "ice" {
 		t.Fatalf("two-round ice lasts into round two = %+v", d.View.Surfaces)
 	}
+	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Aria"], Q: 1, R: 0})
 	u = tb.playerSays(live.Command{Kind: live.CmdCastArea, TokenID: ids["Aria"], Effect: "burning-hands", Q: 2, R: 0})
 	if len(u.View.Area.Saves) != 1 {
 		t.Fatalf("burning hands on the goblin = %+v", u.View.Area)

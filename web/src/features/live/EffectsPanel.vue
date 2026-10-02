@@ -1,23 +1,25 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import type { Ability, LiveToken } from '@/infrastructure/api/types.gen'
-import { GButton } from '@/shared/ui'
+import { GButton, StatusIcon } from '@/shared/ui'
+import { effectLabel, knownEffects } from './conditions'
 
 const props = defineProps<{ token: LiveToken; tokens: LiveToken[] }>()
 const emit = defineEmits<{
-  apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number }]
+  apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number; effectMode?: string; monsterSlug?: string; tempHp?: number }]
   end: [effectId: string]
 }>()
-const known = [
-  { slug: 'bless', name: 'Bless' },
-  { slug: 'faerie-fire', name: 'Faerie Fire' },
-  { slug: 'hunters-mark', name: "Hunter's Mark" },
-  { slug: 'prone', name: 'Prone' },
-  { slug: 'poisoned', name: 'Poisoned' },
-]
+const known = knownEffects
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
-const form = reactive({ effect: '', source: '', rounds: 0, dc: 0 })
+const form = reactive({ effect: '', source: '', rounds: 0, dc: 0, mode: '', creature: '', temp: 0 })
 const saveWith = ref<Ability | ''>('')
+// ends names the concentration the chosen source would lose by putting on a concentration Effect.
+const ends = computed(() => {
+  if (!form.source || !knownEffects.find((k) => k.slug === form.effect.trim())?.concentration) return ''
+  const held = props.tokens.flatMap((t) => (t.effects ?? []).filter((e) => e.concentration && e.sourceId === form.source))
+  const who = props.tokens.find((t) => t.id === form.source)?.label ?? 'The source'
+  return held.length ? `${who} stops concentrating on ${held.map((e) => e.name).join(', ')}.` : ''
+})
 function apply() {
   const slug = form.effect.trim()
   const ability = saveWith.value
@@ -27,8 +29,14 @@ function apply() {
     ...(form.source ? { sourceId: form.source } : {}),
     ...(form.rounds ? { rounds: form.rounds } : {}),
     ...(ability && form.dc ? { saveAbility: ability, saveDc: form.dc } : {}),
+    ...(form.mode.trim() ? { effectMode: form.mode.trim() } : {}),
+    ...(form.creature.trim() ? { monsterSlug: form.creature.trim() } : {}),
+    ...(form.temp > 0 ? { tempHp: form.temp } : {}),
   })
+  form.creature = ''
+  form.temp = 0
   form.effect = ''
+  form.mode = ''
 }
 </script>
 
@@ -37,8 +45,9 @@ function apply() {
     <h2>Effects on {{ token.label }}</h2>
     <ul v-if="token.effects?.length" class="g-list">
       <li v-for="e in token.effects" :key="e.id" class="effect">
-        <span>
-          {{ e.name }}<template v-if="e.roundsLeft"> · {{ e.roundsLeft }} rounds</template><template v-if="e.concentration"> · concentration</template>
+        <span class="what">
+          <StatusIcon :slug="e.slug" :label="effectLabel(e)" />
+          {{ effectLabel(e, true) }}
         </span>
         <GButton variant="danger" :data-testid="`end-effect-${e.slug}`" @click="emit('end', e.id)">End</GButton>
       </li>
@@ -58,6 +67,9 @@ function apply() {
           <option v-for="t in tokens" :key="t.id" :value="t.id">{{ t.label }}</option>
         </select>
       </label>
+      <label class="g-field"><span>Mode</span><input v-model="form.mode" maxlength="80" placeholder="Enlarge" data-testid="effect-mode" /></label>
+      <label class="g-field"><span>Becomes</span><input v-model="form.creature" maxlength="80" placeholder="wolf" data-testid="effect-creature" /></label>
+      <label class="g-field"><span>Temp HP</span><input v-model.number="form.temp" type="number" min="0" max="999" data-testid="effect-temp" /></label>
       <label class="g-field"><span>Rounds</span><input v-model.number="form.rounds" type="number" min="0" max="100" data-testid="effect-rounds" /></label>
       <label class="g-field">
         <span>Ends on a save</span>
@@ -67,12 +79,22 @@ function apply() {
         </select>
       </label>
       <label class="g-field"><span>DC</span><input v-model.number="form.dc" type="number" min="0" max="40" data-testid="effect-dc" /></label>
+      <p v-if="ends" role="alert" class="warn" data-testid="concentration-warning">{{ ends }}</p>
       <GButton type="submit" data-testid="apply-effect">Apply</GButton>
     </form>
   </section>
 </template>
 
 <style scoped>
+.warn {
+  margin: 0;
+  color: var(--color-enemy-soft);
+}
+.what {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .effects {
   display: flex;
   flex-direction: column;

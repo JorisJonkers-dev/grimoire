@@ -211,7 +211,20 @@ func TestReactionEdges(t *testing.T) {
 		t.Fatalf("a fallen walker walks no further = %+v", b)
 	}
 
+	flush := func() {
+		for _, sub := range []*live.Subscriber{tb.dm, tb.player} {
+			for done := false; !done; {
+				select {
+				case <-sub.Out:
+				case <-time.After(50 * time.Millisecond):
+					done = true
+				}
+			}
+		}
+	}
+	flush()
 	tb.dmSays(live.Command{Kind: live.CmdUndoDamage})
+	flush()
 	tb.playerSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(u.View, "Aria").ID})
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdAttack, TokenID: ids["Goblin"], TargetID: ids["Aria"]})
 	fill(d.View.Combat.Attack.RollID, 15)
