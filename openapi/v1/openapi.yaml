@@ -1262,7 +1262,7 @@ paths:
       operationId: useItem
       x-ogen-operation-group: Play
       summary: Drink or throw an item
-      description: "Drinks a potion, restoring hit points if it heals, or throws an item away. Not during a live Session."
+      description: "Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or spends its charges. Not during a live Session."
       tags: [Play]
       parameters:
         - $ref: "#/components/parameters/CampaignId"
@@ -7286,6 +7286,9 @@ components:
         charges: { type: integer, format: int32, minimum: 0, maximum: 100 }
         identified: { type: boolean }
         attuned: { type: boolean }
+        requiresAttunement: { type: boolean }
+        attunementDetail: { type: string, maxLength: 200 }
+        maxCharges: { type: integer, format: int32, minimum: 0, maximum: 100 }
         fits:
           type: array
           maxItems: 13
@@ -7369,7 +7372,8 @@ components:
       properties:
         instanceId: { $ref: "#/components/schemas/Id" }
         slug: { $ref: "#/components/schemas/Slug" }
-        use: { type: string, enum: [drink, throw] }
+        use: { type: string, enum: [drink, throw, attune, unattune, identify, charge] }
+        count: { type: integer, format: int32, minimum: 1, maximum: 100, description: "Charges to spend." }
     InventoryUseResult:
       type: object
       description: The Inventory after using an item, and the hit points it restored.

@@ -758,6 +758,15 @@ type CompendiumItem struct {
 	AttunementDetail   pgtype.Text
 }
 
+type CompendiumItemCharge struct {
+	ItemSlug    string
+	MaxCharges  int32
+	RegainDice  int32
+	RegainFaces int32
+	RegainBonus int32
+	RechargeOn  string
+}
+
 type CompendiumMagicSchool struct {
 	ID   int64
 	Slug string

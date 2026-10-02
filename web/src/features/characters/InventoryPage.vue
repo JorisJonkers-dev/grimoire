@@ -57,13 +57,21 @@ function takeOut(c: ItemCard) {
   status.value = ''
   take.mutate({ path: ids.value, body: { ...ref_(c), count: c.quantity } }, { onSuccess: (v) => { done(v) } })
 }
-function act(c: ItemCard, what: 'drink' | 'throw') {
+const messages: Record<string, (c: ItemCard) => string> = {
+  throw: (c) => `You throw away ${c.name}.`,
+  attune: (c) => `You attune to ${c.name}.`,
+  unattune: (c) => `You end your attunement to ${c.name}.`,
+  identify: (c) => `You study ${c.name} and learn what it is.`,
+  charge: (c) => `You spend a charge of ${c.name}.`,
+}
+const attunedCount = computed(() => [...(inv.value?.bag ?? []), ...(inv.value?.slots.flatMap((sl) => (sl.item ? [sl.item] : [])) ?? [])].filter((c) => c.attuned).length)
+function act(c: ItemCard, what: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge') {
   status.value = ''
   use.mutate(
     { path: ids.value, body: { ...ref_(c), use: what } },
     {
       onSuccess: (r) => {
-        done(r.inventory, what === 'drink' ? (r.healed ? `${c.name}: ${String(r.healed)} hit points back.` : `You drink ${c.name}.`) : `You throw away ${c.name}.`)
+        done(r.inventory, what === 'drink' ? (r.healed ? `${c.name}: ${String(r.healed)} hit points back.` : `You drink ${c.name}.`) : (messages[what]?.(c) ?? ''))
       },
     },
   )
@@ -104,7 +112,7 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
       <section class="load" aria-label="Carrying" data-testid="carrying">
         <span>{{ inv.weightLb.toFixed(1) }} / {{ inv.capacityLb }} lb · {{ loadText[inv.load] }}</span>
         <span class="bar" role="img" :aria-label="`${String(pct)} percent of carrying capacity`"><span :class="inv.load" :style="{ width: `${String(pct)}%` }" /></span>
-        <span class="hint">{{ coins(inv.coins) }}</span>
+        <span class="hint">{{ coins(inv.coins) }} · Attuned to {{ attunedCount }} of 3</span>
       </section>
       <p v-if="status" role="status" class="g-tag" data-testid="inventory-status">{{ status }}</p>
       <p v-if="problem" role="alert" class="g-alert" data-testid="inventory-problem">{{ problem.detail ?? 'That did not work.' }}</p>
@@ -152,13 +160,20 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
             <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- dragging is a pointer shortcut; the item buttons are the accessible path -->
             <li v-for="c in bag" :key="key(c)" class="card" draggable="true" :data-testid="`item-${c.slug}`" @dragstart="dragStart($event, c, 'bag')">
               <span class="name">{{ c.customName ?? c.name }}<small v-if="c.quantity > 1"> ×{{ c.quantity }}</small></span>
-              <small class="meta">{{ c.category }} · {{ (c.weightLb * c.quantity).toFixed(1) }} lb</small>
+              <small class="meta">
+                {{ c.category }} · {{ (c.weightLb * c.quantity).toFixed(1) }} lb<template v-if="c.maxCharges"> · {{ c.charges ?? c.maxCharges }}/{{ c.maxCharges }} charges</template>
+                <template v-if="c.attuned"> · attuned</template><template v-if="!c.identified"> · unidentified</template>
+              </small>
               <span class="actions">
                 <select v-if="c.fits.length" :aria-label="`Equip ${c.name}`" :data-testid="`equip-${c.slug}`" @change="send(c, 'slot', { slot: ($event.target as HTMLSelectElement).value as EquipmentSlot })">
                   <option value="">Equip…</option>
                   <option v-for="f in c.fits" :key="f" :value="f">{{ slotNames[f] }}</option>
                 </select>
                 <GButton v-if="c.category === 'potion'" :data-testid="`drink-${c.slug}`" @click="act(c, 'drink')">Drink</GButton>
+                <GButton v-if="!c.identified" :data-testid="`identify-${key(c)}`" @click="act(c, 'identify')">Identify</GButton>
+                <GButton v-if="c.requiresAttunement && !c.attuned" :data-testid="`attune-${c.slug}`" @click="act(c, 'attune')">Attune</GButton>
+                <GButton v-if="c.attuned" :data-testid="`unattune-${c.slug}`" @click="act(c, 'unattune')">End attunement</GButton>
+                <GButton v-if="c.maxCharges && (c.charges ?? c.maxCharges) > 0" :data-testid="`charge-${c.slug}`" @click="act(c, 'charge')">Use a charge</GButton>
                 <select v-if="inv.party.length" v-model="giveTo[key(c)]" :aria-label="`Give ${c.name} to`" :data-testid="`give-to-${c.slug}`">
                   <option value="">Give to…</option>
                   <option v-for="p in inv.party" :key="p.characterId" :value="p.characterId">{{ p.name }}</option>

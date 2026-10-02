@@ -10,6 +10,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/loot"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -307,11 +308,13 @@ func (s *state) instanceView(in domain.Instance, a Audience) InstanceView {
 		ID: uuid.UUID(in.ID).String(), Slug: in.Slug, Name: info.Name, Count: in.Quantity, Identified: in.Identified, Attuned: in.Attuned, Slot: in.Slot,
 		WeightLb: info.WeightLb * float64(in.Quantity),
 	}
-	if in.Identified || a == AudienceDM {
-		v.Charges = in.Charges
-		if in.CustomName != "" {
-			v.Name = in.CustomName
-		}
+	if !in.Identified && a != AudienceDM {
+		v.Slug, v.Name = "unknown", inventory.UnknownName(info.Category)
+		return v
+	}
+	v.Charges = in.Charges
+	if in.CustomName != "" {
+		v.Name = in.CustomName
 	}
 	return v
 }

@@ -111,3 +111,68 @@ func Healing(slug string) (Potion, bool) {
 	}[slug]
 	return p, ok
 }
+
+// MaxAttuned is how many magic items a creature can be attuned to at once.
+const MaxAttuned = 3
+
+// CanAttune checks an item's attunement requirement ("Requires Attunement by a Druid", "... by a
+// Spellcaster") against a creature's classes and whether it casts spells.
+func CanAttune(detail string, classes []string, caster bool) bool {
+	detail = strings.ToLower(detail)
+	_, by, ok := strings.Cut(detail, " by ")
+	if !ok {
+		return true
+	}
+	if strings.Contains(by, "spellcaster") {
+		return caster
+	}
+	for _, class := range classes {
+		if strings.Contains(by, class) {
+			return true
+		}
+	}
+	return false
+}
+
+// UnknownName is what a player sees of an item nobody has identified: only its kind.
+func UnknownName(category string) string {
+	kind := strings.ReplaceAll(category, "-", " ")
+	if kind == "" {
+		kind = "item"
+	}
+	return "Unknown " + kind
+}
+
+// Rest is the rest a recharge happens on; a long rest passes a dawn.
+type Rest string
+
+// Rests.
+const (
+	ShortRest Rest = "short_rest"
+	LongRest  Rest = "long_rest"
+)
+
+// Recharge schedules.
+const (
+	Dawn              = "dawn"
+	LongRestRecharge  = "long_rest"
+	ShortRestRecharge = "short_rest"
+)
+
+// Charges is how many charges an item holds and what it regains: some dice and a bonus, on a schedule.
+type Charges struct {
+	Max   int
+	Dice  int
+	Faces int
+	Bonus int
+	On    string
+}
+
+// Regain is the charges an item holds after a rest: what it had plus the rolled dice and bonus, never
+// past its maximum, when the rest fits its schedule.
+func (c Charges) Regain(rest Rest, current, rolled int) int {
+	if rest == ShortRest && c.On != ShortRestRecharge {
+		return current
+	}
+	return min(c.Max, current+rolled+c.Bonus)
+}

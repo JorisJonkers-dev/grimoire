@@ -1335,6 +1335,9 @@ export type ItemCard = {
     charges?: number;
     identified: boolean;
     attuned: boolean;
+    requiresAttunement?: boolean;
+    attunementDetail?: string;
+    maxCharges?: number;
     fits: Array<EquipmentSlot>;
 };
 
@@ -1401,7 +1404,11 @@ export type InventoryTake = {
 export type InventoryUse = {
     instanceId?: Id;
     slug?: Slug;
-    use: 'drink' | 'throw';
+    use: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge';
+    /**
+     * Charges to spend.
+     */
+    count?: number;
 };
 
 /**

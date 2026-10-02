@@ -136,3 +136,40 @@ describe('inventory screen', () => {
     expect(missing.wrapper.find('[data-testid="inventory-error"]').exists()).toBe(true)
   })
 })
+
+describe('magic items on the inventory screen', () => {
+  it('attunes, identifies and spends charges', async () => {
+    const UNKNOWN = '0190c7a8-0000-7000-8000-0000000000e1'
+    const sent: unknown[] = []
+    const magic = view({
+      bag: [
+        card('amulet-of-health', 'Amulet of Health', 'wondrous-item', { requiresAttunement: true, fits: ['neck'] }),
+        card('ring-of-protection', 'Ring of Protection', 'ring', { instanceId: '0190c7a8-0000-7000-8000-0000000000e2', requiresAttunement: true, attuned: true, fits: ['ring_1', 'ring_2'] }),
+        card('wand-of-magic-missiles', 'Wand of Magic Missiles', 'wand', { instanceId: '0190c7a8-0000-7000-8000-0000000000e3', maxCharges: 7, charges: 5 }),
+        card('unknown', 'Unknown wand', 'wand', { instanceId: UNKNOWN, identified: false }),
+      ],
+    })
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}/inventory`, {
+      [`${base}/use`]: async (_u, req) => {
+        sent.push(await req.clone().json())
+        return { inventory: magic, healed: 0 }
+      },
+      [base]: () => magic,
+    })
+    expect(wrapper.get('[data-testid="carrying"]').text()).toContain('Attuned to 1 of 3')
+    expect(wrapper.get('[data-testid="item-wand-of-magic-missiles"]').text()).toContain('5/7 charges')
+    expect(wrapper.get('[data-testid="item-unknown"]').text()).toContain('Unknown wand')
+    await expectAccessible(wrapper.element as Element)
+    for (const button of ['attune-amulet-of-health', 'unattune-ring-of-protection', `identify-${UNKNOWN}`, 'charge-wand-of-magic-missiles']) {
+      await wrapper.get(`[data-testid="${button}"]`).trigger('click')
+      await flushPromises()
+    }
+    expect(wrapper.get('[data-testid="inventory-status"]').text()).toBe('You spend a charge of Wand of Magic Missiles.')
+    expect(sent).toEqual([
+      { slug: 'amulet-of-health', use: 'attune' },
+      { instanceId: '0190c7a8-0000-7000-8000-0000000000e2', use: 'unattune' },
+      { instanceId: UNKNOWN, use: 'identify' },
+      { instanceId: '0190c7a8-0000-7000-8000-0000000000e3', use: 'charge' },
+    ])
+  })
+})

@@ -223,7 +223,7 @@ func (b brokenInventory) Take(context.Context, caller.Caller, uuid.UUID, uuid.UU
 	return playapp.InventoryView{}, b.err
 }
 
-func (b brokenInventory) Use(context.Context, caller.Caller, uuid.UUID, uuid.UUID, playapp.ItemRef, string) (playapp.InventoryView, int, error) {
+func (b brokenInventory) Use(context.Context, caller.Caller, uuid.UUID, uuid.UUID, playapp.ItemRef, string, int) (playapp.InventoryView, int, error) {
 	return playapp.InventoryView{}, 0, b.err
 }
 
@@ -253,5 +253,145 @@ func TestInventoryErrorsBecomeProblems(t *testing.T) {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)
 		}
+	}
+}
+
+func cardOf(list any, slug string) map[string]any {
+	for _, c := range list.([]any) {
+		if card := c.(map[string]any); card["slug"] == slug {
+			return card
+		}
+	}
+	return nil
+}
+
+// Attunement takes at most three items and checks who may attune; an unidentified item shows only its
+// kind to players until studied; charges are spent from the item.
+func TestAttunementIdentificationAndCharges(t *testing.T) {
+	t.Parallel()
+	h, pool := srdStack(t)
+	id, _ := campaignWithPlayer(t, h)
+	base := "/api/v1/campaigns/" + id + "/characters"
+	kara := base + "/" + decode(t, call(h, http.MethodPost, base, "player", srdFighter))["id"].(string)
+	stashItems(t, pool, id, map[string]int{
+		"amulet-of-health": 1, "amulet-of-the-planes": 1, "belt-of-dwarvenkind": 1, "belt-of-giant-strength-hill": 1,
+		"staff-of-healing": 1, "wand-of-magic-missiles": 1,
+	})
+	use := func(body string, want int) map[string]any {
+		t.Helper()
+		rec := call(h, http.MethodPost, kara+"/inventory/use", "player", body)
+		if rec.Code != want {
+			t.Fatalf("use %s: %d %s", body, rec.Code, rec.Body.String())
+		}
+		if want != http.StatusOK {
+			return nil
+		}
+		return decode(t, rec)["inventory"].(map[string]any)
+	}
+	for _, slug := range []string{"amulet-of-health", "amulet-of-the-planes", "belt-of-dwarvenkind", "belt-of-giant-strength-hill", "staff-of-healing", "wand-of-magic-missiles"} {
+		if rec := call(h, http.MethodPost, kara+"/inventory/take", "player", `{"slug":"`+slug+`"}`); rec.Code != http.StatusOK {
+			t.Fatalf("take %s: %d", slug, rec.Code)
+		}
+	}
+	use(`{"slug":"wand-of-magic-missiles","use":"attune"}`, http.StatusUnprocessableEntity)
+	rec := call(h, http.MethodPost, kara+"/inventory/use", "player", `{"slug":"staff-of-healing","use":"attune"}`)
+	if rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "Bard, Cleric, or Druid") {
+		t.Fatalf("a fighter attuning a healer's staff: %d %s", rec.Code, rec.Body.String())
+	}
+	var inv map[string]any
+	for _, slug := range []string{"amulet-of-health", "amulet-of-the-planes", "belt-of-dwarvenkind"} {
+		inv = use(`{"slug":"`+slug+`","use":"attune"}`, http.StatusOK)
+	}
+	amulet := cardOf(inv["bag"], "amulet-of-health")
+	if amulet["attuned"] != true {
+		t.Fatalf("attuned = %v", amulet)
+	}
+	use(`{"slug":"belt-of-giant-strength-hill","use":"attune"}`, http.StatusUnprocessableEntity)
+	inv = use(`{"instanceId":"`+amulet["instanceId"].(string)+`","use":"unattune"}`, http.StatusOK)
+	if card := cardOf(inv["bag"], "amulet-of-health"); card["attuned"] != false || card["instanceId"] != nil {
+		t.Fatalf("unattuned amulet = %v", card)
+	}
+	use(`{"slug":"belt-of-giant-strength-hill","use":"attune"}`, http.StatusOK)
+
+	inv = use(`{"slug":"wand-of-magic-missiles","use":"charge","count":2}`, http.StatusOK)
+	wand := cardOf(inv["bag"], "wand-of-magic-missiles")
+	if wand["charges"] != float64(5) || wand["maxCharges"] != float64(7) {
+		t.Fatalf("wand after two charges = %v", wand)
+	}
+	use(`{"instanceId":"`+wand["instanceId"].(string)+`","use":"charge","count":6}`, http.StatusUnprocessableEntity)
+	use(`{"slug":"staff-of-healing","use":"identify"}`, http.StatusUnprocessableEntity)
+
+	if _, err := pool.Exec(context.Background(), `INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+		SELECT gen_random_uuid(), id, 'wand-of-fireballs', 1, false, false, now() FROM campaign.containers WHERE character_id = $1`, strings.TrimPrefix(kara, base+"/")); err != nil {
+		t.Fatal(err)
+	}
+	playerView := call(h, http.MethodGet, kara+"/inventory", "player", "").Body.String()
+	if strings.Contains(playerView, "fireball") || strings.Contains(playerView, "Fireball") || !strings.Contains(playerView, "Unknown wand") {
+		t.Fatalf("a player learns what an unidentified wand is: %s", playerView)
+	}
+	dmView := decode(t, call(h, http.MethodGet, kara+"/inventory", "dm", ""))
+	mystery := cardOf(dmView["bag"], "wand-of-fireballs")
+	if mystery == nil || mystery["identified"] != false || mystery["name"] != "Wand of Fireballs" {
+		t.Fatalf("the DM's view = %v", dmView["bag"])
+	}
+	use(`{"instanceId":"`+mystery["instanceId"].(string)+`","use":"attune"}`, http.StatusUnprocessableEntity)
+	inv = use(`{"instanceId":"`+mystery["instanceId"].(string)+`","use":"identify"}`, http.StatusOK)
+	if cardOf(inv["bag"], "wand-of-fireballs") == nil {
+		t.Fatalf("identified = %v", inv["bag"])
+	}
+	wandID := cardOf(inv["bag"], "wand-of-magic-missiles")["instanceId"].(string)
+	beltID := ""
+	for _, c := range inv["bag"].([]any) {
+		if card := c.(map[string]any); card["slug"] == "belt-of-giant-strength-hill" {
+			beltID = card["instanceId"].(string)
+		}
+	}
+	for body, want := range map[string]int{
+		`{"slug":"amulet-of-health","use":"charge"}`:       http.StatusUnprocessableEntity,
+		`{"instanceId":"` + wandID + `","use":"unattune"}`: http.StatusUnprocessableEntity,
+		`{"instanceId":"` + wandID + `","use":"identify"}`: http.StatusUnprocessableEntity,
+		`{"instanceId":"` + beltID + `","use":"attune"}`:   http.StatusUnprocessableEntity,
+		`{"slug":"amulet-of-health","use":"unattune"}`:     http.StatusUnprocessableEntity,
+		`{"slug":"amulet-of-health","use":"juggle"}`:       http.StatusBadRequest,
+	} {
+		use(body, want)
+	}
+	stashItems(t, pool, id, map[string]int{"potion-of-healing": 2})
+	call(h, http.MethodPost, kara+"/inventory/take", "player", `{"slug":"potion-of-healing","count":2}`)
+	if _, err := pool.Exec(context.Background(), `INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+		SELECT gen_random_uuid(), id, 'potion-of-healing', 1, false, false, now() FROM campaign.containers WHERE character_id = $1`, strings.TrimPrefix(kara, base+"/")); err != nil {
+		t.Fatal(err)
+	}
+	dmView = decode(t, call(h, http.MethodGet, kara+"/inventory", "dm", ""))
+	var unknownPotion string
+	for _, c := range dmView["bag"].([]any) {
+		if card := c.(map[string]any); card["slug"] == "potion-of-healing" && card["identified"] == false {
+			unknownPotion = card["instanceId"].(string)
+		}
+	}
+	named, sworn := uuid.New(), uuid.New()
+	for _, q := range []struct {
+		sql string
+		id  uuid.UUID
+	}{
+		{`INSERT INTO campaign.item_instances (id, container_id, item_slug, custom_name, quantity, identified, attuned, created_at)
+			SELECT $2, id, 'dagger', 'Whisper', 1, false, false, now() FROM campaign.containers WHERE character_id = $1`, named},
+		{`INSERT INTO campaign.item_instances (id, container_id, item_slug, custom_name, quantity, identified, attuned, created_at)
+			SELECT $2, id, 'amulet-of-health', 'Oath Amulet', 1, true, true, now() FROM campaign.containers WHERE character_id = $1`, sworn},
+	} {
+		if _, err := pool.Exec(context.Background(), q.sql, strings.TrimPrefix(kara, base+"/"), q.id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	inv = use(`{"instanceId":"`+named.String()+`","use":"identify"}`, http.StatusOK)
+	if cardOf(inv["bag"], "dagger")["customName"] != "Whisper" {
+		t.Fatalf("an identified named dagger keeps its name = %v", inv["bag"])
+	}
+	if oath := cardOf(use(`{"instanceId":"`+sworn.String()+`","use":"unattune"}`, http.StatusOK)["bag"], "amulet-of-health"); oath == nil {
+		t.Fatal("the oath amulet vanished")
+	}
+	inv = use(`{"instanceId":"`+unknownPotion+`","use":"identify"}`, http.StatusOK)
+	if potions := cardOf(inv["bag"], "potion-of-healing"); potions["quantity"] != float64(3) || potions["instanceId"] != nil {
+		t.Fatalf("an identified potion joins its stack = %v", potions)
 	}
 }

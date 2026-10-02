@@ -888,7 +888,7 @@ export const takeFromStashMutation = (options?: Partial<Options<TakeFromStashDat
 /**
  * Drink or throw an item
  *
- * Drinks a potion, restoring hit points if it heals, or throws an item away. Not during a live Session.
+ * Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or spends its charges. Not during a live Session.
  */
 export const useItemMutation = (options?: Partial<Options<UseItemData>>): UseMutationOptions<UseItemResponse, UseItemError, Options<UseItemData>> => {
     const mutationOptions: UseMutationOptions<UseItemResponse, UseItemError, Options<UseItemData>> = {

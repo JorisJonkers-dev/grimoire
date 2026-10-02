@@ -10496,6 +10496,8 @@ type InventoryUse struct {
 	InstanceId OptID           `json:"instanceId"`
 	Slug       OptSlug         `json:"slug"`
 	Use        InventoryUseUse `json:"use"`
+	// Charges to spend.
+	Count OptInt32 `json:"count"`
 }
 
 // GetInstanceId returns the value of InstanceId.
@@ -10513,6 +10515,11 @@ func (s *InventoryUse) GetUse() InventoryUseUse {
 	return s.Use
 }
 
+// GetCount returns the value of Count.
+func (s *InventoryUse) GetCount() OptInt32 {
+	return s.Count
+}
+
 // SetInstanceId sets the value of InstanceId.
 func (s *InventoryUse) SetInstanceId(val OptID) {
 	s.InstanceId = val
@@ -10526,6 +10533,11 @@ func (s *InventoryUse) SetSlug(val OptSlug) {
 // SetUse sets the value of Use.
 func (s *InventoryUse) SetUse(val InventoryUseUse) {
 	s.Use = val
+}
+
+// SetCount sets the value of Count.
+func (s *InventoryUse) SetCount(val OptInt32) {
+	s.Count = val
 }
 
 // The Inventory after using an item, and the hit points it restored.
@@ -10608,8 +10620,12 @@ func (*InventoryUseResultHeaders) useItemRes() {}
 type InventoryUseUse string
 
 const (
-	InventoryUseUseDrink InventoryUseUse = "drink"
-	InventoryUseUseThrow InventoryUseUse = "throw"
+	InventoryUseUseDrink    InventoryUseUse = "drink"
+	InventoryUseUseThrow    InventoryUseUse = "throw"
+	InventoryUseUseAttune   InventoryUseUse = "attune"
+	InventoryUseUseUnattune InventoryUseUse = "unattune"
+	InventoryUseUseIdentify InventoryUseUse = "identify"
+	InventoryUseUseCharge   InventoryUseUse = "charge"
 )
 
 // AllValues returns all InventoryUseUse values.
@@ -10617,6 +10633,10 @@ func (InventoryUseUse) AllValues() []InventoryUseUse {
 	return []InventoryUseUse{
 		InventoryUseUseDrink,
 		InventoryUseUseThrow,
+		InventoryUseUseAttune,
+		InventoryUseUseUnattune,
+		InventoryUseUseIdentify,
+		InventoryUseUseCharge,
 	}
 }
 
@@ -10626,6 +10646,14 @@ func (s InventoryUseUse) MarshalText() ([]byte, error) {
 	case InventoryUseUseDrink:
 		return []byte(s), nil
 	case InventoryUseUseThrow:
+		return []byte(s), nil
+	case InventoryUseUseAttune:
+		return []byte(s), nil
+	case InventoryUseUseUnattune:
+		return []byte(s), nil
+	case InventoryUseUseIdentify:
+		return []byte(s), nil
+	case InventoryUseUseCharge:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10640,6 +10668,18 @@ func (s *InventoryUseUse) UnmarshalText(data []byte) error {
 		return nil
 	case InventoryUseUseThrow:
 		*s = InventoryUseUseThrow
+		return nil
+	case InventoryUseUseAttune:
+		*s = InventoryUseUseAttune
+		return nil
+	case InventoryUseUseUnattune:
+		*s = InventoryUseUseUnattune
+		return nil
+	case InventoryUseUseIdentify:
+		*s = InventoryUseUseIdentify
+		return nil
+	case InventoryUseUseCharge:
+		*s = InventoryUseUseCharge
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -11046,18 +11086,21 @@ func (s *InviteToken) SetToken(val Token) {
 // An item in an Inventory, with the slots it fits.
 // Ref: #/components/schemas/ItemCard
 type ItemCard struct {
-	InstanceId OptID            `json:"instanceId"`
-	Slug       Slug             `json:"slug"`
-	Name       string           `json:"name"`
-	CustomName OptString        `json:"customName"`
-	Category   string           `json:"category"`
-	Quantity   int32            `json:"quantity"`
-	WeightLb   float64          `json:"weightLb"`
-	Slot       OptEquipmentSlot `json:"slot"`
-	Charges    OptInt32         `json:"charges"`
-	Identified bool             `json:"identified"`
-	Attuned    bool             `json:"attuned"`
-	Fits       []EquipmentSlot  `json:"fits"`
+	InstanceId         OptID            `json:"instanceId"`
+	Slug               Slug             `json:"slug"`
+	Name               string           `json:"name"`
+	CustomName         OptString        `json:"customName"`
+	Category           string           `json:"category"`
+	Quantity           int32            `json:"quantity"`
+	WeightLb           float64          `json:"weightLb"`
+	Slot               OptEquipmentSlot `json:"slot"`
+	Charges            OptInt32         `json:"charges"`
+	Identified         bool             `json:"identified"`
+	Attuned            bool             `json:"attuned"`
+	RequiresAttunement OptBool          `json:"requiresAttunement"`
+	AttunementDetail   OptString        `json:"attunementDetail"`
+	MaxCharges         OptInt32         `json:"maxCharges"`
+	Fits               []EquipmentSlot  `json:"fits"`
 }
 
 // GetInstanceId returns the value of InstanceId.
@@ -11113,6 +11156,21 @@ func (s *ItemCard) GetIdentified() bool {
 // GetAttuned returns the value of Attuned.
 func (s *ItemCard) GetAttuned() bool {
 	return s.Attuned
+}
+
+// GetRequiresAttunement returns the value of RequiresAttunement.
+func (s *ItemCard) GetRequiresAttunement() OptBool {
+	return s.RequiresAttunement
+}
+
+// GetAttunementDetail returns the value of AttunementDetail.
+func (s *ItemCard) GetAttunementDetail() OptString {
+	return s.AttunementDetail
+}
+
+// GetMaxCharges returns the value of MaxCharges.
+func (s *ItemCard) GetMaxCharges() OptInt32 {
+	return s.MaxCharges
 }
 
 // GetFits returns the value of Fits.
@@ -11173,6 +11231,21 @@ func (s *ItemCard) SetIdentified(val bool) {
 // SetAttuned sets the value of Attuned.
 func (s *ItemCard) SetAttuned(val bool) {
 	s.Attuned = val
+}
+
+// SetRequiresAttunement sets the value of RequiresAttunement.
+func (s *ItemCard) SetRequiresAttunement(val OptBool) {
+	s.RequiresAttunement = val
+}
+
+// SetAttunementDetail sets the value of AttunementDetail.
+func (s *ItemCard) SetAttunementDetail(val OptString) {
+	s.AttunementDetail = val
+}
+
+// SetMaxCharges sets the value of MaxCharges.
+func (s *ItemCard) SetMaxCharges(val OptInt32) {
+	s.MaxCharges = val
 }
 
 // SetFits sets the value of Fits.

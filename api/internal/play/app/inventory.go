@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -22,8 +23,11 @@ type InventoryStore interface {
 // InventoryWriter changes Containers inside a transaction.
 type InventoryWriter interface {
 	SetSlot(ctx context.Context, id domain.InstanceID, slot string) error
-	AddInstance(ctx context.Context, to domain.ContainerID, slug, slot string) error
-	SetQuantity(ctx context.Context, id domain.InstanceID, n int) error
+	AddInstance(ctx context.Context, id domain.InstanceID, to domain.ContainerID, slug, slot string, attuned bool) error
+	SetAttuned(ctx context.Context, id domain.InstanceID, attuned bool) error
+	Identify(ctx context.Context, id domain.InstanceID) error
+	SetCharges(ctx context.Context, id domain.InstanceID, n int) error
+	RemoveInstance(ctx context.Context, id domain.InstanceID) error
 	MoveInstance(ctx context.Context, id domain.InstanceID, to domain.ContainerID) error
 	SetStack(ctx context.Context, in domain.ContainerID, slug string, n int) error
 	Heal(ctx context.Context, character uuid.UUID, hp int) error
@@ -74,34 +78,36 @@ type InventoryView struct {
 	WeightLb float64
 	Capacity float64
 	Load     inventory.Load
+	// DM means the viewer is a DM, who sees what unidentified items are.
+	DM bool
 }
 
 // View shows a Character's Inventory; its player or a DM.
 func (s *Inventories) View(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (InventoryView, error) {
-	inv, err := s.load(ctx, c, campaign, character)
+	inv, dm, err := s.load(ctx, c, campaign, character)
 	if err != nil {
 		return InventoryView{}, err
 	}
-	return view(inv, character), nil
+	return view(inv, character, dm), nil
 }
 
-func (s *Inventories) load(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (domain.Inventory, error) {
+func (s *Inventories) load(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (domain.Inventory, bool, error) {
 	me, err := s.Members.Membership(ctx, campaign, c.Subject)
 	if err != nil {
-		return domain.Inventory{}, err
+		return domain.Inventory{}, false, err
 	}
 	inv, err := s.Store.LoadInventory(ctx, campaign)
 	if err != nil {
-		return inv, err
+		return inv, false, err
 	}
 	b, ok := bearerOf(inv, character)
 	if !ok {
-		return inv, apperr.ErrNotFound
+		return inv, false, apperr.ErrNotFound
 	}
 	if b.Owner != me.ID && !me.DM {
-		return inv, apperr.ErrForbidden
+		return inv, false, apperr.ErrForbidden
 	}
-	return inv, nil
+	return inv, me.DM, nil
 }
 
 func bearerOf(inv domain.Inventory, character uuid.UUID) (domain.Bearer, bool) {
@@ -124,10 +130,10 @@ func characterContainer(inv domain.Inventory, character uuid.UUID) domain.Contai
 	return containerOf(inv, func(c domain.Container) bool { return c.CharacterID != nil && *c.CharacterID == character })
 }
 
-func view(inv domain.Inventory, character uuid.UUID) InventoryView {
+func view(inv domain.Inventory, character uuid.UUID, dm bool) InventoryView {
 	b, _ := bearerOf(inv, character)
 	v := InventoryView{
-		Bearer: b, Mine: characterContainer(inv, character), Items: inv.Items,
+		Bearer: b, Mine: characterContainer(inv, character), Items: inv.Items, DM: dm,
 		Stash: containerOf(inv, func(c domain.Container) bool { return c.Kind == domain.ContainerStash }),
 	}
 	for _, c := range inv.Containers {
@@ -182,7 +188,7 @@ func findItem(c domain.Container, ref ItemRef) (held, bool) {
 // Move sends an item from a Character's Inventory: into a slot, back into the bag, to another Character
 // or to the Party Stash. Not during a live Session, where the Session's own Inventory panel rules.
 func (s *Inventories) Move(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, mv ItemMove) (InventoryView, error) {
-	inv, err := s.ready(ctx, c, campaign, character)
+	inv, dm, err := s.ready(ctx, c, campaign, character)
 	if err != nil {
 		return InventoryView{}, err
 	}
@@ -215,12 +221,12 @@ func (s *Inventories) Move(ctx context.Context, c caller.Caller, campaign, chara
 	if err != nil {
 		return InventoryView{}, err
 	}
-	return s.after(ctx, campaign, character)
+	return s.after(ctx, campaign, character, dm)
 }
 
 // Take moves an item from the Party Stash into a Character's bag.
 func (s *Inventories) Take(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref ItemRef, count int) (InventoryView, error) {
-	inv, err := s.ready(ctx, c, campaign, character)
+	inv, dm, err := s.ready(ctx, c, campaign, character)
 	if err != nil {
 		return InventoryView{}, err
 	}
@@ -235,18 +241,23 @@ func (s *Inventories) Take(ctx context.Context, c caller.Caller, campaign, chara
 	if err != nil {
 		return InventoryView{}, err
 	}
-	return s.after(ctx, campaign, character)
+	return s.after(ctx, campaign, character, dm)
 }
 
 // Item uses.
 const (
-	Drink = "drink"
-	Throw = "throw"
+	Drink    = "drink"
+	Throw    = "throw"
+	Attune   = "attune"
+	Unattune = "unattune"
+	Study    = "identify"
+	Charge   = "charge"
 )
 
-// Use drinks a potion, restoring hit points if it heals, or throws an item away; either way one is gone.
-func (s *Inventories) Use(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref ItemRef, use string) (InventoryView, int, error) {
-	inv, err := s.ready(ctx, c, campaign, character)
+// Use acts on one item in a Character's Inventory: drinks a potion, restoring hit points if it heals;
+// throws an item away; attunes or unattunes it; identifies it; or spends count of its charges.
+func (s *Inventories) Use(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref ItemRef, use string, count int) (InventoryView, int, error) {
+	inv, dm, err := s.ready(ctx, c, campaign, character)
 	if err != nil {
 		return InventoryView{}, 0, err
 	}
@@ -255,55 +266,161 @@ func (s *Inventories) Use(ctx context.Context, c caller.Caller, campaign, charac
 	if !ok {
 		return InventoryView{}, 0, apperr.ErrNotFound
 	}
+	b, _ := bearerOf(inv, character)
 	healed := 0
+	var change func(InventoryWriter) error
 	switch use {
 	case Drink:
-		if inv.Items[h.slug].Category != "potion" {
-			return InventoryView{}, 0, apperr.Refuse("only a potion can be drunk")
-		}
-		if p, heals := inventory.Healing(h.slug); heals {
-			healed = s.Roll(p.Dice, p.Faces) + p.Bonus
-		}
+		change, healed, err = s.drink(ctx, inv, mine, h, character)
 	case Throw:
+		change = func(w InventoryWriter) error { return takeOne(ctx, w, mine, h) }
+	case Attune:
+		change, err = attune(ctx, inv, mine, h, b)
+	case Unattune, Study:
+		change, err = settleChange(ctx, mine, h, use)
+	case Charge:
+		change, err = spendCharges(ctx, inv, mine, h, count)
 	default:
-		return InventoryView{}, 0, apperr.Refuse("drink a potion or throw an item")
+		err = apperr.Refuse("drink, throw, attune, identify or spend charges")
 	}
-	err = s.Store.WriteInventory(ctx, func(w InventoryWriter) error {
-		if err := takeOne(ctx, w, mine, h); err != nil {
-			return err
-		}
-		if healed == 0 {
-			return nil
-		}
-		return w.Heal(ctx, character, healed)
-	})
 	if err != nil {
 		return InventoryView{}, 0, err
 	}
-	v, err := s.after(ctx, campaign, character)
+	if err := s.Store.WriteInventory(ctx, change); err != nil {
+		return InventoryView{}, 0, err
+	}
+	v, err := s.after(ctx, campaign, character, dm)
 	return v, healed, err
 }
 
+func (s *Inventories) drink(ctx context.Context, inv domain.Inventory, mine domain.Container, h held, character uuid.UUID) (func(InventoryWriter) error, int, error) {
+	if inv.Items[h.slug].Category != "potion" {
+		return nil, 0, apperr.Refuse("only a potion can be drunk")
+	}
+	healed := 0
+	if p, heals := inventory.Healing(h.slug); heals {
+		healed = s.Roll(p.Dice, p.Faces) + p.Bonus
+	}
+	return func(w InventoryWriter) error {
+		if err := takeOne(ctx, w, mine, h); err != nil || healed == 0 {
+			return err
+		}
+		return w.Heal(ctx, character, healed)
+	}, healed, nil
+}
+
+// attune binds an identified magic item that needs it to the Character, up to three, when it meets the
+// item's requirement.
+func attune(ctx context.Context, inv domain.Inventory, mine domain.Container, h held, b domain.Bearer) (func(InventoryWriter) error, error) {
+	info := inv.Items[h.slug]
+	attuned := 0
+	for _, in := range mine.Instances {
+		if in.Attuned {
+			attuned++
+		}
+	}
+	caster := slices.ContainsFunc(b.Classes, func(c string) bool { return rules.CasterFor(c) != rules.NoCaster })
+	switch {
+	case !info.RequiresAttunement:
+		return nil, apperr.Refuse(info.Name + " needs no attunement")
+	case h.instance != nil && !h.instance.Identified:
+		return nil, apperr.Refuse("identify it before attuning to it")
+	case h.instance != nil && h.instance.Attuned:
+		return nil, apperr.Refuse("already attuned")
+	case attuned >= inventory.MaxAttuned:
+		return nil, apperr.Refuse("you are attuned to three items already")
+	case !inventory.CanAttune(info.AttunementDetail, b.Classes, caster):
+		return nil, apperr.Refuse(info.AttunementDetail)
+	}
+	return func(w InventoryWriter) error {
+		if h.instance != nil {
+			return w.SetAttuned(ctx, h.instance.ID, true)
+		}
+		if err := w.SetStack(ctx, mine.ID, h.slug, h.count-1); err != nil {
+			return err
+		}
+		return w.AddInstance(ctx, domain.InstanceID(uuid.New()), mine.ID, h.slug, "", true)
+	}, nil
+}
+
+// settleChange unattunes or identifies an Item Instance; one that no longer stands out joins its plain
+// stack.
+func settleChange(ctx context.Context, mine domain.Container, h held, use string) (func(InventoryWriter) error, error) {
+	switch {
+	case h.instance == nil, use == Unattune && !h.instance.Attuned:
+		return nil, apperr.Refuse("it is not attuned")
+	case use == Study && h.instance.Identified:
+		return nil, apperr.Refuse("it is already identified")
+	}
+	in := *h.instance
+	if use == Unattune {
+		in.Attuned = false
+	} else {
+		in.Identified = true
+	}
+	return func(w InventoryWriter) error {
+		if in.Plain() {
+			// Gone first: a plain Instance beside its plain stack would break the one-stack rule.
+			if err := w.RemoveInstance(ctx, in.ID); err != nil {
+				return err
+			}
+			return w.SetStack(ctx, mine.ID, in.Slug, mine.Items[in.Slug]+in.Quantity)
+		}
+		if use == Unattune {
+			return w.SetAttuned(ctx, in.ID, false)
+		}
+		return w.Identify(ctx, in.ID)
+	}, nil
+}
+
+// spendCharges uses some of an item's charges; a plain item becomes its own Instance to keep count.
+func spendCharges(ctx context.Context, inv domain.Inventory, mine domain.Container, h held, count int) (func(InventoryWriter) error, error) {
+	info := inv.Items[h.slug]
+	if info.MaxCharges == 0 {
+		return nil, apperr.Refuse(info.Name + " has no charges")
+	}
+	current := info.MaxCharges
+	if h.instance != nil && h.instance.Charges != nil {
+		current = *h.instance.Charges
+	}
+	if count < 1 || count > current {
+		return nil, apperr.Refuse("there are not that many charges left")
+	}
+	return func(w InventoryWriter) error {
+		if h.instance != nil {
+			return w.SetCharges(ctx, h.instance.ID, current-count)
+		}
+		id := domain.InstanceID(uuid.New())
+		if err := w.SetStack(ctx, mine.ID, h.slug, h.count-1); err != nil {
+			return err
+		}
+		if err := w.AddInstance(ctx, id, mine.ID, h.slug, "", false); err != nil {
+			return err
+		}
+		return w.SetCharges(ctx, id, current-count)
+	}, nil
+}
+
 // ready loads an Inventory the caller may change now: theirs or as a DM, and with no live Session.
-func (s *Inventories) ready(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (domain.Inventory, error) {
+func (s *Inventories) ready(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (domain.Inventory, bool, error) {
 	live, err := s.Store.LiveSession(ctx, campaign)
 	if err != nil {
-		return domain.Inventory{}, err
+		return domain.Inventory{}, false, err
 	}
 	if live {
-		return domain.Inventory{}, apperr.Refuse("a Session is live: move items from its Inventory panel")
+		return domain.Inventory{}, false, apperr.Refuse("a Session is live: move items from its Inventory panel")
 	}
 	return s.load(ctx, c, campaign, character)
 }
 
-func (s *Inventories) after(ctx context.Context, campaign, character uuid.UUID) (InventoryView, error) {
+func (s *Inventories) after(ctx context.Context, campaign, character uuid.UUID, dm bool) (InventoryView, error) {
 	inv, err := s.Store.LoadInventory(ctx, campaign)
-	return view(inv, character), err
+	return view(inv, character, dm), err
 }
 
 func takeOne(ctx context.Context, w InventoryWriter, from domain.Container, h held) error {
 	if h.instance != nil {
-		return w.SetQuantity(ctx, h.instance.ID, h.count-1)
+		return w.RemoveInstance(ctx, h.instance.ID)
 	}
 	return w.SetStack(ctx, from.ID, h.slug, h.count-1)
 }
@@ -332,7 +449,7 @@ func transfer(ctx context.Context, w InventoryWriter, from, to domain.Container,
 	in := *h.instance
 	in.Slot = ""
 	if in.Plain() {
-		if err := w.SetQuantity(ctx, in.ID, 0); err != nil {
+		if err := w.RemoveInstance(ctx, in.ID); err != nil {
 			return err
 		}
 		return w.SetStack(ctx, to.ID, in.Slug, to.Items[in.Slug]+in.Quantity)
@@ -363,7 +480,7 @@ func equip(ctx context.Context, w InventoryWriter, inv domain.Inventory, mine do
 		if err := w.SetStack(ctx, mine.ID, h.slug, h.count-1); err != nil {
 			return err
 		}
-		if err := w.AddInstance(ctx, mine.ID, h.slug, slot); err != nil {
+		if err := w.AddInstance(ctx, domain.InstanceID(uuid.New()), mine.ID, h.slug, slot, false); err != nil {
 			return err
 		}
 		mine.Instances = append(mine.Instances, domain.Instance{Slug: h.slug, Quantity: 1, Identified: true, Slot: slot})
@@ -389,7 +506,7 @@ func unequip(ctx context.Context, w InventoryWriter, mine domain.Container, h he
 	in := *h.instance
 	in.Slot = ""
 	if in.Plain() {
-		if err := w.SetQuantity(ctx, in.ID, 0); err != nil {
+		if err := w.RemoveInstance(ctx, in.ID); err != nil {
 			return err
 		}
 		return w.SetStack(ctx, mine.ID, in.Slug, mine.Items[in.Slug]+in.Quantity)

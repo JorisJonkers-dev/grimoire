@@ -67,6 +67,8 @@ type Bearer struct {
 	Name        string
 	Owner       uuid.UUID
 	Strength    int
+	// Classes decide which items it may attune to.
+	Classes []string
 }
 
 // ItemInfo is what an item is called and weighs.
@@ -75,6 +77,16 @@ type ItemInfo struct {
 	WeightLb float64
 	// Category is the compendium's kind of item: weapon, armor, potion, ring, wondrous-item and so on.
 	Category string
+	// RequiresAttunement and AttunementDetail ("Requires Attunement by a Druid") say who may attune it.
+	RequiresAttunement bool
+	AttunementDetail   string
+	// MaxCharges is how many charges it holds, 0 for none; it regains RegainDice d RegainFaces plus
+	// RegainBonus on RechargeOn: dawn, long_rest or short_rest.
+	MaxCharges  int
+	RegainDice  int
+	RegainFaces int
+	RegainBonus int
+	RechargeOn  string
 }
 
 // Inventory is every Container of a Campaign, who carries them, and what their items are.

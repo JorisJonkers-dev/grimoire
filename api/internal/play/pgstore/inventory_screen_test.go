@@ -74,7 +74,7 @@ func TestEveryInventoryScreenFaultSurfaces(t *testing.T) {
 			if _, err := base.Take(ctx, player, tb.campaign, char, app.ItemRef{Slug: "healing-draught"}, 2); err != nil {
 				t.Fatal(err)
 			}
-			_, _, err := r.Use(ctx, player, tb.campaign, char, app.ItemRef{Slug: "healing-draught"}, app.Drink)
+			_, _, err := r.Use(ctx, player, tb.campaign, char, app.ItemRef{Slug: "healing-draught"}, app.Drink, 1)
 			return err
 		},
 	}

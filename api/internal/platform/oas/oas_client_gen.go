@@ -752,8 +752,8 @@ type PlayInvoker interface {
 	TakeFromStash(ctx context.Context, request *InventoryTake, params TakeFromStashParams) (TakeFromStashRes, error)
 	// UseItem invokes useItem operation.
 	//
-	// Drinks a potion, restoring hit points if it heals, or throws an item away. Not during a live
-	// Session.
+	// Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or
+	// spends its charges. Not during a live Session.
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use
 	UseItem(ctx context.Context, request *InventoryUse, params UseItemParams) (UseItemRes, error)
@@ -26440,8 +26440,8 @@ func (c *Client) sendUploadMap(ctx context.Context, request UploadMapReq, params
 
 // UseItem invokes useItem operation.
 //
-// Drinks a potion, restoring hit points if it heals, or throws an item away. Not during a live
-// Session.
+// Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or
+// spends its charges. Not during a live Session.
 //
 // POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use
 func (c *Client) UseItem(ctx context.Context, request *InventoryUse, params UseItemParams) (UseItemRes, error) {

@@ -10,7 +10,9 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -284,8 +286,50 @@ func (r *runtime) finishRest(rest *domain.Rest) (Write, string) {
 			res.Used[slug] = max(0, most-resource.Regain(event, stats, 0, most-used))
 		}
 		w.Results = append(w.Results, res)
+		w.Recharged = append(w.Recharged, r.recharge(x.CharacterID, rest.Kind)...)
 	}
 	return w, ""
+}
+
+// recharge rolls what a rest gives back to the charged magic items a Character carries; a Long Rest
+// passes a dawn.
+func (r *runtime) recharge(character uuid.UUID, kind string) []domain.Recharge {
+	when := inventory.ShortRest
+	if kind == RestLong {
+		when = inventory.LongRest
+	}
+	var out []domain.Recharge
+	for _, c := range r.st.inventory.Containers {
+		if c.CharacterID == nil || *c.CharacterID != character {
+			continue
+		}
+		for _, in := range c.Instances {
+			if after, changed := r.regain(in, when); changed {
+				out = append(out, domain.Recharge{Container: c.ID, Instance: in.ID, Charges: after})
+			}
+		}
+	}
+	return out
+}
+
+// regain is the charges an Item Instance holds after a rest, and whether that is news: it changed, or
+// was never counted before.
+func (r *runtime) regain(in domain.Instance, when inventory.Rest) (int, bool) {
+	info := r.st.itemInfo(in.Slug)
+	if info.MaxCharges == 0 {
+		return 0, false
+	}
+	current := info.MaxCharges
+	if in.Charges != nil {
+		current = *in.Charges
+	}
+	src, rolled := r.source(r.seed()), 0
+	for range info.RegainDice {
+		rolled += dice.Face(src, info.RegainFaces)
+	}
+	schedule := inventory.Charges{Max: info.MaxCharges, Dice: info.RegainDice, Faces: info.RegainFaces, Bonus: info.RegainBonus, On: info.RechargeOn}
+	after := schedule.Regain(when, current, rolled)
+	return after, after != current || in.Charges == nil
 }
 
 // applyRest keeps the rest a write leaves, heals a Long Rest's resters, and eats its Rations.
@@ -307,6 +351,9 @@ func applyRest(s *state, w *Write) {
 		t.Stats = &stats
 		s.tokens[t.ID] = t
 	}
+	for _, rc := range w.Recharged {
+		s.setCharges(rc)
+	}
 	for _, sup := range w.Supplies {
 		for i, c := range s.inventory.Containers {
 			if c.ID != sup.Container {
@@ -315,6 +362,21 @@ func applyRest(s *state, w *Write) {
 			s.inventory.Containers[i].Items[sup.Item] = sup.Left
 			if sup.Left == 0 {
 				delete(s.inventory.Containers[i].Items, sup.Item)
+			}
+		}
+	}
+}
+
+// setCharges keeps the charges a rest gave back to an Item Instance.
+func (s *state) setCharges(rc domain.Recharge) {
+	for i, c := range s.inventory.Containers {
+		if c.ID != rc.Container {
+			continue
+		}
+		for j, in := range c.Instances {
+			if in.ID == rc.Instance {
+				n := rc.Charges
+				s.inventory.Containers[i].Instances[j].Charges = &n
 			}
 		}
 	}

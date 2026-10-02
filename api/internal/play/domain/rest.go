@@ -67,6 +67,13 @@ type Supply struct {
 	Left      int
 }
 
+// Recharge is the charges a rest gives back to an Item Instance.
+type Recharge struct {
+	Container ContainerID
+	Instance  InstanceID
+	Charges   int
+}
+
 // RestResult is what a finished rest leaves a Character with.
 type RestResult struct {
 	CharacterID  uuid.UUID

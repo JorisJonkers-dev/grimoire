@@ -16711,12 +16711,19 @@ func (s *InventoryUse) encodeFields(e *jx.Encoder) {
 		e.FieldStart("use")
 		s.Use.Encode(e)
 	}
+	{
+		if s.Count.Set {
+			e.FieldStart("count")
+			s.Count.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfInventoryUse = [3]string{
+var jsonFieldsNameOfInventoryUse = [4]string{
 	0: "instanceId",
 	1: "slug",
 	2: "use",
+	3: "count",
 }
 
 // Decode decodes InventoryUse from json.
@@ -16757,6 +16764,16 @@ func (s *InventoryUse) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"use\"")
+			}
+		case "count":
+			if err := func() error {
+				s.Count.Reset()
+				if err := s.Count.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"count\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -16945,6 +16962,14 @@ func (s *InventoryUseUse) Decode(d *jx.Decoder) error {
 		*s = InventoryUseUseDrink
 	case InventoryUseUseThrow:
 		*s = InventoryUseUseThrow
+	case InventoryUseUseAttune:
+		*s = InventoryUseUseAttune
+	case InventoryUseUseUnattune:
+		*s = InventoryUseUseUnattune
+	case InventoryUseUseIdentify:
+		*s = InventoryUseUseIdentify
+	case InventoryUseUseCharge:
+		*s = InventoryUseUseCharge
 	default:
 		*s = InventoryUseUse(v)
 	}
@@ -17847,6 +17872,24 @@ func (s *ItemCard) encodeFields(e *jx.Encoder) {
 		e.Bool(s.Attuned)
 	}
 	{
+		if s.RequiresAttunement.Set {
+			e.FieldStart("requiresAttunement")
+			s.RequiresAttunement.Encode(e)
+		}
+	}
+	{
+		if s.AttunementDetail.Set {
+			e.FieldStart("attunementDetail")
+			s.AttunementDetail.Encode(e)
+		}
+	}
+	{
+		if s.MaxCharges.Set {
+			e.FieldStart("maxCharges")
+			s.MaxCharges.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("fits")
 		e.ArrStart()
 		for _, elem := range s.Fits {
@@ -17856,7 +17899,7 @@ func (s *ItemCard) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfItemCard = [12]string{
+var jsonFieldsNameOfItemCard = [15]string{
 	0:  "instanceId",
 	1:  "slug",
 	2:  "name",
@@ -17868,7 +17911,10 @@ var jsonFieldsNameOfItemCard = [12]string{
 	8:  "charges",
 	9:  "identified",
 	10: "attuned",
-	11: "fits",
+	11: "requiresAttunement",
+	12: "attunementDetail",
+	13: "maxCharges",
+	14: "fits",
 }
 
 // Decode decodes ItemCard from json.
@@ -18002,8 +18048,38 @@ func (s *ItemCard) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"attuned\"")
 			}
+		case "requiresAttunement":
+			if err := func() error {
+				s.RequiresAttunement.Reset()
+				if err := s.RequiresAttunement.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"requiresAttunement\"")
+			}
+		case "attunementDetail":
+			if err := func() error {
+				s.AttunementDetail.Reset()
+				if err := s.AttunementDetail.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"attunementDetail\"")
+			}
+		case "maxCharges":
+			if err := func() error {
+				s.MaxCharges.Reset()
+				if err := s.MaxCharges.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"maxCharges\"")
+			}
 		case "fits":
-			requiredBitSet[1] |= 1 << 3
+			requiredBitSet[1] |= 1 << 6
 			if err := func() error {
 				s.Fits = make([]EquipmentSlot, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -18031,7 +18107,7 @@ func (s *ItemCard) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b01110110,
-		0b00001110,
+		0b01000110,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

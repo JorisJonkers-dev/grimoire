@@ -1676,8 +1676,8 @@ func (UnimplementedHandler) UploadMap(ctx context.Context, req UploadMapReq, par
 
 // UseItem implements useItem operation.
 //
-// Drinks a potion, restoring hit points if it heals, or throws an item away. Not during a live
-// Session.
+// Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or
+// spends its charges. Not during a live Session.
 //
 // POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use
 func (UnimplementedHandler) UseItem(ctx context.Context, req *InventoryUse, params UseItemParams) (r UseItemRes, _ error) {

@@ -190,10 +190,30 @@ func TestALongRestCanBeInterruptedAndCostsRations(t *testing.T) {
 	if d2.View.Rest != nil || p2.View.Rest != nil || d2.View.GameDay != day || *tokenByID(t, d2.View, ids["aria-token"]).HP != 4 {
 		t.Fatalf("an interrupted rest gives nothing = %+v", d2.View)
 	}
+	wand := uuid.New()
+	for _, q := range []struct {
+		sql  string
+		args []any
+	}{
+		{`INSERT INTO compendium.documents (key, title, ruleset_year, precedence, license, attribution, url) VALUES ('rest-doc', 'Rest', 2024, 1, 'CC-BY-4.0', 'a', 'https://a') ON CONFLICT DO NOTHING`, nil},
+		{`INSERT INTO compendium.items (document_id, slug, name, description, category, cost_gp, weight_lb, magic, requires_attunement)
+			SELECT id, 'rest-wand', 'Rest Wand', '', 'wand', 1, 1, true, false FROM compendium.documents WHERE key = 'rest-doc' ON CONFLICT DO NOTHING`, nil},
+		{`INSERT INTO compendium.item_charges (item_slug, max_charges, regain_dice, regain_faces, regain_bonus, recharge_on) VALUES ('rest-wand', 7, 1, 6, 1, 'dawn') ON CONFLICT DO NOTHING`, nil},
+		{`INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, charges, identified, attuned, created_at)
+			SELECT $1, id, 'rest-wand', 1, 0, true, false, now() FROM campaign.containers WHERE character_id = $2`, []any{wand, ids["Aria"]}},
+	} {
+		if _, err := w.pool.Exec(ctx, q.sql, q.args...); err != nil {
+			t.Fatal(err)
+		}
+	}
 	stash(2)
 	tb.dmSays(live.Command{Kind: live.CmdProposeRest, Rest: live.RestLong})
 	tb.playerSays(live.Command{Kind: live.CmdAgreeRest})
 	d2, _ = tb.dmSays(live.Command{Kind: live.CmdFinishRest})
+	var charges int
+	if err := w.pool.QueryRow(ctx, "SELECT charges FROM campaign.item_instances WHERE id = $1", wand).Scan(&charges); err != nil || charges < 2 || charges > 7 {
+		t.Fatalf("the wand regains 1d6+1 at dawn: %d %v", charges, err)
+	}
 	if d2.View.Rest != nil || d2.View.GameDay != day+1 || *tokenByID(t, d2.View, ids["aria-token"]).HP != 12 {
 		t.Fatalf("a finished Long Rest heals and moves the day on = %+v", d2.View)
 	}

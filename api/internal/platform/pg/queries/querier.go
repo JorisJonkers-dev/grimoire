@@ -239,6 +239,7 @@ type Querier interface {
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
 	GiveUpInspiration(ctx context.Context, arg GiveUpInspirationParams) (int64, error)
 	HealCharacter(ctx context.Context, arg HealCharacterParams) error
+	IdentifyInstance(ctx context.Context, id uuid.UUID) error
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
 	InsertAccountCharacter(ctx context.Context, arg InsertAccountCharacterParams) error
@@ -583,7 +584,8 @@ type Querier interface {
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
-	SetInstanceQuantity(ctx context.Context, arg SetInstanceQuantityParams) error
+	SetInstanceAttuned(ctx context.Context, arg SetInstanceAttunedParams) error
+	SetInstanceCharges(ctx context.Context, arg SetInstanceChargesParams) error
 	SetInstanceSlot(ctx context.Context, arg SetInstanceSlotParams) error
 	SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error

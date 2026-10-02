@@ -286,6 +286,15 @@ func (q *Queries) HealCharacter(ctx context.Context, arg HealCharacterParams) er
 	return err
 }
 
+const identifyInstance = `-- name: IdentifyInstance :exec
+UPDATE campaign.item_instances SET identified = true WHERE id = $1
+`
+
+func (q *Queries) IdentifyInstance(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, identifyInstance, id)
+	return err
+}
+
 const insertContainer = `-- name: InsertContainer :exec
 INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
 VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING
@@ -314,13 +323,14 @@ func (q *Queries) InsertContainer(ctx context.Context, arg InsertContainerParams
 
 const insertInstance = `-- name: InsertInstance :exec
 INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, equipped_slot, created_at)
-VALUES ($1, $2, $3, 1, true, false, $4, $5)
+VALUES ($1, $2, $3, 1, true, $4, $5, $6)
 `
 
 type InsertInstanceParams struct {
 	ID           uuid.UUID
 	ContainerID  uuid.UUID
 	ItemSlug     string
+	Attuned      bool
 	EquippedSlot pgtype.Text
 	Now          time.Time
 }
@@ -330,6 +340,7 @@ func (q *Queries) InsertInstance(ctx context.Context, arg InsertInstanceParams) 
 		arg.ID,
 		arg.ContainerID,
 		arg.ItemSlug,
+		arg.Attuned,
 		arg.EquippedSlot,
 		arg.Now,
 	)
@@ -440,7 +451,8 @@ func (q *Queries) InsertLootTableRevision(ctx context.Context, arg InsertLootTab
 }
 
 const inventoryCharacters = `-- name: InventoryCharacters :many
-SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength
+SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength,
+    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id
 `
 
@@ -449,6 +461,7 @@ type InventoryCharactersRow struct {
 	Name          string
 	OwnerMemberID uuid.UUID
 	Strength      int32
+	Classes       []string
 }
 
 func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error) {
@@ -465,6 +478,7 @@ func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID)
 			&i.Name,
 			&i.OwnerMemberID,
 			&i.Strength,
+			&i.Classes,
 		); err != nil {
 			return nil, err
 		}
@@ -477,8 +491,13 @@ func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID)
 }
 
 const itemsBySlug = `-- name: ItemsBySlug :many
-SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb, i.category
+SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb, i.category, i.requires_attunement,
+    coalesce(i.attunement_detail, '')::text AS attunement_detail,
+    coalesce(ch.max_charges, 0)::int AS max_charges, coalesce(ch.regain_dice, 0)::int AS regain_dice,
+    coalesce(ch.regain_faces, 0)::int AS regain_faces, coalesce(ch.regain_bonus, 0)::int AS regain_bonus,
+    coalesce(ch.recharge_on, '')::text AS recharge_on
 FROM compendium.items i
+LEFT JOIN compendium.item_charges ch ON ch.item_slug = i.slug
 JOIN compendium.documents d ON d.id = i.document_id
 WHERE i.slug = ANY($1::text[])
 ORDER BY i.slug, (d.key = (SELECT c.ruleset_pref FROM campaign.campaigns c WHERE c.id = $2)) DESC, d.precedence DESC
@@ -490,10 +509,17 @@ type ItemsBySlugParams struct {
 }
 
 type ItemsBySlugRow struct {
-	Slug     string
-	Name     string
-	WeightLb float64
-	Category string
+	Slug               string
+	Name               string
+	WeightLb           float64
+	Category           string
+	RequiresAttunement bool
+	AttunementDetail   string
+	MaxCharges         int32
+	RegainDice         int32
+	RegainFaces        int32
+	RegainBonus        int32
+	RechargeOn         string
 }
 
 func (q *Queries) ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error) {
@@ -510,6 +536,13 @@ func (q *Queries) ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]Ite
 			&i.Name,
 			&i.WeightLb,
 			&i.Category,
+			&i.RequiresAttunement,
+			&i.AttunementDetail,
+			&i.MaxCharges,
+			&i.RegainDice,
+			&i.RegainFaces,
+			&i.RegainBonus,
+			&i.RechargeOn,
 		); err != nil {
 			return nil, err
 		}
@@ -679,17 +712,31 @@ func (q *Queries) SetContainerCoins(ctx context.Context, arg SetContainerCoinsPa
 	return err
 }
 
-const setInstanceQuantity = `-- name: SetInstanceQuantity :exec
-UPDATE campaign.item_instances SET quantity = $1 WHERE id = $2
+const setInstanceAttuned = `-- name: SetInstanceAttuned :exec
+UPDATE campaign.item_instances SET attuned = $1 WHERE id = $2
 `
 
-type SetInstanceQuantityParams struct {
-	Quantity int32
-	ID       uuid.UUID
+type SetInstanceAttunedParams struct {
+	Attuned bool
+	ID      uuid.UUID
 }
 
-func (q *Queries) SetInstanceQuantity(ctx context.Context, arg SetInstanceQuantityParams) error {
-	_, err := q.db.Exec(ctx, setInstanceQuantity, arg.Quantity, arg.ID)
+func (q *Queries) SetInstanceAttuned(ctx context.Context, arg SetInstanceAttunedParams) error {
+	_, err := q.db.Exec(ctx, setInstanceAttuned, arg.Attuned, arg.ID)
+	return err
+}
+
+const setInstanceCharges = `-- name: SetInstanceCharges :exec
+UPDATE campaign.item_instances SET charges = $1 WHERE id = $2
+`
+
+type SetInstanceChargesParams struct {
+	Charges pgtype.Int4
+	ID      uuid.UUID
+}
+
+func (q *Queries) SetInstanceCharges(ctx context.Context, arg SetInstanceChargesParams) error {
+	_, err := q.db.Exec(ctx, setInstanceCharges, arg.Charges, arg.ID)
 	return err
 }
 

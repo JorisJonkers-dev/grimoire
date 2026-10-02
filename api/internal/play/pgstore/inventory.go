@@ -31,7 +31,10 @@ func (s *Store) Items(ctx context.Context, campaign uuid.UUID, slugs []string) (
 		return nil, err
 	}
 	for _, r := range rows {
-		out[r.Slug] = domain.ItemInfo{Name: r.Name, WeightLb: r.WeightLb, Category: r.Category}
+		out[r.Slug] = domain.ItemInfo{
+			Name: r.Name, WeightLb: r.WeightLb, Category: r.Category, RequiresAttunement: r.RequiresAttunement, AttunementDetail: r.AttunementDetail,
+			MaxCharges: int(r.MaxCharges), RegainDice: int(r.RegainDice), RegainFaces: int(r.RegainFaces), RegainBonus: int(r.RegainBonus), RechargeOn: r.RechargeOn,
+		}
 	}
 	return out, nil
 }
@@ -49,7 +52,7 @@ func (s *Store) LoadInventory(ctx context.Context, campaign uuid.UUID) (domain.I
 		return inv, err
 	}
 	for _, c := range chars {
-		inv.Bearers = append(inv.Bearers, domain.Bearer{CharacterID: c.ID, Name: c.Name, Owner: c.OwnerMemberID, Strength: int(c.Strength)})
+		inv.Bearers = append(inv.Bearers, domain.Bearer{CharacterID: c.ID, Name: c.Name, Owner: c.OwnerMemberID, Strength: int(c.Strength), Classes: c.Classes})
 		p := queries.InsertContainerParams{ID: uuid.New(), CampaignID: campaign, Kind: domain.ContainerCharacter, CharacterID: pgtype.UUID{Bytes: c.ID, Valid: true}, Label: c.Name, Now: now}
 		if err := s.q.InsertContainer(ctx, p); err != nil {
 			return inv, err
@@ -235,19 +238,31 @@ func (s *Store) SetSlot(ctx context.Context, id domain.InstanceID, slot string) 
 	return s.q.SetInstanceSlot(ctx, queries.SetInstanceSlotParams{ID: uuid.UUID(id), EquippedSlot: pgtype.Text{String: slot, Valid: slot != ""}})
 }
 
-// AddInstance adds one item as its own Instance, in a slot or none.
-func (s *Store) AddInstance(ctx context.Context, to domain.ContainerID, slug, slot string) error {
+// AddInstance adds one item as its own Instance, in a slot or none, attuned or not.
+func (s *Store) AddInstance(ctx context.Context, id domain.InstanceID, to domain.ContainerID, slug, slot string, attuned bool) error {
 	return s.q.InsertInstance(ctx, queries.InsertInstanceParams{
-		ID: uuid.New(), ContainerID: uuid.UUID(to), ItemSlug: slug, EquippedSlot: pgtype.Text{String: slot, Valid: slot != ""}, Now: time.Now(),
+		ID: uuid.UUID(id), ContainerID: uuid.UUID(to), ItemSlug: slug, EquippedSlot: pgtype.Text{String: slot, Valid: slot != ""}, Attuned: attuned, Now: time.Now(),
 	})
 }
 
-// SetQuantity sets how many an Instance holds; none removes it.
-func (s *Store) SetQuantity(ctx context.Context, id domain.InstanceID, n int) error {
-	if n < 1 {
-		return s.q.DeleteInstance(ctx, uuid.UUID(id))
-	}
-	return s.q.SetInstanceQuantity(ctx, queries.SetInstanceQuantityParams{ID: uuid.UUID(id), Quantity: int32(n)}) //nolint:gosec // bounded by the constraint
+// SetAttuned attunes or unattunes an Item Instance.
+func (s *Store) SetAttuned(ctx context.Context, id domain.InstanceID, attuned bool) error {
+	return s.q.SetInstanceAttuned(ctx, queries.SetInstanceAttunedParams{ID: uuid.UUID(id), Attuned: attuned})
+}
+
+// Identify reveals what an Item Instance is.
+func (s *Store) Identify(ctx context.Context, id domain.InstanceID) error {
+	return s.q.IdentifyInstance(ctx, uuid.UUID(id))
+}
+
+// SetCharges sets the charges an Item Instance holds.
+func (s *Store) SetCharges(ctx context.Context, id domain.InstanceID, n int) error {
+	return s.q.SetInstanceCharges(ctx, queries.SetInstanceChargesParams{ID: uuid.UUID(id), Charges: pgtype.Int4{Int32: int32(n), Valid: true}}) //nolint:gosec // 0 to 100
+}
+
+// RemoveInstance takes an Item Instance out of the Campaign: drunk, thrown or merged into a stack.
+func (s *Store) RemoveInstance(ctx context.Context, id domain.InstanceID) error {
+	return s.q.DeleteInstance(ctx, uuid.UUID(id))
 }
 
 // MoveInstance moves an Item Instance to another Container, out of any slot.

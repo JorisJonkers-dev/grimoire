@@ -119,8 +119,10 @@ type Write struct {
 	Resting  *domain.Rest
 	RestOver bool
 	Supplies []domain.Supply
-	Results  []domain.RestResult
-	Healed   []HPChange
+	// Recharged are the charges a rest gave back to magic items.
+	Recharged []domain.Recharge
+	Results   []domain.RestResult
+	Healed    []HPChange
 	// Pending is a Hide, Grapple or Shove waiting on its roll; Settled the roll of one that resolved.
 	// Pushed is a shoved creature where it lands; Dragged a grappled creature pulled along a walk.
 	Pending *domain.PendingAction

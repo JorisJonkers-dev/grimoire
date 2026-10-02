@@ -2309,6 +2309,9 @@ export const zItemCard = z.object({
     charges: z.int().gte(0).lte(100).optional(),
     identified: z.boolean(),
     attuned: z.boolean(),
+    requiresAttunement: z.boolean().optional(),
+    attunementDetail: z.string().max(200).optional(),
+    maxCharges: z.int().gte(0).lte(100).optional(),
     fits: z.array(zEquipmentSlot).max(13)
 });
 
@@ -2373,7 +2376,15 @@ export const zInventoryTake = z.object({
 export const zInventoryUse = z.object({
     instanceId: zId.optional(),
     slug: zSlug.optional(),
-    use: z.enum(['drink', 'throw'])
+    use: z.enum([
+        'drink',
+        'throw',
+        'attune',
+        'unattune',
+        'identify',
+        'charge'
+    ]),
+    count: z.int().gte(1).lte(100).optional()
 });
 
 /**

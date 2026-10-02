@@ -81,3 +81,64 @@ func TestHealingPotions(t *testing.T) {
 		t.Fatal("heroism heals")
 	}
 }
+
+func TestAttunementRequirements(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		detail  string
+		classes []string
+		caster  bool
+		want    bool
+	}{
+		{"", []string{"fighter"}, false, true},
+		{"Requires Attunement", []string{"fighter"}, false, true},
+		{"Requires Attunement by a Spellcaster", []string{"fighter"}, false, false},
+		{"Requires Attunement by a Spellcaster", []string{"fighter", "wizard"}, true, true},
+		{"Requires Attunement by a Druid", []string{"wizard"}, true, false},
+		{"Requires Attunement by a Bard, Cleric, or Druid", []string{"fighter", "cleric"}, true, true},
+		{"Requires Attunement by a Sorcerer, Warlock, or Wizard", []string{"rogue"}, false, false},
+	}
+	for _, c := range cases {
+		if got := inventory.CanAttune(c.detail, c.classes, c.caster); got != c.want {
+			t.Errorf("%q for %v = %v", c.detail, c.classes, got)
+		}
+	}
+	if inventory.MaxAttuned != 3 {
+		t.Fatal("attunement slots")
+	}
+}
+
+func TestUnknownItemsKeepTheirKindOnly(t *testing.T) {
+	t.Parallel()
+	for category, want := range map[string]string{
+		"potion": "Unknown potion", "wondrous-item": "Unknown wondrous item", "ring": "Unknown ring", "": "Unknown item",
+	} {
+		if got := inventory.UnknownName(category); got != want {
+			t.Errorf("%q = %q", category, got)
+		}
+	}
+}
+
+func TestChargesComeBackOnTheirSchedule(t *testing.T) {
+	t.Parallel()
+	wand := inventory.Charges{Max: 7, Dice: 1, Faces: 6, Bonus: 1, On: inventory.Dawn}
+	for _, c := range []struct {
+		current, rolled int
+		event           inventory.Rest
+		want            int
+	}{
+		{0, 4, inventory.LongRest, 5}, {5, 6, inventory.LongRest, 7}, {2, 3, inventory.ShortRest, 2}, {7, 1, inventory.LongRest, 7},
+	} {
+		if got := wand.Regain(c.event, c.current, c.rolled); got != c.want {
+			t.Errorf("%+v = %d", c, got)
+		}
+	}
+	quick := inventory.Charges{Max: 3, Dice: 0, Faces: 0, Bonus: 3, On: inventory.ShortRestRecharge}
+	if quick.Regain(inventory.ShortRest, 0, 0) != 3 || quick.Regain(inventory.LongRest, 1, 0) != 3 {
+		t.Fatal("a short-rest item regains on any rest")
+	}
+	nightly := inventory.Charges{Max: 3, Dice: 0, Faces: 0, Bonus: 3, On: inventory.LongRestRecharge}
+	if nightly.Regain(inventory.ShortRest, 0, 0) != 0 || nightly.Regain(inventory.LongRest, 0, 0) != 3 {
+		t.Fatal("a long-rest item regains only on a long rest")
+	}
+}
