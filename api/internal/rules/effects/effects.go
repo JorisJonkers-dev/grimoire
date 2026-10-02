@@ -167,6 +167,16 @@ type ResourceChange struct {
 	Delta    int
 }
 
+// Summon brings creatures in under the caster's control: Count of one monster, acting on the caster's
+// turn (Shares) or on their own Initiative, and taking only the Dodge action unless the caster spends a
+// Bonus Action to command them (NeedsCommand).
+type Summon struct {
+	Monster      string
+	Count        int
+	Shares       bool
+	NeedsCommand bool
+}
+
 // Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
 // speed, and at DeathAt levels the bearer dies.
 type Exhausting struct {
@@ -181,6 +191,7 @@ func (Immobile) isComponent()       {}
 func (SaveEdge) isComponent()       {}
 func (CritWithin) isComponent()     {}
 func (Exhausting) isComponent()     {}
+func (Summon) isComponent()         {}
 func (SpeedPenalty) isComponent()   {}
 func (Reacts) isComponent()         {}
 func (TempHP) isComponent()         {}
@@ -302,7 +313,7 @@ func (p *AttackProfile) attacking(d Definition, a Active) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
 		}
 	}
 }
@@ -325,7 +336,7 @@ func (p *AttackProfile) attacked(d Definition, a Active, bySource, withinFive bo
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
 		}
 	}
 }
@@ -426,7 +437,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
 			}
 		}
 	}
@@ -444,7 +455,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
 			}
 		}
 	}
@@ -506,7 +517,7 @@ func (cat Catalog) LandingOf(slug, mode string) Landing {
 		case ResourceChange:
 			out.Resources = append(out.Resources, c)
 		case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
-			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Branch:
+			CritWithin, Exhausting, SpeedPenalty, Reacts, Teleport, ForcedMove, Counter, Choice, Branch, Summon:
 		}
 	}
 	return out
@@ -534,6 +545,16 @@ func (cat Catalog) CounterOf(bearer []Active) (int, string, bool) {
 		}
 	}
 	return best, name, best > 0
+}
+
+// SummonOf is what an Effect summons, if it does.
+func (cat Catalog) SummonOf(slug string) (Summon, bool) {
+	for _, c := range cat[slug].Components {
+		if s, ok := c.(Summon); ok {
+			return s, true
+		}
+	}
+	return Summon{Monster: "", Count: 0, Shares: false, NeedsCommand: false}, false
 }
 
 // Spell reports whether an Effect belongs to a spell, the kind Dispel ends.
@@ -594,7 +615,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Instructions = append(out.Instructions, c.Instruction)
 		case ForcedMove:
 			out.Push = c
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch:
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
 		}
 	}
 	return out, known && found

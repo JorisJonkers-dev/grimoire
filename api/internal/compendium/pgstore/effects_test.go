@@ -26,7 +26,7 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"bless", "burning-hands", "cone-of-cold", "counterspell", "dispel-magic", "dodging", "exhaustion", "faerie-fire", "false-life", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "misty-step", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "spirit-guardians", "stunned", "thunderwave", "vexed", "wall-of-fire"}
+	want := []string{"animate-dead", "bless", "burning-hands", "cone-of-cold", "counterspell", "dispel-magic", "dodging", "exhaustion", "faerie-fire", "false-life", "find-familiar", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "misty-step", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "spirit-guardians", "stunned", "thunderwave", "vexed", "wall-of-fire"}
 	if !reflect.DeepEqual(got.Automated(), want) {
 		t.Fatalf("automated = %v", got.Automated())
 	}
@@ -114,6 +114,7 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 		effects.Counter{RangeFt: 60},
 		effects.GrantFeature{Name: "Darkvision"},
 		effects.ResourceChange{Resource: "rage", Delta: -1},
+		effects.Summon{Monster: "wolf", Count: 2, Shares: true, NeedsCommand: true},
 	}}
 	if err := s.SaveEffect(ctx, owner, second); err != nil {
 		t.Fatal(err)

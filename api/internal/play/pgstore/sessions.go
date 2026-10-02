@@ -140,22 +140,7 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	}
 	tokens := make([]domain.Token, 0, len(rows))
 	for _, t := range rows {
-		tok := domain.Token{
-			ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
-			Tactics: t.Tactics, CanShield: t.CanShield,
-		}
-		if t.ControllerMemberID.Valid {
-			id := uuid.UUID(t.ControllerMemberID.Bytes)
-			tok.Controller = &id
-		}
-		if t.StatSource.Valid {
-			tok.Stats = &domain.Stats{
-				Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
-				Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
-				Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
-			}
-		}
-		tokens = append(tokens, tok)
+		tokens = append(tokens, tokenFrom(t))
 	}
 	saves, err := s.q.SessionTokenSaves(ctx, row.ID)
 	if err != nil {
@@ -203,6 +188,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 		}
 		steps := []func() error{
 			func() error { return tx.write(ctx, sid, board, w, now) },
+			func() error { return tx.dismiss(ctx, sid, w.Dismissed) },
 			func() error { return tx.saveCombat(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
 			func() error { return tx.saveTerrain(ctx, sid, board, w) },
@@ -278,7 +264,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
-		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered:
+		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded:
 		return nil
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {
@@ -287,7 +273,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.setHP(ctx, sid, *w.HP)
 	case domain.ActionReactionSet:
 		return s.saveReactionSettings(ctx, w.Token)
-	case domain.ActionEncounterSpawned:
+	case domain.ActionEncounterSpawned, domain.ActionSummoned:
 		for _, t := range w.Spawned {
 			if err := s.insertToken(ctx, sid, t); err != nil {
 				return err
@@ -320,6 +306,9 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	}
 	if t.Controller != nil {
 		p.ControllerMemberID = pgtype.UUID{Bytes: *t.Controller, Valid: true}
+	}
+	if t.Summon != nil {
+		p.SummonEffectID = pgtype.UUID{Bytes: *t.Summon, Valid: true}
 	}
 	if t.Stats == nil {
 		p.SpeedFt, p.UnarmedDc, p.AttacksPerAction = 30, 10, 1
@@ -371,6 +360,16 @@ func (s *Store) writeLanding(ctx context.Context, sid uuid.UUID, w live.Write) e
 	}
 	for _, r := range w.Resources {
 		if err := s.q.ChangeResourceUsed(ctx, queries.ChangeResourceUsedParams{CharacterID: r.Character, ResourceSlug: r.Resource, Delta: int32(r.Delta)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// dismiss deletes summoned tokens whose Effect ended; their Combatants go with them.
+func (s *Store) dismiss(ctx context.Context, sid uuid.UUID, ids []domain.TokenID) error {
+	for _, id := range ids {
+		if err := s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(id)}); err != nil {
 			return err
 		}
 	}
@@ -530,6 +529,10 @@ func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 		if x.CleaveFrom != nil {
 			cp.CleaveFrom = pgtype.UUID{Bytes: *x.CleaveFrom, Valid: true}
 		}
+		if x.Owner != nil {
+			cp.OwnerCombatantID = pgtype.UUID{Bytes: *x.Owner, Valid: true}
+		}
+		cp.Commanded = x.Commanded
 		if r := x.Readied; r != nil {
 			cp.ReadiedTrigger, cp.ReadiedAttack = pgtype.Text{String: string(r.Trigger.Kind), Valid: true}, pgInt(r.AttackNo)
 			if who, err := uuid.Parse(r.Trigger.Who); err == nil {
@@ -847,6 +850,30 @@ func (o Owner) Acquire(ctx context.Context, id domain.SessionID) (func(), error)
 	}, nil
 }
 
+// tokenFrom reads one stored token, without its attacks, saves and reaction settings.
+func tokenFrom(t queries.SessionTokensRow) domain.Token {
+	tok := domain.Token{
+		ID: domain.TokenID(t.ID), Label: t.Label, Kind: t.Kind, Q: int(t.Q), R: int(t.R), Hidden: t.Hidden, DarkvisionFt: int(t.DarkvisionFt),
+		Tactics: t.Tactics, CanShield: t.CanShield,
+	}
+	if t.ControllerMemberID.Valid {
+		id := uuid.UUID(t.ControllerMemberID.Bytes)
+		tok.Controller = &id
+	}
+	if t.SummonEffectID.Valid {
+		e := domain.EffectID(t.SummonEffectID.Bytes)
+		tok.Summon = &e
+	}
+	if t.StatSource.Valid {
+		tok.Stats = &domain.Stats{
+			Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
+			Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
+			Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
+		}
+	}
+	return tok
+}
+
 // combatantFrom reads one stored Combatant.
 func combatantFrom(x queries.PlayCombatant) domain.Combatant {
 	c := domain.Combatant{
@@ -861,7 +888,11 @@ func combatantFrom(x queries.PlayCombatant) domain.Combatant {
 		n := int(x.Initiative.Int32)
 		c.Initiative = &n
 	}
-	c.Cleaved = x.Cleaved
+	c.Cleaved, c.Commanded = x.Cleaved, x.Commanded
+	if x.OwnerCombatantID.Valid {
+		owner := domain.CombatantID(x.OwnerCombatantID.Bytes)
+		c.Owner = &owner
+	}
 	if x.CleaveFrom.Valid {
 		from := domain.TokenID(x.CleaveFrom.Bytes)
 		c.CleaveFrom = &from

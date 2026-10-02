@@ -88,6 +88,8 @@ const (
 	CmdUnarmed        = "unarmed"
 	CmdInteract       = "interact"
 	CmdTeleport       = "teleport"
+	CmdSummon         = "summon"
+	CmdCommand        = "command"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -592,6 +594,10 @@ type CombatantView struct {
 	Interaction bool `json:"interaction,omitempty"`
 	// Cleave is set while a Cleave hit leaves a second attack open.
 	Cleave bool `json:"cleave,omitempty"`
+	// OwnerID is the Combatant who summoned this one; AwaitingCommand is set while it can only Dodge
+	// until its owner commands it.
+	OwnerID         string `json:"ownerId,omitempty"`
+	AwaitingCommand bool   `json:"awaitingCommand,omitempty"`
 	// Tactics and Suggestion go to the DM only.
 	Surprised  bool            `json:"surprised,omitempty"`
 	Tactics    string          `json:"tactics,omitempty"`

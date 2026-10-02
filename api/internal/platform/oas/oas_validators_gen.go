@@ -15662,6 +15662,10 @@ func (s LiveCommandKind) Validate() error {
 		return nil
 	case "teleport":
 		return nil
+	case "summon":
+		return nil
+	case "command":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}

@@ -264,6 +264,11 @@ func applyCombat(s *state, w *Write) {
 		x.Initiative = &total
 	case domain.ActionTurnEnded:
 		x.Done = true
+		for i := range c.Combatants {
+			if o := c.Combatants[i].Owner; o != nil && *o == x.ID && c.Acting(c.Combatants[i]) {
+				c.Combatants[i].Done = true
+			}
+		}
 	default:
 		x.Economy, _ = x.Economy.Spend(w.resource)
 	}
@@ -294,7 +299,7 @@ func settle(c *domain.Combat, speed func(domain.Combatant) int) {
 		if newRound {
 			c.Round++
 			for i := range c.Combatants {
-				c.Combatants[i].Done = false
+				c.Combatants[i].Done, c.Combatants[i].Commanded = false, false
 			}
 		}
 		c.Turn = next
@@ -385,6 +390,9 @@ func (s *state) combatantView(x domain.Combatant, t domain.Token, totals []int, 
 	}
 	if t.Controller != nil {
 		cv.ControllerID = t.Controller.String()
+	}
+	if x.Owner != nil {
+		cv.OwnerID, cv.AwaitingCommand = uuid.UUID(*x.Owner).String(), s.uncommanded(t) != ""
 	}
 	if a == AudienceDM {
 		cv.Suggestion = s.suggest(x, t)

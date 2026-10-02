@@ -203,6 +203,12 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return widerRow(ctx, q, id, ord, c)
 	case effects.Choice:
 		return "choice", func() error { return nil }
+	case effects.Summon:
+		return "summon", func() error {
+			return q.InsertEffectSummon(ctx, queries.InsertEffectSummonParams{
+				EffectID: id, Ordinal: ord, MonsterSlug: c.Monster, Count: int32(c.Count), SharesTurn: c.Shares, NeedsCommand: c.NeedsCommand, //nolint:gosec // bounded by a check
+			})
+		}
 	case effects.Branch:
 		return "branch", func() error {
 			return q.InsertEffectBranch(ctx, queries.InsertEffectBranchParams{
@@ -246,7 +252,7 @@ func widerRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c ef
 		}
 	case effects.BonusDie, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveDamage, effects.SaveCondition,
 		effects.CreateSurface, effects.Incapacitated, effects.Immobile, effects.SaveEdge, effects.CritWithin, effects.Exhausting, effects.SpeedPenalty, effects.Reacts,
-		effects.Choice, effects.Branch:
+		effects.Choice, effects.Branch, effects.Summon:
 	}
 	return "", func() error { return nil }
 }
@@ -557,6 +563,13 @@ func (s *Store) shapeComponents(ctx context.Context, out map[slot]effects.Compon
 	}
 	for _, r := range branches {
 		out[slot{r.EffectID, r.Ordinal}] = effects.Branch{When: effects.Condition{Kind: effects.ConditionKind(r.Condition), N: int(r.N), Type: r.CreatureType}, Then: nil}
+	}
+	summons, err := s.q.ListEffectSummons(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range summons {
+		out[slot{r.EffectID, r.Ordinal}] = effects.Summon{Monster: r.MonsterSlug, Count: int(r.Count), Shares: r.SharesTurn, NeedsCommand: r.NeedsCommand}
 	}
 	return out, nil
 }

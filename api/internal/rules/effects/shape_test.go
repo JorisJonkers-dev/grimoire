@@ -65,6 +65,18 @@ func TestChoicesAndBranches(t *testing.T) {
 	}
 }
 
+func TestSummons(t *testing.T) {
+	t.Parallel()
+	owl := effects.Summon{Monster: "owl", Count: 1, Shares: true}
+	cat := effects.Catalog{"find-familiar": {Slug: "find-familiar", Components: []effects.Component{effects.Manual{}, owl}}, "bless": {Slug: "bless"}}
+	if got, ok := cat.SummonOf("find-familiar"); !ok || got != owl {
+		t.Fatalf("summon = %+v %v", got, ok)
+	}
+	if got, ok := cat.SummonOf("bless"); ok || got != (effects.Summon{}) {
+		t.Fatalf("bless summons = %+v", got)
+	}
+}
+
 func TestConditionsHold(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
@@ -210,6 +222,10 @@ func TestRulesText(t *testing.T) {
 			effects.Branch{When: effects.Condition{Kind: effects.FirstEachTurn}, Then: []effects.Component{effects.ExtraDamage{Dice: "1d8"}}},
 			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "undead"}, Then: []effects.Component{effects.Immobile{}}},
 			effects.Branch{When: effects.Condition{Kind: effects.CreatureIs, Type: "fiend"}, Then: nil},
+			effects.Summon{Monster: "owl", Count: 1, Shares: true},
+			effects.Summon{Monster: "skeleton", Count: 2, NeedsCommand: true},
+			effects.Summon{Monster: "wolf", Count: 3, Shares: true},
+			effects.Summon{Monster: "zombie", Count: 1, NeedsCommand: true},
 		},
 	}
 	want := []string{
@@ -251,6 +267,10 @@ func TestRulesText(t *testing.T) {
 		"The first time on a turn the effect touches a creature, the source deals an extra 1d8 damage whenever it hits the target.",
 		"If the creature is an undead, the target's Speed is 0.",
 		"If the creature is a fiend, ",
+		"The caster summons an Owl, which acts on the caster's turn.",
+		"The caster summons 2 Skeleton creatures, which roll their own Initiative. They take the Dodge action unless the caster commands them with a Bonus Action.",
+		"The caster summons 3 Wolf creatures, which act on the caster's turn.",
+		"The caster summons a Zombie, which rolls its own Initiative. It takes the Dodge action unless the caster commands it with a Bonus Action.",
 		"Duration: Concentration, up to 1 minute.",
 		"The target repeats the Wisdom saving throw at the end of each of its turns, ending the effect on a success.",
 		"Using a Higher-Level Spell Slot: the damage increases by 1d8 for each slot level above 2.",

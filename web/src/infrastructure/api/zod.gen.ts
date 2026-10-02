@@ -1130,6 +1130,8 @@ export const zLiveCombatant = z.object({
     offHand: z.boolean().optional(),
     interaction: z.boolean().optional(),
     cleave: z.boolean().optional(),
+    ownerId: zId.optional(),
+    awaitingCommand: z.boolean().optional(),
     tactics: zTactics.optional(),
     suggestion: zLiveSuggestion.optional()
 });
@@ -1655,7 +1657,9 @@ export const zLiveCommand = z.object({
         'set_reaction',
         'stabilise',
         'revive',
-        'teleport'
+        'teleport',
+        'summon',
+        'command'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),

@@ -99,6 +99,8 @@ func lastSentence(c Component) string {
 		return "As a Reaction, the caster interrupts a creature it can see casting a spell within " + strconv.Itoa(c.RangeFt) + " feet; the spell fails."
 	case GrantFeature:
 		return "The target gains " + c.Name + "."
+	case Summon:
+		return summonText(c)
 	case ResourceChange:
 		if c.Delta > 0 {
 			return "The target regains " + plural(c.Delta, "use") + " of " + title(c.Resource) + "."
@@ -114,6 +116,21 @@ func lastSentence(c Component) string {
 		b, _ := c.(Branch)
 		return b.When.Text() + ", " + lower(strings.Join(sentences(b.Then), " "))
 	}
+}
+
+func summonText(s Summon) string {
+	who, acts, rolls, it, them := strconv.Itoa(s.Count)+" "+title(s.Monster)+" creatures", "act", "roll their", "They take", "them"
+	if s.Count == 1 {
+		who, acts, rolls, it, them = article(s.Monster)+" "+title(s.Monster), "acts", "rolls its", "It takes", "it"
+	}
+	text := "The caster summons " + who + ", which " + rolls + " own Initiative."
+	if s.Shares {
+		text = "The caster summons " + who + ", which " + acts + " on the caster's turn."
+	}
+	if s.NeedsCommand {
+		text += " " + it + " the Dodge action unless the caster commands " + them + " with a Bonus Action."
+	}
+	return text
 }
 
 func rolls(on []Roll) string {

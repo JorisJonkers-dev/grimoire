@@ -8731,9 +8731,12 @@ type LiveCombatant struct {
 	// The turn's free object interaction is unused.
 	Interaction OptBool `json:"interaction"`
 	// A Cleave hit leaves a second attack open.
-	Cleave     OptBool           `json:"cleave"`
-	Tactics    OptTactics        `json:"tactics"`
-	Suggestion OptLiveSuggestion `json:"suggestion"`
+	Cleave  OptBool `json:"cleave"`
+	OwnerId OptID   `json:"ownerId"`
+	// A summoned creature that only Dodges until its owner commands it with a Bonus Action.
+	AwaitingCommand OptBool           `json:"awaitingCommand"`
+	Tactics         OptTactics        `json:"tactics"`
+	Suggestion      OptLiveSuggestion `json:"suggestion"`
 }
 
 // GetID returns the value of ID.
@@ -8844,6 +8847,16 @@ func (s *LiveCombatant) GetInteraction() OptBool {
 // GetCleave returns the value of Cleave.
 func (s *LiveCombatant) GetCleave() OptBool {
 	return s.Cleave
+}
+
+// GetOwnerId returns the value of OwnerId.
+func (s *LiveCombatant) GetOwnerId() OptID {
+	return s.OwnerId
+}
+
+// GetAwaitingCommand returns the value of AwaitingCommand.
+func (s *LiveCombatant) GetAwaitingCommand() OptBool {
+	return s.AwaitingCommand
 }
 
 // GetTactics returns the value of Tactics.
@@ -8964,6 +8977,16 @@ func (s *LiveCombatant) SetInteraction(val OptBool) {
 // SetCleave sets the value of Cleave.
 func (s *LiveCombatant) SetCleave(val OptBool) {
 	s.Cleave = val
+}
+
+// SetOwnerId sets the value of OwnerId.
+func (s *LiveCombatant) SetOwnerId(val OptID) {
+	s.OwnerId = val
+}
+
+// SetAwaitingCommand sets the value of AwaitingCommand.
+func (s *LiveCombatant) SetAwaitingCommand(val OptBool) {
+	s.AwaitingCommand = val
 }
 
 // SetTactics sets the value of Tactics.
@@ -10137,6 +10160,8 @@ const (
 	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
 	LiveCommandKindRevive         LiveCommandKind = "revive"
 	LiveCommandKindTeleport       LiveCommandKind = "teleport"
+	LiveCommandKindSummon         LiveCommandKind = "summon"
+	LiveCommandKindCommand        LiveCommandKind = "command"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10212,6 +10237,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindStabilise,
 		LiveCommandKindRevive,
 		LiveCommandKindTeleport,
+		LiveCommandKindSummon,
+		LiveCommandKindCommand,
 	}
 }
 
@@ -10357,6 +10384,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindRevive:
 		return []byte(s), nil
 	case LiveCommandKindTeleport:
+		return []byte(s), nil
+	case LiveCommandKindSummon:
+		return []byte(s), nil
+	case LiveCommandKindCommand:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10575,6 +10606,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindTeleport:
 		*s = LiveCommandKindTeleport
+		return nil
+	case LiveCommandKindSummon:
+		*s = LiveCommandKindSummon
+		return nil
+	case LiveCommandKindCommand:
+		*s = LiveCommandKindCommand
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

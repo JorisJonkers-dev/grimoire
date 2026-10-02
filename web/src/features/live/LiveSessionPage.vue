@@ -162,6 +162,10 @@ const areaPreview = computed(() => {
 })
 const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
 const teleporting = ref<string | null>(null)
+const summoning = ref<{ tokenId: string; effect: string } | null>(null)
+// The creatures a Combatant summoned that wait for its command this round.
+const awaitingOrders = (owner: string) =>
+  (combat.value?.combatants ?? []).filter((c) => c.ownerId === owner && c.awaitingCommand).map((c) => ({ tokenId: c.tokenId, label: c.label }))
 const zoneName = ref('')
 const zoneRadius = ref(3)
 const zoneDMOnly = ref(false)
@@ -241,6 +245,11 @@ function explore(c: Coord) {
 }
 function pick(c: Coord) {
   if (!live.value) return
+  if (summoning.value) {
+    live.value.send({ kind: 'summon', ...summoning.value, q: c.q, r: c.r })
+    summoning.value = null
+    return
+  }
   if (teleporting.value) {
     live.value.send({ kind: 'teleport', tokenId: teleporting.value, effect: 'misty-step', q: c.q, r: c.r })
     teleporting.value = null
@@ -358,6 +367,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :off-hand="b.c.offHand ?? false"
         :interaction="b.c.interaction ?? false"
         :cleave="b.c.cleave ?? false"
+        :summons="awaitingOrders(b.c.id)"
         @arm="(n) => arm(b.token, n)"
         @use="useSuggestion(b.token.id, b.c.suggestion)"
         @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"
@@ -369,7 +379,10 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @cleave="(n) => armCleave(b.token, n)"
         @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
         @teleport="teleporting = b.token.id"
+        @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
+        @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
       />
+      <p v-if="summoning" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
       <p v-if="teleporting" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
       <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
       <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>

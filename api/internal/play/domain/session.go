@@ -63,6 +63,8 @@ type Token struct {
 	CanShield bool
 	// Reactions are the Controller's settings, by kind of reaction prompt.
 	Reactions map[string]reactions.Setting
+	// Summon is the Effect that keeps a summoned creature here; it leaves when the Effect ends.
+	Summon *EffectID
 }
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.

@@ -24,14 +24,14 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id)
 VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @controller_member_id, sqlc.narg(stat_source),
     sqlc.narg(armor_class), sqlc.narg(hp), sqlc.narg(hp_max), sqlc.narg(intelligence), @can_shield, sqlc.narg(spell_dc), @stealth,
-    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action);
+    @perception, @initiative, @speed_ft, @unarmed_dc, @attacks_per_action, sqlc.narg(summon_effect_id));
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
@@ -58,7 +58,8 @@ SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_t
 
 -- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
-       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack, attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved
+       shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack, attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved,
+       owner_combatant_id, commanded
 FROM play.combatants WHERE combat_id = $1 ORDER BY id;
 
 -- name: SaveCombat :exec
@@ -71,16 +72,17 @@ ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round,
 -- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
     has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack,
-    attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved)
+    attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved, owner_combatant_id, commanded)
 VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
     @has_bonus_action, @has_reaction, @movement_ft, @shielded, @surprised, @disengaged, sqlc.narg(readied_trigger), sqlc.narg(readied_who),
-    sqlc.narg(readied_attack), @attacks_left, @light_attack, @off_hand, @interaction, sqlc.narg(cleave_from), @cleaved)
+    sqlc.narg(readied_attack), @attacks_left, @light_attack, @off_hand, @interaction, sqlc.narg(cleave_from), @cleaved,
+    sqlc.narg(owner_combatant_id), @commanded)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
     shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
     readied_who = excluded.readied_who, readied_attack = excluded.readied_attack, attacks_left = excluded.attacks_left,
     light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction,
-    cleave_from = excluded.cleave_from, cleaved = excluded.cleaved;
+    cleave_from = excluded.cleave_from, cleaved = excluded.cleaved, commanded = excluded.commanded;
 
 -- name: SetTokenHP :exec
 UPDATE play.tokens SET hp = @hp WHERE session_id = @session_id AND id = @id;

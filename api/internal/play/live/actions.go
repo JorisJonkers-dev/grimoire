@@ -58,6 +58,9 @@ func (r *runtime) planAction(m domain.Member, cmd Command) (Write, string) {
 	}
 	inFight := info.Action == actions.Dash || info.Action == actions.Disengage || info.Action == actions.Dodge || info.Action == actions.Ready
 	t, x, reason := r.actor(m, cmd.TokenID, inFight)
+	if reason == "" && info.Action != actions.Dodge {
+		reason = r.st.uncommanded(t)
+	}
 	if reason != "" {
 		return Write{}, reason
 	}

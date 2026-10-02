@@ -38,11 +38,15 @@ type Write struct {
 	Rolls     []domain.Roll
 	Combatant domain.CombatantID
 	HP        *HPChange
-	// Resources are Character Resources an Effect spent or gave back as it landed.
+	// Resources are Character Resources an Effect spent or gave back as it landed; Dismissed are summoned
+	// tokens that left because the Effect keeping them ended.
 	Resources []ResourceDelta
+	Dismissed []domain.TokenID
 	// Observers saw a ranged attack's damage; each remembers it against the attacker.
 	Observers []domain.TokenID
 	attack    *domain.PendingAttack
+	summons   []domain.Combatant
+	commanded domain.CombatantID
 	board     *domain.MapState
 	frames    []*state
 	prompt    *domain.ReactionPrompt
@@ -611,7 +615,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand:
 		return true
 	}
 	return false
@@ -693,6 +697,7 @@ func apply(s *state, w *Write) {
 		s.forgetChecks(w.Token.ID)
 		changed = true
 	}
+	changed = s.dismiss(w) || changed
 	if changed {
 		fx := cloneEffects(s.fx)
 		w.Effects = &fx
@@ -738,6 +743,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionTeleported:
 		applyTeleport(s, w)
+	case domain.ActionSummoned, domain.ActionCommanded:
+		applySummon(s, w)
+		return
 	case domain.ActionMasteryUsed:
 		applyMastery(s, w)
 		return

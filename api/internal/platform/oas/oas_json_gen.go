@@ -12012,6 +12012,18 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.OwnerId.Set {
+			e.FieldStart("ownerId")
+			s.OwnerId.Encode(e)
+		}
+	}
+	{
+		if s.AwaitingCommand.Set {
+			e.FieldStart("awaitingCommand")
+			s.AwaitingCommand.Encode(e)
+		}
+	}
+	{
 		if s.Tactics.Set {
 			e.FieldStart("tactics")
 			s.Tactics.Encode(e)
@@ -12025,7 +12037,7 @@ func (s *LiveCombatant) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCombatant = [24]string{
+var jsonFieldsNameOfLiveCombatant = [26]string{
 	0:  "id",
 	1:  "tokenId",
 	2:  "label",
@@ -12048,8 +12060,10 @@ var jsonFieldsNameOfLiveCombatant = [24]string{
 	19: "offHand",
 	20: "interaction",
 	21: "cleave",
-	22: "tactics",
-	23: "suggestion",
+	22: "ownerId",
+	23: "awaitingCommand",
+	24: "tactics",
+	25: "suggestion",
 }
 
 // Decode decodes LiveCombatant from json.
@@ -12057,7 +12071,7 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveCombatant to nil")
 	}
-	var requiredBitSet [3]uint8
+	var requiredBitSet [4]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -12297,6 +12311,26 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"cleave\"")
 			}
+		case "ownerId":
+			if err := func() error {
+				s.OwnerId.Reset()
+				if err := s.OwnerId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"ownerId\"")
+			}
+		case "awaitingCommand":
+			if err := func() error {
+				s.AwaitingCommand.Reset()
+				if err := s.AwaitingCommand.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"awaitingCommand\"")
+			}
 		case "tactics":
 			if err := func() error {
 				s.Tactics.Reset()
@@ -12326,9 +12360,10 @@ func (s *LiveCombatant) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [3]uint8{
+	for i, mask := range [4]uint8{
 		0b00101111,
 		0b01111111,
+		0b00000000,
 		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
@@ -14225,6 +14260,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindRevive
 	case LiveCommandKindTeleport:
 		*s = LiveCommandKindTeleport
+	case LiveCommandKindSummon:
+		*s = LiveCommandKindSummon
+	case LiveCommandKindCommand:
+		*s = LiveCommandKindCommand
 	default:
 		*s = LiveCommandKind(v)
 	}

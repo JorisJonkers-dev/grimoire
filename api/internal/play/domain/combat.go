@@ -66,6 +66,10 @@ type Combatant struct {
 	// to it; Cleaved is set once that attack is made.
 	CleaveFrom *TokenID
 	Cleaved    bool
+	// Owner is the Combatant whose summon this is; Commanded is set once the owner spends a Bonus Action
+	// to command it this round.
+	Owner     *CombatantID
+	Commanded bool
 }
 
 // Readied is a readied attack: what sets it off, and which attack it makes.
@@ -100,6 +104,10 @@ const (
 	ActionTeleported = "teleported"
 	// ActionCountered is a reaction that stops a spell being cast (Counterspell).
 	ActionCountered = "countered"
+	// ActionSummoned is an Effect bringing creatures in under its caster's control; ActionCommanded the
+	// caster spending a Bonus Action to command one.
+	ActionSummoned  = "summoned"
+	ActionCommanded = "commanded"
 )
 
 // Reaction kinds and the stage an attack waits in while its target decides.

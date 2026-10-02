@@ -464,6 +464,32 @@ func (q *Queries) InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffect
 	return err
 }
 
+const insertEffectSummon = `-- name: InsertEffectSummon :exec
+INSERT INTO compendium.effect_summons (effect_id, ordinal, monster_slug, count, shares_turn, needs_command)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertEffectSummonParams struct {
+	EffectID     int64
+	Ordinal      int32
+	MonsterSlug  string
+	Count        int32
+	SharesTurn   bool
+	NeedsCommand bool
+}
+
+func (q *Queries) InsertEffectSummon(ctx context.Context, arg InsertEffectSummonParams) error {
+	_, err := q.db.Exec(ctx, insertEffectSummon,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.MonsterSlug,
+		arg.Count,
+		arg.SharesTurn,
+		arg.NeedsCommand,
+	)
+	return err
+}
+
 const insertEffectSurface = `-- name: InsertEffectSurface :exec
 INSERT INTO compendium.effect_surfaces (effect_id, ordinal, surface, rounds) VALUES ($1, $2, $3, $4)
 `
@@ -1285,6 +1311,46 @@ func (q *Queries) ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpe
 	for rows.Next() {
 		var i ListEffectSpeedPenaltiesRow
 		if err := rows.Scan(&i.EffectID, &i.Ordinal, &i.Ft); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectSummons = `-- name: ListEffectSummons :many
+SELECT effect_id, ordinal, monster_slug, count, shares_turn, needs_command FROM compendium.effect_summons
+`
+
+type ListEffectSummonsRow struct {
+	EffectID     int64
+	Ordinal      int32
+	MonsterSlug  string
+	Count        int32
+	SharesTurn   bool
+	NeedsCommand bool
+}
+
+func (q *Queries) ListEffectSummons(ctx context.Context) ([]ListEffectSummonsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectSummons)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectSummonsRow{}
+	for rows.Next() {
+		var i ListEffectSummonsRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.MonsterSlug,
+			&i.Count,
+			&i.SharesTurn,
+			&i.NeedsCommand,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

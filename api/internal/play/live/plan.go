@@ -51,6 +51,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planInteract(m, cmd)
 	case CmdTeleport:
 		return r.planTeleport(m, cmd)
+	case CmdSummon:
+		return r.planSummon(m, cmd)
+	case CmdCommand:
+		return r.planCommand(m, cmd)
 	case CmdSetReaction:
 		return r.planReaction(m, cmd)
 	case CmdStabilise:

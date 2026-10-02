@@ -519,6 +519,16 @@ type CompendiumEffectSpeedPenalty struct {
 	Ft       int32
 }
 
+type CompendiumEffectSummon struct {
+	EffectID     int64
+	Ordinal      int32
+	Kind         string
+	MonsterSlug  string
+	Count        int32
+	SharesTurn   bool
+	NeedsCommand bool
+}
+
 type CompendiumEffectSurface struct {
 	EffectID int64
 	Ordinal  int32
@@ -944,30 +954,32 @@ type PlayCombatResumePath struct {
 }
 
 type PlayCombatant struct {
-	ID              uuid.UUID
-	CombatID        uuid.UUID
-	TokenID         uuid.UUID
-	RollID          uuid.UUID
-	InitiativeBonus int32
-	SpeedFt         int32
-	Initiative      pgtype.Int4
-	Done            bool
-	HasAction       bool
-	HasBonusAction  bool
-	HasReaction     bool
-	MovementFt      int32
-	Shielded        bool
-	Surprised       bool
-	Disengaged      bool
-	ReadiedTrigger  pgtype.Text
-	ReadiedWho      pgtype.UUID
-	ReadiedAttack   pgtype.Int4
-	AttacksLeft     int32
-	LightAttack     bool
-	OffHand         bool
-	Interaction     bool
-	CleaveFrom      pgtype.UUID
-	Cleaved         bool
+	ID               uuid.UUID
+	CombatID         uuid.UUID
+	TokenID          uuid.UUID
+	RollID           uuid.UUID
+	InitiativeBonus  int32
+	SpeedFt          int32
+	Initiative       pgtype.Int4
+	Done             bool
+	HasAction        bool
+	HasBonusAction   bool
+	HasReaction      bool
+	MovementFt       int32
+	Shielded         bool
+	Surprised        bool
+	Disengaged       bool
+	ReadiedTrigger   pgtype.Text
+	ReadiedWho       pgtype.UUID
+	ReadiedAttack    pgtype.Int4
+	AttacksLeft      int32
+	LightAttack      bool
+	OffHand          bool
+	Interaction      bool
+	CleaveFrom       pgtype.UUID
+	Cleaved          bool
+	OwnerCombatantID pgtype.UUID
+	Commanded        bool
 }
 
 type PlayDying struct {
@@ -1166,6 +1178,7 @@ type PlayToken struct {
 	UnarmedDc          int32
 	AttacksPerAction   int32
 	TempHp             int32
+	SummonEffectID     pgtype.UUID
 }
 
 type PlayTokenAttack struct {

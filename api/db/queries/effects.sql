@@ -172,3 +172,10 @@ SELECT effect_id, axis, class_slug, column_name, base_level, dice FROM compendiu
 
 -- name: ListEffectScalingSteps :many
 SELECT effect_id, at_level, dice FROM compendium.effect_scaling_steps ORDER BY effect_id, at_level;
+
+-- name: InsertEffectSummon :exec
+INSERT INTO compendium.effect_summons (effect_id, ordinal, monster_slug, count, shares_turn, needs_command)
+VALUES (@effect_id, @ordinal, @monster_slug, @count, @shares_turn, @needs_command);
+
+-- name: ListEffectSummons :many
+SELECT effect_id, ordinal, monster_slug, count, shares_turn, needs_command FROM compendium.effect_summons;

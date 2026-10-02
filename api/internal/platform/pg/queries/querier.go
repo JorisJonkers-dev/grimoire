@@ -201,6 +201,7 @@ type Querier interface {
 	InsertEffectScaling(ctx context.Context, arg InsertEffectScalingParams) error
 	InsertEffectScalingStep(ctx context.Context, arg InsertEffectScalingStepParams) error
 	InsertEffectSpeedPenalty(ctx context.Context, arg InsertEffectSpeedPenaltyParams) error
+	InsertEffectSummon(ctx context.Context, arg InsertEffectSummonParams) error
 	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
 	InsertEffectTeleport(ctx context.Context, arg InsertEffectTeleportParams) error
 	InsertEffectTempHP(ctx context.Context, arg InsertEffectTempHPParams) error
@@ -277,6 +278,7 @@ type Querier interface {
 	ListEffectScalingSteps(ctx context.Context) ([]CompendiumEffectScalingStep, error)
 	ListEffectScalings(ctx context.Context) ([]CompendiumEffectScaling, error)
 	ListEffectSpeedPenalties(ctx context.Context) ([]ListEffectSpeedPenaltiesRow, error)
+	ListEffectSummons(ctx context.Context) ([]ListEffectSummonsRow, error)
 	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
 	ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error)
 	ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow, error)

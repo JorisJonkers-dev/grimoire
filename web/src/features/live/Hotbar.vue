@@ -15,8 +15,9 @@ withDefaults(
     offHand?: boolean
     interaction?: boolean
     cleave?: boolean
+    summons?: { tokenId: string; label: string }[]
   }>(),
-  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false, cleave: false },
+  { suggestion: undefined, target: 'its target', tactics: undefined, attacksLeft: 0, offHand: false, interaction: false, cleave: false, summons: () => [] },
 )
 const emit = defineEmits<{
   arm: [attackNo: number]
@@ -30,6 +31,8 @@ const emit = defineEmits<{
   cleave: [attackNo: number]
   interact: [what: string]
   teleport: []
+  summon: [effect: string]
+  command: [tokenId: string]
 }>()
 const what = ref('')
 const slot = ref(0)
@@ -72,6 +75,10 @@ const spells = [
   { slug: 'cone-of-cold', name: 'Cone of Cold' },
   { slug: 'spirit-guardians', name: 'Spirit Guardians' },
   { slug: 'wall-of-fire', name: 'Wall of Fire' },
+]
+const summonings = [
+  { slug: 'find-familiar', name: 'Find Familiar' },
+  { slug: 'animate-dead', name: 'Animate Dead' },
 ]
 const styles: { value: Tactics; label: string }[] = [
   { value: 'auto', label: 'From Intelligence' },
@@ -172,6 +179,22 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
         <option v-for="s in spells" :key="s.slug" :value="s.slug">{{ s.name }}</option>
       </select>
     </label>
+    <label class="g-field tactics">
+      <span>Summon</span>
+      <select :disabled="blocked !== ''" data-testid="summon" @change="emit('summon', ($event.target as HTMLSelectElement).value)">
+        <option value="">Choose to place…</option>
+        <option v-for="s in summonings" :key="s.slug" :value="s.slug">{{ s.name }}</option>
+      </select>
+    </label>
+    <GButton
+      v-for="s in summons"
+      :key="s.tokenId"
+      :data-testid="`command-${s.label}`"
+      title="Bonus Action: command the creature you summoned."
+      @click="emit('command', s.tokenId)"
+    >
+      Command {{ s.label }}
+    </GButton>
     <label class="g-field tactics">
       <span>Spell slot</span>
       <select v-model.number="slot" data-testid="area-slot">

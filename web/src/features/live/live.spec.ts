@@ -698,6 +698,32 @@ describe('areas and terrain', () => {
     expect(wrapper.find('[data-testid="teleporting"]').exists()).toBe(false)
   })
 
+  it('summons creatures, marks them in the roster and commands them', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const wolf: LiveToken = { ...boss, id: '0190c7a8-0000-7000-8000-000000000093', label: 'Wolf', q: 1, r: 1 }
+    const owner = fighter(boss, { acting: true })
+    const combat = { status: 'active', round: 1, combatants: [owner, fighter(aria), fighter(wolf, { acting: true, ownerId: owner.id, awaitingCommand: true })] }
+    s.receive(snapshot([aria, boss, wolf], 'dm', { combat }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="summoned-Wolf"]').text()).toBe('Summoned by Goblin Boss · awaiting orders')
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="command-Wolf"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'command', tokenId: boss.id, targetId: wolf.id })
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="summon"]').setValue('animate-dead')
+    expect(wrapper.get('[data-testid="summoning"]').text()).toBe('Tap where they appear.')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'summon', tokenId: boss.id, effect: 'animate-dead', q: 2, r: 0 })
+    expect(wrapper.find('[data-testid="summoning"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="summon"]').setValue('')
+    expect(wrapper.find('[data-testid="summoning"]').exists()).toBe(false)
+    s.receive(snapshot([aria, boss, wolf], 'dm', { combat: { ...combat, combatants: [owner, fighter(aria), fighter(wolf, { ownerId: '0190c7a8-0000-7000-8000-000000000000' })] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="summoned-Wolf"]').text()).toBe('Summoned by someone')
+  })
+
   it('lets the DM aim an area spell, see who it catches and cast it', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/rolls/`]: (u) => pending(u.pathname.split('/')[6] ?? ''),
