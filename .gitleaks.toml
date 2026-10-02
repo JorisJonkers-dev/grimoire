@@ -14,4 +14,7 @@ regexes = [
   '''EXAMPLE_[A-Z0-9_]+''',
   # Open5e document keys look like API keys to the generic rule.
   '''^srd-20[0-9]{2}_[a-z0-9_-]+$''',
+  # The password Go API tests sign in with, and a forged ID token that must be refused.
+  '''0123456789ab''',
+  '''eyJhbGciOiJSUzI1NiJ9\.e30\.c2ln''',
 ]
