@@ -27,6 +27,7 @@ type FriendService interface {
 var (
 	_ FriendService       = (*app.Service)(nil)
 	_ ConversationService = (*app.Service)(nil)
+	_ NotificationService = (*app.Service)(nil)
 )
 
 func (h *Handler) friendError(ctx context.Context, op string, err error) *oas.ProblemStatusCodeWithHeaders {
@@ -38,7 +39,7 @@ func (h *Handler) friendError(ctx context.Context, op string, err error) *oas.Pr
 	case errors.Is(err, domain.ErrConflict):
 		return problem(http.StatusConflict, "Already Friends", "You are already Friends.")
 	case errors.Is(err, domain.ErrInvalid):
-		return problem(http.StatusUnprocessableEntity, "Invalid", "That is not allowed: yourself as a Friend, an empty or too long message, or a Mention you cannot open.")
+		return problem(http.StatusUnprocessableEntity, "Invalid", "That is not allowed: yourself as a Friend, an empty or too long message, a Mention you cannot open, or turning security Notifications off.")
 	}
 	h.Log.ErrorContext(ctx, op, "error", err)
 	return unavailable()

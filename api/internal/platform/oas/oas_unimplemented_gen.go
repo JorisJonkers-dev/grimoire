@@ -452,6 +452,15 @@ func (UnimplementedHandler) GetMyCharacter(ctx context.Context, params GetMyChar
 	return r, ht.ErrNotImplemented
 }
 
+// GetNotificationPreferences implements getNotificationPreferences operation.
+//
+// Which kinds reach the signed-in Account in app, on its devices and by email.
+//
+// GET /api/v1/notification-preferences
+func (UnimplementedHandler) GetNotificationPreferences(ctx context.Context) (r GetNotificationPreferencesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetNpc implements getNpc operation.
 //
 // One NPC. DM only.
@@ -781,6 +790,15 @@ func (UnimplementedHandler) ListMyCharacters(ctx context.Context) (r ListMyChara
 	return r, ht.ErrNotImplemented
 }
 
+// ListNotifications implements listNotifications operation.
+//
+// The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+//
+// GET /api/v1/notifications
+func (UnimplementedHandler) ListNotifications(ctx context.Context) (r ListNotificationsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListNpcRevisions implements listNpcRevisions operation.
 //
 // Every Revision of the NPC, newest first, with its author and origin. DM only.
@@ -923,6 +941,24 @@ func (UnimplementedHandler) PreviewReach(ctx context.Context, req *ReachRequest)
 //
 // POST /api/v1/rules/hex/sight
 func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest) (r PreviewSightRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReadAllNotifications implements readAllNotifications operation.
+//
+// Clears the bell.
+//
+// POST /api/v1/notifications/read
+func (UnimplementedHandler) ReadAllNotifications(ctx context.Context) (r ReadAllNotificationsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReadNotification implements readNotification operation.
+//
+// Marks one Notification read, as acting on it does.
+//
+// POST /api/v1/notifications/{notificationId}/read
+func (UnimplementedHandler) ReadNotification(ctx context.Context, params ReadNotificationParams) (r ReadNotificationRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1131,6 +1167,15 @@ func (UnimplementedHandler) SetAdminRole(ctx context.Context, req *Toggle, param
 //
 // POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
 func (UnimplementedHandler) SetDie(ctx context.Context, req *DieFill, params SetDieParams) (r SetDieRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetNotificationPreferences implements setNotificationPreferences operation.
+//
+// Sets the channels for each kind given; security Notifications always show in app.
+//
+// PUT /api/v1/notification-preferences
+func (UnimplementedHandler) SetNotificationPreferences(ctx context.Context, req *NotificationPreferences) (r SetNotificationPreferencesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

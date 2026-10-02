@@ -126,14 +126,14 @@ func (s *Store) saveRest(ctx context.Context, sess domain.Session, w live.Write,
 			return err
 		}
 	}
-	return s.saveRestOutcome(ctx, sid, w)
+	return s.saveRestOutcome(ctx, sid, w, now)
 }
 
 // saveRestOutcome writes the Rations a Long Rest ate, the hit points it gave back, and what the rest
-// leaves each Character with.
+// leaves each Character with, telling a player whose Character may now level up.
 //
 //nolint:gosec // counts are bounded by the rules
-func (s *Store) saveRestOutcome(ctx context.Context, sid uuid.UUID, w live.Write) error {
+func (s *Store) saveRestOutcome(ctx context.Context, sid uuid.UUID, w live.Write, now time.Time) error {
 	for _, sup := range w.Supplies {
 		if err := s.setCount(ctx, sup.Container, sup.Item, "", sup.Left); err != nil {
 			return err
@@ -145,14 +145,29 @@ func (s *Store) saveRestOutcome(ctx context.Context, sid uuid.UUID, w live.Write
 		}
 	}
 	for _, res := range w.Results {
-		p := queries.SaveRestResultParams{ID: res.CharacterID, HpCurrent: int32(res.HPCurrent), HitDiceSpent: int32(res.HitDiceSpent), LevelUpReady: res.LevelUpReady}
-		if err := s.q.SaveRestResult(ctx, p); err != nil {
+		if err := s.saveRestResult(ctx, res, now); err != nil {
 			return err
 		}
-		for slug, used := range res.Used {
-			if err := s.q.SetResourceUsed(ctx, queries.SetResourceUsedParams{CharacterID: res.CharacterID, ResourceSlug: slug, Used: int32(used)}); err != nil {
-				return err
-			}
+	}
+	return nil
+}
+
+// saveRestResult stores what a rest leaves one Character with.
+//
+//nolint:gosec // counts are bounded by the rules
+func (s *Store) saveRestResult(ctx context.Context, res domain.RestResult, now time.Time) error {
+	p := queries.SaveRestResultParams{ID: res.CharacterID, HpCurrent: int32(res.HPCurrent), HitDiceSpent: int32(res.HitDiceSpent), LevelUpReady: res.LevelUpReady}
+	if err := s.q.SaveRestResult(ctx, p); err != nil {
+		return err
+	}
+	if res.LevelUpReady {
+		if err := s.q.NotifyLevelUp(ctx, queries.NotifyLevelUpParams{CharacterID: res.CharacterID, Now: now}); err != nil {
+			return err
+		}
+	}
+	for slug, used := range res.Used {
+		if err := s.q.SetResourceUsed(ctx, queries.SetResourceUsedParams{CharacterID: res.CharacterID, ResourceSlug: slug, Used: int32(used)}); err != nil {
+			return err
 		}
 	}
 	return nil

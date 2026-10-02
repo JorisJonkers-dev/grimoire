@@ -32,7 +32,7 @@ tags:
   - name: Identity
     description: The signed-in account.
   - name: Social
-    description: Friends and Conversations between Accounts.
+    description: Friends, Conversations and Notifications between Accounts.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
@@ -4647,6 +4647,134 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/notifications:
+    get:
+      operationId: listNotifications
+      x-ogen-operation-group: Read
+      summary: Read my Notifications
+      description: The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+      tags: [Social]
+      responses:
+        "200":
+          description: The Notifications.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/notifications/read:
+    post:
+      operationId: readAllNotifications
+      x-ogen-operation-group: Account
+      summary: Mark every Notification read
+      description: Clears the bell.
+      tags: [Social]
+      responses:
+        "204":
+          description: All read.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/notifications/{notificationId}/read:
+    post:
+      operationId: readNotification
+      x-ogen-operation-group: Account
+      summary: Mark a Notification read
+      description: Marks one Notification read, as acting on it does.
+      tags: [Social]
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: Notification id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Read.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/notification-preferences:
+    get:
+      operationId: getNotificationPreferences
+      x-ogen-operation-group: Read
+      summary: Read my Notification preferences
+      description: Which kinds reach the signed-in Account in app, on its devices and by email.
+      tags: [Social]
+      responses:
+        "200":
+          description: The preferences.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: setNotificationPreferences
+      x-ogen-operation-group: Account
+      summary: Change my Notification preferences
+      description: Sets the channels for each kind given; security Notifications always show in app.
+      tags: [Social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferences"
+      responses:
+        "200":
+          description: The preferences.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -5205,6 +5333,55 @@ components:
           type: array
           maxItems: 40
           items: { $ref: "#/components/schemas/Mentionable" }
+    NotificationKind:
+      type: string
+      description: What a Notification is about.
+      enum: [proposal, join_request, level_up, friend_request, conversation, session_reminder, release_note, security]
+    NotificationEntry:
+      type: object
+      description: A Notification with the one action it offers.
+      additionalProperties: false
+      required: [id, kind, title, body, actionLabel, actionPath, at, read]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { $ref: "#/components/schemas/NotificationKind" }
+        title: { type: string, maxLength: 120 }
+        body: { type: string, maxLength: 200 }
+        actionLabel: { type: string, maxLength: 20 }
+        actionPath: { type: string, pattern: "^/", maxLength: 300 }
+        at: { type: string, format: date-time, maxLength: 40 }
+        read: { type: boolean }
+    NotificationList:
+      type: object
+      description: The latest Notifications and the unread count.
+      additionalProperties: false
+      required: [items, unread]
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/NotificationEntry" }
+        unread: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+    NotificationPreference:
+      type: object
+      description: Which channels one kind reaches.
+      additionalProperties: false
+      required: [kind, inApp, push, email]
+      properties:
+        kind: { $ref: "#/components/schemas/NotificationKind" }
+        inApp: { type: boolean }
+        push: { type: boolean }
+        email: { type: boolean }
+    NotificationPreferences:
+      type: object
+      description: The channels each Notification kind reaches.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 8
+          items: { $ref: "#/components/schemas/NotificationPreference" }
     Person:
       type: object
       description: Another Account as social pages show it.

@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import NotificationBell from '@/features/notifications/NotificationBell.vue'
 import { getAccountOptions, signOutMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { useOnline } from '@/shared/pwa/online'
 
@@ -32,6 +33,7 @@ function leave() {
       </nav>
       <div class="me" data-testid="account-menu">
         <template v-if="account.data.value">
+          <NotificationBell />
           <RouterLink :to="{ name: 'account' }" data-testid="account-link">{{ account.data.value.nickname }}</RouterLink>
           <button type="button" class="out" data-testid="sign-out" @click="leave">Sign out</button>
         </template>

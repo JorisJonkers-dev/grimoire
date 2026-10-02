@@ -29,6 +29,7 @@ type Repository interface {
 	Unblock(ctx context.Context, blocker, blocked domain.AccountID) (bool, error)
 	Friends(ctx context.Context, me domain.AccountID) (domain.Friends, error)
 	ConversationRepository
+	NotificationRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
@@ -65,31 +66,51 @@ func (s *Service) Request(ctx context.Context, subject, username string) error {
 			return firstErr(err, domain.ErrConflict)
 		}
 		now := s.Now()
-		accepted, err := s.acceptCrossing(ctx, r, me.ID, them.ID, now)
+		accepted, err := s.acceptCrossing(ctx, r, me, them.ID, now)
 		if err != nil || accepted {
 			return err
 		}
-		return r.InsertRequest(ctx, uuid.New(), me.ID, them.ID, now)
+		if err := r.InsertRequest(ctx, uuid.New(), me.ID, them.ID, now); err != nil {
+			return err
+		}
+		if blocked, err := r.Blocks(ctx, them.ID, me.ID); err != nil || blocked {
+			return err
+		}
+		return s.notify(ctx, r, them.ID, domain.Notice{
+			Kind: domain.KindFriendRequest, Title: me.Nickname + " wants to be Friends", Body: "@" + me.Username,
+			ActionLabel: "Review", ActionPath: "/friends", Dedupe: "friend:" + me.ID.String(),
+		})
+	})
+}
+
+// accepted tells the one who asked that their Friend request was accepted.
+func (s *Service) accepted(ctx context.Context, r Repository, by domain.Person, asker domain.AccountID) error {
+	return s.notify(ctx, r, asker, domain.Notice{
+		Kind: domain.KindFriendRequest, Title: by.Nickname + " accepted your Friend request", Body: "",
+		ActionLabel: "Open", ActionPath: "/friends", Dedupe: "",
 	})
 }
 
 // acceptCrossing makes two Accounts Friends when the other already asked, unless the caller blocked
 // them.
-func (s *Service) acceptCrossing(ctx context.Context, r Repository, me, them domain.AccountID, now time.Time) (bool, error) {
-	crossing, err := r.PendingBetween(ctx, them, me)
+func (s *Service) acceptCrossing(ctx context.Context, r Repository, me domain.Person, them domain.AccountID, now time.Time) (bool, error) {
+	crossing, err := r.PendingBetween(ctx, them, me.ID)
 	if errors.Is(err, domain.ErrNotFound) {
 		return false, nil
 	}
 	if err != nil {
 		return false, err
 	}
-	if blocked, err := r.Blocks(ctx, me, them); err != nil || blocked {
+	if blocked, err := r.Blocks(ctx, me.ID, them); err != nil || blocked {
 		return false, err
 	}
 	if err := r.DeleteRequest(ctx, crossing); err != nil {
 		return false, err
 	}
-	return true, r.Befriend(ctx, me, them, now)
+	if err := r.Befriend(ctx, me.ID, them, now); err != nil {
+		return false, err
+	}
+	return true, s.accepted(ctx, r, me, them)
 }
 
 func firstErr(err, otherwise error) error {
@@ -125,7 +146,10 @@ func (s *Service) Accept(ctx context.Context, subject string, id uuid.UUID) erro
 		if err := r.DeleteRequest(ctx, id); err != nil {
 			return err
 		}
-		return r.Befriend(ctx, me.ID, from, s.Now())
+		if err := r.Befriend(ctx, me.ID, from, s.Now()); err != nil {
+			return err
+		}
+		return s.accepted(ctx, r, me, from)
 	})
 }
 

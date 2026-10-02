@@ -72,6 +72,8 @@ type Service struct {
 	// Strong reports whether a request's session holds Admin powers: it passed a second step, came from
 	// the external login, or the platform vouched for it.
 	Strong func(context.Context) bool
+	// Alerts reach an Account's holder when its sign-in changes; nil reaches nobody.
+	Alerts Alerts
 }
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]{2,31}$`)

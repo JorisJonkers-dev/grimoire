@@ -81,6 +81,17 @@ func (q *Queries) ConversationMembers(ctx context.Context, ids []uuid.UUID) ([]C
 	return items, nil
 }
 
+const conversationTitle = `-- name: ConversationTitle :one
+SELECT title FROM social.conversations WHERE id = $1
+`
+
+func (q *Queries) ConversationTitle(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, conversationTitle, id)
+	var title string
+	err := row.Scan(&title)
+	return title, err
+}
+
 const declineFriendRequest = `-- name: DeclineFriendRequest :exec
 UPDATE social.friend_requests SET status = 'declined', decided_at = $1 WHERE id = $2
 `
@@ -520,6 +531,51 @@ func (q *Queries) ListMessages(ctx context.Context, arg ListMessagesParams) ([]L
 	return items, nil
 }
 
+const listNotifications = `-- name: ListNotifications :many
+SELECT id, kind, title, body, action_label, action_path, created_at, read_at FROM social.notifications
+WHERE account_id = $1 ORDER BY created_at DESC, id LIMIT 50
+`
+
+type ListNotificationsRow struct {
+	ID          uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	CreatedAt   time.Time
+	ReadAt      pgtype.Timestamptz
+}
+
+func (q *Queries) ListNotifications(ctx context.Context, accountID uuid.UUID) ([]ListNotificationsRow, error) {
+	rows, err := q.db.Query(ctx, listNotifications, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListNotificationsRow{}
+	for rows.Next() {
+		var i ListNotificationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Kind,
+			&i.Title,
+			&i.Body,
+			&i.ActionLabel,
+			&i.ActionPath,
+			&i.CreatedAt,
+			&i.ReadAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOutgoingRequests = `-- name: ListOutgoingRequests :many
 SELECT r.id, a.id AS account_id, a.username, a.nickname, r.created_at FROM social.friend_requests r
 JOIN identity.accounts a ON a.id = r.to_account
@@ -739,6 +795,36 @@ func (q *Queries) MessageMentions(ctx context.Context, ids []uuid.UUID) ([]Socia
 	return items, nil
 }
 
+const notificationPreferences = `-- name: NotificationPreferences :many
+SELECT kind, channel, enabled FROM social.notification_preferences WHERE account_id = $1
+`
+
+type NotificationPreferencesRow struct {
+	Kind    string
+	Channel string
+	Enabled bool
+}
+
+func (q *Queries) NotificationPreferences(ctx context.Context, accountID uuid.UUID) ([]NotificationPreferencesRow, error) {
+	rows, err := q.db.Query(ctx, notificationPreferences, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []NotificationPreferencesRow{}
+	for rows.Next() {
+		var i NotificationPreferencesRow
+		if err := rows.Scan(&i.Kind, &i.Channel, &i.Enabled); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const pendingBetween = `-- name: PendingBetween :one
 SELECT id FROM social.friend_requests WHERE from_account = $1 AND to_account = $2 AND status = 'pending'
 `
@@ -770,6 +856,60 @@ func (q *Queries) PendingRequest(ctx context.Context, id uuid.UUID) (PendingRequ
 	var i PendingRequestRow
 	err := row.Scan(&i.ID, &i.FromAccount, &i.ToAccount)
 	return i, err
+}
+
+const readAllNotifications = `-- name: ReadAllNotifications :exec
+UPDATE social.notifications SET read_at = $1 WHERE account_id = $2 AND read_at IS NULL
+`
+
+type ReadAllNotificationsParams struct {
+	Now       pgtype.Timestamptz
+	AccountID uuid.UUID
+}
+
+func (q *Queries) ReadAllNotifications(ctx context.Context, arg ReadAllNotificationsParams) error {
+	_, err := q.db.Exec(ctx, readAllNotifications, arg.Now, arg.AccountID)
+	return err
+}
+
+const readNotification = `-- name: ReadNotification :execrows
+UPDATE social.notifications SET read_at = $1 WHERE id = $2 AND account_id = $3 AND read_at IS NULL
+`
+
+type ReadNotificationParams struct {
+	Now       pgtype.Timestamptz
+	ID        uuid.UUID
+	AccountID uuid.UUID
+}
+
+func (q *Queries) ReadNotification(ctx context.Context, arg ReadNotificationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, readNotification, arg.Now, arg.ID, arg.AccountID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const setNotificationPreference = `-- name: SetNotificationPreference :exec
+INSERT INTO social.notification_preferences (account_id, kind, channel, enabled) VALUES ($1, $2, $3, $4)
+ON CONFLICT (account_id, kind, channel) DO UPDATE SET enabled = EXCLUDED.enabled
+`
+
+type SetNotificationPreferenceParams struct {
+	AccountID uuid.UUID
+	Kind      string
+	Channel   string
+	Enabled   bool
+}
+
+func (q *Queries) SetNotificationPreference(ctx context.Context, arg SetNotificationPreferenceParams) error {
+	_, err := q.db.Exec(ctx, setNotificationPreference,
+		arg.AccountID,
+		arg.Kind,
+		arg.Channel,
+		arg.Enabled,
+	)
+	return err
 }
 
 const socialAccountBySubject = `-- name: SocialAccountBySubject :one
@@ -817,5 +957,51 @@ type TouchConversationParams struct {
 
 func (q *Queries) TouchConversation(ctx context.Context, arg TouchConversationParams) error {
 	_, err := q.db.Exec(ctx, touchConversation, arg.Now, arg.ID)
+	return err
+}
+
+const unreadNotifications = `-- name: UnreadNotifications :one
+SELECT count(*)::integer AS unread FROM social.notifications WHERE account_id = $1 AND read_at IS NULL
+`
+
+func (q *Queries) UnreadNotifications(ctx context.Context, accountID uuid.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, unreadNotifications, accountID)
+	var unread int32
+	err := row.Scan(&unread)
+	return unread, err
+}
+
+const upsertNotification = `-- name: UpsertNotification :exec
+INSERT INTO social.notifications (id, account_id, kind, title, body, action_label, action_path, dedupe_key, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+ON CONFLICT (account_id, dedupe_key) WHERE read_at IS NULL AND dedupe_key <> ''
+DO UPDATE SET title = EXCLUDED.title, body = EXCLUDED.body, action_label = EXCLUDED.action_label,
+    action_path = EXCLUDED.action_path, created_at = EXCLUDED.created_at
+`
+
+type UpsertNotificationParams struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	DedupeKey   string
+	Now         time.Time
+}
+
+func (q *Queries) UpsertNotification(ctx context.Context, arg UpsertNotificationParams) error {
+	_, err := q.db.Exec(ctx, upsertNotification,
+		arg.ID,
+		arg.AccountID,
+		arg.Kind,
+		arg.Title,
+		arg.Body,
+		arg.ActionLabel,
+		arg.ActionPath,
+		arg.DedupeKey,
+		arg.Now,
+	)
 	return err
 }

@@ -151,3 +151,20 @@ func (s *Store) Mentionable(ctx context.Context, reader domain.AccountID, q stri
 	}
 	return out, nil
 }
+
+// Members reads a Conversation's title and members.
+func (s *Store) Members(ctx context.Context, conversation uuid.UUID) (string, []domain.Person, error) {
+	title, err := s.q.ConversationTitle(ctx, conversation)
+	if err != nil {
+		return "", nil, notFound(err)
+	}
+	rows, err := s.q.ConversationMembers(ctx, []uuid.UUID{conversation})
+	if err != nil {
+		return "", nil, err
+	}
+	out := make([]domain.Person, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, domain.Person{ID: r.ID, Username: r.Username, Nickname: r.Nickname})
+	}
+	return title, out, nil
+}

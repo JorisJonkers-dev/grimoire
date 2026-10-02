@@ -14,6 +14,7 @@ import {
 import { GButton, GField } from '@/shared/ui'
 import { leaveFor } from './leave'
 import { eventLabels, when } from '@/features/admin/labels'
+import NotificationPreferencesSection from '@/features/notifications/NotificationPreferencesSection.vue'
 import AccessTokensSection from './AccessTokensSection.vue'
 import TwoStepSection from './TwoStepSection.vue'
 
@@ -96,6 +97,7 @@ function unlink() {
         <GButton type="submit" :disabled="password.length < 10 || save.isPending.value">{{ account.data.value.hasPassword ? 'Change the password' : 'Set a password' }}</GButton>
       </form>
       <TwoStepSection v-if="account.data.value.hasPassword" :account="account.data.value" />
+      <NotificationPreferencesSection />
       <AccessTokensSection />
       <p v-if="account.data.value.adminPowers" class="g-card"><RouterLink :to="{ name: 'admin' }" data-testid="account-admin-link">Manage Accounts and invites</RouterLink></p>
       <details v-if="history.data.value?.items.length" class="g-card" data-testid="account-history">

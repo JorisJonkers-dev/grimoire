@@ -3,6 +3,7 @@ package pgstore_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -176,5 +177,56 @@ func TestEveryConversationDatabaseFaultSurfaces(t *testing.T) {
 			}
 			return err
 		})
+	}
+}
+
+// Every Notification operation reports a database fault at any of its calls.
+func TestEveryNotificationDatabaseFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	pool := db.Pool()
+	aria := account(t, pool, "aria")
+	base := &app.Service{Repo: pgstore.New(pool), Now: time.Now}
+	if err := base.Alert(ctx, aria, "Your password changed"); err != nil {
+		t.Fatal(err)
+	}
+	list, _, _ := base.Notifications(ctx, "aria")
+	ops := map[string]func(s *app.Service) error{
+		"notify": func(s *app.Service) error {
+			return s.Notify(ctx, aria, domain.Notice{Kind: domain.KindFriendRequest, Title: "x", ActionLabel: "Open", ActionPath: "/friends"})
+		},
+		"list":  func(s *app.Service) error { _, _, err := s.Notifications(ctx, "aria"); return err },
+		"read":  func(s *app.Service) error { return s.ReadNotification(ctx, "aria", list[0].ID) },
+		"all":   func(s *app.Service) error { return s.ReadAll(ctx, "aria") },
+		"prefs": func(s *app.Service) error { _, err := s.Preferences(ctx, "aria"); return err },
+		"set": func(s *app.Service) error {
+			_, err := s.SetPreferences(ctx, "aria", []domain.Preference{{Kind: domain.KindConversation, InApp: true, Push: false, Email: false}})
+			return err
+		},
+		"enabled": func(s *app.Service) error {
+			_, err := s.Enabled(ctx, aria, domain.KindConversation, domain.ChannelPush)
+			return err
+		},
+	}
+	for _, name := range []string{"notify", "list", "read", "all", "prefs", "set", "enabled"} {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := ops[name](&app.Service{Repo: pgstore.NewFaulty(pool, f), Now: time.Now})
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+	long := strings.Repeat("é", 300)
+	if err := base.Notify(ctx, aria, domain.Notice{Kind: domain.KindConversation, Title: long, Body: long, ActionLabel: "Open", ActionPath: "/x"}); err != nil {
+		t.Fatalf("a long notice is cut to fit: %v", err)
+	}
+	if ok, _ := base.Enabled(ctx, aria, domain.KindConversation, domain.ChannelPush); ok {
+		t.Fatal("a chosen channel keeps its choice")
 	}
 }

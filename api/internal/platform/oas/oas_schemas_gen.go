@@ -19169,6 +19169,377 @@ func (s *NewInviteHeaders) SetResponse(val NewInvite) {
 
 func (*NewInviteHeaders) createInviteRes() {}
 
+// A Notification with the one action it offers.
+// Ref: #/components/schemas/NotificationEntry
+type NotificationEntry struct {
+	ID          ID               `json:"id"`
+	Kind        NotificationKind `json:"kind"`
+	Title       string           `json:"title"`
+	Body        string           `json:"body"`
+	ActionLabel string           `json:"actionLabel"`
+	ActionPath  string           `json:"actionPath"`
+	At          time.Time        `json:"at"`
+	Read        bool             `json:"read"`
+}
+
+// GetID returns the value of ID.
+func (s *NotificationEntry) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *NotificationEntry) GetKind() NotificationKind {
+	return s.Kind
+}
+
+// GetTitle returns the value of Title.
+func (s *NotificationEntry) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *NotificationEntry) GetBody() string {
+	return s.Body
+}
+
+// GetActionLabel returns the value of ActionLabel.
+func (s *NotificationEntry) GetActionLabel() string {
+	return s.ActionLabel
+}
+
+// GetActionPath returns the value of ActionPath.
+func (s *NotificationEntry) GetActionPath() string {
+	return s.ActionPath
+}
+
+// GetAt returns the value of At.
+func (s *NotificationEntry) GetAt() time.Time {
+	return s.At
+}
+
+// GetRead returns the value of Read.
+func (s *NotificationEntry) GetRead() bool {
+	return s.Read
+}
+
+// SetID sets the value of ID.
+func (s *NotificationEntry) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *NotificationEntry) SetKind(val NotificationKind) {
+	s.Kind = val
+}
+
+// SetTitle sets the value of Title.
+func (s *NotificationEntry) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *NotificationEntry) SetBody(val string) {
+	s.Body = val
+}
+
+// SetActionLabel sets the value of ActionLabel.
+func (s *NotificationEntry) SetActionLabel(val string) {
+	s.ActionLabel = val
+}
+
+// SetActionPath sets the value of ActionPath.
+func (s *NotificationEntry) SetActionPath(val string) {
+	s.ActionPath = val
+}
+
+// SetAt sets the value of At.
+func (s *NotificationEntry) SetAt(val time.Time) {
+	s.At = val
+}
+
+// SetRead sets the value of Read.
+func (s *NotificationEntry) SetRead(val bool) {
+	s.Read = val
+}
+
+// What a Notification is about.
+// Ref: #/components/schemas/NotificationKind
+type NotificationKind string
+
+const (
+	NotificationKindProposal        NotificationKind = "proposal"
+	NotificationKindJoinRequest     NotificationKind = "join_request"
+	NotificationKindLevelUp         NotificationKind = "level_up"
+	NotificationKindFriendRequest   NotificationKind = "friend_request"
+	NotificationKindConversation    NotificationKind = "conversation"
+	NotificationKindSessionReminder NotificationKind = "session_reminder"
+	NotificationKindReleaseNote     NotificationKind = "release_note"
+	NotificationKindSecurity        NotificationKind = "security"
+)
+
+// AllValues returns all NotificationKind values.
+func (NotificationKind) AllValues() []NotificationKind {
+	return []NotificationKind{
+		NotificationKindProposal,
+		NotificationKindJoinRequest,
+		NotificationKindLevelUp,
+		NotificationKindFriendRequest,
+		NotificationKindConversation,
+		NotificationKindSessionReminder,
+		NotificationKindReleaseNote,
+		NotificationKindSecurity,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s NotificationKind) MarshalText() ([]byte, error) {
+	switch s {
+	case NotificationKindProposal:
+		return []byte(s), nil
+	case NotificationKindJoinRequest:
+		return []byte(s), nil
+	case NotificationKindLevelUp:
+		return []byte(s), nil
+	case NotificationKindFriendRequest:
+		return []byte(s), nil
+	case NotificationKindConversation:
+		return []byte(s), nil
+	case NotificationKindSessionReminder:
+		return []byte(s), nil
+	case NotificationKindReleaseNote:
+		return []byte(s), nil
+	case NotificationKindSecurity:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *NotificationKind) UnmarshalText(data []byte) error {
+	switch NotificationKind(data) {
+	case NotificationKindProposal:
+		*s = NotificationKindProposal
+		return nil
+	case NotificationKindJoinRequest:
+		*s = NotificationKindJoinRequest
+		return nil
+	case NotificationKindLevelUp:
+		*s = NotificationKindLevelUp
+		return nil
+	case NotificationKindFriendRequest:
+		*s = NotificationKindFriendRequest
+		return nil
+	case NotificationKindConversation:
+		*s = NotificationKindConversation
+		return nil
+	case NotificationKindSessionReminder:
+		*s = NotificationKindSessionReminder
+		return nil
+	case NotificationKindReleaseNote:
+		*s = NotificationKindReleaseNote
+		return nil
+	case NotificationKindSecurity:
+		*s = NotificationKindSecurity
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The latest Notifications and the unread count.
+// Ref: #/components/schemas/NotificationList
+type NotificationList struct {
+	Items  []NotificationEntry `json:"items"`
+	Unread int32               `json:"unread"`
+}
+
+// GetItems returns the value of Items.
+func (s *NotificationList) GetItems() []NotificationEntry {
+	return s.Items
+}
+
+// GetUnread returns the value of Unread.
+func (s *NotificationList) GetUnread() int32 {
+	return s.Unread
+}
+
+// SetItems sets the value of Items.
+func (s *NotificationList) SetItems(val []NotificationEntry) {
+	s.Items = val
+}
+
+// SetUnread sets the value of Unread.
+func (s *NotificationList) SetUnread(val int32) {
+	s.Unread = val
+}
+
+// NotificationListHeaders wraps NotificationList with response headers.
+type NotificationListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           NotificationList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *NotificationListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *NotificationListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *NotificationListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *NotificationListHeaders) GetResponse() NotificationList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *NotificationListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *NotificationListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *NotificationListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *NotificationListHeaders) SetResponse(val NotificationList) {
+	s.Response = val
+}
+
+func (*NotificationListHeaders) listNotificationsRes() {}
+
+// Which channels one kind reaches.
+// Ref: #/components/schemas/NotificationPreference
+type NotificationPreference struct {
+	Kind  NotificationKind `json:"kind"`
+	InApp bool             `json:"inApp"`
+	Push  bool             `json:"push"`
+	Email bool             `json:"email"`
+}
+
+// GetKind returns the value of Kind.
+func (s *NotificationPreference) GetKind() NotificationKind {
+	return s.Kind
+}
+
+// GetInApp returns the value of InApp.
+func (s *NotificationPreference) GetInApp() bool {
+	return s.InApp
+}
+
+// GetPush returns the value of Push.
+func (s *NotificationPreference) GetPush() bool {
+	return s.Push
+}
+
+// GetEmail returns the value of Email.
+func (s *NotificationPreference) GetEmail() bool {
+	return s.Email
+}
+
+// SetKind sets the value of Kind.
+func (s *NotificationPreference) SetKind(val NotificationKind) {
+	s.Kind = val
+}
+
+// SetInApp sets the value of InApp.
+func (s *NotificationPreference) SetInApp(val bool) {
+	s.InApp = val
+}
+
+// SetPush sets the value of Push.
+func (s *NotificationPreference) SetPush(val bool) {
+	s.Push = val
+}
+
+// SetEmail sets the value of Email.
+func (s *NotificationPreference) SetEmail(val bool) {
+	s.Email = val
+}
+
+// The channels each Notification kind reaches.
+// Ref: #/components/schemas/NotificationPreferences
+type NotificationPreferences struct {
+	Items []NotificationPreference `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *NotificationPreferences) GetItems() []NotificationPreference {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *NotificationPreferences) SetItems(val []NotificationPreference) {
+	s.Items = val
+}
+
+// NotificationPreferencesHeaders wraps NotificationPreferences with response headers.
+type NotificationPreferencesHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           NotificationPreferences
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *NotificationPreferencesHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *NotificationPreferencesHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *NotificationPreferencesHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *NotificationPreferencesHeaders) GetResponse() NotificationPreferences {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *NotificationPreferencesHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *NotificationPreferencesHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *NotificationPreferencesHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *NotificationPreferencesHeaders) SetResponse(val NotificationPreferences) {
+	s.Response = val
+}
+
+func (*NotificationPreferencesHeaders) getNotificationPreferencesRes() {}
+func (*NotificationPreferencesHeaders) setNotificationPreferencesRes() {}
+
 // A non-player character in the DM's prep.
 // Ref: #/components/schemas/Npc
 type Npc struct {
@@ -23609,6 +23980,7 @@ func (*ProblemStatusCodeWithHeaders) getMapImageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getMapRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getMeRes()                         {}
 func (*ProblemStatusCodeWithHeaders) getMyCharacterRes()                {}
+func (*ProblemStatusCodeWithHeaders) getNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) getNpcRes()                        {}
 func (*ProblemStatusCodeWithHeaders) getPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getPushKeyRes()                    {}
@@ -23645,6 +24017,7 @@ func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listMentionablesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listMessagesRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
+func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
@@ -23661,6 +24034,8 @@ func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
+func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
+func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) requestSignInLinkRes()             {}
 func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
@@ -23683,6 +24058,7 @@ func (*ProblemStatusCodeWithHeaders) setAccountDisabledRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAdminRoleRes()                  {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
+func (*ProblemStatusCodeWithHeaders) setNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
@@ -24114,6 +24490,84 @@ func (s *ReachRequest) SetClimbSpeed(val OptBool) {
 }
 
 type ReactionTimeout int32
+
+// ReadAllNotificationsNoContent is response for ReadAllNotifications operation.
+type ReadAllNotificationsNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ReadAllNotificationsNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ReadAllNotificationsNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ReadAllNotificationsNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ReadAllNotificationsNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ReadAllNotificationsNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ReadAllNotificationsNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*ReadAllNotificationsNoContent) readAllNotificationsRes() {}
+
+// ReadNotificationNoContent is response for ReadNotification operation.
+type ReadNotificationNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ReadNotificationNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ReadNotificationNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ReadNotificationNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ReadNotificationNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ReadNotificationNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ReadNotificationNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*ReadNotificationNoContent) readNotificationRes() {}
 
 // Recovery codes, each good once; shown only when made.
 // Ref: #/components/schemas/RecoveryCodes

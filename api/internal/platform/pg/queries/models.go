@@ -1744,3 +1744,23 @@ type SocialMessageMention struct {
 	CampaignID uuid.UUID
 	TargetID   uuid.UUID
 }
+
+type SocialNotification struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	DedupeKey   string
+	CreatedAt   time.Time
+	ReadAt      pgtype.Timestamptz
+}
+
+type SocialNotificationPreference struct {
+	AccountID uuid.UUID
+	Kind      string
+	Channel   string
+	Enabled   bool
+}

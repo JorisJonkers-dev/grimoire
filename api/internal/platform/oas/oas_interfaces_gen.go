@@ -193,6 +193,10 @@ type GetMyCharacterRes interface {
 	getMyCharacterRes()
 }
 
+type GetNotificationPreferencesRes interface {
+	getNotificationPreferencesRes()
+}
+
 type GetNpcRes interface {
 	getNpcRes()
 }
@@ -337,6 +341,10 @@ type ListMyCharactersRes interface {
 	listMyCharactersRes()
 }
 
+type ListNotificationsRes interface {
+	listNotificationsRes()
+}
+
 type ListNpcRevisionsRes interface {
 	listNpcRevisionsRes()
 }
@@ -399,6 +407,14 @@ type PreviewReachRes interface {
 
 type PreviewSightRes interface {
 	previewSightRes()
+}
+
+type ReadAllNotificationsRes interface {
+	readAllNotificationsRes()
+}
+
+type ReadNotificationRes interface {
+	readNotificationRes()
 }
 
 type RemoveMemberRes interface {
@@ -487,6 +503,10 @@ type SetAdminRoleRes interface {
 
 type SetDieRes interface {
 	setDieRes()
+}
+
+type SetNotificationPreferencesRes interface {
+	setNotificationPreferencesRes()
 }
 
 type SetPortraitRes interface {

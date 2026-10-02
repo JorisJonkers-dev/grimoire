@@ -131,3 +131,33 @@ SELECT n.id, n.name, mp.campaign_id, cp.name AS campaign_name FROM campaign.map_
 JOIN campaign.maps mp ON mp.id = n.map_id AND mp.kind = 'world' JOIN campaign.campaigns cp ON cp.id = mp.campaign_id
 JOIN campaign.members m ON m.campaign_id = mp.campaign_id AND m.role = 'dm' JOIN identity.accounts a ON a.subject = m.auth_subject
 WHERE a.id = @reader AND n.name ILIKE '%' || @q::text || '%' ORDER BY n.name LIMIT 20;
+
+-- name: UpsertNotification :exec
+INSERT INTO social.notifications (id, account_id, kind, title, body, action_label, action_path, dedupe_key, created_at)
+VALUES (@id, @account_id, @kind, @title, @body, @action_label, @action_path, @dedupe_key, @now)
+ON CONFLICT (account_id, dedupe_key) WHERE read_at IS NULL AND dedupe_key <> ''
+DO UPDATE SET title = EXCLUDED.title, body = EXCLUDED.body, action_label = EXCLUDED.action_label,
+    action_path = EXCLUDED.action_path, created_at = EXCLUDED.created_at;
+
+-- name: ListNotifications :many
+SELECT id, kind, title, body, action_label, action_path, created_at, read_at FROM social.notifications
+WHERE account_id = @account_id ORDER BY created_at DESC, id LIMIT 50;
+
+-- name: UnreadNotifications :one
+SELECT count(*)::integer AS unread FROM social.notifications WHERE account_id = @account_id AND read_at IS NULL;
+
+-- name: ReadNotification :execrows
+UPDATE social.notifications SET read_at = @now WHERE id = @id AND account_id = @account_id AND read_at IS NULL;
+
+-- name: ReadAllNotifications :exec
+UPDATE social.notifications SET read_at = @now WHERE account_id = @account_id AND read_at IS NULL;
+
+-- name: NotificationPreferences :many
+SELECT kind, channel, enabled FROM social.notification_preferences WHERE account_id = @account_id;
+
+-- name: SetNotificationPreference :exec
+INSERT INTO social.notification_preferences (account_id, kind, channel, enabled) VALUES (@account_id, @kind, @channel, @enabled)
+ON CONFLICT (account_id, kind, channel) DO UPDATE SET enabled = EXCLUDED.enabled;
+
+-- name: ConversationTitle :one
+SELECT title FROM social.conversations WHERE id = @id;

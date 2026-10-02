@@ -18,9 +18,35 @@ type AdminRepository interface {
 	LiveCounts(ctx context.Context, account domain.AccountID, now time.Time) (int, int, error)
 }
 
-// record writes one line of an Account's history.
+// Alerts tells an Account's holder about a change to how it signs in.
+type Alerts interface {
+	Alert(ctx context.Context, account domain.AccountID, title string) error
+}
+
+// alerts are the history lines that also reach the holder as a security Notification.
+var alerts = map[string]string{ //nolint:gochecknoglobals // a fixed table
+	domain.EventPasswordSet:    "Your password changed",
+	domain.EventTwoStepOn:      "Two-step sign-in is on",
+	domain.EventTwoStepOff:     "Two-step sign-in is off",
+	domain.EventTwoStepReset:   "An Admin reset your two-step sign-in",
+	domain.EventLinked:         "An external login was linked to your Account",
+	domain.EventUnlinked:       "Your external login was unlinked",
+	domain.EventSignInLinkSent: "An Admin emailed you a sign-in link",
+	domain.EventAdminGranted:   "You are now an Admin",
+	domain.EventAdminRevoked:   "Your Admin role was removed",
+	domain.EventEnabled:        "Your Account was enabled again",
+}
+
+// record writes one line of an Account's history and alerts its holder when it touches their sign-in.
+// An alert that cannot be delivered never undoes the change.
 func (s *Service) record(ctx context.Context, r Repository, account domain.AccountID, actor, action, detail string) error {
-	return r.InsertEvent(ctx, account, domain.Event{At: s.Now(), Actor: actor, ActorName: "", Action: action, Detail: detail})
+	if err := r.InsertEvent(ctx, account, domain.Event{At: s.Now(), Actor: actor, ActorName: "", Action: action, Detail: detail}); err != nil {
+		return err
+	}
+	if title, ok := alerts[action]; ok && s.Alerts != nil {
+		_ = s.Alerts.Alert(ctx, account, title)
+	}
+	return nil
 }
 
 // AdminAccounts lists every Account and every Invite not yet used, for an Admin.

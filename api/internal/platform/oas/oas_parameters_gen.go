@@ -8832,6 +8832,79 @@ func decodePreviewCharacterParams(args [1]string, argsEscaped bool, r *http.Requ
 	return params, nil
 }
 
+// ReadNotificationParams is parameters of readNotification operation.
+type ReadNotificationParams struct {
+	// Notification id.
+	NotificationId ID
+}
+
+func unpackReadNotificationParams(packed middleware.Parameters) (params ReadNotificationParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "notificationId",
+			In:   "path",
+		}
+		params.NotificationId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeReadNotificationParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadNotificationParams, _ error) {
+	// Decode path: notificationId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "notificationId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotNotificationIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNotificationIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.NotificationId = ID(paramsDotNotificationIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "notificationId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // RemoveMemberParams is parameters of removeMember operation.
 type RemoveMemberParams struct {
 	// Campaign id.

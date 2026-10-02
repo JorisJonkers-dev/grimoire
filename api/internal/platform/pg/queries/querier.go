@@ -134,6 +134,7 @@ type Querier interface {
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
 	ConfirmTOTP(ctx context.Context, arg ConfirmTOTPParams) (int64, error)
 	ConversationMembers(ctx context.Context, ids []uuid.UUID) ([]ConversationMembersRow, error)
+	ConversationTitle(ctx context.Context, id uuid.UUID) (string, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	CountEntriesByKind(ctx context.Context, arg CountEntriesByKindParams) ([]CountEntriesByKindRow, error)
 	CountLiveSessions(ctx context.Context, arg CountLiveSessionsParams) (int32, error)
@@ -362,6 +363,7 @@ type Querier interface {
 	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
 	ListMessages(ctx context.Context, arg ListMessagesParams) ([]ListMessagesRow, error)
 	ListNPCs(ctx context.Context, campaignID uuid.UUID) ([]ListNPCsRow, error)
+	ListNotifications(ctx context.Context, accountID uuid.UUID) ([]ListNotificationsRow, error)
 	ListOutgoingRequests(ctx context.Context, me uuid.UUID) ([]ListOutgoingRequestsRow, error)
 	ListPools(ctx context.Context, campaignID uuid.UUID) ([]ListPoolsRow, error)
 	ListPrerequisites(ctx context.Context) ([]CompendiumPrerequisite, error)
@@ -420,6 +422,9 @@ type Querier interface {
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
+	NotificationPreferences(ctx context.Context, accountID uuid.UUID) ([]NotificationPreferencesRow, error)
+	// The Account playing a Campaign Character hears it may level up, unless it turned that off in app.
+	NotifyLevelUp(ctx context.Context, arg NotifyLevelUpParams) error
 	OIDCLinkByAccount(ctx context.Context, accountID uuid.UUID) (IdentityOidcLink, error)
 	OIDCLinkBySubject(ctx context.Context, arg OIDCLinkBySubjectParams) (IdentityOidcLink, error)
 	ObserveDamage(ctx context.Context, arg ObserveDamageParams) error
@@ -429,6 +434,8 @@ type Querier interface {
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
 	PushSubscriptions(ctx context.Context, subject string) ([]PushSubscriptionsRow, error)
+	ReadAllNotifications(ctx context.Context, arg ReadAllNotificationsParams) error
+	ReadNotification(ctx context.Context, arg ReadNotificationParams) (int64, error)
 	RecordCompendiumImport(ctx context.Context, snapshotHash string) (int64, error)
 	RecoveryCodesLeft(ctx context.Context, accountID uuid.UUID) (int32, error)
 	RemoveMember(ctx context.Context, arg RemoveMemberParams) error
@@ -513,6 +520,7 @@ type Querier interface {
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
+	SetNotificationPreference(ctx context.Context, arg SetNotificationPreferenceParams) error
 	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
@@ -545,6 +553,7 @@ type Querier interface {
 	TouchConversation(ctx context.Context, arg TouchConversationParams) error
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
+	UnreadNotifications(ctx context.Context, accountID uuid.UUID) (int32, error)
 	UpdateAccountCharacter(ctx context.Context, arg UpdateAccountCharacterParams) error
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
@@ -564,6 +573,7 @@ type Querier interface {
 	UpsertItem(ctx context.Context, arg UpsertItemParams) error
 	UpsertMagicSchool(ctx context.Context, arg UpsertMagicSchoolParams) (int64, error)
 	UpsertMonster(ctx context.Context, arg UpsertMonsterParams) (int64, error)
+	UpsertNotification(ctx context.Context, arg UpsertNotificationParams) error
 	UpsertPushSubscription(ctx context.Context, arg UpsertPushSubscriptionParams) (uuid.UUID, error)
 	UpsertSpecies(ctx context.Context, arg UpsertSpeciesParams) (int64, error)
 	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)

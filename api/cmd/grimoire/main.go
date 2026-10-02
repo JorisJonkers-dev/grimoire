@@ -211,9 +211,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		defer sender.Wait()
 		hub.Notify, notices = sender, sender
 	}
+	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now}
 	accounts := &identityapp.Service{
 		Repo: identitypg.New(store.Pool()), Mailer: mailer(cfg, logger), Passwords: identityapp.DefaultPasswords(), Now: time.Now,
-		Admins: map[string]bool{}, BaseURL: cfg.BaseURL, Strong: httpx.Strong,
+		Admins: map[string]bool{}, BaseURL: cfg.BaseURL, Strong: httpx.Strong, Alerts: social,
 	}
 	for _, s := range cfg.AdminSubjects {
 		accounts.Admins[s] = true
@@ -226,12 +227,11 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		})
 		accounts.Grant, accounts.AdminRole, oidcName = o.GrantRole, o.AdminRole, o.Name
 	}
-	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now}
 	handler, err := httpapi.New(httpapi.Options{
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
 			Push: notices, Accounts: accounts, OIDCName: oidcName,
-			Friends: social, Conversations: social,
+			Friends: social, Conversations: social, Notifications: social,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

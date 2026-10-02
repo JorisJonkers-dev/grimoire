@@ -47,6 +47,10 @@ func TestAccountHandlersNeedAnIdentity(t *testing.T) {
 		"messages":      func() (any, error) { return h.ListMessages(ctx, oas.ListMessagesParams{}) },
 		"send":          func() (any, error) { return h.SendMessage(ctx, &oas.MessageSend{}, oas.SendMessageParams{}) },
 		"mentionables":  func() (any, error) { return h.ListMentionables(ctx, oas.ListMentionablesParams{}) },
+		"bell":          func() (any, error) { return h.ListNotifications(ctx) },
+		"prefs":         func() (any, error) { return h.GetNotificationPreferences(ctx) },
+		"set prefs":     func() (any, error) { return h.SetNotificationPreferences(ctx, &oas.NotificationPreferences{}) },
+		"read all":      func() (any, error) { return h.ReadAllNotifications(ctx) },
 	}
 	for name, call := range calls {
 		res, err := call()
@@ -91,11 +95,27 @@ func (brokenFriends) Mentionable(context.Context, string, string) ([]domain.Ment
 	return nil, errFriends
 }
 
+func (brokenFriends) Notifications(context.Context, string) ([]domain.Notification, int, error) {
+	return nil, 0, errFriends
+}
+
+func (brokenFriends) ReadNotification(context.Context, string, uuid.UUID) error { return errFriends }
+
+func (brokenFriends) ReadAll(context.Context, string) error { return errFriends }
+
+func (brokenFriends) Preferences(context.Context, string) ([]domain.Preference, error) {
+	return nil, errFriends
+}
+
+func (brokenFriends) SetPreferences(context.Context, string, []domain.Preference) ([]domain.Preference, error) {
+	return nil, errFriends
+}
+
 // When the Friends store fails, every call answers 503 without saying why.
 func TestFriendsWhenTheStoreFails(t *testing.T) {
 	t.Parallel()
 	ctx := auth.WithIdentity(context.Background(), auth.Identity{Subject: "aria"})
-	h := &Handler{Friends: brokenFriends{}, Conversations: brokenFriends{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	h := &Handler{Friends: brokenFriends{}, Conversations: brokenFriends{}, Notifications: brokenFriends{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
 	calls := map[string]func() (any, error){
 		"list":    func() (any, error) { return h.ListFriends(ctx) },
 		"request": func() (any, error) { return h.SendFriendRequest(ctx, &oas.FriendRequestCreate{}) },
@@ -113,6 +133,13 @@ func TestFriendsWhenTheStoreFails(t *testing.T) {
 		},
 		"send":         func() (any, error) { return h.SendMessage(ctx, &oas.MessageSend{}, oas.SendMessageParams{}) },
 		"mentionables": func() (any, error) { return h.ListMentionables(ctx, oas.ListMentionablesParams{}) },
+		"bell":         func() (any, error) { return h.ListNotifications(ctx) },
+		"read one":     func() (any, error) { return h.ReadNotification(ctx, oas.ReadNotificationParams{}) },
+		"read all":     func() (any, error) { return h.ReadAllNotifications(ctx) },
+		"prefs":        func() (any, error) { return h.GetNotificationPreferences(ctx) },
+		"set prefs": func() (any, error) {
+			return h.SetNotificationPreferences(ctx, &oas.NotificationPreferences{Items: []oas.NotificationPreference{{Kind: oas.NotificationKindSecurity, InApp: true}}})
+		},
 	}
 	for name, call := range calls {
 		res, err := call()

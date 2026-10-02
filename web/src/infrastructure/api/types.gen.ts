@@ -342,6 +342,50 @@ export type MentionableList = {
 };
 
 /**
+ * What a Notification is about.
+ */
+export type NotificationKind = 'proposal' | 'join_request' | 'level_up' | 'friend_request' | 'conversation' | 'session_reminder' | 'release_note' | 'security';
+
+/**
+ * A Notification with the one action it offers.
+ */
+export type NotificationEntry = {
+    id: Id;
+    kind: NotificationKind;
+    title: string;
+    body: string;
+    actionLabel: string;
+    actionPath: string;
+    at: string;
+    read: boolean;
+};
+
+/**
+ * The latest Notifications and the unread count.
+ */
+export type NotificationList = {
+    items: Array<NotificationEntry>;
+    unread: number;
+};
+
+/**
+ * Which channels one kind reaches.
+ */
+export type NotificationPreference = {
+    kind: NotificationKind;
+    inApp: boolean;
+    push: boolean;
+    email: boolean;
+};
+
+/**
+ * The channels each Notification kind reaches.
+ */
+export type NotificationPreferences = {
+    items: Array<NotificationPreference>;
+};
+
+/**
  * Another Account as social pages show it.
  */
 export type Person = {
@@ -7902,6 +7946,156 @@ export type ListMentionablesResponses = {
 };
 
 export type ListMentionablesResponse = ListMentionablesResponses[keyof ListMentionablesResponses];
+
+export type ListNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications';
+};
+
+export type ListNotificationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListNotificationsError = ListNotificationsErrors[keyof ListNotificationsErrors];
+
+export type ListNotificationsResponses = {
+    /**
+     * The Notifications.
+     */
+    200: NotificationList;
+};
+
+export type ListNotificationsResponse = ListNotificationsResponses[keyof ListNotificationsResponses];
+
+export type ReadAllNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/read';
+};
+
+export type ReadAllNotificationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReadAllNotificationsError = ReadAllNotificationsErrors[keyof ReadAllNotificationsErrors];
+
+export type ReadAllNotificationsResponses = {
+    /**
+     * All read.
+     */
+    204: void;
+};
+
+export type ReadAllNotificationsResponse = ReadAllNotificationsResponses[keyof ReadAllNotificationsResponses];
+
+export type ReadNotificationData = {
+    body?: never;
+    path: {
+        /**
+         * Notification id.
+         */
+        notificationId: Id;
+    };
+    query?: never;
+    url: '/api/v1/notifications/{notificationId}/read';
+};
+
+export type ReadNotificationErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReadNotificationError = ReadNotificationErrors[keyof ReadNotificationErrors];
+
+export type ReadNotificationResponses = {
+    /**
+     * Read.
+     */
+    204: void;
+};
+
+export type ReadNotificationResponse = ReadNotificationResponses[keyof ReadNotificationResponses];
+
+export type GetNotificationPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notification-preferences';
+};
+
+export type GetNotificationPreferencesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetNotificationPreferencesError = GetNotificationPreferencesErrors[keyof GetNotificationPreferencesErrors];
+
+export type GetNotificationPreferencesResponses = {
+    /**
+     * The preferences.
+     */
+    200: NotificationPreferences;
+};
+
+export type GetNotificationPreferencesResponse = GetNotificationPreferencesResponses[keyof GetNotificationPreferencesResponses];
+
+export type SetNotificationPreferencesData = {
+    body: NotificationPreferences;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notification-preferences';
+};
+
+export type SetNotificationPreferencesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetNotificationPreferencesError = SetNotificationPreferencesErrors[keyof SetNotificationPreferencesErrors];
+
+export type SetNotificationPreferencesResponses = {
+    /**
+     * The preferences.
+     */
+    200: NotificationPreferences;
+};
+
+export type SetNotificationPreferencesResponse = SetNotificationPreferencesResponses[keyof SetNotificationPreferencesResponses];
 
 export type GetHealthData = {
     body?: never;

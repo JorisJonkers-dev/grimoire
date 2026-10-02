@@ -23,6 +23,7 @@ type ConversationRepository interface {
 	MarkRead(ctx context.Context, conversation uuid.UUID, account domain.AccountID, now time.Time) error
 	Resolve(ctx context.Context, reader domain.AccountID, m domain.Mention) (domain.Resolved, error)
 	Mentionable(ctx context.Context, reader domain.AccountID, q string) ([]domain.Mentionable, error)
+	Members(ctx context.Context, conversation uuid.UUID) (string, []domain.Person, error)
 }
 
 // Conversation limits.
@@ -111,7 +112,35 @@ func (s *Service) Send(ctx context.Context, subject string, conversation uuid.UU
 		resolved = append(resolved, r)
 	}
 	msg := domain.Message{ID: uuid.New(), Author: me, Body: body, At: s.Now(), Mentions: resolved}
-	return msg, s.Repo.InsertMessage(ctx, conversation, msg, mentions)
+	if err := s.Repo.InsertMessage(ctx, conversation, msg, mentions); err != nil {
+		return domain.Message{}, err
+	}
+	return msg, s.tell(ctx, conversation, me, body)
+}
+
+// tell puts a new message in the other members' bells, once per Conversation until they read it.
+func (s *Service) tell(ctx context.Context, conversation uuid.UUID, from domain.Person, body string) error {
+	title, members, err := s.Repo.Members(ctx, conversation)
+	if err != nil {
+		return err
+	}
+	heading := from.Nickname + " wrote to you"
+	if title != "" {
+		heading = from.Nickname + " in " + title
+	}
+	n := domain.Notice{
+		Kind: domain.KindConversation, Title: heading, Body: body, ActionLabel: "Open",
+		ActionPath: "/conversations/" + conversation.String(), Dedupe: "conversation:" + conversation.String(),
+	}
+	for _, m := range members {
+		if m.ID == from.ID {
+			continue
+		}
+		if err := s.Notify(ctx, m.ID, n); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Messages reads a page of a Conversation, newest first, before a moment, and marks it read. Each

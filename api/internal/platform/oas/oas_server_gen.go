@@ -120,6 +120,18 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account-invites/preview
 	PreviewAccountInvite(ctx context.Context, req *LinkToken) (PreviewAccountInviteRes, error)
+	// ReadAllNotifications implements readAllNotifications operation.
+	//
+	// Clears the bell.
+	//
+	// POST /api/v1/notifications/read
+	ReadAllNotifications(ctx context.Context) (ReadAllNotificationsRes, error)
+	// ReadNotification implements readNotification operation.
+	//
+	// Marks one Notification read, as acting on it does.
+	//
+	// POST /api/v1/notifications/{notificationId}/read
+	ReadNotification(ctx context.Context, params ReadNotificationParams) (ReadNotificationRes, error)
 	// RequestSignInLink implements requestSignInLink operation.
 	//
 	// For a forgotten password. Answers the same whether or not an Account has the email.
@@ -181,6 +193,12 @@ type AccountHandler interface {
 	//
 	// PUT /api/v1/admin/accounts/{accountId}/admin
 	SetAdminRole(ctx context.Context, req *Toggle, params SetAdminRoleParams) (SetAdminRoleRes, error)
+	// SetNotificationPreferences implements setNotificationPreferences operation.
+	//
+	// Sets the channels for each kind given; security Notifications always show in app.
+	//
+	// PUT /api/v1/notification-preferences
+	SetNotificationPreferences(ctx context.Context, req *NotificationPreferences) (SetNotificationPreferencesRes, error)
 	// SignIn implements signIn operation.
 	//
 	// Signs the Account in on this device. Every failure answers the same.
@@ -686,6 +704,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/characters/{characterId}
 	GetMyCharacter(ctx context.Context, params GetMyCharacterParams) (GetMyCharacterRes, error)
+	// GetNotificationPreferences implements getNotificationPreferences operation.
+	//
+	// Which kinds reach the signed-in Account in app, on its devices and by email.
+	//
+	// GET /api/v1/notification-preferences
+	GetNotificationPreferences(ctx context.Context) (GetNotificationPreferencesRes, error)
 	// GetNpc implements getNpc operation.
 	//
 	// One NPC. DM only.
@@ -894,6 +918,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/characters
 	ListMyCharacters(ctx context.Context) (ListMyCharactersRes, error)
+	// ListNotifications implements listNotifications operation.
+	//
+	// The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+	//
+	// GET /api/v1/notifications
+	ListNotifications(ctx context.Context) (ListNotificationsRes, error)
 	// ListNpcRevisions implements listNpcRevisions operation.
 	//
 	// Every Revision of the NPC, newest first, with its author and origin. DM only.

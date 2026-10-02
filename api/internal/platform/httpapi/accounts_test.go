@@ -84,13 +84,14 @@ func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (htt
 		Repo: identitypg.New(store.Pool()), Mailer: mail, Passwords: identityapp.Passwords{MemoryKiB: 64, Time: 1, Threads: 1}, Now: now.Now,
 		Admins: map[string]bool{"root": true}, BaseURL: "https://grimoire.example/", Strong: httpx.Strong,
 	}
-	configure(accounts)
 	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: now.Now}
+	accounts.Alerts = social
+	configure(accounts)
 	build := func(trust bool) http.Handler {
 		h, err := httpapi.New(httpapi.Options{
 			Handler: &httpapi.Handler{
 				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
-				Friends: social, Conversations: social,
+				Friends: social, Conversations: social, Notifications: social,
 				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())), NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 				Characters: &campaignapp.Characters{
 					Repo: campaignpg.New(store.Pool()), Compendium: &fakeCompendium{}, Combat: campaignapp.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,

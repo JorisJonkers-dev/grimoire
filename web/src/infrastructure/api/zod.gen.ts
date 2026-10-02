@@ -158,6 +158,59 @@ export const zMentionableList = z.object({
 });
 
 /**
+ * What a Notification is about.
+ */
+export const zNotificationKind = z.enum([
+    'proposal',
+    'join_request',
+    'level_up',
+    'friend_request',
+    'conversation',
+    'session_reminder',
+    'release_note',
+    'security'
+]);
+
+/**
+ * A Notification with the one action it offers.
+ */
+export const zNotificationEntry = z.object({
+    id: zId,
+    kind: zNotificationKind,
+    title: z.string().max(120),
+    body: z.string().max(200),
+    actionLabel: z.string().max(20),
+    actionPath: z.string().max(300).regex(/^\//),
+    at: z.iso.datetime().max(40),
+    read: z.boolean()
+});
+
+/**
+ * The latest Notifications and the unread count.
+ */
+export const zNotificationList = z.object({
+    items: z.array(zNotificationEntry).max(50),
+    unread: z.int().gte(0).lte(1000000)
+});
+
+/**
+ * Which channels one kind reaches.
+ */
+export const zNotificationPreference = z.object({
+    kind: zNotificationKind,
+    inApp: z.boolean(),
+    push: z.boolean(),
+    email: z.boolean()
+});
+
+/**
+ * The channels each Notification kind reaches.
+ */
+export const zNotificationPreferences = z.object({
+    items: z.array(zNotificationPreference).max(8)
+});
+
+/**
  * The Username to ask.
  */
 export const zFriendRequestCreate = z.object({
@@ -4382,6 +4435,37 @@ export const zListMentionablesQuery = z.object({
  * What may be mentioned.
  */
 export const zListMentionablesResponse = zMentionableList;
+
+/**
+ * The Notifications.
+ */
+export const zListNotificationsResponse = zNotificationList;
+
+/**
+ * All read.
+ */
+export const zReadAllNotificationsResponse = z.void();
+
+export const zReadNotificationPath = z.object({
+    notificationId: zId
+});
+
+/**
+ * Read.
+ */
+export const zReadNotificationResponse = z.void();
+
+/**
+ * The preferences.
+ */
+export const zGetNotificationPreferencesResponse = zNotificationPreferences;
+
+export const zSetNotificationPreferencesBody = zNotificationPreferences;
+
+/**
+ * The preferences.
+ */
+export const zSetNotificationPreferencesResponse = zNotificationPreferences;
 
 /**
  * The process is alive.
