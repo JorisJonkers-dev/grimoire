@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0](https://github.com/JorisJonkers-dev/grimoire/compare/v1.0.0...v1.1.0) (2026-10-02)
+
+
+### Features
+
+* Grimoire v2 Accounts and social: sign-in, two-step, Access Tokens, Friends, Notifications and Release Notes ([#179](https://github.com/JorisJonkers-dev/grimoire/issues/179)) ([829b40b](https://github.com/JorisJonkers-dev/grimoire/commit/829b40b07c3fd130f507cb2088bbd484590daa1a))
+* Grimoire v2 Characters: creation wizard, sheet, level-up, spells, Heroic Inspiration and retraining ([#180](https://github.com/JorisJonkers-dev/grimoire/issues/180)) ([a15cdfa](https://github.com/JorisJonkers-dev/grimoire/commit/a15cdfad4fa521bbe6535905be3ffff0d02da8eb))
+* Grimoire v2 foundations: data-driven Effects, Item Instances and the Soft component system ([#176](https://github.com/JorisJonkers-dev/grimoire/issues/176)) ([4c5d99a](https://github.com/JorisJonkers-dev/grimoire/commit/4c5d99a78452841f6c655356f87a96b995fb13e7))
+* Grimoire v2 rules in play: mechanics as data, rests, 2024 actions, effects and the map ([#178](https://github.com/JorisJonkers-dev/grimoire/issues/178)) ([e1b4d27](https://github.com/JorisJonkers-dev/grimoire/commit/e1b4d27f5fa0c6c6a8d8fb9f05dff1e8d824e784))
+
+
+### Bug Fixes
+
+* **deps:** pin dependencies ([#45](https://github.com/JorisJonkers-dev/grimoire/issues/45)) ([5ee74bb](https://github.com/JorisJonkers-dev/grimoire/commit/5ee74bbac69fae2f853a0a285caeb8e82280f007))
+* **deps:** update minor and patch dependencies ([#175](https://github.com/JorisJonkers-dev/grimoire/issues/175)) ([404d5be](https://github.com/JorisJonkers-dev/grimoire/commit/404d5be1c426a0bb28bde3a1bd10c4daa76d34ff))
+
 ## 1.0.0 (2026-10-01)
 
 
