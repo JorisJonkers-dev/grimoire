@@ -122,6 +122,10 @@ const (
 	ActionSneakEnded    = "sneak_ended"
 	ActionStealthRolled = "stealth_rolled"
 	ActionPartyNoticed  = "party_noticed"
+	// Exploration turn action kinds.
+	ActionExplorationStarted = "exploration_started"
+	ActionExplorationTurn    = "exploration_turn"
+	ActionExplorationEnded   = "exploration_ended"
 )
 
 // Sneak is the party moving quietly with a group Stealth check: each member's roll and, once rolled,
@@ -135,4 +139,12 @@ type SneakRoll struct {
 	Token  TokenID
 	RollID RollID
 	Total  *int
+}
+
+// Exploration is the party moving in turns outside a fight: the order, whose turn it is, and how far
+// that member has moved this turn.
+type Exploration struct {
+	Order   []TokenID
+	Turn    int
+	MovedFt int
 }

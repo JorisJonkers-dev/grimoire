@@ -84,6 +84,11 @@ func (r *runtime) planStart(dm domain.Member, cmd Command) (Write, string) {
 	c := &domain.Combat{ID: domain.CombatID(uuid.New()), Status: domain.CombatRolling, StartedAt: r.now()}
 	var rolls []domain.Roll
 	seen := map[domain.TokenID]bool{}
+	mode, share, err := r.store.CampaignInitiative(context.Background(), r.st.session.CampaignID)
+	if err != nil {
+		r.log.Error("live: initiative options", "error", err)
+	}
+	groups := map[string]domain.RollID{}
 	for _, in := range cmd.Combatants {
 		id, _ := uuid.Parse(in.TokenID)
 		t, ok := r.st.tokens[domain.TokenID(id)]
@@ -96,13 +101,33 @@ func (r *runtime) planStart(dm domain.Member, cmd Command) (Write, string) {
 			return Write{}, "Speed runs from 0 to 120 feet."
 		}
 		seen[t.ID] = true
-		roll := r.initiativeRoll(dm, t, in.InitiativeBonus)
-		rolls = append(rolls, roll)
+		group, label, bonus := initiativeGroup(t, in.InitiativeBonus, mode, share)
+		rollID, rolled := groups[group]
+		if !rolled {
+			roll := r.initiativeRoll(dm, t, bonus)
+			roll.Purpose = "Initiative for " + label
+			rolls, rollID = append(rolls, roll), roll.ID
+			groups[group] = rollID
+		}
 		c.Combatants = append(c.Combatants, domain.Combatant{
-			ID: domain.CombatantID(uuid.New()), TokenID: t.ID, RollID: roll.ID, InitiativeBonus: in.InitiativeBonus, SpeedFt: in.SpeedFt,
+			ID: domain.CombatantID(uuid.New()), TokenID: t.ID, RollID: rollID, InitiativeBonus: in.InitiativeBonus, SpeedFt: in.SpeedFt,
 		})
 	}
 	return Write{Kind: domain.ActionCombatStarted, Combat: c, Rolls: rolls}, ""
+}
+
+// initiativeGroup is who a Combatant rolls initiative with: its whole side, without modifier, in side
+// initiative; every monster of its statblock when identical monsters share; or itself alone.
+func initiativeGroup(t domain.Token, bonus int, mode string, share bool) (string, string, int) {
+	switch {
+	case mode == "side" && t.Kind == domain.TokenParty:
+		return "side:party", "the party", 0
+	case mode == "side":
+		return "side:foes", "the foes", 0
+	case share && t.Kind != domain.TokenParty && t.Stats != nil && t.Summon == nil:
+		return "statblock:" + t.Stats.Source, t.Label + " and its kin", bonus
+	}
+	return "token:" + uuid.UUID(t.ID).String(), t.Label, bonus
 }
 
 // initiativeRoll opens the Roll Request a Combatant's Controller fills in on a Roll Card; the DM rolls
@@ -257,6 +282,9 @@ func applyCombat(s *state, w *Write) {
 		if s.sneak != nil {
 			s.sneak, w.Sneak, w.SaveSneak = nil, nil, true
 		}
+		if s.explore != nil {
+			s.explore, w.Explore, w.SaveExplore = nil, nil, true
+		}
 		return
 	case domain.ActionCombatEnded:
 		s.combat = nil
@@ -267,8 +295,7 @@ func applyCombat(s *state, w *Write) {
 	x := &c.Combatants[i]
 	switch w.Kind {
 	case domain.ActionInitiativeRolled:
-		total := w.total
-		x.Initiative = &total
+		rollInitiative(c, x.RollID, w.total)
 	case domain.ActionTurnEnded:
 		x.Done = true
 		for i := range c.Combatants {
@@ -281,6 +308,16 @@ func applyCombat(s *state, w *Write) {
 	}
 	settle(c, s.speedOf)
 	w.Combat = c
+}
+
+// rollInitiative gives every Combatant waiting on a roll its total: those rolling together share it.
+func rollInitiative(c *domain.Combat, id domain.RollID, total int) {
+	for i := range c.Combatants {
+		if c.Combatants[i].RollID == id && c.Combatants[i].Initiative == nil {
+			n := total
+			c.Combatants[i].Initiative = &n
+		}
+	}
 }
 
 // settle starts the fight once everyone has rolled, and moves to the next initiative count once

@@ -60,6 +60,7 @@ type Querier interface {
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
+	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
@@ -92,6 +93,7 @@ type Querier interface {
 	ClearEffectScaling(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
+	ClearExploration(ctx context.Context, sessionID uuid.UUID) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
 	ClearLootEntries(ctx context.Context, tableID uuid.UUID) error
 	ClearManuals(ctx context.Context, sessionID uuid.UUID) error
@@ -377,6 +379,7 @@ type Querier interface {
 	SaveDying(ctx context.Context, arg SaveDyingParams) error
 	SaveEncounterCheck(ctx context.Context, arg SaveEncounterCheckParams) error
 	SaveEncounterTable(ctx context.Context, arg SaveEncounterTableParams) error
+	SaveExploration(ctx context.Context, arg SaveExplorationParams) error
 	SaveHaggle(ctx context.Context, arg SaveHaggleParams) error
 	SaveLootTable(ctx context.Context, arg SaveLootTableParams) error
 	SaveMapObject(ctx context.Context, arg SaveMapObjectParams) error
@@ -397,6 +400,7 @@ type Querier interface {
 	SessionChecks(ctx context.Context, sessionID pgtype.UUID) ([]SessionChecksRow, error)
 	SessionDying(ctx context.Context, sessionID uuid.UUID) ([]SessionDyingRow, error)
 	SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]SessionEffectsRow, error)
+	SessionExploration(ctx context.Context, sessionID uuid.UUID) (SessionExplorationRow, error)
 	SessionHaggles(ctx context.Context, sessionID uuid.UUID) ([]SessionHagglesRow, error)
 	SessionLog(ctx context.Context, arg SessionLogParams) ([]SessionLogRow, error)
 	SessionManuals(ctx context.Context, sessionID uuid.UUID) ([]SessionManualsRow, error)

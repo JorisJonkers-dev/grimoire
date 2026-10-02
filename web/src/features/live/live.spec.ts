@@ -958,6 +958,29 @@ describe('sneaking', () => {
     s.receive(snapshot([aria], 'party', { map: liveMap, sneak: { waiting: false, reach: [{ q: 0, r: 0 }] } }))
     await flushPromises()
     expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('watched')
+    expect(wrapper.find('[data-testid="start-turns"]').exists()).toBe(false)
+    s.receive(snapshot([aria], 'party', { exploration: { order: [aria.id], turn: aria.id, leftFt: 20 } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="exploration-turn"]').text()).toBe('Aria explores · 20 ft left')
+    await wrapper.get('[data-testid="pass-turn"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'pass_turn' })
+  })
+
+  it('lets the DM put exploration into turns', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria], 'dm'))
+    await flushPromises()
+    await wrapper.get('[data-testid="start-turns"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'explore', on: true })
+    s.receive(snapshot([aria], 'dm', { exploration: { order: [aria.id], turn: '0190c7a8-0000-7000-8000-000000000099', leftFt: 30 } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="exploration-turn"]').text()).toBe('Someone explores · 30 ft left')
+    await wrapper.get('[data-testid="stop-turns"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'explore', on: false })
   })
 })
 

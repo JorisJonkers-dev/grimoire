@@ -241,9 +241,11 @@ describe('table settings', () => {
     await input.setValue(5)
     await wrapper.get('[data-testid="high-ground"]').setValue(true)
     await wrapper.get('[data-testid="rest-supplies"]').setValue(true)
+    await wrapper.get('[data-testid="initiative-mode"]').setValue('side')
+    await wrapper.get('[data-testid="share-initiative"]').setValue(true)
     await wrapper.get('[data-testid="settings"]').trigger('submit')
     await flushPromises()
-    expect(sent).toEqual([{ reactionTimeoutS: 5, highGround: true, restSupplies: true }])
+    expect(sent).toEqual([{ reactionTimeoutS: 5, highGround: true, restSupplies: true, initiativeMode: 'side', shareInitiative: true }])
     expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
   })
 

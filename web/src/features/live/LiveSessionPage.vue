@@ -382,6 +382,23 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
       <InitiativeRail v-if="combat" :combat="combat" :tokens="view?.tokens ?? []" />
       <p v-if="!isDM && turns.length > 0" role="status" class="banner" data-testid="your-turn">Your turn</p>
+      <div v-if="view && !combat && (isDM || view.exploration)" class="row" data-testid="exploration">
+        <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
+          {{ view.exploration ? 'End exploration turns' : 'Explore in turns' }}
+        </GButton>
+        <template v-if="view.exploration">
+          <span role="status" data-testid="exploration-turn">
+            {{ names[view.exploration.turn] ?? 'Someone' }} explores · {{ view.exploration.leftFt }} ft left
+          </span>
+          <GButton
+            v-if="isDM || tokenById(view.exploration.turn)?.controllerId === campaign.data.value?.me.id"
+            data-testid="pass-turn"
+            @click="live?.send({ kind: 'pass_turn' })"
+          >
+            Pass the turn
+          </GButton>
+        </template>
+      </div>
       <div v-if="view && !combat" class="row" data-testid="sneak">
         <GButton :data-testid="view.sneak ? 'stop-sneaking' : 'start-sneaking'" @click="live?.send({ kind: 'sneak', on: !view.sneak })">
           {{ view.sneak ? 'Stop sneaking' : 'Sneak' }}

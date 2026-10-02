@@ -1926,6 +1926,24 @@ func (s *Campaign) Validate() error {
 		})
 	}
 	if err := func() error {
+		if value, ok := s.InitiativeMode.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "initiativeMode",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if err := s.Me.Validate(); err != nil {
 			return err
 		}
@@ -2525,6 +2543,24 @@ func (s *CampaignSummary) Validate() error {
 			Error: err,
 		})
 	}
+	if err := func() error {
+		if value, ok := s.InitiativeMode.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "initiativeMode",
+			Error: err,
+		})
+	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
@@ -2695,6 +2731,24 @@ func (s *CampaignUpdate) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "reactionTimeoutS",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.InitiativeMode.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "initiativeMode",
 			Error: err,
 		})
 	}
@@ -9548,6 +9602,17 @@ func (s HexOccupantSide) Validate() error {
 	}
 }
 
+func (s InitiativeMode) Validate() error {
+	switch s {
+	case "individual":
+		return nil
+	case "side":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *Invite) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -16188,6 +16253,10 @@ func (s LiveCommandKind) Validate() error {
 		return nil
 	case "sneak":
 		return nil
+	case "explore":
+		return nil
+	case "pass_turn":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
@@ -20651,6 +20720,24 @@ func (s *LiveView) Validate() error {
 		})
 	}
 	if err := func() error {
+		if value, ok := s.Exploration.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "exploration",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if s.SurfaceKinds == nil {
 			return nil // optional
 		}
@@ -21000,6 +21087,58 @@ func (s *LiveView) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "ambient",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *LiveViewExploration) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Order == nil {
+			return errors.New("nil is invalid value")
+		}
+		if err := (validate.Array{
+			MinLength:    0,
+			MinLengthSet: false,
+			MaxLength:    50,
+			MaxLengthSet: true,
+		}).ValidateLength(len(s.Order)); err != nil {
+			return errors.Wrap(err, "array")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "order",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Int{
+			MinSet:        true,
+			Min:           0,
+			MaxSet:        true,
+			Max:           1000,
+			MinExclusive:  false,
+			MaxExclusive:  false,
+			MultipleOfSet: false,
+			MultipleOf:    0,
+			Pattern:       nil,
+		}).Validate(int64(s.LeftFt)); err != nil {
+			return errors.Wrap(err, "int")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "leftFt",
 			Error: err,
 		})
 	}

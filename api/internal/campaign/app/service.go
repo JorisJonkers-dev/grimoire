@@ -180,6 +180,9 @@ type UpdateInput struct {
 	HighGround *bool
 	// RestSupplies makes a Long Rest cost each resting Character a day of Rations.
 	RestSupplies *bool
+	// InitiativeMode is individual or side initiative; ShareInitiative gives identical monsters one roll.
+	InitiativeMode  *string
+	ShareInitiative *bool
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -200,7 +203,13 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	if t := in.ReactionTimeoutS; t != nil && (*t < 3 || *t > 120) {
 		return domain.Campaign{}, refuse("reactions wait between 3 and 120 seconds")
 	}
-	change := domain.SettingsChange{Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies}
+	if m := in.InitiativeMode; m != nil && *m != "individual" && *m != "side" {
+		return domain.Campaign{}, refuse("initiative is individual or by side")
+	}
+	change := domain.SettingsChange{
+		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
+		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative,
+	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
 }
 

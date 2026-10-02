@@ -2,9 +2,11 @@ package pgstore
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
@@ -53,6 +55,9 @@ func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Wri
 		return err
 	}
 	if err := s.saveSneak(ctx, sid, w); err != nil {
+		return err
+	}
+	if err := s.saveExploration(ctx, sid, w); err != nil {
 		return err
 	}
 	if err := s.saveDying(ctx, sid, w); err != nil {
@@ -184,6 +189,46 @@ func (s *Store) LoadSneak(ctx context.Context, id domain.SessionID) (*domain.Sne
 			sr.Total = &total
 		}
 		out.Rolls = append(out.Rolls, sr)
+	}
+	return out, nil
+}
+
+// CampaignInitiative reads how a Campaign's fights roll initiative.
+func (s *Store) CampaignInitiative(ctx context.Context, campaign uuid.UUID) (string, bool, error) {
+	r, err := s.q.CampaignInitiative(ctx, campaign)
+	return r.InitiativeMode, r.ShareInitiative, err
+}
+
+// saveExploration writes Exploration's turns, or clears them.
+//
+//nolint:gosec // turns and feet are bounded by the rules
+func (s *Store) saveExploration(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if !w.SaveExplore {
+		return nil
+	}
+	e := w.Explore
+	if e == nil {
+		return s.q.ClearExploration(ctx, sid)
+	}
+	order := make([]uuid.UUID, 0, len(e.Order))
+	for _, id := range e.Order {
+		order = append(order, uuid.UUID(id))
+	}
+	return s.q.SaveExploration(ctx, queries.SaveExplorationParams{SessionID: sid, TurnOrder: order, Turn: int32(e.Turn), MovedFt: int32(e.MovedFt)})
+}
+
+// LoadExploration reads Exploration's turns, nil when it has none.
+func (s *Store) LoadExploration(ctx context.Context, id domain.SessionID) (*domain.Exploration, error) {
+	r, err := s.q.SessionExploration(ctx, uuid.UUID(id))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil //nolint:nilnil // no turns is not an error
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := &domain.Exploration{Order: nil, Turn: int(r.Turn), MovedFt: int(r.MovedFt)}
+	for _, t := range r.TurnOrder {
+		out.Order = append(out.Order, domain.TokenID(t))
 	}
 	return out, nil
 }

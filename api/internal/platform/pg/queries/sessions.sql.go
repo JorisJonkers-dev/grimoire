@@ -135,6 +135,22 @@ func (q *Queries) CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, e
 	return high_ground, err
 }
 
+const campaignInitiative = `-- name: CampaignInitiative :one
+SELECT initiative_mode, share_initiative FROM campaign.campaigns WHERE id = $1
+`
+
+type CampaignInitiativeRow struct {
+	InitiativeMode  string
+	ShareInitiative bool
+}
+
+func (q *Queries) CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error) {
+	row := q.db.QueryRow(ctx, campaignInitiative, id)
+	var i CampaignInitiativeRow
+	err := row.Scan(&i.InitiativeMode, &i.ShareInitiative)
+	return i, err
+}
+
 const campaignReactionTimeout = `-- name: CampaignReactionTimeout :one
 SELECT reaction_timeout_s FROM campaign.campaigns WHERE id = $1
 `
@@ -254,6 +270,15 @@ type ClearElevationParams struct {
 
 func (q *Queries) ClearElevation(ctx context.Context, arg ClearElevationParams) error {
 	_, err := q.db.Exec(ctx, clearElevation, arg.MapID, arg.Q, arg.R)
+	return err
+}
+
+const clearExploration = `-- name: ClearExploration :exec
+DELETE FROM play.exploration_turns WHERE session_id = $1
+`
+
+func (q *Queries) ClearExploration(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearExploration, sessionID)
 	return err
 }
 
@@ -1615,6 +1640,28 @@ func (q *Queries) SaveDying(ctx context.Context, arg SaveDyingParams) error {
 	return err
 }
 
+const saveExploration = `-- name: SaveExploration :exec
+INSERT INTO play.exploration_turns (session_id, turn_order, turn, moved_ft) VALUES ($1, $2::uuid[], $3, $4)
+ON CONFLICT (session_id) DO UPDATE SET turn_order = excluded.turn_order, turn = excluded.turn, moved_ft = excluded.moved_ft
+`
+
+type SaveExplorationParams struct {
+	SessionID uuid.UUID
+	TurnOrder []uuid.UUID
+	Turn      int32
+	MovedFt   int32
+}
+
+func (q *Queries) SaveExploration(ctx context.Context, arg SaveExplorationParams) error {
+	_, err := q.db.Exec(ctx, saveExploration,
+		arg.SessionID,
+		arg.TurnOrder,
+		arg.Turn,
+		arg.MovedFt,
+	)
+	return err
+}
+
 const saveMapObject = `-- name: SaveMapObject :exec
 INSERT INTO campaign.map_objects (id, map_id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft,
     detect_dc, disarm_dc, trigger_ft, armed, locked, lock_dc, key_slug)
@@ -1969,6 +2016,23 @@ func (q *Queries) SessionEffects(ctx context.Context, sessionID uuid.UUID) ([]Se
 		return nil, err
 	}
 	return items, nil
+}
+
+const sessionExploration = `-- name: SessionExploration :one
+SELECT turn_order, turn, moved_ft FROM play.exploration_turns WHERE session_id = $1
+`
+
+type SessionExplorationRow struct {
+	TurnOrder []uuid.UUID
+	Turn      int32
+	MovedFt   int32
+}
+
+func (q *Queries) SessionExploration(ctx context.Context, sessionID uuid.UUID) (SessionExplorationRow, error) {
+	row := q.db.QueryRow(ctx, sessionExploration, sessionID)
+	var i SessionExplorationRow
+	err := row.Scan(&i.TurnOrder, &i.Turn, &i.MovedFt)
+	return i, err
 }
 
 const sessionManuals = `-- name: SessionManuals :many

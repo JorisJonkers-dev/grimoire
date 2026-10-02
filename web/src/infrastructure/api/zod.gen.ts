@@ -34,6 +34,11 @@ export const zMember = z.object({
 });
 
 /**
+ * How a fight rolls initiative, each Combatant for itself or one roll per side.
+ */
+export const zInitiativeMode = z.enum(['individual', 'side']);
+
+/**
  * Seconds a Reaction Prompt waits before it counts as declined.
  */
 export const zReactionTimeout = z.int().gte(3).lte(120);
@@ -1725,7 +1730,9 @@ export const zLiveCommand = z.object({
         'disarm',
         'jump',
         'throw',
-        'sneak'
+        'sneak',
+        'explore',
+        'pass_turn'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1996,6 +2003,11 @@ export const zLiveView = z.object({
         reach: z.array(zHexCoord).max(4000),
         totals: z.record(z.string(), z.int().gte(-20).lte(80)).optional()
     }).optional(),
+    exploration: z.object({
+        order: z.array(zId).max(50),
+        turn: zId,
+        leftFt: z.int().gte(0).lte(1000)
+    }).optional(),
     surfaceKinds: z.array(z.object({
         kind: z.string().max(40),
         name: z.string().max(40)
@@ -2057,7 +2069,9 @@ export const zCampaignSummary = z.object({
     createdAt: z.iso.datetime().max(40),
     reactionTimeoutS: zReactionTimeout.optional(),
     highGround: z.boolean().optional(),
-    restSupplies: z.boolean().optional()
+    restSupplies: z.boolean().optional(),
+    initiativeMode: zInitiativeMode.optional(),
+    shareInitiative: z.boolean().optional()
 });
 
 /**
@@ -2081,6 +2095,8 @@ export const zCampaign = z.object({
     reactionTimeoutS: zReactionTimeout.optional(),
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
+    initiativeMode: zInitiativeMode.optional(),
+    shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
 });
@@ -2164,7 +2180,9 @@ export const zCampaignUpdate = z.object({
     ruleset: zCampaignRuleset.optional(),
     reactionTimeoutS: zReactionTimeout.optional(),
     highGround: z.boolean().optional(),
-    restSupplies: z.boolean().optional()
+    restSupplies: z.boolean().optional(),
+    initiativeMode: zInitiativeMode.optional(),
+    shareInitiative: z.boolean().optional()
 });
 
 /**

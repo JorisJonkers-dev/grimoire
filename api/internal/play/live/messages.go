@@ -104,6 +104,8 @@ const (
 	CmdJump           = "jump"
 	CmdThrow          = "throw"
 	CmdSneak          = "sneak"
+	CmdExplore        = "explore"
+	CmdPassTurn       = "pass_turn"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -425,8 +427,9 @@ type View struct {
 	// Zones go to the DM only; Perception lists the party's Perception Roll Cards, never the DC.
 	Zones   []ZoneView   `json:"zones,omitempty"`
 	Objects []ObjectView `json:"objects,omitempty"`
-	// Sneak is the party's sneaking, while it is.
-	Sneak *SneakView `json:"sneak,omitempty"`
+	// Sneak is the party's sneaking, while it is; Exploration the turns of Exploration, while it has them.
+	Sneak       *SneakView       `json:"sneak,omitempty"`
+	Exploration *ExplorationView `json:"exploration,omitempty"`
 	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
 	Perception   []PerceptionView  `json:"perception,omitempty"`

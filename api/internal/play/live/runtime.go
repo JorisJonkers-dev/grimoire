@@ -46,9 +46,12 @@ type Write struct {
 	// Objects are the Map Objects a change touched, for the store to save; Object the one it removed.
 	Objects []domain.ObjectID
 	Object  domain.ObjectID
-	// Sneak is the party's sneaking after a change when SaveSneak, nil once it stops.
-	Sneak     *domain.Sneak
-	SaveSneak bool
+	// Sneak is the party's sneaking after a change when SaveSneak, nil once it stops; Explore the same
+	// for exploration turns.
+	Sneak       *domain.Sneak
+	SaveSneak   bool
+	Explore     *domain.Exploration
+	SaveExplore bool
 	// Unveiled marks a write whose token lost Visibility Qualities to a Reveal.
 	Unveiled bool
 	// Formed is a token as it takes a form; Reverted are tokens whose form ended.
@@ -67,6 +70,7 @@ type Write struct {
 	grounded []grounding
 	forced   bool
 	sneak    *domain.Sneak
+	explore  *domain.Exploration
 	board    *domain.MapState
 	frames   []*state
 	prompt   *domain.ReactionPrompt
@@ -159,6 +163,7 @@ type loaded struct {
 	pending  []domain.PendingAction
 	dying    map[domain.TokenID]domain.Dying
 	sneak    *domain.Sneak
+	explore  *domain.Exploration
 }
 
 // loadRules reads the Effect catalogue, the rest the Session has under way, the Hides, Grapples and
@@ -181,7 +186,10 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	if out.dying, err = h.Store.LoadDying(ctx, s.ID); err != nil {
 		return out, err
 	}
-	out.sneak, err = h.Store.LoadSneak(ctx, s.ID)
+	if out.sneak, err = h.Store.LoadSneak(ctx, s.ID); err != nil {
+		return out, err
+	}
+	out.explore, err = h.Store.LoadExploration(ctx, s.ID)
 	return out, err
 }
 
@@ -206,6 +214,8 @@ type Store interface {
 	Effects(ctx context.Context) (effects.Catalog, error)
 	Surfaces(ctx context.Context) (surface.Catalog, error)
 	LoadSneak(ctx context.Context, id domain.SessionID) (*domain.Sneak, error)
+	CampaignInitiative(ctx context.Context, campaign uuid.UUID) (string, bool, error)
+	LoadExploration(ctx context.Context, id domain.SessionID) (*domain.Exploration, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
 	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
 	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
@@ -409,7 +419,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, terrainKinds: kept.surfaces, sneak: kept.sneak, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -645,7 +655,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
 		return true
 	}
 	return false
@@ -796,6 +806,9 @@ func change(s *state, w *Write) {
 	case domain.ActionSneakStarted, domain.ActionSneakEnded, domain.ActionStealthRolled, domain.ActionPartyNoticed:
 		s.sneak, w.Sneak, w.SaveSneak = w.sneak, w.sneak, true
 		return
+	case domain.ActionExplorationStarted, domain.ActionExplorationTurn, domain.ActionExplorationEnded:
+		s.explore, w.Explore, w.SaveExplore = w.explore, w.explore, true
+		return
 	case domain.ActionThrown:
 		applyThrow(s, w)
 		return
@@ -886,6 +899,10 @@ func walk(s *state, w *Write) {
 			}
 		}
 		s.combat.Prompt, s.combat.Resume, w.Combat = w.prompt, w.resume, s.combat
+	}
+	if e := s.explore; e != nil && s.combat == nil && e.Order[e.Turn] == w.Token.ID {
+		e.MovedFt += w.CostFt
+		w.Explore, w.SaveExplore = e, true
 	}
 	for _, c := range w.Path[1:] {
 		w.Token.Q, w.Token.R = c.Q, c.R

@@ -53,10 +53,20 @@ const highGround = computed({
   get: () => highGroundChoice.value ?? campaign.data.value?.highGround ?? false,
   set: (v: boolean) => (highGroundChoice.value = v),
 })
+const modeChoice = ref<'individual' | 'side' | null>(null)
+const initiativeMode = computed({
+  get: () => modeChoice.value ?? campaign.data.value?.initiativeMode ?? 'individual',
+  set: (v: 'individual' | 'side') => (modeChoice.value = v),
+})
+const shareChoice = ref<boolean | null>(null)
+const shareInitiative = computed({
+  get: () => shareChoice.value ?? campaign.data.value?.shareInitiative ?? false,
+  set: (v: boolean) => (shareChoice.value = v),
+})
 const settings = useMutation(updateCampaignMutation())
 function saveSettings() {
   failed.value = ''
-  settings.mutate({ ...path.value, body: { reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
+  settings.mutate({ ...path.value, body: { reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value, shareInitiative: shareInitiative.value } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
 const onError = (what: string) => () => (failed.value = what)
@@ -214,6 +224,17 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <label class="check">
           <input v-model="restSupplies" type="checkbox" data-testid="rest-supplies" />
           <span>A Long Rest costs each Character a day of Rations (optional rule)</span>
+        </label>
+        <label class="g-field">
+          <span>Initiative</span>
+          <select v-model="initiativeMode" data-testid="initiative-mode">
+            <option value="individual">Each creature rolls</option>
+            <option value="side">One roll per side</option>
+          </select>
+        </label>
+        <label class="check">
+          <input v-model="shareInitiative" type="checkbox" data-testid="share-initiative" />
+          <span>Identical monsters share one roll</span>
         </label>
         <GButton type="submit">Save settings</GButton>
         <p v-if="settings.isSuccess.value" role="status" data-testid="settings-saved">Saved.</p>

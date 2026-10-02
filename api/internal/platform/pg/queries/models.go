@@ -22,6 +22,8 @@ type CampaignCampaign struct {
 	HighGround       bool
 	GameDay          int32
 	RestSupplies     bool
+	InitiativeMode   string
+	ShareInitiative  bool
 }
 
 type CampaignCharacter struct {
@@ -1068,6 +1070,13 @@ type PlayEncounterZone struct {
 	Held        bool
 	Status      string
 	Dc          int32
+}
+
+type PlayExplorationTurn struct {
+	SessionID uuid.UUID
+	TurnOrder []uuid.UUID
+	Turn      int32
+	MovedFt   int32
 }
 
 type PlayHaggle struct {

@@ -405,3 +405,16 @@ DELETE FROM play.sneak_rolls WHERE session_id = @session_id;
 
 -- name: AddSneakRoll :exec
 INSERT INTO play.sneak_rolls (session_id, token_id, roll_id, total) VALUES (@session_id, @token_id, @roll_id, sqlc.narg(total));
+
+-- name: CampaignInitiative :one
+SELECT initiative_mode, share_initiative FROM campaign.campaigns WHERE id = $1;
+
+-- name: SessionExploration :one
+SELECT turn_order, turn, moved_ft FROM play.exploration_turns WHERE session_id = $1;
+
+-- name: SaveExploration :exec
+INSERT INTO play.exploration_turns (session_id, turn_order, turn, moved_ft) VALUES (@session_id, @turn_order::uuid[], @turn, @moved_ft)
+ON CONFLICT (session_id) DO UPDATE SET turn_order = excluded.turn_order, turn = excluded.turn, moved_ft = excluded.moved_ft;
+
+-- name: ClearExploration :exec
+DELETE FROM play.exploration_turns WHERE session_id = @session_id;

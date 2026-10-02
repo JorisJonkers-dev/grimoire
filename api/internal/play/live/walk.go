@@ -58,7 +58,7 @@ func (r *runtime) previewWalk(req request) {
 // moveLeft refuses a walk a Combatant cannot make now: out of turn, or longer than its movement left.
 func (s *state) moveLeft(t domain.Token, cost int) string {
 	if s.combat == nil {
-		return ""
+		return s.exploreLeft(t, cost)
 	}
 	for _, x := range s.combat.Combatants {
 		switch {

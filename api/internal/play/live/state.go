@@ -30,6 +30,7 @@ type state struct {
 	// terrainKinds is the Surface catalogue; sneak the party's sneaking, nil when it is not.
 	terrainKinds surface.Catalog
 	sneak        *domain.Sneak
+	explore      *domain.Exploration
 	// table is what the Table Display shows; tableMap is the map of its world scene.
 	table    domain.TableDisplay
 	tableMap *domain.Map
@@ -79,6 +80,9 @@ func (s *state) clone() *state {
 	next.inventory, next.day = cloneInventory(s.inventory), s.day
 	if s.sneak != nil {
 		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
+	}
+	if s.explore != nil {
+		next.explore = &domain.Exploration{Order: slices.Clone(s.explore.Order), Turn: s.explore.Turn, MovedFt: s.explore.MovedFt}
 	}
 	if s.shop != nil {
 		next.shop = s.shop.Clone()
@@ -182,7 +186,7 @@ func (s *state) project(a Audience) View {
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
-	v.Shop, v.Rest, v.GameDay, v.Sneak = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen)
+	v.Shop, v.Rest, v.GameDay, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen), s.explorationView()
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds = s.zoneViews(), s.surfaceKindViews()
 	}

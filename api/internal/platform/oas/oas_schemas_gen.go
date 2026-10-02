@@ -1447,9 +1447,12 @@ type Campaign struct {
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
-	RestSupplies OptBool  `json:"restSupplies"`
-	Me           Member   `json:"me"`
-	Members      []Member `json:"members"`
+	RestSupplies   OptBool           `json:"restSupplies"`
+	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// Identical monsters share one initiative roll.
+	ShareInitiative OptBool  `json:"shareInitiative"`
+	Me              Member   `json:"me"`
+	Members         []Member `json:"members"`
 }
 
 // GetID returns the value of ID.
@@ -1495,6 +1498,16 @@ func (s *Campaign) GetHighGround() OptBool {
 // GetRestSupplies returns the value of RestSupplies.
 func (s *Campaign) GetRestSupplies() OptBool {
 	return s.RestSupplies
+}
+
+// GetInitiativeMode returns the value of InitiativeMode.
+func (s *Campaign) GetInitiativeMode() OptInitiativeMode {
+	return s.InitiativeMode
+}
+
+// GetShareInitiative returns the value of ShareInitiative.
+func (s *Campaign) GetShareInitiative() OptBool {
+	return s.ShareInitiative
 }
 
 // GetMe returns the value of Me.
@@ -1550,6 +1563,16 @@ func (s *Campaign) SetHighGround(val OptBool) {
 // SetRestSupplies sets the value of RestSupplies.
 func (s *Campaign) SetRestSupplies(val OptBool) {
 	s.RestSupplies = val
+}
+
+// SetInitiativeMode sets the value of InitiativeMode.
+func (s *Campaign) SetInitiativeMode(val OptInitiativeMode) {
+	s.InitiativeMode = val
+}
+
+// SetShareInitiative sets the value of ShareInitiative.
+func (s *Campaign) SetShareInitiative(val OptBool) {
+	s.ShareInitiative = val
 }
 
 // SetMe sets the value of Me.
@@ -1846,7 +1869,10 @@ type CampaignSummary struct {
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
-	RestSupplies OptBool `json:"restSupplies"`
+	RestSupplies   OptBool           `json:"restSupplies"`
+	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// Identical monsters share one initiative roll.
+	ShareInitiative OptBool `json:"shareInitiative"`
 }
 
 // GetID returns the value of ID.
@@ -1894,6 +1920,16 @@ func (s *CampaignSummary) GetRestSupplies() OptBool {
 	return s.RestSupplies
 }
 
+// GetInitiativeMode returns the value of InitiativeMode.
+func (s *CampaignSummary) GetInitiativeMode() OptInitiativeMode {
+	return s.InitiativeMode
+}
+
+// GetShareInitiative returns the value of ShareInitiative.
+func (s *CampaignSummary) GetShareInitiative() OptBool {
+	return s.ShareInitiative
+}
+
 // SetID sets the value of ID.
 func (s *CampaignSummary) SetID(val ID) {
 	s.ID = val
@@ -1937,6 +1973,16 @@ func (s *CampaignSummary) SetHighGround(val OptBool) {
 // SetRestSupplies sets the value of RestSupplies.
 func (s *CampaignSummary) SetRestSupplies(val OptBool) {
 	s.RestSupplies = val
+}
+
+// SetInitiativeMode sets the value of InitiativeMode.
+func (s *CampaignSummary) SetInitiativeMode(val OptInitiativeMode) {
+	s.InitiativeMode = val
+}
+
+// SetShareInitiative sets the value of ShareInitiative.
+func (s *CampaignSummary) SetShareInitiative(val OptBool) {
+	s.ShareInitiative = val
 }
 
 // CampaignSummaryHeaders wraps CampaignSummary with response headers.
@@ -1998,7 +2044,10 @@ type CampaignUpdate struct {
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
-	RestSupplies OptBool `json:"restSupplies"`
+	RestSupplies   OptBool           `json:"restSupplies"`
+	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// Identical monsters share one initiative roll.
+	ShareInitiative OptBool `json:"shareInitiative"`
 }
 
 // GetName returns the value of Name.
@@ -2026,6 +2075,16 @@ func (s *CampaignUpdate) GetRestSupplies() OptBool {
 	return s.RestSupplies
 }
 
+// GetInitiativeMode returns the value of InitiativeMode.
+func (s *CampaignUpdate) GetInitiativeMode() OptInitiativeMode {
+	return s.InitiativeMode
+}
+
+// GetShareInitiative returns the value of ShareInitiative.
+func (s *CampaignUpdate) GetShareInitiative() OptBool {
+	return s.ShareInitiative
+}
+
 // SetName sets the value of Name.
 func (s *CampaignUpdate) SetName(val OptCampaignName) {
 	s.Name = val
@@ -2049,6 +2108,16 @@ func (s *CampaignUpdate) SetHighGround(val OptBool) {
 // SetRestSupplies sets the value of RestSupplies.
 func (s *CampaignUpdate) SetRestSupplies(val OptBool) {
 	s.RestSupplies = val
+}
+
+// SetInitiativeMode sets the value of InitiativeMode.
+func (s *CampaignUpdate) SetInitiativeMode(val OptInitiativeMode) {
+	s.InitiativeMode = val
+}
+
+// SetShareInitiative sets the value of ShareInitiative.
+func (s *CampaignUpdate) SetShareInitiative(val OptBool) {
+	s.ShareInitiative = val
 }
 
 // The choices for a first-level Character.
@@ -6437,6 +6506,49 @@ func (s *HexOccupantSide) UnmarshalText(data []byte) error {
 
 type ID uuid.UUID
 
+// How a fight rolls initiative, each Combatant for itself or one roll per side.
+// Ref: #/components/schemas/InitiativeMode
+type InitiativeMode string
+
+const (
+	InitiativeModeIndividual InitiativeMode = "individual"
+	InitiativeModeSide       InitiativeMode = "side"
+)
+
+// AllValues returns all InitiativeMode values.
+func (InitiativeMode) AllValues() []InitiativeMode {
+	return []InitiativeMode{
+		InitiativeModeIndividual,
+		InitiativeModeSide,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s InitiativeMode) MarshalText() ([]byte, error) {
+	switch s {
+	case InitiativeModeIndividual:
+		return []byte(s), nil
+	case InitiativeModeSide:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *InitiativeMode) UnmarshalText(data []byte) error {
+	switch InitiativeMode(data) {
+	case InitiativeModeIndividual:
+		*s = InitiativeModeIndividual
+		return nil
+	case InitiativeModeSide:
+		*s = InitiativeModeSide
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // An open invite link.
 // Ref: #/components/schemas/Invite
 type Invite struct {
@@ -10383,6 +10495,8 @@ const (
 	LiveCommandKindJump           LiveCommandKind = "jump"
 	LiveCommandKindThrow          LiveCommandKind = "throw"
 	LiveCommandKindSneak          LiveCommandKind = "sneak"
+	LiveCommandKindExplore        LiveCommandKind = "explore"
+	LiveCommandKindPassTurn       LiveCommandKind = "pass_turn"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10471,6 +10585,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindJump,
 		LiveCommandKindThrow,
 		LiveCommandKindSneak,
+		LiveCommandKindExplore,
+		LiveCommandKindPassTurn,
 	}
 }
 
@@ -10642,6 +10758,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindThrow:
 		return []byte(s), nil
 	case LiveCommandKindSneak:
+		return []byte(s), nil
+	case LiveCommandKindExplore:
+		return []byte(s), nil
+	case LiveCommandKindPassTurn:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10899,6 +11019,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindSneak:
 		*s = LiveCommandKindSneak
+		return nil
+	case LiveCommandKindExplore:
+		*s = LiveCommandKindExplore
+		return nil
+	case LiveCommandKindPassTurn:
+		*s = LiveCommandKindPassTurn
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -14443,6 +14569,8 @@ type LiveView struct {
 	// The party sneaking with a group Stealth check; Reach is where the creatures the audience sees would
 	// notice it.
 	Sneak OptLiveViewSneak `json:"sneak"`
+	// Exploration in turns, outside a fight.
+	Exploration OptLiveViewExploration `json:"exploration"`
 	// The Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
@@ -14534,6 +14662,11 @@ func (s *LiveView) GetWorld() OptLiveWorld {
 // GetSneak returns the value of Sneak.
 func (s *LiveView) GetSneak() OptLiveViewSneak {
 	return s.Sneak
+}
+
+// GetExploration returns the value of Exploration.
+func (s *LiveView) GetExploration() OptLiveViewExploration {
+	return s.Exploration
 }
 
 // GetSurfaceKinds returns the value of SurfaceKinds.
@@ -14671,6 +14804,11 @@ func (s *LiveView) SetSneak(val OptLiveViewSneak) {
 	s.Sneak = val
 }
 
+// SetExploration sets the value of Exploration.
+func (s *LiveView) SetExploration(val OptLiveViewExploration) {
+	s.Exploration = val
+}
+
 // SetSurfaceKinds sets the value of SurfaceKinds.
 func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
 	s.SurfaceKinds = val
@@ -14729,6 +14867,43 @@ func (s *LiveView) SetLights(val []LiveLight) {
 // SetAmbient sets the value of Ambient.
 func (s *LiveView) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
+}
+
+// Exploration in turns, outside a fight.
+type LiveViewExploration struct {
+	Order  []ID  `json:"order"`
+	Turn   ID    `json:"turn"`
+	LeftFt int32 `json:"leftFt"`
+}
+
+// GetOrder returns the value of Order.
+func (s *LiveViewExploration) GetOrder() []ID {
+	return s.Order
+}
+
+// GetTurn returns the value of Turn.
+func (s *LiveViewExploration) GetTurn() ID {
+	return s.Turn
+}
+
+// GetLeftFt returns the value of LeftFt.
+func (s *LiveViewExploration) GetLeftFt() int32 {
+	return s.LeftFt
+}
+
+// SetOrder sets the value of Order.
+func (s *LiveViewExploration) SetOrder(val []ID) {
+	s.Order = val
+}
+
+// SetTurn sets the value of Turn.
+func (s *LiveViewExploration) SetTurn(val ID) {
+	s.Turn = val
+}
+
+// SetLeftFt sets the value of LeftFt.
+func (s *LiveViewExploration) SetLeftFt(val int32) {
+	s.LeftFt = val
 }
 
 // LiveViewHeaders wraps LiveView with response headers.
@@ -17237,6 +17412,52 @@ func (o OptID) Or(d ID) ID {
 	return d
 }
 
+// NewOptInitiativeMode returns new OptInitiativeMode with value set to v.
+func NewOptInitiativeMode(v InitiativeMode) OptInitiativeMode {
+	return OptInitiativeMode{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInitiativeMode is optional InitiativeMode.
+type OptInitiativeMode struct {
+	Value InitiativeMode
+	Set   bool
+}
+
+// IsSet returns true if OptInitiativeMode was set.
+func (o OptInitiativeMode) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInitiativeMode) Reset() {
+	var v InitiativeMode
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInitiativeMode) SetTo(v InitiativeMode) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInitiativeMode) Get() (v InitiativeMode, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInitiativeMode) Or(d InitiativeMode) InitiativeMode {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptInt32 returns new OptInt32 with value set to v.
 func NewOptInt32(v int32) OptInt32 {
 	return OptInt32{
@@ -18657,6 +18878,52 @@ func (o OptLiveView) Get() (v LiveView, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveView) Or(d LiveView) LiveView {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveViewExploration returns new OptLiveViewExploration with value set to v.
+func NewOptLiveViewExploration(v LiveViewExploration) OptLiveViewExploration {
+	return OptLiveViewExploration{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveViewExploration is optional LiveViewExploration.
+type OptLiveViewExploration struct {
+	Value LiveViewExploration
+	Set   bool
+}
+
+// IsSet returns true if OptLiveViewExploration was set.
+func (o OptLiveViewExploration) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveViewExploration) Reset() {
+	var v LiveViewExploration
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveViewExploration) SetTo(v LiveViewExploration) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveViewExploration) Get() (v LiveViewExploration, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveViewExploration) Or(d LiveViewExploration) LiveViewExploration {
 	if v, ok := o.Get(); ok {
 		return v
 	}

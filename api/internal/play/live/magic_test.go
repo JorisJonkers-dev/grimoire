@@ -22,7 +22,12 @@ import (
 // magicTable puts Aria at the centre and a goblin three hexes east.
 func magicTable(t *testing.T) (world, *table, map[string]string) {
 	t.Helper()
-	w := setup(t)
+	return magicTableIn(t, setup(t))
+}
+
+// magicTableIn sets the table up in a world already made.
+func magicTableIn(t *testing.T, w world) (world, *table, map[string]string) {
+	t.Helper()
 	w.hub.Stats = bestiary{owner: w.player.ID}
 	rolls := &app.Rolls{
 		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },
