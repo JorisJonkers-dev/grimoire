@@ -27,6 +27,8 @@ type state struct {
 	// surfaces is terrain on hexes this Session; cast is the area spell waiting on its rolls.
 	surfaces map[hex.Coord]domain.Surface
 	cast     *domain.AreaCast
+	// terrainKinds is the Surface catalogue.
+	terrainKinds surface.Catalog
 	// table is what the Table Display shows; tableMap is the map of its world scene.
 	table    domain.TableDisplay
 	tableMap *domain.Map
@@ -60,7 +62,7 @@ func cloneEffects(fx domain.Effects) domain.Effects {
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog, terrainKinds: s.terrainKinds}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
@@ -178,9 +180,20 @@ func (s *state) project(a Audience) View {
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
 	v.Shop, v.Rest, v.GameDay = s.shopView(), s.restView(a), s.day
 	if a == AudienceDM {
-		v.Zones = s.zoneViews()
+		v.Zones, v.SurfaceKinds = s.zoneViews(), s.surfaceKindViews()
 	}
 	return v
+}
+
+// surfaceKindViews lists the Surface catalogue for the DM's paint tool.
+func (s *state) surfaceKindViews() []SurfaceKindView {
+	var out []SurfaceKindView
+	for _, k := range s.terrainKinds.Kinds() {
+		if k != surface.None {
+			out = append(out, SurfaceKindView{Kind: string(k), Name: s.terrainKinds[k].Name})
+		}
+	}
+	return out
 }
 
 func (s *state) projectPending(v *View, a Audience, seen map[hex.Coord]bool) {
@@ -229,7 +242,8 @@ func sortHexes(hs []Hex) {
 
 // cell is what the rules see of a hex: walls, difficult Surfaces and height.
 func (s *state) cell(c hex.Coord) hex.Cell {
-	out := hex.Cell{Difficult: surface.Difficult(s.surfaces[c].Kind), Blocked: false, BlocksSight: false, ElevationFt: 0, Cover: hex.NoCover}
+	cost := s.terrainKinds.Cost(s.surfaces[c].Kind)
+	out := hex.Cell{Difficult: cost == 2, Multiplier: cost, Blocked: false, BlocksSight: false, ElevationFt: 0, Cover: hex.NoCover}
 	if s.board != nil {
 		out.Blocked, out.BlocksSight, out.ElevationFt = s.board.Walls[c], s.board.Walls[c], s.board.Elevation[c]
 		sight, move := s.objectBlocks(c)

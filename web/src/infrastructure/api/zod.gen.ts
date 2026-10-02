@@ -977,14 +977,7 @@ export const zLiveArea = z.object({
 export const zLiveSurface = z.object({
     q: z.int().gte(-500).lte(500),
     r: z.int().gte(-500).lte(500),
-    kind: z.enum([
-        'fire',
-        'grease',
-        'water',
-        'ice',
-        'web',
-        'electrified'
-    ]),
+    kind: z.string().max(40).regex(/^[a-z][a-z0-9-]{0,39}$/),
     roundsLeft: z.int().gte(1).lte(100).optional()
 });
 
@@ -1792,14 +1785,7 @@ export const zLiveCommand = z.object({
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),
     manualId: zId.optional(),
-    surface: z.enum([
-        'fire',
-        'grease',
-        'water',
-        'ice',
-        'web',
-        'electrified'
-    ]).optional(),
+    surface: z.string().max(40).regex(/^[a-z][a-z0-9-]{0,39}$/).optional(),
     elevationFt: z.int().gte(-100).lte(100).optional(),
     camera: zTableCamera.optional(),
     zoomPct: z.int().gte(50).lte(300).optional(),
@@ -2001,6 +1987,10 @@ export const zLiveView = z.object({
     area: zLiveArea.optional(),
     table: zLiveTable.optional(),
     world: zLiveWorld.optional(),
+    surfaceKinds: z.array(z.object({
+        kind: z.string().max(40),
+        name: z.string().max(40)
+    })).max(500).optional(),
     objects: z.array(zLiveObject).max(500).optional(),
     zones: z.array(zLiveZone).max(200).optional(),
     perception: z.array(zLivePerception).max(1000).optional(),

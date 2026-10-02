@@ -18,6 +18,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -58,9 +59,11 @@ type Write struct {
 	// changedObjects are Map Objects as a change leaves them; trigger an Effect one sets off.
 	changedObjects map[domain.ObjectID]domain.MapObject
 	trigger        *trigger
-	board          *domain.MapState
-	frames         []*state
-	prompt         *domain.ReactionPrompt
+	// grounded are Effects Surfaces put on creatures that entered them or started a turn in them.
+	grounded []grounding
+	board    *domain.MapState
+	frames   []*state
+	prompt   *domain.ReactionPrompt
 	// Effects is the Session's Effects after the change, for the store to save; nil when unchanged.
 	Effects *domain.Effects
 	// Surfaces is the Session's Surfaces after the change when SaveSurfaces; Cast the area spell when SaveCast.
@@ -144,10 +147,11 @@ type Write struct {
 
 // loaded is what the rules keep between a Session's runtimes besides tokens, Combat and Effects.
 type loaded struct {
-	catalog effects.Catalog
-	rest    *domain.Rest
-	pending []domain.PendingAction
-	dying   map[domain.TokenID]domain.Dying
+	catalog  effects.Catalog
+	surfaces surface.Catalog
+	rest     *domain.Rest
+	pending  []domain.PendingAction
+	dying    map[domain.TokenID]domain.Dying
 }
 
 // loadRules reads the Effect catalogue, the rest the Session has under way, the Hides, Grapples and
@@ -156,6 +160,9 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	var out loaded
 	var err error
 	if out.catalog, err = h.Store.Effects(ctx); err != nil {
+		return out, err
+	}
+	if out.surfaces, err = h.Store.Surfaces(ctx); err != nil {
 		return out, err
 	}
 	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
@@ -187,6 +194,7 @@ type Store interface {
 	Features(ctx context.Context) (features.Catalog, error)
 	// Effects reads the Effect catalogue the rules resolve against.
 	Effects(ctx context.Context) (effects.Catalog, error)
+	Surfaces(ctx context.Context) (surface.Catalog, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
 	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
 	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
@@ -390,7 +398,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, terrainKinds: kept.surfaces, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {

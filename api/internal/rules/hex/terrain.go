@@ -26,7 +26,10 @@ func (c Cover) ACBonus() int {
 
 // Cell is one hex of a local map.
 type Cell struct {
-	Difficult   bool
+	Difficult bool
+	// Multiplier is what each foot of movement into the hex costs when more than difficult terrain's
+	// double (overgrowth costs four).
+	Multiplier  int
 	Blocked     bool
 	BlocksSight bool
 	ElevationFt int

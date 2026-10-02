@@ -299,6 +299,7 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 		r.fire(w.trigger, actor, c)
 	}
 	r.approach(w, actor, c)
+	r.groundEffects(w, actor, c)
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
 		r.encounterChecks(prep.TriggerLongRest, prep.DueNextRest, actor, c)

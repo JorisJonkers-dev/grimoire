@@ -107,6 +107,7 @@ type Querier interface {
 	ClearShopStock(ctx context.Context, shopID uuid.UUID) error
 	ClearSpeciesTraits(ctx context.Context, speciesID int64) error
 	ClearSpellChildren(ctx context.Context, spellID int64) error
+	ClearSurfaceReactions(ctx context.Context, surface string) error
 	ClearSurfaces(ctx context.Context, sessionID uuid.UUID) error
 	ClearTableEntries(ctx context.Context, tableID uuid.UUID) error
 	ClearTokenQualities(ctx context.Context, tokenID uuid.UUID) error
@@ -246,6 +247,7 @@ type Querier interface {
 	InsertShopRevisionStock(ctx context.Context, arg InsertShopRevisionStockParams) error
 	InsertSpawnEvent(ctx context.Context, arg InsertSpawnEventParams) error
 	InsertSurface(ctx context.Context, arg InsertSurfaceParams) error
+	InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceReactionParams) error
 	InsertTableEntry(ctx context.Context, arg InsertTableEntryParams) error
 	InsertTableRevision(ctx context.Context, arg InsertTableRevisionParams) error
 	InsertTableRevisionEntry(ctx context.Context, arg InsertTableRevisionEntryParams) error
@@ -315,6 +317,8 @@ type Querier interface {
 	ListSettlements(ctx context.Context, campaignID uuid.UUID) ([]ListSettlementsRow, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
+	ListSurfaceDefinitions(ctx context.Context) ([]CompendiumSurfaceDefinition, error)
+	ListSurfaceReactions(ctx context.Context) ([]CompendiumSurfaceReaction, error)
 	ListTables(ctx context.Context, campaignID uuid.UUID) ([]ListTablesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
 	LockCampaignLog(ctx context.Context, lockKey string) error
@@ -461,6 +465,7 @@ type Querier interface {
 	UpsertPushSubscription(ctx context.Context, arg UpsertPushSubscriptionParams) (uuid.UUID, error)
 	UpsertSpecies(ctx context.Context, arg UpsertSpeciesParams) (int64, error)
 	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)
+	UpsertSurfaceDefinition(ctx context.Context, arg UpsertSurfaceDefinitionParams) error
 	UpsertWeapon(ctx context.Context, arg UpsertWeaponParams) (int64, error)
 	WeaponProperties(ctx context.Context, weaponID int64) ([]WeaponPropertiesRow, error)
 }

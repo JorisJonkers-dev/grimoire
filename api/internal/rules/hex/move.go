@@ -20,17 +20,18 @@ type Step struct {
 type Reach map[Coord]Step
 
 // StepCost is the movement spent entering to from its neighbour from: 5 ft, doubled in difficult
-// terrain, plus one extra foot per foot climbed without a climb speed. ok is false where the hex
+// terrain or multiplied by the hex's own multiplier, plus one extra foot per foot climbed without a climb speed. ok is false where the hex
 // cannot be entered.
 func StepCost(g Grid, from, to Coord, climb bool) (int, bool) {
 	cell, onMap := g.Cells[to]
 	if !onMap || cell.Blocked || g.Occupants[to] == Enemy {
 		return 0, false
 	}
-	cost := FeetPerHex
+	times := max(1, cell.Multiplier)
 	if cell.Difficult {
-		cost *= 2
+		times = max(times, 2)
 	}
+	cost := FeetPerHex * times
 	if rise := cell.ElevationFt - g.Cells[from].ElevationFt; rise > 0 && !climb {
 		cost += rise
 	}

@@ -1184,9 +1184,9 @@ export type LiveCommand = {
     effectId?: Id;
     manualId?: Id;
     /**
-     * With paint_surface; leave it out to clear.
+     * With paint_surface, a Surface from the catalogue; leave it out to clear.
      */
-    surface?: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
+    surface?: string;
     elevationFt?: number;
     camera?: TableCamera;
     zoomPct?: number;
@@ -1582,7 +1582,10 @@ export type LiveAreaSave = {
 export type LiveSurface = {
     q: number;
     r: number;
-    kind: 'fire' | 'grease' | 'water' | 'ice' | 'web' | 'electrified';
+    /**
+     * A Surface from the catalogue.
+     */
+    kind: string;
     roundsLeft?: number;
 };
 
@@ -1867,6 +1870,13 @@ export type LiveView = {
     area?: LiveArea;
     table?: LiveTable;
     world?: LiveWorld;
+    /**
+     * The Surface catalogue, for the DM's paint tool.
+     */
+    surfaceKinds?: Array<{
+        kind: string;
+        name: string;
+    }>;
     /**
      * The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.
      */

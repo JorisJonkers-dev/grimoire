@@ -9101,21 +9101,21 @@ type LiveCommand struct {
 	SaveDc      OptInt32             `json:"saveDc"`
 	EffectId    OptID                `json:"effectId"`
 	ManualId    OptID                `json:"manualId"`
-	// With paint_surface; leave it out to clear.
-	Surface     OptLiveCommandSurface `json:"surface"`
-	ElevationFt OptInt32              `json:"elevationFt"`
-	Camera      OptTableCamera        `json:"camera"`
-	ZoomPct     OptInt32              `json:"zoomPct"`
-	Scene       OptTableScene         `json:"scene"`
-	Title       OptString             `json:"title"`
-	Body        OptString             `json:"body"`
-	NodeId      OptID                 `json:"nodeId"`
-	ToNodeId    OptID                 `json:"toNodeId"`
-	RouteId     OptID                 `json:"routeId"`
-	DistanceMi  OptInt32              `json:"distanceMi"`
-	Pace        OptTravelPace         `json:"pace"`
-	ZoneId      OptID                 `json:"zoneId"`
-	RadiusHexes OptInt32              `json:"radiusHexes"`
+	// With paint_surface, a Surface from the catalogue; leave it out to clear.
+	Surface     OptString      `json:"surface"`
+	ElevationFt OptInt32       `json:"elevationFt"`
+	Camera      OptTableCamera `json:"camera"`
+	ZoomPct     OptInt32       `json:"zoomPct"`
+	Scene       OptTableScene  `json:"scene"`
+	Title       OptString      `json:"title"`
+	Body        OptString      `json:"body"`
+	NodeId      OptID          `json:"nodeId"`
+	ToNodeId    OptID          `json:"toNodeId"`
+	RouteId     OptID          `json:"routeId"`
+	DistanceMi  OptInt32       `json:"distanceMi"`
+	Pace        OptTravelPace  `json:"pace"`
+	ZoneId      OptID          `json:"zoneId"`
+	RadiusHexes OptInt32       `json:"radiusHexes"`
 	// With add_zone, the zone springs only when the DM springs it.
 	DmOnly  OptBool            `json:"dmOnly"`
 	Rest    OptLiveCommandRest `json:"rest"`
@@ -9426,7 +9426,7 @@ func (s *LiveCommand) GetManualId() OptID {
 }
 
 // GetSurface returns the value of Surface.
-func (s *LiveCommand) GetSurface() OptLiveCommandSurface {
+func (s *LiveCommand) GetSurface() OptString {
 	return s.Surface
 }
 
@@ -9901,7 +9901,7 @@ func (s *LiveCommand) SetManualId(val OptID) {
 }
 
 // SetSurface sets the value of Surface.
-func (s *LiveCommand) SetSurface(val OptLiveCommandSurface) {
+func (s *LiveCommand) SetSurface(val OptString) {
 	s.Surface = val
 }
 
@@ -11316,76 +11316,6 @@ func (s *LiveCommandResultHeaders) SetResponse(val LiveCommandResult) {
 }
 
 func (*LiveCommandResultHeaders) sendLiveCommandRes() {}
-
-// With paint_surface; leave it out to clear.
-type LiveCommandSurface string
-
-const (
-	LiveCommandSurfaceFire        LiveCommandSurface = "fire"
-	LiveCommandSurfaceGrease      LiveCommandSurface = "grease"
-	LiveCommandSurfaceWater       LiveCommandSurface = "water"
-	LiveCommandSurfaceIce         LiveCommandSurface = "ice"
-	LiveCommandSurfaceWeb         LiveCommandSurface = "web"
-	LiveCommandSurfaceElectrified LiveCommandSurface = "electrified"
-)
-
-// AllValues returns all LiveCommandSurface values.
-func (LiveCommandSurface) AllValues() []LiveCommandSurface {
-	return []LiveCommandSurface{
-		LiveCommandSurfaceFire,
-		LiveCommandSurfaceGrease,
-		LiveCommandSurfaceWater,
-		LiveCommandSurfaceIce,
-		LiveCommandSurfaceWeb,
-		LiveCommandSurfaceElectrified,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s LiveCommandSurface) MarshalText() ([]byte, error) {
-	switch s {
-	case LiveCommandSurfaceFire:
-		return []byte(s), nil
-	case LiveCommandSurfaceGrease:
-		return []byte(s), nil
-	case LiveCommandSurfaceWater:
-		return []byte(s), nil
-	case LiveCommandSurfaceIce:
-		return []byte(s), nil
-	case LiveCommandSurfaceWeb:
-		return []byte(s), nil
-	case LiveCommandSurfaceElectrified:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *LiveCommandSurface) UnmarshalText(data []byte) error {
-	switch LiveCommandSurface(data) {
-	case LiveCommandSurfaceFire:
-		*s = LiveCommandSurfaceFire
-		return nil
-	case LiveCommandSurfaceGrease:
-		*s = LiveCommandSurfaceGrease
-		return nil
-	case LiveCommandSurfaceWater:
-		*s = LiveCommandSurfaceWater
-		return nil
-	case LiveCommandSurfaceIce:
-		*s = LiveCommandSurfaceIce
-		return nil
-	case LiveCommandSurfaceWeb:
-		*s = LiveCommandSurfaceWeb
-		return nil
-	case LiveCommandSurfaceElectrified:
-		*s = LiveCommandSurfaceElectrified
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}
 
 type LiveCommandTrigger string
 
@@ -13676,10 +13606,11 @@ func (s *LiveSuggestion) SetReason(val string) {
 // A Surface on a hex.
 // Ref: #/components/schemas/LiveSurface
 type LiveSurface struct {
-	Q          int32           `json:"q"`
-	R          int32           `json:"r"`
-	Kind       LiveSurfaceKind `json:"kind"`
-	RoundsLeft OptInt32        `json:"roundsLeft"`
+	Q int32 `json:"q"`
+	R int32 `json:"r"`
+	// A Surface from the catalogue.
+	Kind       string   `json:"kind"`
+	RoundsLeft OptInt32 `json:"roundsLeft"`
 }
 
 // GetQ returns the value of Q.
@@ -13693,7 +13624,7 @@ func (s *LiveSurface) GetR() int32 {
 }
 
 // GetKind returns the value of Kind.
-func (s *LiveSurface) GetKind() LiveSurfaceKind {
+func (s *LiveSurface) GetKind() string {
 	return s.Kind
 }
 
@@ -13713,82 +13644,13 @@ func (s *LiveSurface) SetR(val int32) {
 }
 
 // SetKind sets the value of Kind.
-func (s *LiveSurface) SetKind(val LiveSurfaceKind) {
+func (s *LiveSurface) SetKind(val string) {
 	s.Kind = val
 }
 
 // SetRoundsLeft sets the value of RoundsLeft.
 func (s *LiveSurface) SetRoundsLeft(val OptInt32) {
 	s.RoundsLeft = val
-}
-
-type LiveSurfaceKind string
-
-const (
-	LiveSurfaceKindFire        LiveSurfaceKind = "fire"
-	LiveSurfaceKindGrease      LiveSurfaceKind = "grease"
-	LiveSurfaceKindWater       LiveSurfaceKind = "water"
-	LiveSurfaceKindIce         LiveSurfaceKind = "ice"
-	LiveSurfaceKindWeb         LiveSurfaceKind = "web"
-	LiveSurfaceKindElectrified LiveSurfaceKind = "electrified"
-)
-
-// AllValues returns all LiveSurfaceKind values.
-func (LiveSurfaceKind) AllValues() []LiveSurfaceKind {
-	return []LiveSurfaceKind{
-		LiveSurfaceKindFire,
-		LiveSurfaceKindGrease,
-		LiveSurfaceKindWater,
-		LiveSurfaceKindIce,
-		LiveSurfaceKindWeb,
-		LiveSurfaceKindElectrified,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s LiveSurfaceKind) MarshalText() ([]byte, error) {
-	switch s {
-	case LiveSurfaceKindFire:
-		return []byte(s), nil
-	case LiveSurfaceKindGrease:
-		return []byte(s), nil
-	case LiveSurfaceKindWater:
-		return []byte(s), nil
-	case LiveSurfaceKindIce:
-		return []byte(s), nil
-	case LiveSurfaceKindWeb:
-		return []byte(s), nil
-	case LiveSurfaceKindElectrified:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *LiveSurfaceKind) UnmarshalText(data []byte) error {
-	switch LiveSurfaceKind(data) {
-	case LiveSurfaceKindFire:
-		*s = LiveSurfaceKindFire
-		return nil
-	case LiveSurfaceKindGrease:
-		*s = LiveSurfaceKindGrease
-		return nil
-	case LiveSurfaceKindWater:
-		*s = LiveSurfaceKindWater
-		return nil
-	case LiveSurfaceKindIce:
-		*s = LiveSurfaceKindIce
-		return nil
-	case LiveSurfaceKindWeb:
-		*s = LiveSurfaceKindWeb
-		return nil
-	case LiveSurfaceKindElectrified:
-		*s = LiveSurfaceKindElectrified
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
 }
 
 // What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows
@@ -14546,6 +14408,8 @@ type LiveView struct {
 	Area      OptLiveArea     `json:"area"`
 	Table     OptLiveTable    `json:"table"`
 	World     OptLiveWorld    `json:"world"`
+	// The Surface catalogue, for the DM's paint tool.
+	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
 	// seen.
 	Objects    []LiveObject     `json:"objects"`
@@ -14630,6 +14494,11 @@ func (s *LiveView) GetTable() OptLiveTable {
 // GetWorld returns the value of World.
 func (s *LiveView) GetWorld() OptLiveWorld {
 	return s.World
+}
+
+// GetSurfaceKinds returns the value of SurfaceKinds.
+func (s *LiveView) GetSurfaceKinds() []LiveViewSurfaceKindsItem {
+	return s.SurfaceKinds
 }
 
 // GetObjects returns the value of Objects.
@@ -14757,6 +14626,11 @@ func (s *LiveView) SetWorld(val OptLiveWorld) {
 	s.World = val
 }
 
+// SetSurfaceKinds sets the value of SurfaceKinds.
+func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
+	s.SurfaceKinds = val
+}
+
 // SetObjects sets the value of Objects.
 func (s *LiveView) SetObjects(val []LiveObject) {
 	s.Objects = val
@@ -14861,6 +14735,31 @@ func (s *LiveViewHeaders) SetResponse(val LiveView) {
 }
 
 func (*LiveViewHeaders) getSessionViewRes() {}
+
+type LiveViewSurfaceKindsItem struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveViewSurfaceKindsItem) GetKind() string {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *LiveViewSurfaceKindsItem) GetName() string {
+	return s.Name
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveViewSurfaceKindsItem) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveViewSurfaceKindsItem) SetName(val string) {
+	s.Name = val
+}
 
 // The world map the party travels. The DM gets every location and route; players and the Table get the
 // locations the party has seen or can reach from where it stands, and the routes between them.
@@ -17971,52 +17870,6 @@ func (o OptLiveCommandRest) Get() (v LiveCommandRest, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandRest) Or(d LiveCommandRest) LiveCommandRest {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
-// NewOptLiveCommandSurface returns new OptLiveCommandSurface with value set to v.
-func NewOptLiveCommandSurface(v LiveCommandSurface) OptLiveCommandSurface {
-	return OptLiveCommandSurface{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptLiveCommandSurface is optional LiveCommandSurface.
-type OptLiveCommandSurface struct {
-	Value LiveCommandSurface
-	Set   bool
-}
-
-// IsSet returns true if OptLiveCommandSurface was set.
-func (o OptLiveCommandSurface) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptLiveCommandSurface) Reset() {
-	var v LiveCommandSurface
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptLiveCommandSurface) SetTo(v LiveCommandSurface) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptLiveCommandSurface) Get() (v LiveCommandSurface, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptLiveCommandSurface) Or(d LiveCommandSurface) LiveCommandSurface {
 	if v, ok := o.Get(); ok {
 		return v
 	}

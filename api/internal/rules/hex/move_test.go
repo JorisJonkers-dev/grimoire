@@ -121,3 +121,23 @@ func TestHighGroundBeatsAClimb(t *testing.T) {
 		t.Fatalf("staying high = %+v", s)
 	}
 }
+
+func TestCostMultipliers(t *testing.T) {
+	t.Parallel()
+	from, to := hex.Coord{Q: 0, R: 0}, hex.Coord{Q: 1, R: 0}
+	for _, c := range []struct {
+		cell hex.Cell
+		want int
+	}{
+		{hex.Cell{Multiplier: 4}, 20},
+		{hex.Cell{Multiplier: 4, Difficult: true}, 20},
+		{hex.Cell{Multiplier: 1, Difficult: true}, 10},
+		{hex.Cell{Multiplier: 3}, 15},
+		{hex.Cell{}, 5},
+	} {
+		g := hex.Grid{Cells: map[hex.Coord]hex.Cell{from: {}, to: c.cell}}
+		if got, ok := hex.StepCost(g, from, to, false); !ok || got != c.want {
+			t.Errorf("%+v costs %d", c.cell, got)
+		}
+	}
+}

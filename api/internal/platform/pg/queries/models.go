@@ -824,6 +824,23 @@ type CompendiumSpellScaling struct {
 	DamageRoll string
 }
 
+type CompendiumSurfaceDefinition struct {
+	Slug       string
+	Name       string
+	Cost       int32
+	Obscures   pgtype.Text
+	HazardDice pgtype.Text
+	HazardType pgtype.Text
+	EveryStep  bool
+	EffectSlug pgtype.Text
+}
+
+type CompendiumSurfaceReaction struct {
+	Surface    string
+	DamageType string
+	Becomes    string
+}
+
 type CompendiumWeapon struct {
 	ID            int64
 	DocumentID    int64

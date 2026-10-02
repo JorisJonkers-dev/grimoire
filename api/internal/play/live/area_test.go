@@ -155,7 +155,7 @@ func TestAreaSpellsSavesAndSurfaces(t *testing.T) {
 		t.Fatalf("bare ground = %+v", u.Path)
 	}
 	for want, cmd := range map[string]live.Command{
-		"surfaces are fire":  {Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "lava"},
+		"no such surface":    {Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "quicksand"},
 		"surfaces last":      {Kind: live.CmdPaintSurface, Hexes: []live.Hex{{Q: 1, R: 1}}, Surface: "fire", Rounds: 101},
 		"choose a map":       {Kind: live.CmdSetElevation, Hexes: []live.Hex{{Q: 1, R: 1}}, ElevationFt: 10},
 		"between 1 and 2000": {Kind: live.CmdPaintSurface, Surface: "fire"},

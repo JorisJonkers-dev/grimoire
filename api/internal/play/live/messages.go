@@ -296,6 +296,12 @@ type TokenView struct {
 	Dying     *DyingView            `json:"dying,omitempty"`
 }
 
+// SurfaceKindView is one Surface the DM can paint.
+type SurfaceKindView struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
 // QualityView is one Visibility Quality of a token, and whether the party has seen through it.
 type QualityView struct {
 	Quality     string `json:"quality"`
@@ -414,14 +420,16 @@ type View struct {
 	Table     *TableView      `json:"table,omitempty"`
 	World     *WorldView      `json:"world,omitempty"`
 	// Zones go to the DM only; Perception lists the party's Perception Roll Cards, never the DC.
-	Zones      []ZoneView       `json:"zones,omitempty"`
-	Objects    []ObjectView     `json:"objects,omitempty"`
-	Perception []PerceptionView `json:"perception,omitempty"`
-	Checks     []CheckView      `json:"checks,omitempty"`
-	Inventory  []ContainerView  `json:"inventory,omitempty"`
-	Shop       *ShopView        `json:"shop,omitempty"`
-	Rest       *RestView        `json:"rest,omitempty"`
-	GameDay    int              `json:"gameDay"`
+	Zones   []ZoneView   `json:"zones,omitempty"`
+	Objects []ObjectView `json:"objects,omitempty"`
+	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
+	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
+	Perception   []PerceptionView  `json:"perception,omitempty"`
+	Checks       []CheckView       `json:"checks,omitempty"`
+	Inventory    []ContainerView   `json:"inventory,omitempty"`
+	Shop         *ShopView         `json:"shop,omitempty"`
+	Rest         *RestView         `json:"rest,omitempty"`
+	GameDay      int               `json:"gameDay"`
 }
 
 // RestView is the rest the party proposed or is taking: who agreed, who the rest still waits on, and

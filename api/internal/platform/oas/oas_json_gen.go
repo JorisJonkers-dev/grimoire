@@ -15069,54 +15069,6 @@ func (s *LiveCommandResult) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes LiveCommandSurface as json.
-func (s LiveCommandSurface) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes LiveCommandSurface from json.
-func (s *LiveCommandSurface) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode LiveCommandSurface to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch LiveCommandSurface(v) {
-	case LiveCommandSurfaceFire:
-		*s = LiveCommandSurfaceFire
-	case LiveCommandSurfaceGrease:
-		*s = LiveCommandSurfaceGrease
-	case LiveCommandSurfaceWater:
-		*s = LiveCommandSurfaceWater
-	case LiveCommandSurfaceIce:
-		*s = LiveCommandSurfaceIce
-	case LiveCommandSurfaceWeb:
-		*s = LiveCommandSurfaceWeb
-	case LiveCommandSurfaceElectrified:
-		*s = LiveCommandSurfaceElectrified
-	default:
-		*s = LiveCommandSurface(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s LiveCommandSurface) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *LiveCommandSurface) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes LiveCommandTrigger as json.
 func (s LiveCommandTrigger) Encode(e *jx.Encoder) {
 	e.Str(string(s))
@@ -19940,7 +19892,7 @@ func (s *LiveSurface) encodeFields(e *jx.Encoder) {
 	}
 	{
 		e.FieldStart("kind")
-		s.Kind.Encode(e)
+		e.Str(s.Kind)
 	}
 	{
 		if s.RoundsLeft.Set {
@@ -19993,7 +19945,9 @@ func (s *LiveSurface) Decode(d *jx.Decoder) error {
 		case "kind":
 			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				if err := s.Kind.Decode(d); err != nil {
+				v, err := d.Str()
+				s.Kind = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
@@ -20062,54 +20016,6 @@ func (s *LiveSurface) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveSurface) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes LiveSurfaceKind as json.
-func (s LiveSurfaceKind) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes LiveSurfaceKind from json.
-func (s *LiveSurfaceKind) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode LiveSurfaceKind to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch LiveSurfaceKind(v) {
-	case LiveSurfaceKindFire:
-		*s = LiveSurfaceKindFire
-	case LiveSurfaceKindGrease:
-		*s = LiveSurfaceKindGrease
-	case LiveSurfaceKindWater:
-		*s = LiveSurfaceKindWater
-	case LiveSurfaceKindIce:
-		*s = LiveSurfaceKindIce
-	case LiveSurfaceKindWeb:
-		*s = LiveSurfaceKindWeb
-	case LiveSurfaceKindElectrified:
-		*s = LiveSurfaceKindElectrified
-	default:
-		*s = LiveSurfaceKind(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s LiveSurfaceKind) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *LiveSurfaceKind) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -21631,6 +21537,16 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.SurfaceKinds != nil {
+			e.FieldStart("surfaceKinds")
+			e.ArrStart()
+			for _, elem := range s.SurfaceKinds {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
 		if s.Objects != nil {
 			e.FieldStart("objects")
 			e.ArrStart()
@@ -21726,7 +21642,7 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveView = [25]string{
+var jsonFieldsNameOfLiveView = [26]string{
 	0:  "tokens",
 	1:  "map",
 	2:  "fog",
@@ -21741,17 +21657,18 @@ var jsonFieldsNameOfLiveView = [25]string{
 	11: "area",
 	12: "table",
 	13: "world",
-	14: "objects",
-	15: "zones",
-	16: "perception",
-	17: "checks",
-	18: "inventory",
-	19: "shop",
-	20: "rest",
-	21: "gameDay",
-	22: "walls",
-	23: "lights",
-	24: "ambient",
+	14: "surfaceKinds",
+	15: "objects",
+	16: "zones",
+	17: "perception",
+	18: "checks",
+	19: "inventory",
+	20: "shop",
+	21: "rest",
+	22: "gameDay",
+	23: "walls",
+	24: "lights",
+	25: "ambient",
 }
 
 // Decode decodes LiveView from json.
@@ -21956,6 +21873,23 @@ func (s *LiveView) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"world\"")
+			}
+		case "surfaceKinds":
+			if err := func() error {
+				s.SurfaceKinds = make([]LiveViewSurfaceKindsItem, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LiveViewSurfaceKindsItem
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.SurfaceKinds = append(s.SurfaceKinds, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"surfaceKinds\"")
 			}
 		case "objects":
 			if err := func() error {
@@ -22171,6 +22105,119 @@ func (s *LiveView) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveView) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveViewSurfaceKindsItem) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveViewSurfaceKindsItem) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("kind")
+		e.Str(s.Kind)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+}
+
+var jsonFieldsNameOfLiveViewSurfaceKindsItem = [2]string{
+	0: "kind",
+	1: "name",
+}
+
+// Decode decodes LiveViewSurfaceKindsItem from json.
+func (s *LiveViewSurfaceKindsItem) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveViewSurfaceKindsItem to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "kind":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Kind = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"kind\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveViewSurfaceKindsItem")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveViewSurfaceKindsItem) {
+					name = jsonFieldsNameOfLiveViewSurfaceKindsItem[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveViewSurfaceKindsItem) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveViewSurfaceKindsItem) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -26465,39 +26512,6 @@ func (s OptLiveCommandRest) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveCommandRest) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes LiveCommandSurface as json.
-func (o OptLiveCommandSurface) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	e.Str(string(o.Value))
-}
-
-// Decode decodes LiveCommandSurface from json.
-func (o *OptLiveCommandSurface) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptLiveCommandSurface to nil")
-	}
-	o.Set = true
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptLiveCommandSurface) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptLiveCommandSurface) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/vision"
 )
 
@@ -40,8 +41,8 @@ func (s *state) perceived(t domain.Token) vision.Result {
 	return out
 }
 
-// qualities lists a token's Visibility Qualities, Invisible too while the Invisible condition is on it,
-// and the ones the party has beaten with a check.
+// qualities lists a token's Visibility Qualities, with the obscurement of a cloud it stands in and
+// Invisible while the Invisible condition is on it, and the ones the party has beaten with a check.
 func (s *state) qualities(t domain.Token) ([]vision.Quality, []vision.Quality) {
 	var out, beaten []vision.Quality
 	for _, q := range slices.Sorted(maps.Keys(t.Qualities)) {
@@ -49,6 +50,9 @@ func (s *state) qualities(t domain.Token) ([]vision.Quality, []vision.Quality) {
 		if t.Qualities[q] {
 			beaten = append(beaten, vision.Quality(q))
 		}
+	}
+	if o := s.terrainKinds.Obscures(s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind); o != surface.Clear && !t.Qualities[string(o)] {
+		out = append(out, vision.Quality(o))
 	}
 	if t.Qualities[string(vision.Invisible)] || !slices.ContainsFunc(s.actives(t.ID), func(a effects.Active) bool { return a.Slug == string(vision.Invisible) }) {
 		return out, beaten

@@ -837,9 +837,12 @@ describe('map objects', () => {
       [`/api/v1/campaigns/${ID}`]: () => campaign(),
     })
     const s = FakeSocket.last()
-    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [door, lever, barrel] }))
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [door, lever, barrel], surfaceKinds: [{ kind: 'stinking-cloud', name: 'Stinking cloud' }] }))
     await flushPromises()
     expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('Door (closed)')
+    await wrapper.get('[data-testid="tool-surface"]').setValue(true)
+    expect(wrapper.get('[data-testid="surface-kind"]').text()).toContain('Stinking cloud')
+    await wrapper.get('[data-testid="tool-tokens"]').setValue(true)
     expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('Lever (pulled)')
     expect(wrapper.get('[data-testid="object-Door"]').text()).toContain('Door · closed · 18/18 HP, AC 15')
     expect(wrapper.get('[data-testid="object-Lever"]').text()).toContain('secret')

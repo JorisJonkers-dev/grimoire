@@ -331,8 +331,8 @@ func (r *runtime) planTerrain(cmd Command) (Write, string) {
 	}
 	k := surface.Kind(cmd.Surface)
 	switch {
-	case k != surface.None && !surface.Valid(k):
-		return Write{}, "Surfaces are fire, grease, water, ice, web or electrified."
+	case k != surface.None && !r.st.terrainKinds.Valid(k):
+		return Write{}, "There is no such Surface."
 	case cmd.Rounds < 0 || cmd.Rounds > 100:
 		return Write{}, "Surfaces last 0 to 100 rounds."
 	}
@@ -364,7 +364,7 @@ func applyTerrain(s *state, w *Write) {
 	}
 	for _, c := range w.Hexes {
 		now := s.surfaces[c]
-		now.Kind = surface.React(now.Kind, w.damageType)
+		now.Kind = s.terrainKinds.React(now.Kind, w.damageType)
 		if w.Kind == domain.ActionSurfacesSet || w.created.Kind != surface.None {
 			now = domain.Surface{Kind: w.created.Kind, RoundsLeft: w.created.Rounds}
 		}
@@ -392,28 +392,73 @@ func (s *state) weather() bool {
 	return changed
 }
 
-// hazards hands the DM the damage of creatures that start their turn in, or walk into, a harmful Surface.
+// hazards hands the DM the damage of creatures that start their turn in, or walk into, a harmful
+// Surface; spikes strike on every step. The Effects such Surfaces put on those creatures wait for the
+// change to commit.
 func (s *state) hazards(started map[domain.TokenID]bool, w *Write) bool {
 	var texts []string
 	for id, now := range started {
 		t := s.tokens[id]
-		if dice, kind, ok := surface.Hazard(s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind); now && ok {
-			texts = append(texts, fmt.Sprintf("%s starts its turn in %s: %s %s damage.", t.Label, s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind, dice, kind))
+		k := s.surfaces[hex.Coord{Q: t.Q, R: t.R}].Kind
+		if dice, kind, _, ok := s.terrainKinds.Hazard(k); now && ok {
+			texts = append(texts, fmt.Sprintf("%s starts its turn in %s: %s %s damage.", t.Label, strings.ToLower(s.terrainKinds[k].Name), dice, kind))
+		}
+		if e := s.terrainKinds.Effect(k); now && e != "" {
+			w.grounded = append(w.grounded, grounding{token: id, effect: e})
 		}
 	}
 	if w.Kind == domain.ActionTokenWalked {
-		for _, c := range w.Path[min(1, len(w.Path)):] {
-			if dice, kind, ok := surface.Hazard(s.surfaces[c].Kind); ok {
-				texts = append(texts, fmt.Sprintf("%s walks into %s: %s %s damage.", w.Token.Label, s.surfaces[c].Kind, dice, kind))
-				break
-			}
-		}
+		texts = append(texts, s.walkedThrough(w)...)
 	}
 	slices.Sort(texts)
 	for _, t := range texts {
 		s.fx.Manual = append(s.fx.Manual, domain.ManualPrompt{ID: uuid.New(), Text: t})
 	}
 	return len(texts) > 0
+}
+
+// grounding is an Effect a Surface puts on a creature in it.
+type grounding struct {
+	token  domain.TokenID
+	effect string
+}
+
+// walkedThrough is what a walk through Surfaces costs the walker: the first harmful Surface it enters,
+// every step through spikes, and the Effects of the Surfaces it enters.
+func (s *state) walkedThrough(w *Write) []string {
+	var texts []string
+	steps, hurt := map[surface.Kind]int{}, false
+	for _, c := range w.Path[min(1, len(w.Path)):] {
+		k := s.surfaces[c].Kind
+		dice, kind, every, ok := s.terrainKinds.Hazard(k)
+		switch {
+		case ok && every:
+			steps[k]++
+		case ok && !hurt:
+			texts, hurt = append(texts, fmt.Sprintf("%s walks into %s: %s %s damage.", w.Token.Label, strings.ToLower(s.terrainKinds[k].Name), dice, kind)), true
+		}
+		if e := s.terrainKinds.Effect(k); e != "" && !slices.ContainsFunc(w.grounded, func(g grounding) bool { return g.effect == e && g.token == w.Token.ID }) {
+			w.grounded = append(w.grounded, grounding{token: w.Token.ID, effect: e})
+		}
+	}
+	for k, n := range steps {
+		dice, kind, _, _ := s.terrainKinds.Hazard(k)
+		texts = append(texts, fmt.Sprintf("%s moves %d feet through %s: %s %s damage for every 5 feet.", w.Token.Label, n*hex.FeetPerHex, strings.ToLower(s.terrainKinds[k].Name), dice, kind))
+	}
+	return texts
+}
+
+// groundEffects puts the Effects Surfaces give on the creatures in them, as if the DM applied each.
+func (r *runtime) groundEffects(w Write, actor domain.Member, c caller.Caller) {
+	sys := caller.Caller{Subject: c.Subject, Origin: caller.OriginSystem, Client: ""}
+	for _, g := range w.grounded {
+		if r.st.stacked(g.token, g.effect) < 0 && slices.ContainsFunc(r.st.fx.Active, func(e domain.Effect) bool { return e.Target == g.token && e.Slug == g.effect }) {
+			continue
+		}
+		if next, reason := r.planApply(Command{Kind: CmdApplyEffect, TargetID: uuid.UUID(g.token).String(), Effect: g.effect}); reason == "" {
+			r.commit(request{}, next, actor, sys)
+		}
+	}
 }
 
 // terrainViews shows Surfaces and height where the audience knows the ground, and the area spell on

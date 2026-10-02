@@ -4566,7 +4566,7 @@ components:
         saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
         effectId: { $ref: "#/components/schemas/Id" }
         manualId: { $ref: "#/components/schemas/Id" }
-        surface: { type: string, enum: [fire, grease, water, ice, web, electrified], description: "With paint_surface; leave it out to clear." }
+        surface: { type: string, maxLength: 40, pattern: "^[a-z][a-z0-9-]{0,39}$", description: "With paint_surface, a Surface from the catalogue; leave it out to clear." }
         elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
         camera: { $ref: "#/components/schemas/TableCamera" }
         zoomPct: { type: integer, format: int32, minimum: 50, maximum: 300 }
@@ -5002,7 +5002,7 @@ components:
       properties:
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
-        kind: { type: string, enum: [fire, grease, water, ice, web, electrified] }
+        kind: { type: string, maxLength: 40, pattern: "^[a-z][a-z0-9-]{0,39}$", description: "A Surface from the catalogue." }
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
     LiveElevation:
       type: object
@@ -5279,6 +5279,17 @@ components:
         area: { $ref: "#/components/schemas/LiveArea" }
         table: { $ref: "#/components/schemas/LiveTable" }
         world: { $ref: "#/components/schemas/LiveWorld" }
+        surfaceKinds:
+          type: array
+          description: The Surface catalogue, for the DM's paint tool.
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [kind, name]
+            properties:
+              kind: { type: string, maxLength: 40 }
+              name: { type: string, maxLength: 40 }
         objects:
           type: array
           description: The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.

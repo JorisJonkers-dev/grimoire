@@ -29,6 +29,15 @@ func (q *Queries) ClearEffectScaling(ctx context.Context, effectID int64) error 
 	return err
 }
 
+const clearSurfaceReactions = `-- name: ClearSurfaceReactions :exec
+DELETE FROM compendium.surface_reactions WHERE surface = $1
+`
+
+func (q *Queries) ClearSurfaceReactions(ctx context.Context, surface string) error {
+	_, err := q.db.Exec(ctx, clearSurfaceReactions, surface)
+	return err
+}
+
 const insertEffectArea = `-- name: InsertEffectArea :exec
 INSERT INTO compendium.effect_areas (effect_id, ordinal, shape, size_ft, range_ft)
 VALUES ($1, $2, $3, $4, $5)
@@ -574,6 +583,21 @@ type InsertEffectTempHPParams struct {
 
 func (q *Queries) InsertEffectTempHP(ctx context.Context, arg InsertEffectTempHPParams) error {
 	_, err := q.db.Exec(ctx, insertEffectTempHP, arg.EffectID, arg.Ordinal, arg.Amount)
+	return err
+}
+
+const insertSurfaceReaction = `-- name: InsertSurfaceReaction :exec
+INSERT INTO compendium.surface_reactions (surface, damage_type, becomes) VALUES ($1, $2, $3)
+`
+
+type InsertSurfaceReactionParams struct {
+	Surface    string
+	DamageType string
+	Becomes    string
+}
+
+func (q *Queries) InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceReactionParams) error {
+	_, err := q.db.Exec(ctx, insertSurfaceReaction, arg.Surface, arg.DamageType, arg.Becomes)
 	return err
 }
 
@@ -1559,6 +1583,63 @@ func (q *Queries) ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow
 	return items, nil
 }
 
+const listSurfaceDefinitions = `-- name: ListSurfaceDefinitions :many
+SELECT slug, name, cost, obscures, hazard_dice, hazard_type, every_step, effect_slug FROM compendium.surface_definitions ORDER BY slug
+`
+
+func (q *Queries) ListSurfaceDefinitions(ctx context.Context) ([]CompendiumSurfaceDefinition, error) {
+	rows, err := q.db.Query(ctx, listSurfaceDefinitions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumSurfaceDefinition{}
+	for rows.Next() {
+		var i CompendiumSurfaceDefinition
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.Cost,
+			&i.Obscures,
+			&i.HazardDice,
+			&i.HazardType,
+			&i.EveryStep,
+			&i.EffectSlug,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSurfaceReactions = `-- name: ListSurfaceReactions :many
+SELECT surface, damage_type, becomes FROM compendium.surface_reactions ORDER BY surface, damage_type
+`
+
+func (q *Queries) ListSurfaceReactions(ctx context.Context) ([]CompendiumSurfaceReaction, error) {
+	rows, err := q.db.Query(ctx, listSurfaceReactions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CompendiumSurfaceReaction{}
+	for rows.Next() {
+		var i CompendiumSurfaceReaction
+		if err := rows.Scan(&i.Surface, &i.DamageType, &i.Becomes); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertEffectDefinition = `-- name: UpsertEffectDefinition :one
 INSERT INTO compendium.effect_definitions (slug, name, concentration, owner_kind, owner_slug, duration_kind, duration_amount, repeat_save)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -1594,4 +1675,36 @@ func (q *Queries) UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDe
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const upsertSurfaceDefinition = `-- name: UpsertSurfaceDefinition :exec
+INSERT INTO compendium.surface_definitions (slug, name, cost, obscures, hazard_dice, hazard_type, every_step, effect_slug)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+ON CONFLICT (slug) DO UPDATE SET name = excluded.name, cost = excluded.cost, obscures = excluded.obscures, hazard_dice = excluded.hazard_dice,
+    hazard_type = excluded.hazard_type, every_step = excluded.every_step, effect_slug = excluded.effect_slug
+`
+
+type UpsertSurfaceDefinitionParams struct {
+	Slug       string
+	Name       string
+	Cost       int32
+	Obscures   pgtype.Text
+	HazardDice pgtype.Text
+	HazardType pgtype.Text
+	EveryStep  bool
+	EffectSlug pgtype.Text
+}
+
+func (q *Queries) UpsertSurfaceDefinition(ctx context.Context, arg UpsertSurfaceDefinitionParams) error {
+	_, err := q.db.Exec(ctx, upsertSurfaceDefinition,
+		arg.Slug,
+		arg.Name,
+		arg.Cost,
+		arg.Obscures,
+		arg.HazardDice,
+		arg.HazardType,
+		arg.EveryStep,
+		arg.EffectSlug,
+	)
+	return err
 }

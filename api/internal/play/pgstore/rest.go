@@ -14,8 +14,14 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
+
+// Surfaces reads the Surface catalogue from the compendium.
+func (s *Store) Surfaces(ctx context.Context) (surface.Catalog, error) {
+	return comppg.New(s.pool).Surfaces(ctx)
+}
 
 // Features reads what classes, species and feats grant from the compendium.
 func (s *Store) Features(ctx context.Context) (features.Catalog, error) {

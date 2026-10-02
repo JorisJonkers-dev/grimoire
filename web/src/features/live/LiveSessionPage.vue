@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
-import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
+import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
@@ -164,6 +164,9 @@ const areaPreview = computed(() => {
 })
 const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
 const teleporting = ref<string | null>(null)
+const surfaceKinds = computed(
+  () => view.value?.surfaceKinds ?? ['fire', 'grease', 'water', 'ice', 'web', 'electrified'].map((kind) => ({ kind, name: (kind[0] ?? '').toUpperCase() + kind.slice(1) })),
+)
 const objectForm = ref<{ kind: MapObjectKind; name: string; secret: boolean; effect: string; radiusFt: number; detectDc: number; disarmDc: number; triggerFt: number; lockDc: number; key: string }>({
   kind: 'door', name: '', secret: false, effect: '', radiusFt: 0, detectDc: 0, disarmDc: 0, triggerFt: 0, lockDc: 0, key: '',
 })
@@ -293,7 +296,7 @@ function pick(c: Coord) {
       live.value.send({ kind: 'set_walls', hexes: [c], on: tool.value === 'wall' })
       return
     case 'surface':
-      live.value.send({ kind: 'paint_surface', hexes: [c], ...(surfaceKind.value ? { surface: surfaceKind.value as LiveSurface['kind'] } : {}), ...(surfaceRounds.value ? { rounds: surfaceRounds.value } : {}) })
+      live.value.send({ kind: 'paint_surface', hexes: [c], ...(surfaceKind.value ? { surface: surfaceKind.value } : {}), ...(surfaceRounds.value ? { rounds: surfaceRounds.value } : {}) })
       return
     case 'elevation':
       live.value.send({ kind: 'set_elevation', hexes: [c], elevationFt: elevationFt.value })
@@ -478,7 +481,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             <span>Surface</span>
             <select v-model="surfaceKind" data-testid="surface-kind">
               <option value="">Clear</option>
-              <option v-for="k in ['fire', 'grease', 'water', 'ice', 'web', 'electrified']" :key="k" :value="k">{{ k }}</option>
+              <option v-for="k in surfaceKinds" :key="k.kind" :value="k.kind">{{ k.name }}</option>
             </select>
           </label>
           <label class="g-field"><span>Rounds</span><input v-model.number="surfaceRounds" type="number" min="0" max="100" data-testid="surface-rounds" /></label>
