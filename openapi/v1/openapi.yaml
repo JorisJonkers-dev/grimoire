@@ -3383,7 +3383,7 @@ components:
       required: [name, displayName]
       properties:
         name: { $ref: "#/components/schemas/CampaignName" }
-        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        ruleset: { $ref: "#/components/schemas/CampaignRuleset" }
         displayName: { $ref: "#/components/schemas/DisplayName" }
     CampaignUpdate:
       type: object
@@ -3391,7 +3391,7 @@ components:
       additionalProperties: false
       properties:
         name: { $ref: "#/components/schemas/CampaignName" }
-        ruleset: { $ref: "#/components/schemas/Ruleset" }
+        ruleset: { $ref: "#/components/schemas/CampaignRuleset" }
         reactionTimeoutS: { $ref: "#/components/schemas/ReactionTimeout" }
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
     ReactionTimeout:
@@ -4530,6 +4530,7 @@ components:
         due: { type: string, enum: [next_rest, next_travel] }
         lootTableId: { $ref: "#/components/schemas/Id" }
         fromId: { $ref: "#/components/schemas/Id" }
+        instanceId: { $ref: "#/components/schemas/Id" }
         toId: { $ref: "#/components/schemas/Id" }
         itemSlug: { $ref: "#/components/schemas/Slug" }
         coin: { $ref: "#/components/schemas/Coin" }
@@ -4576,19 +4577,24 @@ components:
         createdAt: { type: string, format: date-time, maxLength: 40 }
     LiveContainer:
       type: object
-      description: A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
+      description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
       additionalProperties: false
-      required: [id, kind, label, items, coins, weightLb]
+      required: [id, kind, label, items, instances, coins, weightLb]
       properties:
         id: { $ref: "#/components/schemas/Id" }
-        kind: { type: string, enum: [character, party_stash, loot_drop] }
+        kind: { type: string, enum: [character, party_stash, loot_drop, bag] }
         label: { type: string, maxLength: 80 }
         characterId: { $ref: "#/components/schemas/Id" }
         ownerId: { $ref: "#/components/schemas/Id" }
+        parentId: { $ref: "#/components/schemas/Id" }
         items:
           type: array
           maxItems: 1000
           items: { $ref: "#/components/schemas/LiveItem" }
+        instances:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LiveItemInstance" }
         coins:
           type: array
           maxItems: 5
@@ -4605,6 +4611,21 @@ components:
         slug: { $ref: "#/components/schemas/Slug" }
         name: { type: string, maxLength: 120 }
         count: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        weightLb: { type: number, format: double, minimum: 0, maximum: 100000000 }
+    LiveItemInstance:
+      type: object
+      description: One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
+      additionalProperties: false
+      required: [id, slug, name, count, identified, weightLb]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        count: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        charges: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        identified: { type: boolean }
+        attuned: { type: boolean }
+        slot: { type: string, enum: [main_hand, off_hand, ranged_main, ranged_off, armor, head, cloak, hands, feet, neck, ring_1, ring_2] }
         weightLb: { type: number, format: double, minimum: 0, maximum: 100000000 }
     LiveCoins:
       type: object
@@ -5160,6 +5181,10 @@ components:
       type: string
       description: Rules document key.
       enum: [srd-2024, srd-2014]
+    CampaignRuleset:
+      type: string
+      description: The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the compendium.
+      enum: [srd-2024]
     SpellSummary:
       type: object
       description: A spell as it appears in a list.

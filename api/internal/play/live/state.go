@@ -11,6 +11,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/imaging"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/vision"
@@ -44,6 +45,8 @@ type state struct {
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
 	fx       domain.Effects
+	// catalog is every Effect the rules know.
+	catalog effects.Catalog
 }
 
 // cloneEffects copies a Session's Effects so a change never touches the committed state.
@@ -52,7 +55,7 @@ func cloneEffects(fx domain.Effects) domain.Effects {
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx)}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}

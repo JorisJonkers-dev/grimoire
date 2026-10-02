@@ -2438,6 +2438,15 @@ func (s *CampaignRefHeaders) Validate() error {
 	return nil
 }
 
+func (s CampaignRuleset) Validate() error {
+	switch s {
+	case "srd-2024":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *CampaignSummary) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -15623,6 +15632,42 @@ func (s *LiveContainer) Validate() error {
 		})
 	}
 	if err := func() error {
+		if s.Instances == nil {
+			return errors.New("nil is invalid value")
+		}
+		if err := (validate.Array{
+			MinLength:    0,
+			MinLengthSet: false,
+			MaxLength:    1000,
+			MaxLengthSet: true,
+		}).ValidateLength(len(s.Instances)); err != nil {
+			return errors.Wrap(err, "array")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Instances {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "instances",
+			Error: err,
+		})
+	}
+	if err := func() error {
 		if s.Coins == nil {
 			return errors.New("nil is invalid value")
 		}
@@ -15720,6 +15765,8 @@ func (s LiveContainerKind) Validate() error {
 	case "party_stash":
 		return nil
 	case "loot_drop":
+		return nil
+	case "bag":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
@@ -16013,6 +16060,171 @@ func (s *LiveItem) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
+}
+
+func (s *LiveItemInstance) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Slug.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "slug",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.String{
+			MinLength:     0,
+			MinLengthSet:  false,
+			MaxLength:     120,
+			MaxLengthSet:  true,
+			Email:         false,
+			Hostname:      false,
+			Regex:         nil,
+			MinNumeric:    0,
+			MinNumericSet: false,
+			MaxNumeric:    0,
+			MaxNumericSet: false,
+		}).Validate(string(s.Name)); err != nil {
+			return errors.Wrap(err, "string")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "name",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Int{
+			MinSet:        true,
+			Min:           1,
+			MaxSet:        true,
+			Max:           100000,
+			MinExclusive:  false,
+			MaxExclusive:  false,
+			MultipleOfSet: false,
+			MultipleOf:    0,
+			Pattern:       nil,
+		}).Validate(int64(s.Count)); err != nil {
+			return errors.Wrap(err, "int")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "count",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Charges.Get(); ok {
+			if err := func() error {
+				if err := (validate.Int{
+					MinSet:        true,
+					Min:           0,
+					MaxSet:        true,
+					Max:           100,
+					MinExclusive:  false,
+					MaxExclusive:  false,
+					MultipleOfSet: false,
+					MultipleOf:    0,
+					Pattern:       nil,
+				}).Validate(int64(value)); err != nil {
+					return errors.Wrap(err, "int")
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "charges",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if value, ok := s.Slot.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "slot",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{
+			MinSet:        true,
+			Min:           0,
+			MaxSet:        true,
+			Max:           1e+08,
+			MinExclusive:  false,
+			MaxExclusive:  false,
+			MultipleOfSet: false,
+			MultipleOf:    nil,
+			Pattern:       nil,
+		}).Validate(float64(s.WeightLb)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "weightLb",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s LiveItemInstanceSlot) Validate() error {
+	switch s {
+	case "main_hand":
+		return nil
+	case "off_hand":
+		return nil
+	case "ranged_main":
+		return nil
+	case "ranged_off":
+		return nil
+	case "armor":
+		return nil
+	case "head":
+		return nil
+	case "cloak":
+		return nil
+	case "hands":
+		return nil
+	case "feet":
+		return nil
+	case "neck":
+		return nil
+	case "ring_1":
+		return nil
+	case "ring_2":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
 }
 
 func (s *LiveLight) Validate() error {

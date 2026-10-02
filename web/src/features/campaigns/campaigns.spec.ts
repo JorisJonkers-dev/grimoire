@@ -41,14 +41,14 @@ describe('campaign list', () => {
     const { wrapper } = await mountApp('/campaigns', {
       '/api/v1/campaigns': (url) =>
         url.searchParams.get('cursor')
-          ? { items: [summary('0190c7a8-0000-7000-8000-000000000003', 'Tomb', { myRole: 'player', memberCount: 1, ruleset: 'srd-2014' })] }
+          ? { items: [summary('0190c7a8-0000-7000-8000-000000000003', 'Tomb', { myRole: 'player', memberCount: 1 })] }
           : { items: [summary('0190c7a8-0000-7000-8000-000000000002', 'Morvain')], nextCursor: 'next' },
     })
     expect(wrapper.get('[data-testid="campaign-list"]').text()).toContain('Morvain')
-    expect(wrapper.text()).toContain('2 members · 2024 rules')
+    expect(wrapper.text()).toContain('2 members')
     await wrapper.get('button.g-button').trigger('click')
     await flushPromises()
-    expect(wrapper.get('[data-testid="campaign-list"]').text()).toContain('1 member · 2014 rules')
+    expect(wrapper.get('[data-testid="campaign-list"]').text()).toContain('1 member')
     expect(wrapper.get('[data-testid="campaign-list"]').text()).toContain('Player')
     await expectAccessible(wrapper.element as Element)
   })
@@ -72,10 +72,10 @@ describe('campaign list', () => {
     expect(submit.attributes('disabled')).toBeDefined()
     await wrapper.get('[data-testid="campaign-name"]').setValue(' Morvain ')
     await wrapper.get('[data-testid="campaign-display-name"]').setValue('Joris')
-    await wrapper.get('[data-testid="campaign-create"] select').setValue('srd-2014')
+    expect(wrapper.find('[data-testid="campaign-create"] select').exists()).toBe(false)
     await wrapper.get('[data-testid="campaign-create"]').trigger('submit')
     await flushPromises()
-    expect(seen.find((s) => s.method === 'POST')?.body).toEqual({ name: 'Morvain', displayName: 'Joris', ruleset: 'srd-2014' })
+    expect(seen.find((s) => s.method === 'POST')?.body).toEqual({ name: 'Morvain', displayName: 'Joris' })
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('campaign') }, { timeout: 5000 })
   })
 
@@ -173,7 +173,7 @@ describe('campaign home', () => {
     })
     expect(wrapper.find('[data-testid="invites"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="member-list"] button').exists()).toBe(false)
-    expect(wrapper.text()).toContain('2024 rules · you are a Player')
+    expect(wrapper.text()).toContain('SRD 5.2 · you are a Player')
     await wrapper.get('[data-testid="leave"]').trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.name).toBe('campaigns')

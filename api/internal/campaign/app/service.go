@@ -112,6 +112,9 @@ type CreateInput struct {
 	DisplayName string
 }
 
+// Ruleset is the only rules document a Campaign plays by: SRD 5.2.
+const Ruleset = "srd-2024"
+
 // Create starts a Campaign with the caller as DM.
 func (s *Service) Create(ctx context.Context, c caller.Caller, in CreateInput) (domain.Detail, error) {
 	name, err := cleanText(in.Name, 80)
@@ -121,6 +124,12 @@ func (s *Service) Create(ctx context.Context, c caller.Caller, in CreateInput) (
 	display, err := cleanText(in.DisplayName, 60)
 	if err != nil {
 		return domain.Detail{}, err
+	}
+	if in.Ruleset == "" {
+		in.Ruleset = Ruleset
+	}
+	if in.Ruleset != Ruleset {
+		return domain.Detail{}, domain.ErrInvalid
 	}
 	var out domain.Detail
 	err = s.Repo.InTx(ctx, func(r Repository) error {
@@ -182,6 +191,9 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 			return domain.Campaign{}, err
 		}
 		in.Name = &name
+	}
+	if in.Ruleset != nil && *in.Ruleset != Ruleset {
+		return domain.Campaign{}, domain.ErrInvalid
 	}
 	if t := in.ReactionTimeoutS; t != nil && (*t < 3 || *t > 120) {
 		return domain.Campaign{}, refuse("reactions wait between 3 and 120 seconds")

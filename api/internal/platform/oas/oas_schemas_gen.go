@@ -1553,9 +1553,9 @@ func (s *Campaign) SetMembers(val []Member) {
 // A new Campaign.
 // Ref: #/components/schemas/CampaignCreate
 type CampaignCreate struct {
-	Name        CampaignName `json:"name"`
-	Ruleset     OptRuleset   `json:"ruleset"`
-	DisplayName DisplayName  `json:"displayName"`
+	Name        CampaignName       `json:"name"`
+	Ruleset     OptCampaignRuleset `json:"ruleset"`
+	DisplayName DisplayName        `json:"displayName"`
 }
 
 // GetName returns the value of Name.
@@ -1564,7 +1564,7 @@ func (s *CampaignCreate) GetName() CampaignName {
 }
 
 // GetRuleset returns the value of Ruleset.
-func (s *CampaignCreate) GetRuleset() OptRuleset {
+func (s *CampaignCreate) GetRuleset() OptCampaignRuleset {
 	return s.Ruleset
 }
 
@@ -1579,7 +1579,7 @@ func (s *CampaignCreate) SetName(val CampaignName) {
 }
 
 // SetRuleset sets the value of Ruleset.
-func (s *CampaignCreate) SetRuleset(val OptRuleset) {
+func (s *CampaignCreate) SetRuleset(val OptCampaignRuleset) {
 	s.Ruleset = val
 }
 
@@ -1784,6 +1784,43 @@ func (s *CampaignRefHeaders) SetResponse(val CampaignRef) {
 
 func (*CampaignRefHeaders) acceptInviteRes() {}
 
+// The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the
+// compendium.
+// Ref: #/components/schemas/CampaignRuleset
+type CampaignRuleset string
+
+const (
+	CampaignRulesetSrd2024 CampaignRuleset = "srd-2024"
+)
+
+// AllValues returns all CampaignRuleset values.
+func (CampaignRuleset) AllValues() []CampaignRuleset {
+	return []CampaignRuleset{
+		CampaignRulesetSrd2024,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CampaignRuleset) MarshalText() ([]byte, error) {
+	switch s {
+	case CampaignRulesetSrd2024:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CampaignRuleset) UnmarshalText(data []byte) error {
+	switch CampaignRuleset(data) {
+	case CampaignRulesetSrd2024:
+		*s = CampaignRulesetSrd2024
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A Campaign as it appears in the caller's list.
 // Ref: #/components/schemas/CampaignSummary
 type CampaignSummary struct {
@@ -1932,7 +1969,7 @@ func (*CampaignSummaryHeaders) updateCampaignRes() {}
 // Ref: #/components/schemas/CampaignUpdate
 type CampaignUpdate struct {
 	Name             OptCampaignName    `json:"name"`
-	Ruleset          OptRuleset         `json:"ruleset"`
+	Ruleset          OptCampaignRuleset `json:"ruleset"`
 	ReactionTimeoutS OptReactionTimeout `json:"reactionTimeoutS"`
 	// Optional rule: attacks from higher ground get +2 to hit.
 	HighGround OptBool `json:"highGround"`
@@ -1944,7 +1981,7 @@ func (s *CampaignUpdate) GetName() OptCampaignName {
 }
 
 // GetRuleset returns the value of Ruleset.
-func (s *CampaignUpdate) GetRuleset() OptRuleset {
+func (s *CampaignUpdate) GetRuleset() OptCampaignRuleset {
 	return s.Ruleset
 }
 
@@ -1964,7 +2001,7 @@ func (s *CampaignUpdate) SetName(val OptCampaignName) {
 }
 
 // SetRuleset sets the value of Ruleset.
-func (s *CampaignUpdate) SetRuleset(val OptRuleset) {
+func (s *CampaignUpdate) SetRuleset(val OptCampaignRuleset) {
 	s.Ruleset = val
 }
 
@@ -8815,6 +8852,7 @@ type LiveCommand struct {
 	Due         OptLiveCommandDue `json:"due"`
 	LootTableId OptID             `json:"lootTableId"`
 	FromId      OptID             `json:"fromId"`
+	InstanceId  OptID             `json:"instanceId"`
 	ToId        OptID             `json:"toId"`
 	ItemSlug    OptSlug           `json:"itemSlug"`
 	Coin        OptCoin           `json:"coin"`
@@ -9110,6 +9148,11 @@ func (s *LiveCommand) GetLootTableId() OptID {
 // GetFromId returns the value of FromId.
 func (s *LiveCommand) GetFromId() OptID {
 	return s.FromId
+}
+
+// GetInstanceId returns the value of InstanceId.
+func (s *LiveCommand) GetInstanceId() OptID {
+	return s.InstanceId
 }
 
 // GetToId returns the value of ToId.
@@ -9435,6 +9478,11 @@ func (s *LiveCommand) SetLootTableId(val OptID) {
 // SetFromId sets the value of FromId.
 func (s *LiveCommand) SetFromId(val OptID) {
 	s.FromId = val
+}
+
+// SetInstanceId sets the value of InstanceId.
+func (s *LiveCommand) SetInstanceId(val OptID) {
+	s.InstanceId = val
 }
 
 // SetToId sets the value of ToId.
@@ -10224,20 +10272,22 @@ func (s *LiveCommandSurface) UnmarshalText(data []byte) error {
 	}
 }
 
-// A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's
-// names its owner and how much they can carry.
+// A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with
+// what it weighs including its bags. A Character's names its owner and how much they can carry.
 // Ref: #/components/schemas/LiveContainer
 type LiveContainer struct {
-	ID          ID                `json:"id"`
-	Kind        LiveContainerKind `json:"kind"`
-	Label       string            `json:"label"`
-	CharacterId OptID             `json:"characterId"`
-	OwnerId     OptID             `json:"ownerId"`
-	Items       []LiveItem        `json:"items"`
-	Coins       []LiveCoins       `json:"coins"`
-	WeightLb    float64           `json:"weightLb"`
-	CapacityLb  OptFloat64        `json:"capacityLb"`
-	Encumbered  OptBool           `json:"encumbered"`
+	ID          ID                 `json:"id"`
+	Kind        LiveContainerKind  `json:"kind"`
+	Label       string             `json:"label"`
+	CharacterId OptID              `json:"characterId"`
+	OwnerId     OptID              `json:"ownerId"`
+	ParentId    OptID              `json:"parentId"`
+	Items       []LiveItem         `json:"items"`
+	Instances   []LiveItemInstance `json:"instances"`
+	Coins       []LiveCoins        `json:"coins"`
+	WeightLb    float64            `json:"weightLb"`
+	CapacityLb  OptFloat64         `json:"capacityLb"`
+	Encumbered  OptBool            `json:"encumbered"`
 }
 
 // GetID returns the value of ID.
@@ -10265,9 +10315,19 @@ func (s *LiveContainer) GetOwnerId() OptID {
 	return s.OwnerId
 }
 
+// GetParentId returns the value of ParentId.
+func (s *LiveContainer) GetParentId() OptID {
+	return s.ParentId
+}
+
 // GetItems returns the value of Items.
 func (s *LiveContainer) GetItems() []LiveItem {
 	return s.Items
+}
+
+// GetInstances returns the value of Instances.
+func (s *LiveContainer) GetInstances() []LiveItemInstance {
+	return s.Instances
 }
 
 // GetCoins returns the value of Coins.
@@ -10315,9 +10375,19 @@ func (s *LiveContainer) SetOwnerId(val OptID) {
 	s.OwnerId = val
 }
 
+// SetParentId sets the value of ParentId.
+func (s *LiveContainer) SetParentId(val OptID) {
+	s.ParentId = val
+}
+
 // SetItems sets the value of Items.
 func (s *LiveContainer) SetItems(val []LiveItem) {
 	s.Items = val
+}
+
+// SetInstances sets the value of Instances.
+func (s *LiveContainer) SetInstances(val []LiveItemInstance) {
+	s.Instances = val
 }
 
 // SetCoins sets the value of Coins.
@@ -10346,6 +10416,7 @@ const (
 	LiveContainerKindCharacter  LiveContainerKind = "character"
 	LiveContainerKindPartyStash LiveContainerKind = "party_stash"
 	LiveContainerKindLootDrop   LiveContainerKind = "loot_drop"
+	LiveContainerKindBag        LiveContainerKind = "bag"
 )
 
 // AllValues returns all LiveContainerKind values.
@@ -10354,6 +10425,7 @@ func (LiveContainerKind) AllValues() []LiveContainerKind {
 		LiveContainerKindCharacter,
 		LiveContainerKindPartyStash,
 		LiveContainerKindLootDrop,
+		LiveContainerKindBag,
 	}
 }
 
@@ -10365,6 +10437,8 @@ func (s LiveContainerKind) MarshalText() ([]byte, error) {
 	case LiveContainerKindPartyStash:
 		return []byte(s), nil
 	case LiveContainerKindLootDrop:
+		return []byte(s), nil
+	case LiveContainerKindBag:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10382,6 +10456,9 @@ func (s *LiveContainerKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveContainerKindLootDrop:
 		*s = LiveContainerKindLootDrop
+		return nil
+	case LiveContainerKindBag:
+		*s = LiveContainerKindBag
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -10583,6 +10660,222 @@ func (s *LiveItem) SetCount(val int32) {
 // SetWeightLb sets the value of WeightLb.
 func (s *LiveItem) SetWeightLb(val float64) {
 	s.WeightLb = val
+}
+
+// One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the
+// base item.
+// Ref: #/components/schemas/LiveItemInstance
+type LiveItemInstance struct {
+	ID         ID                      `json:"id"`
+	Slug       Slug                    `json:"slug"`
+	Name       string                  `json:"name"`
+	Count      int32                   `json:"count"`
+	Charges    OptInt32                `json:"charges"`
+	Identified bool                    `json:"identified"`
+	Attuned    OptBool                 `json:"attuned"`
+	Slot       OptLiveItemInstanceSlot `json:"slot"`
+	WeightLb   float64                 `json:"weightLb"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveItemInstance) GetID() ID {
+	return s.ID
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveItemInstance) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LiveItemInstance) GetName() string {
+	return s.Name
+}
+
+// GetCount returns the value of Count.
+func (s *LiveItemInstance) GetCount() int32 {
+	return s.Count
+}
+
+// GetCharges returns the value of Charges.
+func (s *LiveItemInstance) GetCharges() OptInt32 {
+	return s.Charges
+}
+
+// GetIdentified returns the value of Identified.
+func (s *LiveItemInstance) GetIdentified() bool {
+	return s.Identified
+}
+
+// GetAttuned returns the value of Attuned.
+func (s *LiveItemInstance) GetAttuned() OptBool {
+	return s.Attuned
+}
+
+// GetSlot returns the value of Slot.
+func (s *LiveItemInstance) GetSlot() OptLiveItemInstanceSlot {
+	return s.Slot
+}
+
+// GetWeightLb returns the value of WeightLb.
+func (s *LiveItemInstance) GetWeightLb() float64 {
+	return s.WeightLb
+}
+
+// SetID sets the value of ID.
+func (s *LiveItemInstance) SetID(val ID) {
+	s.ID = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveItemInstance) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveItemInstance) SetName(val string) {
+	s.Name = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveItemInstance) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetCharges sets the value of Charges.
+func (s *LiveItemInstance) SetCharges(val OptInt32) {
+	s.Charges = val
+}
+
+// SetIdentified sets the value of Identified.
+func (s *LiveItemInstance) SetIdentified(val bool) {
+	s.Identified = val
+}
+
+// SetAttuned sets the value of Attuned.
+func (s *LiveItemInstance) SetAttuned(val OptBool) {
+	s.Attuned = val
+}
+
+// SetSlot sets the value of Slot.
+func (s *LiveItemInstance) SetSlot(val OptLiveItemInstanceSlot) {
+	s.Slot = val
+}
+
+// SetWeightLb sets the value of WeightLb.
+func (s *LiveItemInstance) SetWeightLb(val float64) {
+	s.WeightLb = val
+}
+
+type LiveItemInstanceSlot string
+
+const (
+	LiveItemInstanceSlotMainHand   LiveItemInstanceSlot = "main_hand"
+	LiveItemInstanceSlotOffHand    LiveItemInstanceSlot = "off_hand"
+	LiveItemInstanceSlotRangedMain LiveItemInstanceSlot = "ranged_main"
+	LiveItemInstanceSlotRangedOff  LiveItemInstanceSlot = "ranged_off"
+	LiveItemInstanceSlotArmor      LiveItemInstanceSlot = "armor"
+	LiveItemInstanceSlotHead       LiveItemInstanceSlot = "head"
+	LiveItemInstanceSlotCloak      LiveItemInstanceSlot = "cloak"
+	LiveItemInstanceSlotHands      LiveItemInstanceSlot = "hands"
+	LiveItemInstanceSlotFeet       LiveItemInstanceSlot = "feet"
+	LiveItemInstanceSlotNeck       LiveItemInstanceSlot = "neck"
+	LiveItemInstanceSlotRing1      LiveItemInstanceSlot = "ring_1"
+	LiveItemInstanceSlotRing2      LiveItemInstanceSlot = "ring_2"
+)
+
+// AllValues returns all LiveItemInstanceSlot values.
+func (LiveItemInstanceSlot) AllValues() []LiveItemInstanceSlot {
+	return []LiveItemInstanceSlot{
+		LiveItemInstanceSlotMainHand,
+		LiveItemInstanceSlotOffHand,
+		LiveItemInstanceSlotRangedMain,
+		LiveItemInstanceSlotRangedOff,
+		LiveItemInstanceSlotArmor,
+		LiveItemInstanceSlotHead,
+		LiveItemInstanceSlotCloak,
+		LiveItemInstanceSlotHands,
+		LiveItemInstanceSlotFeet,
+		LiveItemInstanceSlotNeck,
+		LiveItemInstanceSlotRing1,
+		LiveItemInstanceSlotRing2,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveItemInstanceSlot) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveItemInstanceSlotMainHand:
+		return []byte(s), nil
+	case LiveItemInstanceSlotOffHand:
+		return []byte(s), nil
+	case LiveItemInstanceSlotRangedMain:
+		return []byte(s), nil
+	case LiveItemInstanceSlotRangedOff:
+		return []byte(s), nil
+	case LiveItemInstanceSlotArmor:
+		return []byte(s), nil
+	case LiveItemInstanceSlotHead:
+		return []byte(s), nil
+	case LiveItemInstanceSlotCloak:
+		return []byte(s), nil
+	case LiveItemInstanceSlotHands:
+		return []byte(s), nil
+	case LiveItemInstanceSlotFeet:
+		return []byte(s), nil
+	case LiveItemInstanceSlotNeck:
+		return []byte(s), nil
+	case LiveItemInstanceSlotRing1:
+		return []byte(s), nil
+	case LiveItemInstanceSlotRing2:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveItemInstanceSlot) UnmarshalText(data []byte) error {
+	switch LiveItemInstanceSlot(data) {
+	case LiveItemInstanceSlotMainHand:
+		*s = LiveItemInstanceSlotMainHand
+		return nil
+	case LiveItemInstanceSlotOffHand:
+		*s = LiveItemInstanceSlotOffHand
+		return nil
+	case LiveItemInstanceSlotRangedMain:
+		*s = LiveItemInstanceSlotRangedMain
+		return nil
+	case LiveItemInstanceSlotRangedOff:
+		*s = LiveItemInstanceSlotRangedOff
+		return nil
+	case LiveItemInstanceSlotArmor:
+		*s = LiveItemInstanceSlotArmor
+		return nil
+	case LiveItemInstanceSlotHead:
+		*s = LiveItemInstanceSlotHead
+		return nil
+	case LiveItemInstanceSlotCloak:
+		*s = LiveItemInstanceSlotCloak
+		return nil
+	case LiveItemInstanceSlotHands:
+		*s = LiveItemInstanceSlotHands
+		return nil
+	case LiveItemInstanceSlotFeet:
+		*s = LiveItemInstanceSlotFeet
+		return nil
+	case LiveItemInstanceSlotNeck:
+		*s = LiveItemInstanceSlotNeck
+		return nil
+	case LiveItemInstanceSlotRing1:
+		*s = LiveItemInstanceSlotRing1
+		return nil
+	case LiveItemInstanceSlotRing2:
+		*s = LiveItemInstanceSlotRing2
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // A light on the Map, for the DM.
@@ -14291,6 +14584,52 @@ func (o OptCampaignName) Or(d CampaignName) CampaignName {
 	return d
 }
 
+// NewOptCampaignRuleset returns new OptCampaignRuleset with value set to v.
+func NewOptCampaignRuleset(v CampaignRuleset) OptCampaignRuleset {
+	return OptCampaignRuleset{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCampaignRuleset is optional CampaignRuleset.
+type OptCampaignRuleset struct {
+	Value CampaignRuleset
+	Set   bool
+}
+
+// IsSet returns true if OptCampaignRuleset was set.
+func (o OptCampaignRuleset) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCampaignRuleset) Reset() {
+	var v CampaignRuleset
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCampaignRuleset) SetTo(v CampaignRuleset) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCampaignRuleset) Get() (v CampaignRuleset, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCampaignRuleset) Or(d CampaignRuleset) CampaignRuleset {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptCharacterName returns new OptCharacterName with value set to v.
 func NewOptCharacterName(v CharacterName) OptCharacterName {
 	return OptCharacterName{
@@ -15205,6 +15544,52 @@ func (o OptLiveCommandSurface) Get() (v LiveCommandSurface, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandSurface) Or(d LiveCommandSurface) LiveCommandSurface {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveItemInstanceSlot returns new OptLiveItemInstanceSlot with value set to v.
+func NewOptLiveItemInstanceSlot(v LiveItemInstanceSlot) OptLiveItemInstanceSlot {
+	return OptLiveItemInstanceSlot{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveItemInstanceSlot is optional LiveItemInstanceSlot.
+type OptLiveItemInstanceSlot struct {
+	Value LiveItemInstanceSlot
+	Set   bool
+}
+
+// IsSet returns true if OptLiveItemInstanceSlot was set.
+func (o OptLiveItemInstanceSlot) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveItemInstanceSlot) Reset() {
+	var v LiveItemInstanceSlot
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveItemInstanceSlot) SetTo(v LiveItemInstanceSlot) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveItemInstanceSlot) Get() (v LiveItemInstanceSlot, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveItemInstanceSlot) Or(d LiveItemInstanceSlot) LiveItemInstanceSlot {
 	if v, ok := o.Get(); ok {
 		return v
 	}

@@ -40,14 +40,14 @@ const bare = computed(() => route.meta.bare === true)
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 0 16px;
+  padding: 0 var(--gutter);
   min-height: 56px;
   border-bottom: 1px solid var(--color-line);
   background: var(--color-surface);
 }
 .offline {
   margin: 0;
-  padding: 8px 16px;
+  padding: 8px var(--gutter);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-gold);
   color: var(--color-gold-high);
@@ -66,12 +66,21 @@ nav {
 nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 54px;
+  border-bottom: 2px solid transparent;
   color: var(--color-text);
+  text-decoration: none;
 }
+nav a.router-link-active {
+  border-bottom-color: var(--color-gold);
+  color: var(--color-gold-high);
+}
+/* The footer spans the whole window, whatever the page above it does. */
 .credit {
   margin-top: auto;
-  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 16px var(--gutter);
   font-size: 14px;
   color: var(--color-text-2);
   border-top: 1px solid var(--color-line);

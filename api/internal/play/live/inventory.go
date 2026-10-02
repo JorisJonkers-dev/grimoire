@@ -35,8 +35,10 @@ func (s *state) bearer(c domain.Container) (domain.Bearer, bool) {
 }
 
 // mine reports whether a member may take from or put into a Container: the DM always; a Player the
-// Party Stash, loot drops (to take from) and their own Characters' Inventories.
+// Party Stash, loot drops (to take from) and their own Characters' Inventories. A bag belongs to
+// whatever it sits in.
 func (s *state) mine(m domain.Member, c domain.Container, taking bool) bool {
+	c = s.root(c)
 	switch {
 	case m.DM, c.Kind == domain.ContainerStash:
 		return true
@@ -54,12 +56,15 @@ func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 	switch {
 	case !ok || !ok2 || from.ID == to.ID:
 		return Write{}, "Move it between two different places."
-	case to.Kind == domain.ContainerDrop:
+	case r.st.root(to).Kind == domain.ContainerDrop:
 		return Write{}, "Loot is only taken from a drop, never put back."
 	case !r.st.mine(m, from, true) || !r.st.mine(m, to, false):
 		return Write{}, "That is not yours to move."
 	}
 	mv := domain.Move{From: from.ID, To: to.ID, Count: cmd.Count, FromLabel: from.Label, ToLabel: to.Label}
+	if cmd.InstanceID != "" {
+		return planMoveInstance(from, mv, cmd.InstanceID)
+	}
 	have, kind := from.Items[cmd.ItemSlug], domain.ActionItemMoved
 	mv.Item = cmd.ItemSlug
 	if cmd.Kind == CmdMoveCoins {
@@ -69,6 +74,17 @@ func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "There are not that many to move."
 	}
 	return Write{Kind: kind, Move: &mv}, ""
+}
+
+// planMoveInstance moves an Item Instance whole; it comes out of any slot it was worn in.
+func planMoveInstance(from domain.Container, mv domain.Move, id string) (Write, string) {
+	iid := domain.InstanceID(parseID(id))
+	i := slices.IndexFunc(from.Instances, func(in domain.Instance) bool { return in.ID == iid })
+	if i < 0 {
+		return Write{}, "There is no such item there."
+	}
+	mv.Instance, mv.Item, mv.Count = &iid, from.Instances[i].Slug, from.Instances[i].Quantity
+	return Write{Kind: domain.ActionItemMoved, Move: &mv}, ""
 }
 
 // planLoot rolls a Loot Table into a new drop.
@@ -135,12 +151,20 @@ func applyInventory(s *state, w *Write) {
 			delete(src, key)
 		}
 	}
-	if mv.Coin != "" {
+	switch {
+	case mv.Instance != nil:
+		src := &inv.Containers[from]
+		i := slices.IndexFunc(src.Instances, func(in domain.Instance) bool { return in.ID == *mv.Instance })
+		in := src.Instances[i]
+		in.Slot = ""
+		src.Instances = slices.Delete(src.Instances, i, i+1)
+		inv.Containers[to].Instances = append(inv.Containers[to].Instances, in)
+	case mv.Coin != "":
 		shift(inv.Containers[from].Coins, inv.Containers[to].Coins, mv.Coin)
-	} else {
+	default:
 		shift(inv.Containers[from].Items, inv.Containers[to].Items, mv.Item)
 	}
-	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Coins) == 0 {
+	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Instances)+len(c.Coins) == 0 {
 		w.Gone = &c.ID
 		inv.Containers = slices.Delete(inv.Containers, from, from+1)
 	}
@@ -158,38 +182,136 @@ func cloneInventory(inv domain.Inventory) domain.Inventory {
 func (s *state) inventoryViews(a Audience) []ContainerView {
 	out := []ContainerView{}
 	for _, c := range s.inventory.Containers {
-		if a == AudienceTable && c.Kind == domain.ContainerCharacter {
+		if a == AudienceTable && s.root(c).Kind == domain.ContainerCharacter {
 			continue
 		}
-		out = append(out, s.containerView(c))
+		out = append(out, s.containerView(c, a))
 	}
 	return out
 }
 
-func (s *state) containerView(c domain.Container) ContainerView {
-	v := ContainerView{ID: uuid.UUID(c.ID).String(), Kind: c.Kind, Label: c.Label, Items: []ItemView{}, Coins: []CoinView{}}
+// maxNesting bounds how deep bags sit in each other, so a loop in stored data never hangs the runtime.
+const maxNesting = 8
+
+// root is the outermost Container a bag sits in.
+func (s *state) root(c domain.Container) domain.Container {
+	for range maxNesting {
+		if c.ParentID == nil {
+			return c
+		}
+		parent, ok := s.container(uuid.UUID(*c.ParentID).String())
+		if !ok {
+			return c
+		}
+		c = parent
+	}
+	return c
+}
+
+// weight is what a Container weighs with its coins and every bag inside it.
+func (s *state) weight(c domain.Container, depth int) float64 {
 	coins := 0
+	for _, n := range c.Coins {
+		coins += n
+	}
+	lb := float64(coins) / loot.CoinsPerPound
+	for slug, n := range c.Items {
+		lb += s.inventory.Items[slug].WeightLb * float64(n)
+	}
+	for _, in := range c.Instances {
+		lb += s.inventory.Items[in.Slug].WeightLb * float64(in.Quantity)
+	}
+	if depth >= maxNesting {
+		return lb
+	}
+	for _, bag := range s.inventory.Containers {
+		if bag.ParentID != nil && *bag.ParentID == c.ID {
+			lb += s.weight(bag, depth+1)
+		}
+	}
+	return lb
+}
+
+func (s *state) itemInfo(slug string) domain.ItemInfo {
+	info, ok := s.inventory.Items[slug]
+	if !ok {
+		info = domain.ItemInfo{Name: slug}
+	}
+	return info
+}
+
+func (s *state) containerView(c domain.Container, a Audience) ContainerView {
+	v := ContainerView{ID: uuid.UUID(c.ID).String(), Kind: c.Kind, Label: c.Label, Items: []ItemView{}, Instances: []InstanceView{}, Coins: []CoinView{}}
+	if c.ParentID != nil {
+		v.ParentID = uuid.UUID(*c.ParentID).String()
+	}
 	for _, coin := range loot.Coins() {
 		if n := c.Coins[coin]; n > 0 {
 			v.Coins = append(v.Coins, CoinView{Coin: coin, Count: n})
-			coins += n
 		}
 	}
-	weight := float64(coins) / loot.CoinsPerPound
 	for slug, n := range c.Items {
-		info, ok := s.inventory.Items[slug]
-		if !ok {
-			info = domain.ItemInfo{Name: slug}
-		}
+		info := s.itemInfo(slug)
 		v.Items = append(v.Items, ItemView{Slug: slug, Name: info.Name, Count: n, WeightLb: info.WeightLb * float64(n)})
-		weight += info.WeightLb * float64(n)
 	}
 	sort.Slice(v.Items, func(i, j int) bool { return v.Items[i].Name < v.Items[j].Name })
-	v.WeightLb = weight
+	for _, in := range c.Instances {
+		v.Instances = append(v.Instances, s.instanceView(in, a))
+	}
+	v.WeightLb = s.weight(c, 0)
 	if b, ok := s.bearer(c); ok {
 		v.CharacterID, v.OwnerID = b.CharacterID.String(), b.Owner.String()
 		v.CapacityLb = loot.Capacity(b.Strength, "medium")
-		v.Encumbered = weight > v.CapacityLb
+		v.Encumbered = v.WeightLb > v.CapacityLb
+	} else if b, ok := s.bearer(s.root(c)); ok {
+		v.OwnerID = b.Owner.String()
+	}
+	return v
+}
+
+// private closes every Inventory that is not the member's own: they see whose it is and what it weighs,
+// never what is in it. The shared view is copied, never changed.
+func private(u Update, m domain.Member) Update {
+	if u.View == nil {
+		return u
+	}
+	v := *u.View
+	v.Inventory = closed(v.Inventory, m)
+	u.View = &v
+	if len(u.Steps) > 0 {
+		u.Steps = slices.Clone(u.Steps)
+		for i := range u.Steps {
+			u.Steps[i].Inventory = closed(u.Steps[i].Inventory, m)
+		}
+	}
+	return u
+}
+
+func closed(cs []ContainerView, m domain.Member) []ContainerView {
+	if cs == nil {
+		return nil
+	}
+	out := make([]ContainerView, len(cs))
+	for i, c := range cs {
+		if c.OwnerID != "" && c.OwnerID != m.ID.String() {
+			c.Items, c.Instances, c.Coins = []ItemView{}, []InstanceView{}, []CoinView{}
+		}
+		out[i] = c
+	}
+	return out
+}
+
+func (s *state) instanceView(in domain.Instance, a Audience) InstanceView {
+	info := s.itemInfo(in.Slug)
+	v := InstanceView{
+		ID: uuid.UUID(in.ID).String(), Slug: in.Slug, Name: info.Name, Count: in.Quantity, Identified: in.Identified, Attuned: in.Attuned, Slot: in.Slot,
+		WeightLb: info.WeightLb * float64(in.Quantity),
+	}
+	if in.Identified || a == AudienceDM {
+		v.Charges = in.Charges
+		if in.CustomName != "" {
+			v.Name = in.CustomName
+		}
 	}
 	return v
 }

@@ -1,0 +1,3 @@
+# Grimoire issues its own Access Tokens for MCP and tools
+
+AI clients and scripts authenticate with Access Tokens that Grimoire mints itself, either from the account page or through an OAuth authorization flow where Grimoire is the authorization server for `/mcp`. Tokens act as the Account, narrowed by scopes (Read, Build, Play) and an expiry, and are listed and revocable beside the Account's sign-ins. We chose this over accepting the estate auth service's tokens because internal Accounts have no estate identity, and every Account, DM or not, must be able to build Homebrew, Campaigns, Maps and Encounters through tools.

@@ -132,7 +132,7 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 		worn = &rules.Armor{Base: armor.ACBase, AddDex: armor.AddDex, DexCap: armor.DexCap, StrengthRequired: armor.StrengthRequired, Stealth: armor.Stealth}
 	}
 	derived := rules.BuildSheet(rules.SheetInput{
-		Class: c.Class, Level: max(c.Level, 1), RulesetYear: o.RulesetYear, HitDie: class.HitDie, Scores: scores,
+		Class: c.Class, Level: max(c.Level, 1), HitDie: class.HitDie, Scores: scores,
 		SaveProfs: toAbilities(class.Saves), SkillProfs: toSkills(append(slices.Clone(c.Skills), background.Skills...)),
 		Armor: worn, ShieldBonus: shield, SpeedFeet: species.SpeedFeet,
 	})

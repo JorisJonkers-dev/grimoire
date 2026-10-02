@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
@@ -169,24 +171,53 @@ func (noShield) BuilderOptions(ctx context.Context, ruleset string) (compendium.
 	return o, err
 }
 
-func TestOlderRulesetsChooseIncreasesFreely(t *testing.T) {
+func TestCampaignsPlaySRD52Only(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	repo := pgstore.New(open(t).Pool())
 	s, _ := service(t, repo)
-	d, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "Old school", Ruleset: "srd-2014", DisplayName: "DM"})
+	if _, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "Old school", Ruleset: "srd-2014", DisplayName: "DM"}); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("2014 campaign created: %v", err)
+	}
+	d, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "New school", DisplayName: "DM"})
+	if err != nil || d.Ruleset != "srd-2024" {
+		t.Fatalf("default ruleset = %+v %v", d, err)
+	}
+	old := "srd-2014"
+	if _, err := s.Update(ctx, dmCaller, d.ID, app.UpdateInput{Ruleset: &old}); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("switched to 2014: %v", err)
+	}
+	if _, err := repo.CreateCampaign(ctx, "Sneaky", "srd-2014", "dm-subject", time.Now()); err == nil {
+		t.Fatal("the database accepted a 2014 campaign")
+	}
+}
+
+// A Character whose build had no 2024 counterpart kept its 5.1 ruleset in the migration; it still
+// reads, with the 5.1 rule that ability increases may go anywhere.
+func TestLegacyCharactersStillRead(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	store := open(t)
+	repo := pgstore.New(store.Pool())
+	s, _ := service(t, repo)
+	d, err := s.Create(ctx, dmCaller, app.CreateInput{Name: "Old friends", DisplayName: "DM"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	chars := &app.Characters{Repo: repo, Compendium: fakeOptions{}, Combat: app.NoCombat{}, Now: time.Now}
-	b := fighter()
-	b.Bonus = map[string]int{"wisdom": 1, "intelligence": 1, "charisma": 1}
-	sheet, err := chars.Create(ctx, dmCaller, d.ID, b)
-	if err != nil || sheet.Ruleset != "srd-2014" || sheet.Scores["wisdom"] != 13 {
-		t.Fatalf("2014 sheet = %+v %v", sheet, err)
+	sheet, err := chars.Create(ctx, dmCaller, d.ID, fighter())
+	if err != nil {
+		t.Fatal(err)
 	}
-	if in, _ := (app.NoCombat{}).InCombat(ctx, sheet.ID); in {
-		t.Fatal("no combat yet")
+	if _, err := store.Pool().Exec(ctx, `UPDATE campaign.characters SET ruleset = 'srd-2014' WHERE id = $1`, uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Pool().Exec(ctx, `UPDATE campaign.character_abilities SET bonus = CASE ability WHEN 'wisdom' THEN 1 WHEN 'intelligence' THEN 1 WHEN 'charisma' THEN 1 ELSE 0 END WHERE character_id = $1`, uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	got, err := chars.Get(ctx, dmCaller, d.ID, sheet.ID)
+	if err != nil || got.Ruleset != "srd-2014" || got.Scores["wisdom"] != 13 {
+		t.Fatalf("legacy sheet = %+v %v", got, err)
 	}
 }
 

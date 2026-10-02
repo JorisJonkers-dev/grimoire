@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 )
 
@@ -34,7 +33,7 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 	if !ok {
 		return domain.Token{}, nil, 0, "There is no way there."
 	}
-	cost := reach[to].CostFt * effects.MoveMultiplier(r.st.actives(t.ID))
+	cost := reach[to].CostFt * r.st.catalog.MoveMultiplier(r.st.actives(t.ID))
 	if reason := r.st.moveLeft(t, cost); reason != "" {
 		return domain.Token{}, nil, 0, reason
 	}

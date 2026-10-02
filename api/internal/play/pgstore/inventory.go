@@ -62,7 +62,7 @@ func (s *Store) readContainers(ctx context.Context, campaign uuid.UUID, inv doma
 	if err != nil {
 		return inv, err
 	}
-	items, err := s.q.CampaignContainerItems(ctx, campaign)
+	instances, err := s.q.CampaignItemInstances(ctx, campaign)
 	if err != nil {
 		return inv, err
 	}
@@ -77,21 +77,42 @@ func (s *Store) readContainers(ctx context.Context, campaign uuid.UUID, inv doma
 			id := uuid.UUID(r.CharacterID.Bytes)
 			c.CharacterID = &id
 		}
+		if r.ParentID.Valid {
+			id := domain.ContainerID(r.ParentID.Bytes)
+			c.ParentID = &id
+		}
 		inv.Containers = append(inv.Containers, c)
 	}
-	byID := map[uuid.UUID]domain.Container{}
-	for _, c := range inv.Containers {
-		byID[uuid.UUID(c.ID)] = c
+	byID := map[uuid.UUID]*domain.Container{}
+	for i := range inv.Containers {
+		byID[uuid.UUID(inv.Containers[i].ID)] = &inv.Containers[i]
 	}
-	for _, i := range items {
-		byID[i.ContainerID].Items[i.ItemSlug] = int(i.Quantity)
-		slugs = append(slugs, i.ItemSlug)
+	for _, r := range instances {
+		c, in := byID[r.ContainerID], instanceOf(r)
+		if in.Plain() {
+			c.Items[in.Slug] = in.Quantity
+		} else {
+			c.Instances = append(c.Instances, in)
+		}
+		slugs = append(slugs, r.ItemSlug)
 	}
 	for _, k := range coins {
 		byID[k.ContainerID].Coins[k.Coin] = int(k.Amount)
 	}
 	inv.Items, err = s.Items(ctx, campaign, slugs)
 	return inv, err
+}
+
+func instanceOf(r queries.CampaignItemInstancesRow) domain.Instance {
+	in := domain.Instance{
+		ID: domain.InstanceID(r.ID), Slug: r.ItemSlug, CustomName: r.CustomName.String, Quantity: int(r.Quantity),
+		Identified: r.Identified, Attuned: r.Attuned, Slot: r.EquippedSlot.String,
+	}
+	if r.Charges.Valid {
+		n := int(r.Charges.Int32)
+		in.Charges = &n
+	}
+	return in
 }
 
 // saveInventory writes a drop of loot, or the two Containers a transfer changed, and clears an emptied drop.
@@ -123,12 +144,22 @@ func (s *Store) saveInventory(ctx context.Context, sess domain.Session, w live.W
 
 // moveCount writes a transfer's new counts on both sides; an emptied drop is deleted instead.
 func (s *Store) moveCount(ctx context.Context, mv domain.Move, gone bool) error {
+	if mv.Instance != nil {
+		if err := s.q.MoveInstance(ctx, queries.MoveInstanceParams{ID: uuid.UUID(*mv.Instance), ContainerID: uuid.UUID(mv.To)}); err != nil {
+			return err
+		}
+	}
 	if gone {
 		if err := s.q.DeleteContainer(ctx, uuid.UUID(mv.From)); err != nil {
 			return err
 		}
-	} else if err := s.setCount(ctx, mv.From, mv.Item, mv.Coin, mv.Left); err != nil {
-		return err
+	} else if mv.Instance == nil {
+		if err := s.setCount(ctx, mv.From, mv.Item, mv.Coin, mv.Left); err != nil {
+			return err
+		}
+	}
+	if mv.Instance != nil {
+		return nil
 	}
 	return s.setCount(ctx, mv.To, mv.Item, mv.Coin, mv.Now)
 }
@@ -142,9 +173,9 @@ func (s *Store) setCount(ctx context.Context, id domain.ContainerID, item, coin 
 	case coin != "":
 		return s.q.DeleteContainerCoins(ctx, queries.DeleteContainerCoinsParams{ContainerID: cid, Coin: coin})
 	case n > 0:
-		return s.q.SetContainerItem(ctx, queries.SetContainerItemParams{ContainerID: cid, ItemSlug: item, Quantity: int32(n)})
+		return s.q.SetStack(ctx, queries.SetStackParams{ID: uuid.New(), ContainerID: cid, ItemSlug: item, Quantity: int32(n), Now: time.Now()})
 	default:
-		return s.q.DeleteContainerItem(ctx, queries.DeleteContainerItemParams{ContainerID: cid, ItemSlug: item})
+		return s.q.DeleteStack(ctx, queries.DeleteStackParams{ContainerID: cid, ItemSlug: item})
 	}
 }
 

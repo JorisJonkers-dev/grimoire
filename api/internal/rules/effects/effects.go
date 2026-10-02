@@ -117,6 +117,31 @@ func (d Definition) Automated() bool {
 	return true
 }
 
+// Catalog is every Effect the engine knows, keyed by slug.
+type Catalog map[string]Definition
+
+// OwnerKind is what an Effect belongs to; every Effect has exactly one owner.
+type OwnerKind string
+
+// Owner kinds.
+const (
+	OwnedBySpell           OwnerKind = "spell"
+	OwnedByFeature         OwnerKind = "feature"
+	OwnedByItemProperty    OwnerKind = "item_property"
+	OwnedByCondition       OwnerKind = "condition"
+	OwnedByMonsterAction   OwnerKind = "monster_action"
+	OwnedBySurface         OwnerKind = "surface"
+	OwnedByRuleVariant     OwnerKind = "rule_variant"
+	OwnedByTrap            OwnerKind = "trap"
+	OwnedByRollTableResult OwnerKind = "roll_table_result"
+)
+
+// Owner is the thing an Effect belongs to, by kind and slug.
+type Owner struct {
+	Kind OwnerKind
+	Slug string
+}
+
 // Active is an Effect on a creature, and who put it there.
 type Active struct {
 	Slug   string
@@ -134,13 +159,13 @@ type AttackProfile struct {
 }
 
 // ForAttack folds the attacker's and the target's effects into one attack's profile.
-func ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
+func (cat Catalog) ForAttack(attacker, target []Active, attackerID string, withinFive bool) AttackProfile {
 	var p AttackProfile
 	for _, a := range attacker {
-		p.attacking(lookup(a.Slug))
+		p.attacking(cat[a.Slug])
 	}
 	for _, a := range target {
-		p.attacked(lookup(a.Slug), a.Source == attackerID, withinFive)
+		p.attacked(cat[a.Slug], a.Source == attackerID, withinFive)
 	}
 	return p
 }
@@ -201,10 +226,10 @@ func (p *AttackProfile) add(name string, e Edge) {
 }
 
 // SaveDice are the dice a creature's effects add to its saving throws.
-func SaveDice(bearer []Active) []string {
+func (cat Catalog) SaveDice(bearer []Active) []string {
 	var out []string
 	for _, a := range bearer {
-		for _, c := range lookup(a.Slug).Components {
+		for _, c := range cat[a.Slug].Components {
 			if b, ok := c.(BonusDie); ok && slices.Contains(b.On, SavingThrows) {
 				out = append(out, b.Dice)
 			}
@@ -214,10 +239,10 @@ func SaveDice(bearer []Active) []string {
 }
 
 // MoveMultiplier is what each foot of movement costs a creature: the steepest of its effects.
-func MoveMultiplier(bearer []Active) int {
+func (cat Catalog) MoveMultiplier(bearer []Active) int {
 	most := 1
 	for _, a := range bearer {
-		for _, c := range lookup(a.Slug).Components {
+		for _, c := range cat[a.Slug].Components {
 			if m, ok := c.(MoveCost); ok {
 				most = max(most, m.Multiplier)
 			}
@@ -228,8 +253,8 @@ func MoveMultiplier(bearer []Active) int {
 
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole
 // instruction, so nothing is ever skipped silently.
-func Instructions(slug, name string) []string {
-	d, known := catalog()[slug]
+func (cat Catalog) Instructions(slug, name string) []string {
+	d, known := cat[slug]
 	if !known {
 		return []string{"Resolve " + name + " by hand."}
 	}
@@ -254,8 +279,8 @@ type AreaSpell struct {
 }
 
 // AreaOf finds a modelled area Effect.
-func AreaOf(slug string) (AreaSpell, bool) {
-	d, known := catalog()[slug]
+func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
+	d, known := cat[slug]
 	var out AreaSpell
 	out.Name = d.Name
 	found := false
@@ -278,82 +303,28 @@ func AreaOf(slug string) (AreaSpell, bool) {
 }
 
 // Lookup finds a modelled Effect.
-func Lookup(slug string) (Definition, bool) {
-	d, ok := catalog()[slug]
+func (cat Catalog) Lookup(slug string) (Definition, bool) {
+	d, ok := cat[slug]
 	return d, ok
 }
 
 // Automated lists the slugs of every Effect the engine computes in full.
-func Automated() []string {
-	return slugs(true)
+func (cat Catalog) Automated() []string {
+	return cat.slugs(true)
 }
 
 // Partial lists the slugs of Effects the engine computes in part, leaving the rest to the DM.
-func Partial() []string {
-	return slugs(false)
+func (cat Catalog) Partial() []string {
+	return cat.slugs(false)
 }
 
-func slugs(automated bool) []string {
+func (cat Catalog) slugs(automated bool) []string {
 	var out []string
-	for slug, d := range catalog() {
+	for slug, d := range cat {
 		if d.Automated() == automated {
 			out = append(out, slug)
 		}
 	}
 	sort.Strings(out)
 	return out
-}
-
-func lookup(slug string) Definition {
-	return catalog()[slug]
-}
-
-// catalog is every Effect the engine models, keyed by compendium slug.
-func catalog() map[string]Definition {
-	return map[string]Definition{
-		"bless": {Slug: "bless", Name: "Bless", Concentration: true, Components: []Component{
-			BonusDie{On: []Roll{AttackRolls, SavingThrows}, Dice: "1d4"},
-		}},
-		"faerie-fire": {Slug: "faerie-fire", Name: "Faerie Fire", Concentration: true, Components: []Component{
-			Edge{Against: true, Advantage: true, Range: AnyRange},
-		}},
-		"hunters-mark": {Slug: "hunters-mark", Name: "Hunter's Mark", Concentration: true, Components: []Component{
-			ExtraDamage{Dice: "1d6"},
-		}},
-		"fireball": {Slug: "fireball", Name: "Fireball", Concentration: false, Components: []Component{
-			Area{Shape: hex.SphereArea, SizeFt: 20, RangeFt: 150}, SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "fire", Half: true},
-		}},
-		"burning-hands": {Slug: "burning-hands", Name: "Burning Hands", Concentration: false, Components: []Component{
-			Area{Shape: hex.ConeArea, SizeFt: 15, RangeFt: 0}, SaveDamage{Ability: "dexterity", Dice: "3d6", Type: "fire", Half: true},
-		}},
-		"lightning-bolt": {Slug: "lightning-bolt", Name: "Lightning Bolt", Concentration: false, Components: []Component{
-			Area{Shape: hex.LineArea, SizeFt: 100, RangeFt: 0}, SaveDamage{Ability: "dexterity", Dice: "8d6", Type: "lightning", Half: true},
-		}},
-		"cone-of-cold": {Slug: "cone-of-cold", Name: "Cone of Cold", Concentration: false, Components: []Component{
-			Area{Shape: hex.ConeArea, SizeFt: 60, RangeFt: 0}, SaveDamage{Ability: "constitution", Dice: "8d8", Type: "cold", Half: true},
-		}},
-		"shatter": {Slug: "shatter", Name: "Shatter", Concentration: false, Components: []Component{
-			Area{Shape: hex.SphereArea, SizeFt: 10, RangeFt: 60}, SaveDamage{Ability: "constitution", Dice: "3d8", Type: "thunder", Half: true},
-		}},
-		"thunderwave": {Slug: "thunderwave", Name: "Thunderwave", Concentration: false, Components: []Component{
-			Area{Shape: hex.CubeArea, SizeFt: 15, RangeFt: 0},
-			SaveDamage{Ability: "constitution", Dice: "2d8", Type: "thunder", Half: true},
-			Manual{Instruction: "Thunderwave: creatures that failed their save are pushed 10 feet away."},
-		}},
-		"grease": {Slug: "grease", Name: "Grease", Concentration: false, Components: []Component{
-			Area{Shape: hex.CylinderArea, SizeFt: 5, RangeFt: 60},
-			CreateSurface{Kind: surface.Grease, Rounds: 10},
-			SaveCondition{Ability: "dexterity", Slug: "prone"},
-		}},
-		"prone": {Slug: "prone", Name: "Prone", Concentration: false, Components: []Component{
-			Edge{Against: false, Advantage: false, Range: AnyRange},
-			Edge{Against: true, Advantage: true, Range: WithinFive},
-			Edge{Against: true, Advantage: false, Range: BeyondFive},
-			MoveCost{Multiplier: 2},
-		}},
-		"poisoned": {Slug: "poisoned", Name: "Poisoned", Concentration: false, Components: []Component{
-			Edge{Against: false, Advantage: false, Range: AnyRange},
-			Manual{Instruction: "Poisoned: ability checks are made with disadvantage."},
-		}},
-	}
 }

@@ -82,3 +82,6 @@ web/test-results/
 !api/internal/platform/webui/dist/
 api/internal/platform/webui/dist/*
 !api/internal/platform/webui/dist/.gitkeep
+
+# Local ticket mirror; the GitHub issues are the record
+.scratch/

@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { createNpcMutation, listDeletedNpcsOptions, listNpcsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { Disposition } from '@/infrastructure/api/types.gen'
-import { GButton } from '@/shared/ui'
+import { GAvatar, GButton, GField, GRow } from '@/shared/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,15 +39,14 @@ function add() {
     <template v-else>
       <ul class="g-list" data-testid="npc-list">
         <li v-for="n in npcs.data.value ?? []" :key="n.id">
-          <RouterLink :to="{ name: 'npc', params: { id, npcId: n.id } }" class="row">
-            <span class="name">{{ n.name }}</span>
-            <span class="meta">{{ n.title || 'No title' }}</span>
-            <span class="g-tag">{{ n.disposition }}</span>
-          </RouterLink>
+          <GRow :to="{ name: 'npc', params: { id, npcId: n.id } }" :title="n.name" :subtitle="n.title || 'No title'">
+            <template #leading><GAvatar :name="n.name" /></template>
+            <template #trailing><span class="g-tag">{{ n.disposition }}</span></template>
+          </GRow>
         </li>
       </ul>
       <form class="g-card add" data-testid="npc-create" @submit.prevent="add">
-        <label class="g-field"><span>Name</span><input v-model="name" maxlength="80" data-testid="npc-name" /></label>
+        <GField v-model="name" label="Name" :maxlength="80" data-testid="npc-name" />
         <label class="g-field">
           <span>Disposition</span>
           <select v-model="disposition">
@@ -74,29 +73,8 @@ function add() {
 .back {
   color: var(--color-gold-high);
 }
-.row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 12px;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  text-decoration: none;
-}
-.name {
-  font-weight: 700;
-}
-.meta {
-  font-size: 14px;
-  color: var(--color-text-2);
-}
-.row .g-tag {
-  grid-row: 1 / span 2;
-  grid-column: 2;
-  align-self: center;
+.g-list {
+  gap: 0;
 }
 .add {
   display: flex;

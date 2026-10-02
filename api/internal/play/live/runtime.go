@@ -112,6 +112,8 @@ type Store interface {
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
 	LoadEffects(ctx context.Context, id domain.SessionID) (domain.Effects, error)
+	// Effects reads the Effect catalogue the rules resolve against.
+	Effects(ctx context.Context) (effects.Catalog, error)
 	LoadTerrain(ctx context.Context, id domain.SessionID) (map[hex.Coord]domain.Surface, *domain.AreaCast, error)
 	LoadTable(ctx context.Context, id domain.SessionID) (domain.TableDisplay, error)
 	// LoadWorld reads a world map with its locations, routes and the party, and the Session's Travel Legs on it.
@@ -279,6 +281,11 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		release()
 		return nil, err
 	}
+	catalog, err := h.Store.Effects(ctx)
+	if err != nil {
+		release()
+		return nil, err
+	}
 	ground, cast, err := h.Store.LoadTerrain(ctx, id)
 	if err != nil {
 		release()
@@ -310,7 +317,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: catalog, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {
@@ -473,6 +480,9 @@ func (r *runtime) seeDM(sub *Subscriber) {
 func (r *runtime) send(sub *Subscriber, u Update) {
 	if _, ok := r.subs[sub]; !ok {
 		return
+	}
+	if sub.Audience == AudienceParty {
+		u = private(u, sub.Member)
 	}
 	select {
 	case sub.Out <- u:

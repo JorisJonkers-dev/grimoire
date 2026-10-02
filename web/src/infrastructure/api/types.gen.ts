@@ -86,7 +86,7 @@ export type Campaign = {
  */
 export type CampaignCreate = {
     name: CampaignName;
-    ruleset?: Ruleset;
+    ruleset?: CampaignRuleset;
     displayName: DisplayName;
 };
 
@@ -95,7 +95,7 @@ export type CampaignCreate = {
  */
 export type CampaignUpdate = {
     name?: CampaignName;
-    ruleset?: Ruleset;
+    ruleset?: CampaignRuleset;
     reactionTimeoutS?: ReactionTimeout;
     /**
      * Optional rule: attacks from higher ground get +2 to hit.
@@ -1127,6 +1127,7 @@ export type LiveCommand = {
     due?: 'next_rest' | 'next_travel';
     lootTableId?: Id;
     fromId?: Id;
+    instanceId?: Id;
     toId?: Id;
     itemSlug?: Slug;
     coin?: Coin;
@@ -1177,15 +1178,17 @@ export type SessionAction = {
 };
 
 /**
- * A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
+ * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
     id: Id;
-    kind: 'character' | 'party_stash' | 'loot_drop';
+    kind: 'character' | 'party_stash' | 'loot_drop' | 'bag';
     label: string;
     characterId?: Id;
     ownerId?: Id;
+    parentId?: Id;
     items: Array<LiveItem>;
+    instances: Array<LiveItemInstance>;
     coins: Array<LiveCoins>;
     weightLb: number;
     capacityLb?: number;
@@ -1199,6 +1202,21 @@ export type LiveItem = {
     slug: Slug;
     name: string;
     count: number;
+    weightLb: number;
+};
+
+/**
+ * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
+ */
+export type LiveItemInstance = {
+    id: Id;
+    slug: Slug;
+    name: string;
+    count: number;
+    charges?: number;
+    identified: boolean;
+    attuned?: boolean;
+    slot?: 'main_hand' | 'off_hand' | 'ranged_main' | 'ranged_off' | 'armor' | 'head' | 'cloak' | 'hands' | 'feet' | 'neck' | 'ring_1' | 'ring_2';
     weightLb: number;
 };
 
@@ -1683,6 +1701,11 @@ export type Slug = string;
  * Rules document key.
  */
 export type Ruleset = 'srd-2024' | 'srd-2014';
+
+/**
+ * The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the compendium.
+ */
+export type CampaignRuleset = 'srd-2024';
 
 /**
  * A spell as it appears in a list.

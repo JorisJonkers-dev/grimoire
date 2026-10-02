@@ -1623,6 +1623,7 @@ export const zLiveCommand = z.object({
     due: z.enum(['next_rest', 'next_travel']).optional(),
     lootTableId: zId.optional(),
     fromId: zId.optional(),
+    instanceId: zId.optional(),
     toId: zId.optional(),
     itemSlug: zSlug.optional(),
     coin: zCoin.optional(),
@@ -1644,19 +1645,50 @@ export const zLiveItem = z.object({
 });
 
 /**
- * A Character's Inventory, the Party Stash, or a drop of loot, with what it weighs. A Character's names its owner and how much they can carry.
+ * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
+ */
+export const zLiveItemInstance = z.object({
+    id: zId,
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    charges: z.int().gte(0).lte(100).optional(),
+    identified: z.boolean(),
+    attuned: z.boolean().optional(),
+    slot: z.enum([
+        'main_hand',
+        'off_hand',
+        'ranged_main',
+        'ranged_off',
+        'armor',
+        'head',
+        'cloak',
+        'hands',
+        'feet',
+        'neck',
+        'ring_1',
+        'ring_2'
+    ]).optional(),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export const zLiveContainer = z.object({
     id: zId,
     kind: z.enum([
         'character',
         'party_stash',
-        'loot_drop'
+        'loot_drop',
+        'bag'
     ]),
     label: z.string().max(80),
     characterId: zId.optional(),
     ownerId: zId.optional(),
+    parentId: zId.optional(),
     items: z.array(zLiveItem).max(1000),
+    instances: z.array(zLiveItemInstance).max(1000),
     coins: z.array(zLiveCoins).max(5),
     weightLb: z.number().gte(0).lte(100000000),
     capacityLb: z.number().gte(0).lte(100000).optional(),
@@ -1814,25 +1846,6 @@ export const zCampaign = z.object({
 });
 
 /**
- * A new Campaign.
- */
-export const zCampaignCreate = z.object({
-    name: zCampaignName,
-    ruleset: zRuleset.optional(),
-    displayName: zDisplayName
-});
-
-/**
- * Settings to change; omitted fields stay as they are.
- */
-export const zCampaignUpdate = z.object({
-    name: zCampaignName.optional(),
-    ruleset: zRuleset.optional(),
-    reactionTimeoutS: zReactionTimeout.optional(),
-    highGround: z.boolean().optional()
-});
-
-/**
  * A Character's sheet with every value derived by the rules.
  */
 export const zCharacterSheet = z.object({
@@ -1887,6 +1900,30 @@ export const zBuilderOptions = z.object({
     armor: z.array(zArmorOptionItem).max(100),
     weapons: z.array(zWeaponLine).max(200),
     skills: z.array(zSkillChoice).max(18)
+});
+
+/**
+ * The rules a Campaign plays by. Grimoire runs SRD 5.2 only; the earlier ruleset stays readable in the compendium.
+ */
+export const zCampaignRuleset = z.enum(['srd-2024']);
+
+/**
+ * A new Campaign.
+ */
+export const zCampaignCreate = z.object({
+    name: zCampaignName,
+    ruleset: zCampaignRuleset.optional(),
+    displayName: zDisplayName
+});
+
+/**
+ * Settings to change; omitted fields stay as they are.
+ */
+export const zCampaignUpdate = z.object({
+    name: zCampaignName.optional(),
+    ruleset: zCampaignRuleset.optional(),
+    reactionTimeoutS: zReactionTimeout.optional(),
+    highGround: z.boolean().optional()
 });
 
 /**

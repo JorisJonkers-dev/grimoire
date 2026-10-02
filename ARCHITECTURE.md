@@ -23,12 +23,12 @@ marked *(later)*; everything else is in scope for the milestone named next to it
 
 | Area | Decision | Section |
 |---|---|---|
-| Users | Private groups; identity from the estate's auth-api; DM invites Players per Campaign | §1 |
+| Users | Private groups; **Grimoire Accounts** created by Admin invite, optionally linked to a jorisjonkers.dev login ([ADR-0008](docs/adr/0008-own-accounts-with-linkable-oidc.md)); DM invites Players per Campaign | §1 |
 | Scope | Everything in the old Grimoire spec **plus** BG3-style combat UX, random encounters, shops, AI/MCP, loot, rest/camp, handouts, chat, journal; towns/images later | §2 |
 | Rules | **Full automation**; typed effects with a **manual fallback** for anything not yet modelled | §9 |
 | Dice | **Roll Card**: shows the exact dice to throw; player types the faces or taps to auto-roll | §10 |
-| Grid | Hex, 5 ft, axial coordinates, with elevation, cover and Surfaces | §12 |
-| Backend | **Go 1.26**, spec-first OpenAPI 3.1 (**ogen**), **sqlc**, **Atlas**, goroutine per live Session | §6 |
+| Grid | Hex, axial coordinates, scale per Map (5 ft on battle maps, miles on world maps), with elevation, cover and Surfaces | §12 |
+| Backend | **Go 1.27**, spec-first OpenAPI 3.1 (**ogen**), **sqlc**, **goose** + **squawk** ([ADR-0005](docs/adr/0005-goose-and-squawk-for-migrations.md)), goroutine per live Session | §6 |
 | Contract | One OpenAPI 3.1 spec for REST **and** WebSocket messages; MCP tools call the same use cases | §7 |
 | Rules on client | **Server-only**; client keeps hex↔pixel geometry only, pinned by golden fixtures | §9.9 |
 | Frontend | Vue 3.5 + TS strict, hey-api client + Zod, TanStack Query, Pinia; hybrid **PixiJS canvas + SVG** map | §15 |
@@ -37,9 +37,9 @@ marked *(later)*; everything else is in scope for the milestone named next to it
 | Design | **Claude Design mocks first** (M0), own BG3-inspired theme, vue-web-commons for plumbing only | §16, §23 |
 | Play | Exploration without initiative, combat with initiative on the TV, one hotbar for players and DM, suggested enemy actions, Encounter Zones with surprise | §23 |
 | Runtime | **Single replica** + Postgres advisory lock; ports ready for multi-replica | §11.7 |
-| AI | MCP server **inside the Go API** at `/mcp`, auth via auth-api OAuth; writes apply **immediately**, undone via Revisions/Action Log | §14 |
+| AI | MCP server **inside the Go API** at `/mcp`, authenticated with Grimoire **Access Tokens** ([ADR-0009](docs/adr/0009-grimoire-issues-its-own-access-tokens.md)); writes apply **immediately**, undone via Revisions/Action Log | §14 |
 | Generation | Deterministic seeded generators in Go; Go-native OSS embeds; Watabou/Azgaar exports imported; FMG and ComfyUI sidecars *(later)* | §13 |
-| Hosting | Estate k3s/Flux via `platform/deployment.yml`, forward-auth, shared Postgres, Garage S3 | §19 |
+| Hosting | Estate k3s/Flux via `platform/deployment.yml`, shared Postgres, Garage S3; Grimoire handles its own sign-in | §19 |
 | Tooling | Monorepo with **mise + Taskfile** | §5 |
 | Gates | **Tiered**: contract, types, lint, tests, fog negatives and device matrix block every PR; full mutation nightly | §17 |
 | License | Public repo under the **Attribution Assurance License**; forks must credit the author visibly in their UI | §21 |
@@ -60,8 +60,13 @@ hotbar, hit-chance previews, reaction prompts, roll cards with a modifier breakd
 
 ### 1.2 Users & tenancy
 
-- **Private groups only.** No public sign-up. Every account comes from the estate's auth-api; the
-  app stores only the auth subject id (`X-User-Id`) and a display name.
+- **Private groups only.** No public sign-up. Grimoire owns its **Accounts**: an Admin invites a
+  person, who sets up a Username, Nickname and password, or signs in with a linked jorisjonkers.dev
+  login if they hold the Grimoire permission. Admins must use two-step sign-in. Agents and scripts
+  use scoped **Access Tokens** ([ADR-0008](docs/adr/0008-own-accounts-with-linkable-oidc.md),
+  [ADR-0009](docs/adr/0009-grimoire-issues-its-own-access-tokens.md)).
+- **Characters belong to Accounts** and join Campaigns as Campaign Characters with their own progress
+  ([ADR-0010](docs/adr/0010-characters-owned-by-accounts.md)).
 - A **Campaign** has members with a role: **DM** (one or more co-DMs) or **Player**. Membership is by
   invite.
 - A **Controller** drives a Combatant; normally its owner, reassignable by the DM (absent players,
@@ -95,7 +100,6 @@ hotbar, hit-chance previews, reaction prompts, roll cards with a modifier breakd
 - Public multi-tenant hosting, payments, a marketplace.
 - Voice/video (people are in the room or on their own call).
 - Full offline play. Live play requires a connection.
-- Cinematic 3D, physics or animation-heavy dice.
 - Hosting or redistributing non-SRD commercial content.
 
 ---
@@ -106,7 +110,7 @@ Every feature below is in scope. The milestone tag says when it lands (§20). "G
 features carried over from the earlier spec.
 
 ### 2.1 Compendium
-- SRD **5.2 (2024)** and **5.1 (2014)** blend, **2024 leads**, per-campaign override (Grimoire) — M1
+- SRD **5.2 (2024)** only. The earlier 5.1 option is retired; existing data is migrated to the 2024 names and rules
 - Spells, classes, subclasses, class levels and features, species, backgrounds, feats, conditions,
   monsters (every stat NOT NULL, kill XP), weapons with properties and masteries, armor, equipment,
   magic items, tools, languages — M1
@@ -147,13 +151,13 @@ features carried over from the earlier spec.
 - Campaigns, members, roles, invites — M3
 - **Character builder** (BG3-style wizard): species, class, background, ability scores, feats,
   spells, gear, validated against the ruleset — M3
-- **Level-up flow**: offered after combat, applied out of combat (Grimoire §25) — M3
+- **Level-up flow**: unlocks at the next long rest after the threshold, unless the DM holds it; applied out of combat — M3
 - Out-of-combat editing (swap cantrips, prepare spells, retrain), edit-locked in an active Combat
   (Grimoire §28) — M3
 - **D&D Beyond import** (unofficial public JSON; unknowns flagged) — M8
 - NPCs, factions, locations, KB entries with typed links (Grimoire) — M3/M7
 - Sessions: numbered, dated, recap, summary — M3/M4
-- XP ledger (party XP) or milestone mode (Grimoire) — M5
+- XP split equally among a Combat's participants, or Milestone advancement — M5
 - **Boards** (Kanban quest/planning boards linked into the KB) (Grimoire) — M7
 - **Handouts** pushed to phones and the Table; **party chat** and **whispers**; per-player
   **journal** fed from boards/KB — M7
@@ -187,7 +191,7 @@ features carried over from the earlier spec.
 - Shared "Level up!" moment on Table + phones (Grimoire §25) — M5
 
 ### 2.6 AI & MCP
-- MCP server at `/mcp` (Streamable HTTP), auth-api OAuth, DM-scoped tools — M4
+- MCP server at `/mcp` (Streamable HTTP), Grimoire Access Tokens, DM-scoped tools — M4
 - Tools for prep (encounters, pools, loot, shops, NPCs, KB, homebrew), live management (spawn
   encounter, apply effect, move token, reveal fog, run encounter check), and lookup — M4 onward
 - Immediate writes, attributed to the MCP client, recoverable via Revisions/Action Log — M4
@@ -202,8 +206,8 @@ features carried over from the earlier spec.
              └──────────────┬───────────────────────────────┬────────────────┘
                             │ HTTPS REST + WebSocket         │
                    ┌────────▼────────┐                       │
-DM's AI agent ────▶│ Traefik + auth  │ forward-auth → auth-api (OIDC, sessions)
- (Claude, MCP)     └────────┬────────┘   injects X-User-Id
+DM's AI agent ────▶│ Traefik         │ Grimoire sessions, OIDC link to jorisjonkers.dev,
+ (Claude, MCP)     └────────┬────────┘   Access Tokens for MCP
                             │
           ┌─────────────────▼──────────────────────────────────────────┐
           │ grimoire-api (Go, single binary, single replica)            │
@@ -241,8 +245,8 @@ context line.
 | **play** | Live Session runtime: combat, positions, effects, reveal, reactions, rolls, Action Log, projections | shared, rules, compendium, campaign, prep |
 | **generation** | Seeded generators (encounters, loot, shops, names, dungeons), import of Watabou/FMG exports, sidecar gateways | shared, compendium, rules |
 
-Identity is **not** a context: the estate's auth-api owns it. Grimoire keeps a thin `members` table
-mapping auth subjects to campaign roles.
+**identity** is its own context (ADR-0008): Accounts, credentials, two-step factors, OIDC links,
+sessions, Access Tokens and invites. Campaign members reference Accounts.
 
 ```
 compendium ◀── rules ◀── campaign ◀── prep ◀── play
@@ -268,7 +272,7 @@ grimoire/
 ├── ARCHITECTURE.md                # this document
 ├── ATTRIBUTION.md                 # SRD / OGL / Watabou / Azgaar / OSS credits (machine-readable)
 ├── LICENSE                        # Attribution Assurance License
-├── mise.toml                      # pins go, node, pnpm, ogen, sqlc, atlas, redocly, vacuum, spectral, golangci-lint
+├── mise.toml                      # pins go, node, pnpm, task, sqlc, squawk, vacuum, golangci-lint
 ├── Taskfile.yml                   # the only entry points: dev, gen, check, test, e2e, fix
 ├── openapi/
 │   ├── v1/openapi.yaml            # HAND-AUTHORED source of truth (REST + WS message components)
@@ -276,7 +280,7 @@ grimoire/
 │   ├── redocly.yaml  .spectral.yaml
 │   └── fixtures/                  # golden request/response + hex geometry fixtures (§9.9)
 ├── api/                           # Go module
-│   ├── go.mod  sqlc.yaml  atlas.hcl  .golangci.yml  .custom-gcl.yml
+│   ├── go.mod  sqlc.yaml  .golangci.yml  .custom-gcl.yml
 │   ├── cmd/grimoire/main.go       # composition root: `serve`, `migrate`, `import`, `gen`
 │   ├── internal/
 │   │   ├── shared/                # IDs, Result helpers, clock, rng, errors
@@ -320,10 +324,10 @@ Follows the [Go API blueprint](docs/blueprints/go-api.md) in full except where s
 ### 6.1 Stack
 
 ```
-Go 1.26
+Go 1.27
 github.com/ogen-go/ogen                 # server + types + validation from openapi.yaml
 github.com/jackc/pgx/v5                 # driver + pgxpool; sqlc generates queries
-ariga.io/atlas                          # schema-as-code migrations + lint (CLI)
+github.com/pressly/goose/v3             # forward-only SQL migrations embedded in the binary (squawk lints them)
 github.com/coder/websocket              # live play transport
 github.com/modelcontextprotocol/go-sdk  # MCP server (Streamable HTTP) — verify version in M0
 github.com/riverqueue/river             # Postgres-backed jobs (imports, restocks, scheduled checks)
@@ -430,7 +434,7 @@ generator rerolls stay exact. The clock is injected the same way.
 ### 8.2 Schema inventory
 
 The Grimoire (Rails) DDL is the baseline for compendium, campaign maps and play tables; it carries
-over with the changes marked **Δ**. New tables are marked **new**. Agents write the Atlas schema from
+over with the changes marked **Δ**. New tables are marked **new**. Agents write goose migrations from
 this inventory plus the Open5e v2 field set.
 
 **compendium**
@@ -454,9 +458,9 @@ this inventory plus the Open5e v2 field set.
 - **new** `automation_coverage` materialized view (entity → automation_level) for the coverage report
 
 **campaign**
-- **Δ** `members` replaces `accounts` + `memberships`: `(campaign_id, auth_subject, display_name,
-  role dm|player)`; unique `(campaign_id, auth_subject)`
-- `campaigns` (ruleset_pref, progression_mode, xp_is_party, table_vision_mode, reaction_timeout_s
+- **Δ** `members`: `(campaign_id, account_id, display_name_override, role dm|player)`; unique
+  `(campaign_id, account_id)`; Accounts live in the identity schema (ADR-0008)
+- `campaigns` (progression_mode `xp|milestone`, table_vision_mode, reaction_timeout_s
   **new**, rolling_default **new** `physical|auto`)
 - `characters` + `character_classes`, `character_ability_scores`, `character_skills`,
   `character_spells`, `character_senses`, `character_resources` (**new**: slots, hit dice, class
@@ -552,17 +556,36 @@ rows. The Go side is a sealed union:
 ```go
 type Component interface{ isComponent() }
 type Damage struct{ Dice DiceSpec; Type DamageType; OnSave SaveOutcome /* half|none */ }
-type Heal struct{ Dice DiceSpec; Temp bool }
+type Heal struct{ Dice DiceSpec; Temp bool }                 // Temp = temporary hit points
 type SaveGate struct{ Ability Ability; DC DCSource }        // spell DC, fixed, or formula
 type AttackGate struct{ Kind AttackKind; Bonus BonusSource }
 type ApplyCondition struct{ Condition ConditionRef; Duration Duration; EndsOnSave bool }
-type Modifier struct{ Target ModTarget; Value ModValue; Scope Scope }   // to_hit, ac, speed, adv, ...
-type Area struct{ Shape Shape; SizeFt Feet; Origin Origin }
-type CreateSurface struct{ Kind SurfaceKind; Area Area; Duration Duration }
+type Modifier struct{ Target ModTarget; Value ModValue; Scope Scope }   // to_hit, ac, speed, adv, resist, ...
+type Light struct{ BrightFt, DimFt Feet; Colour Colour; Sunlight bool }
+type Reveal struct{ Strips []VisibilityQuality }            // Hidden, Invisible, Disguised, ...
+type Sense struct{ Kind SenseKind; RangeFt Feet }
+type Movement struct{ Kind MoveKind; DistanceFt Feet }      // push, pull, teleport, drag
+type CreateSurface struct{ Kind SurfaceKind; Duration Duration }
+type Summon struct{ Creature CreatureRef; Count CountSpec; Acts SummonTurn }
+type Transform struct{ Form FormRef }                       // Wild Shape, Polymorph
+type CreateObject struct{ Object ObjectRef }                // walls, barriers
+type Dispel struct{ Level LevelSpec }
+type Counter struct{ Level LevelSpec }
+type GrantFeature struct{ Feature FeatureRef }
+type ResourceChange struct{ Resource ResourceRef; Delta ModValue }
+type Choice struct{ Options [][]Component }                 // the caster picks a mode
+type Branch struct{ If Condition; Then, Else []Component }  // "fails by 5+", "HP <= 50", type filter
 type Trigger struct{ On TriggerKind; Then []Component }     // reactions, "start of turn", "on hit"
-type Scaling struct{ Per ScalingAxis; Add []Component }      // upcast, cantrip level
+type Scaling struct{ Per ScalingAxis; Add []Component }      // slot, character level, class level, table column
 type Manual struct{ Instruction string }                     // the fallback (§9.4)
 ```
+
+Every Effect also carries **Targeting** (self, creatures, sphere, cone, line, cube, cylinder,
+emanation, wall, ring; size, range, origin; side filter; creature-type filter; sight required) and a
+**Duration** (instant, rounds, minutes, hours, until dispelled, until a rest, permanent, end of next
+turn, with repeat saves). These names match the glossary's Effect, Targeting and Visibility Quality
+entries; Item Properties, Features, conditions, surfaces, traps, Rule Variants and Roll Table results
+are all owners of Effects.
 
 The **EffectEngine** folds a Combatant's active effects into an immutable `EffectProfile` (to-hit,
 damage bonuses by type, AC delta, speed delta, advantage/disadvantage sources with reasons, save
@@ -606,8 +629,8 @@ Action Log records it like any other action. Nothing silently skips.
   per target hex with a cost breakdown.
 - **LineOfSight / Cover** — hex ray casting with elevation; `map_terrain.cover` and intervening
   creatures produce half / three-quarters / total cover.
-- **AreaTemplates** — cone, sphere, cube, cylinder, line, emanation rasterised to hexes
-  (5 ft per hex); origin rules per shape.
+- **AreaTemplates** — cone, sphere, cube, cylinder, line, emanation, wall and ring rasterised to
+  hexes at the Map's scale; origin rules per shape. Areas are drawn as tinted hexes, never circles.
 - **ForcedMovement** — shove, push, pull; collisions and falling damage.
 
 ### 9.7 Vision & lighting
@@ -767,8 +790,10 @@ settings) so the lock hand-off is clean; the WS client reconnects with backoff a
 
 ## 12. Maps & space
 
-- **Hex grid, 5 ft per hex**, pointy-top, axial coordinates. Maps are calibrated (orientation,
-  hex size px, origin, scale) so server and client agree (golden fixtures).
+- **Hex grid**, pointy-top, axial coordinates, **scale per Map**: 5 ft per hex on battle maps, miles
+  per hex on world maps. Maps are calibrated (orientation, hex size px, origin, scale) so server and
+  client agree (golden fixtures). A world map is a picture (the painted Default World or an upload)
+  under a see-through grid the DM calibrates by placing two points a known distance apart.
 - **World maps**: nodes (locations, Settlements), edges (routes, travel time, danger), Regions with
   Encounter Tables; party marker; "no map" mode. Travelling an edge is a **travel leg**, which can
   trigger Encounter Checks.
@@ -849,10 +874,8 @@ campaign data beyond the request, pinned image digest, and pnpm supply-chain set
 
 - MCP over **Streamable HTTP** at `/mcp`, served by the same Go binary, calling the same use cases
   as REST. No separate MCP service.
-- **Auth**: OAuth 2.1 against auth-api (authorization server). The DM adds Grimoire as a connector in
-  Claude; tools run as that member. **Risk:** Claude connectors expect OAuth metadata discovery and
-  (often) dynamic client registration; auth-api's support must be verified in M0, and a
-  pre-registered client or an auth-api change is part of M4 if missing.
+- **Auth**: Grimoire **Access Tokens** (ADR-0009): scoped, expiring, revocable, minted by the Account
+  holder in the UI. Tools run as that Account and check its Campaign role.
 - Tool scope: every tool takes a `campaign` argument and requires the caller to be DM there
   (player-level tools *(later)*).
 
@@ -929,7 +952,9 @@ concentration indicator, spell slot and resource pips, hit % + damage range on t
 path preview with feet cost and difficult terrain, AoE template with affected-creature highlights,
 Reaction Prompt with countdown, Roll Card (§10), initiative rail with portraits and tied ranks,
 condition icons with nested tooltips, turn banner ("Your turn"), combat log (from the Action Log),
-DM override drawer. Animation budget: ≤ 200 ms transitions, no camera moves, reduced-motion honoured.
+DM override drawer. Animation budget: ≤ 200 ms for UI transitions; the exceptions are the dice
+(ADR-0012: roll in, glide to centre, total), the initiative reveal and the "It's your turn" banner.
+Reduced motion replaces all three with an immediate result.
 
 ### 15.6 Surfaces & responsive contract
 
@@ -949,7 +974,7 @@ Table.
   the app shell, compendium reads and the member's own sheets for offline reading. Live play shows an
   explicit offline state.
 - **Capacitor 7** shells for Android/iOS, following agents-ui: the WebView loads the hosted URL and
-  keeps `*.jorisjonkers.dev` in-app so the forward-auth cookie works; adds native push (turn
+  keeps `*.jorisjonkers.dev` in-app so the Grimoire session cookie works; adds native push (turn
   notifications, Reaction Prompts while locked), haptics on "your turn", and keep-awake. APK built
   in CI; iOS simulator build in release, store builds *(later)*.
 - **Table**: any browser in kiosk mode on the TV; a `/table/<session>` route with a join code.
@@ -987,7 +1012,7 @@ motion. Grimoire has its **own theme**; vue-web-commons provides plumbing only.
   AoE rasterisation, LOS, initiative, effect folding, budgets. **100% statement coverage** on
   `internal/rules/...`; **gremlins** mutation testing.
 - **Use case tests** with in-memory fakes of ports.
-- **Adapter tests**: sqlc repositories against **testcontainers Postgres** with Atlas migrations
+- **Adapter tests**: sqlc repositories against **testcontainers Postgres** with goose migrations
   applied; query-count assertions on list endpoints; S3 against a MinIO/Garage container;
   `httptest` for Open5e/5e-bits (recorded fixtures, no network).
 - **Contract tests**: ogen server in-process; every operation's examples validate against the spec;
@@ -1012,7 +1037,7 @@ motion. Grimoire has its **own theme**; vue-web-commons provides plumbing only.
 - `golangci-lint` (incl. nilaway, exhaustive, gochecksumtype, exhaustruct, depguard, gosec)
 - `go test -race ./...`, with coverage 100% on `rules` and a global floor of 98% (web: 98% lines, 95% branches)
 - gremlins on **changed** `rules` packages
-- `atlas migrate lint` and `migration-guard`
+- `squawk` on migrations and `migration-guard`
 - `govulncheck`
 - `vue-tsc`, ESLint (boundaries + a11y), Vitest with coverage
 - Playwright device matrix + multi-client scenarios + axe + fog negatives
@@ -1033,7 +1058,7 @@ estate's one-job rule targets private-repo billing and does not apply here.
 
 ### 18.1 Recipes
 
-**Add a compendium entity:** Atlas schema → sqlc queries → domain type + port → repository →
+**Add a compendium entity:** goose migration → sqlc queries → domain type + port → repository →
 import mapping (Open5e + 5e-bits cross-check) → effect components if it does anything → use case →
 OpenAPI paths → `task gen` → handler → tests (unit, adapter, contract) → attribution.
 
@@ -1081,9 +1106,9 @@ Imperative use-case names (`MoveToken`, `RunEncounterCheck`); ports named `…Re
   on every release tag; deployed via `platform/deployment.yml`
   (v2) with pinned digests in `images.lock.json`, through the estate's publish → `deploy/production`
   → Flux flow.
-- Route: `grimoire.jorisjonkers.dev`, `authMode: forward-auth` for the app and API; `/mcp` uses
-  OAuth bearer tokens (route rule to be defined with auth-api in M4); `/healthz` and `/readyz`
-  anonymous.
+- Route: `grimoire.jorisjonkers.dev`. Until Grimoire Accounts ship the route stays behind the
+  estate's forward-auth; afterwards Grimoire handles sign-in itself (ADR-0008), `/mcp` takes Access
+  Tokens (ADR-0009), and `/healthz`, `/readyz` and the Public Compendium are anonymous.
 - **Platform onboarding** (identity allow-lists, database and credentials, object storage bucket,
   native login redirect) happens in the estate's private infrastructure repositories. The checklist
   lives there, not in this public repo. Each step is verified by reading the state back, not by exit
@@ -1097,7 +1122,7 @@ The repo-template skeleton (`ci.yml` ending in `Pipeline Complete`, release-plea
 add-to-project) plus:
 
 - a **`go-ci`** reusable workflow in `github-workflows` (new; setup-go with cache, golangci-lint,
-  race tests, coverage gate, gremlins-changed, govulncheck, atlas lint, testcontainers)
+  race tests, coverage gate, gremlins-changed, govulncheck, squawk, testcontainers)
 - the existing `node-ci` for `web/`
 - `api-contract-checks` for oasdiff
 - Playwright job with the device matrix
@@ -1160,7 +1185,7 @@ Each milestone ends with all gates green, and with a demo on phone + TV where UI
   and **prominently credit the original author in their user interface**. Grimoire shows the credit
   in its own About/footer as the reference implementation. Replaces repo-template's
   source-available LICENSE for this repo only.
-- **SRD 5.2 and 5.1**: CC-BY-4.0, with the required attribution in `ATTRIBUTION.md` and the in-app
+- **SRD 5.2**: CC-BY-4.0, with the required attribution in `ATTRIBUTION.md` and the in-app
   attribution surface. 5e-bits data is under OGL 1.0a: include the OGL text and Section 15 when it is
   used.
 - **Excluded from the SRD** (e.g. Artificer, Aasimar, Beholder): only as campaign-scoped homebrew,
@@ -1176,7 +1201,7 @@ Each milestone ends with all gates green, and with a demo on phone + TV where UI
 
 | Risk | Mitigation |
 |---|---|
-| auth-api lacks what Claude MCP connectors need (discovery, dynamic registration) | verify in M0; pre-registered client or auth-api change scheduled into M4 |
+| MCP clients expect OAuth discovery that Access Tokens don't provide | Access Tokens work as bearer tokens in Claude connectors and scripts today; add OAuth discovery only if a client requires it |
 | Full automation scope is enormous | typed effects + manual fallback + coverage report make progress incremental and visible |
 | Single replica restarts drop live WS connections | fast startup (static binary), advisory-lock hand-off, client auto-resync; multi-replica ADR ready |
 | Go lacks native sum types | gochecksumtype/exhaustive as blocking gates; review forbids `default` escapes |
@@ -1248,10 +1273,12 @@ frame (hexagonal) is always drawn over the icon so allegiance stays readable wit
 
 ### 23.7 Visual language
 
-Dark parchment and gold: tokens in `design/tokens.json`; Cinzel for titles, Alegreya for flavour
-text, Alegreya Sans for UI and numbers. Party tokens are round, enemies hexagonal, hidden
-creatures dashed (DM only). Touch targets are at least 44 px; motion stays under 200 ms except the
-dice tumble.
+The **Soft** component system on a dark ground (not parchment): 5 px controls, 8 px panels,
+brass primary buttons, a gold underline for the current tab, floating-label fields, rows instead of
+cards. Cinzel for titles, Marcellus for labels and navigation, Alegreya Sans for UI and numbers,
+Alegreya for rules and lore. In play the map is always underneath and panels are see-through glass.
+Party tokens are round, enemies hexagonal, hidden creatures dashed (DM only). Touch targets are at
+least 44 px. The Claude Design canvas "Grimoire UI mockups" is the visual reference.
 
 ---
 

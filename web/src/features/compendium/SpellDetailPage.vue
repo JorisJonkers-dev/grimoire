@@ -86,12 +86,12 @@ const paragraphs = (text: string) => text.split(/\n+/).filter((p) => p.trim() !=
 
 <style scoped>
 .spell {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 16px;
+  padding: 24px var(--gutter);
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
 }
 .back {
   color: var(--color-gold-high);

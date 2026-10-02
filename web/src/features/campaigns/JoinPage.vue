@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/vue-query'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { acceptInviteMutation, previewInviteMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import { GButton } from '@/shared/ui'
+import { GButton, GField } from '@/shared/ui'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,10 +35,7 @@ function join() {
       <p>
         <strong>{{ preview.data.value.invitedBy }}</strong> invites you to <strong>{{ preview.data.value.campaignName }}</strong>.
       </p>
-      <label class="g-field">
-        <span>Your name at this table</span>
-        <input v-model="displayName" maxlength="60" required data-testid="join-display-name" />
-      </label>
+      <GField v-model="displayName" label="Your name at this table" :maxlength="60" required data-testid="join-display-name" />
       <p v-if="accept.isError.value" role="alert" class="g-alert">You could not join. The link may have expired.</p>
       <GButton type="submit" variant="primary" :disabled="displayName.trim() === '' || accept.isPending.value">Join as Player</GButton>
     </form>

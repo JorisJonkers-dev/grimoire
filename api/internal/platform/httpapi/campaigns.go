@@ -166,7 +166,7 @@ func (h *Handler) CreateCampaign(ctx context.Context, req *oas.CampaignCreate) (
 		return unauthorized(), nil
 	}
 	d, err := h.Campaigns.Create(ctx, c, app.CreateInput{
-		Name: string(req.Name), Ruleset: string(req.Ruleset.Or(oas.RulesetSrd2024)), DisplayName: string(req.DisplayName),
+		Name: string(req.Name), Ruleset: string(req.Ruleset.Or(oas.CampaignRulesetSrd2024)), DisplayName: string(req.DisplayName),
 	})
 	if err != nil {
 		return h.campaignProblem(ctx, "create campaign", err), nil

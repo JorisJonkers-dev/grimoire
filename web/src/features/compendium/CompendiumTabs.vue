@@ -21,25 +21,25 @@ defineProps<{ current: string }>()
 <style scoped>
 .tabs {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-line);
   scrollbar-width: thin;
 }
 .tabs a {
   flex: none;
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-pill);
-  color: var(--color-text);
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-2);
   text-decoration: none;
   white-space: nowrap;
 }
 .tabs a[aria-current='page'] {
-  border-color: var(--color-gold);
+  border-bottom-color: var(--color-gold);
   color: var(--color-gold-high);
 }
 </style>

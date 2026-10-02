@@ -39,40 +39,15 @@ func (q *Queries) CampaignContainerCoins(ctx context.Context, campaignID uuid.UU
 	return items, nil
 }
 
-const campaignContainerItems = `-- name: CampaignContainerItems :many
-SELECT i.container_id, i.item_slug, i.quantity
-FROM campaign.container_items i JOIN campaign.containers c ON c.id = i.container_id
-WHERE c.campaign_id = $1 ORDER BY i.container_id, i.item_slug
-`
-
-func (q *Queries) CampaignContainerItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerItem, error) {
-	rows, err := q.db.Query(ctx, campaignContainerItems, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []CampaignContainerItem{}
-	for rows.Next() {
-		var i CampaignContainerItem
-		if err := rows.Scan(&i.ContainerID, &i.ItemSlug, &i.Quantity); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const campaignContainers = `-- name: CampaignContainers :many
-SELECT id, kind, character_id, label, created_at FROM campaign.containers WHERE campaign_id = $1 ORDER BY created_at, id
+SELECT id, kind, character_id, parent_id, label, created_at FROM campaign.containers WHERE campaign_id = $1 ORDER BY created_at, id
 `
 
 type CampaignContainersRow struct {
 	ID          uuid.UUID
 	Kind        string
 	CharacterID pgtype.UUID
+	ParentID    pgtype.UUID
 	Label       string
 	CreatedAt   time.Time
 }
@@ -90,8 +65,57 @@ func (q *Queries) CampaignContainers(ctx context.Context, campaignID uuid.UUID) 
 			&i.ID,
 			&i.Kind,
 			&i.CharacterID,
+			&i.ParentID,
 			&i.Label,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const campaignItemInstances = `-- name: CampaignItemInstances :many
+SELECT i.id, i.container_id, i.item_slug, i.custom_name, i.quantity, i.charges, i.identified, i.attuned, i.equipped_slot
+FROM campaign.item_instances i JOIN campaign.containers c ON c.id = i.container_id
+WHERE c.campaign_id = $1 ORDER BY i.container_id, i.created_at, i.id
+`
+
+type CampaignItemInstancesRow struct {
+	ID           uuid.UUID
+	ContainerID  uuid.UUID
+	ItemSlug     string
+	CustomName   pgtype.Text
+	Quantity     int32
+	Charges      pgtype.Int4
+	Identified   bool
+	Attuned      bool
+	EquippedSlot pgtype.Text
+}
+
+func (q *Queries) CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error) {
+	rows, err := q.db.Query(ctx, campaignItemInstances, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignItemInstancesRow{}
+	for rows.Next() {
+		var i CampaignItemInstancesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ContainerID,
+			&i.ItemSlug,
+			&i.CustomName,
+			&i.Quantity,
+			&i.Charges,
+			&i.Identified,
+			&i.Attuned,
+			&i.EquippedSlot,
 		); err != nil {
 			return nil, err
 		}
@@ -170,20 +194,6 @@ func (q *Queries) DeleteContainerCoins(ctx context.Context, arg DeleteContainerC
 	return err
 }
 
-const deleteContainerItem = `-- name: DeleteContainerItem :exec
-DELETE FROM campaign.container_items WHERE container_id = $1 AND item_slug = $2
-`
-
-type DeleteContainerItemParams struct {
-	ContainerID uuid.UUID
-	ItemSlug    string
-}
-
-func (q *Queries) DeleteContainerItem(ctx context.Context, arg DeleteContainerItemParams) error {
-	_, err := q.db.Exec(ctx, deleteContainerItem, arg.ContainerID, arg.ItemSlug)
-	return err
-}
-
 const deleteLootTable = `-- name: DeleteLootTable :execrows
 DELETE FROM prep.loot_tables WHERE campaign_id = $1 AND id = $2
 `
@@ -199,6 +209,22 @@ func (q *Queries) DeleteLootTable(ctx context.Context, arg DeleteLootTableParams
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const deleteStack = `-- name: DeleteStack :exec
+DELETE FROM campaign.item_instances
+WHERE container_id = $1 AND item_slug = $2
+    AND custom_name IS NULL AND charges IS NULL AND equipped_slot IS NULL AND NOT attuned AND identified
+`
+
+type DeleteStackParams struct {
+	ContainerID uuid.UUID
+	ItemSlug    string
+}
+
+func (q *Queries) DeleteStack(ctx context.Context, arg DeleteStackParams) error {
+	_, err := q.db.Exec(ctx, deleteStack, arg.ContainerID, arg.ItemSlug)
+	return err
 }
 
 const getLootTableRevision = `-- name: GetLootTableRevision :one
@@ -520,6 +546,20 @@ func (q *Queries) LootTableInUse(ctx context.Context, nestedTableID pgtype.UUID)
 	return column_1, err
 }
 
+const moveInstance = `-- name: MoveInstance :exec
+UPDATE campaign.item_instances SET container_id = $1, equipped_slot = NULL WHERE id = $2
+`
+
+type MoveInstanceParams struct {
+	ContainerID uuid.UUID
+	ID          uuid.UUID
+}
+
+func (q *Queries) MoveInstance(ctx context.Context, arg MoveInstanceParams) error {
+	_, err := q.db.Exec(ctx, moveInstance, arg.ContainerID, arg.ID)
+	return err
+}
+
 const saveLootTable = `-- name: SaveLootTable :exec
 INSERT INTO prep.loot_tables (id, campaign_id, name, rolls, updated_at) VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (id) DO UPDATE SET name = excluded.name, rolls = excluded.rolls, updated_at = excluded.updated_at
@@ -560,18 +600,28 @@ func (q *Queries) SetContainerCoins(ctx context.Context, arg SetContainerCoinsPa
 	return err
 }
 
-const setContainerItem = `-- name: SetContainerItem :exec
-INSERT INTO campaign.container_items (container_id, item_slug, quantity) VALUES ($1, $2, $3)
-ON CONFLICT (container_id, item_slug) DO UPDATE SET quantity = excluded.quantity
+const setStack = `-- name: SetStack :exec
+INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+VALUES ($1, $2, $3, $4, true, false, $5)
+ON CONFLICT (container_id, item_slug) WHERE custom_name IS NULL AND charges IS NULL AND equipped_slot IS NULL AND NOT attuned AND identified
+DO UPDATE SET quantity = excluded.quantity
 `
 
-type SetContainerItemParams struct {
+type SetStackParams struct {
+	ID          uuid.UUID
 	ContainerID uuid.UUID
 	ItemSlug    string
 	Quantity    int32
+	Now         time.Time
 }
 
-func (q *Queries) SetContainerItem(ctx context.Context, arg SetContainerItemParams) error {
-	_, err := q.db.Exec(ctx, setContainerItem, arg.ContainerID, arg.ItemSlug, arg.Quantity)
+func (q *Queries) SetStack(ctx context.Context, arg SetStackParams) error {
+	_, err := q.db.Exec(ctx, setStack,
+		arg.ID,
+		arg.ContainerID,
+		arg.ItemSlug,
+		arg.Quantity,
+		arg.Now,
+	)
 	return err
 }

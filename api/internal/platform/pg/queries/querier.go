@@ -51,10 +51,10 @@ type Querier interface {
 	BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, error)
 	CampaignChecks(ctx context.Context, campaignID uuid.UUID) ([]CampaignChecksRow, error)
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
-	CampaignContainerItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerItem, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
+	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
 	CampaignNode(ctx context.Context, arg CampaignNodeParams) (CampaignNodeRow, error)
@@ -80,6 +80,7 @@ type Querier interface {
 	ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
+	ClearEffectComponents(ctx context.Context, effectID int64) error
 	ClearEffects(ctx context.Context, sessionID uuid.UUID) error
 	ClearElevation(ctx context.Context, arg ClearElevationParams) error
 	ClearFeatBenefits(ctx context.Context, featID int64) error
@@ -110,7 +111,6 @@ type Querier interface {
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
-	DeleteContainerItem(ctx context.Context, arg DeleteContainerItemParams) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
@@ -123,6 +123,7 @@ type Querier interface {
 	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
 	DeleteShop(ctx context.Context, arg DeleteShopParams) (int64, error)
 	DeleteShopStock(ctx context.Context, arg DeleteShopStockParams) error
+	DeleteStack(ctx context.Context, arg DeleteStackParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
@@ -167,7 +168,17 @@ type Querier interface {
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
 	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
+	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
+	InsertEffectBonusDie(ctx context.Context, arg InsertEffectBonusDieParams) error
+	InsertEffectComponent(ctx context.Context, arg InsertEffectComponentParams) error
+	InsertEffectEdge(ctx context.Context, arg InsertEffectEdgeParams) error
 	InsertEffectEvent(ctx context.Context, arg InsertEffectEventParams) error
+	InsertEffectExtraDamage(ctx context.Context, arg InsertEffectExtraDamageParams) error
+	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
+	InsertEffectMoveCost(ctx context.Context, arg InsertEffectMoveCostParams) error
+	InsertEffectSaveCondition(ctx context.Context, arg InsertEffectSaveConditionParams) error
+	InsertEffectSaveDamage(ctx context.Context, arg InsertEffectSaveDamageParams) error
+	InsertEffectSurface(ctx context.Context, arg InsertEffectSurfaceParams) error
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
@@ -216,6 +227,17 @@ type Querier interface {
 	LatestSnapshotHash(ctx context.Context) (string, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
+	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
+	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
+	ListEffectComponents(ctx context.Context) ([]CompendiumEffectComponent, error)
+	ListEffectDefinitions(ctx context.Context) ([]ListEffectDefinitionsRow, error)
+	ListEffectEdges(ctx context.Context) ([]ListEffectEdgesRow, error)
+	ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraDamageRow, error)
+	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
+	ListEffectMoveCosts(ctx context.Context) ([]ListEffectMoveCostsRow, error)
+	ListEffectSaveConditions(ctx context.Context) ([]ListEffectSaveConditionsRow, error)
+	ListEffectSaveDamage(ctx context.Context) ([]ListEffectSaveDamageRow, error)
+	ListEffectSurfaces(ctx context.Context) ([]ListEffectSurfacesRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
 	ListLootTables(ctx context.Context, campaignID uuid.UUID) ([]ListLootTablesRow, error)
@@ -253,6 +275,7 @@ type Querier interface {
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
 	MonsterXP(ctx context.Context, arg MonsterXPParams) (MonsterXPRow, error)
+	MoveInstance(ctx context.Context, arg MoveInstanceParams) error
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
@@ -312,7 +335,6 @@ type Querier interface {
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
-	SetContainerItem(ctx context.Context, arg SetContainerItemParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
@@ -324,6 +346,7 @@ type Querier interface {
 	SetSessionWorld(ctx context.Context, arg SetSessionWorldParams) error
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
+	SetStack(ctx context.Context, arg SetStackParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	ShopRevisionStock(ctx context.Context, revisionID uuid.UUID) ([]ShopRevisionStockRow, error)
@@ -345,6 +368,7 @@ type Querier interface {
 	UpsertCondition(ctx context.Context, arg UpsertConditionParams) error
 	UpsertDamageType(ctx context.Context, arg UpsertDamageTypeParams) (int64, error)
 	UpsertDocument(ctx context.Context, arg UpsertDocumentParams) (int64, error)
+	UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDefinitionParams) (int64, error)
 	UpsertFeat(ctx context.Context, arg UpsertFeatParams) (int64, error)
 	UpsertItem(ctx context.Context, arg UpsertItemParams) error
 	UpsertMagicSchool(ctx context.Context, arg UpsertMagicSchoolParams) (int64, error)

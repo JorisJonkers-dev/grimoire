@@ -113,3 +113,59 @@ func TestInventoriesAreStoredWithTheirTransfers(t *testing.T) {
 		})
 	}
 }
+
+// The schema keeps Containers and Item Instances honest: every Container has exactly one owner, and an
+// item singled out by a name, Charges, a slot or Attunement is one item.
+func TestItemInstancesAndBagsRefuseNonsense(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	stash := uuid.New()
+	container := func(id uuid.UUID, kind string, parent any) error {
+		_, err := tb.pool.Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, parent_id, label, created_at) VALUES ($1, $2, $3, $4, 'Box', now())`,
+			id, tb.campaign, kind, parent)
+		return err
+	}
+	if err := container(stash, domain.ContainerStash, nil); err != nil {
+		t.Fatal(err)
+	}
+	bag := uuid.New()
+	if err := container(bag, domain.ContainerBag, stash); err != nil {
+		t.Fatalf("a bag in the stash = %v", err)
+	}
+	for name, err := range map[string]error{
+		"a bag that sits nowhere": container(uuid.New(), domain.ContainerBag, nil),
+		"a stash inside a bag":    container(uuid.New(), domain.ContainerStash, bag),
+		"a bag inside itself":     container(bag, domain.ContainerBag, bag),
+		"a container of no kind":  container(uuid.New(), "chest", nil),
+	} {
+		if err == nil {
+			t.Errorf("%s was stored", name)
+		}
+	}
+	instance := func(qty int, name, charges, slot any, identified, attuned bool) error {
+		_, err := tb.pool.Exec(ctx, `INSERT INTO campaign.item_instances (id, container_id, item_slug, custom_name, quantity, charges, identified, attuned, equipped_slot, created_at)
+			VALUES ($1, $2, 'rope', $3, $4, $5, $6, $7, $8, now())`, uuid.New(), bag, name, qty, charges, identified, attuned, slot)
+		return err
+	}
+	if err := instance(1, "Climbing Line", 3, "neck", true, true); err != nil {
+		t.Fatalf("a named, charged, worn rope = %v", err)
+	}
+	if err := instance(50, nil, nil, nil, false, false); err != nil {
+		t.Fatalf("a plain stack = %v", err)
+	}
+	for name, err := range map[string]error{
+		"a named stack":               instance(2, "Twins", nil, nil, true, false),
+		"a charged stack":             instance(2, nil, 1, nil, true, false),
+		"a worn stack":                instance(2, nil, nil, "feet", true, false),
+		"an attuned stack":            instance(2, nil, nil, nil, true, true),
+		"attuned yet unidentified":    instance(1, nil, nil, nil, false, true),
+		"a second thing at the neck":  instance(1, nil, nil, "neck", true, false),
+		"a slot nobody has":           instance(1, nil, nil, "tail", true, false),
+		"more charges than the rules": instance(1, nil, 101, nil, true, false),
+	} {
+		if err == nil {
+			t.Errorf("%s was stored", name)
+		}
+	}
+}

@@ -116,7 +116,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
       <header>
         <h1>{{ campaign.data.value.name }}</h1>
         <p class="sub">
-          {{ campaign.data.value.ruleset === 'srd-2024' ? '2024 rules' : '2014 rules' }} · you are
+          SRD 5.2 · you are
           {{ isDM ? 'a DM' : 'a Player' }}
         </p>
       </header>

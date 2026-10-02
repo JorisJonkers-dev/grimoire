@@ -55,9 +55,7 @@ const missing = computed(() => !isEntryKind(kind.value) || entry.isError.value)
 <style scoped>
 .entry {
   width: 100%;
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 16px;
+  padding: 24px var(--gutter);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

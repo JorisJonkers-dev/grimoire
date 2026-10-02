@@ -879,6 +879,19 @@
                 "weightLb": 10
               }
             ],
+            "instances": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000034",
+                "slug": "rope",
+                "name": "Climbing Line",
+                "count": 1,
+                "charges": 3,
+                "identified": true,
+                "attuned": true,
+                "slot": "neck",
+                "weightLb": 5
+              }
+            ],
             "coins": [
               {
                 "coin": "gp",
@@ -893,6 +906,17 @@
             "kind": "loot_drop",
             "label": "Loot: Hoard",
             "items": [],
+            "instances": [],
+            "coins": [],
+            "weightLb": 0
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000035",
+            "kind": "bag",
+            "label": "Backpack",
+            "parentId": "0190c7a8-0000-7000-8000-000000000030",
+            "items": [],
+            "instances": [],
             "coins": [],
             "weightLb": 0
           }
@@ -1274,6 +1298,19 @@
                 "weightLb": 10
               }
             ],
+            "instances": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000034",
+                "slug": "rope",
+                "name": "Climbing Line",
+                "count": 1,
+                "charges": 3,
+                "identified": true,
+                "attuned": true,
+                "slot": "neck",
+                "weightLb": 5
+              }
+            ],
             "coins": [
               {
                 "coin": "gp",
@@ -1288,6 +1325,17 @@
             "kind": "loot_drop",
             "label": "Loot: Hoard",
             "items": [],
+            "instances": [],
+            "coins": [],
+            "weightLb": 0
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000035",
+            "kind": "bag",
+            "label": "Backpack",
+            "parentId": "0190c7a8-0000-7000-8000-000000000030",
+            "items": [],
+            "instances": [],
             "coins": [],
             "weightLb": 0
           }
@@ -1653,6 +1701,19 @@
                 "weightLb": 10
               }
             ],
+            "instances": [
+              {
+                "id": "0190c7a8-0000-7000-8000-000000000034",
+                "slug": "rope",
+                "name": "Climbing Line",
+                "count": 1,
+                "charges": 3,
+                "identified": true,
+                "attuned": true,
+                "slot": "neck",
+                "weightLb": 5
+              }
+            ],
             "coins": [
               {
                 "coin": "gp",
@@ -1667,6 +1728,17 @@
             "kind": "loot_drop",
             "label": "Loot: Hoard",
             "items": [],
+            "instances": [],
+            "coins": [],
+            "weightLb": 0
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-000000000035",
+            "kind": "bag",
+            "label": "Backpack",
+            "parentId": "0190c7a8-0000-7000-8000-000000000030",
+            "items": [],
+            "instances": [],
             "coins": [],
             "weightLb": 0
           }
@@ -1988,6 +2060,19 @@
                   "weightLb": 10
                 }
               ],
+              "instances": [
+                {
+                  "id": "0190c7a8-0000-7000-8000-000000000034",
+                  "slug": "rope",
+                  "name": "Climbing Line",
+                  "count": 1,
+                  "charges": 3,
+                  "identified": true,
+                  "attuned": true,
+                  "slot": "neck",
+                  "weightLb": 5
+                }
+              ],
               "coins": [
                 {
                   "coin": "gp",
@@ -2002,6 +2087,17 @@
               "kind": "loot_drop",
               "label": "Loot: Hoard",
               "items": [],
+              "instances": [],
+              "coins": [],
+              "weightLb": 0
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-000000000035",
+              "kind": "bag",
+              "label": "Backpack",
+              "parentId": "0190c7a8-0000-7000-8000-000000000030",
+              "items": [],
+              "instances": [],
               "coins": [],
               "weightLb": 0
             }
