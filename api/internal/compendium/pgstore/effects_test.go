@@ -26,7 +26,7 @@ func TestFreshDatabasesHoldTheSRDEffects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"animate-dead", "bless", "burning-hands", "cone-of-cold", "counterspell", "dispel-magic", "dodging", "exhaustion", "faerie-fire", "false-life", "find-familiar", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "misty-step", "paralyzed", "prone", "restrained", "sapped", "shatter", "slowed", "spirit-guardians", "stunned", "thunderwave", "vexed", "wall-of-fire"}
+	want := []string{"animate-dead", "bless", "burning-hands", "cone-of-cold", "counterspell", "dispel-magic", "dodging", "exhaustion", "faerie-fire", "false-life", "find-familiar", "fireball", "grease", "hellish-rebuke", "hunters-mark", "invisible", "lightning-bolt", "misty-step", "paralyzed", "polymorph", "prone", "restrained", "sapped", "shatter", "slowed", "spirit-guardians", "stunned", "thunderwave", "vexed", "wall-of-fire", "wild-shape"}
 	if !reflect.DeepEqual(got.Automated(), want) {
 		t.Fatalf("automated = %v", got.Automated())
 	}
@@ -115,6 +115,7 @@ func TestSavingAnEffectReplacesItsComponents(t *testing.T) {
 		effects.GrantFeature{Name: "Darkvision"},
 		effects.ResourceChange{Resource: "rage", Delta: -1},
 		effects.Summon{Monster: "wolf", Count: 2, Shares: true, NeedsCommand: true},
+		effects.Form{Monster: "owl", TempHP: 4},
 	}}
 	if err := s.SaveEffect(ctx, owner, second); err != nil {
 		t.Fatal(err)

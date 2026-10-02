@@ -203,6 +203,10 @@ func componentRow(ctx context.Context, q *queries.Queries, id int64, ord int32, 
 		return widerRow(ctx, q, id, ord, c)
 	case effects.Choice:
 		return "choice", func() error { return nil }
+	case effects.Form:
+		return "form", func() error {
+			return q.InsertEffectForm(ctx, queries.InsertEffectFormParams{EffectID: id, Ordinal: ord, MonsterSlug: c.Monster, TempHp: int32(c.TempHP)}) //nolint:gosec // bounded by a check
+		}
 	case effects.Summon:
 		return "summon", func() error {
 			return q.InsertEffectSummon(ctx, queries.InsertEffectSummonParams{
@@ -252,7 +256,7 @@ func widerRow(ctx context.Context, q *queries.Queries, id int64, ord int32, c ef
 		}
 	case effects.BonusDie, effects.Edge, effects.ExtraDamage, effects.MoveCost, effects.Manual, effects.Area, effects.SaveDamage, effects.SaveCondition,
 		effects.CreateSurface, effects.Incapacitated, effects.Immobile, effects.SaveEdge, effects.CritWithin, effects.Exhausting, effects.SpeedPenalty, effects.Reacts,
-		effects.Choice, effects.Branch, effects.Summon:
+		effects.Choice, effects.Branch, effects.Summon, effects.Form:
 	}
 	return "", func() error { return nil }
 }
@@ -570,6 +574,13 @@ func (s *Store) shapeComponents(ctx context.Context, out map[slot]effects.Compon
 	}
 	for _, r := range summons {
 		out[slot{r.EffectID, r.Ordinal}] = effects.Summon{Monster: r.MonsterSlug, Count: int(r.Count), Shares: r.SharesTurn, NeedsCommand: r.NeedsCommand}
+	}
+	forms, err := s.q.ListEffectForms(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, r := range forms {
+		out[slot{r.EffectID, r.Ordinal}] = effects.Form{Monster: r.MonsterSlug, TempHP: int(r.TempHp)}
 	}
 	return out, nil
 }

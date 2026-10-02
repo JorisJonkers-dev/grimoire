@@ -18,7 +18,8 @@ export function describe(t: LiveToken): string {
   const temp = t.tempHp ? ` +${String(t.tempHp)} temp` : ''
   const health = t.hp !== undefined && t.hpMax !== undefined ? ` (${String(t.hp)}/${String(t.hpMax)} HP${temp})` : t.health ? ` (${t.health})` : ''
   const effects = t.effects?.length ? ` · ${t.effects.map((e) => e.name).join(', ')}` : ''
-  return `${t.label}${t.hidden ? ' (hidden)' : ''}${health}${effects}`
+  const form = t.form ? ` as ${t.form}` : ''
+  return `${t.label}${form}${t.hidden ? ' (hidden)' : ''}${health}${effects}`
 }
 
 /** The hexes every emanation on the board covers, around whoever carries it. */

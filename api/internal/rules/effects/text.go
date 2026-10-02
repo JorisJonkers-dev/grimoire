@@ -101,6 +101,8 @@ func lastSentence(c Component) string {
 		return "The target gains " + c.Name + "."
 	case Summon:
 		return summonText(c)
+	case Form:
+		return formText(c)
 	case ResourceChange:
 		if c.Delta > 0 {
 			return "The target regains " + plural(c.Delta, "use") + " of " + title(c.Resource) + "."
@@ -131,6 +133,19 @@ func summonText(s Summon) string {
 		text += " " + it + " the Dodge action unless the caster commands " + them + " with a Bonus Action."
 	}
 	return text
+}
+
+func formText(f Form) string {
+	what := "a creature of the caster's choice"
+	if f.Monster != "" {
+		what = article(f.Monster) + " " + title(f.Monster)
+	}
+	pool := "Temporary Hit Points equal to that creature's Hit Point maximum"
+	if f.TempHP > 0 {
+		pool = strconv.Itoa(f.TempHP) + " Temporary Hit Points"
+	}
+	return "The target takes the form of " + what + ", using its statistics and gaining " + pool +
+		"; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points."
 }
 
 func rolls(on []Roll) string {

@@ -134,6 +134,7 @@ type Querier interface {
 	DeleteShopStock(ctx context.Context, arg DeleteShopStockParams) error
 	DeleteStack(ctx context.Context, arg DeleteStackParams) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
+	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
 	DropPushEndpoint(ctx context.Context, endpoint string) error
@@ -189,6 +190,7 @@ type Querier interface {
 	InsertEffectExhaustion(ctx context.Context, arg InsertEffectExhaustionParams) error
 	InsertEffectExtraDamage(ctx context.Context, arg InsertEffectExtraDamageParams) error
 	InsertEffectForcedMove(ctx context.Context, arg InsertEffectForcedMoveParams) error
+	InsertEffectForm(ctx context.Context, arg InsertEffectFormParams) error
 	InsertEffectGrant(ctx context.Context, arg InsertEffectGrantParams) error
 	InsertEffectManual(ctx context.Context, arg InsertEffectManualParams) error
 	InsertEffectMode(ctx context.Context, arg InsertEffectModeParams) error
@@ -266,6 +268,7 @@ type Querier interface {
 	ListEffectExhaustion(ctx context.Context) ([]ListEffectExhaustionRow, error)
 	ListEffectExtraDamage(ctx context.Context) ([]ListEffectExtraDamageRow, error)
 	ListEffectForcedMoves(ctx context.Context) ([]ListEffectForcedMovesRow, error)
+	ListEffectForms(ctx context.Context) ([]ListEffectFormsRow, error)
 	ListEffectGrants(ctx context.Context) ([]ListEffectGrantsRow, error)
 	ListEffectManual(ctx context.Context) ([]ListEffectManualRow, error)
 	ListEffectModes(ctx context.Context) ([]ListEffectModesRow, error)
@@ -367,6 +370,7 @@ type Querier interface {
 	SaveSettlement(ctx context.Context, arg SaveSettlementParams) error
 	SaveShop(ctx context.Context, arg SaveShopParams) error
 	SaveTable(ctx context.Context, arg SaveTableParams) error
+	SaveTokenForm(ctx context.Context, arg SaveTokenFormParams) error
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
@@ -386,6 +390,7 @@ type Querier interface {
 	SessionSurfaces(ctx context.Context, sessionID uuid.UUID) ([]SessionSurfacesRow, error)
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
+	SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenForm, error)
 	SessionTokenReactions(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenReaction, error)
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
 	SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error)

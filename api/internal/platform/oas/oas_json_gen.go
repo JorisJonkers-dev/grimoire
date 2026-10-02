@@ -12744,6 +12744,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.TempHp.Set {
+			e.FieldStart("tempHp")
+			s.TempHp.Encode(e)
+		}
+	}
+	{
 		if s.SaveAbility.Set {
 			e.FieldStart("saveAbility")
 			s.SaveAbility.Encode(e)
@@ -13013,7 +13019,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [77]string{
+var jsonFieldsNameOfLiveCommand = [78]string{
 	0:  "nonce",
 	1:  "kind",
 	2:  "tokenId",
@@ -13047,50 +13053,51 @@ var jsonFieldsNameOfLiveCommand = [77]string{
 	30: "rounds",
 	31: "slot",
 	32: "effectMode",
-	33: "saveAbility",
-	34: "saveDc",
-	35: "effectId",
-	36: "manualId",
-	37: "surface",
-	38: "elevationFt",
-	39: "camera",
-	40: "zoomPct",
-	41: "scene",
-	42: "title",
-	43: "body",
-	44: "nodeId",
-	45: "toNodeId",
-	46: "routeId",
-	47: "distanceMi",
-	48: "pace",
-	49: "zoneId",
-	50: "radiusHexes",
-	51: "dmOnly",
-	52: "rest",
-	53: "tableId",
-	54: "mode",
-	55: "entry",
-	56: "due",
-	57: "lootTableId",
-	58: "fromId",
-	59: "instanceId",
-	60: "action",
-	61: "detail",
-	62: "trigger",
-	63: "option",
-	64: "offHand",
-	65: "cleave",
-	66: "reactionKind",
-	67: "reactionMode",
-	68: "condition",
-	69: "toId",
-	70: "itemSlug",
-	71: "coin",
-	72: "count",
-	73: "shopId",
-	74: "monsters",
-	75: "hpDelta",
-	76: "seq",
+	33: "tempHp",
+	34: "saveAbility",
+	35: "saveDc",
+	36: "effectId",
+	37: "manualId",
+	38: "surface",
+	39: "elevationFt",
+	40: "camera",
+	41: "zoomPct",
+	42: "scene",
+	43: "title",
+	44: "body",
+	45: "nodeId",
+	46: "toNodeId",
+	47: "routeId",
+	48: "distanceMi",
+	49: "pace",
+	50: "zoneId",
+	51: "radiusHexes",
+	52: "dmOnly",
+	53: "rest",
+	54: "tableId",
+	55: "mode",
+	56: "entry",
+	57: "due",
+	58: "lootTableId",
+	59: "fromId",
+	60: "instanceId",
+	61: "action",
+	62: "detail",
+	63: "trigger",
+	64: "option",
+	65: "offHand",
+	66: "cleave",
+	67: "reactionKind",
+	68: "reactionMode",
+	69: "condition",
+	70: "toId",
+	71: "itemSlug",
+	72: "coin",
+	73: "count",
+	74: "shopId",
+	75: "monsters",
+	76: "hpDelta",
+	77: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -13453,6 +13460,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"effectMode\"")
+			}
+		case "tempHp":
+			if err := func() error {
+				s.TempHp.Reset()
+				if err := s.TempHp.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tempHp\"")
 			}
 		case "saveAbility":
 			if err := func() error {
@@ -19482,6 +19499,12 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Form.Set {
+			e.FieldStart("form")
+			s.Form.Encode(e)
+		}
+	}
+	{
 		if s.Health.Set {
 			e.FieldStart("health")
 			s.Health.Encode(e)
@@ -19531,7 +19554,7 @@ func (s *LiveToken) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveToken = [18]string{
+var jsonFieldsNameOfLiveToken = [19]string{
 	0:  "id",
 	1:  "label",
 	2:  "kind",
@@ -19544,12 +19567,13 @@ var jsonFieldsNameOfLiveToken = [18]string{
 	9:  "hp",
 	10: "hpMax",
 	11: "tempHp",
-	12: "health",
-	13: "attacks",
-	14: "shield",
-	15: "effects",
-	16: "reactions",
-	17: "dying",
+	12: "form",
+	13: "health",
+	14: "attacks",
+	15: "shield",
+	16: "effects",
+	17: "reactions",
+	18: "dying",
 }
 
 // Decode decodes LiveToken from json.
@@ -19690,6 +19714,16 @@ func (s *LiveToken) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"tempHp\"")
+			}
+		case "form":
+			if err := func() error {
+				s.Form.Reset()
+				if err := s.Form.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"form\"")
 			}
 		case "health":
 			if err := func() error {

@@ -381,6 +381,15 @@ func (q *Queries) DeleteToken(ctx context.Context, arg DeleteTokenParams) error 
 	return err
 }
 
+const deleteTokenForm = `-- name: DeleteTokenForm :exec
+DELETE FROM play.token_forms WHERE token_id = $1
+`
+
+func (q *Queries) DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTokenForm, tokenID)
+	return err
+}
+
 const deleteZone = `-- name: DeleteZone :exec
 DELETE FROM play.encounter_zones WHERE session_id = $1 AND id = $2
 `
@@ -1466,6 +1475,28 @@ func (q *Queries) SaveTable(ctx context.Context, arg SaveTableParams) error {
 	return err
 }
 
+const saveTokenForm = `-- name: SaveTokenForm :exec
+INSERT INTO play.token_forms (token_id, effect_id, name, stats) VALUES ($1, $2, $3, $4)
+ON CONFLICT (token_id) DO UPDATE SET effect_id = excluded.effect_id, name = excluded.name, stats = excluded.stats
+`
+
+type SaveTokenFormParams struct {
+	TokenID  uuid.UUID
+	EffectID uuid.UUID
+	Name     string
+	Stats    []byte
+}
+
+func (q *Queries) SaveTokenForm(ctx context.Context, arg SaveTokenFormParams) error {
+	_, err := q.db.Exec(ctx, saveTokenForm,
+		arg.TokenID,
+		arg.EffectID,
+		arg.Name,
+		arg.Stats,
+	)
+	return err
+}
+
 const saveZone = `-- name: SaveZone :exec
 INSERT INTO play.encounter_zones (id, session_id, name, q, r, radius_hexes, dm_only, held, status, dc)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -1890,6 +1921,35 @@ func (q *Queries) SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) 
 			&i.Light,
 			&i.DamageMod,
 			&i.Mastery,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sessionTokenForms = `-- name: SessionTokenForms :many
+SELECT f.token_id, f.effect_id, f.name, f.stats FROM play.token_forms f JOIN play.tokens t ON t.id = f.token_id WHERE t.session_id = $1
+`
+
+func (q *Queries) SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenForm, error) {
+	rows, err := q.db.Query(ctx, sessionTokenForms, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PlayTokenForm{}
+	for rows.Next() {
+		var i PlayTokenForm
+		if err := rows.Scan(
+			&i.TokenID,
+			&i.EffectID,
+			&i.Name,
+			&i.Stats,
 		); err != nil {
 			return nil, err
 		}

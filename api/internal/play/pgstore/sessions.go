@@ -2,6 +2,7 @@ package pgstore
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"time"
@@ -168,6 +169,9 @@ func (s *Store) Load(ctx context.Context, id domain.SessionID) (domain.Session, 
 	if err := s.loadReactionSettings(ctx, row.ID, tokens); err != nil {
 		return domain.Session{}, nil, nil, err
 	}
+	if err := s.loadForms(ctx, row.ID, tokens); err != nil {
+		return domain.Session{}, nil, nil, err
+	}
 	sess := session(row)
 	if sess.MapID == nil {
 		return sess, tokens, nil, nil
@@ -189,6 +193,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 		steps := []func() error{
 			func() error { return tx.write(ctx, sid, board, w, now) },
 			func() error { return tx.dismiss(ctx, sid, w.Dismissed) },
+			func() error { return tx.saveForms(ctx, sid, w) },
 			func() error { return tx.saveCombat(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
 			func() error { return tx.saveTerrain(ctx, sid, board, w) },
@@ -360,6 +365,53 @@ func (s *Store) writeLanding(ctx context.Context, sid uuid.UUID, w live.Write) e
 	}
 	for _, r := range w.Resources {
 		if err := s.q.ChangeResourceUsed(ctx, queries.ChangeResourceUsedParams{CharacterID: r.Character, ResourceSlug: r.Resource, Delta: int32(r.Delta)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// loadForms lays each stored form over its token. The token's row keeps its own statistics; its hit
+// points are its own and its temporary hit points the form's.
+func (s *Store) loadForms(ctx context.Context, sid uuid.UUID, tokens []domain.Token) error {
+	forms, err := s.q.SessionTokenForms(ctx, sid)
+	if err != nil {
+		return err
+	}
+	for _, f := range forms {
+		i := slices.IndexFunc(tokens, func(t domain.Token) bool { return uuid.UUID(t.ID) == f.TokenID })
+		if i < 0 || tokens[i].Stats == nil {
+			continue
+		}
+		var shaped domain.Stats
+		if err := json.Unmarshal(f.Stats, &shaped); err != nil {
+			return err
+		}
+		own := *tokens[i].Stats
+		shaped.HP, shaped.HPMax, shaped.TempHP = own.HP, own.HPMax, own.TempHP
+		own.TempHP = 0
+		tokens[i].Stats, tokens[i].Form = &shaped, &domain.Form{Effect: domain.EffectID(f.EffectID), Name: f.Name, Own: own}
+	}
+	return nil
+}
+
+// saveForms writes a form a token takes and drops the forms of tokens that reverted.
+func (s *Store) saveForms(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if t := w.Formed; t != nil {
+		stats, err := json.Marshal(t.Stats)
+		if err != nil {
+			return err
+		}
+		p := queries.SaveTokenFormParams{TokenID: uuid.UUID(t.ID), EffectID: uuid.UUID(t.Form.Effect), Name: t.Form.Name, Stats: stats}
+		if err := s.q.SaveTokenForm(ctx, p); err != nil {
+			return err
+		}
+	}
+	for _, id := range w.Reverted {
+		if err := s.q.DeleteTokenForm(ctx, uuid.UUID(id)); err != nil {
+			return err
+		}
+		if err := s.q.SetTokenTempHP(ctx, queries.SetTokenTempHPParams{SessionID: sid, ID: uuid.UUID(id), TempHp: 0}); err != nil {
 			return err
 		}
 	}

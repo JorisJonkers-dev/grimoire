@@ -427,6 +427,14 @@ type CompendiumEffectForcedMove struct {
 	Toward   bool
 }
 
+type CompendiumEffectForm struct {
+	EffectID    int64
+	Ordinal     int32
+	Kind        string
+	MonsterSlug string
+	TempHp      int32
+}
+
 type CompendiumEffectGrant struct {
 	EffectID int64
 	Ordinal  int32
@@ -1195,6 +1203,13 @@ type PlayTokenAttack struct {
 	Light       bool
 	DamageMod   int32
 	Mastery     pgtype.Text
+}
+
+type PlayTokenForm struct {
+	TokenID  uuid.UUID
+	EffectID uuid.UUID
+	Name     string
+	Stats    []byte
 }
 
 type PlayTokenReaction struct {

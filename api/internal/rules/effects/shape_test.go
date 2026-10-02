@@ -77,6 +77,17 @@ func TestSummons(t *testing.T) {
 	}
 }
 
+func TestFormsLand(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{"polymorph": {Slug: "polymorph", Components: []effects.Component{effects.Form{Monster: "", TempHP: 0}}}}
+	if l := cat.LandingOf("polymorph", ""); l.Form == nil || *l.Form != (effects.Form{}) {
+		t.Fatalf("polymorph lands a form = %+v", l)
+	}
+	if l := cat.LandingOf("bless", ""); l.Form != nil {
+		t.Fatalf("bless lands no form = %+v", l)
+	}
+}
+
 func TestConditionsHold(t *testing.T) {
 	t.Parallel()
 	for _, c := range []struct {
@@ -226,6 +237,8 @@ func TestRulesText(t *testing.T) {
 			effects.Summon{Monster: "skeleton", Count: 2, NeedsCommand: true},
 			effects.Summon{Monster: "wolf", Count: 3, Shares: true},
 			effects.Summon{Monster: "zombie", Count: 1, NeedsCommand: true},
+			effects.Form{Monster: "", TempHP: 0},
+			effects.Form{Monster: "owl", TempHP: 5},
 		},
 	}
 	want := []string{
@@ -271,6 +284,8 @@ func TestRulesText(t *testing.T) {
 		"The caster summons 2 Skeleton creatures, which roll their own Initiative. They take the Dodge action unless the caster commands them with a Bonus Action.",
 		"The caster summons 3 Wolf creatures, which act on the caster's turn.",
 		"The caster summons a Zombie, which rolls its own Initiative. It takes the Dodge action unless the caster commands it with a Bonus Action.",
+		"The target takes the form of a creature of the caster's choice, using its statistics and gaining Temporary Hit Points equal to that creature's Hit Point maximum; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points.",
+		"The target takes the form of an Owl, using its statistics and gaining 5 Temporary Hit Points; it reverts when they are gone or the effect ends, and any damage left over carries to its own Hit Points.",
 		"Duration: Concentration, up to 1 minute.",
 		"The target repeats the Wisdom saving throw at the end of each of its turns, ending the effect on a success.",
 		"Using a Higher-Level Spell Slot: the damage increases by 1d8 for each slot level above 2.",

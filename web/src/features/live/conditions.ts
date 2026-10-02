@@ -18,6 +18,8 @@ export const knownEffects: { slug: string; name: string; concentration?: boolean
   { slug: 'false-life', name: 'False Life' },
   { slug: 'dispel-magic', name: 'Dispel Magic' },
   { slug: 'counterspell', name: 'Counterspell' },
+  { slug: 'polymorph', name: 'Polymorph', concentration: true },
+  { slug: 'wild-shape', name: 'Wild Shape' },
   ...['blinded', 'charmed', 'deafened', 'exhaustion', 'frightened', 'grappled', 'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained', 'stunned', 'unconscious'].map(
     (slug) => ({ slug, name: (slug[0] ?? '').toUpperCase() + slug.slice(1) }),
   ),

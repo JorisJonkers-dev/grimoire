@@ -155,7 +155,9 @@ type Command struct {
 	// Slot is the spell slot level an area spell is cast with; 0 casts it at its lowest.
 	Slot int `json:"slot,omitempty"`
 	// EffectMode is the option an Effect that offers a choice is applied in.
-	EffectMode  string `json:"effectMode,omitempty"`
+	EffectMode string `json:"effectMode,omitempty"`
+	// TempHP sets the Temporary Hit Points of a form, such as a druid's level for Wild Shape.
+	TempHP      int    `json:"tempHp,omitempty"`
 	SaveAbility string `json:"saveAbility,omitempty"`
 	SaveDC      int    `json:"saveDc,omitempty"`
 	EffectID    string `json:"effectId,omitempty"`
@@ -245,6 +247,7 @@ type TokenView struct {
 	HP      *int         `json:"hp,omitempty"`
 	HPMax   *int         `json:"hpMax,omitempty"`
 	TempHP  int          `json:"tempHp,omitempty"`
+	Form    string       `json:"form,omitempty"`
 	Health  string       `json:"health,omitempty"`
 	Attacks []AttackView `json:"attacks,omitempty"`
 	Shield  bool         `json:"shield,omitempty"`
@@ -696,6 +699,9 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	v := TokenView{ID: uuid.UUID(t.ID).String(), Label: t.Label, Kind: t.Kind, Q: t.Q, R: t.R, Hidden: t.Hidden, DarkvisionFt: t.DarkvisionFt}
 	if t.Controller != nil {
 		v.ControllerID = t.Controller.String()
+	}
+	if t.Form != nil {
+		v.Form = t.Form.Name
 	}
 	s := t.Stats
 	switch {

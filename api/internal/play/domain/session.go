@@ -65,6 +65,16 @@ type Token struct {
 	Reactions map[string]reactions.Setting
 	// Summon is the Effect that keeps a summoned creature here; it leaves when the Effect ends.
 	Summon *EffectID
+	// Form is the creature the token has taken the shape of, if any; Stats are then the form's.
+	Form *Form
+}
+
+// Form is a shape a token has taken: the Effect keeping it, the creature's name, and the token's own
+// statistics to revert to.
+type Form struct {
+	Effect EffectID
+	Name   string
+	Own    Stats
 }
 
 // Stats is a token's fighting statblock, copied from a monster or a Character when it is placed.

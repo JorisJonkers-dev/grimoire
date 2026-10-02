@@ -177,6 +177,14 @@ type Summon struct {
 	NeedsCommand bool
 }
 
+// Form overlays the bearer's stat block with a creature's (Polymorph, Wild Shape). Monster empty lets
+// whoever applies it choose the creature. The form's hit points are Temporary Hit Points: TempHP of
+// them, or the creature's Hit Point maximum when TempHP is 0. The bearer reverts when they are gone.
+type Form struct {
+	Monster string
+	TempHP  int
+}
+
 // Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
 // speed, and at DeathAt levels the bearer dies.
 type Exhausting struct {
@@ -192,6 +200,7 @@ func (SaveEdge) isComponent()       {}
 func (CritWithin) isComponent()     {}
 func (Exhausting) isComponent()     {}
 func (Summon) isComponent()         {}
+func (Form) isComponent()           {}
 func (SpeedPenalty) isComponent()   {}
 func (Reacts) isComponent()         {}
 func (TempHP) isComponent()         {}
@@ -313,7 +322,7 @@ func (p *AttackProfile) attacking(d Definition, a Active) {
 		case Exhausting:
 			p.Penalty += c.D20PerLevel * levels
 			p.Notes = append(p.Notes, d.Name+" "+strconv.Itoa(levels)+": -"+strconv.Itoa(c.D20PerLevel*levels)+" to hit")
-		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
+		case ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
 		}
 	}
 }
@@ -336,7 +345,7 @@ func (p *AttackProfile) attacked(d Definition, a Active, bySource, withinFive bo
 				p.Crit = true
 				p.Notes = append(p.Notes, d.Name+": a hit from this close is a Critical Hit")
 			}
-		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
+		case BonusDie, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
 		}
 	}
 }
@@ -437,7 +446,7 @@ func (cat Catalog) ForSave(bearer []Active, ability string) SaveProfile {
 				}
 			case Exhausting:
 				p.Penalty += c.D20PerLevel * a.levels()
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, CritWithin, SpeedPenalty, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
 			}
 		}
 	}
@@ -455,7 +464,7 @@ func (cat Catalog) SpeedPenaltyFt(bearer []Active) int {
 				ft += c.SpeedFtPerLevel * a.levels()
 			case SpeedPenalty:
 				worst = max(worst, c.Ft)
-			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
+			case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge, CritWithin, Reacts, TempHP, Teleport, ForcedMove, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
 			}
 		}
 	}
@@ -501,6 +510,7 @@ type Landing struct {
 	Dispels   bool
 	Grants    []string
 	Resources []ResourceChange
+	Form      *Form
 }
 
 // LandingOf is what an Effect does as it lands.
@@ -514,6 +524,8 @@ func (cat Catalog) LandingOf(slug, mode string) Landing {
 			out.Dispels = true
 		case GrantFeature:
 			out.Grants = append(out.Grants, c.Name)
+		case Form:
+			out.Form = &c
 		case ResourceChange:
 			out.Resources = append(out.Resources, c)
 		case BonusDie, Edge, ExtraDamage, MoveCost, Manual, Area, SaveDamage, SaveCondition, CreateSurface, Incapacitated, Immobile, SaveEdge,
@@ -615,7 +627,7 @@ func (cat Catalog) AreaOf(slug string) (AreaSpell, bool) {
 			out.Instructions = append(out.Instructions, c.Instruction)
 		case ForcedMove:
 			out.Push = c
-		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon:
+		case BonusDie, Edge, ExtraDamage, MoveCost, Incapacitated, Immobile, SaveEdge, CritWithin, Exhausting, SpeedPenalty, Reacts, TempHP, Teleport, Dispel, Counter, GrantFeature, ResourceChange, Choice, Branch, Summon, Form:
 		}
 	}
 	return out, known && found

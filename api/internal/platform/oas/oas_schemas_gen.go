@@ -9077,7 +9077,9 @@ type LiveCommand struct {
 	// The spell slot level an area spell is cast with; left out, it is cast at its lowest.
 	Slot OptInt32 `json:"slot"`
 	// The option an Effect that offers a choice is applied in.
-	EffectMode  OptString  `json:"effectMode"`
+	EffectMode OptString `json:"effectMode"`
+	// Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
+	TempHp      OptInt32   `json:"tempHp"`
 	SaveAbility OptAbility `json:"saveAbility"`
 	SaveDc      OptInt32   `json:"saveDc"`
 	EffectId    OptID      `json:"effectId"`
@@ -9294,6 +9296,11 @@ func (s *LiveCommand) GetSlot() OptInt32 {
 // GetEffectMode returns the value of EffectMode.
 func (s *LiveCommand) GetEffectMode() OptString {
 	return s.EffectMode
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *LiveCommand) GetTempHp() OptInt32 {
+	return s.TempHp
 }
 
 // GetSaveAbility returns the value of SaveAbility.
@@ -9679,6 +9686,11 @@ func (s *LiveCommand) SetSlot(val OptInt32) {
 // SetEffectMode sets the value of EffectMode.
 func (s *LiveCommand) SetEffectMode(val OptString) {
 	s.EffectMode = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *LiveCommand) SetTempHp(val OptInt32) {
+	s.TempHp = val
 }
 
 // SetSaveAbility sets the value of SaveAbility.
@@ -13349,6 +13361,8 @@ type LiveToken struct {
 	HpMax        OptInt32  `json:"hpMax"`
 	// Temporary hit points, lost before hit points.
 	TempHp OptInt32 `json:"tempHp"`
+	// The creature whose shape the token has taken.
+	Form OptString `json:"form"`
 	// What anyone can tell by looking, for creatures whose hit points the audience may not see.
 	Health    OptLiveTokenHealth    `json:"health"`
 	Attacks   []LiveAttack          `json:"attacks"`
@@ -13416,6 +13430,11 @@ func (s *LiveToken) GetHpMax() OptInt32 {
 // GetTempHp returns the value of TempHp.
 func (s *LiveToken) GetTempHp() OptInt32 {
 	return s.TempHp
+}
+
+// GetForm returns the value of Form.
+func (s *LiveToken) GetForm() OptString {
+	return s.Form
 }
 
 // GetHealth returns the value of Health.
@@ -13506,6 +13525,11 @@ func (s *LiveToken) SetHpMax(val OptInt32) {
 // SetTempHp sets the value of TempHp.
 func (s *LiveToken) SetTempHp(val OptInt32) {
 	s.TempHp = val
+}
+
+// SetForm sets the value of Form.
+func (s *LiveToken) SetForm(val OptString) {
+	s.Form = val
 }
 
 // SetHealth sets the value of Health.

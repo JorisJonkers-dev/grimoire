@@ -6,12 +6,12 @@ import { effectLabel, knownEffects } from './conditions'
 
 const props = defineProps<{ token: LiveToken; tokens: LiveToken[] }>()
 const emit = defineEmits<{
-  apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number; effectMode?: string }]
+  apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number; effectMode?: string; monsterSlug?: string; tempHp?: number }]
   end: [effectId: string]
 }>()
 const known = knownEffects
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
-const form = reactive({ effect: '', source: '', rounds: 0, dc: 0, mode: '' })
+const form = reactive({ effect: '', source: '', rounds: 0, dc: 0, mode: '', creature: '', temp: 0 })
 const saveWith = ref<Ability | ''>('')
 // ends names the concentration the chosen source would lose by putting on a concentration Effect.
 const ends = computed(() => {
@@ -30,7 +30,11 @@ function apply() {
     ...(form.rounds ? { rounds: form.rounds } : {}),
     ...(ability && form.dc ? { saveAbility: ability, saveDc: form.dc } : {}),
     ...(form.mode.trim() ? { effectMode: form.mode.trim() } : {}),
+    ...(form.creature.trim() ? { monsterSlug: form.creature.trim() } : {}),
+    ...(form.temp > 0 ? { tempHp: form.temp } : {}),
   })
+  form.creature = ''
+  form.temp = 0
   form.effect = ''
   form.mode = ''
 }
@@ -64,6 +68,8 @@ function apply() {
         </select>
       </label>
       <label class="g-field"><span>Mode</span><input v-model="form.mode" maxlength="80" placeholder="Enlarge" data-testid="effect-mode" /></label>
+      <label class="g-field"><span>Becomes</span><input v-model="form.creature" maxlength="80" placeholder="wolf" data-testid="effect-creature" /></label>
+      <label class="g-field"><span>Temp HP</span><input v-model.number="form.temp" type="number" min="0" max="999" data-testid="effect-temp" /></label>
       <label class="g-field"><span>Rounds</span><input v-model.number="form.rounds" type="number" min="0" max="100" data-testid="effect-rounds" /></label>
       <label class="g-field">
         <span>Ends on a save</span>

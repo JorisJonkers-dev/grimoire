@@ -237,6 +237,27 @@ func (q *Queries) InsertEffectForcedMove(ctx context.Context, arg InsertEffectFo
 	return err
 }
 
+const insertEffectForm = `-- name: InsertEffectForm :exec
+INSERT INTO compendium.effect_forms (effect_id, ordinal, monster_slug, temp_hp) VALUES ($1, $2, $3, $4)
+`
+
+type InsertEffectFormParams struct {
+	EffectID    int64
+	Ordinal     int32
+	MonsterSlug string
+	TempHp      int32
+}
+
+func (q *Queries) InsertEffectForm(ctx context.Context, arg InsertEffectFormParams) error {
+	_, err := q.db.Exec(ctx, insertEffectForm,
+		arg.EffectID,
+		arg.Ordinal,
+		arg.MonsterSlug,
+		arg.TempHp,
+	)
+	return err
+}
+
 const insertEffectGrant = `-- name: InsertEffectGrant :exec
 INSERT INTO compendium.effect_grants (effect_id, ordinal, name) VALUES ($1, $2, $3)
 `
@@ -921,6 +942,42 @@ func (q *Queries) ListEffectForcedMoves(ctx context.Context) ([]ListEffectForced
 			&i.Ordinal,
 			&i.Ft,
 			&i.Toward,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEffectForms = `-- name: ListEffectForms :many
+SELECT effect_id, ordinal, monster_slug, temp_hp FROM compendium.effect_forms
+`
+
+type ListEffectFormsRow struct {
+	EffectID    int64
+	Ordinal     int32
+	MonsterSlug string
+	TempHp      int32
+}
+
+func (q *Queries) ListEffectForms(ctx context.Context) ([]ListEffectFormsRow, error) {
+	rows, err := q.db.Query(ctx, listEffectForms)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEffectFormsRow{}
+	for rows.Next() {
+		var i ListEffectFormsRow
+		if err := rows.Scan(
+			&i.EffectID,
+			&i.Ordinal,
+			&i.MonsterSlug,
+			&i.TempHp,
 		); err != nil {
 			return nil, err
 		}

@@ -1028,6 +1028,7 @@ export const zLiveToken = z.object({
     hp: z.int().gte(0).lte(10000).optional(),
     hpMax: z.int().gte(1).lte(10000).optional(),
     tempHp: z.int().gte(1).lte(999).optional(),
+    form: z.string().max(80).optional(),
     health: z.enum([
         'unhurt',
         'hurt',
@@ -1696,6 +1697,7 @@ export const zLiveCommand = z.object({
     rounds: z.int().gte(0).lte(100).optional(),
     slot: z.int().gte(1).lte(9).optional(),
     effectMode: z.string().max(80).optional(),
+    tempHp: z.int().gte(1).lte(999).optional(),
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),

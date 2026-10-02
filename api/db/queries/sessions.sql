@@ -335,3 +335,13 @@ DELETE FROM play.dying WHERE token_id = $1;
 
 -- name: SetTokenTempHP :exec
 UPDATE play.tokens SET temp_hp = @temp_hp WHERE session_id = @session_id AND id = @id;
+
+-- name: SaveTokenForm :exec
+INSERT INTO play.token_forms (token_id, effect_id, name, stats) VALUES (@token_id, @effect_id, @name, @stats)
+ON CONFLICT (token_id) DO UPDATE SET effect_id = excluded.effect_id, name = excluded.name, stats = excluded.stats;
+
+-- name: DeleteTokenForm :exec
+DELETE FROM play.token_forms WHERE token_id = @token_id;
+
+-- name: SessionTokenForms :many
+SELECT f.token_id, f.effect_id, f.name, f.stats FROM play.token_forms f JOIN play.tokens t ON t.id = f.token_id WHERE t.session_id = $1;

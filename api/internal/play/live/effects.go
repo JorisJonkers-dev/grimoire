@@ -61,14 +61,7 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	if land.Dispels {
 		return r.st.dispel(target)
 	}
-	def, known := r.st.catalog.Lookup(slug)
-	name := def.Name
-	if !known {
-		name = strings.TrimSpace(cmd.EffectName)
-		if name == "" || len([]rune(name)) > 80 {
-			name = slug
-		}
-	}
+	def, name := r.st.effectName(slug, cmd.EffectName)
 	if modes := def.Modes(); len(modes) > 0 && !slices.Contains(modes, cmd.EffectMode) {
 		return Write{}, "Choose " + strings.Join(modes, " or ") + "."
 	}
@@ -83,6 +76,11 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 	}
 	w := Write{Kind: domain.ActionEffectApplied, Token: target, effect: &e}
 	r.st.land(&w, land, target)
+	if land.Form != nil {
+		if reason := r.shape(&w, *land.Form, cmd, target, e.ID); reason != "" {
+			return Write{}, reason
+		}
+	}
 	r.st.afflict(&w, e, target)
 	for _, old := range r.st.fx.Active {
 		if e.Concentration && old.Concentration && old.Source != nil && *old.Source == *source {
@@ -93,6 +91,20 @@ func (r *runtime) planApply(cmd Command) (Write, string) {
 		w.manuals = append(w.manuals, domain.ManualPrompt{ID: uuid.New(), Text: target.Label + ": " + text})
 	}
 	return w, ""
+}
+
+// effectName is an Effect's definition and the name it shows: its own, or the one given for an Effect
+// the rules do not know.
+func (s *state) effectName(slug, given string) (effects.Definition, string) {
+	def, known := s.catalog.Lookup(slug)
+	if known {
+		return def, def.Name
+	}
+	name := strings.TrimSpace(given)
+	if name == "" || len([]rune(name)) > 80 {
+		name = slug
+	}
+	return def, name
 }
 
 // land adds what an Effect gives the moment it lands: temporary hit points, which replace smaller ones
@@ -294,6 +306,9 @@ func applyEffects(s *state, w *Write) {
 		} else {
 			fx.Active = append(fx.Active, *w.effect)
 		}
+	}
+	if w.Formed != nil {
+		s.tokens[w.Formed.ID] = *w.Formed
 	}
 	if w.Kind == domain.ActionEffectApplied && w.HP != nil {
 		s.setHP(*w.HP)

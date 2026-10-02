@@ -1004,6 +1004,10 @@ export type LiveToken = {
      */
     tempHp?: number;
     /**
+     * The creature whose shape the token has taken.
+     */
+    form?: string;
+    /**
      * What anyone can tell by looking, for creatures whose hit points the audience may not see.
      */
     health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
@@ -1146,6 +1150,10 @@ export type LiveCommand = {
      * The option an Effect that offers a choice is applied in.
      */
     effectMode?: string;
+    /**
+     * Temporary Hit Points a form gives, such as a druid's level for Wild Shape.
+     */
+    tempHp?: number;
     saveAbility?: Ability;
     saveDc?: number;
     effectId?: Id;

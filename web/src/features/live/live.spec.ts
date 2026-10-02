@@ -640,6 +640,11 @@ describe('effects', () => {
     await panel.get('[data-testid="effect-mode"]').setValue(' Reduce ')
     await panel.get('form').trigger('submit')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'apply_effect', effect: 'enlarge-reduce', effectMode: 'Reduce' })
+    await panel.get('[data-testid="effect-name"]').setValue('wild-shape')
+    await panel.get('[data-testid="effect-creature"]').setValue(' wolf ')
+    await panel.get('[data-testid="effect-temp"]').setValue(4)
+    await panel.get('form').trigger('submit')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'apply_effect', effect: 'wild-shape', monsterSlug: 'wolf', tempHp: 4 })
     expect((panel.get('[data-testid="effect-mode"]').element as HTMLInputElement).value).toBe('')
   })
 
@@ -687,9 +692,9 @@ describe('areas and terrain', () => {
     const s = FakeSocket.last()
     const combat = { status: 'active', round: 1, combatants: [fighter(boss, { acting: true }), fighter(aria)] }
     const guarded: LiveToken = { ...boss, effects: [{ id: '0190c7a8-0000-7000-8000-000000000091', slug: 'spirit-guardians', name: 'Spirit Guardians', concentration: true, hexes: [{ q: 1, r: 0 }] }] }
-    s.receive(snapshot([{ ...aria, tempHp: 3 }, guarded], 'dm', { combat }))
+    s.receive(snapshot([{ ...aria, tempHp: 3, form: 'Wolf' }, guarded], 'dm', { combat }))
     await flushPromises()
-    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria (12/12 HP +3 temp)')
+    expect(wrapper.get('[data-hex="0,0"]').attributes('aria-label')).toContain('Aria as Wolf (12/12 HP +3 temp)')
     expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('in the area')
     await wrapper.get('[data-testid="hotbar-Goblin Boss"] [data-testid="misty-step"]').trigger('click')
     expect(wrapper.get('[data-testid="teleporting"]').text()).toBe('Tap a free hex within 30 feet.')

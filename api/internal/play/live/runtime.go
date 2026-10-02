@@ -42,6 +42,9 @@ type Write struct {
 	// tokens that left because the Effect keeping them ended.
 	Resources []ResourceDelta
 	Dismissed []domain.TokenID
+	// Formed is a token as it takes a form; Reverted are tokens whose form ended.
+	Formed   *domain.Token
+	Reverted []domain.TokenID
 	// Observers saw a ranged attack's damage; each remembers it against the attacker.
 	Observers []domain.TokenID
 	attack    *domain.PendingAttack
@@ -680,6 +683,7 @@ func apply(s *state, w *Write) {
 	if w.Kind == domain.ActionRestTaken {
 		w.ended = append(w.ended, s.restEnded()...)
 	}
+	s.formBroken(w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
 	started := map[domain.TokenID]bool{}
@@ -698,6 +702,7 @@ func apply(s *state, w *Write) {
 		changed = true
 	}
 	changed = s.dismiss(w) || changed
+	changed = s.revert(w) || changed
 	if changed {
 		fx := cloneEffects(s.fx)
 		w.Effects = &fx
