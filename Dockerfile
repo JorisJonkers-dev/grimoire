@@ -15,6 +15,8 @@ COPY fixtures fixtures
 COPY web web
 RUN pnpm --filter @grimoire/web build
 
+# The API compiles on its own (the embedded web app is a placeholder until the next stage), so the web and
+# API stages build in parallel and CI can check each alone.
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS api
 ARG TARGETOS
 ARG TARGETARCH
@@ -22,12 +24,18 @@ WORKDIR /src/api
 COPY api/go.mod api/go.sum ./
 RUN go mod download
 COPY api .
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath ./...
+
+# Embedding the web app relinks the binary from the API stage's build cache.
+FROM api AS app
+ARG TARGETOS
+ARG TARGETARCH
 COPY --from=web /src/web/dist internal/platform/webui/dist
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/grimoire ./cmd/grimoire
 
 FROM gcr.io/distroless/static-debian12:nonroot
-COPY --from=api /out/grimoire /grimoire
+COPY --from=app /out/grimoire /grimoire
 EXPOSE 8080
 USER nonroot:nonroot
 ENTRYPOINT ["/grimoire"]
