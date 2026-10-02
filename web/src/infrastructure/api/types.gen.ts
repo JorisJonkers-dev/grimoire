@@ -238,6 +238,110 @@ export type AdminAccountDetail = {
 };
 
 /**
+ * What a Mention points at.
+ */
+export type MentionKind = 'character' | 'location';
+
+/**
+ * Game content a message mentions.
+ */
+export type MentionRef = {
+    kind: MentionKind;
+    campaignId: Id;
+    id: Id;
+};
+
+/**
+ * A Mention as the reader sees it; label and mapId appear only when they may open it.
+ */
+export type MentionView = {
+    kind: MentionKind;
+    campaignId: Id;
+    id: Id;
+    open: boolean;
+    label?: string;
+    mapId?: Id;
+};
+
+/**
+ * One message in a Conversation.
+ */
+export type MessageEntry = {
+    id: Id;
+    author: Person;
+    body: string;
+    at: string;
+    mentions: Array<MentionView>;
+};
+
+/**
+ * A page of messages, newest first.
+ */
+export type MessagePage = {
+    items: Array<MessageEntry>;
+};
+
+/**
+ * A new message and what it mentions.
+ */
+export type MessageSend = {
+    body: string;
+    mentions?: Array<MentionRef>;
+};
+
+/**
+ * A Conversation in its members' list.
+ */
+export type ConversationEntry = {
+    id: Id;
+    title: string;
+    members: Array<Person>;
+    updatedAt: string;
+    unread: number;
+    lastBody: string;
+};
+
+/**
+ * An Account's Conversations.
+ */
+export type ConversationList = {
+    items: Array<ConversationEntry>;
+};
+
+/**
+ * The Friends to talk with, and a title for a group.
+ */
+export type ConversationStart = {
+    with: Array<Id>;
+    title?: string;
+};
+
+/**
+ * A Conversation's id.
+ */
+export type ConversationRef = {
+    id: Id;
+};
+
+/**
+ * Something the caller may mention.
+ */
+export type Mentionable = {
+    kind: MentionKind;
+    id: Id;
+    name: string;
+    campaignId: Id;
+    campaignName: string;
+};
+
+/**
+ * What the caller may mention.
+ */
+export type MentionableList = {
+    items: Array<Mentionable>;
+};
+
+/**
  * Another Account as social pages show it.
  */
 export type Person = {
@@ -7633,6 +7737,171 @@ export type UnblockResponses = {
 };
 
 export type UnblockResponse = UnblockResponses[keyof UnblockResponses];
+
+export type ListConversationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/conversations';
+};
+
+export type ListConversationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListConversationsError = ListConversationsErrors[keyof ListConversationsErrors];
+
+export type ListConversationsResponses = {
+    /**
+     * The Conversations.
+     */
+    200: ConversationList;
+};
+
+export type ListConversationsResponse = ListConversationsResponses[keyof ListConversationsResponses];
+
+export type StartConversationData = {
+    body: ConversationStart;
+    path?: never;
+    query?: never;
+    url: '/api/v1/conversations';
+};
+
+export type StartConversationErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartConversationError = StartConversationErrors[keyof StartConversationErrors];
+
+export type StartConversationResponses = {
+    /**
+     * The Conversation.
+     */
+    201: ConversationRef;
+};
+
+export type StartConversationResponse = StartConversationResponses[keyof StartConversationResponses];
+
+export type ListMessagesData = {
+    body?: never;
+    path: {
+        /**
+         * Conversation id.
+         */
+        conversationId: Id;
+    };
+    query?: {
+        /**
+         * Only messages from before this moment, for the next page.
+         */
+        before?: string;
+    };
+    url: '/api/v1/conversations/{conversationId}/messages';
+};
+
+export type ListMessagesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMessagesError = ListMessagesErrors[keyof ListMessagesErrors];
+
+export type ListMessagesResponses = {
+    /**
+     * The messages.
+     */
+    200: MessagePage;
+};
+
+export type ListMessagesResponse = ListMessagesResponses[keyof ListMessagesResponses];
+
+export type SendMessageData = {
+    body: MessageSend;
+    path: {
+        /**
+         * Conversation id.
+         */
+        conversationId: Id;
+    };
+    query?: never;
+    url: '/api/v1/conversations/{conversationId}/messages';
+};
+
+export type SendMessageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendMessageError = SendMessageErrors[keyof SendMessageErrors];
+
+export type SendMessageResponses = {
+    /**
+     * The message.
+     */
+    201: MessageEntry;
+};
+
+export type SendMessageResponse = SendMessageResponses[keyof SendMessageResponses];
+
+export type ListMentionablesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Letters the name contains.
+         */
+        q?: string;
+    };
+    url: '/api/v1/mentionables';
+};
+
+export type ListMentionablesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMentionablesError = ListMentionablesErrors[keyof ListMentionablesErrors];
+
+export type ListMentionablesResponses = {
+    /**
+     * What may be mentioned.
+     */
+    200: MentionableList;
+};
+
+export type ListMentionablesResponse = ListMentionablesResponses[keyof ListMentionablesResponses];
 
 export type GetHealthData = {
     body?: never;

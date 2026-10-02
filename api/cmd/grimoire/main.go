@@ -226,11 +226,12 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		})
 		accounts.Grant, accounts.AdminRole, oidcName = o.GrantRole, o.AdminRole, o.Name
 	}
+	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now}
 	handler, err := httpapi.New(httpapi.Options{
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
 			Push: notices, Accounts: accounts, OIDCName: oidcName,
-			Friends: &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now},
+			Friends: social, Conversations: social,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

@@ -47,3 +47,58 @@ type Friends struct {
 	Outgoing []Request
 	Blocked  []Request
 }
+
+// Mention kinds: a Campaign Character, or a Location on a Campaign's world map.
+const (
+	MentionCharacter = "character"
+	MentionLocation  = "location"
+)
+
+// Mention is game content a Message points at.
+type Mention struct {
+	Kind       string
+	CampaignID uuid.UUID
+	TargetID   uuid.UUID
+}
+
+// Placed is a stored Mention and the Message it belongs to.
+type Placed struct {
+	Message uuid.UUID
+	Mention
+}
+
+// Resolved is a Mention as one reader sees it: its name and where it opens, when they may open it.
+type Resolved struct {
+	Mention
+	Label string
+	MapID uuid.UUID
+	Open  bool
+}
+
+// Conversation is a Conversation as its members' list shows it.
+type Conversation struct {
+	ID        uuid.UUID
+	Title     string
+	Members   []Person
+	UpdatedAt time.Time
+	Unread    int
+	LastBody  string
+}
+
+// Message is one message in a Conversation, with its Mentions as the reader sees them.
+type Message struct {
+	ID       uuid.UUID
+	Author   Person
+	Body     string
+	At       time.Time
+	Mentions []Resolved
+}
+
+// Mentionable is game content the caller may mention.
+type Mentionable struct {
+	Kind         string
+	ID           uuid.UUID
+	Name         string
+	CampaignID   uuid.UUID
+	CampaignName string
+}

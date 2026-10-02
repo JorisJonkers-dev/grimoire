@@ -58,3 +58,76 @@ WHERE r.from_account = @me AND r.status = 'pending' ORDER BY r.created_at DESC;
 -- name: ListBlocked :many
 SELECT a.id, a.username, a.nickname, b.created_at FROM social.blocks b JOIN identity.accounts a ON a.id = b.blocked
 WHERE b.blocker = @me ORDER BY lower(a.nickname), a.username;
+
+-- name: InsertConversation :exec
+INSERT INTO social.conversations (id, title, created_by, created_at, updated_at) VALUES (@id, @title, @created_by, @now, @now);
+
+-- name: AddConversationMember :exec
+INSERT INTO social.conversation_members (conversation_id, account_id, joined_at, last_read_at) VALUES (@conversation_id, @account_id, @now, @now);
+
+-- name: DirectConversation :one
+-- The one-to-one Conversation between two Accounts, if they have one.
+SELECT c.id FROM social.conversations c
+WHERE (SELECT count(*) FROM social.conversation_members m WHERE m.conversation_id = c.id) = 2
+    AND EXISTS (SELECT 1 FROM social.conversation_members m WHERE m.conversation_id = c.id AND m.account_id = @x)
+    AND EXISTS (SELECT 1 FROM social.conversation_members m WHERE m.conversation_id = c.id AND m.account_id = @y)
+    AND c.title = ''
+LIMIT 1;
+
+-- name: IsConversationMember :one
+SELECT EXISTS (SELECT 1 FROM social.conversation_members WHERE conversation_id = @conversation_id AND account_id = @account_id);
+
+-- name: ListConversations :many
+SELECT c.id, c.title, c.updated_at,
+    (SELECT count(*) FROM social.messages msg WHERE msg.conversation_id = c.id AND msg.author <> @me AND msg.created_at > me.last_read_at)::integer AS unread,
+    coalesce((SELECT left(msg.body, 120) FROM social.messages msg WHERE msg.conversation_id = c.id ORDER BY msg.created_at DESC, msg.id DESC LIMIT 1), '')::text AS last_body
+FROM social.conversations c JOIN social.conversation_members me ON me.conversation_id = c.id AND me.account_id = @me
+ORDER BY c.updated_at DESC, c.id;
+
+-- name: ConversationMembers :many
+SELECT m.conversation_id, a.id, a.username, a.nickname FROM social.conversation_members m JOIN identity.accounts a ON a.id = m.account_id
+WHERE m.conversation_id = ANY(@ids::uuid[]) ORDER BY lower(a.nickname), a.username;
+
+-- name: InsertMessage :exec
+INSERT INTO social.messages (id, conversation_id, author, body, created_at) VALUES (@id, @conversation_id, @author, @body, @now);
+
+-- name: TouchConversation :exec
+UPDATE social.conversations SET updated_at = @now WHERE id = @id;
+
+-- name: InsertMention :exec
+INSERT INTO social.message_mentions (message_id, ordinal, kind, campaign_id, target_id) VALUES (@message_id, @ordinal, @kind, @campaign_id, @target_id);
+
+-- name: ListMessages :many
+SELECT msg.id, msg.author, a.username, a.nickname, msg.body, msg.created_at FROM social.messages msg JOIN identity.accounts a ON a.id = msg.author
+WHERE msg.conversation_id = @conversation_id AND msg.created_at < @before ORDER BY msg.created_at DESC, msg.id DESC LIMIT @lim;
+
+-- name: MessageMentions :many
+SELECT message_id, ordinal, kind, campaign_id, target_id FROM social.message_mentions WHERE message_id = ANY(@ids::uuid[]) ORDER BY message_id, ordinal;
+
+-- name: MarkConversationRead :exec
+UPDATE social.conversation_members SET last_read_at = @now WHERE conversation_id = @conversation_id AND account_id = @account_id;
+
+-- name: MentionedCharacter :one
+-- A Campaign Character a reader may open: they are a Member of its Campaign.
+SELECT c.name FROM campaign.characters c JOIN campaign.members m ON m.campaign_id = c.campaign_id
+JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE c.id = @target_id AND c.campaign_id = @campaign_id AND a.id = @reader;
+
+-- name: MentionedLocation :one
+-- A Location a reader may open: they are a DM of its Campaign.
+SELECT n.name, mp.id AS map_id FROM campaign.map_nodes n JOIN campaign.maps mp ON mp.id = n.map_id
+JOIN campaign.members m ON m.campaign_id = mp.campaign_id AND m.role = 'dm'
+JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE n.id = @target_id AND mp.campaign_id = @campaign_id AND a.id = @reader;
+
+-- name: MentionableCharacters :many
+SELECT c.id, c.name, c.campaign_id, cp.name AS campaign_name FROM campaign.characters c
+JOIN campaign.campaigns cp ON cp.id = c.campaign_id
+JOIN campaign.members m ON m.campaign_id = c.campaign_id JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE a.id = @reader AND c.name ILIKE '%' || @q::text || '%' ORDER BY c.name LIMIT 20;
+
+-- name: MentionableLocations :many
+SELECT n.id, n.name, mp.campaign_id, cp.name AS campaign_name FROM campaign.map_nodes n
+JOIN campaign.maps mp ON mp.id = n.map_id AND mp.kind = 'world' JOIN campaign.campaigns cp ON cp.id = mp.campaign_id
+JOIN campaign.members m ON m.campaign_id = mp.campaign_id AND m.role = 'dm' JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE a.id = @reader AND n.name ILIKE '%' || @q::text || '%' ORDER BY n.name LIMIT 20;

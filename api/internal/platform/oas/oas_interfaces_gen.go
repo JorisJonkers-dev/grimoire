@@ -269,6 +269,10 @@ type ListCharactersRes interface {
 	listCharactersRes()
 }
 
+type ListConversationsRes interface {
+	listConversationsRes()
+}
+
 type ListDeletedNpcsRes interface {
 	listDeletedNpcsRes()
 }
@@ -319,6 +323,14 @@ type ListLootTablesRes interface {
 
 type ListMapsRes interface {
 	listMapsRes()
+}
+
+type ListMentionablesRes interface {
+	listMentionablesRes()
+}
+
+type ListMessagesRes interface {
+	listMessagesRes()
 }
 
 type ListMyCharactersRes interface {
@@ -457,6 +469,10 @@ type SendLiveCommandRes interface {
 	sendLiveCommandRes()
 }
 
+type SendMessageRes interface {
+	sendMessageRes()
+}
+
 type SetAccountDisabledRes interface {
 	setAccountDisabledRes()
 }
@@ -487,6 +503,10 @@ type SignInRes interface {
 
 type SignOutRes interface {
 	signOutRes()
+}
+
+type StartConversationRes interface {
+	startConversationRes()
 }
 
 type StartOidcLinkRes interface {

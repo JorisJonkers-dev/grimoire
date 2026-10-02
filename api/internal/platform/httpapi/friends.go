@@ -24,18 +24,21 @@ type FriendService interface {
 	Friends(ctx context.Context, subject string) (domain.Friends, error)
 }
 
-var _ FriendService = (*app.Service)(nil)
+var (
+	_ FriendService       = (*app.Service)(nil)
+	_ ConversationService = (*app.Service)(nil)
+)
 
 func (h *Handler) friendError(ctx context.Context, op string, err error) *oas.ProblemStatusCodeWithHeaders {
 	switch {
 	case errors.Is(err, domain.ErrNoAccount):
 		return problem(http.StatusForbidden, "No Account", "Friends need a Grimoire Account; sign in with one first.")
 	case errors.Is(err, domain.ErrNotFound):
-		return problem(http.StatusNotFound, "Not found", "There is no such Account or Friend request.")
+		return problem(http.StatusNotFound, "Not found", "There is no such Account, Friend, Friend request or Conversation.")
 	case errors.Is(err, domain.ErrConflict):
 		return problem(http.StatusConflict, "Already Friends", "You are already Friends.")
 	case errors.Is(err, domain.ErrInvalid):
-		return problem(http.StatusUnprocessableEntity, "Invalid", "You cannot befriend yourself.")
+		return problem(http.StatusUnprocessableEntity, "Invalid", "That is not allowed: yourself as a Friend, an empty or too long message, or a Mention you cannot open.")
 	}
 	h.Log.ErrorContext(ctx, op, "error", err)
 	return unavailable()

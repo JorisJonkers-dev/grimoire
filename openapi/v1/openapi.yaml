@@ -32,7 +32,7 @@ tags:
   - name: Identity
     description: The signed-in account.
   - name: Social
-    description: Friends between Accounts.
+    description: Friends and Conversations between Accounts.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
@@ -4489,6 +4489,164 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/conversations:
+    get:
+      operationId: listConversations
+      x-ogen-operation-group: Read
+      summary: List my Conversations
+      description: The signed-in Account's Conversations, newest first, with how many messages each has unread.
+      tags: [Social]
+      responses:
+        "200":
+          description: The Conversations.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: startConversation
+      x-ogen-operation-group: Account
+      summary: Start a Conversation
+      description: Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to ten.
+      tags: [Social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationStart"
+      responses:
+        "201":
+          description: The Conversation.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationRef"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/conversations/{conversationId}/messages:
+    get:
+      operationId: listMessages
+      x-ogen-operation-group: Read
+      summary: Read a Conversation
+      description: A page of messages, newest first; reading the newest page marks the Conversation read. Only members read it.
+      tags: [Social]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Conversation id.
+          schema: { $ref: "#/components/schemas/Id" }
+        - name: before
+          in: query
+          required: false
+          description: Only messages from before this moment, for the next page.
+          schema: { type: string, format: date-time, maxLength: 40 }
+      responses:
+        "200":
+          description: The messages.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessagePage"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: sendMessage
+      x-ogen-operation-group: Account
+      summary: Send a message
+      description: Posts a message, with Mentions of game content the sender may open.
+      tags: [Social]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Conversation id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageSend"
+      responses:
+        "201":
+          description: The message.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/mentionables:
+    get:
+      operationId: listMentionables
+      x-ogen-operation-group: Read
+      summary: Find something to mention
+      description: Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+      tags: [Social]
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Letters the name contains.
+          schema: { type: string, maxLength: 60 }
+      responses:
+        "200":
+          description: What may be mentioned.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MentionableList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -4922,6 +5080,131 @@ components:
           type: array
           maxItems: 100
           items: { $ref: "#/components/schemas/AccountEvent" }
+    MentionKind:
+      type: string
+      description: What a Mention points at.
+      enum: [character, location]
+    MentionRef:
+      type: object
+      description: Game content a message mentions.
+      additionalProperties: false
+      required: [kind, campaignId, id]
+      properties:
+        kind: { $ref: "#/components/schemas/MentionKind" }
+        campaignId: { $ref: "#/components/schemas/Id" }
+        id: { $ref: "#/components/schemas/Id" }
+    MentionView:
+      type: object
+      description: A Mention as the reader sees it; label and mapId appear only when they may open it.
+      additionalProperties: false
+      required: [kind, campaignId, id, open]
+      properties:
+        kind: { $ref: "#/components/schemas/MentionKind" }
+        campaignId: { $ref: "#/components/schemas/Id" }
+        id: { $ref: "#/components/schemas/Id" }
+        open: { type: boolean }
+        label: { type: string, maxLength: 120 }
+        mapId: { $ref: "#/components/schemas/Id" }
+    MessageEntry:
+      type: object
+      description: One message in a Conversation.
+      additionalProperties: false
+      required: [id, author, body, at, mentions]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        author: { $ref: "#/components/schemas/Person" }
+        body: { type: string, minLength: 1, maxLength: 4000 }
+        at: { type: string, format: date-time, maxLength: 40 }
+        mentions:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/MentionView" }
+    MessagePage:
+      type: object
+      description: A page of messages, newest first.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/MessageEntry" }
+    MessageSend:
+      type: object
+      description: A new message and what it mentions.
+      additionalProperties: false
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 4000 }
+        mentions:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/MentionRef" }
+    ConversationEntry:
+      type: object
+      description: A Conversation in its members' list.
+      additionalProperties: false
+      required: [id, title, members, updatedAt, unread, lastBody]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        title: { type: string, maxLength: 80 }
+        members:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/Person" }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+        unread: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        lastBody: { type: string, maxLength: 120 }
+    ConversationList:
+      type: object
+      description: An Account's Conversations.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ConversationEntry" }
+    ConversationStart:
+      type: object
+      description: The Friends to talk with, and a title for a group.
+      additionalProperties: false
+      required: [with]
+      properties:
+        with:
+          type: array
+          minItems: 1
+          maxItems: 9
+          items: { $ref: "#/components/schemas/Id" }
+        title: { type: string, maxLength: 80 }
+    ConversationRef:
+      type: object
+      description: A Conversation's id.
+      additionalProperties: false
+      required: [id]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+    Mentionable:
+      type: object
+      description: Something the caller may mention.
+      additionalProperties: false
+      required: [kind, id, name, campaignId, campaignName]
+      properties:
+        kind: { $ref: "#/components/schemas/MentionKind" }
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 120 }
+        campaignId: { $ref: "#/components/schemas/Id" }
+        campaignName: { type: string, maxLength: 80 }
+    MentionableList:
+      type: object
+      description: What the caller may mention.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/Mentionable" }
     Person:
       type: object
       description: Another Account as social pages show it.

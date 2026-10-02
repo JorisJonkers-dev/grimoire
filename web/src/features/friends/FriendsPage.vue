@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   acceptFriendRequestMutation,
   cancelFriendRequestMutation,
@@ -8,12 +9,18 @@ import {
   listFriendsOptions,
   listFriendsQueryKey,
   sendFriendRequestMutation,
+  startConversationMutation,
   unblockMutation,
   unfriendMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton, GField } from '@/shared/ui'
 
 const client = useQueryClient()
+const router = useRouter()
+const talk = useMutation(startConversationMutation())
+function talkWith(id: string) {
+  talk.mutate({ body: { with: [id] } }, { onSuccess: (c) => void router.push({ name: 'conversation', params: { conversationId: c.id } }) })
+}
 const page = useQuery(listFriendsOptions())
 const refresh = () => client.invalidateQueries({ queryKey: listFriendsQueryKey() })
 const done = { onSuccess: () => void refresh() }
@@ -83,7 +90,10 @@ function ask() {
         <ul v-if="page.data.value.friends.length" class="rows">
           <li v-for="f in page.data.value.friends" :key="f.person.id" :data-testid="`friend-${f.person.username}`">
             <span><strong>{{ f.person.nickname }}</strong> <span class="dim">{{ f.person.username }} · since {{ since(f.since) }}</span></span>
-            <GButton type="button" :data-testid="`unfriend-${f.person.username}`" @click="unfriend.mutate({ path: { accountId: f.person.id } }, done)">Remove</GButton>
+            <span class="actions">
+              <GButton type="button" variant="primary" :data-testid="`talk-${f.person.username}`" @click="talkWith(f.person.id)">Talk</GButton>
+              <GButton type="button" :data-testid="`unfriend-${f.person.username}`" @click="unfriend.mutate({ path: { accountId: f.person.id } }, done)">Remove</GButton>
+            </span>
           </li>
         </ul>
         <p v-else data-testid="friend-none">No Friends yet. Ask someone by their Username.</p>

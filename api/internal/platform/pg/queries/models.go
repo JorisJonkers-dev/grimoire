@@ -1699,6 +1699,21 @@ type SocialBlock struct {
 	CreatedAt time.Time
 }
 
+type SocialConversation struct {
+	ID        uuid.UUID
+	Title     string
+	CreatedBy uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type SocialConversationMember struct {
+	ConversationID uuid.UUID
+	AccountID      uuid.UUID
+	JoinedAt       time.Time
+	LastReadAt     time.Time
+}
+
 type SocialFriendRequest struct {
 	ID          uuid.UUID
 	FromAccount uuid.UUID
@@ -1712,4 +1727,20 @@ type SocialFriendship struct {
 	A     uuid.UUID
 	B     uuid.UUID
 	Since time.Time
+}
+
+type SocialMessage struct {
+	ID             uuid.UUID
+	ConversationID uuid.UUID
+	Author         uuid.UUID
+	Body           string
+	CreatedAt      time.Time
+}
+
+type SocialMessageMention struct {
+	MessageID  uuid.UUID
+	Ordinal    int32
+	Kind       string
+	CampaignID uuid.UUID
+	TargetID   uuid.UUID
 }

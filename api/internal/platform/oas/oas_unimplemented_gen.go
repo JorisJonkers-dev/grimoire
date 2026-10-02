@@ -626,6 +626,15 @@ func (UnimplementedHandler) ListCharacters(ctx context.Context, params ListChara
 	return r, ht.ErrNotImplemented
 }
 
+// ListConversations implements listConversations operation.
+//
+// The signed-in Account's Conversations, newest first, with how many messages each has unread.
+//
+// GET /api/v1/conversations
+func (UnimplementedHandler) ListConversations(ctx context.Context) (r ListConversationsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListDeletedNpcs implements listDeletedNpcs operation.
 //
 // NPCs that were deleted and can still be restored from their Revisions. DM only.
@@ -741,6 +750,25 @@ func (UnimplementedHandler) ListLootTables(ctx context.Context, params ListLootT
 //
 // GET /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) ListMaps(ctx context.Context, params ListMapsParams) (r ListMapsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListMentionables implements listMentionables operation.
+//
+// Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+//
+// GET /api/v1/mentionables
+func (UnimplementedHandler) ListMentionables(ctx context.Context, params ListMentionablesParams) (r ListMentionablesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListMessages implements listMessages operation.
+//
+// A page of messages, newest first; reading the newest page marks the Conversation read. Only members
+// read it.
+//
+// GET /api/v1/conversations/{conversationId}/messages
+func (UnimplementedHandler) ListMessages(ctx context.Context, params ListMessagesParams) (r ListMessagesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1060,6 +1088,15 @@ func (UnimplementedHandler) SendLiveCommand(ctx context.Context, req *LiveComman
 	return r, ht.ErrNotImplemented
 }
 
+// SendMessage implements sendMessage operation.
+//
+// Posts a message, with Mentions of game content the sender may open.
+//
+// POST /api/v1/conversations/{conversationId}/messages
+func (UnimplementedHandler) SendMessage(ctx context.Context, req *MessageSend, params SendMessageParams) (r SendMessageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SetAccountDisabled implements setAccountDisabled operation.
 //
 // Disabling ends every session and Access Token the Account has. Nobody disables themselves.
@@ -1130,6 +1167,16 @@ func (UnimplementedHandler) SignIn(ctx context.Context, req *SignInRequest) (r S
 //
 // POST /api/v1/sign-out
 func (UnimplementedHandler) SignOut(ctx context.Context, params SignOutParams) (r SignOutRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// StartConversation implements startConversation operation.
+//
+// Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to
+// ten.
+//
+// POST /api/v1/conversations
+func (UnimplementedHandler) StartConversation(ctx context.Context, req *ConversationStart) (r StartConversationRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -444,6 +444,20 @@ func encodeSendLiveCommandRequest(
 	return nil
 }
 
+func encodeSendMessageRequest(
+	req *MessageSend,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeSetAccountDisabledRequest(
 	req *Toggle,
 	r *http.Request,
@@ -522,6 +536,20 @@ func encodeSetTokenIconRequest(
 
 func encodeSignInRequest(
 	req *SignInRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeStartConversationRequest(
+	req *ConversationStart,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

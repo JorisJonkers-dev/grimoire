@@ -4863,6 +4863,236 @@ func (s *ConditionRef) SetDescription(val string) {
 	s.Description = val
 }
 
+// A Conversation in its members' list.
+// Ref: #/components/schemas/ConversationEntry
+type ConversationEntry struct {
+	ID        ID        `json:"id"`
+	Title     string    `json:"title"`
+	Members   []Person  `json:"members"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	Unread    int32     `json:"unread"`
+	LastBody  string    `json:"lastBody"`
+}
+
+// GetID returns the value of ID.
+func (s *ConversationEntry) GetID() ID {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *ConversationEntry) GetTitle() string {
+	return s.Title
+}
+
+// GetMembers returns the value of Members.
+func (s *ConversationEntry) GetMembers() []Person {
+	return s.Members
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *ConversationEntry) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// GetUnread returns the value of Unread.
+func (s *ConversationEntry) GetUnread() int32 {
+	return s.Unread
+}
+
+// GetLastBody returns the value of LastBody.
+func (s *ConversationEntry) GetLastBody() string {
+	return s.LastBody
+}
+
+// SetID sets the value of ID.
+func (s *ConversationEntry) SetID(val ID) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *ConversationEntry) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetMembers sets the value of Members.
+func (s *ConversationEntry) SetMembers(val []Person) {
+	s.Members = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *ConversationEntry) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SetUnread sets the value of Unread.
+func (s *ConversationEntry) SetUnread(val int32) {
+	s.Unread = val
+}
+
+// SetLastBody sets the value of LastBody.
+func (s *ConversationEntry) SetLastBody(val string) {
+	s.LastBody = val
+}
+
+// An Account's Conversations.
+// Ref: #/components/schemas/ConversationList
+type ConversationList struct {
+	Items []ConversationEntry `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *ConversationList) GetItems() []ConversationEntry {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *ConversationList) SetItems(val []ConversationEntry) {
+	s.Items = val
+}
+
+// ConversationListHeaders wraps ConversationList with response headers.
+type ConversationListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ConversationList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ConversationListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ConversationListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ConversationListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ConversationListHeaders) GetResponse() ConversationList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ConversationListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ConversationListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ConversationListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ConversationListHeaders) SetResponse(val ConversationList) {
+	s.Response = val
+}
+
+func (*ConversationListHeaders) listConversationsRes() {}
+
+// A Conversation's id.
+// Ref: #/components/schemas/ConversationRef
+type ConversationRef struct {
+	ID ID `json:"id"`
+}
+
+// GetID returns the value of ID.
+func (s *ConversationRef) GetID() ID {
+	return s.ID
+}
+
+// SetID sets the value of ID.
+func (s *ConversationRef) SetID(val ID) {
+	s.ID = val
+}
+
+// ConversationRefHeaders wraps ConversationRef with response headers.
+type ConversationRefHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ConversationRef
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ConversationRefHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ConversationRefHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ConversationRefHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ConversationRefHeaders) GetResponse() ConversationRef {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ConversationRefHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ConversationRefHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ConversationRefHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ConversationRefHeaders) SetResponse(val ConversationRef) {
+	s.Response = val
+}
+
+func (*ConversationRefHeaders) startConversationRes() {}
+
+// The Friends to talk with, and a title for a group.
+// Ref: #/components/schemas/ConversationStart
+type ConversationStart struct {
+	With  []ID      `json:"with"`
+	Title OptString `json:"title"`
+}
+
+// GetWith returns the value of With.
+func (s *ConversationStart) GetWith() []ID {
+	return s.With
+}
+
+// GetTitle returns the value of Title.
+func (s *ConversationStart) GetTitle() OptString {
+	return s.Title
+}
+
+// SetWith sets the value of With.
+func (s *ConversationStart) SetWith(val []ID) {
+	s.With = val
+}
+
+// SetTitle sets the value of Title.
+func (s *ConversationStart) SetTitle(val OptString) {
+	s.Title = val
+}
+
 // How much of a target is hidden.
 // Ref: #/components/schemas/CoverLevel
 type CoverLevel string
@@ -18321,6 +18551,487 @@ func (s *MemberUpdate) SetRole(val Role) {
 	s.Role = val
 }
 
+// What a Mention points at.
+// Ref: #/components/schemas/MentionKind
+type MentionKind string
+
+const (
+	MentionKindCharacter MentionKind = "character"
+	MentionKindLocation  MentionKind = "location"
+)
+
+// AllValues returns all MentionKind values.
+func (MentionKind) AllValues() []MentionKind {
+	return []MentionKind{
+		MentionKindCharacter,
+		MentionKindLocation,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MentionKind) MarshalText() ([]byte, error) {
+	switch s {
+	case MentionKindCharacter:
+		return []byte(s), nil
+	case MentionKindLocation:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MentionKind) UnmarshalText(data []byte) error {
+	switch MentionKind(data) {
+	case MentionKindCharacter:
+		*s = MentionKindCharacter
+		return nil
+	case MentionKindLocation:
+		*s = MentionKindLocation
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Game content a message mentions.
+// Ref: #/components/schemas/MentionRef
+type MentionRef struct {
+	Kind       MentionKind `json:"kind"`
+	CampaignId ID          `json:"campaignId"`
+	ID         ID          `json:"id"`
+}
+
+// GetKind returns the value of Kind.
+func (s *MentionRef) GetKind() MentionKind {
+	return s.Kind
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *MentionRef) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// GetID returns the value of ID.
+func (s *MentionRef) GetID() ID {
+	return s.ID
+}
+
+// SetKind sets the value of Kind.
+func (s *MentionRef) SetKind(val MentionKind) {
+	s.Kind = val
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *MentionRef) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
+// SetID sets the value of ID.
+func (s *MentionRef) SetID(val ID) {
+	s.ID = val
+}
+
+// A Mention as the reader sees it; label and mapId appear only when they may open it.
+// Ref: #/components/schemas/MentionView
+type MentionView struct {
+	Kind       MentionKind `json:"kind"`
+	CampaignId ID          `json:"campaignId"`
+	ID         ID          `json:"id"`
+	Open       bool        `json:"open"`
+	Label      OptString   `json:"label"`
+	MapId      OptID       `json:"mapId"`
+}
+
+// GetKind returns the value of Kind.
+func (s *MentionView) GetKind() MentionKind {
+	return s.Kind
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *MentionView) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// GetID returns the value of ID.
+func (s *MentionView) GetID() ID {
+	return s.ID
+}
+
+// GetOpen returns the value of Open.
+func (s *MentionView) GetOpen() bool {
+	return s.Open
+}
+
+// GetLabel returns the value of Label.
+func (s *MentionView) GetLabel() OptString {
+	return s.Label
+}
+
+// GetMapId returns the value of MapId.
+func (s *MentionView) GetMapId() OptID {
+	return s.MapId
+}
+
+// SetKind sets the value of Kind.
+func (s *MentionView) SetKind(val MentionKind) {
+	s.Kind = val
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *MentionView) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
+// SetID sets the value of ID.
+func (s *MentionView) SetID(val ID) {
+	s.ID = val
+}
+
+// SetOpen sets the value of Open.
+func (s *MentionView) SetOpen(val bool) {
+	s.Open = val
+}
+
+// SetLabel sets the value of Label.
+func (s *MentionView) SetLabel(val OptString) {
+	s.Label = val
+}
+
+// SetMapId sets the value of MapId.
+func (s *MentionView) SetMapId(val OptID) {
+	s.MapId = val
+}
+
+// Something the caller may mention.
+// Ref: #/components/schemas/Mentionable
+type Mentionable struct {
+	Kind         MentionKind `json:"kind"`
+	ID           ID          `json:"id"`
+	Name         string      `json:"name"`
+	CampaignId   ID          `json:"campaignId"`
+	CampaignName string      `json:"campaignName"`
+}
+
+// GetKind returns the value of Kind.
+func (s *Mentionable) GetKind() MentionKind {
+	return s.Kind
+}
+
+// GetID returns the value of ID.
+func (s *Mentionable) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Mentionable) GetName() string {
+	return s.Name
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *Mentionable) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// GetCampaignName returns the value of CampaignName.
+func (s *Mentionable) GetCampaignName() string {
+	return s.CampaignName
+}
+
+// SetKind sets the value of Kind.
+func (s *Mentionable) SetKind(val MentionKind) {
+	s.Kind = val
+}
+
+// SetID sets the value of ID.
+func (s *Mentionable) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Mentionable) SetName(val string) {
+	s.Name = val
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *Mentionable) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
+// SetCampaignName sets the value of CampaignName.
+func (s *Mentionable) SetCampaignName(val string) {
+	s.CampaignName = val
+}
+
+// What the caller may mention.
+// Ref: #/components/schemas/MentionableList
+type MentionableList struct {
+	Items []Mentionable `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *MentionableList) GetItems() []Mentionable {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *MentionableList) SetItems(val []Mentionable) {
+	s.Items = val
+}
+
+// MentionableListHeaders wraps MentionableList with response headers.
+type MentionableListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           MentionableList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MentionableListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MentionableListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MentionableListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MentionableListHeaders) GetResponse() MentionableList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MentionableListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MentionableListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MentionableListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MentionableListHeaders) SetResponse(val MentionableList) {
+	s.Response = val
+}
+
+func (*MentionableListHeaders) listMentionablesRes() {}
+
+// One message in a Conversation.
+// Ref: #/components/schemas/MessageEntry
+type MessageEntry struct {
+	ID       ID            `json:"id"`
+	Author   Person        `json:"author"`
+	Body     string        `json:"body"`
+	At       time.Time     `json:"at"`
+	Mentions []MentionView `json:"mentions"`
+}
+
+// GetID returns the value of ID.
+func (s *MessageEntry) GetID() ID {
+	return s.ID
+}
+
+// GetAuthor returns the value of Author.
+func (s *MessageEntry) GetAuthor() Person {
+	return s.Author
+}
+
+// GetBody returns the value of Body.
+func (s *MessageEntry) GetBody() string {
+	return s.Body
+}
+
+// GetAt returns the value of At.
+func (s *MessageEntry) GetAt() time.Time {
+	return s.At
+}
+
+// GetMentions returns the value of Mentions.
+func (s *MessageEntry) GetMentions() []MentionView {
+	return s.Mentions
+}
+
+// SetID sets the value of ID.
+func (s *MessageEntry) SetID(val ID) {
+	s.ID = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *MessageEntry) SetAuthor(val Person) {
+	s.Author = val
+}
+
+// SetBody sets the value of Body.
+func (s *MessageEntry) SetBody(val string) {
+	s.Body = val
+}
+
+// SetAt sets the value of At.
+func (s *MessageEntry) SetAt(val time.Time) {
+	s.At = val
+}
+
+// SetMentions sets the value of Mentions.
+func (s *MessageEntry) SetMentions(val []MentionView) {
+	s.Mentions = val
+}
+
+// MessageEntryHeaders wraps MessageEntry with response headers.
+type MessageEntryHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           MessageEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MessageEntryHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MessageEntryHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MessageEntryHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MessageEntryHeaders) GetResponse() MessageEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MessageEntryHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MessageEntryHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MessageEntryHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MessageEntryHeaders) SetResponse(val MessageEntry) {
+	s.Response = val
+}
+
+func (*MessageEntryHeaders) sendMessageRes() {}
+
+// A page of messages, newest first.
+// Ref: #/components/schemas/MessagePage
+type MessagePage struct {
+	Items []MessageEntry `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *MessagePage) GetItems() []MessageEntry {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *MessagePage) SetItems(val []MessageEntry) {
+	s.Items = val
+}
+
+// MessagePageHeaders wraps MessagePage with response headers.
+type MessagePageHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           MessagePage
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *MessagePageHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *MessagePageHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *MessagePageHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *MessagePageHeaders) GetResponse() MessagePage {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *MessagePageHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *MessagePageHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *MessagePageHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *MessagePageHeaders) SetResponse(val MessagePage) {
+	s.Response = val
+}
+
+func (*MessagePageHeaders) listMessagesRes() {}
+
+// A new message and what it mentions.
+// Ref: #/components/schemas/MessageSend
+type MessageSend struct {
+	Body     string       `json:"body"`
+	Mentions []MentionRef `json:"mentions"`
+}
+
+// GetBody returns the value of Body.
+func (s *MessageSend) GetBody() string {
+	return s.Body
+}
+
+// GetMentions returns the value of Mentions.
+func (s *MessageSend) GetMentions() []MentionRef {
+	return s.Mentions
+}
+
+// SetBody sets the value of Body.
+func (s *MessageSend) SetBody(val string) {
+	s.Body = val
+}
+
+// SetMentions sets the value of Mentions.
+func (s *MessageSend) SetMentions(val []MentionRef) {
+	s.Mentions = val
+}
+
 // A compendium entry by slug and name.
 // Ref: #/components/schemas/NamedRef
 type NamedRef struct {
@@ -22917,6 +23628,7 @@ func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listAdminAccountsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
+func (*ProblemStatusCodeWithHeaders) listConversationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
 func (*ProblemStatusCodeWithHeaders) listEncounterChecksRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEncounterPoolRevisionsRes()    {}
@@ -22930,6 +23642,8 @@ func (*ProblemStatusCodeWithHeaders) listLocationsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listLootTableRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listLootTablesRes()                {}
 func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listMentionablesRes()              {}
+func (*ProblemStatusCodeWithHeaders) listMessagesRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
@@ -22964,6 +23678,7 @@ func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
 func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
+func (*ProblemStatusCodeWithHeaders) sendMessageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setAccountDisabledRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAdminRoleRes()                  {}
@@ -22972,6 +23687,7 @@ func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
 func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
+func (*ProblemStatusCodeWithHeaders) startConversationRes()             {}
 func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}

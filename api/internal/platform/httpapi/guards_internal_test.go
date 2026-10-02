@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -41,6 +42,11 @@ func TestAccountHandlersNeedAnIdentity(t *testing.T) {
 		"friends":       func() (any, error) { return h.ListFriends(ctx) },
 		"befriend":      func() (any, error) { return h.SendFriendRequest(ctx, &oas.FriendRequestCreate{}) },
 		"accept friend": func() (any, error) { return h.AcceptFriendRequest(ctx, oas.AcceptFriendRequestParams{}) },
+		"conversations": func() (any, error) { return h.ListConversations(ctx) },
+		"start":         func() (any, error) { return h.StartConversation(ctx, &oas.ConversationStart{}) },
+		"messages":      func() (any, error) { return h.ListMessages(ctx, oas.ListMessagesParams{}) },
+		"send":          func() (any, error) { return h.SendMessage(ctx, &oas.MessageSend{}, oas.SendMessageParams{}) },
+		"mentionables":  func() (any, error) { return h.ListMentionables(ctx, oas.ListMentionablesParams{}) },
 	}
 	for name, call := range calls {
 		res, err := call()
@@ -65,11 +71,31 @@ func (brokenFriends) Friends(context.Context, string) (domain.Friends, error) {
 	return domain.Friends{}, errFriends
 }
 
+func (brokenFriends) StartConversation(context.Context, string, string, []domain.AccountID) (uuid.UUID, error) {
+	return uuid.Nil, errFriends
+}
+
+func (brokenFriends) Conversations(context.Context, string) ([]domain.Conversation, error) {
+	return nil, errFriends
+}
+
+func (brokenFriends) Send(context.Context, string, uuid.UUID, string, []domain.Mention) (domain.Message, error) {
+	return domain.Message{}, errFriends
+}
+
+func (brokenFriends) Messages(context.Context, string, uuid.UUID, *time.Time) ([]domain.Message, error) {
+	return nil, errFriends
+}
+
+func (brokenFriends) Mentionable(context.Context, string, string) ([]domain.Mentionable, error) {
+	return nil, errFriends
+}
+
 // When the Friends store fails, every call answers 503 without saying why.
 func TestFriendsWhenTheStoreFails(t *testing.T) {
 	t.Parallel()
 	ctx := auth.WithIdentity(context.Background(), auth.Identity{Subject: "aria"})
-	h := &Handler{Friends: brokenFriends{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	h := &Handler{Friends: brokenFriends{}, Conversations: brokenFriends{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
 	calls := map[string]func() (any, error){
 		"list":    func() (any, error) { return h.ListFriends(ctx) },
 		"request": func() (any, error) { return h.SendFriendRequest(ctx, &oas.FriendRequestCreate{}) },
@@ -77,9 +103,16 @@ func TestFriendsWhenTheStoreFails(t *testing.T) {
 		"decline": func() (any, error) {
 			return h.DeclineFriendRequest(ctx, &oas.FriendRequestDecline{}, oas.DeclineFriendRequestParams{})
 		},
-		"cancel":   func() (any, error) { return h.CancelFriendRequest(ctx, oas.CancelFriendRequestParams{}) },
-		"unfriend": func() (any, error) { return h.Unfriend(ctx, oas.UnfriendParams{}) },
-		"unblock":  func() (any, error) { return h.Unblock(ctx, oas.UnblockParams{}) },
+		"cancel":             func() (any, error) { return h.CancelFriendRequest(ctx, oas.CancelFriendRequestParams{}) },
+		"unfriend":           func() (any, error) { return h.Unfriend(ctx, oas.UnfriendParams{}) },
+		"unblock":            func() (any, error) { return h.Unblock(ctx, oas.UnblockParams{}) },
+		"list conversations": func() (any, error) { return h.ListConversations(ctx) },
+		"start":              func() (any, error) { return h.StartConversation(ctx, &oas.ConversationStart{}) },
+		"messages": func() (any, error) {
+			return h.ListMessages(ctx, oas.ListMessagesParams{Before: oas.NewOptDateTime(time.Now())})
+		},
+		"send":         func() (any, error) { return h.SendMessage(ctx, &oas.MessageSend{}, oas.SendMessageParams{}) },
+		"mentionables": func() (any, error) { return h.ListMentionables(ctx, oas.ListMentionablesParams{}) },
 	}
 	for name, call := range calls {
 		res, err := call()

@@ -33,6 +33,7 @@ type Querier interface {
 	AddClassFeature(ctx context.Context, arg AddClassFeatureParams) (int64, error)
 	AddClassFeatureLevel(ctx context.Context, arg AddClassFeatureLevelParams) error
 	AddClassSave(ctx context.Context, arg AddClassSaveParams) error
+	AddConversationMember(ctx context.Context, arg AddConversationMemberParams) error
 	AddFeatBenefit(ctx context.Context, arg AddFeatBenefitParams) error
 	AddMapObjectLink(ctx context.Context, arg AddMapObjectLinkParams) error
 	AddMember(ctx context.Context, arg AddMemberParams) (CampaignMember, error)
@@ -132,6 +133,7 @@ type Querier interface {
 	CompendiumVersion(ctx context.Context) (int64, error)
 	ConditionsForDocument(ctx context.Context, documentKey string) ([]ConditionsForDocumentRow, error)
 	ConfirmTOTP(ctx context.Context, arg ConfirmTOTPParams) (int64, error)
+	ConversationMembers(ctx context.Context, ids []uuid.UUID) ([]ConversationMembersRow, error)
 	CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	CountEntriesByKind(ctx context.Context, arg CountEntriesByKindParams) ([]CountEntriesByKindRow, error)
 	CountLiveSessions(ctx context.Context, arg CountLiveSessionsParams) (int32, error)
@@ -168,6 +170,8 @@ type Querier interface {
 	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
+	// The one-to-one Conversation between two Accounts, if they have one.
+	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
 	DropPushEndpoint(ctx context.Context, endpoint string) error
 	Edits(ctx context.Context, arg EditsParams) ([]EditsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
@@ -217,6 +221,7 @@ type Querier interface {
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
 	InsertCheckMonster(ctx context.Context, arg InsertCheckMonsterParams) error
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
+	InsertConversation(ctx context.Context, arg InsertConversationParams) error
 	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
@@ -261,6 +266,8 @@ type Querier interface {
 	InsertLootTableRevision(ctx context.Context, arg InsertLootTableRevisionParams) error
 	InsertManual(ctx context.Context, arg InsertManualParams) error
 	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
+	InsertMention(ctx context.Context, arg InsertMentionParams) error
+	InsertMessage(ctx context.Context, arg InsertMessageParams) error
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
 	InsertNode(ctx context.Context, arg InsertNodeParams) error
@@ -303,6 +310,7 @@ type Querier interface {
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
 	InviteByToken(ctx context.Context, tokenHash []byte) (InviteByTokenRow, error)
 	IsBlocked(ctx context.Context, arg IsBlockedParams) (bool, error)
+	IsConversationMember(ctx context.Context, arg IsConversationMemberParams) (bool, error)
 	ItemPrices(ctx context.Context, arg ItemPricesParams) ([]ItemPricesRow, error)
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
@@ -315,6 +323,7 @@ type Querier interface {
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
+	ListConversations(ctx context.Context, me uuid.UUID) ([]ListConversationsRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)
 	ListEffectBonusDice(ctx context.Context) ([]ListEffectBonusDiceRow, error)
 	ListEffectBranches(ctx context.Context) ([]ListEffectBranchesRow, error)
@@ -351,6 +360,7 @@ type Querier interface {
 	ListLootTables(ctx context.Context, campaignID uuid.UUID) ([]ListLootTablesRow, error)
 	ListMaps(ctx context.Context, campaignID uuid.UUID) ([]CampaignMap, error)
 	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
+	ListMessages(ctx context.Context, arg ListMessagesParams) ([]ListMessagesRow, error)
 	ListNPCs(ctx context.Context, campaignID uuid.UUID) ([]ListNPCsRow, error)
 	ListOutgoingRequests(ctx context.Context, me uuid.UUID) ([]ListOutgoingRequestsRow, error)
 	ListPools(ctx context.Context, campaignID uuid.UUID) ([]ListPoolsRow, error)
@@ -389,6 +399,14 @@ type Querier interface {
 	MapParty(ctx context.Context, mapID uuid.UUID) ([]uuid.UUID, error)
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
+	MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error
+	MentionableCharacters(ctx context.Context, arg MentionableCharactersParams) ([]MentionableCharactersRow, error)
+	MentionableLocations(ctx context.Context, arg MentionableLocationsParams) ([]MentionableLocationsRow, error)
+	// A Campaign Character a reader may open: they are a Member of its Campaign.
+	MentionedCharacter(ctx context.Context, arg MentionedCharacterParams) (string, error)
+	// A Location a reader may open: they are a DM of its Campaign.
+	MentionedLocation(ctx context.Context, arg MentionedLocationParams) (MentionedLocationRow, error)
+	MessageMentions(ctx context.Context, ids []uuid.UUID) ([]SocialMessageMention, error)
 	MonsterActions(ctx context.Context, monsterID int64) ([]MonsterActionsRow, error)
 	MonsterAmbushStats(ctx context.Context, monsterID int64) ([]MonsterAmbushStatsRow, error)
 	MonsterAttackRows(ctx context.Context, monsterID int64) ([]MonsterAttackRowsRow, error)
@@ -524,6 +542,7 @@ type Querier interface {
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
 	TouchAccessToken(ctx context.Context, arg TouchAccessTokenParams) error
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
+	TouchConversation(ctx context.Context, arg TouchConversationParams) error
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UpdateAccountCharacter(ctx context.Context, arg UpdateAccountCharacterParams) error

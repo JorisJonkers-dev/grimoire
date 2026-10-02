@@ -28,6 +28,7 @@ type Repository interface {
 	Block(ctx context.Context, blocker, blocked domain.AccountID, now time.Time) error
 	Unblock(ctx context.Context, blocker, blocked domain.AccountID) (bool, error)
 	Friends(ctx context.Context, me domain.AccountID) (domain.Friends, error)
+	ConversationRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 

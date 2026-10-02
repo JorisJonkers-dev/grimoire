@@ -13,6 +13,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addConversationMember = `-- name: AddConversationMember :exec
+INSERT INTO social.conversation_members (conversation_id, account_id, joined_at, last_read_at) VALUES ($1, $2, $3, $3)
+`
+
+type AddConversationMemberParams struct {
+	ConversationID uuid.UUID
+	AccountID      uuid.UUID
+	Now            time.Time
+}
+
+func (q *Queries) AddConversationMember(ctx context.Context, arg AddConversationMemberParams) error {
+	_, err := q.db.Exec(ctx, addConversationMember, arg.ConversationID, arg.AccountID, arg.Now)
+	return err
+}
+
 const areFriends = `-- name: AreFriends :one
 SELECT EXISTS (SELECT 1 FROM social.friendships WHERE a = least($1::uuid, $2::uuid) AND b = greatest($1::uuid, $2::uuid))
 `
@@ -27,6 +42,43 @@ func (q *Queries) AreFriends(ctx context.Context, arg AreFriendsParams) (bool, e
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const conversationMembers = `-- name: ConversationMembers :many
+SELECT m.conversation_id, a.id, a.username, a.nickname FROM social.conversation_members m JOIN identity.accounts a ON a.id = m.account_id
+WHERE m.conversation_id = ANY($1::uuid[]) ORDER BY lower(a.nickname), a.username
+`
+
+type ConversationMembersRow struct {
+	ConversationID uuid.UUID
+	ID             uuid.UUID
+	Username       string
+	Nickname       string
+}
+
+func (q *Queries) ConversationMembers(ctx context.Context, ids []uuid.UUID) ([]ConversationMembersRow, error) {
+	rows, err := q.db.Query(ctx, conversationMembers, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ConversationMembersRow{}
+	for rows.Next() {
+		var i ConversationMembersRow
+		if err := rows.Scan(
+			&i.ConversationID,
+			&i.ID,
+			&i.Username,
+			&i.Nickname,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const declineFriendRequest = `-- name: DeclineFriendRequest :exec
@@ -86,6 +138,28 @@ func (q *Queries) DeleteFriendship(ctx context.Context, arg DeleteFriendshipPara
 	return result.RowsAffected(), nil
 }
 
+const directConversation = `-- name: DirectConversation :one
+SELECT c.id FROM social.conversations c
+WHERE (SELECT count(*) FROM social.conversation_members m WHERE m.conversation_id = c.id) = 2
+    AND EXISTS (SELECT 1 FROM social.conversation_members m WHERE m.conversation_id = c.id AND m.account_id = $1)
+    AND EXISTS (SELECT 1 FROM social.conversation_members m WHERE m.conversation_id = c.id AND m.account_id = $2)
+    AND c.title = ''
+LIMIT 1
+`
+
+type DirectConversationParams struct {
+	X uuid.UUID
+	Y uuid.UUID
+}
+
+// The one-to-one Conversation between two Accounts, if they have one.
+func (q *Queries) DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, directConversation, arg.X, arg.Y)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const insertBlock = `-- name: InsertBlock :exec
 INSERT INTO social.blocks (blocker, blocked, created_at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
 `
@@ -98,6 +172,27 @@ type InsertBlockParams struct {
 
 func (q *Queries) InsertBlock(ctx context.Context, arg InsertBlockParams) error {
 	_, err := q.db.Exec(ctx, insertBlock, arg.Blocker, arg.Blocked, arg.Now)
+	return err
+}
+
+const insertConversation = `-- name: InsertConversation :exec
+INSERT INTO social.conversations (id, title, created_by, created_at, updated_at) VALUES ($1, $2, $3, $4, $4)
+`
+
+type InsertConversationParams struct {
+	ID        uuid.UUID
+	Title     string
+	CreatedBy uuid.UUID
+	Now       time.Time
+}
+
+func (q *Queries) InsertConversation(ctx context.Context, arg InsertConversationParams) error {
+	_, err := q.db.Exec(ctx, insertConversation,
+		arg.ID,
+		arg.Title,
+		arg.CreatedBy,
+		arg.Now,
+	)
 	return err
 }
 
@@ -141,6 +236,52 @@ func (q *Queries) InsertFriendship(ctx context.Context, arg InsertFriendshipPara
 	return err
 }
 
+const insertMention = `-- name: InsertMention :exec
+INSERT INTO social.message_mentions (message_id, ordinal, kind, campaign_id, target_id) VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertMentionParams struct {
+	MessageID  uuid.UUID
+	Ordinal    int32
+	Kind       string
+	CampaignID uuid.UUID
+	TargetID   uuid.UUID
+}
+
+func (q *Queries) InsertMention(ctx context.Context, arg InsertMentionParams) error {
+	_, err := q.db.Exec(ctx, insertMention,
+		arg.MessageID,
+		arg.Ordinal,
+		arg.Kind,
+		arg.CampaignID,
+		arg.TargetID,
+	)
+	return err
+}
+
+const insertMessage = `-- name: InsertMessage :exec
+INSERT INTO social.messages (id, conversation_id, author, body, created_at) VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertMessageParams struct {
+	ID             uuid.UUID
+	ConversationID uuid.UUID
+	Author         uuid.UUID
+	Body           string
+	Now            time.Time
+}
+
+func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) error {
+	_, err := q.db.Exec(ctx, insertMessage,
+		arg.ID,
+		arg.ConversationID,
+		arg.Author,
+		arg.Body,
+		arg.Now,
+	)
+	return err
+}
+
 const isBlocked = `-- name: IsBlocked :one
 SELECT EXISTS (SELECT 1 FROM social.blocks WHERE blocker = $1 AND blocked = $2)
 `
@@ -152,6 +293,22 @@ type IsBlockedParams struct {
 
 func (q *Queries) IsBlocked(ctx context.Context, arg IsBlockedParams) (bool, error) {
 	row := q.db.QueryRow(ctx, isBlocked, arg.Blocker, arg.Blocked)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const isConversationMember = `-- name: IsConversationMember :one
+SELECT EXISTS (SELECT 1 FROM social.conversation_members WHERE conversation_id = $1 AND account_id = $2)
+`
+
+type IsConversationMemberParams struct {
+	ConversationID uuid.UUID
+	AccountID      uuid.UUID
+}
+
+func (q *Queries) IsConversationMember(ctx context.Context, arg IsConversationMemberParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isConversationMember, arg.ConversationID, arg.AccountID)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -183,6 +340,48 @@ func (q *Queries) ListBlocked(ctx context.Context, me uuid.UUID) ([]ListBlockedR
 			&i.Username,
 			&i.Nickname,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listConversations = `-- name: ListConversations :many
+SELECT c.id, c.title, c.updated_at,
+    (SELECT count(*) FROM social.messages msg WHERE msg.conversation_id = c.id AND msg.author <> $1 AND msg.created_at > me.last_read_at)::integer AS unread,
+    coalesce((SELECT left(msg.body, 120) FROM social.messages msg WHERE msg.conversation_id = c.id ORDER BY msg.created_at DESC, msg.id DESC LIMIT 1), '')::text AS last_body
+FROM social.conversations c JOIN social.conversation_members me ON me.conversation_id = c.id AND me.account_id = $1
+ORDER BY c.updated_at DESC, c.id
+`
+
+type ListConversationsRow struct {
+	ID        uuid.UUID
+	Title     string
+	UpdatedAt time.Time
+	Unread    int32
+	LastBody  string
+}
+
+func (q *Queries) ListConversations(ctx context.Context, me uuid.UUID) ([]ListConversationsRow, error) {
+	rows, err := q.db.Query(ctx, listConversations, me)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListConversationsRow{}
+	for rows.Next() {
+		var i ListConversationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.UpdatedAt,
+			&i.Unread,
+			&i.LastBody,
 		); err != nil {
 			return nil, err
 		}
@@ -274,6 +473,53 @@ func (q *Queries) ListIncomingRequests(ctx context.Context, me uuid.UUID) ([]Lis
 	return items, nil
 }
 
+const listMessages = `-- name: ListMessages :many
+SELECT msg.id, msg.author, a.username, a.nickname, msg.body, msg.created_at FROM social.messages msg JOIN identity.accounts a ON a.id = msg.author
+WHERE msg.conversation_id = $1 AND msg.created_at < $2 ORDER BY msg.created_at DESC, msg.id DESC LIMIT $3
+`
+
+type ListMessagesParams struct {
+	ConversationID uuid.UUID
+	Before         time.Time
+	Lim            int32
+}
+
+type ListMessagesRow struct {
+	ID        uuid.UUID
+	Author    uuid.UUID
+	Username  string
+	Nickname  string
+	Body      string
+	CreatedAt time.Time
+}
+
+func (q *Queries) ListMessages(ctx context.Context, arg ListMessagesParams) ([]ListMessagesRow, error) {
+	rows, err := q.db.Query(ctx, listMessages, arg.ConversationID, arg.Before, arg.Lim)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMessagesRow{}
+	for rows.Next() {
+		var i ListMessagesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Author,
+			&i.Username,
+			&i.Nickname,
+			&i.Body,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOutgoingRequests = `-- name: ListOutgoingRequests :many
 SELECT r.id, a.id AS account_id, a.username, a.nickname, r.created_at FROM social.friend_requests r
 JOIN identity.accounts a ON a.id = r.to_account
@@ -303,6 +549,185 @@ func (q *Queries) ListOutgoingRequests(ctx context.Context, me uuid.UUID) ([]Lis
 			&i.Username,
 			&i.Nickname,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markConversationRead = `-- name: MarkConversationRead :exec
+UPDATE social.conversation_members SET last_read_at = $1 WHERE conversation_id = $2 AND account_id = $3
+`
+
+type MarkConversationReadParams struct {
+	Now            time.Time
+	ConversationID uuid.UUID
+	AccountID      uuid.UUID
+}
+
+func (q *Queries) MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error {
+	_, err := q.db.Exec(ctx, markConversationRead, arg.Now, arg.ConversationID, arg.AccountID)
+	return err
+}
+
+const mentionableCharacters = `-- name: MentionableCharacters :many
+SELECT c.id, c.name, c.campaign_id, cp.name AS campaign_name FROM campaign.characters c
+JOIN campaign.campaigns cp ON cp.id = c.campaign_id
+JOIN campaign.members m ON m.campaign_id = c.campaign_id JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE a.id = $1 AND c.name ILIKE '%' || $2::text || '%' ORDER BY c.name LIMIT 20
+`
+
+type MentionableCharactersParams struct {
+	Reader uuid.UUID
+	Q      string
+}
+
+type MentionableCharactersRow struct {
+	ID           uuid.UUID
+	Name         string
+	CampaignID   uuid.UUID
+	CampaignName string
+}
+
+func (q *Queries) MentionableCharacters(ctx context.Context, arg MentionableCharactersParams) ([]MentionableCharactersRow, error) {
+	rows, err := q.db.Query(ctx, mentionableCharacters, arg.Reader, arg.Q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MentionableCharactersRow{}
+	for rows.Next() {
+		var i MentionableCharactersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CampaignID,
+			&i.CampaignName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const mentionableLocations = `-- name: MentionableLocations :many
+SELECT n.id, n.name, mp.campaign_id, cp.name AS campaign_name FROM campaign.map_nodes n
+JOIN campaign.maps mp ON mp.id = n.map_id AND mp.kind = 'world' JOIN campaign.campaigns cp ON cp.id = mp.campaign_id
+JOIN campaign.members m ON m.campaign_id = mp.campaign_id AND m.role = 'dm' JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE a.id = $1 AND n.name ILIKE '%' || $2::text || '%' ORDER BY n.name LIMIT 20
+`
+
+type MentionableLocationsParams struct {
+	Reader uuid.UUID
+	Q      string
+}
+
+type MentionableLocationsRow struct {
+	ID           uuid.UUID
+	Name         string
+	CampaignID   uuid.UUID
+	CampaignName string
+}
+
+func (q *Queries) MentionableLocations(ctx context.Context, arg MentionableLocationsParams) ([]MentionableLocationsRow, error) {
+	rows, err := q.db.Query(ctx, mentionableLocations, arg.Reader, arg.Q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MentionableLocationsRow{}
+	for rows.Next() {
+		var i MentionableLocationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CampaignID,
+			&i.CampaignName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const mentionedCharacter = `-- name: MentionedCharacter :one
+SELECT c.name FROM campaign.characters c JOIN campaign.members m ON m.campaign_id = c.campaign_id
+JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE c.id = $1 AND c.campaign_id = $2 AND a.id = $3
+`
+
+type MentionedCharacterParams struct {
+	TargetID   uuid.UUID
+	CampaignID uuid.UUID
+	Reader     uuid.UUID
+}
+
+// A Campaign Character a reader may open: they are a Member of its Campaign.
+func (q *Queries) MentionedCharacter(ctx context.Context, arg MentionedCharacterParams) (string, error) {
+	row := q.db.QueryRow(ctx, mentionedCharacter, arg.TargetID, arg.CampaignID, arg.Reader)
+	var name string
+	err := row.Scan(&name)
+	return name, err
+}
+
+const mentionedLocation = `-- name: MentionedLocation :one
+SELECT n.name, mp.id AS map_id FROM campaign.map_nodes n JOIN campaign.maps mp ON mp.id = n.map_id
+JOIN campaign.members m ON m.campaign_id = mp.campaign_id AND m.role = 'dm'
+JOIN identity.accounts a ON a.subject = m.auth_subject
+WHERE n.id = $1 AND mp.campaign_id = $2 AND a.id = $3
+`
+
+type MentionedLocationParams struct {
+	TargetID   uuid.UUID
+	CampaignID uuid.UUID
+	Reader     uuid.UUID
+}
+
+type MentionedLocationRow struct {
+	Name  string
+	MapID uuid.UUID
+}
+
+// A Location a reader may open: they are a DM of its Campaign.
+func (q *Queries) MentionedLocation(ctx context.Context, arg MentionedLocationParams) (MentionedLocationRow, error) {
+	row := q.db.QueryRow(ctx, mentionedLocation, arg.TargetID, arg.CampaignID, arg.Reader)
+	var i MentionedLocationRow
+	err := row.Scan(&i.Name, &i.MapID)
+	return i, err
+}
+
+const messageMentions = `-- name: MessageMentions :many
+SELECT message_id, ordinal, kind, campaign_id, target_id FROM social.message_mentions WHERE message_id = ANY($1::uuid[]) ORDER BY message_id, ordinal
+`
+
+func (q *Queries) MessageMentions(ctx context.Context, ids []uuid.UUID) ([]SocialMessageMention, error) {
+	rows, err := q.db.Query(ctx, messageMentions, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SocialMessageMention{}
+	for rows.Next() {
+		var i SocialMessageMention
+		if err := rows.Scan(
+			&i.MessageID,
+			&i.Ordinal,
+			&i.Kind,
+			&i.CampaignID,
+			&i.TargetID,
 		); err != nil {
 			return nil, err
 		}
@@ -379,4 +804,18 @@ func (q *Queries) SocialAccountByUsername(ctx context.Context, username string) 
 	var i SocialAccountByUsernameRow
 	err := row.Scan(&i.ID, &i.Username, &i.Nickname)
 	return i, err
+}
+
+const touchConversation = `-- name: TouchConversation :exec
+UPDATE social.conversations SET updated_at = $1 WHERE id = $2
+`
+
+type TouchConversationParams struct {
+	Now time.Time
+	ID  uuid.UUID
+}
+
+func (q *Queries) TouchConversation(ctx context.Context, arg TouchConversationParams) error {
+	_, err := q.db.Exec(ctx, touchConversation, arg.Now, arg.ID)
+	return err
 }

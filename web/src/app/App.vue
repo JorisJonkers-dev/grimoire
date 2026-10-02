@@ -26,6 +26,7 @@ function leave() {
         <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
         <RouterLink v-if="account.data.value" :to="{ name: 'my-characters' }" data-testid="characters-link">Characters</RouterLink>
         <RouterLink v-if="account.data.value" :to="{ name: 'friends' }" data-testid="friends-link">Friends</RouterLink>
+        <RouterLink v-if="account.data.value" :to="{ name: 'conversations' }" data-testid="conversations-link">Talk</RouterLink>
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
         <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
       </nav>

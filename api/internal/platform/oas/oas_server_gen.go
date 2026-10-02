@@ -157,6 +157,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/friend-requests
 	SendFriendRequest(ctx context.Context, req *FriendRequestCreate) (SendFriendRequestRes, error)
+	// SendMessage implements sendMessage operation.
+	//
+	// Posts a message, with Mentions of game content the sender may open.
+	//
+	// POST /api/v1/conversations/{conversationId}/messages
+	SendMessage(ctx context.Context, req *MessageSend, params SendMessageParams) (SendMessageRes, error)
 	// SetAccountDisabled implements setAccountDisabled operation.
 	//
 	// Disabling ends every session and Access Token the Account has. Nobody disables themselves.
@@ -187,6 +193,13 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/sign-out
 	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
+	// StartConversation implements startConversation operation.
+	//
+	// Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to
+	// ten.
+	//
+	// POST /api/v1/conversations
+	StartConversation(ctx context.Context, req *ConversationStart) (StartConversationRes, error)
 	// StartOidcLink implements startOidcLink operation.
 	//
 	// Returns where to send the browser to link a login to the signed-in Account.
@@ -777,6 +790,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters
 	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
+	// ListConversations implements listConversations operation.
+	//
+	// The signed-in Account's Conversations, newest first, with how many messages each has unread.
+	//
+	// GET /api/v1/conversations
+	ListConversations(ctx context.Context) (ListConversationsRes, error)
 	// ListDeletedNpcs implements listDeletedNpcs operation.
 	//
 	// NPCs that were deleted and can still be restored from their Revisions. DM only.
@@ -856,6 +875,19 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/maps
 	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)
+	// ListMentionables implements listMentionables operation.
+	//
+	// Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+	//
+	// GET /api/v1/mentionables
+	ListMentionables(ctx context.Context, params ListMentionablesParams) (ListMentionablesRes, error)
+	// ListMessages implements listMessages operation.
+	//
+	// A page of messages, newest first; reading the newest page marks the Conversation read. Only members
+	// read it.
+	//
+	// GET /api/v1/conversations/{conversationId}/messages
+	ListMessages(ctx context.Context, params ListMessagesParams) (ListMessagesRes, error)
 	// ListMyCharacters implements listMyCharacters operation.
 	//
 	// The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.

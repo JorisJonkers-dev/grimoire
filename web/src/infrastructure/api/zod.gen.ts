@@ -91,6 +91,73 @@ export const zAdminCampaign = z.object({
 });
 
 /**
+ * What a Mention points at.
+ */
+export const zMentionKind = z.enum(['character', 'location']);
+
+/**
+ * Game content a message mentions.
+ */
+export const zMentionRef = z.object({
+    kind: zMentionKind,
+    campaignId: zId,
+    id: zId
+});
+
+/**
+ * A Mention as the reader sees it; label and mapId appear only when they may open it.
+ */
+export const zMentionView = z.object({
+    kind: zMentionKind,
+    campaignId: zId,
+    id: zId,
+    open: z.boolean(),
+    label: z.string().max(120).optional(),
+    mapId: zId.optional()
+});
+
+/**
+ * A new message and what it mentions.
+ */
+export const zMessageSend = z.object({
+    body: z.string().min(1).max(4000),
+    mentions: z.array(zMentionRef).max(10).optional()
+});
+
+/**
+ * The Friends to talk with, and a title for a group.
+ */
+export const zConversationStart = z.object({
+    with: z.array(zId).min(1).max(9),
+    title: z.string().max(80).optional()
+});
+
+/**
+ * A Conversation's id.
+ */
+export const zConversationRef = z.object({
+    id: zId
+});
+
+/**
+ * Something the caller may mention.
+ */
+export const zMentionable = z.object({
+    kind: zMentionKind,
+    id: zId,
+    name: z.string().max(120),
+    campaignId: zId,
+    campaignName: z.string().max(80)
+});
+
+/**
+ * What the caller may mention.
+ */
+export const zMentionableList = z.object({
+    items: z.array(zMentionable).max(40)
+});
+
+/**
  * The Username to ask.
  */
 export const zFriendRequestCreate = z.object({
@@ -318,6 +385,43 @@ export const zPerson = z.object({
     id: zId,
     username: zUsername,
     nickname: z.string().min(1).max(40)
+});
+
+/**
+ * One message in a Conversation.
+ */
+export const zMessageEntry = z.object({
+    id: zId,
+    author: zPerson,
+    body: z.string().min(1).max(4000),
+    at: z.iso.datetime().max(40),
+    mentions: z.array(zMentionView).max(10)
+});
+
+/**
+ * A page of messages, newest first.
+ */
+export const zMessagePage = z.object({
+    items: z.array(zMessageEntry).max(50)
+});
+
+/**
+ * A Conversation in its members' list.
+ */
+export const zConversationEntry = z.object({
+    id: zId,
+    title: z.string().max(80),
+    members: z.array(zPerson).max(10),
+    updatedAt: z.iso.datetime().max(40),
+    unread: z.int().gte(0).lte(1000000),
+    lastBody: z.string().max(120)
+});
+
+/**
+ * An Account's Conversations.
+ */
+export const zConversationList = z.object({
+    items: z.array(zConversationEntry).max(1000)
 });
 
 /**
@@ -4233,6 +4337,51 @@ export const zUnblockPath = z.object({
  * Unblocked.
  */
 export const zUnblockResponse = z.void();
+
+/**
+ * The Conversations.
+ */
+export const zListConversationsResponse = zConversationList;
+
+export const zStartConversationBody = zConversationStart;
+
+/**
+ * The Conversation.
+ */
+export const zStartConversationResponse = zConversationRef;
+
+export const zListMessagesPath = z.object({
+    conversationId: zId
+});
+
+export const zListMessagesQuery = z.object({
+    before: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * The messages.
+ */
+export const zListMessagesResponse = zMessagePage;
+
+export const zSendMessageBody = zMessageSend;
+
+export const zSendMessagePath = z.object({
+    conversationId: zId
+});
+
+/**
+ * The message.
+ */
+export const zSendMessageResponse = zMessageEntry;
+
+export const zListMentionablesQuery = z.object({
+    q: z.string().max(60).optional()
+});
+
+/**
+ * What may be mentioned.
+ */
+export const zListMentionablesResponse = zMentionableList;
 
 /**
  * The process is alive.
