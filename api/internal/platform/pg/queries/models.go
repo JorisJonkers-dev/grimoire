@@ -45,6 +45,7 @@ type CampaignCampaign struct {
 	CreationMethods  []string
 	StartingLevel    int32
 	HoldLevelUps     bool
+	GameMinute       int32
 }
 
 type CampaignCharacter struct {
@@ -72,6 +73,7 @@ type CampaignCharacter struct {
 	LevelUpReady   bool
 	CharacterID    pgtype.UUID
 	TempHp         int32
+	CanPrepare     bool
 }
 
 type CampaignCharacterAbility struct {
@@ -123,6 +125,8 @@ type CampaignCharacterSpell struct {
 	ClassSlug    string
 	SpellSlug    string
 	LearnedLevel int32
+	Prepared     bool
+	Spellbook    bool
 }
 
 type CampaignCharacterWeapon struct {
@@ -322,6 +326,13 @@ type CompendiumAbilityScore struct {
 	ID   int64
 	Slug string
 	Name string
+}
+
+type CompendiumAlwaysPrepared struct {
+	OwnerKind string
+	OwnerSlug string
+	Level     int32
+	SpellSlug string
 }
 
 type CompendiumArmor struct {

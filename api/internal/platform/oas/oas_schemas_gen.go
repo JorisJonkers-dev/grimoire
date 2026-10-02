@@ -5534,6 +5534,156 @@ func (s *ClassLine) SetLevel(val int32) {
 	s.Level = val
 }
 
+// What a Character casts through one class.
+// Ref: #/components/schemas/ClassSpells
+type ClassSpells struct {
+	Class Slug   `json:"class"`
+	Name  string `json:"name"`
+	Level int32  `json:"level"`
+	// How many spells it prepares.
+	Limit          int32 `json:"limit"`
+	MaxLevel       int32 `json:"maxLevel"`
+	KeepsSpellbook bool  `json:"keepsSpellbook"`
+	// Spells a wizard's book holds for free.
+	Allotment int32         `json:"allotment"`
+	Cantrips  SpellPickList `json:"cantrips"`
+	Prepared  SpellPickList `json:"prepared"`
+	Always    SpellPickList `json:"always"`
+	Spellbook SpellPickList `json:"spellbook"`
+	Options   SpellPickList `json:"options"`
+	Copyable  SpellPickList `json:"copyable"`
+}
+
+// GetClass returns the value of Class.
+func (s *ClassSpells) GetClass() Slug {
+	return s.Class
+}
+
+// GetName returns the value of Name.
+func (s *ClassSpells) GetName() string {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *ClassSpells) GetLevel() int32 {
+	return s.Level
+}
+
+// GetLimit returns the value of Limit.
+func (s *ClassSpells) GetLimit() int32 {
+	return s.Limit
+}
+
+// GetMaxLevel returns the value of MaxLevel.
+func (s *ClassSpells) GetMaxLevel() int32 {
+	return s.MaxLevel
+}
+
+// GetKeepsSpellbook returns the value of KeepsSpellbook.
+func (s *ClassSpells) GetKeepsSpellbook() bool {
+	return s.KeepsSpellbook
+}
+
+// GetAllotment returns the value of Allotment.
+func (s *ClassSpells) GetAllotment() int32 {
+	return s.Allotment
+}
+
+// GetCantrips returns the value of Cantrips.
+func (s *ClassSpells) GetCantrips() SpellPickList {
+	return s.Cantrips
+}
+
+// GetPrepared returns the value of Prepared.
+func (s *ClassSpells) GetPrepared() SpellPickList {
+	return s.Prepared
+}
+
+// GetAlways returns the value of Always.
+func (s *ClassSpells) GetAlways() SpellPickList {
+	return s.Always
+}
+
+// GetSpellbook returns the value of Spellbook.
+func (s *ClassSpells) GetSpellbook() SpellPickList {
+	return s.Spellbook
+}
+
+// GetOptions returns the value of Options.
+func (s *ClassSpells) GetOptions() SpellPickList {
+	return s.Options
+}
+
+// GetCopyable returns the value of Copyable.
+func (s *ClassSpells) GetCopyable() SpellPickList {
+	return s.Copyable
+}
+
+// SetClass sets the value of Class.
+func (s *ClassSpells) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassSpells) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *ClassSpells) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *ClassSpells) SetLimit(val int32) {
+	s.Limit = val
+}
+
+// SetMaxLevel sets the value of MaxLevel.
+func (s *ClassSpells) SetMaxLevel(val int32) {
+	s.MaxLevel = val
+}
+
+// SetKeepsSpellbook sets the value of KeepsSpellbook.
+func (s *ClassSpells) SetKeepsSpellbook(val bool) {
+	s.KeepsSpellbook = val
+}
+
+// SetAllotment sets the value of Allotment.
+func (s *ClassSpells) SetAllotment(val int32) {
+	s.Allotment = val
+}
+
+// SetCantrips sets the value of Cantrips.
+func (s *ClassSpells) SetCantrips(val SpellPickList) {
+	s.Cantrips = val
+}
+
+// SetPrepared sets the value of Prepared.
+func (s *ClassSpells) SetPrepared(val SpellPickList) {
+	s.Prepared = val
+}
+
+// SetAlways sets the value of Always.
+func (s *ClassSpells) SetAlways(val SpellPickList) {
+	s.Always = val
+}
+
+// SetSpellbook sets the value of Spellbook.
+func (s *ClassSpells) SetSpellbook(val SpellPickList) {
+	s.Spellbook = val
+}
+
+// SetOptions sets the value of Options.
+func (s *ClassSpells) SetOptions(val SpellPickList) {
+	s.Options = val
+}
+
+// SetCopyable sets the value of Copyable.
+func (s *ClassSpells) SetCopyable(val SpellPickList) {
+	s.Copyable = val
+}
+
 // ClearTokenIconNoContent is response for ClearTokenIcon operation.
 type ClearTokenIconNoContent struct {
 	RateLimitLimit     OptInt32
@@ -8503,6 +8653,34 @@ func (s *FriendsPageHeaders) SetResponse(val FriendsPage) {
 }
 
 func (*FriendsPageHeaders) listFriendsRes() {}
+
+// The time on a Campaign's Game Clock.
+// Ref: #/components/schemas/GameClock
+type GameClock struct {
+	Day int32 `json:"day"`
+	// Minutes after midnight.
+	Minute int32 `json:"minute"`
+}
+
+// GetDay returns the value of Day.
+func (s *GameClock) GetDay() int32 {
+	return s.Day
+}
+
+// GetMinute returns the value of Minute.
+func (s *GameClock) GetMinute() int32 {
+	return s.Minute
+}
+
+// SetDay sets the value of Day.
+func (s *GameClock) SetDay(val int32) {
+	s.Day = val
+}
+
+// SetMinute sets the value of Minute.
+func (s *GameClock) SetMinute(val int32) {
+	s.Minute = val
+}
 
 // GetActionLogOKHeaders wraps []ActionEntry with response headers.
 type GetActionLogOKHeaders struct {
@@ -25735,8 +25913,10 @@ func (*ProblemStatusCodeWithHeaders) acceptFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
 func (*ProblemStatusCodeWithHeaders) cancelFriendRequestRes()           {}
+func (*ProblemStatusCodeWithHeaders) castRitualRes()                    {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
 func (*ProblemStatusCodeWithHeaders) confirmTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) copySpellRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
@@ -25793,6 +25973,7 @@ func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
 func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
+func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
@@ -25835,6 +26016,7 @@ func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
+func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
@@ -27226,6 +27408,94 @@ func (s *RevokeInviteNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*RevokeInviteNoContent) revokeInviteRes() {}
+
+// A ritual cast, how long it took, and the Game Clock after it.
+// Ref: #/components/schemas/RitualCast
+type RitualCast struct {
+	Spell   SpellPick `json:"spell"`
+	Minutes int32     `json:"minutes"`
+	Clock   GameClock `json:"clock"`
+}
+
+// GetSpell returns the value of Spell.
+func (s *RitualCast) GetSpell() SpellPick {
+	return s.Spell
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *RitualCast) GetMinutes() int32 {
+	return s.Minutes
+}
+
+// GetClock returns the value of Clock.
+func (s *RitualCast) GetClock() GameClock {
+	return s.Clock
+}
+
+// SetSpell sets the value of Spell.
+func (s *RitualCast) SetSpell(val SpellPick) {
+	s.Spell = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *RitualCast) SetMinutes(val int32) {
+	s.Minutes = val
+}
+
+// SetClock sets the value of Clock.
+func (s *RitualCast) SetClock(val GameClock) {
+	s.Clock = val
+}
+
+// RitualCastHeaders wraps RitualCast with response headers.
+type RitualCastHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RitualCast
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RitualCastHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RitualCastHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RitualCastHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RitualCastHeaders) GetResponse() RitualCast {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RitualCastHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RitualCastHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RitualCastHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RitualCastHeaders) SetResponse(val RitualCast) {
+	s.Response = val
+}
+
+func (*RitualCastHeaders) castRitualRes() {}
 
 // What a Member may do in a Campaign.
 // Ref: #/components/schemas/Role
@@ -29813,6 +30083,22 @@ func (s *Spell) SetMentions(val []ConditionRef) {
 	s.Mentions = val
 }
 
+// One spell by slug.
+// Ref: #/components/schemas/SpellChoice
+type SpellChoice struct {
+	Spell Slug `json:"spell"`
+}
+
+// GetSpell returns the value of Spell.
+func (s *SpellChoice) GetSpell() Slug {
+	return s.Spell
+}
+
+// SetSpell sets the value of Spell.
+func (s *SpellChoice) SetSpell(val Slug) {
+	s.Spell = val
+}
+
 // SpellHeaders wraps Spell with response headers.
 type SpellHeaders struct {
 	ETag               OptString
@@ -29965,9 +30251,10 @@ func (*SpellPageHeaders) listSpellsRes() {}
 // A cantrip (level 0) or spell on a class's list.
 // Ref: #/components/schemas/SpellPick
 type SpellPick struct {
-	Slug  Slug   `json:"slug"`
-	Name  string `json:"name"`
-	Level int32  `json:"level"`
+	Slug   Slug    `json:"slug"`
+	Name   string  `json:"name"`
+	Level  int32   `json:"level"`
+	Ritual OptBool `json:"ritual"`
 }
 
 // GetSlug returns the value of Slug.
@@ -29985,6 +30272,11 @@ func (s *SpellPick) GetLevel() int32 {
 	return s.Level
 }
 
+// GetRitual returns the value of Ritual.
+func (s *SpellPick) GetRitual() OptBool {
+	return s.Ritual
+}
+
 // SetSlug sets the value of Slug.
 func (s *SpellPick) SetSlug(val Slug) {
 	s.Slug = val
@@ -29998,6 +30290,40 @@ func (s *SpellPick) SetName(val string) {
 // SetLevel sets the value of Level.
 func (s *SpellPick) SetLevel(val int32) {
 	s.Level = val
+}
+
+// SetRitual sets the value of Ritual.
+func (s *SpellPick) SetRitual(val OptBool) {
+	s.Ritual = val
+}
+
+type SpellPickList []SpellPick
+
+// The spells to have prepared through a class.
+// Ref: #/components/schemas/SpellPreparation
+type SpellPreparation struct {
+	Class  Slug   `json:"class"`
+	Spells []Slug `json:"spells"`
+}
+
+// GetClass returns the value of Class.
+func (s *SpellPreparation) GetClass() Slug {
+	return s.Class
+}
+
+// GetSpells returns the value of Spells.
+func (s *SpellPreparation) GetSpells() []Slug {
+	return s.Spells
+}
+
+// SetClass sets the value of Class.
+func (s *SpellPreparation) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *SpellPreparation) SetSpells(val []Slug) {
+	s.Spells = val
 }
 
 // Damage at a higher slot or character level.
@@ -30160,6 +30486,108 @@ func (s *SpellSummary) SetRitual(val bool) {
 func (s *SpellSummary) SetConcentration(val bool) {
 	s.Concentration = val
 }
+
+// A Character's spells in every class it casts through.
+// Ref: #/components/schemas/Spellcasting
+type Spellcasting struct {
+	// It may change its prepared spells now.
+	CanPrepare bool          `json:"canPrepare"`
+	Classes    []ClassSpells `json:"classes"`
+	Purse      []LiveCoins   `json:"purse"`
+	Clock      GameClock     `json:"clock"`
+}
+
+// GetCanPrepare returns the value of CanPrepare.
+func (s *Spellcasting) GetCanPrepare() bool {
+	return s.CanPrepare
+}
+
+// GetClasses returns the value of Classes.
+func (s *Spellcasting) GetClasses() []ClassSpells {
+	return s.Classes
+}
+
+// GetPurse returns the value of Purse.
+func (s *Spellcasting) GetPurse() []LiveCoins {
+	return s.Purse
+}
+
+// GetClock returns the value of Clock.
+func (s *Spellcasting) GetClock() GameClock {
+	return s.Clock
+}
+
+// SetCanPrepare sets the value of CanPrepare.
+func (s *Spellcasting) SetCanPrepare(val bool) {
+	s.CanPrepare = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *Spellcasting) SetClasses(val []ClassSpells) {
+	s.Classes = val
+}
+
+// SetPurse sets the value of Purse.
+func (s *Spellcasting) SetPurse(val []LiveCoins) {
+	s.Purse = val
+}
+
+// SetClock sets the value of Clock.
+func (s *Spellcasting) SetClock(val GameClock) {
+	s.Clock = val
+}
+
+// SpellcastingHeaders wraps Spellcasting with response headers.
+type SpellcastingHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Spellcasting
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpellcastingHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpellcastingHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpellcastingHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpellcastingHeaders) GetResponse() Spellcasting {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpellcastingHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpellcastingHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpellcastingHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpellcastingHeaders) SetResponse(val Spellcasting) {
+	s.Response = val
+}
+
+func (*SpellcastingHeaders) copySpellRes()       {}
+func (*SpellcastingHeaders) getSpellcastingRes() {}
+func (*SpellcastingHeaders) prepareSpellsRes()   {}
 
 // Service status.
 // Ref: #/components/schemas/Status

@@ -247,6 +247,14 @@ func assertTraits(t *testing.T, s *pgstore.Store) {
 	if !levels[0] || !levels[1] || levels[2] {
 		t.Fatalf("wizard spells to level 1 = %v", levels)
 	}
+	always, err := s.AlwaysPrepared(ctx, "srd-2024", "cleric", "life-domain", 5)
+	names := map[string]bool{}
+	for _, sp := range always {
+		names[sp.Slug] = true
+	}
+	if err != nil || len(always) != 6 || !names["revivify"] || names["death-ward"] {
+		t.Fatalf("life domain at 5 = %v %v", always, err)
+	}
 	cat, err := s.Features(ctx)
 	if err != nil || cat.MasteryCount("fighter", 1) != 3 || cat.MasteryCount("fighter", 4) != 4 || cat.MasteryCount("wizard", 5) != 0 {
 		t.Fatalf("mastery counts: %v", err)

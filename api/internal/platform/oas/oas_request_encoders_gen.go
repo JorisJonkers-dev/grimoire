@@ -38,8 +38,36 @@ func encodeAcceptInviteRequest(
 	return nil
 }
 
+func encodeCastRitualRequest(
+	req *SpellChoice,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeConfirmTwoStepRequest(
 	req *TwoStepCode,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCopySpellRequest(
+	req *SpellChoice,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -348,6 +376,20 @@ func encodeLinkOidcAccountRequest(
 
 func encodePassTwoStepRequest(
 	req *TwoStepAnswer,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePrepareSpellsRequest(
+	req *SpellPreparation,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

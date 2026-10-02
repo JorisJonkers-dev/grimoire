@@ -59,6 +59,8 @@ type Querier interface {
 	AddZoneCreature(ctx context.Context, arg AddZoneCreatureParams) error
 	// A new Campaign Character takes its Character's name, Portrait and token.
 	AdoptCharacterIdentity(ctx context.Context, id uuid.UUID) error
+	// The spells a class and its subclass always have prepared at a class level.
+	AlwaysPreparedSpells(ctx context.Context, arg AlwaysPreparedSpellsParams) ([]AlwaysPreparedSpellsRow, error)
 	AnnounceReleaseNote(ctx context.Context, arg AnnounceReleaseNoteParams) error
 	AreFriends(ctx context.Context, arg AreFriendsParams) (bool, error)
 	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
@@ -69,6 +71,7 @@ type Querier interface {
 	BuilderWeapons(ctx context.Context, key string) ([]BuilderWeaponsRow, error)
 	BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, error)
 	CampaignChecks(ctx context.Context, campaignID uuid.UUID) ([]CampaignChecksRow, error)
+	CampaignClock(ctx context.Context, id uuid.UUID) (CampaignClockRow, error)
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
@@ -92,6 +95,8 @@ type Querier interface {
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
 	CharacterClasses(ctx context.Context, characterID uuid.UUID) ([]CharacterClassesRow, error)
 	CharacterPicks(ctx context.Context, characterID uuid.UUID) ([]CharacterPicksRow, error)
+	// The coins in a Character's own container; none when it has never held any.
+	CharacterPurse(ctx context.Context, characterID pgtype.UUID) ([]CharacterPurseRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
 	CharacterSpells(ctx context.Context, characterID uuid.UUID) ([]CharacterSpellsRow, error)
 	CharacterTrade(ctx context.Context, campaignID uuid.UUID) ([]CharacterTradeRow, error)
@@ -105,6 +110,7 @@ type Querier interface {
 	ClearCharacterClasses(ctx context.Context, characterID uuid.UUID) error
 	ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error
 	ClearClassChildren(ctx context.Context, classID int64) error
+	ClearClassSpells(ctx context.Context, arg ClearClassSpellsParams) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
 	ClearEffectComponents(ctx context.Context, effectID int64) error
 	ClearEffectScaling(ctx context.Context, effectID int64) error
@@ -542,6 +548,8 @@ type Querier interface {
 	SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error
 	SetAccountDisabled(ctx context.Context, arg SetAccountDisabledParams) error
 	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
+	SetCampaignClock(ctx context.Context, arg SetCampaignClockParams) error
+	SetCanPrepare(ctx context.Context, arg SetCanPrepareParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error

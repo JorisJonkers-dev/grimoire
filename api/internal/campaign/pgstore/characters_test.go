@@ -29,6 +29,18 @@ func (f fakeOptions) LevelUpOptions(context.Context, string, string, int) (compe
 	return compendium.LevelUpOptions{}, f.err
 }
 
+func (f fakeOptions) ClassSpells(context.Context, string, string, int) ([]compendium.SpellOption, error) {
+	out := []compendium.SpellOption{{Slug: "alarm", Name: "Alarm", Level: 1, Ritual: true, CastingTime: "1minute"}}
+	for _, slug := range []string{"s1", "s2", "s3", "s4", "s5", "s6"} {
+		out = append(out, compendium.SpellOption{Slug: slug, Name: slug, Level: 1, Ritual: false, CastingTime: "action"})
+	}
+	return out, f.err
+}
+
+func (f fakeOptions) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, f.err
+}
+
 func (f fakeOptions) Features(context.Context) (features.Catalog, error) {
 	return features.Catalog{}, f.err
 }
@@ -303,6 +315,22 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 		t.Fatalf("combat status error: %v", err)
 	}
 	combat.err = nil
+	wb := fighter()
+	wb.Class = "wizard"
+	wiz, err := chars.Create(ctx, playerCaller, d.ID, wb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []app.Compendium{&spellsFail{failAt: 1}, &spellsFail{failAt: 2}, &spellsFail{failAt: 3, always: true}} {
+		chars.Compendium = c
+		if _, err := chars.Spells(ctx, playerCaller, d.ID, wiz.ID); err == nil {
+			if _, err := chars.CopySpell(ctx, playerCaller, d.ID, wiz.ID, "s1"); !errors.Is(err, boom) {
+				t.Fatalf("spell list error on copy: %v", err)
+			}
+		} else if !errors.Is(err, boom) {
+			t.Fatalf("spell list error: %v", err)
+		}
+	}
 	chars.Compendium = levelUpFails{}
 	if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, ""); !errors.Is(err, boom) {
 		t.Fatalf("level-up options error: %v", err)
@@ -343,6 +371,29 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	if _, err := chars.Update(ctx, playerCaller, d.ID, sheet.ID, app.Edit{}); err == nil {
 		t.Fatal("second combat check error ignored")
 	}
+}
+
+// spellsFail reads a class's spells until a call number, then fails it; always fails the always-prepared
+// spells instead.
+type spellsFail struct {
+	fakeOptions
+	calls, failAt int
+	always        bool
+}
+
+func (f *spellsFail) ClassSpells(ctx context.Context, ruleset, class string, level int) ([]compendium.SpellOption, error) {
+	f.calls++
+	if !f.always && f.calls >= f.failAt {
+		return nil, errExtras
+	}
+	return f.fakeOptions.ClassSpells(ctx, ruleset, class, level)
+}
+
+func (f *spellsFail) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	if f.always {
+		return nil, errExtras
+	}
+	return nil, nil
 }
 
 // levelUpFails builds sheets but cannot read what a level offers.
@@ -411,6 +462,27 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 		Increase: map[string]int{"strength": 2},
 	}
 	ready := true
+	wb := fighter()
+	wb.Class = "wizard"
+	wiz, err := chars.Create(ctx, playerCaller, d.ID, wb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	book := []domain.LearnedSpell{}
+	for _, slug := range []string{"alarm", "s1", "s2", "s3", "s4", "s5"} {
+		book = append(book, domain.LearnedSpell{Class: "wizard", Spell: slug, Level: 1, Prepared: false, Spellbook: true})
+	}
+	if err := store.ReplaceClassSpells(ctx, wiz.ID, "wizard", book, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
+		VALUES (gen_random_uuid(), $1, 'character', $2, 'Pack', now())`, uuid.UUID(d.ID), uuid.UUID(wiz.ID)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, `INSERT INTO campaign.container_coins (container_id, coin, amount)
+		SELECT id, 'gp', 100 FROM campaign.containers WHERE character_id = $1`, uuid.UUID(wiz.ID)); err != nil {
+		t.Fatal(err)
+	}
 	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); err != nil {
 		t.Fatal(err)
 	}
@@ -475,6 +547,33 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			}
 			full.From = now.Level
 			return c.Repo.InTx(ctx, func(r app.Repository) error { return r.LevelUp(ctx, full, time.Now()) })
+		},
+		"spells": func(c *app.Characters) error { _, err := c.Spells(ctx, playerCaller, d.ID, wiz.ID); return err },
+		"prepare": func(c *app.Characters) error {
+			if _, err := db.Pool().Exec(ctx, "UPDATE campaign.characters SET can_prepare = true WHERE id = $1", uuid.UUID(wiz.ID)); err != nil {
+				t.Fatal(err)
+			}
+			_, err := c.Prepare(ctx, playerCaller, d.ID, wiz.ID, "wizard", []string{"s1", "s2"})
+			return err
+		},
+		"ritual": func(c *app.Characters) error {
+			_, err := c.CastRitual(ctx, playerCaller, d.ID, wiz.ID, "alarm")
+			return err
+		},
+		"copy": func(c *app.Characters) error {
+			if _, err := db.Pool().Exec(ctx, "DELETE FROM campaign.character_spells WHERE character_id = $1 AND spell_slug = 's6'", uuid.UUID(wiz.ID)); err != nil {
+				t.Fatal(err)
+			}
+			for _, q := range []string{
+				"DELETE FROM campaign.container_coins k USING campaign.containers c WHERE k.container_id = c.id AND c.character_id = $1",
+				"INSERT INTO campaign.container_coins (container_id, coin, amount) SELECT id, 'gp', 100 FROM campaign.containers WHERE character_id = $1",
+			} {
+				if _, err := db.Pool().Exec(ctx, q, uuid.UUID(wiz.ID)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, err := c.CopySpell(ctx, playerCaller, d.ID, wiz.ID, "s6")
+			return err
 		},
 		"unlock": func(c *app.Characters) error {
 			_, err := c.Update(ctx, dmCaller, d.ID, sheet.ID, app.Edit{LevelUpReady: &ready})

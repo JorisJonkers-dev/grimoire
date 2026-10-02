@@ -849,6 +849,136 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spells:
+    get:
+      operationId: getSpellcasting
+      x-ogen-operation-group: Read
+      summary: Read a Character's spells
+      description: Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game Clock.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The spells.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spellcasting"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared:
+    put:
+      operationId: prepareSpells
+      x-ogen-operation-group: Build
+      summary: Prepare spells
+      description: Sets the spells prepared through one class within its limit, after a long rest or a new level.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellPreparation"
+      responses:
+        "200":
+          description: The spells.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spellcasting"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals:
+    post:
+      operationId: castRitual
+      x-ogen-operation-group: Play
+      summary: Cast a ritual
+      description: Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes to the Game Clock.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellChoice"
+      responses:
+        "200":
+          description: The ritual and the Game Clock after it.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RitualCast"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook:
+    post:
+      operationId: copySpell
+      x-ogen-operation-group: Build
+      summary: Copy a spell into the spellbook
+      description: Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2 hours per spell level.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellChoice"
+      responses:
+        "200":
+          description: The spells.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spellcasting"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
     get:
       operationId: getPortrait
@@ -6555,6 +6685,81 @@ components:
           type: array
           maxItems: 100
           items: { $ref: "#/components/schemas/LearnedSpellLine" }
+    Spellcasting:
+      type: object
+      description: A Character's spells in every class it casts through.
+      additionalProperties: false
+      required: [canPrepare, classes, purse, clock]
+      properties:
+        canPrepare: { type: boolean, description: "It may change its prepared spells now." }
+        classes:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ClassSpells" }
+        purse:
+          type: array
+          maxItems: 5
+          items: { $ref: "#/components/schemas/LiveCoins" }
+        clock: { $ref: "#/components/schemas/GameClock" }
+    ClassSpells:
+      type: object
+      description: What a Character casts through one class.
+      additionalProperties: false
+      required: [class, name, level, limit, maxLevel, keepsSpellbook, allotment, cantrips, prepared, always, spellbook, options, copyable]
+      properties:
+        class: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        limit: { type: integer, format: int32, minimum: 0, maximum: 30, description: "How many spells it prepares." }
+        maxLevel: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        keepsSpellbook: { type: boolean }
+        allotment: { type: integer, format: int32, minimum: 0, maximum: 60, description: "Spells a wizard's book holds for free." }
+        cantrips: { $ref: "#/components/schemas/SpellPickList" }
+        prepared: { $ref: "#/components/schemas/SpellPickList" }
+        always: { $ref: "#/components/schemas/SpellPickList" }
+        spellbook: { $ref: "#/components/schemas/SpellPickList" }
+        options: { $ref: "#/components/schemas/SpellPickList" }
+        copyable: { $ref: "#/components/schemas/SpellPickList" }
+    SpellPickList:
+      type: array
+      description: Spells by slug, name and level.
+      maxItems: 500
+      items: { $ref: "#/components/schemas/SpellPick" }
+    GameClock:
+      type: object
+      description: The time on a Campaign's Game Clock.
+      additionalProperties: false
+      required: [day, minute]
+      properties:
+        day: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        minute: { type: integer, format: int32, minimum: 0, maximum: 1439, description: "Minutes after midnight." }
+    SpellPreparation:
+      type: object
+      description: The spells to have prepared through a class.
+      additionalProperties: false
+      required: [class, spells]
+      properties:
+        class: { $ref: "#/components/schemas/Slug" }
+        spells:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/Slug" }
+    SpellChoice:
+      type: object
+      description: One spell by slug.
+      additionalProperties: false
+      required: [spell]
+      properties:
+        spell: { $ref: "#/components/schemas/Slug" }
+    RitualCast:
+      type: object
+      description: A ritual cast, how long it took, and the Game Clock after it.
+      additionalProperties: false
+      required: [spell, minutes, clock]
+      properties:
+        spell: { $ref: "#/components/schemas/SpellPick" }
+        minutes: { type: integer, format: int32, minimum: 10, maximum: 1500 }
+        clock: { $ref: "#/components/schemas/GameClock" }
     LevelUpPlan:
       type: object
       description: What the next level offers in one class.
@@ -6631,6 +6836,7 @@ components:
         slug: { $ref: "#/components/schemas/Slug" }
         name: { type: string, maxLength: 120 }
         level: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        ritual: { type: boolean }
     LevelUpRequest:
       type: object
       description: The choices made for the next level.

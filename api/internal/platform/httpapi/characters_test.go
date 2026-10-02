@@ -161,6 +161,22 @@ func (b brokenCharacters) LevelUp(context.Context, caller.Caller, domain.Campaig
 	return app.Sheet{}, b.err
 }
 
+func (b brokenCharacters) Spells(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) (app.Spellcasting, error) {
+	return app.Spellcasting{}, b.err
+}
+
+func (b brokenCharacters) Prepare(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string, []string) (app.Spellcasting, error) {
+	return app.Spellcasting{}, b.err
+}
+
+func (b brokenCharacters) CastRitual(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.Ritual, error) {
+	return app.Ritual{}, b.err
+}
+
+func (b brokenCharacters) CopySpell(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.Spellcasting, error) {
+	return app.Spellcasting{}, b.err
+}
+
 func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/characters"
@@ -185,6 +201,10 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft/roll", ""},
 		{http.MethodGet, one + "/level-up", ""},
 		{http.MethodPost, one + "/level-up", `{"class":"fighter"}`},
+		{http.MethodGet, one + "/spells", ""},
+		{http.MethodPut, one + "/spells/prepared", `{"class":"wizard","spells":[]}`},
+		{http.MethodPost, one + "/spells/rituals", `{"spell":"alarm"}`},
+		{http.MethodPost, one + "/spellbook", `{"spell":"alarm"}`},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -219,6 +239,10 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.RollCharacterScores(ctx, oas.RollCharacterScoresParams{}))
 	add(h.PlanLevelUp(ctx, oas.PlanLevelUpParams{}))
 	add(h.LevelUp(ctx, &oas.LevelUpRequest{}, oas.LevelUpParams{}))
+	add(h.GetSpellcasting(ctx, oas.GetSpellcastingParams{}))
+	add(h.PrepareSpells(ctx, &oas.SpellPreparation{}, oas.PrepareSpellsParams{}))
+	add(h.CastRitual(ctx, &oas.SpellChoice{}, oas.CastRitualParams{}))
+	add(h.CopySpell(ctx, &oas.SpellChoice{}, oas.CopySpellParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

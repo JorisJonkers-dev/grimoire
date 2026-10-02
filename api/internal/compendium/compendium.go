@@ -248,11 +248,14 @@ type FeatOption struct {
 	Description string
 }
 
-// SpellOption is a cantrip (level 0) or spell on a class's list.
+// SpellOption is a cantrip (level 0) or spell on a class's list, whether it can be cast as a ritual,
+// and its casting time.
 type SpellOption struct {
-	Slug  string
-	Name  string
-	Level int
+	Slug        string
+	Name        string
+	Level       int
+	Ritual      bool
+	CastingTime string
 }
 
 // LevelUpOptions are what a class offers on levelling up: its subclasses, every feat, and the cantrips

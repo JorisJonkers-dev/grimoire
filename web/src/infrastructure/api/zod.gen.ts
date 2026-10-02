@@ -869,6 +869,14 @@ export const zCharacterJoin = z.object({
 });
 
 /**
+ * The time on a Campaign's Game Clock.
+ */
+export const zGameClock = z.object({
+    day: z.int().gte(0).lte(1000000),
+    minute: z.int().gte(0).lte(1439)
+});
+
+/**
  * Same-origin path of a stored picture; it changes when the picture does.
  */
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
@@ -2150,6 +2158,21 @@ export const zWeaponLine = z.object({
 });
 
 /**
+ * The spells to have prepared through a class.
+ */
+export const zSpellPreparation = z.object({
+    class: zSlug,
+    spells: z.array(zSlug).max(30)
+});
+
+/**
+ * One spell by slug.
+ */
+export const zSpellChoice = z.object({
+    spell: zSlug
+});
+
+/**
  * A class the next level can go to, with what multiclassing into it still needs.
  */
 export const zLevelUpClass = z.object({
@@ -2193,7 +2216,51 @@ export const zLevelUpChoice = z.object({
 export const zSpellPick = z.object({
     slug: zSlug,
     name: z.string().max(120),
-    level: z.int().gte(0).lte(9)
+    level: z.int().gte(0).lte(9),
+    ritual: z.boolean().optional()
+});
+
+/**
+ * Spells by slug, name and level.
+ */
+export const zSpellPickList = z.array(zSpellPick).max(500);
+
+/**
+ * What a Character casts through one class.
+ */
+export const zClassSpells = z.object({
+    class: zSlug,
+    name: z.string().max(120),
+    level: z.int().gte(1).lte(20),
+    limit: z.int().gte(0).lte(30),
+    maxLevel: z.int().gte(0).lte(9),
+    keepsSpellbook: z.boolean(),
+    allotment: z.int().gte(0).lte(60),
+    cantrips: zSpellPickList,
+    prepared: zSpellPickList,
+    always: zSpellPickList,
+    spellbook: zSpellPickList,
+    options: zSpellPickList,
+    copyable: zSpellPickList
+});
+
+/**
+ * A Character's spells in every class it casts through.
+ */
+export const zSpellcasting = z.object({
+    canPrepare: z.boolean(),
+    classes: z.array(zClassSpells).max(12),
+    purse: z.array(zLiveCoins).max(5),
+    clock: zGameClock
+});
+
+/**
+ * A ritual cast, how long it took, and the Game Clock after it.
+ */
+export const zRitualCast = z.object({
+    spell: zSpellPick,
+    minutes: z.int().gte(10).lte(1500),
+    clock: zGameClock
 });
 
 /**
@@ -3619,6 +3686,52 @@ export const zLevelUpPath = z.object({
  * The sheet at the new level.
  */
 export const zLevelUpResponse = zCharacterSheet;
+
+export const zGetSpellcastingPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The spells.
+ */
+export const zGetSpellcastingResponse = zSpellcasting;
+
+export const zPrepareSpellsBody = zSpellPreparation;
+
+export const zPrepareSpellsPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The spells.
+ */
+export const zPrepareSpellsResponse = zSpellcasting;
+
+export const zCastRitualBody = zSpellChoice;
+
+export const zCastRitualPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The ritual and the Game Clock after it.
+ */
+export const zCastRitualResponse = zRitualCast;
+
+export const zCopySpellBody = zSpellChoice;
+
+export const zCopySpellPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The spells.
+ */
+export const zCopySpellResponse = zSpellcasting;
 
 export const zGetPortraitPath = z.object({
     campaignId: zId,

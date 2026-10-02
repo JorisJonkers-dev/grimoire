@@ -63,6 +63,9 @@ func TestRestsAreStored(t *testing.T) {
 		Kind: domain.ActionRestTaken, Rest: live.RestLong, RestOver: true,
 		Results: []domain.RestResult{{CharacterID: char, HPCurrent: 99, HitDiceSpent: 0, Used: map[string]int{"second-wind": 0}, LevelUpReady: true}},
 	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.characters SET can_prepare = false WHERE id = $1", char); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := store.Commit(ctx, s, nil, finish, me, dm, time.Now()); err != nil {
 		t.Fatal(err)
 	}
@@ -71,8 +74,9 @@ func TestRestsAreStored(t *testing.T) {
 	}
 	var hp int
 	var ready bool
-	if err := tb.pool.QueryRow(ctx, "SELECT hp_current, level_up_ready FROM campaign.characters WHERE id = $1", char).Scan(&hp, &ready); err != nil || hp != 20 || !ready {
-		t.Fatalf("hp %d ready %v %v", hp, ready, err)
+	var prepare bool
+	if err := tb.pool.QueryRow(ctx, "SELECT hp_current, level_up_ready, can_prepare FROM campaign.characters WHERE id = $1", char).Scan(&hp, &ready, &prepare); err != nil || hp != 20 || !ready || !prepare {
+		t.Fatalf("hp %d ready %v prepare %v %v", hp, ready, prepare, err)
 	}
 	var title, path string
 	if err := tb.pool.QueryRow(ctx, "SELECT title, action_path FROM social.notifications WHERE kind = 'level_up'").Scan(&title, &path); err != nil ||

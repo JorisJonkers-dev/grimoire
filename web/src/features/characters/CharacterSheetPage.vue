@@ -86,10 +86,11 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
           </p>
           <p v-if="!s.editable" class="g-tag locked" data-testid="sheet-locked">Read only</p>
           <p v-if="s.editable" class="level-actions">
-            <GButton v-if="s.levelUpReady" variant="primary" data-testid="level-up" @click="router.push({ name: 'level-up', params: path.path })">
+            <GButton v-if="s.levelUpReady" variant="primary" data-testid="level-up" @click="router.push({ name: 'level-up', params: { id: path.path.campaignId, characterId: path.path.characterId } })">
               Level up to {{ s.level + 1 }}
             </GButton>
             <GButton v-else-if="!s.mine && s.level < 20" data-testid="unlock-level" @click="unlock()">Grant level {{ s.level + 1 }}</GButton>
+            <RouterLink class="spells-link" :to="{ name: 'character-spells', params: { id: path.path.campaignId, characterId: path.path.characterId } }" data-testid="open-spells">Spells</RouterLink>
           </p>
         </div>
         <label v-if="campaigns.length > 1" class="switch">
@@ -259,7 +260,14 @@ h1 {
   margin-top: 6px;
 }
 .level-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   margin: 8px 0 0;
+}
+.spells-link {
+  color: var(--color-gold-high);
 }
 .switch {
   display: flex;

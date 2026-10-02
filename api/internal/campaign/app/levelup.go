@@ -123,13 +123,32 @@ func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (Level
 }
 
 // newSpells are how many cantrips and spells a class's next level adds, from one it has at a level; a
-// new class grants its whole first level.
+// new class grants its whole first level. A wizard writes its new spells into its spellbook: six at first
+// level and two each level after.
 func newSpells(class string, level int) (int, int) {
+	cantrips := rules.CantripsKnown(class, level+1) - rules.CantripsKnown(class, level)
 	if level == 0 {
-		return rules.CantripsKnown(class, 1), rules.PreparedSpells(class, 1)
+		cantrips = rules.CantripsKnown(class, 1)
 	}
-	return rules.CantripsKnown(class, level+1) - rules.CantripsKnown(class, level),
-		rules.PreparedSpells(class, level+1) - rules.PreparedSpells(class, level)
+	switch {
+	case rules.KeepsSpellbook(class):
+		return cantrips, rules.SpellbookAllotment(level+1) - rules.SpellbookAllotment(level)*min(level, 1)
+	case level == 0:
+		return cantrips, rules.PreparedSpells(class, 1)
+	default:
+		return cantrips, rules.PreparedSpells(class, level+1) - rules.PreparedSpells(class, level)
+	}
+}
+
+// preparedCount is how many spells of level 1 and up a Character has prepared through a class.
+func preparedCount(spells []domain.LearnedSpell, class string) int {
+	n := 0
+	for _, s := range spells {
+		if s.Class == class && s.Prepared && s.Spellbook {
+			n++
+		}
+	}
+	return n
 }
 
 // spellList is the class's list the level can learn from: cantrips when it grants some, spells when it
@@ -275,7 +294,7 @@ func (s *Characters) LevelUp(ctx context.Context, c caller.Caller, id domain.Cam
 	if err != nil {
 		return Sheet{}, err
 	}
-	if l.Spells, err = spellsFor(p, req.Spells); err != nil {
+	if l.Spells, err = spellsFor(p, req.Spells, preparedCount(sheet.Spells, p.Class)); err != nil {
 		return Sheet{}, err
 	}
 	l.Classes = advance(l.Classes, p, l.Picks)
@@ -347,7 +366,12 @@ func improvement(sheet Sheet, picks []domain.Pick, increase map[string]int) (map
 
 // spellsFor checks the cantrips and spells learned: as many of each as the level grants, distinct, from
 // the class's list.
-func spellsFor(p LevelUpPlan, spells []string) ([]domain.LearnedSpell, error) {
+//
+// Cantrips and the spells of most classes are prepared at once; a wizard's go into its spellbook and are
+// prepared while it has room.
+func spellsFor(p LevelUpPlan, spells []string, prepared int) ([]domain.LearnedSpell, error) {
+	limit := rules.PreparedSpells(p.Class, p.ClassLevel)
+	book := rules.KeepsSpellbook(p.Class)
 	cantrips, leveled := 0, 0
 	out := make([]domain.LearnedSpell, 0, len(spells))
 	for i, slug := range spells {
@@ -355,12 +379,18 @@ func spellsFor(p LevelUpPlan, spells []string) ([]domain.LearnedSpell, error) {
 		if !ok || slices.Contains(spells[:i], slug) {
 			return nil, refuse("choose each spell once, from the class's list")
 		}
+		learned := domain.LearnedSpell{Class: p.Class, Spell: slug, Level: p.Level, Prepared: true, Spellbook: false}
 		if sp.Level == 0 {
 			cantrips++
 		} else {
 			leveled++
+			learned.Spellbook = book
+			learned.Prepared = !book || prepared < limit
+			if learned.Prepared {
+				prepared++
+			}
 		}
-		out = append(out, domain.LearnedSpell{Class: p.Class, Spell: slug, Level: p.Level})
+		out = append(out, learned)
 	}
 	if cantrips != p.Cantrips || leveled != p.Spells {
 		return nil, refuse("learn " + strconv.Itoa(p.Cantrips) + " cantrips and " + strconv.Itoa(p.Spells) + " spells")

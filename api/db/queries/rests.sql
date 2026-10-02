@@ -45,7 +45,8 @@ UPDATE campaign.characters SET hit_dice_spent = hit_dice_spent + 1 WHERE id = $1
 -- name: SaveRestResult :exec
 UPDATE campaign.characters c
 SET hp_current = LEAST(c.hp_max, GREATEST(0, @hp_current::integer)), hit_dice_spent = @hit_dice_spent,
-    level_up_ready = c.level_up_ready OR (@level_up_ready AND c.level < 20 AND NOT p.hold_level_ups)
+    level_up_ready = c.level_up_ready OR (@level_up_ready AND c.level < 20 AND NOT p.hold_level_ups),
+    can_prepare = c.can_prepare OR @level_up_ready
 FROM campaign.campaigns p
 WHERE c.id = @id AND p.id = c.campaign_id;
 

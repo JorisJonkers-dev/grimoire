@@ -268,6 +268,14 @@ func (f *fakeCompendium) LevelUpOptions(context.Context, string, string, int) (c
 	return compendium.LevelUpOptions{}, f.catErr
 }
 
+func (f *fakeCompendium) ClassSpells(context.Context, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, f.catErr
+}
+
+func (f *fakeCompendium) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, f.catErr
+}
+
 func (f *fakeCompendium) Features(context.Context) (features.Catalog, error) {
 	return features.Catalog{Scales: map[string]features.Named{"fighter-weapon-mastery": {Slug: "fighter-weapon-mastery", Name: "Weapon Mastery", Owner: features.Owner{}, Steps: features.Scale[string]{{Level: 1, Value: "3"}}}}}, f.catErr
 }

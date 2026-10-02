@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/JorisJonkers-dev/grimoire/api/db"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	campaignpg "github.com/JorisJonkers-dev/grimoire/api/internal/campaign/pgstore"
@@ -20,6 +22,13 @@ import (
 
 // srdCampaigns is the Campaign API over the real SRD 5.2 compendium, with a Hit Die that always rolls 1.
 func srdCampaigns(t *testing.T) http.Handler {
+	t.Helper()
+	h, _ := srdStack(t)
+	return h
+}
+
+// srdStack is srdCampaigns with its database, for setting up what the API cannot.
+func srdStack(t *testing.T) (http.Handler, *pgxpool.Pool) {
 	t.Helper()
 	ctx := context.Background()
 	store, err := pg.Open(ctx, pgtest.URL(t))
@@ -44,7 +53,7 @@ func srdCampaigns(t *testing.T) http.Handler {
 		Repo: repo, Compendium: compendium, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
 		Die: func(int) int { return 1 },
 	}
-	return campaignServer(t, app.NewService(repo), chars)
+	return campaignServer(t, app.NewService(repo), chars), store.Pool()
 }
 
 const srdFighter = `{"name":"Kara","species":"human","class":"fighter","background":"soldier","method":"point-buy",
@@ -161,7 +170,7 @@ func TestLevelUpFromFeatureData(t *testing.T) {
 	}
 }
 
-// A Character with 13 Intelligence multiclasses into wizard and learns its cantrips and spells; one
+// A Character with 13 Intelligence multiclasses into wizard and writes six spells into its book; one
 // without it is told what it lacks. A DM's hold shows on the plan, and a level the DM granted stays open.
 func TestMulticlassLevelUp(t *testing.T) {
 	t.Parallel()
@@ -177,7 +186,7 @@ func TestMulticlassLevelUp(t *testing.T) {
 	scholar := base + "/" + decode(t, call(h, http.MethodPost, base, "player", srdScholar))["id"].(string)
 	unlock(t, h, scholar)
 	plan := decode(t, call(h, http.MethodGet, scholar+"/level-up?class=wizard", "player", ""))
-	if plan["classLevel"] != float64(1) || plan["cantrips"] != float64(3) || plan["spells"] != float64(4) || plan["average"] != float64(6) || len(plan["choices"].([]any)) != 0 {
+	if plan["classLevel"] != float64(1) || plan["cantrips"] != float64(3) || plan["spells"] != float64(6) || plan["average"] != float64(6) || len(plan["choices"].([]any)) != 0 {
 		t.Fatalf("wizard plan = %v", plan)
 	}
 	var cantrips, spells []string
@@ -186,7 +195,7 @@ func TestMulticlassLevelUp(t *testing.T) {
 		switch {
 		case sp["level"] == float64(0) && len(cantrips) < 3:
 			cantrips = append(cantrips, `"`+sp["slug"].(string)+`"`)
-		case sp["level"] == float64(1) && len(spells) < 4:
+		case sp["level"] == float64(1) && len(spells) < 6:
 			spells = append(spells, `"`+sp["slug"].(string)+`"`)
 		case sp["level"].(float64) > 1:
 			t.Fatalf("a level %v spell at wizard 1", sp["level"])
@@ -201,7 +210,7 @@ func TestMulticlassLevelUp(t *testing.T) {
 		t.Fatalf("a spell twice: %d", rec.Code)
 	}
 	sheet := levelUp(t, h, scholar, `{"class":"wizard","spells":[`+strings.Join(append(cantrips, spells...), ",")+`]}`)
-	if len(sheet["classes"].([]any)) != 2 || len(sheet["spells"].([]any)) != 7 || sheet["hpMax"] != float64(18) {
+	if len(sheet["classes"].([]any)) != 2 || len(sheet["spells"].([]any)) != 9 || sheet["hpMax"] != float64(18) {
 		t.Fatalf("multiclassed = classes %v spells %v hp %v", sheet["classes"], sheet["spells"], sheet["hpMax"])
 	}
 	resources := map[string]float64{}
@@ -224,7 +233,7 @@ func TestMulticlassLevelUp(t *testing.T) {
 			t.Fatalf("wizard 2 offers %v again", sp["slug"])
 		}
 	}
-	if plan["classLevel"] != float64(2) || plan["cantrips"] != float64(0) || plan["spells"] != float64(1) {
+	if plan["classLevel"] != float64(2) || plan["cantrips"] != float64(0) || plan["spells"] != float64(2) {
 		t.Fatalf("wizard 2 plan = %v", plan)
 	}
 

@@ -31,6 +31,14 @@ func (armoury) LevelUpOptions(context.Context, string, string, int) (compendium.
 	return compendium.LevelUpOptions{}, nil
 }
 
+func (armoury) ClassSpells(context.Context, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, nil
+}
+
+func (armoury) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, nil
+}
+
 func (armoury) Features(context.Context) (features.Catalog, error) { return features.Catalog{}, nil }
 
 func (armoury) BuilderOptions(_ context.Context, ruleset string) (compendium.BuilderOptions, error) {

@@ -200,12 +200,26 @@ func (s *Store) LevelUpOptions(ctx context.Context, ruleset, class string, maxSp
 	for _, f := range feats {
 		out.Feats = append(out.Feats, compendium.FeatOption{Slug: f.Slug, Name: f.Name, Category: f.FeatType, Description: f.Description})
 	}
-	spells, err := s.q.LevelUpSpells(ctx, queries.LevelUpSpellsParams{Ruleset: ruleset, Class: class, MaxLevel: int32(maxSpellLevel)}) //nolint:gosec // 0 to 9
-	if err != nil {
-		return out, err
+	out.Spells, err = s.ClassSpells(ctx, ruleset, class, maxSpellLevel)
+	return out, err
+}
+
+// ClassSpells are a class's cantrips and spells up to a spell level.
+func (s *Store) ClassSpells(ctx context.Context, ruleset, class string, maxSpellLevel int) ([]compendium.SpellOption, error) {
+	rows, err := s.q.LevelUpSpells(ctx, queries.LevelUpSpellsParams{Ruleset: ruleset, Class: class, MaxLevel: int32(maxSpellLevel)}) //nolint:gosec // 0 to 9
+	out := make([]compendium.SpellOption, 0, len(rows))
+	for _, x := range rows {
+		out = append(out, compendium.SpellOption{Slug: x.Slug, Name: x.Name, Level: int(x.Level), Ritual: x.Ritual, CastingTime: x.CastingTime})
 	}
-	for _, x := range spells {
-		out.Spells = append(out.Spells, compendium.SpellOption{Slug: x.Slug, Name: x.Name, Level: int(x.Level)})
+	return out, err
+}
+
+// AlwaysPrepared are the spells a class and its subclass always have prepared at a class level.
+func (s *Store) AlwaysPrepared(ctx context.Context, ruleset, class, subclass string, level int) ([]compendium.SpellOption, error) {
+	rows, err := s.q.AlwaysPreparedSpells(ctx, queries.AlwaysPreparedSpellsParams{Ruleset: ruleset, Class: class, Subclass: subclass, Level: int32(level)}) //nolint:gosec // 1 to 20
+	out := make([]compendium.SpellOption, 0, len(rows))
+	for _, x := range rows {
+		out = append(out, compendium.SpellOption{Slug: x.Slug, Name: x.Name, Level: int(x.Level), Ritual: x.Ritual, CastingTime: x.CastingTime})
 	}
-	return out, nil
+	return out, err
 }

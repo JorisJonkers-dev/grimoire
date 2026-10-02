@@ -11,6 +11,62 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const alwaysPreparedSpells = `-- name: AlwaysPreparedSpells :many
+SELECT s.slug, s.name, s.level, s.ritual, s.casting_time FROM compendium.always_prepared a
+JOIN compendium.spells s ON s.slug = a.spell_slug
+JOIN compendium.documents d ON d.id = s.document_id
+WHERE d.key = $1 AND a.level <= $2
+    AND ((a.owner_kind = 'class' AND a.owner_slug = $3) OR (a.owner_kind = 'subclass' AND a.owner_slug = $4))
+ORDER BY s.level, s.name
+`
+
+type AlwaysPreparedSpellsParams struct {
+	Ruleset  string
+	Level    int32
+	Class    string
+	Subclass string
+}
+
+type AlwaysPreparedSpellsRow struct {
+	Slug        string
+	Name        string
+	Level       int32
+	Ritual      bool
+	CastingTime string
+}
+
+// The spells a class and its subclass always have prepared at a class level.
+func (q *Queries) AlwaysPreparedSpells(ctx context.Context, arg AlwaysPreparedSpellsParams) ([]AlwaysPreparedSpellsRow, error) {
+	rows, err := q.db.Query(ctx, alwaysPreparedSpells,
+		arg.Ruleset,
+		arg.Level,
+		arg.Class,
+		arg.Subclass,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AlwaysPreparedSpellsRow{}
+	for rows.Next() {
+		var i AlwaysPreparedSpellsRow
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.Level,
+			&i.Ritual,
+			&i.CastingTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const builderArmor = `-- name: BuilderArmor :many
 SELECT a.slug, a.name, a.category, a.ac_base, a.add_dex, a.dex_cap, a.stealth_disadvantage, a.strength_required
 FROM compendium.armor a
@@ -270,7 +326,7 @@ func (q *Queries) LevelUpFeats(ctx context.Context, ruleset string) ([]LevelUpFe
 }
 
 const levelUpSpells = `-- name: LevelUpSpells :many
-SELECT s.slug, s.name, s.level FROM compendium.spells s
+SELECT s.slug, s.name, s.level, s.ritual, s.casting_time FROM compendium.spells s
 JOIN compendium.documents d ON d.id = s.document_id
 JOIN compendium.spell_classes sc ON sc.spell_id = s.id
 WHERE d.key = $1 AND sc.class_slug = $2 AND s.level <= $3
@@ -284,9 +340,11 @@ type LevelUpSpellsParams struct {
 }
 
 type LevelUpSpellsRow struct {
-	Slug  string
-	Name  string
-	Level int32
+	Slug        string
+	Name        string
+	Level       int32
+	Ritual      bool
+	CastingTime string
 }
 
 // A class's cantrips and spells up to a spell level.
@@ -299,7 +357,13 @@ func (q *Queries) LevelUpSpells(ctx context.Context, arg LevelUpSpellsParams) ([
 	items := []LevelUpSpellsRow{}
 	for rows.Next() {
 		var i LevelUpSpellsRow
-		if err := rows.Scan(&i.Slug, &i.Name, &i.Level); err != nil {
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.Level,
+			&i.Ritual,
+			&i.CastingTime,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

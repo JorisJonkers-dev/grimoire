@@ -78,6 +78,11 @@ func TestEveryPresenterFaultSurfaces(t *testing.T) {
 	})
 	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
 		f.DB = store.Pool()
+		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).AlwaysPrepared(ctx, "srd-2024", "cleric", "life-domain", 3)
+		return err
+	})
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		f.DB = store.Pool()
 		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).Traits(ctx, "srd-2024", "dwarf", []compendium.ClassLevel{{Class: "fighter", Subclass: "champion", Level: 3}}, []string{"alert"})
 		return err
 	})

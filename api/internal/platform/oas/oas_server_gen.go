@@ -304,6 +304,13 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// CopySpell implements copySpell operation.
+	//
+	// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
+	// hours per spell level.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook
+	CopySpell(ctx context.Context, req *SpellChoice, params CopySpellParams) (CopySpellRes, error)
 	// CreateCampaign implements createCampaign operation.
 	//
 	// Starts a Campaign with the caller as its first DM.
@@ -419,6 +426,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (LevelUpRes, error)
+	// PrepareSpells implements prepareSpells operation.
+	//
+	// Sets the spells prepared through one class within its limit, after a long rest or a new level.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared
+	PrepareSpells(ctx context.Context, req *SpellPreparation, params PrepareSpellsParams) (PrepareSpellsRes, error)
 	// PreviewCharacter implements previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -616,6 +629,13 @@ type BuildHandler interface {
 //
 // x-ogen-operation-group: Play
 type PlayHandler interface {
+	// CastRitual implements castRitual operation.
+	//
+	// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
+	// to the Game Clock.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals
+	CastRitual(ctx context.Context, req *SpellChoice, params CastRitualParams) (CastRitualRes, error)
 	// CreateRoll implements createRoll operation.
 	//
 	// Opens a Roll Request for the caller, or, from a DM, for another Member.
@@ -828,6 +848,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/spells/{slug}
 	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
+	// GetSpellcasting implements getSpellcasting operation.
+	//
+	// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
+	// Clock.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/spells
+	GetSpellcasting(ctx context.Context, params GetSpellcastingParams) (GetSpellcastingRes, error)
 	// GetStatus implements getStatus operation.
 	//
 	// Reports the running version and whether the database answers.

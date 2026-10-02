@@ -32,6 +32,10 @@ type CharacterService interface {
 	RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
 	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (app.LevelUpPlan, error)
 	LevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, req app.LevelUpRequest) (app.Sheet, error)
+	Spells(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (app.Spellcasting, error)
+	Prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string, spells []string) (app.Spellcasting, error)
+	CastRitual(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Ritual, error)
+	CopySpell(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Spellcasting, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {

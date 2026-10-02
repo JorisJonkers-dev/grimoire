@@ -88,7 +88,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), TempHP: int(r.TempHp), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
-		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady,
+		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady, CanPrepare: r.CanPrepare,
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
 	if err != nil {
@@ -146,7 +146,7 @@ func (s *Store) progress(ctx context.Context, c domain.Character) (domain.Charac
 		return domain.Character{}, err
 	}
 	for _, sp := range spells {
-		c.Spells = append(c.Spells, domain.LearnedSpell{Class: sp.ClassSlug, Spell: sp.SpellSlug, Level: int(sp.LearnedLevel)})
+		c.Spells = append(c.Spells, domain.LearnedSpell{Class: sp.ClassSlug, Spell: sp.SpellSlug, Level: int(sp.LearnedLevel), Prepared: sp.Prepared, Spellbook: sp.Spellbook})
 	}
 	return c, nil
 }
@@ -177,13 +177,78 @@ func (s *Store) LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) er
 			return err
 		}
 	}
-	for _, sp := range l.Spells {
-		if err := s.q.InsertCharacterSpell(ctx, queries.InsertCharacterSpellParams{CharacterID: id, ClassSlug: sp.Class, SpellSlug: sp.Spell, LearnedLevel: int32(sp.Level)}); err != nil {
-			return err
-		}
+	if err := s.insertSpells(ctx, id, l.Spells); err != nil {
+		return err
 	}
 	for ability, inc := range l.Increase {
 		if err := s.q.SetAbilityIncrease(ctx, queries.SetAbilityIncreaseParams{CharacterID: id, Ability: ability, Increase: int32(inc)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//nolint:gosec // levels run 1 to 20
+func (s *Store) insertSpells(ctx context.Context, id uuid.UUID, spells []domain.LearnedSpell) error {
+	for _, sp := range spells {
+		p := queries.InsertCharacterSpellParams{
+			CharacterID: id, ClassSlug: sp.Class, SpellSlug: sp.Spell, LearnedLevel: int32(sp.Level), Prepared: sp.Prepared, Spellbook: sp.Spellbook,
+		}
+		if err := s.q.InsertCharacterSpell(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ReplaceClassSpells sets every cantrip and spell a Character has through one class, and whether it may
+// prepare again.
+func (s *Store) ReplaceClassSpells(ctx context.Context, ch domain.CharacterID, class string, spells []domain.LearnedSpell, canPrepare bool) error {
+	id := uuid.UUID(ch)
+	if err := s.q.ClearClassSpells(ctx, queries.ClearClassSpellsParams{CharacterID: id, ClassSlug: class}); err != nil {
+		return err
+	}
+	if err := s.insertSpells(ctx, id, spells); err != nil {
+		return err
+	}
+	return s.q.SetCanPrepare(ctx, queries.SetCanPrepareParams{ID: id, CanPrepare: canPrepare})
+}
+
+// Clock reads a Campaign's Game Clock.
+func (s *Store) Clock(ctx context.Context, id domain.CampaignID) (domain.Clock, error) {
+	r, err := s.q.CampaignClock(ctx, uuid.UUID(id))
+	return domain.Clock{Day: int(r.GameDay), Minute: int(r.GameMinute)}, notFound(err)
+}
+
+// SetClock sets a Campaign's Game Clock.
+//
+//nolint:gosec // days and minutes are bounded by their constraints
+func (s *Store) SetClock(ctx context.Context, id domain.CampaignID, c domain.Clock) error {
+	return s.q.SetCampaignClock(ctx, queries.SetCampaignClockParams{ID: uuid.UUID(id), GameDay: int32(c.Day), GameMinute: int32(c.Minute)})
+}
+
+// Purse reads the coins in a Character's own container.
+func (s *Store) Purse(ctx context.Context, ch domain.CharacterID) (domain.Purse, error) {
+	rows, err := s.q.CharacterPurse(ctx, pgtype.UUID{Bytes: ch, Valid: true})
+	out := domain.Purse{Container: uuid.Nil, Coins: map[string]int{}}
+	for _, r := range rows {
+		out.Container = r.ContainerID
+		if r.Coin.Valid {
+			out.Coins[r.Coin.String] = int(r.Amount.Int32)
+		}
+	}
+	return out, err
+}
+
+// SetPurse replaces the coins in a container.
+//
+//nolint:gosec // purses are bounded by their constraints
+func (s *Store) SetPurse(ctx context.Context, p domain.Purse) error {
+	if err := s.q.ClearContainerCoins(ctx, p.Container); err != nil {
+		return err
+	}
+	for coin, n := range p.Coins {
+		if err := s.q.SetContainerCoins(ctx, queries.SetContainerCoinsParams{ContainerID: p.Container, Coin: coin, Amount: int32(n)}); err != nil {
 			return err
 		}
 	}

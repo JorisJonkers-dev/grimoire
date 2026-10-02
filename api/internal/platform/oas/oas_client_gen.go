@@ -326,6 +326,13 @@ type BuildInvoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// CopySpell invokes copySpell operation.
+	//
+	// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
+	// hours per spell level.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook
+	CopySpell(ctx context.Context, request *SpellChoice, params CopySpellParams) (CopySpellRes, error)
 	// CreateCampaign invokes createCampaign operation.
 	//
 	// Starts a Campaign with the caller as its first DM.
@@ -441,6 +448,12 @@ type BuildInvoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	LevelUp(ctx context.Context, request *LevelUpRequest, params LevelUpParams) (LevelUpRes, error)
+	// PrepareSpells invokes prepareSpells operation.
+	//
+	// Sets the spells prepared through one class within its limit, after a long rest or a new level.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared
+	PrepareSpells(ctx context.Context, request *SpellPreparation, params PrepareSpellsParams) (PrepareSpellsRes, error)
 	// PreviewCharacter invokes previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -638,6 +651,13 @@ type BuildInvoker interface {
 //
 // x-gen-operation-group: Play
 type PlayInvoker interface {
+	// CastRitual invokes castRitual operation.
+	//
+	// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
+	// to the Game Clock.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals
+	CastRitual(ctx context.Context, request *SpellChoice, params CastRitualParams) (CastRitualRes, error)
 	// CreateRoll invokes createRoll operation.
 	//
 	// Opens a Roll Request for the caller, or, from a DM, for another Member.
@@ -850,6 +870,13 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/compendium/spells/{slug}
 	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
+	// GetSpellcasting invokes getSpellcasting operation.
+	//
+	// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
+	// Clock.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/spells
+	GetSpellcasting(ctx context.Context, params GetSpellcastingParams) (GetSpellcastingRes, error)
 	// GetStatus invokes getStatus operation.
 	//
 	// Reports the running version and whether the database answers.
@@ -1707,6 +1734,167 @@ func (c *Client) sendCancelFriendRequest(ctx context.Context, params CancelFrien
 	return result, nil
 }
 
+// CastRitual invokes castRitual operation.
+//
+// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
+// to the Game Clock.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals
+func (c *Client) CastRitual(ctx context.Context, request *SpellChoice, params CastRitualParams) (CastRitualRes, error) {
+	res, err := c.sendCastRitual(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendCastRitual(ctx context.Context, request *SpellChoice, params CastRitualParams) (res CastRitualRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("castRitual"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CastRitualOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/characters/"
+	{
+		// Encode "characterId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "characterId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CharacterId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/spells/rituals"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCastRitualRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, CastRitualOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCastRitualResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // ClearTokenIcon invokes clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -1992,6 +2180,167 @@ func (c *Client) sendConfirmTwoStep(ctx context.Context, request *TwoStepCode, p
 
 	stage = "DecodeResponse"
 	result, err := decodeConfirmTwoStepResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// CopySpell invokes copySpell operation.
+//
+// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
+// hours per spell level.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook
+func (c *Client) CopySpell(ctx context.Context, request *SpellChoice, params CopySpellParams) (CopySpellRes, error) {
+	res, err := c.sendCopySpell(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendCopySpell(ctx context.Context, request *SpellChoice, params CopySpellParams) (res CopySpellRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("copySpell"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CopySpellOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/characters/"
+	{
+		// Encode "characterId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "characterId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CharacterId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/spellbook"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCopySpellRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, CopySpellOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCopySpellResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -9699,6 +10048,164 @@ func (c *Client) sendGetSpell(ctx context.Context, params GetSpellParams) (res G
 	return result, nil
 }
 
+// GetSpellcasting invokes getSpellcasting operation.
+//
+// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
+// Clock.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/spells
+func (c *Client) GetSpellcasting(ctx context.Context, params GetSpellcastingParams) (GetSpellcastingRes, error) {
+	res, err := c.sendGetSpellcasting(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetSpellcasting(ctx context.Context, params GetSpellcastingParams) (res GetSpellcastingRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getSpellcasting"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/characters/{characterId}/spells"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetSpellcastingOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/characters/"
+	{
+		// Encode "characterId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "characterId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CharacterId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/spells"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetSpellcastingOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetSpellcastingResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetStatus invokes getStatus operation.
 //
 // Reports the running version and whether the database answers.
@@ -15534,6 +16041,166 @@ func (c *Client) sendPlanLevelUp(ctx context.Context, params PlanLevelUpParams) 
 
 	stage = "DecodeResponse"
 	result, err := decodePlanLevelUpResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// PrepareSpells invokes prepareSpells operation.
+//
+// Sets the spells prepared through one class within its limit, after a long rest or a new level.
+//
+// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared
+func (c *Client) PrepareSpells(ctx context.Context, request *SpellPreparation, params PrepareSpellsParams) (PrepareSpellsRes, error) {
+	res, err := c.sendPrepareSpells(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendPrepareSpells(ctx context.Context, request *SpellPreparation, params PrepareSpellsParams) (res PrepareSpellsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("prepareSpells"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, PrepareSpellsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [5]string
+	pathParts[0] = "/api/v1/campaigns/"
+	{
+		// Encode "campaignId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "campaignId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CampaignId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/characters/"
+	{
+		// Encode "characterId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "characterId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CharacterId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[3] = encoded
+	}
+	pathParts[4] = "/spells/prepared"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePrepareSpellsRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, PrepareSpellsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodePrepareSpellsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

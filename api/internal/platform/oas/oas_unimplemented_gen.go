@@ -59,6 +59,16 @@ func (UnimplementedHandler) CancelFriendRequest(ctx context.Context, params Canc
 	return r, ht.ErrNotImplemented
 }
 
+// CastRitual implements castRitual operation.
+//
+// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
+// to the Game Clock.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals
+func (UnimplementedHandler) CastRitual(ctx context.Context, req *SpellChoice, params CastRitualParams) (r CastRitualRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ClearTokenIcon implements clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -74,6 +84,16 @@ func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearToke
 //
 // POST /api/v1/account/two-step/confirm
 func (UnimplementedHandler) ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (r ConfirmTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CopySpell implements copySpell operation.
+//
+// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
+// hours per spell level.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook
+func (UnimplementedHandler) CopySpell(ctx context.Context, req *SpellChoice, params CopySpellParams) (r CopySpellRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -590,6 +610,16 @@ func (UnimplementedHandler) GetSpell(ctx context.Context, params GetSpellParams)
 	return r, ht.ErrNotImplemented
 }
 
+// GetSpellcasting implements getSpellcasting operation.
+//
+// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
+// Clock.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/spells
+func (UnimplementedHandler) GetSpellcasting(ctx context.Context, params GetSpellcastingParams) (r GetSpellcastingRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetStatus implements getStatus operation.
 //
 // Reports the running version and whether the database answers.
@@ -971,6 +1001,15 @@ func (UnimplementedHandler) PassTwoStep(ctx context.Context, req *TwoStepAnswer)
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 func (UnimplementedHandler) PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (r PlanLevelUpRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PrepareSpells implements prepareSpells operation.
+//
+// Sets the spells prepared through one class within its limit, after a long rest or a new level.
+//
+// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared
+func (UnimplementedHandler) PrepareSpells(ctx context.Context, req *SpellPreparation, params PrepareSpellsParams) (r PrepareSpellsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

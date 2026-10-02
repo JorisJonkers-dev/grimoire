@@ -190,6 +190,8 @@ type Character struct {
 	Spells       []LearnedSpell
 	Increase     map[string]int
 	LevelUpReady bool
+	// CanPrepare means it may change its prepared spells: after a long rest or a new level.
+	CanPrepare bool
 }
 
 // ClassLevel is the levels a Character has in one class, and the subclass it chose there.
@@ -206,11 +208,26 @@ type Pick struct {
 	Value  string
 }
 
-// LearnedSpell is a cantrip or spell a Character learned through a class, and the level it learned it at.
+// LearnedSpell is a cantrip or spell a Character learned through a class, the level it learned it at,
+// whether it is prepared, and whether it sits in a wizard's spellbook.
 type LearnedSpell struct {
-	Class string
-	Spell string
-	Level int
+	Class     string
+	Spell     string
+	Level     int
+	Prepared  bool
+	Spellbook bool
+}
+
+// Clock is the time on a Campaign's Game Clock: its game day and the minutes after midnight.
+type Clock struct {
+	Day    int
+	Minute int
+}
+
+// Purse is the coins in a Character's own container; Container is zero when it has none yet.
+type Purse struct {
+	Container uuid.UUID
+	Coins     map[string]int
 }
 
 // LevelUp is a Character taking its next level: the hit points it gains, its classes afterwards, what it

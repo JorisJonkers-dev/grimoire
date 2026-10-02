@@ -1152,6 +1152,84 @@ export type CharacterSheet = {
 };
 
 /**
+ * A Character's spells in every class it casts through.
+ */
+export type Spellcasting = {
+    /**
+     * It may change its prepared spells now.
+     */
+    canPrepare: boolean;
+    classes: Array<ClassSpells>;
+    purse: Array<LiveCoins>;
+    clock: GameClock;
+};
+
+/**
+ * What a Character casts through one class.
+ */
+export type ClassSpells = {
+    class: Slug;
+    name: string;
+    level: number;
+    /**
+     * How many spells it prepares.
+     */
+    limit: number;
+    maxLevel: number;
+    keepsSpellbook: boolean;
+    /**
+     * Spells a wizard's book holds for free.
+     */
+    allotment: number;
+    cantrips: SpellPickList;
+    prepared: SpellPickList;
+    always: SpellPickList;
+    spellbook: SpellPickList;
+    options: SpellPickList;
+    copyable: SpellPickList;
+};
+
+/**
+ * Spells by slug, name and level.
+ */
+export type SpellPickList = Array<SpellPick>;
+
+/**
+ * The time on a Campaign's Game Clock.
+ */
+export type GameClock = {
+    day: number;
+    /**
+     * Minutes after midnight.
+     */
+    minute: number;
+};
+
+/**
+ * The spells to have prepared through a class.
+ */
+export type SpellPreparation = {
+    class: Slug;
+    spells: Array<Slug>;
+};
+
+/**
+ * One spell by slug.
+ */
+export type SpellChoice = {
+    spell: Slug;
+};
+
+/**
+ * A ritual cast, how long it took, and the Game Clock after it.
+ */
+export type RitualCast = {
+    spell: SpellPick;
+    minutes: number;
+    clock: GameClock;
+};
+
+/**
  * What the next level offers in one class.
  */
 export type LevelUpPlan = {
@@ -1219,6 +1297,7 @@ export type SpellPick = {
     slug: Slug;
     name: string;
     level: number;
+    ritual?: boolean;
 };
 
 /**
@@ -4080,6 +4159,158 @@ export type LevelUpResponses = {
 };
 
 export type LevelUpResponse = LevelUpResponses[keyof LevelUpResponses];
+
+export type GetSpellcastingData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spells';
+};
+
+export type GetSpellcastingErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpellcastingError = GetSpellcastingErrors[keyof GetSpellcastingErrors];
+
+export type GetSpellcastingResponses = {
+    /**
+     * The spells.
+     */
+    200: Spellcasting;
+};
+
+export type GetSpellcastingResponse = GetSpellcastingResponses[keyof GetSpellcastingResponses];
+
+export type PrepareSpellsData = {
+    body: SpellPreparation;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared';
+};
+
+export type PrepareSpellsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PrepareSpellsError = PrepareSpellsErrors[keyof PrepareSpellsErrors];
+
+export type PrepareSpellsResponses = {
+    /**
+     * The spells.
+     */
+    200: Spellcasting;
+};
+
+export type PrepareSpellsResponse = PrepareSpellsResponses[keyof PrepareSpellsResponses];
+
+export type CastRitualData = {
+    body: SpellChoice;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals';
+};
+
+export type CastRitualErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CastRitualError = CastRitualErrors[keyof CastRitualErrors];
+
+export type CastRitualResponses = {
+    /**
+     * The ritual and the Game Clock after it.
+     */
+    200: RitualCast;
+};
+
+export type CastRitualResponse = CastRitualResponses[keyof CastRitualResponses];
+
+export type CopySpellData = {
+    body: SpellChoice;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook';
+};
+
+export type CopySpellErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CopySpellError = CopySpellErrors[keyof CopySpellErrors];
+
+export type CopySpellResponses = {
+    /**
+     * The spells.
+     */
+    200: Spellcasting;
+};
+
+export type CopySpellResponse = CopySpellResponses[keyof CopySpellResponses];
 
 export type GetPortraitData = {
     body?: never;

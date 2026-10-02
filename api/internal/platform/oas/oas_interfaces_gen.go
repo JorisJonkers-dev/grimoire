@@ -21,12 +21,20 @@ type CancelFriendRequestRes interface {
 	cancelFriendRequestRes()
 }
 
+type CastRitualRes interface {
+	castRitualRes()
+}
+
 type ClearTokenIconRes interface {
 	clearTokenIconRes()
 }
 
 type ConfirmTwoStepRes interface {
 	confirmTwoStepRes()
+}
+
+type CopySpellRes interface {
+	copySpellRes()
 }
 
 type CreateAccessTokenRes interface {
@@ -253,6 +261,10 @@ type GetSpellRes interface {
 	getSpellRes()
 }
 
+type GetSpellcastingRes interface {
+	getSpellcastingRes()
+}
+
 type GetStatusRes interface {
 	getStatusRes()
 }
@@ -419,6 +431,10 @@ type PassTwoStepRes interface {
 
 type PlanLevelUpRes interface {
 	planLevelUpRes()
+}
+
+type PrepareSpellsRes interface {
+	prepareSpellsRes()
 }
 
 type PreviewAccountInviteRes interface {

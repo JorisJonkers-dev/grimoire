@@ -26,6 +26,8 @@ type Compendium interface {
 	BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error)
 	Traits(ctx context.Context, ruleset, species string, classes []compendium.ClassLevel, feats []string) ([]compendium.Trait, error)
 	LevelUpOptions(ctx context.Context, ruleset, class string, maxSpellLevel int) (compendium.LevelUpOptions, error)
+	ClassSpells(ctx context.Context, ruleset, class string, maxSpellLevel int) ([]compendium.SpellOption, error)
+	AlwaysPrepared(ctx context.Context, ruleset, class, subclass string, level int) ([]compendium.SpellOption, error)
 	Features(ctx context.Context) (features.Catalog, error)
 }
 
