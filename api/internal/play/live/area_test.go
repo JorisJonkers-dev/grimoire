@@ -265,12 +265,13 @@ func TestElevationHighGroundAndAreaEdges(t *testing.T) {
 	fill(d.View.Area.DamageRollID, 1, 1)
 	fill(d.View.Area.Saves[0].RollID, 1)
 	var last live.Update
-	for range 3 {
+	for range 4 {
 		next(t, tb.player)
 		last = next(t, tb.dm)
 	}
-	if aria := token(last.View, "Aria"); len(last.View.Manual) != 0 || *aria.HP != 10 || aria.Q != 0 || aria.R != 0 {
-		t.Fatalf("thunderwave pushes Aria straight away from the goblin = %+v %+v", last.View.Manual, aria)
+	aria := token(last.View, "Aria")
+	if len(last.View.Manual) != 1 || last.View.Manual[0].Text != "Aria falls 10 feet: 1d6 bludgeoning damage." || *aria.HP != 10 || aria.Q != 0 || aria.R != 0 || effect(aria, "Prone") == nil {
+		t.Fatalf("thunderwave pushes Aria off the 10-foot rise, and she falls = %+v %+v", last.View.Manual, aria)
 	}
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdEndTurn, CombatantID: combatant(d.View, "Goblin").ID})
 	if surfaceAt(d.View, 0, 1) != "ice" {

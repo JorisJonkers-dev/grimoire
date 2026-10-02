@@ -89,9 +89,11 @@ type Stats struct {
 	HPMax  int
 	// TempHP is temporary hit points, lost before hit points.
 	TempHP int
-	// Senses are blindsight, tremorsense and truesight ranges in feet.
-	Senses  map[string]int
-	Attacks []Attack
+	// Senses are blindsight, tremorsense and truesight ranges in feet; Strength is the Strength score
+	// jumping and throwing use, 10 when the statblock gives none.
+	Senses   map[string]int
+	Strength int
+	Attacks  []Attack
 	// Intelligence drives Tactics; 0 when the statblock has none.
 	Intelligence int
 	// Shield is set for statblocks that can cast the Shield spell.

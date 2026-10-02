@@ -164,6 +164,9 @@ const areaPreview = computed(() => {
 })
 const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
 const teleporting = ref<string | null>(null)
+const jumping = ref<string | null>(null)
+// throwing is the thrower, then what it throws: a creature it grapples or an object next to it.
+const throwing = ref<{ tokenId: string; targetId?: string; objectId?: string } | null>(null)
 const surfaceKinds = computed(
   () => view.value?.surfaceKinds ?? ['fire', 'grease', 'water', 'ice', 'web', 'electrified'].map((kind) => ({ kind, name: (kind[0] ?? '').toUpperCase() + kind.slice(1) })),
 )
@@ -253,6 +256,23 @@ function explore(c: Coord) {
 }
 function pick(c: Coord) {
   if (!live.value) return
+  if (jumping.value) {
+    live.value.send({ kind: 'jump', tokenId: jumping.value, q: c.q, r: c.r })
+    jumping.value = null
+    return
+  }
+  if (throwing.value) {
+    const t = throwing.value
+    if (t.targetId || t.objectId) {
+      live.value.send({ kind: 'throw', ...t, q: c.q, r: c.r })
+      throwing.value = null
+      return
+    }
+    const thing = tokenAt(c)
+    const object = view.value?.objects?.find((o) => o.q === c.q && o.r === c.r)
+    throwing.value = thing ? { ...t, targetId: thing.id } : object ? { ...t, objectId: object.id } : t
+    return
+  }
   if (summoning.value) {
     live.value.send({ kind: 'summon', ...summoning.value, q: c.q, r: c.r })
     summoning.value = null
@@ -397,11 +417,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @cleave="(n) => armCleave(b.token, n)"
         @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
         @teleport="teleporting = b.token.id"
+        @jump="jumping = b.token.id"
+        @throw="throwing = { tokenId: b.token.id }"
         @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
         @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
       />
       <p v-if="summoning" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
       <p v-if="teleporting" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
+      <p v-if="jumping" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
+      <p v-if="throwing" role="status" class="walk" data-testid="throwing">
+        {{ throwing.targetId || throwing.objectId ? 'Tap where it lands.' : 'Tap the creature or object to throw.' }}
+      </p>
       <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
       <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
       <AreaPreviewCard v-if="areaPreview" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />

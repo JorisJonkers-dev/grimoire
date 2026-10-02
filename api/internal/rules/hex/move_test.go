@@ -73,8 +73,11 @@ func TestTerrainElevationAndCreatures(t *testing.T) {
 			t.Errorf("StepCost to %v (climb %v) = %d %v, want %d %v", tc.to, tc.climb, cost, ok, tc.cost, tc.ok)
 		}
 	}
-	if cost, _ := hex.StepCost(g, c(-1, 0), c(-1, 1), false); cost != 5 {
-		t.Fatalf("going down cost %d", cost)
+	if cost, _ := hex.StepCost(g, c(-1, 0), c(-1, 1), false); cost != 15 {
+		t.Fatalf("climbing down 10 feet cost %d", cost)
+	}
+	if cost, _ := hex.StepCost(g, c(-1, 0), c(-1, 1), true); cost != 5 {
+		t.Fatalf("a climber going down cost %d", cost)
 	}
 	reach := hex.Reachable(g, c(0, 0), hex.MoveOptions{SpeedFt: 10})
 	if s, ok := reach[c(1, -1)]; !ok || s.CanEnd {

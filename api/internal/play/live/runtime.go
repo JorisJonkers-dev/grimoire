@@ -59,8 +59,10 @@ type Write struct {
 	// changedObjects are Map Objects as a change leaves them; trigger an Effect one sets off.
 	changedObjects map[domain.ObjectID]domain.MapObject
 	trigger        *trigger
-	// grounded are Effects Surfaces put on creatures that entered them or started a turn in them.
+	// grounded are Effects Surfaces put on creatures that entered them or started a turn in them;
+	// forced marks a change that may drop creatures from a height.
 	grounded []grounding
+	forced   bool
 	board    *domain.MapState
 	frames   []*state
 	prompt   *domain.ReactionPrompt
@@ -634,7 +636,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow:
 		return true
 	}
 	return false
@@ -687,6 +689,10 @@ func (r *runtime) viewUpdate(a Audience, seq int64, w *Write) Update {
 // down as turns start, concentration broken by damage, and those of a removed token.
 func apply(s *state, w *Write) {
 	before := s.acting()
+	var heights map[domain.TokenID]int
+	if w.forced || w.Pushed != nil {
+		heights = s.heights()
+	}
 	round := 0
 	if s.combat != nil {
 		round = s.combat.Round
@@ -699,6 +705,7 @@ func apply(s *state, w *Write) {
 	if w.Kind == domain.ActionRestTaken {
 		w.ended = append(w.ended, s.restEnded()...)
 	}
+	fell := heights != nil && s.falls(w, heights)
 	s.formBroken(w)
 	changed := w.effect != nil || len(w.ended)+len(w.manuals)+len(w.newSaves) > 0 || w.resolved != uuid.Nil || w.saved != domain.RollID{}
 	applyEffects(s, w)
@@ -709,8 +716,20 @@ func apply(s *state, w *Write) {
 	changed = s.tick(started) || changed
 	changed = s.hazards(started, w) || changed
 	settleTerrain(s, w, round)
+	changed = s.aftermath(w) || changed || fell
+	if changed {
+		fx := cloneEffects(s.fx)
+		w.Effects = &fx
+	}
+}
+
+// aftermath settles what a change leaves behind: concentration broken by damage, the Effects of a
+// removed token, summons whose Effect ended and forms that reverted. It reports whether the Effects
+// changed.
+func (s *state) aftermath(w *Write) bool {
+	changed := false
 	if w.Kind == domain.ActionDamageDealt {
-		changed = s.concentrate(*w.HP) || changed
+		changed = s.concentrate(*w.HP)
 	}
 	if w.Kind == domain.ActionTokenRemoved {
 		s.forget(w.Token.ID)
@@ -718,11 +737,7 @@ func apply(s *state, w *Write) {
 		changed = true
 	}
 	changed = s.dismiss(w) || changed
-	changed = s.revert(w) || changed
-	if changed {
-		fx := cloneEffects(s.fx)
-		w.Effects = &fx
-	}
+	return s.revert(w) || changed
 }
 
 // settleTerrain ages Surfaces as a round starts, drops a removed token from the waiting area spell, and
@@ -766,6 +781,11 @@ func change(s *state, w *Write) {
 		applyTeleport(s, w)
 	case domain.ActionSummoned, domain.ActionCommanded:
 		applySummon(s, w)
+		return
+	case domain.ActionJumped:
+		applyJump(s, w)
+	case domain.ActionThrown:
+		applyThrow(s, w)
 		return
 	case domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
 		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung:

@@ -101,6 +101,8 @@ const (
 	CmdFindObject     = "find_object"
 	CmdUnlock         = "unlock"
 	CmdDisarm         = "disarm"
+	CmdJump           = "jump"
+	CmdThrow          = "throw"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -716,6 +718,8 @@ type AreaPreview struct {
 type AreaTarget struct {
 	TokenID string `json:"tokenId"`
 	Ally    bool   `json:"ally"`
+	// PushedTo is where the spell would push the target if it fails its save.
+	PushedTo *Hex `json:"pushedTo,omitempty"`
 }
 
 // AreaView is an area spell waiting on its rolls.

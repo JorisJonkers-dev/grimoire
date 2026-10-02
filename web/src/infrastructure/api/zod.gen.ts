@@ -935,7 +935,8 @@ export const zTableScene = z.enum([
  */
 export const zLiveAreaTarget = z.object({
     tokenId: zId,
-    ally: z.boolean()
+    ally: z.boolean(),
+    pushedTo: zHexCoord.optional()
 });
 
 /**
@@ -1721,7 +1722,9 @@ export const zLiveCommand = z.object({
         'damage_object',
         'find_object',
         'unlock',
-        'disarm'
+        'disarm',
+        'jump',
+        'throw'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),

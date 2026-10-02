@@ -10382,11 +10382,18 @@ func (s *LiveAreaTarget) encodeFields(e *jx.Encoder) {
 		e.FieldStart("ally")
 		e.Bool(s.Ally)
 	}
+	{
+		if s.PushedTo.Set {
+			e.FieldStart("pushedTo")
+			s.PushedTo.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveAreaTarget = [2]string{
+var jsonFieldsNameOfLiveAreaTarget = [3]string{
 	0: "tokenId",
 	1: "ally",
+	2: "pushedTo",
 }
 
 // Decode decodes LiveAreaTarget from json.
@@ -10419,6 +10426,16 @@ func (s *LiveAreaTarget) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ally\"")
+			}
+		case "pushedTo":
+			if err := func() error {
+				s.PushedTo.Reset()
+				if err := s.PushedTo.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"pushedTo\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -14621,6 +14638,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindUnlock
 	case LiveCommandKindDisarm:
 		*s = LiveCommandKindDisarm
+	case LiveCommandKindJump:
+		*s = LiveCommandKindJump
+	case LiveCommandKindThrow:
+		*s = LiveCommandKindThrow
 	default:
 		*s = LiveCommandKind(v)
 	}

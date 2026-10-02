@@ -128,7 +128,11 @@ func (r *runtime) previewArea(req request) {
 	for _, t := range p.targets {
 		if req.from.Member.DM || r.st.shows(t, seen) {
 			ally := (t.Kind == domain.TokenParty) == (p.caster.Kind == domain.TokenParty)
-			out.Targets = append(out.Targets, AreaTarget{TokenID: uuid.UUID(t.ID).String(), Ally: ally})
+			target := AreaTarget{TokenID: uuid.UUID(t.ID).String(), Ally: ally, PushedTo: nil}
+			if moved := r.st.forced(p.caster, t, p.spell.Push); p.spell.Push.Ft > 0 && moved != nil {
+				target.PushedTo = &Hex{Q: moved.Q, R: moved.R}
+			}
+			out.Targets = append(out.Targets, target)
 			if ally {
 				out.Allies++
 			}
@@ -201,7 +205,7 @@ func (r *runtime) areaRolled() {
 	}
 	for _, t := range failed {
 		if moved := r.st.forced(caster, r.st.tokens[t.ID], spell.Push); spell.Push.Ft > 0 && moved != nil {
-			r.commit(request{}, Write{Kind: domain.ActionTokenMoved, Token: *moved}, actor, sys)
+			r.commit(request{}, Write{Kind: domain.ActionTokenMoved, Token: *moved, forced: true}, actor, sys)
 		}
 	}
 	if w := r.st.sustained(r.st.tokens[caster.ID], c.Spell); w != nil {

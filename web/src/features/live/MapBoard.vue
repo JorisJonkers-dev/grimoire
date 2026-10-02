@@ -20,6 +20,8 @@ const tokens = computed(() => new Map(props.view.tokens.map((t) => [key(t), t]))
 const route = computed(() => new Set(props.path.map(key)))
 const surfaces = computed(() => new Map((props.view.surfaces ?? []).map((s) => [key(s), s])))
 const heights = computed(() => new Map((props.view.elevation ?? []).map((e) => [key(e), e.elevationFt])))
+// shade darkens sunken ground and lightens raised ground, more the further from level it is.
+const shade = (ft: number) => Math.min(0.6, 0.12 + Math.abs(ft) / 50).toFixed(2)
 const area = computed(() => new Set(props.area.map(key)))
 const zone = computed(() => new Set(props.zone.map(key)))
 const points = (c: Coord) =>
@@ -79,6 +81,7 @@ const cells = computed(() =>
         @keydown.enter.prevent="emit('select', { q: c.q, r: c.r })"
       >
         <polygon :points="c.points" />
+        <polygon v-if="heights.has(c.k)" :points="c.points" :class="['height', (heights.get(c.k) ?? 0) > 0 ? 'height--up' : 'height--down']" :style="{ opacity: shade(heights.get(c.k) ?? 0) }" :data-height="heights.get(c.k)" />
         <circle v-if="lights.has(c.k)" :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.22" class="light" />
         <template v-if="c.token">
           <circle :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.62" :class="['token', `token--${c.token.kind}`, { 'token--hidden': c.token.hidden }]" />
@@ -104,6 +107,16 @@ const cells = computed(() =>
   stroke: rgb(255 255 255 / 12%);
   stroke-width: 1;
   cursor: pointer;
+}
+.cell .height {
+  pointer-events: none;
+  stroke: none;
+}
+.cell .height--up {
+  fill: #fff;
+}
+.cell .height--down {
+  fill: #000;
 }
 .cell--remembered polygon {
   fill: rgb(0 0 0 / 55%);

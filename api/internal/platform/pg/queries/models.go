@@ -1242,6 +1242,7 @@ type PlayToken struct {
 	TempHp             int32
 	SummonEffectID     pgtype.UUID
 	Disguise           pgtype.Text
+	Strength           int32
 }
 
 type PlayTokenAttack struct {

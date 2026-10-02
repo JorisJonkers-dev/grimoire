@@ -114,4 +114,7 @@ const (
 	ActionObjectUnlocked = "object_unlocked"
 	ActionTrapDisarmed   = "trap_disarmed"
 	ActionTrapSprung     = "trap_sprung"
+	// ActionJumped is a creature leaping; ActionThrown one throwing a creature or an object.
+	ActionJumped = "jumped"
+	ActionThrown = "thrown"
 )

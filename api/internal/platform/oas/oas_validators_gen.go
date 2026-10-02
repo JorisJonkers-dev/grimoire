@@ -12968,6 +12968,23 @@ func (s *LiveAreaPreview) Validate() error {
 		}).ValidateLength(len(s.Targets)); err != nil {
 			return errors.Wrap(err, "array")
 		}
+		var failures []validate.FieldError
+		for i, elem := range s.Targets {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
 		return nil
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
@@ -13041,6 +13058,36 @@ func (s *LiveAreaPreview) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "ends",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *LiveAreaTarget) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if value, ok := s.PushedTo.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "pushedTo",
 			Error: err,
 		})
 	}
@@ -16134,6 +16181,10 @@ func (s LiveCommandKind) Validate() error {
 	case "unlock":
 		return nil
 	case "disarm":
+		return nil
+	case "jump":
+		return nil
+	case "throw":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

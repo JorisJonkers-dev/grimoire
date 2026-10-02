@@ -7924,8 +7924,9 @@ func (s *LiveAreaSave) SetRollId(val OptID) {
 // A creature an area catches.
 // Ref: #/components/schemas/LiveAreaTarget
 type LiveAreaTarget struct {
-	TokenId ID   `json:"tokenId"`
-	Ally    bool `json:"ally"`
+	TokenId  ID          `json:"tokenId"`
+	Ally     bool        `json:"ally"`
+	PushedTo OptHexCoord `json:"pushedTo"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -7938,6 +7939,11 @@ func (s *LiveAreaTarget) GetAlly() bool {
 	return s.Ally
 }
 
+// GetPushedTo returns the value of PushedTo.
+func (s *LiveAreaTarget) GetPushedTo() OptHexCoord {
+	return s.PushedTo
+}
+
 // SetTokenId sets the value of TokenId.
 func (s *LiveAreaTarget) SetTokenId(val ID) {
 	s.TokenId = val
@@ -7946,6 +7952,11 @@ func (s *LiveAreaTarget) SetTokenId(val ID) {
 // SetAlly sets the value of Ally.
 func (s *LiveAreaTarget) SetAlly(val bool) {
 	s.Ally = val
+}
+
+// SetPushedTo sets the value of PushedTo.
+func (s *LiveAreaTarget) SetPushedTo(val OptHexCoord) {
+	s.PushedTo = val
 }
 
 // One attack on a token's hotbar.
@@ -10369,6 +10380,8 @@ const (
 	LiveCommandKindFindObject     LiveCommandKind = "find_object"
 	LiveCommandKindUnlock         LiveCommandKind = "unlock"
 	LiveCommandKindDisarm         LiveCommandKind = "disarm"
+	LiveCommandKindJump           LiveCommandKind = "jump"
+	LiveCommandKindThrow          LiveCommandKind = "throw"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10454,6 +10467,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindFindObject,
 		LiveCommandKindUnlock,
 		LiveCommandKindDisarm,
+		LiveCommandKindJump,
+		LiveCommandKindThrow,
 	}
 }
 
@@ -10619,6 +10634,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindUnlock:
 		return []byte(s), nil
 	case LiveCommandKindDisarm:
+		return []byte(s), nil
+	case LiveCommandKindJump:
+		return []byte(s), nil
+	case LiveCommandKindThrow:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10867,6 +10886,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindDisarm:
 		*s = LiveCommandKindDisarm
+		return nil
+	case LiveCommandKindJump:
+		*s = LiveCommandKindJump
+		return nil
+	case LiveCommandKindThrow:
+		*s = LiveCommandKindThrow
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

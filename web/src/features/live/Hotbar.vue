@@ -32,6 +32,8 @@ const emit = defineEmits<{
   interact: [what: string]
   teleport: []
   summon: [effect: string]
+  jump: []
+  throw: []
   command: [tokenId: string]
 }>()
 const what = ref('')
@@ -171,6 +173,8 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
         <option v-for="(a, i) in token.attacks ?? []" v-show="a.reachFt > 0" :key="a.name + String(i)" :value="i">{{ a.name }}</option>
       </select>
     </label>
+    <GButton data-testid="jump" title="Leap as far as your Strength score in feet with a run-up." @click="emit('jump')">Jump</GButton>
+    <GButton :disabled="blocked !== ''" data-testid="throw" title="Throw the creature you grapple, or a barrel or chest next to you." @click="emit('throw')">Throw</GButton>
     <GButton :disabled="blocked !== ''" data-testid="misty-step" title="Bonus Action: teleport up to 30 feet to a free hex." @click="emit('teleport')">Misty Step</GButton>
     <label class="g-field tactics">
       <span>Area spell</span>

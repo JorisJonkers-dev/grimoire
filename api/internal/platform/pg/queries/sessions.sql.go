@@ -804,10 +804,10 @@ func (q *Queries) InsertSurface(ctx context.Context, arg InsertSurfaceParams) er
 
 const insertToken = `-- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
-    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id)
+    hp, hp_max, intelligence, can_shield, spell_dc, stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, summon_effect_id, strength)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22, $23)
+    $18, $19, $20, $21, $22, $23, $24)
 `
 
 type InsertTokenParams struct {
@@ -834,6 +834,7 @@ type InsertTokenParams struct {
 	UnarmedDc          int32
 	AttacksPerAction   int32
 	SummonEffectID     pgtype.UUID
+	Strength           int32
 }
 
 func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error {
@@ -861,6 +862,7 @@ func (q *Queries) InsertToken(ctx context.Context, arg InsertTokenParams) error 
 		arg.UnarmedDc,
 		arg.AttacksPerAction,
 		arg.SummonEffectID,
+		arg.Strength,
 	)
 	return err
 }
@@ -2301,7 +2303,7 @@ func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) (
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2330,6 +2332,7 @@ type SessionTokensRow struct {
 	TempHp             int32
 	SummonEffectID     pgtype.UUID
 	Disguise           pgtype.Text
+	Strength           int32
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2367,6 +2370,7 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.TempHp,
 			&i.SummonEffectID,
 			&i.Disguise,
+			&i.Strength,
 		); err != nil {
 			return nil, err
 		}

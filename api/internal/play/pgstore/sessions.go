@@ -259,7 +259,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		return s.insertToken(ctx, sid, t)
 	case domain.ActionTokenRemoved:
 		return s.q.DeleteToken(ctx, queries.DeleteTokenParams{SessionID: sid, ID: uuid.UUID(t.ID)})
-	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTeleported:
+	case domain.ActionTokenMoved, domain.ActionTokenWalked, domain.ActionTokenHidden, domain.ActionTokenRevealed, domain.ActionTeleported, domain.ActionJumped:
 		return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden})
 	case domain.ActionEffectApplied:
 		return s.writeLanding(ctx, sid, w)
@@ -275,8 +275,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
 		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded,
 		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
-		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung:
-		return nil
+		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung, domain.ActionThrown:
+		return s.writeThrown(ctx, sid, w)
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {
 			return nil
@@ -323,6 +323,7 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	if t.Summon != nil {
 		p.SummonEffectID = pgtype.UUID{Bytes: *t.Summon, Valid: true}
 	}
+	p.Strength = 10
 	if t.Stats == nil {
 		p.SpeedFt, p.UnarmedDc, p.AttacksPerAction = 30, 10, 1
 		if err := s.q.InsertToken(ctx, p); err != nil {
@@ -339,6 +340,9 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 		p.UnarmedDc = 10
 	}
 	p.AttacksPerAction = int32(max(1, min(4, st.AttacksPerAction)))
+	if st.Strength > 0 {
+		p.Strength = int32(min(30, st.Strength))
+	}
 	if st.SpellDC > 0 {
 		p.SpellDc = pgInt(st.SpellDC)
 	}
@@ -496,6 +500,15 @@ func (s *Store) saveForms(ctx context.Context, sid uuid.UUID, w live.Write) erro
 	return nil
 }
 
+// writeThrown moves a thrown creature; every other Map Object change is written with the objects.
+func (s *Store) writeThrown(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	if w.Kind != domain.ActionThrown || w.Pushed == nil {
+		return nil
+	}
+	t := w.Pushed
+	return s.q.UpdateToken(ctx, queries.UpdateTokenParams{SessionID: sid, ID: uuid.UUID(t.ID), Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden}) //nolint:gosec // map coordinates
+}
+
 // dismiss deletes summoned tokens whose Effect ended; their Combatants go with them.
 func (s *Store) dismiss(ctx context.Context, sid uuid.UUID, ids []domain.TokenID) error {
 	for _, id := range ids {
@@ -582,7 +595,8 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionAttackMissed, domain.ActionTacticsSet, domain.ActionReactionOffered, domain.ActionReactionUsed, domain.ActionReactionDeclined,
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
 		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet, domain.ActionConcentrationChecked,
-		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered, domain.ActionVisibilitySet:
+		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered, domain.ActionVisibilitySet,
+		domain.ActionJumped, domain.ActionThrown:
 		t := w.Token
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
 			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
@@ -1059,6 +1073,7 @@ func tokenFrom(t queries.SessionTokensRow) domain.Token {
 			Source: t.StatSource.String, AC: int(t.ArmorClass.Int32), HP: int(t.Hp.Int32), HPMax: int(t.HpMax.Int32), Attacks: []domain.Attack{},
 			Intelligence: int(t.Intelligence.Int32), SpellDC: int(t.SpellDc.Int32), Stealth: int(t.Stealth), Perception: int(t.Perception),
 			Initiative: int(t.Initiative), SpeedFt: int(t.SpeedFt), UnarmedDC: int(t.UnarmedDc), AttacksPerAction: int(t.AttacksPerAction), TempHP: int(t.TempHp),
+			Strength: int(t.Strength),
 		}
 	}
 	return tok
