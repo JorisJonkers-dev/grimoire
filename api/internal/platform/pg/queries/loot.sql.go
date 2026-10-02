@@ -138,6 +138,38 @@ func (q *Queries) CampaignItemInstances(ctx context.Context, campaignID uuid.UUI
 	return items, nil
 }
 
+const campaignLootClaims = `-- name: CampaignLootClaims :many
+SELECT l.container_id, l.character_id, l.item, l.choice, l.roll, l.created_at FROM campaign.loot_claims l
+JOIN campaign.containers k ON k.id = l.container_id WHERE k.campaign_id = $1 ORDER BY l.created_at, l.character_id, l.item
+`
+
+func (q *Queries) CampaignLootClaims(ctx context.Context, campaignID uuid.UUID) ([]CampaignLootClaim, error) {
+	rows, err := q.db.Query(ctx, campaignLootClaims, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignLootClaim{}
+	for rows.Next() {
+		var i CampaignLootClaim
+		if err := rows.Scan(
+			&i.ContainerID,
+			&i.CharacterID,
+			&i.Item,
+			&i.Choice,
+			&i.Roll,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const campaignLootEntries = `-- name: CampaignLootEntries :many
 SELECT e.table_id, e.ordering, e.weight, e.kind, e.item_slug, e.coin, e.amount, e.nested_table_id
 FROM prep.loot_entries e JOIN prep.loot_tables t ON t.id = e.table_id
@@ -211,6 +243,21 @@ DELETE FROM campaign.item_instances WHERE id = $1
 
 func (q *Queries) DeleteInstance(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteInstance, id)
+	return err
+}
+
+const deleteLootClaim = `-- name: DeleteLootClaim :exec
+DELETE FROM campaign.loot_claims WHERE container_id = $1 AND character_id = $2 AND item = $3
+`
+
+type DeleteLootClaimParams struct {
+	ContainerID uuid.UUID
+	CharacterID uuid.UUID
+	Item        string
+}
+
+func (q *Queries) DeleteLootClaim(ctx context.Context, arg DeleteLootClaimParams) error {
+	_, err := q.db.Exec(ctx, deleteLootClaim, arg.ContainerID, arg.CharacterID, arg.Item)
 	return err
 }
 
@@ -794,5 +841,32 @@ type SetWeaponSetParams struct {
 
 func (q *Queries) SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error {
 	_, err := q.db.Exec(ctx, setWeaponSet, arg.WeaponSet, arg.ID)
+	return err
+}
+
+const upsertLootClaim = `-- name: UpsertLootClaim :exec
+INSERT INTO campaign.loot_claims (container_id, character_id, item, choice, roll, created_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (container_id, character_id, item) DO UPDATE SET choice = excluded.choice
+`
+
+type UpsertLootClaimParams struct {
+	ContainerID uuid.UUID
+	CharacterID uuid.UUID
+	Item        string
+	Choice      string
+	Roll        int32
+	CreatedAt   time.Time
+}
+
+func (q *Queries) UpsertLootClaim(ctx context.Context, arg UpsertLootClaimParams) error {
+	_, err := q.db.Exec(ctx, upsertLootClaim,
+		arg.ContainerID,
+		arg.CharacterID,
+		arg.Item,
+		arg.Choice,
+		arg.Roll,
+		arg.CreatedAt,
+	)
 	return err
 }

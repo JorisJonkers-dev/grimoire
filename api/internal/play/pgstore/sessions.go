@@ -270,7 +270,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet,
 		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
-		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
+		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionLootClaimed, domain.ActionLootSettled, domain.ActionShopOpened, domain.ActionShopClosed,
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,

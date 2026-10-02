@@ -211,6 +211,15 @@ type CampaignItemInstance struct {
 	CreatedAt    time.Time
 }
 
+type CampaignLootClaim struct {
+	ContainerID uuid.UUID
+	CharacterID uuid.UUID
+	Item        string
+	Choice      string
+	Roll        int32
+	CreatedAt   time.Time
+}
+
 type CampaignMap struct {
 	ID         uuid.UUID
 	CampaignID uuid.UUID

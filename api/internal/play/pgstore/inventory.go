@@ -103,8 +103,21 @@ func (s *Store) readContainers(ctx context.Context, campaign uuid.UUID, inv doma
 	for _, k := range coins {
 		byID[k.ContainerID].Coins[k.Coin] = int(k.Amount)
 	}
+	if inv.Claims, err = s.claims(ctx, campaign); err != nil {
+		return inv, err
+	}
 	inv.Items, err = s.Items(ctx, campaign, slugs)
 	return inv, err
+}
+
+// claims reads the calls on the Campaign's loot piles, earliest first.
+func (s *Store) claims(ctx context.Context, campaign uuid.UUID) ([]domain.Claim, error) {
+	rows, err := s.q.CampaignLootClaims(ctx, campaign)
+	var out []domain.Claim
+	for _, c := range rows {
+		out = append(out, domain.Claim{Container: domain.ContainerID(c.ContainerID), Character: c.CharacterID, Item: c.Item, Choice: c.Choice, Roll: int(c.Roll), At: c.CreatedAt})
+	}
+	return out, err
 }
 
 func instanceOf(r queries.CampaignItemInstancesRow) domain.Instance {
@@ -122,28 +135,48 @@ func instanceOf(r queries.CampaignItemInstancesRow) domain.Instance {
 // saveInventory writes a drop of loot, or the two Containers a transfer changed, and clears an emptied drop.
 func (s *Store) saveInventory(ctx context.Context, sess domain.Session, w live.Write, now time.Time) error {
 	if d := w.Drop; d != nil {
-		if err := s.q.InsertContainer(ctx, queries.InsertContainerParams{ID: uuid.UUID(d.ID), CampaignID: sess.CampaignID, Kind: d.Kind, Label: d.Label, Now: now}); err != nil {
+		return s.saveDrop(ctx, sess, *d, now)
+	}
+	if c := w.Claim; c != nil {
+		return s.saveClaim(ctx, *c, w.Unclaim)
+	}
+	for i, mv := range w.Moves {
+		if err := s.moveCount(ctx, mv, w.Gone != nil && i == len(w.Moves)-1); err != nil {
 			return err
 		}
-		for slug, n := range d.Items {
-			if err := s.setCount(ctx, d.ID, slug, "", n); err != nil {
-				return err
-			}
-		}
-		for coin, n := range d.Coins {
-			if err := s.setCount(ctx, d.ID, "", coin, n); err != nil {
-				return err
-			}
-		}
-		return nil
 	}
 	if w.Move == nil {
 		return nil
 	}
-	if w.Gone != nil {
-		return s.moveCount(ctx, *w.Move, true)
+	return s.moveCount(ctx, *w.Move, w.Gone != nil)
+}
+
+// saveClaim records a Character's call on a loot pile's item, or takes it back.
+func (s *Store) saveClaim(ctx context.Context, c domain.Claim, unclaim bool) error {
+	if unclaim {
+		return s.q.DeleteLootClaim(ctx, queries.DeleteLootClaimParams{ContainerID: uuid.UUID(c.Container), CharacterID: c.Character, Item: c.Item})
 	}
-	return s.moveCount(ctx, *w.Move, false)
+	return s.q.UpsertLootClaim(ctx, queries.UpsertLootClaimParams{
+		ContainerID: uuid.UUID(c.Container), CharacterID: c.Character, Item: c.Item, Choice: c.Choice, Roll: int32(c.Roll), CreatedAt: c.At, //nolint:gosec // a d20
+	})
+}
+
+// saveDrop writes a new drop of loot with what it holds.
+func (s *Store) saveDrop(ctx context.Context, sess domain.Session, d domain.Container, now time.Time) error {
+	if err := s.q.InsertContainer(ctx, queries.InsertContainerParams{ID: uuid.UUID(d.ID), CampaignID: sess.CampaignID, Kind: d.Kind, Label: d.Label, Now: now}); err != nil {
+		return err
+	}
+	for slug, n := range d.Items {
+		if err := s.setCount(ctx, d.ID, slug, "", n); err != nil {
+			return err
+		}
+	}
+	for coin, n := range d.Coins {
+		if err := s.setCount(ctx, d.ID, "", coin, n); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // moveCount writes a transfer's new counts on both sides; an emptied drop is deleted instead.
@@ -183,14 +216,32 @@ func (s *Store) setCount(ctx context.Context, id domain.ContainerID, item, coin 
 	}
 }
 
+// line is one item or coin transfer in the Action Log.
+type line struct {
+	from, to, item, coin string
+	n                    int
+}
+
+// tradeLines are what a purchase or sale moves: the goods one way, the coins the other.
+func tradeLines(w live.Write) []line {
+	t := w.Trade
+	switch {
+	case t == nil:
+		return nil
+	case w.Kind == domain.ActionItemBought:
+		return []line{{from: t.Shop, to: t.Label, item: t.Item, n: t.Count}, {from: t.Label, to: t.Shop, coin: "cp", n: t.PriceCP}}
+	case w.Kind != domain.ActionItemSold:
+		return nil
+	case t.PriceCP > 0:
+		return []line{{from: t.Label, to: t.Shop, item: t.Item, n: t.Count}, {from: t.Shop, to: t.Label, coin: "cp", n: t.PriceCP}}
+	}
+	return []line{{from: t.Label, to: t.Shop, item: t.Item, n: t.Count}}
+}
+
 // logItems records what a drop or transfer moved against its Action.
 //
 //nolint:gosec // counts are bounded by the rules
 func (s *Store) logItems(ctx context.Context, actionID uuid.UUID, w live.Write) error {
-	type line struct {
-		from, to, item, coin string
-		n                    int
-	}
 	var lines []line
 	if d := w.Drop; d != nil {
 		for slug, n := range d.Items {
@@ -200,18 +251,14 @@ func (s *Store) logItems(ctx context.Context, actionID uuid.UUID, w live.Write) 
 			lines = append(lines, line{from: "Loot table", to: d.Label, coin: coin, n: n})
 		}
 	}
-	if mv := w.Move; mv != nil {
+	moves := w.Moves
+	if w.Move != nil {
+		moves = append(moves, *w.Move)
+	}
+	for _, mv := range moves {
 		lines = append(lines, line{from: mv.FromLabel, to: mv.ToLabel, item: mv.Item, coin: mv.Coin, n: mv.Count})
 	}
-	if t := w.Trade; t != nil && w.Kind == domain.ActionItemBought {
-		lines = append(lines, line{from: t.Shop, to: t.Label, item: t.Item, n: t.Count}, line{from: t.Label, to: t.Shop, coin: "cp", n: t.PriceCP})
-	}
-	if t := w.Trade; t != nil && w.Kind == domain.ActionItemSold {
-		lines = append(lines, line{from: t.Label, to: t.Shop, item: t.Item, n: t.Count})
-		if t.PriceCP > 0 {
-			lines = append(lines, line{from: t.Shop, to: t.Label, coin: "cp", n: t.PriceCP})
-		}
-	}
+	lines = append(lines, tradeLines(w)...)
 	for i, l := range lines {
 		p := queries.InsertItemEventParams{ActionID: actionID, Position: int32(i), FromLabel: l.from, ToLabel: l.to, Count: int32(l.n)}
 		p.ItemSlug = pgtype.Text{String: l.item, Valid: l.item != ""}

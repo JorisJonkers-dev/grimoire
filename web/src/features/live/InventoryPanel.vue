@@ -25,6 +25,17 @@ function moveStack(c: LiveContainer, key: string, d: Dragged) {
   const to = target[`${c.id}:${key}`] ?? destinations(c)[0]?.id
   if (to) move({ ...d, count: Math.min(count[`${c.id}:${key}`] ?? d.count, d.count) }, to)
 }
+// Whose claims a member makes: their own Characters, or any for the DM.
+const claimants = computed(() => props.containers.filter((c) => c.kind === 'character' && c.characterId && (props.dm || c.ownerId === props.me)))
+const claimant = ref('')
+const claimFor = computed(() => claimant.value || claimants.value[0]?.characterId || '')
+const pileItems = (c: LiveContainer) => [
+  ...c.items.map((i) => ({ key: i.slug, name: i.name, ref: { itemSlug: i.slug } })),
+  ...c.instances.map((i) => ({ key: i.id, name: instanceLabel(i), ref: { instanceId: i.id } })),
+]
+function claim(c: LiveContainer, ref: { itemSlug?: string; instanceId?: string }, option: 'need' | 'greed' | 'pass') {
+  emit('send', { kind: 'claim_loot', fromId: c.id, characterId: claimFor.value, option, ...ref })
+}
 function drag(ev: DragEvent, d: Dragged) {
   ev.dataTransfer?.setData('application/json', JSON.stringify(d))
 }
@@ -122,12 +133,44 @@ function drop(ev: DragEvent, c: LiveContainer) {
             </template>
           </li>
         </ul>
+        <div v-if="c.kind === 'loot_drop'" class="claims" data-testid="claims">
+          <label v-if="claimants.length > 1" class="g-field">
+            <span>Claim for</span>
+            <select v-model="claimant" data-testid="claim-for">
+              <option v-for="k in claimants" :key="k.id" :value="k.characterId">{{ k.label }}</option>
+            </select>
+          </label>
+          <div v-for="it in pileItems(c)" :key="it.key" class="claim">
+            <span>{{ it.name }}</span>
+            <span v-for="cl in (c.claims ?? []).filter((x) => x.item === it.key)" :key="cl.characterId" class="g-tag" :data-testid="`claim-${cl.name}-${it.key}`">
+              {{ cl.name }}: {{ cl.choice }} {{ cl.roll }}
+            </span>
+            <template v-if="claimFor">
+              <GButton :data-testid="`need-${it.key}`" @click="claim(c, it.ref, 'need')">Need</GButton>
+              <GButton :data-testid="`greed-${it.key}`" @click="claim(c, it.ref, 'greed')">Greed</GButton>
+              <GButton :data-testid="`pass-${it.key}`" @click="claim(c, it.ref, 'pass')">Pass</GButton>
+            </template>
+          </div>
+          <GButton v-if="dm" variant="primary" data-testid="settle-loot" @click="emit('send', { kind: 'settle_loot', fromId: c.id })">Share out</GButton>
+          <p class="hint">Need beats greed, then the higher roll. Coins split evenly; the rest goes to the Party Stash.</p>
+        </div>
       </article>
     </div>
   </section>
 </template>
 
 <style scoped>
+.claims {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.claim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
 .inventory {
   display: flex;
   flex-direction: column;

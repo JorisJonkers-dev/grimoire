@@ -1583,6 +1583,54 @@ describe('inventory', () => {
     await expectAccessible(wrapper.element as Element)
   })
 
+  it('lets players claim loot with need or greed and the DM share it out', async () => {
+    const claimed: LiveContainer = {
+      ...drop,
+      instances: [{ id: STASH, slug: 'rope', name: 'Moonrope', count: 1, identified: true, weightLb: 5 }],
+      claims: [{ characterId: ARIA, name: 'Aria', item: 'anvil', choice: 'need', roll: 14 }],
+    }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party', { inventory: [claimed, aria, brom, stash] }))
+    await flushPromises()
+    const hoard = wrapper.get('[data-testid="container-Loot: Hoard"]')
+    expect(hoard.get('[data-testid="claim-Aria-anvil"]').text()).toBe('Aria: need 14')
+    expect(hoard.find('[data-testid="claim-for"]').exists()).toBe(false)
+    expect(hoard.find('[data-testid="settle-loot"]').exists()).toBe(false)
+    await hoard.get('[data-testid="greed-anvil"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'claim_loot', fromId: DROP, characterId: ARIA, option: 'greed', itemSlug: 'anvil' })
+    await hoard.get(`[data-testid="need-${STASH}"]`).trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'claim_loot', fromId: DROP, characterId: ARIA, option: 'need', instanceId: STASH })
+    await hoard.get('[data-testid="pass-anvil"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'claim_loot', option: 'pass', itemSlug: 'anvil' })
+    await expectAccessible(wrapper.element as Element)
+  })
+
+  it('lets the DM claim for any Character and share a pile out', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/loot-tables`]: () => [],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'dm', { inventory: containers }))
+    await flushPromises()
+    const hoard = wrapper.get('[data-testid="container-Loot: Hoard"]')
+    await hoard.get('[data-testid="claim-for"]').setValue(BROM)
+    await hoard.get('[data-testid="need-anvil"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'claim_loot', characterId: BROM, option: 'need', itemSlug: 'anvil' })
+    await hoard.get('[data-testid="settle-loot"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'settle_loot', fromId: DROP })
+  })
+
+  it('offers no claims to a player without a Character', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party', { inventory: [drop, brom, stash] }))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="need-anvil"]').exists()).toBe(false)
+  })
+
   it('lets the DM roll loot, end a fight with loot, and move anything', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/loot-tables`]: () => [{ id: '0190c7a8-0000-7000-8000-000000000071', name: 'Purse', rolls: 1, entries: [], updatedAt: '2026-10-01T20:00:00Z' }],

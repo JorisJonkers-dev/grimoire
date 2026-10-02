@@ -98,6 +98,19 @@ type Inventory struct {
 	Containers []Container
 	Bearers    []Bearer
 	Items      map[string]ItemInfo
+	// Claims are the Characters' calls on items in loot piles, earliest first.
+	Claims []Claim
+}
+
+// Claim is a Character's need or greed call on an item in a loot pile: a plain stack's slug or an Item
+// Instance's id, with the d20 rolled when it was first made.
+type Claim struct {
+	Container ContainerID
+	Character uuid.UUID
+	Item      string
+	Choice    string
+	Roll      int
+	At        time.Time
 }
 
 // Move is a number of one item, or of one kind of coin, going from one Container to another.
@@ -121,6 +134,8 @@ const (
 	ActionLootDropped = "loot_dropped"
 	ActionItemMoved   = "item_moved"
 	ActionCoinsMoved  = "coins_moved"
+	ActionLootClaimed = "loot_claimed"
+	ActionLootSettled = "loot_settled"
 )
 
 // Held is what a Character wears and holds in a weapon set: its armor, whether a shield is in the set's

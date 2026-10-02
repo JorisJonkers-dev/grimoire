@@ -132,3 +132,15 @@ UPDATE campaign.item_instances SET charges = @charges WHERE id = @id;
 
 -- name: SetWeaponSet :exec
 UPDATE campaign.characters SET weapon_set = @weapon_set WHERE id = @id;
+
+-- name: CampaignLootClaims :many
+SELECT l.container_id, l.character_id, l.item, l.choice, l.roll, l.created_at FROM campaign.loot_claims l
+JOIN campaign.containers k ON k.id = l.container_id WHERE k.campaign_id = @campaign_id ORDER BY l.created_at, l.character_id, l.item;
+
+-- name: UpsertLootClaim :exec
+INSERT INTO campaign.loot_claims (container_id, character_id, item, choice, roll, created_at)
+VALUES (@container_id, @character_id, @item, @choice, @roll, @created_at)
+ON CONFLICT (container_id, character_id, item) DO UPDATE SET choice = excluded.choice;
+
+-- name: DeleteLootClaim :exec
+DELETE FROM campaign.loot_claims WHERE container_id = @container_id AND character_id = @character_id AND item = @item;

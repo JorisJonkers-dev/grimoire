@@ -105,6 +105,11 @@ type Write struct {
 	// Drop is a new drop of loot; Move a transfer between Containers; Gone the drop it emptied.
 	Drop *domain.Container
 	Move *domain.Move
+	// Moves are the transfers a settled loot pile makes, in order; Claim a call on one of its items,
+	// taken back when Unclaim.
+	Moves   []domain.Move
+	Claim   *domain.Claim
+	Unclaim bool
 	// Swap is a Character changing weapon sets.
 	Swap      *WeaponSwap
 	Gone      *domain.ContainerID
@@ -660,7 +665,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle,
 		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
 		return true
 	}
@@ -866,6 +871,9 @@ func change(s *state, w *Write) {
 		return
 	case domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved:
 		applyInventory(s, w)
+		return
+	case domain.ActionLootClaimed, domain.ActionLootSettled:
+		applyClaims(s, w)
 		return
 	case domain.ActionShopOpened, domain.ActionShopClosed, domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted,
 		domain.ActionHaggled, domain.ActionStockRolled:

@@ -80,6 +80,7 @@ type Querier interface {
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
+	CampaignLootClaims(ctx context.Context, campaignID uuid.UUID) ([]CampaignLootClaim, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
 	CampaignNode(ctx context.Context, arg CampaignNodeParams) (CampaignNodeRow, error)
 	CampaignNpc(ctx context.Context, arg CampaignNpcParams) (string, error)
@@ -174,6 +175,7 @@ type Querier interface {
 	DeleteFriendship(ctx context.Context, arg DeleteFriendshipParams) (int64, error)
 	DeleteInstance(ctx context.Context, id uuid.UUID) error
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
+	DeleteLootClaim(ctx context.Context, arg DeleteLootClaimParams) error
 	DeleteLootTable(ctx context.Context, arg DeleteLootTableParams) (int64, error)
 	DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
@@ -659,6 +661,7 @@ type Querier interface {
 	UpsertEffectDefinition(ctx context.Context, arg UpsertEffectDefinitionParams) (int64, error)
 	UpsertFeat(ctx context.Context, arg UpsertFeatParams) (int64, error)
 	UpsertItem(ctx context.Context, arg UpsertItemParams) error
+	UpsertLootClaim(ctx context.Context, arg UpsertLootClaimParams) error
 	UpsertMagicSchool(ctx context.Context, arg UpsertMagicSchoolParams) (int64, error)
 	UpsertMonster(ctx context.Context, arg UpsertMonsterParams) (int64, error)
 	UpsertNotification(ctx context.Context, arg UpsertNotificationParams) error

@@ -14032,6 +14032,109 @@ func (s *LiveCheckStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed,
+// then the higher roll, then the earlier claim.
+// Ref: #/components/schemas/LiveClaim
+type LiveClaim struct {
+	CharacterId ID     `json:"characterId"`
+	Name        string `json:"name"`
+	// A plain stack's slug or an Item Instance's id.
+	Item   string          `json:"item"`
+	Choice LiveClaimChoice `json:"choice"`
+	Roll   int32           `json:"roll"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveClaim) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetName returns the value of Name.
+func (s *LiveClaim) GetName() string {
+	return s.Name
+}
+
+// GetItem returns the value of Item.
+func (s *LiveClaim) GetItem() string {
+	return s.Item
+}
+
+// GetChoice returns the value of Choice.
+func (s *LiveClaim) GetChoice() LiveClaimChoice {
+	return s.Choice
+}
+
+// GetRoll returns the value of Roll.
+func (s *LiveClaim) GetRoll() int32 {
+	return s.Roll
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveClaim) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveClaim) SetName(val string) {
+	s.Name = val
+}
+
+// SetItem sets the value of Item.
+func (s *LiveClaim) SetItem(val string) {
+	s.Item = val
+}
+
+// SetChoice sets the value of Choice.
+func (s *LiveClaim) SetChoice(val LiveClaimChoice) {
+	s.Choice = val
+}
+
+// SetRoll sets the value of Roll.
+func (s *LiveClaim) SetRoll(val int32) {
+	s.Roll = val
+}
+
+type LiveClaimChoice string
+
+const (
+	LiveClaimChoiceNeed  LiveClaimChoice = "need"
+	LiveClaimChoiceGreed LiveClaimChoice = "greed"
+)
+
+// AllValues returns all LiveClaimChoice values.
+func (LiveClaimChoice) AllValues() []LiveClaimChoice {
+	return []LiveClaimChoice{
+		LiveClaimChoiceNeed,
+		LiveClaimChoiceGreed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveClaimChoice) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveClaimChoiceNeed:
+		return []byte(s), nil
+	case LiveClaimChoiceGreed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveClaimChoice) UnmarshalText(data []byte) error {
+	switch LiveClaimChoice(data) {
+	case LiveClaimChoiceNeed:
+		*s = LiveClaimChoiceNeed
+		return nil
+	case LiveClaimChoiceGreed:
+		*s = LiveClaimChoiceGreed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // How many coins of one kind a container holds.
 // Ref: #/components/schemas/LiveCoins
 type LiveCoins struct {
@@ -15800,6 +15903,8 @@ const (
 	LiveCommandKindRollLoot       LiveCommandKind = "roll_loot"
 	LiveCommandKindMoveItem       LiveCommandKind = "move_item"
 	LiveCommandKindMoveCoins      LiveCommandKind = "move_coins"
+	LiveCommandKindClaimLoot      LiveCommandKind = "claim_loot"
+	LiveCommandKindSettleLoot     LiveCommandKind = "settle_loot"
 	LiveCommandKindOpenShop       LiveCommandKind = "open_shop"
 	LiveCommandKindCloseShop      LiveCommandKind = "close_shop"
 	LiveCommandKindBuy            LiveCommandKind = "buy"
@@ -15891,6 +15996,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindRollLoot,
 		LiveCommandKindMoveItem,
 		LiveCommandKindMoveCoins,
+		LiveCommandKindClaimLoot,
+		LiveCommandKindSettleLoot,
 		LiveCommandKindOpenShop,
 		LiveCommandKindCloseShop,
 		LiveCommandKindBuy,
@@ -16032,6 +16139,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindMoveItem:
 		return []byte(s), nil
 	case LiveCommandKindMoveCoins:
+		return []byte(s), nil
+	case LiveCommandKindClaimLoot:
+		return []byte(s), nil
+	case LiveCommandKindSettleLoot:
 		return []byte(s), nil
 	case LiveCommandKindOpenShop:
 		return []byte(s), nil
@@ -16263,6 +16374,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 	case LiveCommandKindMoveCoins:
 		*s = LiveCommandKindMoveCoins
 		return nil
+	case LiveCommandKindClaimLoot:
+		*s = LiveCommandKindClaimLoot
+		return nil
+	case LiveCommandKindSettleLoot:
+		*s = LiveCommandKindSettleLoot
+		return nil
 	case LiveCommandKindOpenShop:
 		*s = LiveCommandKindOpenShop
 		return nil
@@ -16445,6 +16562,9 @@ const (
 	LiveCommandOptionRevivify     LiveCommandOption = "revivify"
 	LiveCommandOptionRaiseDead    LiveCommandOption = "raise_dead"
 	LiveCommandOptionResurrection LiveCommandOption = "resurrection"
+	LiveCommandOptionNeed         LiveCommandOption = "need"
+	LiveCommandOptionGreed        LiveCommandOption = "greed"
+	LiveCommandOptionPass         LiveCommandOption = "pass"
 )
 
 // AllValues returns all LiveCommandOption values.
@@ -16458,6 +16578,9 @@ func (LiveCommandOption) AllValues() []LiveCommandOption {
 		LiveCommandOptionRevivify,
 		LiveCommandOptionRaiseDead,
 		LiveCommandOptionResurrection,
+		LiveCommandOptionNeed,
+		LiveCommandOptionGreed,
+		LiveCommandOptionPass,
 	}
 }
 
@@ -16479,6 +16602,12 @@ func (s LiveCommandOption) MarshalText() ([]byte, error) {
 	case LiveCommandOptionRaiseDead:
 		return []byte(s), nil
 	case LiveCommandOptionResurrection:
+		return []byte(s), nil
+	case LiveCommandOptionNeed:
+		return []byte(s), nil
+	case LiveCommandOptionGreed:
+		return []byte(s), nil
+	case LiveCommandOptionPass:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -16511,6 +16640,15 @@ func (s *LiveCommandOption) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandOptionResurrection:
 		*s = LiveCommandOptionResurrection
+		return nil
+	case LiveCommandOptionNeed:
+		*s = LiveCommandOptionNeed
+		return nil
+	case LiveCommandOptionGreed:
+		*s = LiveCommandOptionGreed
+		return nil
+	case LiveCommandOptionPass:
+		*s = LiveCommandOptionPass
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -16870,6 +17008,8 @@ type LiveContainer struct {
 	WeightLb    float64            `json:"weightLb"`
 	CapacityLb  OptFloat64         `json:"capacityLb"`
 	Encumbered  OptBool            `json:"encumbered"`
+	// The calls on a loot pile's items, earliest first.
+	Claims []LiveClaim `json:"claims"`
 }
 
 // GetID returns the value of ID.
@@ -16932,6 +17072,11 @@ func (s *LiveContainer) GetEncumbered() OptBool {
 	return s.Encumbered
 }
 
+// GetClaims returns the value of Claims.
+func (s *LiveContainer) GetClaims() []LiveClaim {
+	return s.Claims
+}
+
 // SetID sets the value of ID.
 func (s *LiveContainer) SetID(val ID) {
 	s.ID = val
@@ -16990,6 +17135,11 @@ func (s *LiveContainer) SetCapacityLb(val OptFloat64) {
 // SetEncumbered sets the value of Encumbered.
 func (s *LiveContainer) SetEncumbered(val OptBool) {
 	s.Encumbered = val
+}
+
+// SetClaims sets the value of Claims.
+func (s *LiveContainer) SetClaims(val []LiveClaim) {
+	s.Claims = val
 }
 
 type LiveContainerKind string

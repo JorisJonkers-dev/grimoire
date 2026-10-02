@@ -1544,6 +1544,17 @@ export const zSessionAction = z.object({
 });
 
 /**
+ * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
+ */
+export const zLiveClaim = z.object({
+    characterId: zId,
+    name: z.string().max(80),
+    item: z.string().max(80),
+    choice: z.enum(['need', 'greed']),
+    roll: z.int().gte(1).lte(20)
+});
+
+/**
  * A resting Character, their Hit Die, how many are left, and the roll of one being spent.
  */
 export const zLiveRester = z.object({
@@ -2862,6 +2873,8 @@ export const zLiveCommand = z.object({
         'roll_loot',
         'move_item',
         'move_coins',
+        'claim_loot',
+        'settle_loot',
         'open_shop',
         'close_shop',
         'buy',
@@ -3007,7 +3020,10 @@ export const zLiveCommand = z.object({
         'spell',
         'revivify',
         'raise_dead',
-        'resurrection'
+        'resurrection',
+        'need',
+        'greed',
+        'pass'
     ]).optional(),
     offHand: z.boolean().optional(),
     cleave: z.boolean().optional(),
@@ -3091,7 +3107,8 @@ export const zLiveContainer = z.object({
     coins: z.array(zLiveCoins).max(5),
     weightLb: z.number().gte(0).lte(100000000),
     capacityLb: z.number().gte(0).lte(100000).optional(),
-    encumbered: z.boolean().optional()
+    encumbered: z.boolean().optional(),
+    claims: z.array(zLiveClaim).max(1000).optional()
 });
 
 /**

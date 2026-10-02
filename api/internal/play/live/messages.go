@@ -77,6 +77,8 @@ const (
 	CmdRollLoot       = "roll_loot"
 	CmdMoveItem       = "move_item"
 	CmdMoveCoins      = "move_coins"
+	CmdClaimLoot      = "claim_loot"
+	CmdSettleLoot     = "settle_loot"
 	CmdOpenShop       = "open_shop"
 	CmdCloseShop      = "close_shop"
 	CmdBuy            = "buy"
@@ -478,6 +480,18 @@ type ContainerView struct {
 	WeightLb    float64        `json:"weightLb"`
 	CapacityLb  float64        `json:"capacityLb,omitempty"`
 	Encumbered  bool           `json:"encumbered,omitempty"`
+	// Claims are the calls on a loot pile's items, earliest first.
+	Claims []ClaimView `json:"claims,omitempty"`
+}
+
+// ClaimView is a Character's need or greed call on a loot pile's item: a stack's slug or an Item
+// Instance's id, with the d20 it rolled.
+type ClaimView struct {
+	CharacterID string `json:"characterId"`
+	Name        string `json:"name"`
+	Item        string `json:"item"`
+	Choice      string `json:"choice"`
+	Roll        int    `json:"roll"`
 }
 
 // ItemView is a stack of one item in a Container.

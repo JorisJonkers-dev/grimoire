@@ -43,6 +43,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planLoot(cmd.LootTableID)
 	case CmdMoveItem, CmdMoveCoins:
 		return r.planMove(m, cmd)
+	case CmdClaimLoot:
+		return r.planClaim(m, cmd)
+	case CmdSettleLoot:
+		return r.planSettle(cmd)
 	case CmdTakeAction:
 		return r.planAction(m, cmd)
 	case CmdUnarmed:

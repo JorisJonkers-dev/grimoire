@@ -143,6 +143,16 @@ func applyInventory(s *state, w *Write) {
 	}
 	mv := w.Move
 	from := slices.IndexFunc(inv.Containers, func(c domain.Container) bool { return c.ID == mv.From })
+	moveOne(inv, mv)
+	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Instances)+len(c.Coins) == 0 {
+		w.Gone = &c.ID
+		inv.Containers = slices.Delete(inv.Containers, from, from+1)
+	}
+}
+
+// moveOne makes one transfer between two Containers and notes what each then holds of it.
+func moveOne(inv *domain.Inventory, mv *domain.Move) {
+	from := slices.IndexFunc(inv.Containers, func(c domain.Container) bool { return c.ID == mv.From })
 	to := slices.IndexFunc(inv.Containers, func(c domain.Container) bool { return c.ID == mv.To })
 	shift := func(src, dst map[string]int, key string) {
 		src[key] -= mv.Count
@@ -165,14 +175,10 @@ func applyInventory(s *state, w *Write) {
 	default:
 		shift(inv.Containers[from].Items, inv.Containers[to].Items, mv.Item)
 	}
-	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Instances)+len(c.Coins) == 0 {
-		w.Gone = &c.ID
-		inv.Containers = slices.Delete(inv.Containers, from, from+1)
-	}
 }
 
 func cloneInventory(inv domain.Inventory) domain.Inventory {
-	out := domain.Inventory{Bearers: inv.Bearers, Items: maps.Clone(inv.Items)}
+	out := domain.Inventory{Bearers: inv.Bearers, Items: maps.Clone(inv.Items), Claims: inv.Claims}
 	for _, c := range inv.Containers {
 		out.Containers = append(out.Containers, c.Clone())
 	}
@@ -260,6 +266,12 @@ func (s *state) containerView(c domain.Container, a Audience) ContainerView {
 		v.Instances = append(v.Instances, s.instanceView(in, a))
 	}
 	v.WeightLb = s.weight(c, 0)
+	for _, cl := range s.inventory.Claims {
+		if cl.Container == c.ID {
+			b, _ := s.bearer(domain.Container{CharacterID: &cl.Character})
+			v.Claims = append(v.Claims, ClaimView{CharacterID: cl.Character.String(), Name: b.Name, Item: cl.Item, Choice: cl.Choice, Roll: cl.Roll})
+		}
+	}
 	if b, ok := s.bearer(c); ok {
 		v.CharacterID, v.OwnerID = b.CharacterID.String(), b.Owner.String()
 		v.CapacityLb = loot.Capacity(b.Strength, "medium")

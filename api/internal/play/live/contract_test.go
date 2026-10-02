@@ -76,7 +76,10 @@ func samples() contract {
 			Items: []live.ItemView{{Slug: "rope", Name: "Rope", Count: 2, WeightLb: 10}}, Coins: []live.CoinView{{Coin: "gp", Count: 50}}, WeightLb: 11, CapacityLb: 120,
 			Instances: []live.InstanceView{{ID: "0190c7a8-0000-7000-8000-000000000034", Slug: "rope", Name: "Climbing Line", Count: 1, Charges: &three, Identified: true, Attuned: true, Slot: "neck", WeightLb: 5}},
 		},
-		{ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false},
+		{
+			ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false,
+			Claims: []live.ClaimView{{CharacterID: "0190c7a8-0000-7000-8000-000000000012", Name: "Aria", Item: "rope", Choice: "need", Roll: 14}},
+		},
 		{ID: "0190c7a8-0000-7000-8000-000000000035", Kind: "bag", Label: "Backpack", ParentID: "0190c7a8-0000-7000-8000-000000000030", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}},
 	}
 	view.Rest = &live.RestView{
@@ -166,6 +169,8 @@ func samples() contract {
 			{Nonce: "n51", Kind: live.CmdScheduleCheck, TableID: "0190c7a8-0000-7000-8000-000000000029", Due: "next_travel"},
 			{Nonce: "n52", Kind: live.CmdRollLoot, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
 			{Nonce: "n53", Kind: live.CmdMoveItem, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 2},
+			{Nonce: "n54b", Kind: live.CmdClaimLoot, FromID: "0190c7a8-0000-7000-8000-000000000031", CharacterID: "0190c7a8-0000-7000-8000-000000000012", ItemSlug: "rope", Option: "need"},
+			{Nonce: "n54c", Kind: live.CmdSettleLoot, FromID: "0190c7a8-0000-7000-8000-000000000031"},
 			{Nonce: "n54", Kind: live.CmdMoveCoins, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", Coin: "gp", Count: 50},
 			{Nonce: "n55", Kind: live.CmdEndCombat, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
 			{Nonce: "n56", Kind: live.CmdOpenShop, ShopID: "0190c7a8-0000-7000-8000-000000000033"},
