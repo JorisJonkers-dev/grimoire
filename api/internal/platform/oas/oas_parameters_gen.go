@@ -10375,6 +10375,96 @@ func decodeSetTokenIconParams(args [2]string, argsEscaped bool, r *http.Request)
 	return params, nil
 }
 
+// SignOutParams is parameters of signOut operation.
+type SignOutParams struct {
+	// The session to end.
+	GrimoireSession OptString `json:",omitempty,omitzero"`
+}
+
+func unpackSignOutParams(packed middleware.Parameters) (params SignOutParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "grimoire_session",
+			In:   "cookie",
+		}
+		if v, ok := packed[key]; ok {
+			params.GrimoireSession = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeSignOutParams(args [0]string, argsEscaped bool, r *http.Request) (params SignOutParams, _ error) {
+	c := uri.NewCookieDecoder(r)
+	// Decode cookie: grimoire_session.
+	if err := func() error {
+		cfg := uri.CookieParameterDecodingConfig{
+			Name:    "grimoire_session",
+			Explode: true,
+		}
+		if err := c.HasParam(cfg); err == nil {
+			if err := c.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotGrimoireSessionVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotGrimoireSessionVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.GrimoireSession.SetTo(paramsDotGrimoireSessionVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.GrimoireSession.Get(); ok {
+					if err := func() error {
+						if err := (validate.String{
+							MinLength:     0,
+							MinLengthSet:  false,
+							MaxLength:     64,
+							MaxLengthSet:  true,
+							Email:         false,
+							Hostname:      false,
+							Regex:         nil,
+							MinNumeric:    0,
+							MinNumericSet: false,
+							MaxNumeric:    0,
+							MaxNumericSet: false,
+						}).Validate(string(value)); err != nil {
+							return errors.Wrap(err, "string")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "grimoire_session",
+			In:   "cookie",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // StartSessionParams is parameters of startSession operation.
 type StartSessionParams struct {
 	// Campaign id.

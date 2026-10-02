@@ -14,6 +14,10 @@ import (
 
 type Querier interface {
 	AbilityIDBySlug(ctx context.Context, slug string) (int64, error)
+	AccountByEmail(ctx context.Context, email string) (AccountByEmailRow, error)
+	AccountByID(ctx context.Context, id uuid.UUID) (AccountByIDRow, error)
+	AccountBySubject(ctx context.Context, subject string) (AccountBySubjectRow, error)
+	AccountByUsername(ctx context.Context, username string) (IdentityAccount, error)
 	ActionEffectEvent(ctx context.Context, actionID uuid.UUID) (uuid.UUID, error)
 	ActionHPEvent(ctx context.Context, actionID uuid.UUID) (ActionHPEventRow, error)
 	ActionHexEvents(ctx context.Context, actionID uuid.UUID) ([]ActionHexEventsRow, error)
@@ -181,6 +185,8 @@ type Querier interface {
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
 	GetTableRevision(ctx context.Context, arg GetTableRevisionParams) (GetTableRevisionRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
+	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
+	InsertAccountSession(ctx context.Context, arg InsertAccountSessionParams) error
 	InsertAction(ctx context.Context, arg InsertActionParams) (uuid.UUID, error)
 	InsertCast(ctx context.Context, arg InsertCastParams) error
 	InsertCastHex(ctx context.Context, arg InsertCastHexParams) error
@@ -222,6 +228,7 @@ type Querier interface {
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
+	InsertInvite(ctx context.Context, arg InsertInviteParams) error
 	InsertItemEvent(ctx context.Context, arg InsertItemEventParams) error
 	InsertLight(ctx context.Context, arg InsertLightParams) error
 	InsertLootEntry(ctx context.Context, arg InsertLootEntryParams) error
@@ -249,6 +256,7 @@ type Querier interface {
 	InsertSettlementRevision(ctx context.Context, arg InsertSettlementRevisionParams) error
 	InsertShopRevision(ctx context.Context, arg InsertShopRevisionParams) error
 	InsertShopRevisionStock(ctx context.Context, arg InsertShopRevisionStockParams) error
+	InsertSignInLink(ctx context.Context, arg InsertSignInLinkParams) error
 	InsertSpawnEvent(ctx context.Context, arg InsertSpawnEventParams) error
 	InsertSurface(ctx context.Context, arg InsertSurfaceParams) error
 	InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceReactionParams) error
@@ -263,6 +271,7 @@ type Querier interface {
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
 	InsertUndo(ctx context.Context, arg InsertUndoParams) error
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
+	InviteByToken(ctx context.Context, tokenHash []byte) (InviteByTokenRow, error)
 	ItemPrices(ctx context.Context, arg ItemPricesParams) ([]ItemPricesRow, error)
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
@@ -367,6 +376,7 @@ type Querier interface {
 	RestCharacters(ctx context.Context, arg RestCharactersParams) ([]RestCharactersRow, error)
 	RestResourcesUsed(ctx context.Context, ids []uuid.UUID) ([]CampaignCharacterResource, error)
 	ResumePath(ctx context.Context, combatID uuid.UUID) ([]ResumePathRow, error)
+	RevokeAccountSession(ctx context.Context, arg RevokeAccountSessionParams) error
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
 	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
@@ -394,6 +404,7 @@ type Querier interface {
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
+	SessionAccount(ctx context.Context, arg SessionAccountParams) (SessionAccountRow, error)
 	SessionActionBySeq(ctx context.Context, arg SessionActionBySeqParams) (SessionActionBySeqRow, error)
 	SessionByID(ctx context.Context, id uuid.UUID) (PlaySession, error)
 	SessionCast(ctx context.Context, sessionID uuid.UUID) (SessionCastRow, error)
@@ -423,6 +434,7 @@ type Querier interface {
 	SessionZoneChecks(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCheck, error)
 	SessionZoneCreatures(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCreature, error)
 	SessionZones(ctx context.Context, sessionID uuid.UUID) ([]SessionZonesRow, error)
+	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
@@ -454,6 +466,7 @@ type Querier interface {
 	SpendHitDie(ctx context.Context, id uuid.UUID) error
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
+	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error
@@ -476,6 +489,8 @@ type Querier interface {
 	UpsertSpell(ctx context.Context, arg UpsertSpellParams) (int64, error)
 	UpsertSurfaceDefinition(ctx context.Context, arg UpsertSurfaceDefinitionParams) error
 	UpsertWeapon(ctx context.Context, arg UpsertWeaponParams) (int64, error)
+	UseInvite(ctx context.Context, arg UseInviteParams) (int64, error)
+	UseSignInLink(ctx context.Context, arg UseSignInLinkParams) (uuid.UUID, error)
 	WeaponProperties(ctx context.Context, weaponID int64) ([]WeaponPropertiesRow, error)
 }
 

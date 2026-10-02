@@ -24,6 +24,13 @@ const LiveSessionPage = () => import('@/features/live/LiveSessionPage.vue')
 const TablePage = () => import('@/features/live/TablePage.vue')
 const MapsPage = () => import('@/features/live/MapsPage.vue')
 const MapCalibrationPage = () => import('@/features/live/MapCalibrationPage.vue')
+const SignInPage = () => import('@/features/account/SignInPage.vue')
+const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
+const SignInLinkPage = () => import('@/features/account/SignInLinkPage.vue')
+const AccountPage = () => import('@/features/account/AccountPage.vue')
+
+/** Pages anyone may open without signing in. */
+export const publicPages = ['sign-in', 'account-invite', 'sign-in-link', 'spells', 'spell', 'entries', 'entry', 'attribution', 'automation', 'gallery']
 
 export function createAppRouter(history: RouterHistory = createWebHistory()) {
   return createRouter({
@@ -54,6 +61,10 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/maps/:mapId', name: 'map', component: MapCalibrationPage },
       { path: '/join', name: 'join', component: JoinPage },
       { path: '/about/attribution', name: 'attribution', component: AttributionPage },
+      { path: '/sign-in', name: 'sign-in', component: SignInPage },
+      { path: '/account-invite', name: 'account-invite', component: AccountInvitePage },
+      { path: '/sign-in-link', name: 'sign-in-link', component: SignInLinkPage },
+      { path: '/account', name: 'account', component: AccountPage },
     ],
   })
 }

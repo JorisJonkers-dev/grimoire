@@ -10,8 +10,36 @@ import (
 	ht "github.com/ogen-go/ogen/http"
 )
 
+func encodeAcceptAccountInviteRequest(
+	req *AccountSetup,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeAcceptInviteRequest(
 	req *InviteAccept,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCreateAccountInviteRequest(
+	req *AccountInviteRequest,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -164,6 +192,20 @@ func encodeCreateShopRequest(
 	return nil
 }
 
+func encodePreviewAccountInviteRequest(
+	req *LinkToken,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewCharacterRequest(
 	req *CharacterBuild,
 	r *http.Request,
@@ -220,8 +262,36 @@ func encodePreviewSightRequest(
 	return nil
 }
 
+func encodeRequestSignInLinkRequest(
+	req *SignInLinkRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeSendLiveCommandRequest(
 	req *LiveCommand,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSetAccountPasswordRequest(
+	req *PasswordChange,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -265,6 +335,20 @@ func encodeSetTokenIconRequest(
 	const contentType = "application/octet-stream"
 	body := req
 	ht.SetBody(r, body, contentType)
+	return nil
+}
+
+func encodeSignInRequest(
+	req *SignInRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
 	return nil
 }
 
@@ -415,6 +499,20 @@ func encodeUploadMapRequest(
 	const contentType = "application/octet-stream"
 	body := req
 	ht.SetBody(r, body, contentType)
+	return nil
+}
+
+func encodeUseSignInLinkRequest(
+	req *LinkToken,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
 	return nil
 }
 

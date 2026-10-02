@@ -131,6 +131,86 @@ export type CampaignUpdate = {
 };
 
 /**
+ * A Grimoire Account.
+ */
+export type Account = {
+    id: Id;
+    username: Username;
+    nickname: string;
+    email: string;
+    admin: boolean;
+};
+
+/**
+ * Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.
+ */
+export type Username = string;
+
+/**
+ * The token an invite or sign-in link carries.
+ */
+export type LinkToken = {
+    token: string;
+};
+
+/**
+ * What an invitee chooses for their Account, with the token its invite link carries.
+ */
+export type AccountSetup = {
+    token: string;
+    username: string;
+    nickname: string;
+    email: string;
+    password: string;
+};
+
+/**
+ * A Username and password.
+ */
+export type SignInRequest = {
+    username: string;
+    password: string;
+};
+
+/**
+ * Where to email a sign-in link.
+ */
+export type SignInLinkRequest = {
+    email: string;
+};
+
+/**
+ * A new password.
+ */
+export type PasswordChange = {
+    password: string;
+};
+
+/**
+ * How long an Account Invite stays open, and whether it sets up an Admin.
+ */
+export type AccountInviteRequest = {
+    hours: number;
+    admin?: boolean;
+};
+
+/**
+ * A new Account Invite and the token its link carries; the token is shown only now.
+ */
+export type AccountInviteCreated = {
+    token: string;
+    expiresAt: string;
+};
+
+/**
+ * An open Account Invite.
+ */
+export type AccountInvite = {
+    expiresAt: string;
+    admin: boolean;
+};
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export type InitiativeMode = 'individual' | 'side';
@@ -5883,6 +5963,265 @@ export type GetStatusResponses = {
 };
 
 export type GetStatusResponse = GetStatusResponses[keyof GetStatusResponses];
+
+export type CreateAccountInviteData = {
+    body: AccountInviteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/account-invites';
+};
+
+export type CreateAccountInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateAccountInviteError = CreateAccountInviteErrors[keyof CreateAccountInviteErrors];
+
+export type CreateAccountInviteResponses = {
+    /**
+     * The invite, with the token its link carries.
+     */
+    201: AccountInviteCreated;
+};
+
+export type CreateAccountInviteResponse = CreateAccountInviteResponses[keyof CreateAccountInviteResponses];
+
+export type PreviewAccountInviteData = {
+    body: LinkToken;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account-invites/preview';
+};
+
+export type PreviewAccountInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewAccountInviteError = PreviewAccountInviteErrors[keyof PreviewAccountInviteErrors];
+
+export type PreviewAccountInviteResponses = {
+    /**
+     * The open invite.
+     */
+    200: AccountInvite;
+};
+
+export type PreviewAccountInviteResponse = PreviewAccountInviteResponses[keyof PreviewAccountInviteResponses];
+
+export type AcceptAccountInviteData = {
+    body: AccountSetup;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account-invites/accept';
+};
+
+export type AcceptAccountInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type AcceptAccountInviteError = AcceptAccountInviteErrors[keyof AcceptAccountInviteErrors];
+
+export type AcceptAccountInviteResponses = {
+    /**
+     * The new Account, signed in.
+     */
+    201: Account;
+};
+
+export type AcceptAccountInviteResponse = AcceptAccountInviteResponses[keyof AcceptAccountInviteResponses];
+
+export type SignInData = {
+    body: SignInRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in';
+};
+
+export type SignInErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SignInError = SignInErrors[keyof SignInErrors];
+
+export type SignInResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+};
+
+export type SignInResponse = SignInResponses[keyof SignInResponses];
+
+export type SignOutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-out';
+};
+
+export type SignOutErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SignOutError = SignOutErrors[keyof SignOutErrors];
+
+export type SignOutResponses = {
+    /**
+     * Signed out.
+     */
+    204: void;
+};
+
+export type SignOutResponse = SignOutResponses[keyof SignOutResponses];
+
+export type RequestSignInLinkData = {
+    body: SignInLinkRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in-links';
+};
+
+export type RequestSignInLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RequestSignInLinkError = RequestSignInLinkErrors[keyof RequestSignInLinkErrors];
+
+export type RequestSignInLinkResponses = {
+    /**
+     * A link is on its way if an Account has that email.
+     */
+    202: unknown;
+};
+
+export type UseSignInLinkData = {
+    body: LinkToken;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in-links/use';
+};
+
+export type UseSignInLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UseSignInLinkError = UseSignInLinkErrors[keyof UseSignInLinkErrors];
+
+export type UseSignInLinkResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+};
+
+export type UseSignInLinkResponse = UseSignInLinkResponses[keyof UseSignInLinkResponses];
+
+export type GetAccountData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account';
+};
+
+export type GetAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAccountError = GetAccountErrors[keyof GetAccountErrors];
+
+export type GetAccountResponses = {
+    /**
+     * The Account.
+     */
+    200: Account;
+};
+
+export type GetAccountResponse = GetAccountResponses[keyof GetAccountResponses];
+
+export type SetAccountPasswordData = {
+    body: PasswordChange;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/password';
+};
+
+export type SetAccountPasswordErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetAccountPasswordError = SetAccountPasswordErrors[keyof SetAccountPasswordErrors];
+
+export type SetAccountPasswordResponses = {
+    /**
+     * The password is set.
+     */
+    204: void;
+};
+
+export type SetAccountPasswordResponse = SetAccountPasswordResponses[keyof SetAccountPasswordResponses];
 
 export type GetHealthData = {
     body?: never;

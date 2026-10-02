@@ -59,6 +59,7 @@ Grimoire serves MCP over Streamable HTTP at `/mcp`.
 ## Phones and the Android app
 
 - **Install:** Grimoire is an installable PWA. The compendium and Character sheets a device has opened stay readable offline, and the app says when live play is waiting for the connection.
+- **Accounts:** Grimoire runs its own Accounts and sessions (ADR-0008). List the subjects that may send the first Account Invite in `GRIMOIRE_ADMIN_SUBJECTS` (comma-separated); after that, Admin Accounts invite from their Account page. Emailed sign-in links point at `GRIMOIRE_BASE_URL` and go out through `GRIMOIRE_SMTP_ADDR` and `GRIMOIRE_SMTP_FROM` (with `GRIMOIRE_SMTP_USERNAME` and `GRIMOIRE_SMTP_PASSWORD` when the server needs them); without an SMTP server the email is written to the log. While a forward-auth proxy still sits in front, Grimoire trusts its `X-User-Id`; set `GRIMOIRE_TRUST_FORWARD_AUTH=false` once it does not, so only a session cookie can say who someone is.
 - **Notifications:** set `GRIMOIRE_VAPID_PUBLIC_KEY`, `GRIMOIRE_VAPID_PRIVATE_KEY` and `GRIMOIRE_VAPID_CONTACT` to send Web Push. A player taps "Notify me on my turn" in a live Session, and the device then hears about their turn and Reaction Prompts while locked. Without the keys the server sends none.
 - **Android:** `task android` builds the Capacitor shell as a debug APK (Java 21 and the Android SDK). Set `GRIMOIRE_APP_URL` at build time to load a hosted server instead of the bundled build. The screen stays awake during a live Session.
 

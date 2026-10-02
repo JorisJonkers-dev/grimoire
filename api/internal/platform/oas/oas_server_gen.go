@@ -8,6 +8,12 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// AcceptAccountInvite implements acceptAccountInvite operation.
+	//
+	// Creates the Account the invite was for and signs it in on this device.
+	//
+	// POST /api/v1/account-invites/accept
+	AcceptAccountInvite(ctx context.Context, req *AccountSetup) (AcceptAccountInviteRes, error)
 	// AcceptInvite implements acceptInvite operation.
 	//
 	// Joins the caller to the Campaign as a Player. A Member keeps their role.
@@ -20,6 +26,13 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// CreateAccountInvite implements createAccountInvite operation.
+	//
+	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
+	// another Admin.
+	//
+	// POST /api/v1/admin/account-invites
+	CreateAccountInvite(ctx context.Context, req *AccountInviteRequest) (CreateAccountInviteRes, error)
 	// CreateCampaign implements createCampaign operation.
 	//
 	// Starts a Campaign with the caller as its first DM.
@@ -147,6 +160,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// GetAccount implements getAccount operation.
+	//
+	// The Account the caller is signed in as.
+	//
+	// GET /api/v1/account
+	GetAccount(ctx context.Context) (GetAccountRes, error)
 	// GetActionLog implements getActionLog operation.
 	//
 	// The Campaign's recent Actions with their seeds. DM only.
@@ -428,6 +447,12 @@ type Handler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PreviewAccountInvite implements previewAccountInvite operation.
+	//
+	// Whether an invite link can still set up an Account; gone once used or expired.
+	//
+	// POST /api/v1/account-invites/preview
+	PreviewAccountInvite(ctx context.Context, req *LinkToken) (PreviewAccountInviteRes, error)
 	// PreviewCharacter implements previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -458,6 +483,12 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RequestSignInLink implements requestSignInLink operation.
+	//
+	// For a forgotten password. Answers the same whether or not an Account has the email.
+	//
+	// POST /api/v1/sign-in-links
+	RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (RequestSignInLinkRes, error)
 	// RerollStock implements rerollStock operation.
 	//
 	// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
@@ -526,6 +557,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
 	SendLiveCommand(ctx context.Context, req *LiveCommand, params SendLiveCommandParams) (SendLiveCommandRes, error)
+	// SetAccountPassword implements setAccountPassword operation.
+	//
+	// Replaces the signed-in Account's password, for example after signing in with an emailed link.
+	//
+	// PUT /api/v1/account/password
+	SetAccountPassword(ctx context.Context, req *PasswordChange) (SetAccountPasswordRes, error)
 	// SetDie implements setDie operation.
 	//
 	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
@@ -545,6 +582,18 @@ type Handler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// SignIn implements signIn operation.
+	//
+	// Signs the Account in on this device. Every failure answers the same.
+	//
+	// POST /api/v1/sign-in
+	SignIn(ctx context.Context, req *SignInRequest) (SignInRes, error)
+	// SignOut implements signOut operation.
+	//
+	// Ends this device's session and clears its cookie.
+	//
+	// POST /api/v1/sign-out
+	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
 	// StartSession implements startSession operation.
 	//
 	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -628,6 +677,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/maps
 	UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (UploadMapRes, error)
+	// UseSignInLink implements useSignInLink operation.
+	//
+	// Signs the Account in on this device; a link works once, within 30 minutes.
+	//
+	// POST /api/v1/sign-in-links/use
+	UseSignInLink(ctx context.Context, req *LinkToken) (UseSignInLinkRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

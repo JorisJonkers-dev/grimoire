@@ -862,6 +862,48 @@ type CompendiumWeaponProperty struct {
 	Detail   pgtype.Text
 }
 
+type IdentityAccount struct {
+	ID           uuid.UUID
+	Subject      string
+	Username     string
+	Nickname     string
+	Email        string
+	PasswordHash pgtype.Text
+	Admin        bool
+	Disabled     bool
+	CreatedAt    time.Time
+}
+
+type IdentityAccountSession struct {
+	ID         uuid.UUID
+	AccountID  uuid.UUID
+	TokenHash  []byte
+	UserAgent  string
+	CreatedAt  time.Time
+	LastSeenAt time.Time
+	ExpiresAt  time.Time
+	RevokedAt  pgtype.Timestamptz
+}
+
+type IdentityInvite struct {
+	ID        uuid.UUID
+	TokenHash []byte
+	CreatedBy string
+	Admin     bool
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+	AccountID pgtype.UUID
+}
+
+type IdentitySignInLink struct {
+	TokenHash []byte
+	AccountID uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
 type OpsCompendiumImport struct {
 	ID           int64
 	SnapshotHash string

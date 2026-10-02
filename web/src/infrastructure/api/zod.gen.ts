@@ -34,6 +34,86 @@ export const zMember = z.object({
 });
 
 /**
+ * Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.
+ */
+export const zUsername = z.string().min(3).max(32).regex(/^[a-z0-9][a-z0-9_.-]{2,31}$/);
+
+/**
+ * A Grimoire Account.
+ */
+export const zAccount = z.object({
+    id: zId,
+    username: zUsername,
+    nickname: z.string().min(1).max(40),
+    email: z.email().max(254),
+    admin: z.boolean()
+});
+
+/**
+ * The token an invite or sign-in link carries.
+ */
+export const zLinkToken = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/)
+});
+
+/**
+ * What an invitee chooses for their Account, with the token its invite link carries.
+ */
+export const zAccountSetup = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    username: z.string().min(3).max(32),
+    nickname: z.string().min(1).max(40),
+    email: z.email().max(254),
+    password: z.string().min(10).max(200)
+});
+
+/**
+ * A Username and password.
+ */
+export const zSignInRequest = z.object({
+    username: z.string().min(1).max(32),
+    password: z.string().min(1).max(200)
+});
+
+/**
+ * Where to email a sign-in link.
+ */
+export const zSignInLinkRequest = z.object({
+    email: z.email().max(254)
+});
+
+/**
+ * A new password.
+ */
+export const zPasswordChange = z.object({
+    password: z.string().min(10).max(200)
+});
+
+/**
+ * How long an Account Invite stays open, and whether it sets up an Admin.
+ */
+export const zAccountInviteRequest = z.object({
+    hours: z.int().gte(1).lte(720),
+    admin: z.boolean().optional()
+});
+
+/**
+ * A new Account Invite and the token its link carries; the token is shown only now.
+ */
+export const zAccountInviteCreated = z.object({
+    token: z.string().min(20).max(64),
+    expiresAt: z.iso.datetime().max(40)
+});
+
+/**
+ * An open Account Invite.
+ */
+export const zAccountInvite = z.object({
+    expiresAt: z.iso.datetime().max(40),
+    admin: z.boolean()
+});
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export const zInitiativeMode = z.enum(['individual', 'side']);
@@ -3493,6 +3573,60 @@ export const zDeletePushSubscriptionResponse = z.void();
  * The service status.
  */
 export const zGetStatusResponse = zStatus;
+
+export const zCreateAccountInviteBody = zAccountInviteRequest;
+
+/**
+ * The invite, with the token its link carries.
+ */
+export const zCreateAccountInviteResponse = zAccountInviteCreated;
+
+export const zPreviewAccountInviteBody = zLinkToken;
+
+/**
+ * The open invite.
+ */
+export const zPreviewAccountInviteResponse = zAccountInvite;
+
+export const zAcceptAccountInviteBody = zAccountSetup;
+
+/**
+ * The new Account, signed in.
+ */
+export const zAcceptAccountInviteResponse = zAccount;
+
+export const zSignInBody = zSignInRequest;
+
+/**
+ * The Account, signed in.
+ */
+export const zSignInResponse = zAccount;
+
+/**
+ * Signed out.
+ */
+export const zSignOutResponse = z.void();
+
+export const zRequestSignInLinkBody = zSignInLinkRequest;
+
+export const zUseSignInLinkBody = zLinkToken;
+
+/**
+ * The Account, signed in.
+ */
+export const zUseSignInLinkResponse = zAccount;
+
+/**
+ * The Account.
+ */
+export const zGetAccountResponse = zAccount;
+
+export const zSetAccountPasswordBody = zPasswordChange;
+
+/**
+ * The password is set.
+ */
+export const zSetAccountPasswordResponse = z.void();
 
 /**
  * The process is alive.

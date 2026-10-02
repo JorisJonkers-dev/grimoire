@@ -13,6 +13,15 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// AcceptAccountInvite implements acceptAccountInvite operation.
+//
+// Creates the Account the invite was for and signs it in on this device.
+//
+// POST /api/v1/account-invites/accept
+func (UnimplementedHandler) AcceptAccountInvite(ctx context.Context, req *AccountSetup) (r AcceptAccountInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // AcceptInvite implements acceptInvite operation.
 //
 // Joins the caller to the Campaign as a Player. A Member keeps their role.
@@ -28,6 +37,16 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 //
 // DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (r ClearTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateAccountInvite implements createAccountInvite operation.
+//
+// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
+// another Admin.
+//
+// POST /api/v1/admin/account-invites
+func (UnimplementedHandler) CreateAccountInvite(ctx context.Context, req *AccountInviteRequest) (r CreateAccountInviteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -218,6 +237,15 @@ func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpc
 //
 // POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 func (UnimplementedHandler) EndSession(ctx context.Context, params EndSessionParams) (r EndSessionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAccount implements getAccount operation.
+//
+// The Account the caller is signed in as.
+//
+// GET /api/v1/account
+func (UnimplementedHandler) GetAccount(ctx context.Context) (r GetAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -640,6 +668,15 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewAccountInvite implements previewAccountInvite operation.
+//
+// Whether an invite link can still set up an Account; gone once used or expired.
+//
+// POST /api/v1/account-invites/preview
+func (UnimplementedHandler) PreviewAccountInvite(ctx context.Context, req *LinkToken) (r PreviewAccountInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewCharacter implements previewCharacter operation.
 //
 // Validates a build and returns the sheet it would make, without saving it.
@@ -682,6 +719,15 @@ func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest)
 //
 // DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMemberParams) (r RemoveMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RequestSignInLink implements requestSignInLink operation.
+//
+// For a forgotten password. Answers the same whether or not an Account has the email.
+//
+// POST /api/v1/sign-in-links
+func (UnimplementedHandler) RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (r RequestSignInLinkRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -783,6 +829,15 @@ func (UnimplementedHandler) SendLiveCommand(ctx context.Context, req *LiveComman
 	return r, ht.ErrNotImplemented
 }
 
+// SetAccountPassword implements setAccountPassword operation.
+//
+// Replaces the signed-in Account's password, for example after signing in with an emailed link.
+//
+// PUT /api/v1/account/password
+func (UnimplementedHandler) SetAccountPassword(ctx context.Context, req *PasswordChange) (r SetAccountPasswordRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SetDie implements setDie operation.
 //
 // The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
@@ -808,6 +863,24 @@ func (UnimplementedHandler) SetPortrait(ctx context.Context, req SetPortraitReq,
 //
 // PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (r SetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SignIn implements signIn operation.
+//
+// Signs the Account in on this device. Every failure answers the same.
+//
+// POST /api/v1/sign-in
+func (UnimplementedHandler) SignIn(ctx context.Context, req *SignInRequest) (r SignInRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SignOut implements signOut operation.
+//
+// Ends this device's session and clears its cookie.
+//
+// POST /api/v1/sign-out
+func (UnimplementedHandler) SignOut(ctx context.Context, params SignOutParams) (r SignOutRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -930,6 +1003,15 @@ func (UnimplementedHandler) UpdateShop(ctx context.Context, req *ShopInput, para
 //
 // POST /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (r UploadMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UseSignInLink implements useSignInLink operation.
+//
+// Signs the Account in on this device; a link works once, within 30 minutes.
+//
+// POST /api/v1/sign-in-links/use
+func (UnimplementedHandler) UseSignInLink(ctx context.Context, req *LinkToken) (r UseSignInLinkRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

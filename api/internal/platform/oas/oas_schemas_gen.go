@@ -284,6 +284,420 @@ func (s *AbilityLine) SetSaveProficient(val bool) {
 	s.SaveProficient = val
 }
 
+// AcceptAccountInviteCreatedHeaders wraps Account with response headers.
+type AcceptAccountInviteCreatedHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	SetCookie          OptString
+	Response           Account
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AcceptAccountInviteCreatedHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AcceptAccountInviteCreatedHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AcceptAccountInviteCreatedHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetSetCookie returns the value of SetCookie.
+func (s *AcceptAccountInviteCreatedHeaders) GetSetCookie() OptString {
+	return s.SetCookie
+}
+
+// GetResponse returns the value of Response.
+func (s *AcceptAccountInviteCreatedHeaders) GetResponse() Account {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AcceptAccountInviteCreatedHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AcceptAccountInviteCreatedHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AcceptAccountInviteCreatedHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetSetCookie sets the value of SetCookie.
+func (s *AcceptAccountInviteCreatedHeaders) SetSetCookie(val OptString) {
+	s.SetCookie = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AcceptAccountInviteCreatedHeaders) SetResponse(val Account) {
+	s.Response = val
+}
+
+func (*AcceptAccountInviteCreatedHeaders) acceptAccountInviteRes() {}
+func (*AcceptAccountInviteCreatedHeaders) signInRes()              {}
+func (*AcceptAccountInviteCreatedHeaders) useSignInLinkRes()       {}
+
+// A Grimoire Account.
+// Ref: #/components/schemas/Account
+type Account struct {
+	ID       ID       `json:"id"`
+	Username Username `json:"username"`
+	Nickname string   `json:"nickname"`
+	Email    string   `json:"email"`
+	Admin    bool     `json:"admin"`
+}
+
+// GetID returns the value of ID.
+func (s *Account) GetID() ID {
+	return s.ID
+}
+
+// GetUsername returns the value of Username.
+func (s *Account) GetUsername() Username {
+	return s.Username
+}
+
+// GetNickname returns the value of Nickname.
+func (s *Account) GetNickname() string {
+	return s.Nickname
+}
+
+// GetEmail returns the value of Email.
+func (s *Account) GetEmail() string {
+	return s.Email
+}
+
+// GetAdmin returns the value of Admin.
+func (s *Account) GetAdmin() bool {
+	return s.Admin
+}
+
+// SetID sets the value of ID.
+func (s *Account) SetID(val ID) {
+	s.ID = val
+}
+
+// SetUsername sets the value of Username.
+func (s *Account) SetUsername(val Username) {
+	s.Username = val
+}
+
+// SetNickname sets the value of Nickname.
+func (s *Account) SetNickname(val string) {
+	s.Nickname = val
+}
+
+// SetEmail sets the value of Email.
+func (s *Account) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetAdmin sets the value of Admin.
+func (s *Account) SetAdmin(val bool) {
+	s.Admin = val
+}
+
+// AccountHeaders wraps Account with response headers.
+type AccountHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Account
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AccountHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AccountHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AccountHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AccountHeaders) GetResponse() Account {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AccountHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AccountHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AccountHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AccountHeaders) SetResponse(val Account) {
+	s.Response = val
+}
+
+func (*AccountHeaders) getAccountRes() {}
+
+// An open Account Invite.
+// Ref: #/components/schemas/AccountInvite
+type AccountInvite struct {
+	ExpiresAt time.Time `json:"expiresAt"`
+	Admin     bool      `json:"admin"`
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *AccountInvite) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// GetAdmin returns the value of Admin.
+func (s *AccountInvite) GetAdmin() bool {
+	return s.Admin
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *AccountInvite) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+// SetAdmin sets the value of Admin.
+func (s *AccountInvite) SetAdmin(val bool) {
+	s.Admin = val
+}
+
+// A new Account Invite and the token its link carries; the token is shown only now.
+// Ref: #/components/schemas/AccountInviteCreated
+type AccountInviteCreated struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
+// GetToken returns the value of Token.
+func (s *AccountInviteCreated) GetToken() string {
+	return s.Token
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *AccountInviteCreated) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// SetToken sets the value of Token.
+func (s *AccountInviteCreated) SetToken(val string) {
+	s.Token = val
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *AccountInviteCreated) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+// AccountInviteCreatedHeaders wraps AccountInviteCreated with response headers.
+type AccountInviteCreatedHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AccountInviteCreated
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AccountInviteCreatedHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AccountInviteCreatedHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AccountInviteCreatedHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AccountInviteCreatedHeaders) GetResponse() AccountInviteCreated {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AccountInviteCreatedHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AccountInviteCreatedHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AccountInviteCreatedHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AccountInviteCreatedHeaders) SetResponse(val AccountInviteCreated) {
+	s.Response = val
+}
+
+func (*AccountInviteCreatedHeaders) createAccountInviteRes() {}
+
+// AccountInviteHeaders wraps AccountInvite with response headers.
+type AccountInviteHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           AccountInvite
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *AccountInviteHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *AccountInviteHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *AccountInviteHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *AccountInviteHeaders) GetResponse() AccountInvite {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *AccountInviteHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *AccountInviteHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *AccountInviteHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AccountInviteHeaders) SetResponse(val AccountInvite) {
+	s.Response = val
+}
+
+func (*AccountInviteHeaders) previewAccountInviteRes() {}
+
+// How long an Account Invite stays open, and whether it sets up an Admin.
+// Ref: #/components/schemas/AccountInviteRequest
+type AccountInviteRequest struct {
+	Hours int32   `json:"hours"`
+	Admin OptBool `json:"admin"`
+}
+
+// GetHours returns the value of Hours.
+func (s *AccountInviteRequest) GetHours() int32 {
+	return s.Hours
+}
+
+// GetAdmin returns the value of Admin.
+func (s *AccountInviteRequest) GetAdmin() OptBool {
+	return s.Admin
+}
+
+// SetHours sets the value of Hours.
+func (s *AccountInviteRequest) SetHours(val int32) {
+	s.Hours = val
+}
+
+// SetAdmin sets the value of Admin.
+func (s *AccountInviteRequest) SetAdmin(val OptBool) {
+	s.Admin = val
+}
+
+// What an invitee chooses for their Account, with the token its invite link carries.
+// Ref: #/components/schemas/AccountSetup
+type AccountSetup struct {
+	Token    string `json:"token"`
+	Username string `json:"username"`
+	Nickname string `json:"nickname"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// GetToken returns the value of Token.
+func (s *AccountSetup) GetToken() string {
+	return s.Token
+}
+
+// GetUsername returns the value of Username.
+func (s *AccountSetup) GetUsername() string {
+	return s.Username
+}
+
+// GetNickname returns the value of Nickname.
+func (s *AccountSetup) GetNickname() string {
+	return s.Nickname
+}
+
+// GetEmail returns the value of Email.
+func (s *AccountSetup) GetEmail() string {
+	return s.Email
+}
+
+// GetPassword returns the value of Password.
+func (s *AccountSetup) GetPassword() string {
+	return s.Password
+}
+
+// SetToken sets the value of Token.
+func (s *AccountSetup) SetToken(val string) {
+	s.Token = val
+}
+
+// SetUsername sets the value of Username.
+func (s *AccountSetup) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetNickname sets the value of Nickname.
+func (s *AccountSetup) SetNickname(val string) {
+	s.Nickname = val
+}
+
+// SetEmail sets the value of Email.
+func (s *AccountSetup) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetPassword sets the value of Password.
+func (s *AccountSetup) SetPassword(val string) {
+	s.Password = val
+}
+
 // One entry of the Action Log.
 // Ref: #/components/schemas/ActionEntry
 type ActionEntry struct {
@@ -6715,6 +7129,22 @@ func (s *InviteToken) GetToken() Token {
 
 // SetToken sets the value of Token.
 func (s *InviteToken) SetToken(val Token) {
+	s.Token = val
+}
+
+// The token an invite or sign-in link carries.
+// Ref: #/components/schemas/LinkToken
+type LinkToken struct {
+	Token string `json:"token"`
+}
+
+// GetToken returns the value of Token.
+func (s *LinkToken) GetToken() string {
+	return s.Token
+}
+
+// SetToken sets the value of Token.
+func (s *LinkToken) SetToken(val string) {
 	s.Token = val
 }
 
@@ -19666,6 +20096,22 @@ func (o OptTravelPace) Or(d TravelPace) TravelPace {
 	return d
 }
 
+// A new password.
+// Ref: #/components/schemas/PasswordChange
+type PasswordChange struct {
+	Password string `json:"password"`
+}
+
+// GetPassword returns the value of Password.
+func (s *PasswordChange) GetPassword() string {
+	return s.Password
+}
+
+// SetPassword sets the value of Password.
+func (s *PasswordChange) SetPassword(val string) {
+	s.Password = val
+}
+
 // One evening of play.
 // Ref: #/components/schemas/PlaySession
 type PlaySession struct {
@@ -19960,8 +20406,10 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 	s.Response = val
 }
 
+func (*ProblemStatusCodeWithHeaders) acceptAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
+func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
@@ -19983,6 +20431,7 @@ func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
@@ -20029,11 +20478,13 @@ func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
+func (*ProblemStatusCodeWithHeaders) requestSignInLinkRes()             {}
 func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterPoolRevisionRes()  {}
 func (*ProblemStatusCodeWithHeaders) restoreEncounterTableRevisionRes() {}
@@ -20044,9 +20495,12 @@ func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
+func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
+func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
@@ -20060,6 +20514,7 @@ func (*ProblemStatusCodeWithHeaders) updateNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
+func (*ProblemStatusCodeWithHeaders) useSignInLinkRes()                 {}
 
 // The VAPID public key devices subscribe with, base64url-encoded.
 // Ref: #/components/schemas/PushKey
@@ -20504,6 +20959,45 @@ func (s *RemoveMemberNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*RemoveMemberNoContent) removeMemberRes() {}
+
+// RequestSignInLinkAccepted is response for RequestSignInLink operation.
+type RequestSignInLinkAccepted struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RequestSignInLinkAccepted) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RequestSignInLinkAccepted) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RequestSignInLinkAccepted) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RequestSignInLinkAccepted) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RequestSignInLinkAccepted) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RequestSignInLinkAccepted) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*RequestSignInLinkAccepted) requestSignInLinkRes() {}
 
 // A spendable pool such as hit dice or spell slots.
 // Ref: #/components/schemas/ResourcePool
@@ -21470,6 +21964,45 @@ func (s *SessionActionOrigin) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// SetAccountPasswordNoContent is response for SetAccountPassword operation.
+type SetAccountPasswordNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SetAccountPasswordNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SetAccountPasswordNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SetAccountPasswordNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SetAccountPasswordNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SetAccountPasswordNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SetAccountPasswordNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SetAccountPasswordNoContent) setAccountPasswordRes() {}
 
 // SetPortraitNoContent is response for SetPortrait operation.
 type SetPortraitNoContent struct {
@@ -22482,6 +23015,99 @@ func (s *SightRequest) SetFrom(val HexCoord) {
 func (s *SightRequest) SetTo(val HexCoord) {
 	s.To = val
 }
+
+// Where to email a sign-in link.
+// Ref: #/components/schemas/SignInLinkRequest
+type SignInLinkRequest struct {
+	Email string `json:"email"`
+}
+
+// GetEmail returns the value of Email.
+func (s *SignInLinkRequest) GetEmail() string {
+	return s.Email
+}
+
+// SetEmail sets the value of Email.
+func (s *SignInLinkRequest) SetEmail(val string) {
+	s.Email = val
+}
+
+// A Username and password.
+// Ref: #/components/schemas/SignInRequest
+type SignInRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// GetUsername returns the value of Username.
+func (s *SignInRequest) GetUsername() string {
+	return s.Username
+}
+
+// GetPassword returns the value of Password.
+func (s *SignInRequest) GetPassword() string {
+	return s.Password
+}
+
+// SetUsername sets the value of Username.
+func (s *SignInRequest) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetPassword sets the value of Password.
+func (s *SignInRequest) SetPassword(val string) {
+	s.Password = val
+}
+
+// SignOutNoContent is response for SignOut operation.
+type SignOutNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	SetCookie          OptString
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SignOutNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SignOutNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SignOutNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetSetCookie returns the value of SetCookie.
+func (s *SignOutNoContent) GetSetCookie() OptString {
+	return s.SetCookie
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SignOutNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SignOutNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SignOutNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetSetCookie sets the value of SetCookie.
+func (s *SignOutNoContent) SetSetCookie(val OptString) {
+	s.SetCookie = val
+}
+
+func (*SignOutNoContent) signOutRes() {}
 
 // A skill and its ability.
 // Ref: #/components/schemas/SkillChoice
@@ -23734,6 +24360,8 @@ func (s UploadMapReq) Read(p []byte) (n int, err error) {
 	}
 	return s.Data.Read(p)
 }
+
+type Username string
 
 // Something that keeps a creature or object from being seen for what it is.
 // Ref: #/components/schemas/VisibilityQuality

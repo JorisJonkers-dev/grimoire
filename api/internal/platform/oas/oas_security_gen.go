@@ -37,6 +37,7 @@ func findAuthorization(h http.Header, prefix string) (string, bool) {
 var operationRolesForwardAuth = map[string][]string{
 	AcceptInviteOperation:                  []string{},
 	ClearTokenIconOperation:                []string{},
+	CreateAccountInviteOperation:           []string{},
 	CreateCampaignOperation:                []string{},
 	CreateCharacterOperation:               []string{},
 	CreateEncounterPoolOperation:           []string{},
@@ -58,6 +59,7 @@ var operationRolesForwardAuth = map[string][]string{
 	DeleteShopOperation:                    []string{},
 	DiffNpcRevisionsOperation:              []string{},
 	EndSessionOperation:                    []string{},
+	GetAccountOperation:                    []string{},
 	GetActionLogOperation:                  []string{},
 	GetAutomationCoverageOperation:         []string{},
 	GetBuilderOptionsOperation:             []string{},
@@ -117,6 +119,7 @@ var operationRolesForwardAuth = map[string][]string{
 	RevokeInviteOperation:                  []string{},
 	RollRestOperation:                      []string{},
 	SendLiveCommandOperation:               []string{},
+	SetAccountPasswordOperation:            []string{},
 	SetDieOperation:                        []string{},
 	SetPortraitOperation:                   []string{},
 	SetTokenIconOperation:                  []string{},

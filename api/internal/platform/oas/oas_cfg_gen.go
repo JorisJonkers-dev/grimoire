@@ -24,8 +24,10 @@ var regexMap = map[string]ogenregex.Regexp{
 	"^[0-9]+$":                    ogenregex.MustCompile("^[0-9]+$"),
 	"^[0-9dDkKhHlL+\\- ]+$":       ogenregex.MustCompile("^[0-9dDkKhHlL+\\- ]+$"),
 	"^[A-Za-z0-9_-]+$":            ogenregex.MustCompile("^[A-Za-z0-9_-]+$"),
+	"^[A-Za-z0-9_-]{20,64}$":      ogenregex.MustCompile("^[A-Za-z0-9_-]{20,64}$"),
 	"^[^\\s]+$":                   ogenregex.MustCompile("^[^\\s]+$"),
 	"^[a-z0-9]+(-[a-z0-9]+)*$":    ogenregex.MustCompile("^[a-z0-9]+(-[a-z0-9]+)*$"),
+	"^[a-z0-9][a-z0-9_.-]{2,31}$": ogenregex.MustCompile("^[a-z0-9][a-z0-9_.-]{2,31}$"),
 	"^[a-z][a-z0-9-]{0,39}$":      ogenregex.MustCompile("^[a-z][a-z0-9-]{0,39}$"),
 	"^https://":                   ogenregex.MustCompile("^https://"),
 }

@@ -3090,6 +3090,272 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/admin/account-invites:
+    post:
+      operationId: createAccountInvite
+      summary: Invite someone to set up an Account
+      description: An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountInviteRequest"
+      responses:
+        "201":
+          description: The invite, with the token its link carries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountInviteCreated"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account-invites/preview:
+    post:
+      operationId: previewAccountInvite
+      summary: Check an Account Invite
+      description: Whether an invite link can still set up an Account; gone once used or expired.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkToken"
+      responses:
+        "200":
+          description: The open invite.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountInvite"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account-invites/accept:
+    post:
+      operationId: acceptAccountInvite
+      summary: Set up an Account from an invite
+      description: Creates the Account the invite was for and signs it in on this device.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountSetup"
+      responses:
+        "201":
+          description: The new Account, signed in.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/sign-in:
+    post:
+      operationId: signIn
+      summary: Sign in with a Username and password
+      description: Signs the Account in on this device. Every failure answers the same.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
+      responses:
+        "200":
+          description: The Account, signed in.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/sign-out:
+    post:
+      operationId: signOut
+      summary: Sign out
+      description: Ends this device's session and clears its cookie.
+      tags: [Identity]
+      security: []
+      parameters:
+        - name: grimoire_session
+          in: cookie
+          required: false
+          description: The session to end.
+          schema: { type: string, maxLength: 64 }
+      responses:
+        "204":
+          description: Signed out.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/sign-in-links:
+    post:
+      operationId: requestSignInLink
+      summary: Email a sign-in link
+      description: For a forgotten password. Answers the same whether or not an Account has the email.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInLinkRequest"
+      responses:
+        "202":
+          description: A link is on its way if an Account has that email.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/sign-in-links/use:
+    post:
+      operationId: useSignInLink
+      summary: Sign in with an emailed link
+      description: Signs the Account in on this device; a link works once, within 30 minutes.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkToken"
+      responses:
+        "200":
+          description: The Account, signed in.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account:
+    get:
+      operationId: getAccount
+      summary: Get my Account
+      description: The Account the caller is signed in as.
+      tags: [Identity]
+      responses:
+        "200":
+          description: The Account.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/password:
+    put:
+      operationId: setAccountPassword
+      summary: Set my password
+      description: Replaces the signed-in Account's password, for example after signing in with an emailed link.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChange"
+      responses:
+        "204":
+          description: The password is set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -3260,6 +3526,9 @@ components:
       description: Restrict to one ruleset; omitted, the 2024 rules lead.
       schema: { $ref: "#/components/schemas/Ruleset" }
   headers:
+    SessionCookie:
+      description: The session cookie, HttpOnly and Secure; cleared on sign-out.
+      schema: { type: string, maxLength: 300 }
     ETag:
       description: Version of the compendium this response came from.
       schema: { type: string, maxLength: 100 }
@@ -3403,6 +3672,87 @@ components:
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
+    Account:
+      type: object
+      description: A Grimoire Account.
+      additionalProperties: false
+      required: [id, username, nickname, email, admin]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        username: { $ref: "#/components/schemas/Username" }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 254 }
+        admin: { type: boolean }
+    Username:
+      type: string
+      description: Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.
+      pattern: "^[a-z0-9][a-z0-9_.-]{2,31}$"
+      minLength: 3
+      maxLength: 32
+    LinkToken:
+      type: object
+      description: The token an invite or sign-in link carries.
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { type: string, pattern: "^[A-Za-z0-9_-]{20,64}$", minLength: 20, maxLength: 64 }
+    AccountSetup:
+      type: object
+      description: What an invitee chooses for their Account, with the token its invite link carries.
+      additionalProperties: false
+      required: [token, username, nickname, email, password]
+      properties:
+        token: { type: string, pattern: "^[A-Za-z0-9_-]{20,64}$", minLength: 20, maxLength: 64 }
+        username: { type: string, minLength: 3, maxLength: 32 }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, format: password, minLength: 10, maxLength: 200 }
+    SignInRequest:
+      type: object
+      description: A Username and password.
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 32 }
+        password: { type: string, format: password, minLength: 1, maxLength: 200 }
+    SignInLinkRequest:
+      type: object
+      description: Where to email a sign-in link.
+      additionalProperties: false
+      required: [email]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+    PasswordChange:
+      type: object
+      description: A new password.
+      additionalProperties: false
+      required: [password]
+      properties:
+        password: { type: string, format: password, minLength: 10, maxLength: 200 }
+    AccountInviteRequest:
+      type: object
+      description: How long an Account Invite stays open, and whether it sets up an Admin.
+      additionalProperties: false
+      required: [hours]
+      properties:
+        hours: { type: integer, format: int32, minimum: 1, maximum: 720 }
+        admin: { type: boolean }
+    AccountInviteCreated:
+      type: object
+      description: A new Account Invite and the token its link carries; the token is shown only now.
+      additionalProperties: false
+      required: [token, expiresAt]
+      properties:
+        token: { type: string, minLength: 20, maxLength: 64 }
+        expiresAt: { type: string, format: date-time, maxLength: 40 }
+    AccountInvite:
+      type: object
+      description: An open Account Invite.
+      additionalProperties: false
+      required: [expiresAt, admin]
+      properties:
+        expiresAt: { type: string, format: date-time, maxLength: 40 }
+        admin: { type: boolean }
     InitiativeMode:
       type: string
       description: How a fight rolls initiative, each Combatant for itself or one roll per side.

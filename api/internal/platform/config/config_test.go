@@ -17,7 +17,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Addr != ":8080" || c.RateLimit != 600 || c.AutoMigrate || c.DevSubject != "" {
+	if c.Addr != ":8080" || c.RateLimit != 600 || c.AutoMigrate || c.DevSubject != "" || !c.TrustForwardAuth || c.SMTP != nil || c.AdminSubjects != nil {
 		t.Fatalf("unexpected defaults: %+v", c)
 	}
 }
@@ -35,12 +35,27 @@ func TestLoadOverrides(t *testing.T) {
 		"GRIMOIRE_VAPID_PUBLIC_KEY":      "pub",
 		"GRIMOIRE_VAPID_PRIVATE_KEY":     "priv",
 		"GRIMOIRE_VAPID_CONTACT":         "mailto:dm@example.com",
+		"GRIMOIRE_TRUST_FORWARD_AUTH":    "false",
+		"GRIMOIRE_ADMIN_SUBJECTS":        " dev , root,,",
+		"GRIMOIRE_BASE_URL":              "https://grimoire.example",
+		"GRIMOIRE_SMTP_ADDR":             "smtp.example:587",
+		"GRIMOIRE_SMTP_FROM":             "grimoire@example.com",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" || c.OAuthIssuer != "https://auth.example" || *c.Push != (config.Push{PublicKey: "pub", PrivateKey: "priv", Contact: "mailto:dm@example.com"}) {
 		t.Fatalf("overrides not applied: %+v", c)
+	}
+	if c.TrustForwardAuth || len(c.AdminSubjects) != 2 || c.AdminSubjects[1] != "root" || c.BaseURL != "https://grimoire.example" || c.SMTP.Addr != "smtp.example:587" {
+		t.Fatalf("identity settings = %+v", c)
+	}
+}
+
+func TestLoadRejectsHalfAnSMTPSetup(t *testing.T) {
+	t.Parallel()
+	if _, err := config.Load(env(map[string]string{"GRIMOIRE_DATABASE_URL": "postgres://x", "GRIMOIRE_SMTP_ADDR": "smtp.example:587"})); !errors.Is(err, config.ErrIncompleteSMTP) {
+		t.Fatalf("err = %v", err)
 	}
 }
 

@@ -23,8 +23,11 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/open5e"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	identityapp "github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
+	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/push"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
@@ -124,6 +127,13 @@ func crossCheck(ctx context.Context, args []string) error {
 	return os.WriteFile(out, []byte(report.Markdown()), 0o600) //nolint:gosec // developer command writing where the developer points it
 }
 
+func mailer(cfg config.Config, logger *slog.Logger) identityapp.Mailer {
+	if s := cfg.SMTP; s != nil {
+		return mail.SMTP{Addr: s.Addr, Username: s.Username, Password: s.Password, From: s.From, Now: time.Now}
+	}
+	return mail.Log{Log: logger}
+}
+
 func blobs(cfg config.Config, logger *slog.Logger) campaignapp.Blobs {
 	if cfg.S3 != nil {
 		logger.Info("assets in S3", "endpoint", cfg.S3.Endpoint, "bucket", cfg.S3.Bucket)
@@ -196,9 +206,17 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		defer sender.Wait()
 		hub.Notify, notices = sender, sender
 	}
+	accounts := &identityapp.Service{
+		Repo: identitypg.New(store.Pool()), Mailer: mailer(cfg, logger), Passwords: identityapp.DefaultPasswords(), Now: time.Now,
+		Admins: map[string]bool{}, BaseURL: cfg.BaseURL,
+	}
+	for _, s := range cfg.AdminSubjects {
+		accounts.Admins[s] = true
+	}
 	handler, err := httpapi.New(httpapi.Options{
+		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
-			Push:    notices,
+			Push: notices, Accounts: accounts,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,
