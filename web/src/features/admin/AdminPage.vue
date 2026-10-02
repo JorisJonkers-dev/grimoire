@@ -27,6 +27,7 @@ function send() {
 <template>
   <main class="g-page">
     <h1>Admin</h1>
+    <RouterLink :to="{ name: 'admin-shared' }" data-testid="admin-shared-link">Shared Library requests</RouterLink>
     <p v-if="forbidden" role="alert" class="g-alert" data-testid="admin-forbidden">
       Only an Admin with two-step sign-in can open this page.
     </p>

@@ -168,6 +168,7 @@ type Querier interface {
 	CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error)
 	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	DecideRetrain(ctx context.Context, arg DecideRetrainParams) (int64, error)
+	DecideSharedSubmission(ctx context.Context, arg DecideSharedSubmissionParams) error
 	DeclineFriendRequest(ctx context.Context, arg DeclineFriendRequestParams) error
 	DeleteBlock(ctx context.Context, arg DeleteBlockParams) (int64, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
@@ -344,6 +345,7 @@ type Querier interface {
 	InsertSession(ctx context.Context, arg InsertSessionParams) (PlaySession, error)
 	InsertSessionAction(ctx context.Context, arg InsertSessionActionParams) (uuid.UUID, error)
 	InsertSettlementRevision(ctx context.Context, arg InsertSettlementRevisionParams) error
+	InsertSharedSubmission(ctx context.Context, arg InsertSharedSubmissionParams) error
 	InsertShopRevision(ctx context.Context, arg InsertShopRevisionParams) error
 	InsertShopRevisionStock(ctx context.Context, arg InsertShopRevisionStockParams) error
 	InsertSignInLink(ctx context.Context, arg InsertSignInLinkParams) error
@@ -506,6 +508,7 @@ type Querier interface {
 	PartyLevels(ctx context.Context, campaignID uuid.UUID) ([]int32, error)
 	PendingBetween(ctx context.Context, arg PendingBetweenParams) (uuid.UUID, error)
 	PendingRequest(ctx context.Context, id uuid.UUID) (PendingRequestRow, error)
+	PendingSharedSubmission(ctx context.Context, entryID uuid.UUID) (bool, error)
 	PinLibraryRevision(ctx context.Context, arg PinLibraryRevisionParams) error
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
@@ -635,6 +638,8 @@ type Querier interface {
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
 	SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error
+	SharedSubmission(ctx context.Context, id uuid.UUID) (LibrarySharedSubmission, error)
+	SharedSubmissions(ctx context.Context, submitterSubject pgtype.Text) ([]LibrarySharedSubmission, error)
 	// A class's features up to a level, each at the first level it is gained.
 	SheetClassFeatures(ctx context.Context, arg SheetClassFeaturesParams) ([]SheetClassFeaturesRow, error)
 	SheetSpeciesTraits(ctx context.Context, arg SheetSpeciesTraitsParams) ([]SheetSpeciesTraitsRow, error)

@@ -278,7 +278,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			NPCs:       &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			Library: &libraryapp.Service{
 				Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now,
-				Notices: proposalNotices{social: social}, Log: logger,
+				Notices: proposalNotices{social: social}, Log: logger, Admins: accounts,
 			},
 			Sessions: &playapp.Sessions{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,

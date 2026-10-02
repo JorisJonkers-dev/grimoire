@@ -37,7 +37,7 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 	campaign := uuid.UUID(camp.ID)
 	members := playpg.CampaignMembers{Store: campaignpg.New(pool)}
 	service := func(repo app.Repository) *app.Service {
-		return &app.Service{Repo: repo, Members: members, Now: time.Now}
+		return &app.Service{Repo: repo, Members: members, Now: time.Now, Admins: everyone{}}
 	}
 	base := service(pgstore.New(pool))
 	draft := domain.Draft{Kind: "npc", Name: "Odo", Fields: domain.Fields{"Mood": "cheery"}}
@@ -129,6 +129,25 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 			_, err = s.Review(ctx, dm, campaign, change.ID, app.Approve, "", nil)
 			return err
 		},
+		"shared": func(s *app.Service) error { _, err := s.Shared(ctx, "npc"); return err },
+		"share": func(s *app.Service) error {
+			if _, err := s.Share(ctx, dm, fresh(), "mine"); err != nil {
+				return err
+			}
+			_, err := s.Submissions(ctx, dm)
+			return err
+		},
+		"review share": func(s *app.Service) error {
+			x, err := base.Share(ctx, dm, fresh(), "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := s.AllSubmissions(ctx, dm); err != nil {
+				return err
+			}
+			_, err = s.ReviewSubmission(ctx, dm, x.ID, true, true, "own words", "thanks")
+			return err
+		},
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
@@ -140,3 +159,8 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 		})
 	}
 }
+
+// everyone is an Admin.
+type everyone struct{}
+
+func (everyone) IsAdmin(context.Context, string) bool { return true }

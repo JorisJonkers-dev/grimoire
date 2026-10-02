@@ -1,6 +1,6 @@
 -- name: InsertLibraryEntry :exec
-INSERT INTO library.entries (id, owner_subject, kind, name, fields, revision, created_at, updated_at)
-VALUES (@id, @owner_subject, @kind, @name, @fields, 1, @now, @now);
+INSERT INTO library.entries (id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared)
+VALUES (@id, @owner_subject, @kind, @name, @fields, 1, @now, @now, @shared);
 
 -- name: UpdateLibraryEntry :one
 UPDATE library.entries SET name = @name, fields = @fields, revision = revision + 1, updated_at = @now WHERE id = @id RETURNING revision;
@@ -10,10 +10,10 @@ INSERT INTO library.entry_revisions (entry_id, no, name, fields, author_subject,
 VALUES (@entry_id, @no, @name, @fields, @author_subject, @now);
 
 -- name: LibraryEntry :one
-SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at FROM library.entries WHERE id = @id;
+SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared FROM library.entries WHERE id = @id;
 
 -- name: LibraryEntries :many
-SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at FROM library.entries
+SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared FROM library.entries
 WHERE owner_subject = @owner_subject AND (sqlc.narg(kind)::text IS NULL OR kind = sqlc.narg(kind)::text)
 ORDER BY kind, lower(name), id;
 
@@ -55,7 +55,7 @@ WITH visible AS (
     SELECT ce.entry_id FROM library.collection_entries ce
     JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = @campaign_id
 )
-SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at,
+SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at, e.shared,
     l.pinned_revision, coalesce(l.override, '{}'::jsonb)::jsonb AS override, coalesce(l.direct, false)::boolean AS direct,
     r.name AS pinned_name, r.fields AS pinned_fields,
     ARRAY(SELECT c.name FROM library.collection_entries ce
@@ -134,3 +134,27 @@ SELECT @proposal_id, coalesce(max(no), 0) + 1, @action, @message, @by_name, @now
 
 -- name: ProposalReviews :many
 SELECT no, action, message, by_name, created_at FROM library.proposal_reviews WHERE proposal_id = @proposal_id ORDER BY no;
+
+-- name: InsertSharedSubmission :exec
+INSERT INTO library.shared_submissions (id, entry_id, revision, kind, name, fields, note, submitter_subject, status, created_at)
+VALUES (@id, @entry_id, @revision, @kind, @name, @fields, @note, @submitter_subject, 'pending', @now);
+
+-- name: DecideSharedSubmission :exec
+UPDATE library.shared_submissions SET status = @status, ip_clear = @ip_clear, ip_note = @ip_note, message = @message,
+    reviewer_subject = @reviewer_subject, shared_entry_id = sqlc.narg(shared_entry_id), decided_at = @now
+WHERE id = @id;
+
+-- name: SharedSubmission :one
+SELECT id, entry_id, revision, kind, name, fields, note, submitter_subject, status, ip_clear, ip_note, message, reviewer_subject,
+    shared_entry_id, created_at, decided_at
+FROM library.shared_submissions WHERE id = @id;
+
+-- name: SharedSubmissions :many
+SELECT id, entry_id, revision, kind, name, fields, note, submitter_subject, status, ip_clear, ip_note, message, reviewer_subject,
+    shared_entry_id, created_at, decided_at
+FROM library.shared_submissions
+WHERE sqlc.narg(submitter_subject)::text IS NULL OR submitter_subject = sqlc.narg(submitter_subject)::text
+ORDER BY status = 'pending' DESC, created_at DESC, id;
+
+-- name: PendingSharedSubmission :one
+SELECT EXISTS (SELECT 1 FROM library.shared_submissions WHERE entry_id = @entry_id AND status = 'pending');

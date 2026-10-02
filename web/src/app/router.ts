@@ -27,6 +27,8 @@ const LibraryPage = () => import('@/features/library/LibraryPage.vue')
 const LibraryEntryPage = () => import('@/features/library/LibraryEntryPage.vue')
 const CampaignLibraryPage = () => import('@/features/library/CampaignLibraryPage.vue')
 const ProposalsPage = () => import('@/features/library/ProposalsPage.vue')
+const SharedLibraryPage = () => import('@/features/library/SharedLibraryPage.vue')
+const SharedReviewPage = () => import('@/features/library/SharedReviewPage.vue')
 const ProposalPage = () => import('@/features/library/ProposalPage.vue')
 const NpcPage = () => import('@/features/npcs/NpcPage.vue')
 const EncountersPage = () => import('@/features/prep/EncountersPage.vue')
@@ -74,6 +76,8 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/proposals', name: 'proposals', component: ProposalsPage },
       { path: '/campaigns/:id/proposals/:proposalId', name: 'proposal', component: ProposalPage },
       { path: '/library', name: 'library', component: LibraryPage },
+      { path: '/shared-library', name: 'shared-library', component: SharedLibraryPage },
+      { path: '/admin/shared-library', name: 'admin-shared', component: SharedReviewPage },
       { path: '/library/:entryId', name: 'library-entry', component: LibraryEntryPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },

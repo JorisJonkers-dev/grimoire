@@ -138,7 +138,7 @@ describe('library entry page', () => {
           ? jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'keep it to 100 fields' }, 422)
           : { entry: hag, revisions: [], uses: [] },
     })
-    expect(refused.wrapper.get('[data-testid="entry-uses"]').text()).toContain('No Campaign links it yet.')
+    expect(refused.wrapper.get('[data-testid="entry-uses"]').text()).toContain('No Campaign of yours links it yet.')
     await refused.wrapper.get('[data-testid="entry-edit"]').trigger('submit')
     await flushPromises()
     expect(refused.wrapper.get('[data-testid="entry-edit"] [role="alert"]').text()).toBe('keep it to 100 fields')
@@ -269,5 +269,83 @@ describe('collections', () => {
     await wrapper.get('[data-testid="switch-Feywild"]').setValue(false)
     await flushPromises()
     expect(sent.filter((x) => x.method === 'PUT')).toEqual([{ method: 'PUT', path: `/api/v1/campaigns/${CAMP}/collections/${FEY}`, body: { on: false } }])
+  })
+})
+
+describe('shared library', () => {
+  const COPY = '0190c7a8-0000-7000-8000-0000000000c1'
+  const REQ = '0190c7a8-0000-7000-8000-0000000000c2'
+  const copy: LibraryEntry = { ...hag, id: COPY, shared: true, revision: 1 }
+  const request = {
+    id: REQ, entryId: HAG, revision: 2, kind: 'creature' as const, name: 'Bog Hag', fields: hag.fields, note: 'All mine', status: 'pending' as const,
+    ipNote: '', message: '', createdAt: at,
+  }
+
+  it('lists shared entries by kind', async () => {
+    const { wrapper } = await mountApp('/shared-library', { '/api/v1/shared-library': () => [copy] })
+    expect(wrapper.get('[data-testid="shared-list"]').text()).toContain('Bog Hag')
+    await wrapper.findAll('[role="tab"]').find((t) => t.text() === 'NPC')?.trigger('click')
+    expect(wrapper.get('[data-testid="shared-empty"]').text()).toBe('Nothing shared here yet.')
+    await expectAccessible(wrapper.element as Element)
+    const broken = await mountApp('/shared-library', { '/api/v1/shared-library': () => jsonResponse({ type: 'about:blank', title: 'x', status: 503 }, 503) })
+    expect(broken.wrapper.get('[data-testid="shared-error"]').text()).toContain('could not be opened')
+  })
+
+  it('shows a shared copy read-only, ready to link', async () => {
+    const { wrapper } = await mountApp(`/library/${COPY}`, {
+      '/api/v1/campaigns': () => ({ items: [{ id: OTHER, name: 'Second', ruleset: 'srd-2024', myRole: 'dm', memberCount: 1, createdAt: at }] }),
+      [`/api/v1/library/${COPY}`]: () => ({ entry: copy, revisions: [{ no: 1, name: 'Bog Hag', fields: hag.fields, createdAt: at }], uses: [] }),
+    })
+    expect(wrapper.get('[data-testid="entry-shared"]').text()).toContain('read-only copy')
+    expect(wrapper.get('[data-testid="entry-fields"]').text()).toContain('HP')
+    expect(wrapper.find('[data-testid="entry-edit"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="entry-share"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="entry-link"]').exists()).toBe(true)
+  })
+
+  it('asks the Admins to share one of the caller\'s entries', async () => {
+    const sent: Sent[] = []
+    const { wrapper } = await mountApp(`/library/${HAG}`, {
+      '/api/v1/campaigns': () => ({ items: [] }),
+      '/api/v1/shared-library/submissions': async (u, req) => {
+        await record(sent, u, req)
+        if (req.method === 'POST') return jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'this entry already waits for an Admin' }, 422)
+        return [{ ...request, status: 'declined', message: 'Rewrite it' }, { ...request, id: OTHER, entryId: ODO }]
+      },
+      [`/api/v1/library/${HAG}`]: () => ({ entry: hag, revisions: [], uses: [] }),
+    })
+    expect(wrapper.findAll('[data-testid="share-request"]').map((li) => li.text())).toEqual(['Revision 2 · Declined · Rewrite it'])
+    await wrapper.get('[data-testid="share-note"]').setValue('All mine')
+    await wrapper.get('[data-testid="share"]').trigger('click')
+    await flushPromises()
+    expect(sent.filter((x) => x.method === 'POST')).toEqual([{ method: 'POST', path: '/api/v1/shared-library/submissions', body: { entryId: HAG, note: 'All mine' } }])
+    expect(wrapper.get('[data-testid="entry-share"] [role="alert"]').text()).toBe('this entry already waits for an Admin')
+  })
+
+  it('lets an Admin share an entry only with the IP check, or decline it', async () => {
+    const sent: Sent[] = []
+    const { wrapper } = await mountApp('/admin/shared-library', {
+      '/api/v1/admin/shared-library': async (u, req) => {
+        await record(sent, u, req)
+        return [request, { ...request, id: OTHER, name: 'Odo', status: 'declined', ipClear: false, ipNote: 'Quotes a book' }]
+      },
+    })
+    const card = wrapper.get('[data-testid="request-Bog Hag"]')
+    expect(card.get('[data-testid="share-approve"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="request-Odo"] [data-testid="request-outcome"]').text()).toBe('IP check not passed: Quotes a book')
+    await expectAccessible(wrapper.element as Element)
+    await card.get('[data-testid="ip-clear"]').setValue(true)
+    await card.get('[data-testid="ip-note"]').setValue('Own words')
+    await card.get('[data-testid="review-message"]').setValue('Thanks')
+    await card.get('[data-testid="share-approve"]').trigger('click')
+    await flushPromises()
+    await card.get('[data-testid="share-decline"]').trigger('click')
+    await flushPromises()
+    expect(sent.filter((x) => x.method === 'POST')).toEqual([
+      { method: 'POST', path: `/api/v1/admin/shared-library/${REQ}/review`, body: { decision: 'approve', ipClear: true, ipNote: 'Own words', message: 'Thanks' } },
+      { method: 'POST', path: `/api/v1/admin/shared-library/${REQ}/review`, body: { decision: 'decline', ipClear: true, ipNote: 'Own words', message: 'Thanks' } },
+    ])
+    const refused = await mountApp('/admin/shared-library', { '/api/v1/admin/shared-library': () => jsonResponse({ type: 'about:blank', title: 'Forbidden', status: 403 }, 403) })
+    expect(refused.wrapper.get('[data-testid="shared-review-forbidden"]').text()).toContain('Only an Admin')
   })
 })

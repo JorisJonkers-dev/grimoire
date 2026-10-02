@@ -1166,6 +1166,7 @@ type LibraryEntry struct {
 	Revision     int32
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	Shared       bool
 }
 
 type LibraryEntryRevision struct {
@@ -1201,6 +1202,25 @@ type LibraryProposalReview struct {
 	Message    string
 	ByName     string
 	CreatedAt  time.Time
+}
+
+type LibrarySharedSubmission struct {
+	ID               uuid.UUID
+	EntryID          uuid.UUID
+	Revision         int32
+	Kind             string
+	Name             string
+	Fields           []byte
+	Note             string
+	SubmitterSubject string
+	Status           string
+	IpClear          pgtype.Bool
+	IpNote           string
+	Message          string
+	ReviewerSubject  pgtype.Text
+	SharedEntryID    pgtype.UUID
+	CreatedAt        time.Time
+	DecidedAt        pgtype.Timestamptz
 }
 
 type OpsCompendiumImport struct {

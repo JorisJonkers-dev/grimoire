@@ -63,7 +63,10 @@ func libraryStackWith(t *testing.T, bell libraryapp.Notifier) http.Handler {
 	}
 	t.Cleanup(store.Close)
 	repo := campaignpg.New(store.Pool())
-	lib := &libraryapp.Service{Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now, Notices: bell, Log: quiet}
+	lib := &libraryapp.Service{
+		Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now, Notices: bell, Log: quiet,
+		Admins: admins{"admin": true},
+	}
 	return campaignServer(t, app.NewService(repo), httpapi.LibraryService(lib))
 }
 
@@ -450,6 +453,86 @@ func TestLibraryRefusals(t *testing.T) {
 		if rec := call(h, c.method, c.path, c.who, c.body); rec.Code != c.want {
 			t.Errorf("%s: %d, want %d", c.name, rec.Code, c.want)
 		}
+	}
+}
+
+// admins are the subjects with Admin powers.
+type admins map[string]bool
+
+func (a admins) IsAdmin(_ context.Context, subject string) bool { return a[subject] }
+
+// A DM asks to share an entry; an Admin approves it only with the IP check, which puts a read-only copy
+// in the Shared Library that another DM links; a declined request keeps its IP check too.
+func TestSharedLibraryWithAdminReview(t *testing.T) {
+	t.Parallel()
+	h := libraryStack(t)
+	hag := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"creature","name":"Bog Hag","fields":[{"name":"HP","value":"52"}]}`))["id"].(string)
+	share := func(who, entry string) *httptest.ResponseRecorder {
+		return call(h, http.MethodPost, "/api/v1/shared-library/submissions", who, `{"entryId":"`+entry+`","note":"All my own words"}`)
+	}
+	if rec := share("player", hag); rec.Code != http.StatusNotFound {
+		t.Fatalf("sharing another account's entry: %d", rec.Code)
+	}
+	rec := share("dm", hag)
+	sub := decode(t, rec)
+	if rec.Code != http.StatusCreated || sub["status"] != "pending" || sub["revision"] != float64(1) || sub["ipClear"] != nil {
+		t.Fatalf("share: %d %v", rec.Code, sub)
+	}
+	if rec := share("dm", hag); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("sharing what already waits: %d", rec.Code)
+	}
+	if list := decodeList(t, call(h, http.MethodGet, "/api/v1/shared-library/submissions", "dm", "")); len(list) != 1 {
+		t.Fatalf("my requests = %v", list)
+	}
+	review := "/api/v1/admin/shared-library/" + sub["id"].(string) + "/review"
+	if rec := call(h, http.MethodGet, "/api/v1/admin/shared-library", "dm", ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("a DM lists the requests: %d", rec.Code)
+	}
+	if rec := call(h, http.MethodPost, review, "dm", `{"decision":"approve","ipClear":true}`); rec.Code != http.StatusForbidden {
+		t.Fatalf("a DM approves their own request: %d", rec.Code)
+	}
+	if list := decodeList(t, call(h, http.MethodGet, "/api/v1/admin/shared-library", "admin", "")); len(list) != 1 || list[0]["status"] != "pending" {
+		t.Fatalf("the Admin's queue = %v", list)
+	}
+	if rec := call(h, http.MethodPost, review, "admin", `{"decision":"approve","ipClear":false}`); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("approving without the IP check: %d", rec.Code)
+	}
+	call(h, http.MethodPut, "/api/v1/library/"+hag, "dm", `{"name":"Bog Hag","fields":[{"name":"HP","value":"99"}]}`)
+	rec = call(h, http.MethodPost, review, "admin", `{"decision":"approve","ipClear":true,"ipNote":"No non-SRD text","message":"Thanks"}`)
+	done := decode(t, rec)
+	if rec.Code != http.StatusOK || done["status"] != "approved" || done["ipClear"] != true || done["ipNote"] != "No non-SRD text" || done["sharedEntryId"] == nil || done["decidedAt"] == nil {
+		t.Fatalf("approve: %d %v", rec.Code, done)
+	}
+	if rec := call(h, http.MethodPost, review, "admin", `{"decision":"decline","ipClear":false}`); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("reviewing twice: %d", rec.Code)
+	}
+	shared := decodeList(t, call(h, http.MethodGet, "/api/v1/shared-library?kind=creature", "player", ""))
+	if len(shared) != 1 || shared[0]["shared"] != true || fieldsOf(t, shared[0]["fields"])["HP"] != "52" || shared[0]["id"] == hag {
+		t.Fatalf("the Shared Library holds a copy of the submitted Revision = %v", shared)
+	}
+	copied := shared[0]["id"].(string)
+
+	own := decode(t, call(h, http.MethodPost, "/api/v1/campaigns", "player", `{"name":"Elsewhere","displayName":"Tamsin"}`))["id"].(string)
+	if rec := call(h, http.MethodPost, "/api/v1/campaigns/"+own+"/library", "player", `{"entryId":"`+copied+`"}`); rec.Code != http.StatusOK {
+		t.Fatalf("another DM links the shared copy: %d %s", rec.Code, rec.Body.String())
+	}
+	if d := decode(t, call(h, http.MethodGet, "/api/v1/library/"+copied, "player", "")); len(d["uses"].([]any)) != 0 || d["entry"].(map[string]any)["shared"] != true {
+		t.Fatalf("a shared copy reads without where others use it = %v", d)
+	}
+	for _, who := range []string{"player", "dm", "admin"} {
+		if rec := call(h, http.MethodPut, "/api/v1/library/"+copied, who, `{"name":"Mine now","fields":[]}`); rec.Code != http.StatusNotFound {
+			t.Fatalf("%s edits the shared copy: %d", who, rec.Code)
+		}
+	}
+
+	odo := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"npc","name":"Odo","fields":[]}`))["id"].(string)
+	second := decode(t, share("dm", odo))["id"].(string)
+	rec = call(h, http.MethodPost, "/api/v1/admin/shared-library/"+second+"/review", "admin", `{"decision":"decline","ipClear":false,"ipNote":"Quotes a published book","message":"Rewrite it in your own words"}`)
+	if no := decode(t, rec); rec.Code != http.StatusOK || no["status"] != "declined" || no["ipClear"] != false || no["sharedEntryId"] != nil {
+		t.Fatalf("decline: %d %v", rec.Code, no)
+	}
+	if rec := call(h, http.MethodPost, "/api/v1/admin/shared-library/"+uuid.NewString()+"/review", "admin", `{"decision":"decline","ipClear":false}`); rec.Code != http.StatusNotFound {
+		t.Fatalf("no such request: %d", rec.Code)
 	}
 }
 

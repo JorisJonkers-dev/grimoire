@@ -59,7 +59,7 @@ func decode(raw []byte) domain.Fields {
 
 func entryOf(r queries.LibraryEntry) domain.Entry {
 	return domain.Entry{
-		ID: r.ID, Owner: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields), Revision: int(r.Revision),
+		ID: r.ID, Owner: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields), Revision: int(r.Revision), Shared: r.Shared,
 		CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
 	}
 }
@@ -67,7 +67,7 @@ func entryOf(r queries.LibraryEntry) domain.Entry {
 // InsertEntry adds an entry.
 func (s *Store) InsertEntry(ctx context.Context, e domain.Entry) error {
 	return s.q.InsertLibraryEntry(ctx, queries.InsertLibraryEntryParams{
-		ID: e.ID, OwnerSubject: e.Owner, Kind: e.Kind, Name: e.Name, Fields: encode(e.Fields), Now: e.CreatedAt,
+		ID: e.ID, OwnerSubject: e.Owner, Kind: e.Kind, Name: e.Name, Fields: encode(e.Fields), Now: e.CreatedAt, Shared: e.Shared,
 	})
 }
 
@@ -172,6 +172,7 @@ func (s *Store) Linked(ctx context.Context, campaign uuid.UUID, entry *uuid.UUID
 	for _, r := range rows {
 		e := entryOf(queries.LibraryEntry{
 			ID: r.ID, OwnerSubject: r.OwnerSubject, Kind: r.Kind, Name: r.Name, Fields: r.Fields, Revision: r.Revision, CreatedAt: r.CreatedAt, UpdatedAt: r.UpdatedAt,
+			Shared: r.Shared,
 		})
 		l := domain.Linked{Entry: e, Pinned: pinned(r.PinnedRevision), Base: e.Fields, BaseName: e.Name, Override: decode(r.Override), Direct: r.Direct, Via: r.Via}
 		if l.Pinned != nil {
@@ -330,4 +331,66 @@ func (s *Store) Reviews(ctx context.Context, proposal uuid.UUID) ([]domain.Revie
 		out = append(out, domain.Review{No: int(r.No), Action: r.Action, Message: r.Message, By: r.ByName, At: r.CreatedAt})
 	}
 	return out, err
+}
+
+// InsertSubmission records a DM's request to share an entry.
+func (s *Store) InsertSubmission(ctx context.Context, x domain.Submission) error {
+	return s.q.InsertSharedSubmission(ctx, queries.InsertSharedSubmissionParams{
+		ID: x.ID, EntryID: x.Entry, Revision: int32(x.Revision), Kind: x.Draft.Kind, Name: x.Draft.Name, Fields: encode(x.Draft.Fields), //nolint:gosec // revision numbers are small
+		Note: x.Note, SubmitterSubject: x.Submitter, Now: x.CreatedAt,
+	})
+}
+
+// DecideSubmission records an Admin's review.
+func (s *Store) DecideSubmission(ctx context.Context, x domain.Submission) error {
+	p := queries.DecideSharedSubmissionParams{
+		ID: x.ID, Status: x.Status, IpNote: x.IPNote, Message: x.Message, ReviewerSubject: pgtype.Text{String: x.Reviewer, Valid: true},
+		SharedEntryID: optUUID(x.Shared),
+	}
+	if x.IPClear != nil {
+		p.IpClear = pgtype.Bool{Bool: *x.IPClear, Valid: true}
+	}
+	if x.DecidedAt != nil {
+		p.Now = pgtype.Timestamptz{Time: *x.DecidedAt, Valid: true}
+	}
+	return s.q.DecideSharedSubmission(ctx, p)
+}
+
+func submissionOf(r queries.LibrarySharedSubmission) domain.Submission {
+	x := domain.Submission{
+		ID: r.ID, Entry: r.EntryID, Revision: int(r.Revision), Draft: domain.Draft{Kind: r.Kind, Name: r.Name, Fields: decode(r.Fields)},
+		Note: r.Note, Submitter: r.SubmitterSubject, Status: r.Status, IPNote: r.IpNote, Message: r.Message, Reviewer: r.ReviewerSubject.String,
+		Shared: uuidOf(r.SharedEntryID), CreatedAt: r.CreatedAt,
+	}
+	if r.IpClear.Valid {
+		x.IPClear = &r.IpClear.Bool
+	}
+	if r.DecidedAt.Valid {
+		x.DecidedAt = &r.DecidedAt.Time
+	}
+	return x
+}
+
+// Submission reads one request to share.
+func (s *Store) Submission(ctx context.Context, id uuid.UUID) (domain.Submission, error) {
+	r, err := s.q.SharedSubmission(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Submission{}, apperr.ErrNotFound
+	}
+	return submissionOf(r), err
+}
+
+// Submissions lists requests to share, pending first; only one submitter's when submitter is set.
+func (s *Store) Submissions(ctx context.Context, submitter string) ([]domain.Submission, error) {
+	rows, err := s.q.SharedSubmissions(ctx, pgtype.Text{String: submitter, Valid: submitter != ""})
+	out := make([]domain.Submission, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, submissionOf(r))
+	}
+	return out, err
+}
+
+// PendingSubmission reports whether an entry already waits for an Admin.
+func (s *Store) PendingSubmission(ctx context.Context, entry uuid.UUID) (bool, error) {
+	return s.q.PendingSharedSubmission(ctx, entry)
 }

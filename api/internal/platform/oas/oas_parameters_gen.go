@@ -10274,6 +10274,86 @@ func decodeListSettlementsParams(args [1]string, argsEscaped bool, r *http.Reque
 	return params, nil
 }
 
+// ListSharedEntriesParams is parameters of listSharedEntries operation.
+type ListSharedEntriesParams struct {
+	// Only entries of this kind.
+	Kind OptLibraryKind `json:",omitempty,omitzero"`
+}
+
+func unpackListSharedEntriesParams(packed middleware.Parameters) (params ListSharedEntriesParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "kind",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Kind = v.(OptLibraryKind)
+		}
+	}
+	return params
+}
+
+func decodeListSharedEntriesParams(args [0]string, argsEscaped bool, r *http.Request) (params ListSharedEntriesParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: kind.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "kind",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotKindVal LibraryKind
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotKindVal = LibraryKind(c)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Kind.SetTo(paramsDotKindVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Kind.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "kind",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ListShopRevisionsParams is parameters of listShopRevisions operation.
 type ListShopRevisionsParams struct {
 	// Campaign id.
@@ -14174,6 +14254,79 @@ func decodeReviewProposalParams(args [2]string, argsEscaped bool, r *http.Reques
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "proposalId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ReviewSharedSubmissionParams is parameters of reviewSharedSubmission operation.
+type ReviewSharedSubmissionParams struct {
+	// Shared Library request id.
+	SubmissionId ID
+}
+
+func unpackReviewSharedSubmissionParams(packed middleware.Parameters) (params ReviewSharedSubmissionParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "submissionId",
+			In:   "path",
+		}
+		params.SubmissionId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeReviewSharedSubmissionParams(args [1]string, argsEscaped bool, r *http.Request) (params ReviewSharedSubmissionParams, _ error) {
+	// Decode path: submissionId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "submissionId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotSubmissionIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotSubmissionIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.SubmissionId = ID(paramsDotSubmissionIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "submissionId",
 			In:   "path",
 			Err:  err,
 		}

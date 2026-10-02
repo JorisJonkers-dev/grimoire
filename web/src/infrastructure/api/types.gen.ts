@@ -2532,6 +2532,10 @@ export type LibraryEntry = {
     name: string;
     fields: LibraryFields;
     revision: number;
+    /**
+     * A read-only copy in the Shared Library.
+     */
+    shared?: boolean;
     createdAt: string;
     updatedAt: string;
 };
@@ -2732,6 +2736,47 @@ export type ProposalReviewInput = {
     message?: string;
     name?: string;
     fields?: LibraryFields;
+};
+
+/**
+ * A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is the Admin's check that it carries no non-SRD text, absent until reviewed.
+ */
+export type SharedSubmission = {
+    id: Id;
+    entryId: Id;
+    revision: number;
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    note: string;
+    status: 'pending' | 'approved' | 'declined';
+    ipClear?: boolean;
+    ipNote: string;
+    message: string;
+    sharedEntryId?: Id;
+    createdAt: string;
+    decidedAt?: string;
+};
+
+/**
+ * The entry to share, with a note for the Admins.
+ */
+export type ShareInput = {
+    entryId: Id;
+    note?: string;
+};
+
+/**
+ * An Admin's decision on a request to share, with the IP check.
+ */
+export type SharedReviewInput = {
+    decision: 'approve' | 'decline';
+    /**
+     * The entry carries no non-SRD text.
+     */
+    ipClear: boolean;
+    ipNote?: string;
+    message?: string;
 };
 
 /**
@@ -3711,6 +3756,11 @@ export type CollectionId = Id;
  * Proposal id.
  */
 export type ProposalId = Id;
+
+/**
+ * Shared Library request id.
+ */
+export type SubmissionId = Id;
 
 /**
  * Library entry id.
@@ -8690,6 +8740,161 @@ export type ReviewProposalResponses = {
 };
 
 export type ReviewProposalResponse = ReviewProposalResponses[keyof ReviewProposalResponses];
+
+export type ListSharedEntriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only entries of this kind.
+         */
+        kind?: LibraryKind;
+    };
+    url: '/api/v1/shared-library';
+};
+
+export type ListSharedEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSharedEntriesError = ListSharedEntriesErrors[keyof ListSharedEntriesErrors];
+
+export type ListSharedEntriesResponses = {
+    /**
+     * The shared entries.
+     */
+    200: Array<LibraryEntry>;
+};
+
+export type ListSharedEntriesResponse = ListSharedEntriesResponses[keyof ListSharedEntriesResponses];
+
+export type ListMySubmissionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared-library/submissions';
+};
+
+export type ListMySubmissionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMySubmissionsError = ListMySubmissionsErrors[keyof ListMySubmissionsErrors];
+
+export type ListMySubmissionsResponses = {
+    /**
+     * The requests.
+     */
+    200: Array<SharedSubmission>;
+};
+
+export type ListMySubmissionsResponse = ListMySubmissionsResponses[keyof ListMySubmissionsResponses];
+
+export type ShareLibraryEntryData = {
+    body: ShareInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/shared-library/submissions';
+};
+
+export type ShareLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ShareLibraryEntryError = ShareLibraryEntryErrors[keyof ShareLibraryEntryErrors];
+
+export type ShareLibraryEntryResponses = {
+    /**
+     * The request.
+     */
+    201: SharedSubmission;
+};
+
+export type ShareLibraryEntryResponse = ShareLibraryEntryResponses[keyof ShareLibraryEntryResponses];
+
+export type ListSharedSubmissionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/shared-library';
+};
+
+export type ListSharedSubmissionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSharedSubmissionsError = ListSharedSubmissionsErrors[keyof ListSharedSubmissionsErrors];
+
+export type ListSharedSubmissionsResponses = {
+    /**
+     * The requests.
+     */
+    200: Array<SharedSubmission>;
+};
+
+export type ListSharedSubmissionsResponse = ListSharedSubmissionsResponses[keyof ListSharedSubmissionsResponses];
+
+export type ReviewSharedSubmissionData = {
+    body: SharedReviewInput;
+    path: {
+        /**
+         * Shared Library request id.
+         */
+        submissionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/shared-library/{submissionId}/review';
+};
+
+export type ReviewSharedSubmissionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReviewSharedSubmissionError = ReviewSharedSubmissionErrors[keyof ReviewSharedSubmissionErrors];
+
+export type ReviewSharedSubmissionResponses = {
+    /**
+     * The request.
+     */
+    200: SharedSubmission;
+};
+
+export type ReviewSharedSubmissionResponse = ReviewSharedSubmissionResponses[keyof ReviewSharedSubmissionResponses];
 
 export type GetMeData = {
     body?: never;

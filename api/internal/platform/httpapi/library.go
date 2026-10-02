@@ -37,6 +37,11 @@ type LibraryService interface {
 	Proposal(ctx context.Context, c caller.Caller, campaign, id uuid.UUID) (domain.ProposalDetail, error)
 	Resubmit(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, d domain.Draft, note string) (domain.ProposalDetail, error)
 	Review(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, action, message string, edit *domain.Draft) (domain.ProposalDetail, error)
+	Shared(ctx context.Context, kind string) ([]domain.Entry, error)
+	Share(ctx context.Context, c caller.Caller, entry uuid.UUID, note string) (domain.Submission, error)
+	Submissions(ctx context.Context, c caller.Caller) ([]domain.Submission, error)
+	AllSubmissions(ctx context.Context, c caller.Caller) ([]domain.Submission, error)
+	ReviewSubmission(ctx context.Context, c caller.Caller, id uuid.UUID, approve, ipClear bool, ipNote, message string) (domain.Submission, error)
 }
 
 var _ LibraryService = (*app.Service)(nil)
@@ -82,8 +87,15 @@ func optRevision(n *int) oas.OptInt32 {
 func libraryEntryOut(e domain.Entry) oas.LibraryEntry {
 	return oas.LibraryEntry{
 		ID: oas.ID(e.ID), Kind: oas.LibraryKind(e.Kind), Name: e.Name, Fields: fieldsOut(e.Fields), Revision: int32(e.Revision), //nolint:gosec // revision numbers are small
-		CreatedAt: e.CreatedAt.UTC(), UpdatedAt: e.UpdatedAt.UTC(),
+		CreatedAt: e.CreatedAt.UTC(), UpdatedAt: e.UpdatedAt.UTC(), Shared: optShared(e.Shared),
 	}
+}
+
+func optShared(shared bool) oas.OptBool {
+	if !shared {
+		return oas.OptBool{}
+	}
+	return oas.NewOptBool(true)
 }
 
 func libraryDetailOut(d domain.Detail) *oas.LibraryEntryDetailHeaders {
@@ -430,4 +442,87 @@ func (h *Handler) ReviewProposal(ctx context.Context, req *oas.ProposalReviewInp
 		return bad, nil
 	}
 	return proposalDetailOut(d), nil
+}
+
+func submissionOut(x domain.Submission) oas.SharedSubmission {
+	out := oas.SharedSubmission{
+		ID: oas.ID(x.ID), EntryId: oas.ID(x.Entry), Revision: int32(x.Revision), Kind: oas.LibraryKind(x.Draft.Kind), Name: x.Draft.Name, //nolint:gosec // revision numbers are small
+		Fields: fieldsOut(x.Draft.Fields), Note: x.Note, Status: oas.SharedSubmissionStatus(x.Status), IpNote: x.IPNote, Message: x.Message,
+		SharedEntryId: optID(x.Shared), CreatedAt: x.CreatedAt.UTC(),
+	}
+	if x.IPClear != nil {
+		out.IpClear = oas.NewOptBool(*x.IPClear)
+	}
+	if x.DecidedAt != nil {
+		out.DecidedAt = oas.NewOptDateTime(x.DecidedAt.UTC())
+	}
+	return out
+}
+
+func submissionsOut(list []domain.Submission) []oas.SharedSubmission {
+	out := make([]oas.SharedSubmission, 0, len(list))
+	for _, x := range list {
+		out = append(out, submissionOut(x))
+	}
+	return out
+}
+
+// ListSharedEntries lists the Shared Library.
+func (h *Handler) ListSharedEntries(ctx context.Context, p oas.ListSharedEntriesParams) (oas.ListSharedEntriesRes, error) {
+	list, bad := libraryCall(ctx, h, "list shared", func(caller.Caller) ([]domain.Entry, error) {
+		return h.Library.Shared(ctx, string(p.Kind.Or("")))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	out := make([]oas.LibraryEntry, 0, len(list))
+	for _, e := range list {
+		out = append(out, libraryEntryOut(e))
+	}
+	return &oas.ListSharedEntriesOKHeaders{Response: out}, nil
+}
+
+// ListMySubmissions lists the caller's requests to share.
+func (h *Handler) ListMySubmissions(ctx context.Context) (oas.ListMySubmissionsRes, error) {
+	list, bad := libraryCall(ctx, h, "list my submissions", func(c caller.Caller) ([]domain.Submission, error) {
+		return h.Library.Submissions(ctx, c)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.ListMySubmissionsOKHeaders{Response: submissionsOut(list)}, nil
+}
+
+// ShareLibraryEntry asks the Admins to share an entry.
+func (h *Handler) ShareLibraryEntry(ctx context.Context, req *oas.ShareInput) (oas.ShareLibraryEntryRes, error) {
+	x, bad := libraryCall(ctx, h, "share library entry", func(c caller.Caller) (domain.Submission, error) {
+		return h.Library.Share(ctx, c, uuid.UUID(req.EntryId), req.Note.Or(""))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.SharedSubmissionHeaders{Response: submissionOut(x)}, nil
+}
+
+// ListSharedSubmissions lists every request to share, for an Admin.
+func (h *Handler) ListSharedSubmissions(ctx context.Context) (oas.ListSharedSubmissionsRes, error) {
+	list, bad := libraryCall(ctx, h, "list submissions", func(c caller.Caller) ([]domain.Submission, error) {
+		return h.Library.AllSubmissions(ctx, c)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.ListSharedSubmissionsOKHeaders{Response: submissionsOut(list)}, nil
+}
+
+// ReviewSharedSubmission decides a request to share, for an Admin.
+func (h *Handler) ReviewSharedSubmission(ctx context.Context, req *oas.SharedReviewInput, p oas.ReviewSharedSubmissionParams) (oas.ReviewSharedSubmissionRes, error) {
+	x, bad := libraryCall(ctx, h, "review submission", func(c caller.Caller) (domain.Submission, error) {
+		approve := req.Decision == oas.SharedReviewInputDecisionApprove
+		return h.Library.ReviewSubmission(ctx, c, uuid.UUID(p.SubmissionId), approve, req.IpClear, req.IpNote.Or(""), req.Message.Or(""))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.SharedSubmissionHeaders{Response: submissionOut(x)}, nil
 }

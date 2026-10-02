@@ -50,6 +50,12 @@ type Repository interface {
 	Proposals(ctx context.Context, campaign uuid.UUID, author string) ([]domain.Proposal, error)
 	InsertReview(ctx context.Context, proposal uuid.UUID, r domain.Review) error
 	Reviews(ctx context.Context, proposal uuid.UUID) ([]domain.Review, error)
+	InsertSubmission(ctx context.Context, x domain.Submission) error
+	DecideSubmission(ctx context.Context, x domain.Submission) error
+	Submission(ctx context.Context, id uuid.UUID) (domain.Submission, error)
+	// Submissions lists requests to share, pending first; only one submitter's when submitter is set.
+	Submissions(ctx context.Context, submitter string) ([]domain.Submission, error)
+	PendingSubmission(ctx context.Context, entry uuid.UUID) (bool, error)
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
@@ -67,6 +73,13 @@ type Service struct {
 	// Notices rings bells about Proposals, and Log records a bell that failed; nil Notices rings none.
 	Notices Notifier
 	Log     *slog.Logger
+	// Admins says who reviews the Shared Library.
+	Admins Admins
+}
+
+// Admins tells Admins apart.
+type Admins interface {
+	IsAdmin(ctx context.Context, subject string) bool
 }
 
 // Entries lists the caller's entries, of one kind when kind is set.
@@ -100,14 +113,24 @@ func (s *Service) owned(ctx context.Context, c caller.Caller, id uuid.UUID) (dom
 	return e, err
 }
 
-// Get reads one of the caller's entries with its Revisions and the Campaigns it is linked into.
+// linkable reads an entry the caller may link: one of their own, or a Shared Library copy.
+func (s *Service) linkable(ctx context.Context, c caller.Caller, id uuid.UUID) (domain.Entry, error) {
+	e, err := s.Repo.Entry(ctx, id)
+	if err == nil && e.Owner != c.Subject && !e.Shared {
+		return domain.Entry{}, apperr.ErrNotFound
+	}
+	return e, err
+}
+
+// Get reads one of the caller's entries with its Revisions and the Campaigns it is linked into, or a
+// Shared Library copy with its Revisions; where others use a shared copy is theirs to know.
 func (s *Service) Get(ctx context.Context, c caller.Caller, id uuid.UUID) (domain.Detail, error) {
-	e, err := s.owned(ctx, c, id)
+	e, err := s.linkable(ctx, c, id)
 	if err != nil {
 		return domain.Detail{}, err
 	}
-	d := domain.Detail{Entry: e}
-	if d.Revisions, err = s.Repo.Revisions(ctx, id); err != nil {
+	d := domain.Detail{Entry: e, Uses: []domain.Use{}}
+	if d.Revisions, err = s.Repo.Revisions(ctx, id); err != nil || e.Shared {
 		return d, err
 	}
 	d.Uses, err = s.Repo.Uses(ctx, id)
@@ -168,12 +191,13 @@ func (s *Service) one(ctx context.Context, campaign, entry uuid.UUID) (domain.Li
 	return l[0], nil
 }
 
-// Link links one of the caller's entries into a Campaign they run; linking it twice changes nothing.
+// Link links one of the caller's entries, or a Shared Library copy, into a Campaign they run; linking it
+// twice changes nothing.
 func (s *Service) Link(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) (domain.Linked, error) {
 	if err := s.dm(ctx, c, campaign); err != nil {
 		return domain.Linked{}, err
 	}
-	if _, err := s.owned(ctx, c, entry); err != nil {
+	if _, err := s.linkable(ctx, c, entry); err != nil {
 		return domain.Linked{}, err
 	}
 	if err := s.Repo.Link(ctx, campaign, entry, s.Now()); err != nil {

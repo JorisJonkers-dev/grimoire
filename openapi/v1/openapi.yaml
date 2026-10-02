@@ -4309,6 +4309,158 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/shared-library:
+    get:
+      operationId: listSharedEntries
+      x-ogen-operation-group: Read
+      summary: List the Shared Library
+      description: "Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check."
+      tags: [Library]
+      parameters:
+        - name: kind
+          in: query
+          description: Only entries of this kind.
+          schema: { $ref: "#/components/schemas/LibraryKind" }
+      responses:
+        "200":
+          description: The shared entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/shared-library/submissions:
+    get:
+      operationId: listMySubmissions
+      x-ogen-operation-group: Read
+      summary: List my requests to share
+      description: "The caller's requests to put entries in the Shared Library, pending first."
+      tags: [Library]
+      responses:
+        "200":
+          description: The requests.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: shareLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Ask to share an entry
+      description: "Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShareInput"
+      responses:
+        "201":
+          description: The request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/shared-library:
+    get:
+      operationId: listSharedSubmissions
+      x-ogen-operation-group: Read
+      summary: List requests to share
+      description: "Every request to put an entry in the Shared Library, pending first. Admins only."
+      tags: [Library]
+      responses:
+        "200":
+          description: The requests.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/shared-library/{submissionId}/review:
+    post:
+      operationId: reviewSharedSubmission
+      x-ogen-operation-group: Account
+      summary: Review a request to share
+      description: "Approves or declines a request with the IP check recorded either way; approval needs the Admin's check that the entry carries no non-SRD text and puts a read-only copy in the Shared Library. Admins only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/SubmissionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SharedReviewInput"
+      responses:
+        "200":
+          description: The request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SharedSubmission"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -6476,6 +6628,12 @@ components:
       in: path
       required: true
       description: Proposal id.
+      schema: { $ref: "#/components/schemas/Id" }
+    SubmissionId:
+      name: submissionId
+      in: path
+      required: true
+      description: Shared Library request id.
       schema: { $ref: "#/components/schemas/Id" }
     LibraryEntryId:
       name: entryId
@@ -9214,6 +9372,7 @@ components:
         name: { type: string, maxLength: 80 }
         fields: { $ref: "#/components/schemas/LibraryFields" }
         revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        shared: { type: boolean, description: "A read-only copy in the Shared Library." }
         createdAt: { type: string, format: date-time, maxLength: 40 }
         updatedAt: { type: string, format: date-time, maxLength: 40 }
     LibraryEntryInput:
@@ -9424,6 +9583,44 @@ components:
         message: { type: string, maxLength: 2000 }
         name: { type: string, minLength: 1, maxLength: 80 }
         fields: { $ref: "#/components/schemas/LibraryFields" }
+    SharedSubmission:
+      type: object
+      description: A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is the Admin's check that it carries no non-SRD text, absent until reviewed.
+      additionalProperties: false
+      required: [id, entryId, revision, kind, name, fields, note, status, ipNote, message, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        entryId: { $ref: "#/components/schemas/Id" }
+        revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        note: { type: string, maxLength: 2000 }
+        status: { type: string, enum: [pending, approved, declined] }
+        ipClear: { type: boolean }
+        ipNote: { type: string, maxLength: 2000 }
+        message: { type: string, maxLength: 2000 }
+        sharedEntryId: { $ref: "#/components/schemas/Id" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        decidedAt: { type: string, format: date-time, maxLength: 40 }
+    ShareInput:
+      type: object
+      description: The entry to share, with a note for the Admins.
+      additionalProperties: false
+      required: [entryId]
+      properties:
+        entryId: { $ref: "#/components/schemas/Id" }
+        note: { type: string, maxLength: 2000 }
+    SharedReviewInput:
+      type: object
+      description: An Admin's decision on a request to share, with the IP check.
+      additionalProperties: false
+      required: [decision, ipClear]
+      properties:
+        decision: { type: string, enum: [approve, decline] }
+        ipClear: { type: boolean, description: "The entry carries no non-SRD text." }
+        ipNote: { type: string, maxLength: 2000 }
+        message: { type: string, maxLength: 2000 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.

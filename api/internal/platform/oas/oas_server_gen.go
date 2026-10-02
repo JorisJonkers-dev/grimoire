@@ -169,6 +169,14 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account/two-step/recovery-codes
 	ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (ResetRecoveryCodesRes, error)
+	// ReviewSharedSubmission implements reviewSharedSubmission operation.
+	//
+	// Approves or declines a request with the IP check recorded either way; approval needs the Admin's
+	// check that the entry carries no non-SRD text and puts a read-only copy in the Shared Library. Admins
+	// only.
+	//
+	// POST /api/v1/admin/shared-library/{submissionId}/review
+	ReviewSharedSubmission(ctx context.Context, req *SharedReviewInput, params ReviewSharedSubmissionParams) (ReviewSharedSubmissionRes, error)
 	// RevokeAccessToken implements revokeAccessToken operation.
 	//
 	// The token stops working at once.
@@ -613,6 +621,12 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// ShareLibraryEntry implements shareLibraryEntry operation.
+	//
+	// Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library.
+	//
+	// POST /api/v1/shared-library/submissions
+	ShareLibraryEntry(ctx context.Context, req *ShareInput) (ShareLibraryEntryRes, error)
 	// SwitchLibraryCollection implements switchLibraryCollection operation.
 	//
 	// On brings the Collection's entries into the Campaign; off hides those not linked otherwise. Only its
@@ -1211,6 +1225,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/characters
 	ListMyCharacters(ctx context.Context) (ListMyCharactersRes, error)
+	// ListMySubmissions implements listMySubmissions operation.
+	//
+	// The caller's requests to put entries in the Shared Library, pending first.
+	//
+	// GET /api/v1/shared-library/submissions
+	ListMySubmissions(ctx context.Context) (ListMySubmissionsRes, error)
 	// ListNotifications implements listNotifications operation.
 	//
 	// The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
@@ -1277,6 +1297,18 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/settlements
 	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
+	// ListSharedEntries implements listSharedEntries operation.
+	//
+	// Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check.
+	//
+	// GET /api/v1/shared-library
+	ListSharedEntries(ctx context.Context, params ListSharedEntriesParams) (ListSharedEntriesRes, error)
+	// ListSharedSubmissions implements listSharedSubmissions operation.
+	//
+	// Every request to put an entry in the Shared Library, pending first. Admins only.
+	//
+	// GET /api/v1/admin/shared-library
+	ListSharedSubmissions(ctx context.Context) (ListSharedSubmissionsRes, error)
 	// ListShopRevisions implements listShopRevisions operation.
 	//
 	// Every Revision of the Shop, newest first. DM only.

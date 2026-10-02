@@ -6,6 +6,8 @@ import {
   getLibraryEntryOptions,
   linkLibraryEntryMutation,
   listCampaignsOptions,
+  listMySubmissionsOptions,
+  shareLibraryEntryMutation,
   updateLibraryEntryMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { LibraryField } from '@/infrastructure/api/types.gen'
@@ -20,6 +22,20 @@ const detail = useQuery(computed(() => ({ ...getLibraryEntryOptions(path.value),
 const d = computed(() => detail.data.value)
 const campaigns = useQuery(computed(() => ({ ...listCampaignsOptions({ query: { limit: 100 } }), retry: false })))
 const update = useMutation(updateLibraryEntryMutation())
+const shared = computed(() => d.value?.entry.shared ?? false)
+const submissions = useQuery(computed(() => ({ ...listMySubmissionsOptions(), enabled: Boolean(d.value) && !shared.value, retry: false })))
+const mine = computed(() => (submissions.data.value ?? []).filter((x) => x.entryId === String(route.params.entryId)))
+const share = useMutation(shareLibraryEntryMutation())
+const shareNote = ref('')
+const sharing = { pending: 'Waiting for an Admin', approved: 'In the Shared Library', declined: 'Declined' } as Record<string, string>
+function askToShare() {
+  share.mutate({ body: { entryId: String(route.params.entryId), note: shareNote.value.trim() } }, {
+    onSuccess: () => {
+      shareNote.value = ''
+      void client.invalidateQueries()
+    },
+  })
+}
 const link = useMutation(linkLibraryEntryMutation())
 const name = ref('')
 const fields = ref<LibraryField[]>([])
@@ -66,7 +82,14 @@ function linkInto() {
     <template v-else>
       <h1>{{ d.entry.name }} <span class="g-tag">{{ kindNames[d.entry.kind] }}</span></h1>
       <p v-if="status" role="status" class="g-tag" data-testid="entry-status">{{ status }}</p>
-      <form class="g-card stack" data-testid="entry-edit" @submit.prevent="save">
+      <p v-if="shared" class="g-card hint" data-testid="entry-shared">A read-only copy from the Shared Library. Link it into a Campaign, then override its fields there.</p>
+      <dl v-if="shared" class="g-card fields" data-testid="entry-fields">
+        <template v-for="f in d.entry.fields" :key="f.name">
+          <dt>{{ f.name }}</dt>
+          <dd>{{ f.value }}</dd>
+        </template>
+      </dl>
+      <form v-else class="g-card stack" data-testid="entry-edit" @submit.prevent="save">
         <GField v-model="name" label="Name" :maxlength="80" data-testid="entry-name" />
         <FieldsEditor v-model="fields" label="Fields" />
         <p class="hint">Saving makes a new Revision. Every Campaign that follows the latest sees it; a pinned Campaign does not.</p>
@@ -75,7 +98,7 @@ function linkInto() {
       </form>
       <section class="g-card stack" data-testid="entry-uses">
         <h2>Used in</h2>
-        <p v-if="d.uses.length === 0" class="hint">No Campaign links it yet.</p>
+        <p v-if="d.uses.length === 0" class="hint">No Campaign of yours links it yet.</p>
         <ul class="g-list">
           <li v-for="u in d.uses" :key="u.campaignId">
             <RouterLink :to="{ name: 'campaign-library', params: { id: u.campaignId } }">{{ u.campaign }}</RouterLink>
@@ -91,6 +114,18 @@ function linkInto() {
           </label>
           <GButton :disabled="link.isPending.value" data-testid="entry-link" @click="linkInto">Link</GButton>
         </div>
+      </section>
+      <section v-if="!shared" class="g-card stack" data-testid="entry-share">
+        <h2>Share with every DM</h2>
+        <p class="hint">An Admin checks that it carries no non-SRD text before it joins the Shared Library as a read-only copy.</p>
+        <ul class="g-list">
+          <li v-for="x in mine" :key="x.id" data-testid="share-request">
+            Revision {{ x.revision }} · {{ sharing[x.status] }}<template v-if="x.message"> · {{ x.message }}</template>
+          </li>
+        </ul>
+        <p v-if="share.error.value" role="alert" class="g-alert">{{ share.error.value.detail ?? 'That request was not sent.' }}</p>
+        <GField v-model="shareNote" label="Note to the Admins" :maxlength="2000" data-testid="share-note" />
+        <GButton :disabled="share.isPending.value" data-testid="share" @click="askToShare">Ask to share</GButton>
       </section>
       <section class="g-card stack" data-testid="entry-revisions">
         <h2>Revisions</h2>
@@ -136,5 +171,18 @@ h2 {
 }
 .grow {
   flex: 1 1 200px;
+}
+.fields {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+dt {
+  color: var(--color-text-2);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 </style>

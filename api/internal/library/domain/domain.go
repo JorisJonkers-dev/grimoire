@@ -31,14 +31,45 @@ type Fields map[string]string
 
 // Entry is a Library entry's base: its latest Revision.
 type Entry struct {
-	ID        uuid.UUID
-	Owner     string
-	Kind      string
-	Name      string
-	Fields    Fields
-	Revision  int
+	ID       uuid.UUID
+	Owner    string
+	Kind     string
+	Name     string
+	Fields   Fields
+	Revision int
+	// Shared marks a read-only copy in the Shared Library.
+	Shared    bool
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+// SharedOwner owns the Shared Library's copies; no account signs in as it.
+const SharedOwner = "grimoire:shared"
+
+// Submission statuses: a DM's request to share an entry, waiting for an Admin or decided.
+const (
+	SubmissionPending  = "pending"
+	SubmissionApproved = "approved"
+	SubmissionDeclined = "declined"
+)
+
+// Submission is a DM's request to put one Revision of an entry in the Shared Library, and the Admin's
+// review: IPClear is the Admin's check that it carries no non-SRD text, nil until reviewed.
+type Submission struct {
+	ID        uuid.UUID
+	Entry     uuid.UUID
+	Revision  int
+	Draft     Draft
+	Note      string
+	Submitter string
+	Status    string
+	IPClear   *bool
+	IPNote    string
+	Message   string
+	Reviewer  string
+	Shared    *uuid.UUID
+	CreatedAt time.Time
+	DecidedAt *time.Time
 }
 
 // Revision is one saved version of an entry's base.

@@ -668,6 +668,20 @@ func encodeReviewProposalRequest(
 	return nil
 }
 
+func encodeReviewSharedSubmissionRequest(
+	req *SharedReviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeSaveCharacterDraftRequest(
 	req *CharacterDraftSave,
 	r *http.Request,
@@ -825,6 +839,20 @@ func encodeSetTokenIconRequest(
 	const contentType = "application/octet-stream"
 	body := req
 	ht.SetBody(r, body, contentType)
+	return nil
+}
+
+func encodeShareLibraryEntryRequest(
+	req *ShareInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
 	return nil
 }
 

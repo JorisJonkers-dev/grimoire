@@ -437,6 +437,10 @@ type ListMyCharactersRes interface {
 	listMyCharactersRes()
 }
 
+type ListMySubmissionsRes interface {
+	listMySubmissionsRes()
+}
+
 type ListNotificationsRes interface {
 	listNotificationsRes()
 }
@@ -479,6 +483,14 @@ type ListSettlementRevisionsRes interface {
 
 type ListSettlementsRes interface {
 	listSettlementsRes()
+}
+
+type ListSharedEntriesRes interface {
+	listSharedEntriesRes()
+}
+
+type ListSharedSubmissionsRes interface {
+	listSharedSubmissionsRes()
 }
 
 type ListShopRevisionsRes interface {
@@ -613,6 +625,10 @@ type ReviewProposalRes interface {
 	reviewProposalRes()
 }
 
+type ReviewSharedSubmissionRes interface {
+	reviewSharedSubmissionRes()
+}
+
 type RevokeAccessTokenRes interface {
 	revokeAccessTokenRes()
 }
@@ -683,6 +699,10 @@ type SetPortraitRes interface {
 
 type SetTokenIconRes interface {
 	setTokenIconRes()
+}
+
+type ShareLibraryEntryRes interface {
+	shareLibraryEntryRes()
 }
 
 type SignInRes interface {

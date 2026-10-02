@@ -1578,6 +1578,7 @@ export const zLibraryEntry = z.object({
     name: z.string().max(80),
     fields: zLibraryFields,
     revision: z.int().gte(1).lte(1000000),
+    shared: z.boolean().optional(),
     createdAt: z.iso.datetime().max(40),
     updatedAt: z.iso.datetime().max(40)
 });
@@ -1784,6 +1785,48 @@ export const zProposalReviewInput = z.object({
     message: z.string().max(2000).optional(),
     name: z.string().min(1).max(80).optional(),
     fields: zLibraryFields.optional()
+});
+
+/**
+ * A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is the Admin's check that it carries no non-SRD text, absent until reviewed.
+ */
+export const zSharedSubmission = z.object({
+    id: zId,
+    entryId: zId,
+    revision: z.int().gte(1).lte(1000000),
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    note: z.string().max(2000),
+    status: z.enum([
+        'pending',
+        'approved',
+        'declined'
+    ]),
+    ipClear: z.boolean().optional(),
+    ipNote: z.string().max(2000),
+    message: z.string().max(2000),
+    sharedEntryId: zId.optional(),
+    createdAt: z.iso.datetime().max(40),
+    decidedAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * The entry to share, with a note for the Admins.
+ */
+export const zShareInput = z.object({
+    entryId: zId,
+    note: z.string().max(2000).optional()
+});
+
+/**
+ * An Admin's decision on a request to share, with the IP check.
+ */
+export const zSharedReviewInput = z.object({
+    decision: z.enum(['approve', 'decline']),
+    ipClear: z.boolean(),
+    ipNote: z.string().max(2000).optional(),
+    message: z.string().max(2000).optional()
 });
 
 /**
@@ -3926,6 +3969,11 @@ export const zCollectionId = zId;
 export const zProposalId = zId;
 
 /**
+ * Shared Library request id.
+ */
+export const zSubmissionId = zId;
+
+/**
  * Library entry id.
  */
 export const zLibraryEntryId = zId;
@@ -5370,6 +5418,43 @@ export const zReviewProposalPath = z.object({
  * The Proposal.
  */
 export const zReviewProposalResponse = zProposalDetail;
+
+export const zListSharedEntriesQuery = z.object({
+    kind: zLibraryKind.optional()
+});
+
+/**
+ * The shared entries.
+ */
+export const zListSharedEntriesResponse = z.array(zLibraryEntry).max(1000);
+
+/**
+ * The requests.
+ */
+export const zListMySubmissionsResponse = z.array(zSharedSubmission).max(1000);
+
+export const zShareLibraryEntryBody = zShareInput;
+
+/**
+ * The request.
+ */
+export const zShareLibraryEntryResponse = zSharedSubmission;
+
+/**
+ * The requests.
+ */
+export const zListSharedSubmissionsResponse = z.array(zSharedSubmission).max(1000);
+
+export const zReviewSharedSubmissionBody = zSharedReviewInput;
+
+export const zReviewSharedSubmissionPath = z.object({
+    submissionId: zId
+});
+
+/**
+ * The request.
+ */
+export const zReviewSharedSubmissionResponse = zSharedSubmission;
 
 /**
  * The signed-in account.

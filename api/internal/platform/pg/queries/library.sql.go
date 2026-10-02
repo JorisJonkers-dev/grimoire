@@ -100,7 +100,7 @@ WITH visible AS (
     SELECT ce.entry_id FROM library.collection_entries ce
     JOIN library.campaign_collections cc ON cc.collection_id = ce.collection_id WHERE cc.campaign_id = $1
 )
-SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at,
+SELECT e.id, e.owner_subject, e.kind, e.name, e.fields, e.revision, e.created_at, e.updated_at, e.shared,
     l.pinned_revision, coalesce(l.override, '{}'::jsonb)::jsonb AS override, coalesce(l.direct, false)::boolean AS direct,
     r.name AS pinned_name, r.fields AS pinned_fields,
     ARRAY(SELECT c.name FROM library.collection_entries ce
@@ -129,6 +129,7 @@ type CampaignLibraryLinksRow struct {
 	Revision       int32
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	Shared         bool
 	PinnedRevision pgtype.Int4
 	Override       []byte
 	Direct         bool
@@ -155,6 +156,7 @@ func (q *Queries) CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryL
 			&i.Revision,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Shared,
 			&i.PinnedRevision,
 			&i.Override,
 			&i.Direct,
@@ -228,6 +230,37 @@ func (q *Queries) ClearLibraryCollection(ctx context.Context, collectionID uuid.
 	return err
 }
 
+const decideSharedSubmission = `-- name: DecideSharedSubmission :exec
+UPDATE library.shared_submissions SET status = $1, ip_clear = $2, ip_note = $3, message = $4,
+    reviewer_subject = $5, shared_entry_id = $6, decided_at = $7
+WHERE id = $8
+`
+
+type DecideSharedSubmissionParams struct {
+	Status          string
+	IpClear         pgtype.Bool
+	IpNote          string
+	Message         string
+	ReviewerSubject pgtype.Text
+	SharedEntryID   pgtype.UUID
+	Now             pgtype.Timestamptz
+	ID              uuid.UUID
+}
+
+func (q *Queries) DecideSharedSubmission(ctx context.Context, arg DecideSharedSubmissionParams) error {
+	_, err := q.db.Exec(ctx, decideSharedSubmission,
+		arg.Status,
+		arg.IpClear,
+		arg.IpNote,
+		arg.Message,
+		arg.ReviewerSubject,
+		arg.SharedEntryID,
+		arg.Now,
+		arg.ID,
+	)
+	return err
+}
+
 const insertCampaignHome = `-- name: InsertCampaignHome :exec
 INSERT INTO library.campaign_homes (campaign_id, collection_id) VALUES ($1, $2)
 `
@@ -267,8 +300,8 @@ func (q *Queries) InsertLibraryCollection(ctx context.Context, arg InsertLibrary
 }
 
 const insertLibraryEntry = `-- name: InsertLibraryEntry :exec
-INSERT INTO library.entries (id, owner_subject, kind, name, fields, revision, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, 1, $6, $6)
+INSERT INTO library.entries (id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared)
+VALUES ($1, $2, $3, $4, $5, 1, $6, $6, $7)
 `
 
 type InsertLibraryEntryParams struct {
@@ -278,6 +311,7 @@ type InsertLibraryEntryParams struct {
 	Name         string
 	Fields       []byte
 	Now          time.Time
+	Shared       bool
 }
 
 func (q *Queries) InsertLibraryEntry(ctx context.Context, arg InsertLibraryEntryParams) error {
@@ -288,6 +322,7 @@ func (q *Queries) InsertLibraryEntry(ctx context.Context, arg InsertLibraryEntry
 		arg.Name,
 		arg.Fields,
 		arg.Now,
+		arg.Shared,
 	)
 	return err
 }
@@ -376,6 +411,38 @@ func (q *Queries) InsertProposalReview(ctx context.Context, arg InsertProposalRe
 	return err
 }
 
+const insertSharedSubmission = `-- name: InsertSharedSubmission :exec
+INSERT INTO library.shared_submissions (id, entry_id, revision, kind, name, fields, note, submitter_subject, status, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9)
+`
+
+type InsertSharedSubmissionParams struct {
+	ID               uuid.UUID
+	EntryID          uuid.UUID
+	Revision         int32
+	Kind             string
+	Name             string
+	Fields           []byte
+	Note             string
+	SubmitterSubject string
+	Now              time.Time
+}
+
+func (q *Queries) InsertSharedSubmission(ctx context.Context, arg InsertSharedSubmissionParams) error {
+	_, err := q.db.Exec(ctx, insertSharedSubmission,
+		arg.ID,
+		arg.EntryID,
+		arg.Revision,
+		arg.Kind,
+		arg.Name,
+		arg.Fields,
+		arg.Note,
+		arg.SubmitterSubject,
+		arg.Now,
+	)
+	return err
+}
+
 const libraryCollection = `-- name: LibraryCollection :one
 SELECT c.id, c.owner_subject, c.name, c.description, c.created_at, c.updated_at,
     ARRAY(SELECT ce.entry_id FROM library.collection_entries ce WHERE ce.collection_id = c.id ORDER BY ce.entry_id)::uuid[] AS entry_ids
@@ -408,7 +475,7 @@ func (q *Queries) LibraryCollection(ctx context.Context, id uuid.UUID) (LibraryC
 }
 
 const libraryEntries = `-- name: LibraryEntries :many
-SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at FROM library.entries
+SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared FROM library.entries
 WHERE owner_subject = $1 AND ($2::text IS NULL OR kind = $2::text)
 ORDER BY kind, lower(name), id
 `
@@ -436,6 +503,7 @@ func (q *Queries) LibraryEntries(ctx context.Context, arg LibraryEntriesParams) 
 			&i.Revision,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Shared,
 		); err != nil {
 			return nil, err
 		}
@@ -448,7 +516,7 @@ func (q *Queries) LibraryEntries(ctx context.Context, arg LibraryEntriesParams) 
 }
 
 const libraryEntry = `-- name: LibraryEntry :one
-SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at FROM library.entries WHERE id = $1
+SELECT id, owner_subject, kind, name, fields, revision, created_at, updated_at, shared FROM library.entries WHERE id = $1
 `
 
 func (q *Queries) LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry, error) {
@@ -463,6 +531,7 @@ func (q *Queries) LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry,
 		&i.Revision,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Shared,
 	)
 	return i, err
 }
@@ -570,6 +639,17 @@ type LinkLibraryEntryParams struct {
 func (q *Queries) LinkLibraryEntry(ctx context.Context, arg LinkLibraryEntryParams) error {
 	_, err := q.db.Exec(ctx, linkLibraryEntry, arg.CampaignID, arg.EntryID, arg.Now)
 	return err
+}
+
+const pendingSharedSubmission = `-- name: PendingSharedSubmission :one
+SELECT EXISTS (SELECT 1 FROM library.shared_submissions WHERE entry_id = $1 AND status = 'pending')
+`
+
+func (q *Queries) PendingSharedSubmission(ctx context.Context, entryID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, pendingSharedSubmission, entryID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const pinLibraryRevision = `-- name: PinLibraryRevision :exec
@@ -681,6 +761,81 @@ func (q *Queries) SetLibraryOverride(ctx context.Context, arg SetLibraryOverride
 		arg.Now,
 	)
 	return err
+}
+
+const sharedSubmission = `-- name: SharedSubmission :one
+SELECT id, entry_id, revision, kind, name, fields, note, submitter_subject, status, ip_clear, ip_note, message, reviewer_subject,
+    shared_entry_id, created_at, decided_at
+FROM library.shared_submissions WHERE id = $1
+`
+
+func (q *Queries) SharedSubmission(ctx context.Context, id uuid.UUID) (LibrarySharedSubmission, error) {
+	row := q.db.QueryRow(ctx, sharedSubmission, id)
+	var i LibrarySharedSubmission
+	err := row.Scan(
+		&i.ID,
+		&i.EntryID,
+		&i.Revision,
+		&i.Kind,
+		&i.Name,
+		&i.Fields,
+		&i.Note,
+		&i.SubmitterSubject,
+		&i.Status,
+		&i.IpClear,
+		&i.IpNote,
+		&i.Message,
+		&i.ReviewerSubject,
+		&i.SharedEntryID,
+		&i.CreatedAt,
+		&i.DecidedAt,
+	)
+	return i, err
+}
+
+const sharedSubmissions = `-- name: SharedSubmissions :many
+SELECT id, entry_id, revision, kind, name, fields, note, submitter_subject, status, ip_clear, ip_note, message, reviewer_subject,
+    shared_entry_id, created_at, decided_at
+FROM library.shared_submissions
+WHERE $1::text IS NULL OR submitter_subject = $1::text
+ORDER BY status = 'pending' DESC, created_at DESC, id
+`
+
+func (q *Queries) SharedSubmissions(ctx context.Context, submitterSubject pgtype.Text) ([]LibrarySharedSubmission, error) {
+	rows, err := q.db.Query(ctx, sharedSubmissions, submitterSubject)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LibrarySharedSubmission{}
+	for rows.Next() {
+		var i LibrarySharedSubmission
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntryID,
+			&i.Revision,
+			&i.Kind,
+			&i.Name,
+			&i.Fields,
+			&i.Note,
+			&i.SubmitterSubject,
+			&i.Status,
+			&i.IpClear,
+			&i.IpNote,
+			&i.Message,
+			&i.ReviewerSubject,
+			&i.SharedEntryID,
+			&i.CreatedAt,
+			&i.DecidedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const switchOffLibraryCollection = `-- name: SwitchOffLibraryCollection :exec

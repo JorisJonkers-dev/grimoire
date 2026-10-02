@@ -12097,13 +12097,15 @@ func (s *LibraryCollectionUpdate) SetEntryIds(val []ID) {
 // A Library entry's base at its latest Revision.
 // Ref: #/components/schemas/LibraryEntry
 type LibraryEntry struct {
-	ID        ID            `json:"id"`
-	Kind      LibraryKind   `json:"kind"`
-	Name      string        `json:"name"`
-	Fields    LibraryFields `json:"fields"`
-	Revision  int32         `json:"revision"`
-	CreatedAt time.Time     `json:"createdAt"`
-	UpdatedAt time.Time     `json:"updatedAt"`
+	ID       ID            `json:"id"`
+	Kind     LibraryKind   `json:"kind"`
+	Name     string        `json:"name"`
+	Fields   LibraryFields `json:"fields"`
+	Revision int32         `json:"revision"`
+	// A read-only copy in the Shared Library.
+	Shared    OptBool   `json:"shared"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // GetID returns the value of ID.
@@ -12129,6 +12131,11 @@ func (s *LibraryEntry) GetFields() LibraryFields {
 // GetRevision returns the value of Revision.
 func (s *LibraryEntry) GetRevision() int32 {
 	return s.Revision
+}
+
+// GetShared returns the value of Shared.
+func (s *LibraryEntry) GetShared() OptBool {
+	return s.Shared
 }
 
 // GetCreatedAt returns the value of CreatedAt.
@@ -12164,6 +12171,11 @@ func (s *LibraryEntry) SetFields(val LibraryFields) {
 // SetRevision sets the value of Revision.
 func (s *LibraryEntry) SetRevision(val int32) {
 	s.Revision = val
+}
+
+// SetShared sets the value of Shared.
+func (s *LibraryEntry) SetShared(val OptBool) {
+	s.Shared = val
 }
 
 // SetCreatedAt sets the value of CreatedAt.
@@ -13704,6 +13716,56 @@ func (s *ListMapsOKHeaders) SetResponse(val []LocalMap) {
 
 func (*ListMapsOKHeaders) listMapsRes() {}
 
+// ListMySubmissionsOKHeaders wraps []SharedSubmission with response headers.
+type ListMySubmissionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []SharedSubmission
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListMySubmissionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListMySubmissionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListMySubmissionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListMySubmissionsOKHeaders) GetResponse() []SharedSubmission {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListMySubmissionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListMySubmissionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListMySubmissionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListMySubmissionsOKHeaders) SetResponse(val []SharedSubmission) {
+	s.Response = val
+}
+
+func (*ListMySubmissionsOKHeaders) listMySubmissionsRes() {}
+
 // ListNpcRevisionsOKHeaders wraps []Revision with response headers.
 type ListNpcRevisionsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -14153,6 +14215,106 @@ func (s *ListSettlementsOKHeaders) SetResponse(val []Settlement) {
 }
 
 func (*ListSettlementsOKHeaders) listSettlementsRes() {}
+
+// ListSharedEntriesOKHeaders wraps []LibraryEntry with response headers.
+type ListSharedEntriesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []LibraryEntry
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSharedEntriesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSharedEntriesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSharedEntriesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSharedEntriesOKHeaders) GetResponse() []LibraryEntry {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSharedEntriesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSharedEntriesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSharedEntriesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSharedEntriesOKHeaders) SetResponse(val []LibraryEntry) {
+	s.Response = val
+}
+
+func (*ListSharedEntriesOKHeaders) listSharedEntriesRes() {}
+
+// ListSharedSubmissionsOKHeaders wraps []SharedSubmission with response headers.
+type ListSharedSubmissionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []SharedSubmission
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListSharedSubmissionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListSharedSubmissionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListSharedSubmissionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListSharedSubmissionsOKHeaders) GetResponse() []SharedSubmission {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListSharedSubmissionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListSharedSubmissionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListSharedSubmissionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListSharedSubmissionsOKHeaders) SetResponse(val []SharedSubmission) {
+	s.Response = val
+}
+
+func (*ListSharedSubmissionsOKHeaders) listSharedSubmissionsRes() {}
 
 // ListShopRevisionsOKHeaders wraps []Revision with response headers.
 type ListShopRevisionsOKHeaders struct {
@@ -29196,6 +29358,7 @@ func (*ProblemStatusCodeWithHeaders) listMapsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listMentionablesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listMessagesRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
+func (*ProblemStatusCodeWithHeaders) listMySubmissionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
@@ -29207,6 +29370,8 @@ func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listSettlementsRes()               {}
+func (*ProblemStatusCodeWithHeaders) listSharedEntriesRes()             {}
+func (*ProblemStatusCodeWithHeaders) listSharedSubmissionsRes()         {}
 func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
@@ -29240,6 +29405,7 @@ func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) resubmitProposalRes()              {}
 func (*ProblemStatusCodeWithHeaders) reviewProposalRes()                {}
+func (*ProblemStatusCodeWithHeaders) reviewSharedSubmissionRes()        {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
@@ -29258,6 +29424,7 @@ func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) shareLibraryEntryRes()             {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
 func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
 func (*ProblemStatusCodeWithHeaders) startConversationRes()             {}
@@ -33109,6 +33276,383 @@ func (s *SettlementWealth) UnmarshalText(data []byte) error {
 		return nil
 	case SettlementWealthWealthy:
 		*s = SettlementWealthWealthy
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The entry to share, with a note for the Admins.
+// Ref: #/components/schemas/ShareInput
+type ShareInput struct {
+	EntryId ID        `json:"entryId"`
+	Note    OptString `json:"note"`
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *ShareInput) GetEntryId() ID {
+	return s.EntryId
+}
+
+// GetNote returns the value of Note.
+func (s *ShareInput) GetNote() OptString {
+	return s.Note
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *ShareInput) SetEntryId(val ID) {
+	s.EntryId = val
+}
+
+// SetNote sets the value of Note.
+func (s *ShareInput) SetNote(val OptString) {
+	s.Note = val
+}
+
+// An Admin's decision on a request to share, with the IP check.
+// Ref: #/components/schemas/SharedReviewInput
+type SharedReviewInput struct {
+	Decision SharedReviewInputDecision `json:"decision"`
+	// The entry carries no non-SRD text.
+	IpClear bool      `json:"ipClear"`
+	IpNote  OptString `json:"ipNote"`
+	Message OptString `json:"message"`
+}
+
+// GetDecision returns the value of Decision.
+func (s *SharedReviewInput) GetDecision() SharedReviewInputDecision {
+	return s.Decision
+}
+
+// GetIpClear returns the value of IpClear.
+func (s *SharedReviewInput) GetIpClear() bool {
+	return s.IpClear
+}
+
+// GetIpNote returns the value of IpNote.
+func (s *SharedReviewInput) GetIpNote() OptString {
+	return s.IpNote
+}
+
+// GetMessage returns the value of Message.
+func (s *SharedReviewInput) GetMessage() OptString {
+	return s.Message
+}
+
+// SetDecision sets the value of Decision.
+func (s *SharedReviewInput) SetDecision(val SharedReviewInputDecision) {
+	s.Decision = val
+}
+
+// SetIpClear sets the value of IpClear.
+func (s *SharedReviewInput) SetIpClear(val bool) {
+	s.IpClear = val
+}
+
+// SetIpNote sets the value of IpNote.
+func (s *SharedReviewInput) SetIpNote(val OptString) {
+	s.IpNote = val
+}
+
+// SetMessage sets the value of Message.
+func (s *SharedReviewInput) SetMessage(val OptString) {
+	s.Message = val
+}
+
+type SharedReviewInputDecision string
+
+const (
+	SharedReviewInputDecisionApprove SharedReviewInputDecision = "approve"
+	SharedReviewInputDecisionDecline SharedReviewInputDecision = "decline"
+)
+
+// AllValues returns all SharedReviewInputDecision values.
+func (SharedReviewInputDecision) AllValues() []SharedReviewInputDecision {
+	return []SharedReviewInputDecision{
+		SharedReviewInputDecisionApprove,
+		SharedReviewInputDecisionDecline,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SharedReviewInputDecision) MarshalText() ([]byte, error) {
+	switch s {
+	case SharedReviewInputDecisionApprove:
+		return []byte(s), nil
+	case SharedReviewInputDecisionDecline:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SharedReviewInputDecision) UnmarshalText(data []byte) error {
+	switch SharedReviewInputDecision(data) {
+	case SharedReviewInputDecisionApprove:
+		*s = SharedReviewInputDecisionApprove
+		return nil
+	case SharedReviewInputDecisionDecline:
+		*s = SharedReviewInputDecisionDecline
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A request to put one Revision of an entry in the Shared Library, and the Admin's review. ipClear is
+// the Admin's check that it carries no non-SRD text, absent until reviewed.
+// Ref: #/components/schemas/SharedSubmission
+type SharedSubmission struct {
+	ID            ID                     `json:"id"`
+	EntryId       ID                     `json:"entryId"`
+	Revision      int32                  `json:"revision"`
+	Kind          LibraryKind            `json:"kind"`
+	Name          string                 `json:"name"`
+	Fields        LibraryFields          `json:"fields"`
+	Note          string                 `json:"note"`
+	Status        SharedSubmissionStatus `json:"status"`
+	IpClear       OptBool                `json:"ipClear"`
+	IpNote        string                 `json:"ipNote"`
+	Message       string                 `json:"message"`
+	SharedEntryId OptID                  `json:"sharedEntryId"`
+	CreatedAt     time.Time              `json:"createdAt"`
+	DecidedAt     OptDateTime            `json:"decidedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *SharedSubmission) GetID() ID {
+	return s.ID
+}
+
+// GetEntryId returns the value of EntryId.
+func (s *SharedSubmission) GetEntryId() ID {
+	return s.EntryId
+}
+
+// GetRevision returns the value of Revision.
+func (s *SharedSubmission) GetRevision() int32 {
+	return s.Revision
+}
+
+// GetKind returns the value of Kind.
+func (s *SharedSubmission) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *SharedSubmission) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *SharedSubmission) GetFields() LibraryFields {
+	return s.Fields
+}
+
+// GetNote returns the value of Note.
+func (s *SharedSubmission) GetNote() string {
+	return s.Note
+}
+
+// GetStatus returns the value of Status.
+func (s *SharedSubmission) GetStatus() SharedSubmissionStatus {
+	return s.Status
+}
+
+// GetIpClear returns the value of IpClear.
+func (s *SharedSubmission) GetIpClear() OptBool {
+	return s.IpClear
+}
+
+// GetIpNote returns the value of IpNote.
+func (s *SharedSubmission) GetIpNote() string {
+	return s.IpNote
+}
+
+// GetMessage returns the value of Message.
+func (s *SharedSubmission) GetMessage() string {
+	return s.Message
+}
+
+// GetSharedEntryId returns the value of SharedEntryId.
+func (s *SharedSubmission) GetSharedEntryId() OptID {
+	return s.SharedEntryId
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *SharedSubmission) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetDecidedAt returns the value of DecidedAt.
+func (s *SharedSubmission) GetDecidedAt() OptDateTime {
+	return s.DecidedAt
+}
+
+// SetID sets the value of ID.
+func (s *SharedSubmission) SetID(val ID) {
+	s.ID = val
+}
+
+// SetEntryId sets the value of EntryId.
+func (s *SharedSubmission) SetEntryId(val ID) {
+	s.EntryId = val
+}
+
+// SetRevision sets the value of Revision.
+func (s *SharedSubmission) SetRevision(val int32) {
+	s.Revision = val
+}
+
+// SetKind sets the value of Kind.
+func (s *SharedSubmission) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *SharedSubmission) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *SharedSubmission) SetFields(val LibraryFields) {
+	s.Fields = val
+}
+
+// SetNote sets the value of Note.
+func (s *SharedSubmission) SetNote(val string) {
+	s.Note = val
+}
+
+// SetStatus sets the value of Status.
+func (s *SharedSubmission) SetStatus(val SharedSubmissionStatus) {
+	s.Status = val
+}
+
+// SetIpClear sets the value of IpClear.
+func (s *SharedSubmission) SetIpClear(val OptBool) {
+	s.IpClear = val
+}
+
+// SetIpNote sets the value of IpNote.
+func (s *SharedSubmission) SetIpNote(val string) {
+	s.IpNote = val
+}
+
+// SetMessage sets the value of Message.
+func (s *SharedSubmission) SetMessage(val string) {
+	s.Message = val
+}
+
+// SetSharedEntryId sets the value of SharedEntryId.
+func (s *SharedSubmission) SetSharedEntryId(val OptID) {
+	s.SharedEntryId = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *SharedSubmission) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetDecidedAt sets the value of DecidedAt.
+func (s *SharedSubmission) SetDecidedAt(val OptDateTime) {
+	s.DecidedAt = val
+}
+
+// SharedSubmissionHeaders wraps SharedSubmission with response headers.
+type SharedSubmissionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SharedSubmission
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SharedSubmissionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SharedSubmissionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SharedSubmissionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SharedSubmissionHeaders) GetResponse() SharedSubmission {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SharedSubmissionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SharedSubmissionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SharedSubmissionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SharedSubmissionHeaders) SetResponse(val SharedSubmission) {
+	s.Response = val
+}
+
+func (*SharedSubmissionHeaders) reviewSharedSubmissionRes() {}
+func (*SharedSubmissionHeaders) shareLibraryEntryRes()      {}
+
+type SharedSubmissionStatus string
+
+const (
+	SharedSubmissionStatusPending  SharedSubmissionStatus = "pending"
+	SharedSubmissionStatusApproved SharedSubmissionStatus = "approved"
+	SharedSubmissionStatusDeclined SharedSubmissionStatus = "declined"
+)
+
+// AllValues returns all SharedSubmissionStatus values.
+func (SharedSubmissionStatus) AllValues() []SharedSubmissionStatus {
+	return []SharedSubmissionStatus{
+		SharedSubmissionStatusPending,
+		SharedSubmissionStatusApproved,
+		SharedSubmissionStatusDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SharedSubmissionStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case SharedSubmissionStatusPending:
+		return []byte(s), nil
+	case SharedSubmissionStatusApproved:
+		return []byte(s), nil
+	case SharedSubmissionStatusDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SharedSubmissionStatus) UnmarshalText(data []byte) error {
+	switch SharedSubmissionStatus(data) {
+	case SharedSubmissionStatusPending:
+		*s = SharedSubmissionStatusPending
+		return nil
+	case SharedSubmissionStatusApproved:
+		*s = SharedSubmissionStatusApproved
+		return nil
+	case SharedSubmissionStatusDeclined:
+		*s = SharedSubmissionStatusDeclined
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

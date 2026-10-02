@@ -1015,6 +1015,15 @@ func (UnimplementedHandler) ListMyCharacters(ctx context.Context) (r ListMyChara
 	return r, ht.ErrNotImplemented
 }
 
+// ListMySubmissions implements listMySubmissions operation.
+//
+// The caller's requests to put entries in the Shared Library, pending first.
+//
+// GET /api/v1/shared-library/submissions
+func (UnimplementedHandler) ListMySubmissions(ctx context.Context) (r ListMySubmissionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListNotifications implements listNotifications operation.
 //
 // The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
@@ -1111,6 +1120,24 @@ func (UnimplementedHandler) ListSettlementRevisions(ctx context.Context, params 
 //
 // GET /api/v1/campaigns/{campaignId}/settlements
 func (UnimplementedHandler) ListSettlements(ctx context.Context, params ListSettlementsParams) (r ListSettlementsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSharedEntries implements listSharedEntries operation.
+//
+// Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check.
+//
+// GET /api/v1/shared-library
+func (UnimplementedHandler) ListSharedEntries(ctx context.Context, params ListSharedEntriesParams) (r ListSharedEntriesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSharedSubmissions implements listSharedSubmissions operation.
+//
+// Every request to put an entry in the Shared Library, pending first. Admins only.
+//
+// GET /api/v1/admin/shared-library
+func (UnimplementedHandler) ListSharedSubmissions(ctx context.Context) (r ListSharedSubmissionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1427,6 +1454,17 @@ func (UnimplementedHandler) ReviewProposal(ctx context.Context, req *ProposalRev
 	return r, ht.ErrNotImplemented
 }
 
+// ReviewSharedSubmission implements reviewSharedSubmission operation.
+//
+// Approves or declines a request with the IP check recorded either way; approval needs the Admin's
+// check that the entry carries no non-SRD text and puts a read-only copy in the Shared Library. Admins
+// only.
+//
+// POST /api/v1/admin/shared-library/{submissionId}/review
+func (UnimplementedHandler) ReviewSharedSubmission(ctx context.Context, req *SharedReviewInput, params ReviewSharedSubmissionParams) (r ReviewSharedSubmissionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RevokeAccessToken implements revokeAccessToken operation.
 //
 // The token stops working at once.
@@ -1590,6 +1628,15 @@ func (UnimplementedHandler) SetPortrait(ctx context.Context, req SetPortraitReq,
 //
 // PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (r SetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ShareLibraryEntry implements shareLibraryEntry operation.
+//
+// Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library.
+//
+// POST /api/v1/shared-library/submissions
+func (UnimplementedHandler) ShareLibraryEntry(ctx context.Context, req *ShareInput) (r ShareLibraryEntryRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
