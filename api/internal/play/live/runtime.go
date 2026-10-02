@@ -42,6 +42,9 @@ type Write struct {
 	// tokens that left because the Effect keeping them ended.
 	Resources []ResourceDelta
 	Dismissed []domain.TokenID
+	// Objects are the Map Objects a change touched, for the store to save; Object the one it removed.
+	Objects []domain.ObjectID
+	Object  domain.ObjectID
 	// Unveiled marks a write whose token lost Visibility Qualities to a Reveal.
 	Unveiled bool
 	// Formed is a token as it takes a form; Reverted are tokens whose form ended.
@@ -52,9 +55,12 @@ type Write struct {
 	attack    *domain.PendingAttack
 	summons   []domain.Combatant
 	commanded domain.CombatantID
-	board     *domain.MapState
-	frames    []*state
-	prompt    *domain.ReactionPrompt
+	// changedObjects are Map Objects as a change leaves them; trigger an Effect one sets off.
+	changedObjects map[domain.ObjectID]domain.MapObject
+	trigger        *trigger
+	board          *domain.MapState
+	frames         []*state
+	prompt         *domain.ReactionPrompt
 	// Effects is the Session's Effects after the change, for the store to save; nil when unchanged.
 	Effects *domain.Effects
 	// Surfaces is the Session's Surfaces after the change when SaveSurfaces; Cast the area spell when SaveCast.
@@ -620,7 +626,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject:
 		return true
 	}
 	return false
@@ -753,6 +759,8 @@ func change(s *state, w *Write) {
 	case domain.ActionSummoned, domain.ActionCommanded:
 		applySummon(s, w)
 		return
+	case domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound:
+		applyObject(s, w)
 	case domain.ActionMasteryUsed:
 		applyMastery(s, w)
 		return

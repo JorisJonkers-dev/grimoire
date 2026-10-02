@@ -13,6 +13,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addMapObjectLink = `-- name: AddMapObjectLink :exec
+INSERT INTO campaign.map_object_links (object_id, target_id) VALUES ($1, $2)
+`
+
+type AddMapObjectLinkParams struct {
+	ObjectID uuid.UUID
+	TargetID uuid.UUID
+}
+
+func (q *Queries) AddMapObjectLink(ctx context.Context, arg AddMapObjectLinkParams) error {
+	_, err := q.db.Exec(ctx, addMapObjectLink, arg.ObjectID, arg.TargetID)
+	return err
+}
+
 const addResumeHex = `-- name: AddResumeHex :exec
 INSERT INTO play.combat_resume_path (combat_id, ordering, q, r) VALUES ($1, $2, $3, $4)
 `
@@ -231,6 +245,15 @@ func (q *Queries) ClearManuals(ctx context.Context, sessionID uuid.UUID) error {
 	return err
 }
 
+const clearMapObjectLinks = `-- name: ClearMapObjectLinks :exec
+DELETE FROM campaign.map_object_links WHERE object_id = $1
+`
+
+func (q *Queries) ClearMapObjectLinks(ctx context.Context, objectID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearMapObjectLinks, objectID)
+	return err
+}
+
 const clearPendingSaves = `-- name: ClearPendingSaves :exec
 DELETE FROM play.pending_saves WHERE session_id = $1
 `
@@ -394,6 +417,20 @@ DELETE FROM play.dying WHERE token_id = $1
 
 func (q *Queries) DeleteDying(ctx context.Context, tokenID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteDying, tokenID)
+	return err
+}
+
+const deleteMapObject = `-- name: DeleteMapObject :exec
+DELETE FROM campaign.map_objects WHERE id = $1 AND map_id = $2
+`
+
+type DeleteMapObjectParams struct {
+	ID    uuid.UUID
+	MapID uuid.UUID
+}
+
+func (q *Queries) DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error {
+	_, err := q.db.Exec(ctx, deleteMapObject, arg.ID, arg.MapID)
 	return err
 }
 
@@ -1012,6 +1049,84 @@ func (q *Queries) MapElevations(ctx context.Context, mapID uuid.UUID) ([]MapElev
 	return items, nil
 }
 
+const mapObjectLinks = `-- name: MapObjectLinks :many
+SELECT l.object_id, l.target_id FROM campaign.map_object_links l JOIN campaign.map_objects o ON o.id = l.object_id WHERE o.map_id = $1
+`
+
+func (q *Queries) MapObjectLinks(ctx context.Context, mapID uuid.UUID) ([]CampaignMapObjectLink, error) {
+	rows, err := q.db.Query(ctx, mapObjectLinks, mapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignMapObjectLink{}
+	for rows.Next() {
+		var i CampaignMapObjectLink
+		if err := rows.Scan(&i.ObjectID, &i.TargetID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const mapObjects = `-- name: MapObjects :many
+SELECT id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft FROM campaign.map_objects WHERE map_id = $1 ORDER BY name, id
+`
+
+type MapObjectsRow struct {
+	ID         uuid.UUID
+	Kind       string
+	Name       string
+	Q          int32
+	R          int32
+	ArmorClass int32
+	Hp         int32
+	HpMax      int32
+	Open       bool
+	Broken     bool
+	Secret     bool
+	EffectSlug pgtype.Text
+	RadiusFt   int32
+}
+
+func (q *Queries) MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjectsRow, error) {
+	rows, err := q.db.Query(ctx, mapObjects, mapID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MapObjectsRow{}
+	for rows.Next() {
+		var i MapObjectsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Kind,
+			&i.Name,
+			&i.Q,
+			&i.R,
+			&i.ArmorClass,
+			&i.Hp,
+			&i.HpMax,
+			&i.Open,
+			&i.Broken,
+			&i.Secret,
+			&i.EffectSlug,
+			&i.RadiusFt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const monsterAmbushStats = `-- name: MonsterAmbushStats :many
 SELECT kind, name, value FROM compendium.monster_stats
 WHERE monster_id = $1 AND ((kind = 'skill' AND name IN ('stealth', 'perception')) OR (kind = 'speed' AND name = 'walk'))
@@ -1443,6 +1558,51 @@ func (q *Queries) SaveDying(ctx context.Context, arg SaveDyingParams) error {
 		arg.DiedFight,
 		arg.DiedRound,
 		arg.DiedDay,
+	)
+	return err
+}
+
+const saveMapObject = `-- name: SaveMapObject :exec
+INSERT INTO campaign.map_objects (id, map_id, kind, name, q, r, armor_class, hp, hp_max, open, broken, secret, effect_slug, radius_ft)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+ON CONFLICT (id) DO UPDATE SET name = excluded.name, q = excluded.q, r = excluded.r, armor_class = excluded.armor_class, hp = excluded.hp,
+    hp_max = excluded.hp_max, open = excluded.open, broken = excluded.broken, secret = excluded.secret, effect_slug = excluded.effect_slug,
+    radius_ft = excluded.radius_ft
+`
+
+type SaveMapObjectParams struct {
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	Kind       string
+	Name       string
+	Q          int32
+	R          int32
+	ArmorClass int32
+	Hp         int32
+	HpMax      int32
+	Open       bool
+	Broken     bool
+	Secret     bool
+	EffectSlug pgtype.Text
+	RadiusFt   int32
+}
+
+func (q *Queries) SaveMapObject(ctx context.Context, arg SaveMapObjectParams) error {
+	_, err := q.db.Exec(ctx, saveMapObject,
+		arg.ID,
+		arg.MapID,
+		arg.Kind,
+		arg.Name,
+		arg.Q,
+		arg.R,
+		arg.ArmorClass,
+		arg.Hp,
+		arg.HpMax,
+		arg.Open,
+		arg.Broken,
+		arg.Secret,
+		arg.EffectSlug,
+		arg.RadiusFt,
 	)
 	return err
 }

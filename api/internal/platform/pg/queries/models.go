@@ -162,6 +162,28 @@ type CampaignMapNode struct {
 	R     int32
 }
 
+type CampaignMapObject struct {
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	Kind       string
+	Name       string
+	Q          int32
+	R          int32
+	ArmorClass int32
+	Hp         int32
+	HpMax      int32
+	Open       bool
+	Broken     bool
+	Secret     bool
+	EffectSlug pgtype.Text
+	RadiusFt   int32
+}
+
+type CampaignMapObjectLink struct {
+	ObjectID uuid.UUID
+	TargetID uuid.UUID
+}
+
 type CampaignMapParty struct {
 	MapID  uuid.UUID
 	NodeID uuid.UUID

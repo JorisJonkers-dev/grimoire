@@ -90,6 +90,7 @@ func (s *state) clone() *state {
 		b := *s.board
 		b.Walls, b.Reveals, b.Elevation = maps.Clone(b.Walls), maps.Clone(b.Reveals), maps.Clone(b.Elevation)
 		b.Lights = append([]domain.MapLight(nil), b.Lights...)
+		b.Objects = maps.Clone(b.Objects)
 		next.board = &b
 	}
 	return next
@@ -158,6 +159,7 @@ func (s *state) project(a Audience) View {
 	seen := s.vision()
 	if s.board != nil {
 		s.projectBoard(&v, a, seen)
+		v.Objects = s.objectViews(a, seen)
 	}
 	for _, t := range s.tokens {
 		if a == AudienceDM || s.shows(t, seen) {
@@ -230,6 +232,8 @@ func (s *state) cell(c hex.Coord) hex.Cell {
 	out := hex.Cell{Difficult: surface.Difficult(s.surfaces[c].Kind), Blocked: false, BlocksSight: false, ElevationFt: 0, Cover: hex.NoCover}
 	if s.board != nil {
 		out.Blocked, out.BlocksSight, out.ElevationFt = s.board.Walls[c], s.board.Walls[c], s.board.Elevation[c]
+		sight, move := s.objectBlocks(c)
+		out.Blocked, out.BlocksSight = out.Blocked || move, out.BlocksSight || sight
 	}
 	return out
 }

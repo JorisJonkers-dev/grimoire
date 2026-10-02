@@ -9083,6 +9083,14 @@ type LiveCommand struct {
 	Qualities   []VisibilityQuality `json:"qualities"`
 	SeenThrough []VisibilityQuality `json:"seenThrough"`
 	Disguise    OptString           `json:"disguise"`
+	ObjectId    OptID               `json:"objectId"`
+	ObjectKind  OptMapObjectKind    `json:"objectKind"`
+	ObjectName  OptString           `json:"objectName"`
+	ArmorClass  OptInt32            `json:"armorClass"`
+	HpMax       OptInt32            `json:"hpMax"`
+	Secret      OptBool             `json:"secret"`
+	RadiusFt    OptInt32            `json:"radiusFt"`
+	Links       []ID                `json:"links"`
 	SaveAbility OptAbility          `json:"saveAbility"`
 	SaveDc      OptInt32            `json:"saveDc"`
 	EffectId    OptID               `json:"effectId"`
@@ -9319,6 +9327,46 @@ func (s *LiveCommand) GetSeenThrough() []VisibilityQuality {
 // GetDisguise returns the value of Disguise.
 func (s *LiveCommand) GetDisguise() OptString {
 	return s.Disguise
+}
+
+// GetObjectId returns the value of ObjectId.
+func (s *LiveCommand) GetObjectId() OptID {
+	return s.ObjectId
+}
+
+// GetObjectKind returns the value of ObjectKind.
+func (s *LiveCommand) GetObjectKind() OptMapObjectKind {
+	return s.ObjectKind
+}
+
+// GetObjectName returns the value of ObjectName.
+func (s *LiveCommand) GetObjectName() OptString {
+	return s.ObjectName
+}
+
+// GetArmorClass returns the value of ArmorClass.
+func (s *LiveCommand) GetArmorClass() OptInt32 {
+	return s.ArmorClass
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveCommand) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetSecret returns the value of Secret.
+func (s *LiveCommand) GetSecret() OptBool {
+	return s.Secret
+}
+
+// GetRadiusFt returns the value of RadiusFt.
+func (s *LiveCommand) GetRadiusFt() OptInt32 {
+	return s.RadiusFt
+}
+
+// GetLinks returns the value of Links.
+func (s *LiveCommand) GetLinks() []ID {
+	return s.Links
 }
 
 // GetSaveAbility returns the value of SaveAbility.
@@ -9724,6 +9772,46 @@ func (s *LiveCommand) SetSeenThrough(val []VisibilityQuality) {
 // SetDisguise sets the value of Disguise.
 func (s *LiveCommand) SetDisguise(val OptString) {
 	s.Disguise = val
+}
+
+// SetObjectId sets the value of ObjectId.
+func (s *LiveCommand) SetObjectId(val OptID) {
+	s.ObjectId = val
+}
+
+// SetObjectKind sets the value of ObjectKind.
+func (s *LiveCommand) SetObjectKind(val OptMapObjectKind) {
+	s.ObjectKind = val
+}
+
+// SetObjectName sets the value of ObjectName.
+func (s *LiveCommand) SetObjectName(val OptString) {
+	s.ObjectName = val
+}
+
+// SetArmorClass sets the value of ArmorClass.
+func (s *LiveCommand) SetArmorClass(val OptInt32) {
+	s.ArmorClass = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveCommand) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetSecret sets the value of Secret.
+func (s *LiveCommand) SetSecret(val OptBool) {
+	s.Secret = val
+}
+
+// SetRadiusFt sets the value of RadiusFt.
+func (s *LiveCommand) SetRadiusFt(val OptInt32) {
+	s.RadiusFt = val
+}
+
+// SetLinks sets the value of Links.
+func (s *LiveCommand) SetLinks(val []ID) {
+	s.Links = val
 }
 
 // SetSaveAbility sets the value of SaveAbility.
@@ -10208,6 +10296,11 @@ const (
 	LiveCommandKindSummon         LiveCommandKind = "summon"
 	LiveCommandKindCommand        LiveCommandKind = "command"
 	LiveCommandKindSetVisibility  LiveCommandKind = "set_visibility"
+	LiveCommandKindPlaceObject    LiveCommandKind = "place_object"
+	LiveCommandKindRemoveObject   LiveCommandKind = "remove_object"
+	LiveCommandKindUseObject      LiveCommandKind = "use_object"
+	LiveCommandKindDamageObject   LiveCommandKind = "damage_object"
+	LiveCommandKindFindObject     LiveCommandKind = "find_object"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -10286,6 +10379,11 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindSummon,
 		LiveCommandKindCommand,
 		LiveCommandKindSetVisibility,
+		LiveCommandKindPlaceObject,
+		LiveCommandKindRemoveObject,
+		LiveCommandKindUseObject,
+		LiveCommandKindDamageObject,
+		LiveCommandKindFindObject,
 	}
 }
 
@@ -10437,6 +10535,16 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindCommand:
 		return []byte(s), nil
 	case LiveCommandKindSetVisibility:
+		return []byte(s), nil
+	case LiveCommandKindPlaceObject:
+		return []byte(s), nil
+	case LiveCommandKindRemoveObject:
+		return []byte(s), nil
+	case LiveCommandKindUseObject:
+		return []byte(s), nil
+	case LiveCommandKindDamageObject:
+		return []byte(s), nil
+	case LiveCommandKindFindObject:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -10664,6 +10772,21 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindSetVisibility:
 		*s = LiveCommandKindSetVisibility
+		return nil
+	case LiveCommandKindPlaceObject:
+		*s = LiveCommandKindPlaceObject
+		return nil
+	case LiveCommandKindRemoveObject:
+		*s = LiveCommandKindRemoveObject
+		return nil
+	case LiveCommandKindUseObject:
+		*s = LiveCommandKindUseObject
+		return nil
+	case LiveCommandKindDamageObject:
+		*s = LiveCommandKindDamageObject
+		return nil
+	case LiveCommandKindFindObject:
+		*s = LiveCommandKindFindObject
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -12055,6 +12178,155 @@ func (s *LiveMap) SetOriginY(val float64) {
 // SetImageVersion sets the value of ImageVersion.
 func (s *LiveMap) SetImageVersion(val int32) {
 	s.ImageVersion = val
+}
+
+// A Map Object; its numbers, trigger and secrecy go to the DM only.
+// Ref: #/components/schemas/LiveObject
+type LiveObject struct {
+	ID   ID            `json:"id"`
+	Kind MapObjectKind `json:"kind"`
+	Name string        `json:"name"`
+	Q    int32         `json:"q"`
+	R    int32         `json:"r"`
+	// Open, or pulled for a lever.
+	Open     bool      `json:"open"`
+	Broken   bool      `json:"broken"`
+	Secret   OptBool   `json:"secret"`
+	Ac       OptInt32  `json:"ac"`
+	Hp       OptInt32  `json:"hp"`
+	HpMax    OptInt32  `json:"hpMax"`
+	Effect   OptString `json:"effect"`
+	RadiusFt OptInt32  `json:"radiusFt"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveObject) GetID() ID {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveObject) GetKind() MapObjectKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *LiveObject) GetName() string {
+	return s.Name
+}
+
+// GetQ returns the value of Q.
+func (s *LiveObject) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LiveObject) GetR() int32 {
+	return s.R
+}
+
+// GetOpen returns the value of Open.
+func (s *LiveObject) GetOpen() bool {
+	return s.Open
+}
+
+// GetBroken returns the value of Broken.
+func (s *LiveObject) GetBroken() bool {
+	return s.Broken
+}
+
+// GetSecret returns the value of Secret.
+func (s *LiveObject) GetSecret() OptBool {
+	return s.Secret
+}
+
+// GetAc returns the value of Ac.
+func (s *LiveObject) GetAc() OptInt32 {
+	return s.Ac
+}
+
+// GetHp returns the value of Hp.
+func (s *LiveObject) GetHp() OptInt32 {
+	return s.Hp
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveObject) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetEffect returns the value of Effect.
+func (s *LiveObject) GetEffect() OptString {
+	return s.Effect
+}
+
+// GetRadiusFt returns the value of RadiusFt.
+func (s *LiveObject) GetRadiusFt() OptInt32 {
+	return s.RadiusFt
+}
+
+// SetID sets the value of ID.
+func (s *LiveObject) SetID(val ID) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveObject) SetKind(val MapObjectKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveObject) SetName(val string) {
+	s.Name = val
+}
+
+// SetQ sets the value of Q.
+func (s *LiveObject) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LiveObject) SetR(val int32) {
+	s.R = val
+}
+
+// SetOpen sets the value of Open.
+func (s *LiveObject) SetOpen(val bool) {
+	s.Open = val
+}
+
+// SetBroken sets the value of Broken.
+func (s *LiveObject) SetBroken(val bool) {
+	s.Broken = val
+}
+
+// SetSecret sets the value of Secret.
+func (s *LiveObject) SetSecret(val OptBool) {
+	s.Secret = val
+}
+
+// SetAc sets the value of Ac.
+func (s *LiveObject) SetAc(val OptInt32) {
+	s.Ac = val
+}
+
+// SetHp sets the value of Hp.
+func (s *LiveObject) SetHp(val OptInt32) {
+	s.Hp = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveObject) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *LiveObject) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// SetRadiusFt sets the value of RadiusFt.
+func (s *LiveObject) SetRadiusFt(val OptInt32) {
+	s.RadiusFt = val
 }
 
 // The route a walk would take, start first, and the movement it costs.
@@ -14055,13 +14327,16 @@ type LiveView struct {
 	Combat     OptLiveCombat `json:"combat"`
 	Manual     []LiveManual  `json:"manual"`
 	// The DM is resolving part of an Effect by hand.
-	Resolving  OptBool          `json:"resolving"`
-	Saves      []LiveSave       `json:"saves"`
-	Surfaces   []LiveSurface    `json:"surfaces"`
-	Elevation  []LiveElevation  `json:"elevation"`
-	Area       OptLiveArea      `json:"area"`
-	Table      OptLiveTable     `json:"table"`
-	World      OptLiveWorld     `json:"world"`
+	Resolving OptBool         `json:"resolving"`
+	Saves     []LiveSave      `json:"saves"`
+	Surfaces  []LiveSurface   `json:"surfaces"`
+	Elevation []LiveElevation `json:"elevation"`
+	Area      OptLiveArea     `json:"area"`
+	Table     OptLiveTable    `json:"table"`
+	World     OptLiveWorld    `json:"world"`
+	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
+	// seen.
+	Objects    []LiveObject     `json:"objects"`
 	Zones      []LiveZone       `json:"zones"`
 	Perception []LivePerception `json:"perception"`
 	Checks     []LiveCheck      `json:"checks"`
@@ -14143,6 +14418,11 @@ func (s *LiveView) GetTable() OptLiveTable {
 // GetWorld returns the value of World.
 func (s *LiveView) GetWorld() OptLiveWorld {
 	return s.World
+}
+
+// GetObjects returns the value of Objects.
+func (s *LiveView) GetObjects() []LiveObject {
+	return s.Objects
 }
 
 // GetZones returns the value of Zones.
@@ -14263,6 +14543,11 @@ func (s *LiveView) SetTable(val OptLiveTable) {
 // SetWorld sets the value of World.
 func (s *LiveView) SetWorld(val OptLiveWorld) {
 	s.World = val
+}
+
+// SetObjects sets the value of Objects.
+func (s *LiveView) SetObjects(val []LiveObject) {
+	s.Objects = val
 }
 
 // SetZones sets the value of Zones.
@@ -15327,6 +15612,76 @@ func (s *MapKind) UnmarshalText(data []byte) error {
 		return nil
 	case MapKindWorld:
 		*s = MapKindWorld
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Ref: #/components/schemas/MapObjectKind
+type MapObjectKind string
+
+const (
+	MapObjectKindDoor         MapObjectKind = "door"
+	MapObjectKindLever        MapObjectKind = "lever"
+	MapObjectKindChest        MapObjectKind = "chest"
+	MapObjectKindBarrel       MapObjectKind = "barrel"
+	MapObjectKindCurtain      MapObjectKind = "curtain"
+	MapObjectKindDestructible MapObjectKind = "destructible"
+)
+
+// AllValues returns all MapObjectKind values.
+func (MapObjectKind) AllValues() []MapObjectKind {
+	return []MapObjectKind{
+		MapObjectKindDoor,
+		MapObjectKindLever,
+		MapObjectKindChest,
+		MapObjectKindBarrel,
+		MapObjectKindCurtain,
+		MapObjectKindDestructible,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MapObjectKind) MarshalText() ([]byte, error) {
+	switch s {
+	case MapObjectKindDoor:
+		return []byte(s), nil
+	case MapObjectKindLever:
+		return []byte(s), nil
+	case MapObjectKindChest:
+		return []byte(s), nil
+	case MapObjectKindBarrel:
+		return []byte(s), nil
+	case MapObjectKindCurtain:
+		return []byte(s), nil
+	case MapObjectKindDestructible:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MapObjectKind) UnmarshalText(data []byte) error {
+	switch MapObjectKind(data) {
+	case MapObjectKindDoor:
+		*s = MapObjectKindDoor
+		return nil
+	case MapObjectKindLever:
+		*s = MapObjectKindLever
+		return nil
+	case MapObjectKindChest:
+		*s = MapObjectKindChest
+		return nil
+	case MapObjectKindBarrel:
+		*s = MapObjectKindBarrel
+		return nil
+	case MapObjectKindCurtain:
+		*s = MapObjectKindCurtain
+		return nil
+	case MapObjectKindDestructible:
+		*s = MapObjectKindDestructible
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -18179,6 +18534,52 @@ func (o OptMapKind) Get() (v MapKind, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptMapKind) Or(d MapKind) MapKind {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMapObjectKind returns new OptMapObjectKind with value set to v.
+func NewOptMapObjectKind(v MapObjectKind) OptMapObjectKind {
+	return OptMapObjectKind{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMapObjectKind is optional MapObjectKind.
+type OptMapObjectKind struct {
+	Value MapObjectKind
+	Set   bool
+}
+
+// IsSet returns true if OptMapObjectKind was set.
+func (o OptMapObjectKind) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMapObjectKind) Reset() {
+	var v MapObjectKind
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMapObjectKind) SetTo(v MapObjectKind) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMapObjectKind) Get() (v MapObjectKind, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMapObjectKind) Or(d MapObjectKind) MapObjectKind {
 	if v, ok := o.Get(); ok {
 		return v
 	}

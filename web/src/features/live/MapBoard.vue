@@ -26,6 +26,12 @@ const points = (c: Coord) =>
   corners(layout.value, c)
     .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
     .join(' ')
+const objects = computed(() => new Map((props.view.objects ?? []).map((o) => [key({ q: o.q, r: o.r }), o])))
+const objectNote = (k: string) => {
+  const o = objects.value.get(k)
+  if (!o) return ''
+  return `${o.name} (${o.broken ? 'broken' : o.kind === 'lever' ? (o.open ? 'pulled' : 'up') : o.open ? 'open' : 'closed'})`
+}
 const cells = computed(() =>
   cellsFor(layout.value, props.map.width, props.map.height).map((c) => {
     const k = key(c)
@@ -37,6 +43,7 @@ const cells = computed(() =>
       t ? describe(t) : '',
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
+      objectNote(k),
       route.value.has(k) ? 'on the path' : '',
       ...groundNotes(k, surfaces.value, area.value, zone.value),
       heights.value.has(k) ? `${String(heights.value.get(k))} ft high` : '',

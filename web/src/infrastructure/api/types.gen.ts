@@ -1111,7 +1111,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -1165,6 +1165,14 @@ export type LiveCommand = {
     qualities?: Array<VisibilityQuality>;
     seenThrough?: Array<VisibilityQuality>;
     disguise?: string;
+    objectId?: Id;
+    objectKind?: MapObjectKind;
+    objectName?: string;
+    armorClass?: number;
+    hpMax?: number;
+    secret?: boolean;
+    radiusFt?: number;
+    links?: Array<Id>;
     saveAbility?: Ability;
     saveDc?: number;
     effectId?: Id;
@@ -1582,6 +1590,30 @@ export type LiveElevation = {
 };
 
 /**
+ * A Map Object; its numbers, trigger and secrecy go to the DM only.
+ */
+export type LiveObject = {
+    id: Id;
+    kind: MapObjectKind;
+    name: string;
+    q: number;
+    r: number;
+    /**
+     * Open, or pulled for a lever.
+     */
+    open: boolean;
+    broken: boolean;
+    secret?: boolean;
+    ac?: number;
+    hp?: number;
+    hpMax?: number;
+    effect?: string;
+    radiusFt?: number;
+};
+
+export type MapObjectKind = 'door' | 'lever' | 'chest' | 'barrel' | 'curtain' | 'destructible';
+
+/**
  * One Visibility Quality of a token, and whether the party has seen through it with a check.
  */
 export type LiveQuality = {
@@ -1822,6 +1854,10 @@ export type LiveView = {
     area?: LiveArea;
     table?: LiveTable;
     world?: LiveWorld;
+    /**
+     * The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.
+     */
+    objects?: Array<LiveObject>;
     zones?: Array<LiveZone>;
     perception?: Array<LivePerception>;
     checks?: Array<LiveCheck>;

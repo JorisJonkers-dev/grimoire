@@ -55,6 +55,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planSummon(m, cmd)
 	case CmdSetVisibility:
 		return r.planVisibility(cmd)
+	case CmdPlaceObject, CmdRemoveObject, CmdDamageObject, CmdFindObject:
+		return r.planObject(cmd)
+	case CmdUseObject:
+		return r.planUse(m, cmd)
 	case CmdCommand:
 		return r.planCommand(m, cmd)
 	case CmdSetReaction:

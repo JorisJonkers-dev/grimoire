@@ -94,6 +94,11 @@ const (
 	CmdSummon         = "summon"
 	CmdCommand        = "command"
 	CmdSetVisibility  = "set_visibility"
+	CmdPlaceObject    = "place_object"
+	CmdRemoveObject   = "remove_object"
+	CmdUseObject      = "use_object"
+	CmdDamageObject   = "damage_object"
+	CmdFindObject     = "find_object"
 	CmdSetReaction    = "set_reaction"
 	CmdStabilise      = "stabilise"
 	CmdRevive         = "revive"
@@ -167,6 +172,16 @@ type Command struct {
 	Qualities   []string `json:"qualities,omitempty"`
 	SeenThrough []string `json:"seenThrough,omitempty"`
 	Disguise    string   `json:"disguise,omitempty"`
+	// ObjectID, ObjectKind, ObjectName, ArmorClass, HPMax, Secret, RadiusFt and Links place or work a Map
+	// Object; Effect names what it triggers.
+	ObjectID    string   `json:"objectId,omitempty"`
+	ObjectKind  string   `json:"objectKind,omitempty"`
+	ObjectName  string   `json:"objectName,omitempty"`
+	ArmorClass  int      `json:"armorClass,omitempty"`
+	HPMax       int      `json:"hpMax,omitempty"`
+	Secret      bool     `json:"secret,omitempty"`
+	RadiusFt    int      `json:"radiusFt,omitempty"`
+	Links       []string `json:"links,omitempty"`
 	SaveAbility string   `json:"saveAbility,omitempty"`
 	SaveDC      int      `json:"saveDc,omitempty"`
 	EffectID    string   `json:"effectId,omitempty"`
@@ -390,6 +405,7 @@ type View struct {
 	World     *WorldView      `json:"world,omitempty"`
 	// Zones go to the DM only; Perception lists the party's Perception Roll Cards, never the DC.
 	Zones      []ZoneView       `json:"zones,omitempty"`
+	Objects    []ObjectView     `json:"objects,omitempty"`
 	Perception []PerceptionView `json:"perception,omitempty"`
 	Checks     []CheckView      `json:"checks,omitempty"`
 	Inventory  []ContainerView  `json:"inventory,omitempty"`

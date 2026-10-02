@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
-import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, TokenKind } from '@/infrastructure/api/types.gen'
+import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveSurface, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import HexGrid from '@/shared/map/HexGrid.vue'
@@ -17,6 +17,7 @@ import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
 import EffectsPanel from './EffectsPanel.vue'
 import VisibilityPanel from './VisibilityPanel.vue'
+import ObjectsPanel from './ObjectsPanel.vue'
 import ActionLog from './ActionLog.vue'
 import DyingPanel from './DyingPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
@@ -35,7 +36,7 @@ import TurnPanel from './TurnPanel.vue'
 import WorldPanel from './WorldPanel.vue'
 import ZonesPanel from './ZonesPanel.vue'
 
-type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'zone' | 'camera' | 'ping'
+type Tool = 'tokens' | 'reveal' | 'conceal' | 'wall' | 'unwall' | 'light' | 'surface' | 'elevation' | 'zone' | 'object' | 'camera' | 'ping'
 
 const route = useRoute()
 const router = useRouter()
@@ -163,6 +164,7 @@ const areaPreview = computed(() => {
 })
 const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
 const teleporting = ref<string | null>(null)
+const objectForm = ref<{ kind: MapObjectKind; name: string; secret: boolean; effect: string; radiusFt: number }>({ kind: 'door', name: '', secret: false, effect: '', radiusFt: 0 })
 const summoning = ref<{ tokenId: string; effect: string } | null>(null)
 // The creatures a Combatant summoned that wait for its command this round.
 const awaitingOrders = (owner: string) =>
@@ -300,6 +302,14 @@ function pick(c: Coord) {
     case 'ping':
       live.value.send({ kind: 'ping', q: c.q, r: c.r })
       return
+    case 'object': {
+      const f = objectForm.value
+      live.value.send({
+        kind: 'place_object', objectKind: f.kind, q: c.q, r: c.r, ...(f.name.trim() ? { objectName: f.name.trim() } : {}), ...(f.secret ? { secret: true } : {}),
+        ...(f.effect.trim() ? { effect: f.effect.trim() } : {}), ...(f.radiusFt ? { radiusFt: f.radiusFt } : {}),
+      })
+      return
+    }
     case 'zone':
       if (zoneName.value.trim()) live.value.send({ kind: 'add_zone', label: zoneName.value.trim(), q: c.q, r: c.r, radiusHexes: zoneRadius.value, dmOnly: zoneDMOnly.value })
       return
@@ -448,9 +458,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </div>
         <fieldset class="tools">
           <legend>Tap the map to</legend>
-          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'camera', 'ping'] as const)" :key="t" class="tool">
+          <label v-for="t in (['tokens', 'reveal', 'conceal', 'wall', 'unwall', 'light', 'surface', 'elevation', 'zone', 'object', 'camera', 'ping'] as const)" :key="t" class="tool">
             <input v-model="tool" type="radio" :value="t" :data-testid="`tool-${t}`" />
-            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
+            <span>{{ { tokens: 'Place or walk tokens', reveal: 'Reveal', conceal: 'Conceal', wall: 'Build walls', unwall: 'Clear walls', light: 'Place or remove light', surface: 'Paint surfaces', elevation: 'Raise or lower ground', zone: 'Draw an encounter zone', object: 'Place objects', camera: 'Point the table camera', ping: 'Ping the table' }[t] }}</span>
           </label>
         </fieldset>
         <div v-if="view?.map" class="row">
@@ -475,6 +485,18 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <label class="check"><input v-model="zoneDMOnly" type="checkbox" data-testid="zone-dm-only" /><span>Only when I spring it</span></label>
         </div>
         <ZonesPanel v-if="view?.zones?.length" :zones="view.zones" :names="names" @send="(cmd) => live?.send(cmd)" />
+        <div v-if="tool === 'object'" class="row">
+          <label class="g-field">
+            <span>Object</span>
+            <select v-model="objectForm.kind" data-testid="object-kind">
+              <option v-for="k in ['door', 'lever', 'chest', 'barrel', 'curtain', 'destructible'] as const" :key="k" :value="k">{{ k }}</option>
+            </select>
+          </label>
+          <label class="g-field"><span>Name</span><input v-model="objectForm.name" maxlength="40" data-testid="object-name" /></label>
+          <label class="g-field"><span>Triggers</span><input v-model="objectForm.effect" maxlength="80" placeholder="prone" data-testid="object-effect" /></label>
+          <label class="g-field"><span>Reach (ft)</span><input v-model.number="objectForm.radiusFt" type="number" min="0" max="60" step="5" data-testid="object-radius" /></label>
+          <label class="check"><input v-model="objectForm.secret" type="checkbox" data-testid="object-secret" /><span>Secret</span></label>
+        </div>
         <div v-if="tool === 'elevation'" class="row">
           <label class="g-field"><span>Height (ft)</span><input v-model.number="elevationFt" type="number" min="-100" max="100" step="5" data-testid="elevation-ft" /></label>
         </div>
@@ -587,6 +609,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         :token="walker"
         @set="(kind, mode, condition) => live?.send({ kind: 'set_reaction', tokenId: walker?.id ?? '', reactionKind: kind, reactionMode: mode, condition })"
       />
+      <ObjectsPanel v-if="view?.objects?.length" :objects="view.objects" :dm="isDM" :user="walker?.id" @send="(cmd) => live?.send(cmd)" />
       <RestPanel
         v-if="view"
         :rest="view.rest"

@@ -197,6 +197,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.write(ctx, sid, board, w, now) },
 			func() error { return tx.dismiss(ctx, sid, w.Dismissed) },
 			func() error { return tx.saveForms(ctx, sid, w) },
+			func() error { return tx.saveObjects(ctx, board, w) },
 			func() error { return tx.saveCombat(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveEffects(ctx, sid, w.Effects) },
 			func() error { return tx.saveTerrain(ctx, sid, board, w) },
@@ -272,7 +273,8 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
-		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded:
+		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded,
+		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound:
 		return nil
 	case domain.ActionDyingChanged, domain.ActionRevived:
 		if w.HP == nil {
@@ -938,7 +940,64 @@ func (s *Store) LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID
 	for _, rv := range reveals {
 		out.Reveals[hex.Coord{Q: int(rv.Q), R: int(rv.R)}] = true
 	}
-	return out, nil
+	return out, s.loadObjects(ctx, m.ID, out)
+}
+
+// loadObjects reads a Map's objects and the links between them.
+func (s *Store) loadObjects(ctx context.Context, mapID uuid.UUID, out *domain.MapState) error {
+	rows, err := s.q.MapObjects(ctx, mapID)
+	if err != nil {
+		return err
+	}
+	out.Objects = map[domain.ObjectID]domain.MapObject{}
+	for _, o := range rows {
+		out.Objects[o.ID] = domain.MapObject{
+			ID: o.ID, Kind: o.Kind, Name: o.Name, At: hex.Coord{Q: int(o.Q), R: int(o.R)}, AC: int(o.ArmorClass), HP: int(o.Hp), HPMax: int(o.HpMax),
+			Open: o.Open, Broken: o.Broken, Secret: o.Secret, Effect: o.EffectSlug.String, RadiusFt: int(o.RadiusFt),
+		}
+	}
+	links, err := s.q.MapObjectLinks(ctx, mapID)
+	if err != nil {
+		return err
+	}
+	for _, l := range links {
+		o := out.Objects[l.ObjectID]
+		o.Links = append(o.Links, l.TargetID)
+		out.Objects[l.ObjectID] = o
+	}
+	return nil
+}
+
+// saveObjects writes the Map Objects a change touched, or deletes a removed one.
+//
+//nolint:gosec // object numbers are bounded by checks
+func (s *Store) saveObjects(ctx context.Context, board *domain.MapState, w live.Write) error {
+	if board == nil {
+		return nil
+	}
+	mapID := uuid.UUID(board.Map.ID)
+	if w.Kind == domain.ActionObjectRemoved {
+		return s.q.DeleteMapObject(ctx, queries.DeleteMapObjectParams{ID: w.Object, MapID: mapID})
+	}
+	for _, id := range w.Objects {
+		o := board.Objects[id]
+		p := queries.SaveMapObjectParams{
+			ID: o.ID, MapID: mapID, Kind: o.Kind, Name: o.Name, Q: int32(o.At.Q), R: int32(o.At.R), ArmorClass: int32(o.AC), Hp: int32(o.HP), HpMax: int32(o.HPMax),
+			Open: o.Open, Broken: o.Broken, Secret: o.Secret, EffectSlug: pgtype.Text{String: o.Effect, Valid: o.Effect != ""}, RadiusFt: int32(o.RadiusFt),
+		}
+		if err := s.q.SaveMapObject(ctx, p); err != nil {
+			return err
+		}
+		if err := s.q.ClearMapObjectLinks(ctx, o.ID); err != nil {
+			return err
+		}
+		for _, target := range o.Links {
+			if err := s.q.AddMapObjectLink(ctx, queries.AddMapObjectLinkParams{ObjectID: o.ID, TargetID: target}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func mapRow(m queries.CampaignMap) domain.Map {

@@ -59,6 +59,30 @@ type MapState struct {
 	Reveals map[hex.Coord]bool
 	// Elevation is each raised or sunken hex's height in feet.
 	Elevation map[hex.Coord]int
+	// Objects are the Map Objects on the Map.
+	Objects map[ObjectID]MapObject
+}
+
+// ObjectID identifies a Map Object.
+type ObjectID = uuid.UUID
+
+// MapObject is an interactable thing on a local Map, with its own Armor Class and hit points. A Secret
+// object is unknown to the party until found; Effect fires on whoever uses it, or on every creature
+// within RadiusFt, when it is used or broken; Links are the objects a lever works.
+type MapObject struct {
+	ID       ObjectID
+	Kind     string
+	Name     string
+	At       hex.Coord
+	AC       int
+	HP       int
+	HPMax    int
+	Open     bool
+	Broken   bool
+	Secret   bool
+	Effect   string
+	RadiusFt int
+	Links    []ObjectID
 }
 
 // Map action kinds in the Action Log.
@@ -71,4 +95,10 @@ const (
 	ActionLightPlaced    = "light_placed"
 	ActionLightRemoved   = "light_removed"
 	ActionAmbientSet     = "ambient_set"
+	// Map Object action kinds.
+	ActionObjectPlaced  = "object_placed"
+	ActionObjectRemoved = "object_removed"
+	ActionObjectToggled = "object_toggled"
+	ActionObjectDamaged = "object_damaged"
+	ActionObjectFound   = "object_found"
 )

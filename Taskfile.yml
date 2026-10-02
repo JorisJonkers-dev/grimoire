@@ -127,6 +127,7 @@ tasks:
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/loot
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/shops
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/surface
+      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/objects
 
   android:
     desc: Build the Capacitor Android shell as a debug APK from the web build (needs Java 21 and the Android SDK)

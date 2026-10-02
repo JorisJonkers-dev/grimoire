@@ -825,6 +825,64 @@ describe('areas and terrain', () => {
   })
 })
 
+describe('map objects', () => {
+  const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, controllerId: player.id }
+  const door = { id: '0190c7a8-0000-7000-8000-0000000000a1', kind: 'door' as const, name: 'Door', q: 1, r: 0, open: false, broken: false, ac: 15, hp: 18, hpMax: 18 }
+  const lever = { id: '0190c7a8-0000-7000-8000-0000000000a2', kind: 'lever' as const, name: 'Lever', q: 0, r: 1, open: true, broken: false, secret: true, ac: 19, hp: 5, hpMax: 5 }
+  const barrel = { id: '0190c7a8-0000-7000-8000-0000000000a3', kind: 'barrel' as const, name: 'Barrel', q: 1, r: 1, open: false, broken: true }
+
+  it('lets the DM place, find, damage and remove objects, and anyone next to one use it', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [door, lever, barrel] }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).toContain('Door (closed)')
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('Lever (pulled)')
+    expect(wrapper.get('[data-testid="object-Door"]').text()).toContain('Door · closed · 18/18 HP, AC 15')
+    expect(wrapper.get('[data-testid="object-Lever"]').text()).toContain('secret')
+    expect(wrapper.get('[data-testid="object-Barrel"]').text()).toContain('broken')
+    expect(wrapper.find('[data-testid="use-Door"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="find-Lever"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'find_object', objectId: lever.id })
+    await wrapper.get('[data-testid="hit-Door"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'find_object' })
+    await wrapper.get('[data-testid="damage-Door"]').setValue(5)
+    await wrapper.get('[data-testid="hit-Door"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'damage_object', objectId: door.id, hpDelta: -5 })
+    await wrapper.get('[data-testid="remove-Barrel"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'remove_object', objectId: barrel.id })
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    await wrapper.get('[data-testid="use-Door"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'use_object', tokenId: aria.id, objectId: door.id })
+    expect(wrapper.get('[data-testid="use-Lever"]').text()).toBe('Pull')
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [{ ...door, open: true }] }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="use-Door"]').text()).toBe('Close')
+    await wrapper.get('[data-testid="tool-object"]').setValue(true)
+    await wrapper.get('[data-testid="object-kind"]').setValue('barrel')
+    await wrapper.get('[data-testid="object-name"]').setValue(' Powder keg ')
+    await wrapper.get('[data-testid="object-effect"]').setValue('prone')
+    await wrapper.get('[data-testid="object-radius"]').setValue(5)
+    await wrapper.get('[data-testid="object-secret"]').setValue(true)
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'place_object', objectKind: 'barrel', objectName: 'Powder keg', effect: 'prone', radiusFt: 5, secret: true, q: 2, r: 0 })
+    await wrapper.get('[data-testid="object-name"]').setValue('')
+    await wrapper.get('[data-testid="object-effect"]').setValue('')
+    await wrapper.get('[data-testid="object-radius"]').setValue(0)
+    await wrapper.get('[data-testid="object-secret"]').setValue(false)
+    await wrapper.get('[data-hex="1,1"]').trigger('click')
+    expect(s.sent.at(-1)).toEqual(expect.objectContaining({ kind: 'place_object', objectKind: 'barrel', q: 1, r: 1 }))
+    expect(s.sent.at(-1)).not.toHaveProperty('objectName')
+    s.receive(snapshot([aria], 'dm', { map: liveMap, objects: [{ ...lever, open: false, secret: false }, { ...barrel, broken: false }] }))
+    await flushPromises()
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('Lever (up)')
+    expect(wrapper.get('[data-hex="1,1"]').attributes('aria-label')).toContain('Barrel (closed)')
+  })
+})
+
 describe('table remote', () => {
   const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 2 }
   const brom: LiveToken = { ...aria, id: '0190c7a8-0000-7000-8000-00000000000f', label: 'Brom', q: 2, r: 0 }

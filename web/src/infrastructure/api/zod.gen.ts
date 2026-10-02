@@ -997,6 +997,34 @@ export const zLiveElevation = z.object({
     elevationFt: z.int().gte(-100).lte(100)
 });
 
+export const zMapObjectKind = z.enum([
+    'door',
+    'lever',
+    'chest',
+    'barrel',
+    'curtain',
+    'destructible'
+]);
+
+/**
+ * A Map Object; its numbers, trigger and secrecy go to the DM only.
+ */
+export const zLiveObject = z.object({
+    id: zId,
+    kind: zMapObjectKind,
+    name: z.string().max(40),
+    q: z.int().gte(-500).lte(500),
+    r: z.int().gte(-500).lte(500),
+    open: z.boolean(),
+    broken: z.boolean(),
+    secret: z.boolean().optional(),
+    ac: z.int().gte(1).lte(30).optional(),
+    hp: z.int().gte(0).lte(1000).optional(),
+    hpMax: z.int().gte(1).lte(1000).optional(),
+    effect: z.string().max(80).optional(),
+    radiusFt: z.int().gte(0).lte(60).optional()
+});
+
 /**
  * Something that keeps a creature or object from being seen for what it is.
  */
@@ -1685,7 +1713,12 @@ export const zLiveCommand = z.object({
         'teleport',
         'summon',
         'command',
-        'set_visibility'
+        'set_visibility',
+        'place_object',
+        'remove_object',
+        'use_object',
+        'damage_object',
+        'find_object'
     ]),
     tokenId: zId.optional(),
     label: z.string().max(40).optional(),
@@ -1726,6 +1759,14 @@ export const zLiveCommand = z.object({
     qualities: z.array(zVisibilityQuality).max(8).optional(),
     seenThrough: z.array(zVisibilityQuality).max(8).optional(),
     disguise: z.string().max(40).optional(),
+    objectId: zId.optional(),
+    objectKind: zMapObjectKind.optional(),
+    objectName: z.string().max(40).optional(),
+    armorClass: z.int().gte(1).lte(30).optional(),
+    hpMax: z.int().gte(1).lte(1000).optional(),
+    secret: z.boolean().optional(),
+    radiusFt: z.int().gte(0).lte(60).optional(),
+    links: z.array(zId).max(20).optional(),
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),
@@ -1939,6 +1980,7 @@ export const zLiveView = z.object({
     area: zLiveArea.optional(),
     table: zLiveTable.optional(),
     world: zLiveWorld.optional(),
+    objects: z.array(zLiveObject).max(500).optional(),
     zones: z.array(zLiveZone).max(200).optional(),
     perception: z.array(zLivePerception).max(1000).optional(),
     checks: z.array(zLiveCheck).max(10).optional(),

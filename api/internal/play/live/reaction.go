@@ -295,6 +295,9 @@ func (r *runtime) follow(w Write, actor domain.Member, c caller.Caller) {
 	if w.Kind == domain.ActionAreaCast {
 		r.offerCounter(w.Token, actor, c)
 	}
+	if w.trigger != nil {
+		r.fire(w.trigger, actor, c)
+	}
 	switch {
 	case w.Kind == domain.ActionRestTaken && w.Rest == RestLong:
 		r.encounterChecks(prep.TriggerLongRest, prep.DueNextRest, actor, c)

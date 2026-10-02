@@ -27,6 +27,7 @@ type Querier interface {
 	AddClassFeatureLevel(ctx context.Context, arg AddClassFeatureLevelParams) error
 	AddClassSave(ctx context.Context, arg AddClassSaveParams) error
 	AddFeatBenefit(ctx context.Context, arg AddFeatBenefitParams) error
+	AddMapObjectLink(ctx context.Context, arg AddMapObjectLinkParams) error
 	AddMember(ctx context.Context, arg AddMemberParams) (CampaignMember, error)
 	AddMonsterAction(ctx context.Context, arg AddMonsterActionParams) (int64, error)
 	AddMonsterAttack(ctx context.Context, arg AddMonsterAttackParams) error
@@ -93,6 +94,7 @@ type Querier interface {
 	ClearFeatBenefits(ctx context.Context, featID int64) error
 	ClearLootEntries(ctx context.Context, tableID uuid.UUID) error
 	ClearManuals(ctx context.Context, sessionID uuid.UUID) error
+	ClearMapObjectLinks(ctx context.Context, objectID uuid.UUID) error
 	ClearMonsterChildren(ctx context.Context, monsterID int64) error
 	ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error
 	ClearPoolMembers(ctx context.Context, poolID uuid.UUID) error
@@ -126,6 +128,7 @@ type Querier interface {
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
 	DeleteLootTable(ctx context.Context, arg DeleteLootTableParams) (int64, error)
+	DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
 	DeletePendingAction(ctx context.Context, rollID uuid.UUID) error
@@ -324,6 +327,8 @@ type Querier interface {
 	MapElevations(ctx context.Context, mapID uuid.UUID) ([]MapElevationsRow, error)
 	MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRow, error)
 	MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow, error)
+	MapObjectLinks(ctx context.Context, mapID uuid.UUID) ([]CampaignMapObjectLink, error)
+	MapObjects(ctx context.Context, mapID uuid.UUID) ([]MapObjectsRow, error)
 	MapParty(ctx context.Context, mapID uuid.UUID) ([]uuid.UUID, error)
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
@@ -368,6 +373,7 @@ type Querier interface {
 	SaveEncounterTable(ctx context.Context, arg SaveEncounterTableParams) error
 	SaveHaggle(ctx context.Context, arg SaveHaggleParams) error
 	SaveLootTable(ctx context.Context, arg SaveLootTableParams) error
+	SaveMapObject(ctx context.Context, arg SaveMapObjectParams) error
 	SavePool(ctx context.Context, arg SavePoolParams) error
 	SavePrompt(ctx context.Context, arg SavePromptParams) error
 	SaveRest(ctx context.Context, arg SaveRestParams) error
