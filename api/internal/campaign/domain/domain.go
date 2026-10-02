@@ -67,6 +67,12 @@ type Campaign struct {
 	// monsters one roll.
 	InitiativeMode  string
 	ShareInitiative bool
+	// CreationMethods are the ability score methods new Characters may use; StartingLevel is the level
+	// they start at.
+	CreationMethods []string
+	StartingLevel   int
+	// HoldLevelUps stops long rests unlocking the next level; the DM grants levels instead.
+	HoldLevelUps bool
 }
 
 // SettingsChange is a change to a Campaign's settings; nil leaves a field alone.
@@ -78,6 +84,9 @@ type SettingsChange struct {
 	RestSupplies     *bool
 	InitiativeMode   *string
 	ShareInitiative  *bool
+	CreationMethods  []string
+	StartingLevel    *int
+	HoldLevelUps     *bool
 }
 
 // Member is an account's participation in a Campaign.
@@ -138,6 +147,9 @@ type Build struct {
 	Armor      string
 	Shield     bool
 	Weapons    []string
+	// Appearance and Backstory are written at creation and kept on the Character.
+	Appearance string
+	Backstory  string
 }
 
 // Image is a stored picture, addressed by the hash of its content.
@@ -167,9 +179,70 @@ type Character struct {
 	BackgroundSkills []string
 	HPMax            int
 	HPCurrent        int
+	TempHP           int
 	UpdatedAt        time.Time
 	Portrait         *Image
 	Token            *Image
+	// Classes are its levels in each class, the starting class first; Picks and Spells what it chose on
+	// the way; Increase its Ability Score Improvements. LevelUpReady means the next level is unlocked.
+	Classes      []ClassLevel
+	Picks        []Pick
+	Spells       []LearnedSpell
+	Increase     map[string]int
+	LevelUpReady bool
+	// CanPrepare means it may change its prepared spells: after a long rest or a new level.
+	CanPrepare bool
+	// HeroicInspiration is held or not; it is spent on a reroll or passed to an ally.
+	HeroicInspiration bool
+}
+
+// ClassLevel is the levels a Character has in one class, and the subclass it chose there.
+type ClassLevel struct {
+	Class    string
+	Subclass string
+	Level    int
+}
+
+// Pick is one value chosen for a choice on reaching a level: "fighting-style" = "defense".
+type Pick struct {
+	Level  int
+	Choice string
+	Value  string
+}
+
+// LearnedSpell is a cantrip or spell a Character learned through a class, the level it learned it at,
+// whether it is prepared, and whether it sits in a wizard's spellbook.
+type LearnedSpell struct {
+	Class     string
+	Spell     string
+	Level     int
+	Prepared  bool
+	Spellbook bool
+}
+
+// Clock is the time on a Campaign's Game Clock: its game day and the minutes after midnight.
+type Clock struct {
+	Day    int
+	Minute int
+}
+
+// Purse is the coins in a Character's own container; Container is zero when it has none yet.
+type Purse struct {
+	Container uuid.UUID
+	Coins     map[string]int
+}
+
+// LevelUp is a Character taking its next level: the hit points it gains, its classes afterwards, what it
+// picked and learned, and its Ability Score Improvements afterwards.
+type LevelUp struct {
+	CampaignID CampaignID
+	ID         CharacterID
+	From       int
+	Gain       int
+	Classes    []ClassLevel
+	Picks      []Pick
+	Spells     []LearnedSpell
+	Increase   map[string]int
 }
 
 // CharacterSummary is a Character as it appears in the party list.
@@ -184,6 +257,8 @@ type CharacterSummary struct {
 	HPCurrent int
 	HPMax     int
 	TokenKey  string
+	// HeroicInspiration shows in the party roster.
+	HeroicInspiration bool
 }
 
 // OwnedCharacter is a Character as its Account sees it: identity, build and Backstory, and its progress
@@ -211,4 +286,57 @@ type CampaignEntry struct {
 	Level        int
 	HPCurrent    int
 	HPMax        int
+}
+
+// Draft is a Character being made in the wizard: the step reached, the choices so far as the client
+// keeps them, and the six scores the server rolled for it, if any.
+type Draft struct {
+	Step      int
+	Build     []byte
+	Rolled    []int
+	UpdatedAt time.Time
+}
+
+// Snapshot is a Character's rebuildable choices at one moment: what a retrain proposes, or what a
+// Revision kept.
+type Snapshot struct {
+	ID         uuid.UUID
+	Species    string
+	Background string
+	Method     string
+	Base       map[string]int
+	Bonus      map[string]int
+	Increase   map[string]int
+	Skills     []string
+	Picks      []Pick
+	CreatedAt  time.Time
+}
+
+// Retrain statuses.
+const (
+	RetrainPending  = "pending"
+	RetrainApproved = "approved"
+	RetrainDeclined = "declined"
+)
+
+// Retrain is a player's request to rebuild a Campaign Character, which the DM approves or declines.
+type Retrain struct {
+	ID          uuid.UUID
+	CharacterID CharacterID
+	Proposed    Snapshot
+	Status      string
+	Reason      string
+	RequestedBy string
+	DecidedBy   string
+	CreatedAt   time.Time
+	DecidedAt   *time.Time
+}
+
+// CharacterRevision is a build an approved retrain replaced, kept as a Revision.
+type CharacterRevision struct {
+	No        int
+	Author    string
+	CreatedAt time.Time
+	Build     Snapshot
+	RetrainID *uuid.UUID
 }

@@ -26,6 +26,7 @@ type CampaignAccountCharacter struct {
 	TokenType      pgtype.Text
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	Appearance     string
 }
 
 type CampaignCampaign struct {
@@ -41,32 +42,39 @@ type CampaignCampaign struct {
 	RestSupplies     bool
 	InitiativeMode   string
 	ShareInitiative  bool
+	CreationMethods  []string
+	StartingLevel    int32
+	HoldLevelUps     bool
+	GameMinute       int32
 }
 
 type CampaignCharacter struct {
-	ID             uuid.UUID
-	CampaignID     uuid.UUID
-	OwnerMemberID  uuid.UUID
-	Name           string
-	Ruleset        string
-	SpeciesSlug    string
-	ClassSlug      string
-	BackgroundSlug string
-	Level          int32
-	AbilityMethod  string
-	HpMax          int32
-	HpCurrent      int32
-	ArmorSlug      pgtype.Text
-	Shield         bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	PortraitKey    pgtype.Text
-	PortraitType   pgtype.Text
-	TokenKey       pgtype.Text
-	TokenType      pgtype.Text
-	HitDiceSpent   int32
-	LevelUpReady   bool
-	CharacterID    pgtype.UUID
+	ID                uuid.UUID
+	CampaignID        uuid.UUID
+	OwnerMemberID     uuid.UUID
+	Name              string
+	Ruleset           string
+	SpeciesSlug       string
+	ClassSlug         string
+	BackgroundSlug    string
+	Level             int32
+	AbilityMethod     string
+	HpMax             int32
+	HpCurrent         int32
+	ArmorSlug         pgtype.Text
+	Shield            bool
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	PortraitKey       pgtype.Text
+	PortraitType      pgtype.Text
+	TokenKey          pgtype.Text
+	TokenType         pgtype.Text
+	HitDiceSpent      int32
+	LevelUpReady      bool
+	CharacterID       pgtype.UUID
+	TempHp            int32
+	CanPrepare        bool
+	HeroicInspiration bool
 }
 
 type CampaignCharacterAbility struct {
@@ -74,6 +82,31 @@ type CampaignCharacterAbility struct {
 	Ability     string
 	Base        int32
 	Bonus       int32
+	Increase    int32
+}
+
+type CampaignCharacterClass struct {
+	CharacterID  uuid.UUID
+	ClassSlug    string
+	SubclassSlug pgtype.Text
+	Level        int32
+	Position     int32
+}
+
+type CampaignCharacterDraft struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+	Step         int32
+	Build        []byte
+	Rolled       []int32
+	UpdatedAt    time.Time
+}
+
+type CampaignCharacterPick struct {
+	CharacterID uuid.UUID
+	Level       int32
+	Choice      string
+	Value       string
 }
 
 type CampaignCharacterResource struct {
@@ -82,10 +115,54 @@ type CampaignCharacterResource struct {
 	Used         int32
 }
 
+type CampaignCharacterRevision struct {
+	RevisionID uuid.UUID
+	SnapshotID uuid.UUID
+	RetrainID  pgtype.UUID
+}
+
 type CampaignCharacterSkill struct {
 	CharacterID uuid.UUID
 	Skill       string
 	Source      string
+}
+
+type CampaignCharacterSnapshot struct {
+	ID             uuid.UUID
+	CharacterID    uuid.UUID
+	SpeciesSlug    string
+	BackgroundSlug string
+	AbilityMethod  string
+	CreatedAt      time.Time
+}
+
+type CampaignCharacterSnapshotAbility struct {
+	SnapshotID uuid.UUID
+	Ability    string
+	Base       int32
+	Bonus      int32
+	Increase   int32
+}
+
+type CampaignCharacterSnapshotPick struct {
+	SnapshotID uuid.UUID
+	Level      int32
+	Choice     string
+	Value      string
+}
+
+type CampaignCharacterSnapshotSkill struct {
+	SnapshotID uuid.UUID
+	Skill      string
+}
+
+type CampaignCharacterSpell struct {
+	CharacterID  uuid.UUID
+	ClassSlug    string
+	SpellSlug    string
+	LearnedLevel int32
+	Prepared     bool
+	Spellbook    bool
 }
 
 type CampaignCharacterWeapon struct {
@@ -266,6 +343,19 @@ type CampaignPushSubscription struct {
 	CreatedAt time.Time
 }
 
+type CampaignRetrain struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	CharacterID uuid.UUID
+	ProposedID  uuid.UUID
+	Status      string
+	Reason      string
+	RequestedBy string
+	DecidedBy   string
+	CreatedAt   time.Time
+	DecidedAt   pgtype.Timestamptz
+}
+
 type CampaignRevision struct {
 	ID            uuid.UUID
 	CampaignID    uuid.UUID
@@ -285,6 +375,13 @@ type CompendiumAbilityScore struct {
 	ID   int64
 	Slug string
 	Name string
+}
+
+type CompendiumAlwaysPrepared struct {
+	OwnerKind string
+	OwnerSlug string
+	Level     int32
+	SpellSlug string
 }
 
 type CompendiumArmor struct {
@@ -638,6 +735,12 @@ type CompendiumFeatBenefit struct {
 	FeatID      int64
 	Ordering    int32
 	Description string
+}
+
+type CompendiumInspirationGrant struct {
+	OwnerKind string
+	OwnerSlug string
+	OnEvent   string
 }
 
 type CompendiumItem struct {
@@ -1308,6 +1411,8 @@ type PlayRollRequest struct {
 	Total           pgtype.Int4
 	CreatedAt       time.Time
 	ResolvedAt      pgtype.Timestamptz
+	Choosing        bool
+	Rerolled        bool
 }
 
 type PlayRollRequestLabel struct {

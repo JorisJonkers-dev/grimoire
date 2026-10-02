@@ -47,6 +47,18 @@ export type CampaignSummary = {
     restSupplies?: boolean;
     initiativeMode?: InitiativeMode;
     /**
+     * The ability score methods new Characters may use.
+     */
+    creationMethods?: Array<CreationMethod>;
+    /**
+     * The level new Characters start at.
+     */
+    startingLevel?: number;
+    /**
+     * Long rests stop unlocking the next level; the DM grants levels instead.
+     */
+    holdLevelUps?: boolean;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -92,6 +104,18 @@ export type Campaign = {
     restSupplies?: boolean;
     initiativeMode?: InitiativeMode;
     /**
+     * The ability score methods new Characters may use.
+     */
+    creationMethods?: Array<CreationMethod>;
+    /**
+     * The level new Characters start at.
+     */
+    startingLevel?: number;
+    /**
+     * Long rests stop unlocking the next level; the DM grants levels instead.
+     */
+    holdLevelUps?: boolean;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -124,6 +148,18 @@ export type CampaignUpdate = {
      */
     restSupplies?: boolean;
     initiativeMode?: InitiativeMode;
+    /**
+     * The ability score methods new Characters may use.
+     */
+    creationMethods?: Array<CreationMethod>;
+    /**
+     * The level new Characters start at.
+     */
+    startingLevel?: number;
+    /**
+     * Long rests stop unlocking the next level; the DM grants levels instead.
+     */
+    holdLevelUps?: boolean;
     /**
      * Identical monsters share one initiative roll.
      */
@@ -711,6 +747,11 @@ export type AccountInvite = {
 };
 
 /**
+ * How a new Character's ability scores are set.
+ */
+export type CreationMethod = 'standard-array' | 'point-buy' | 'rolled';
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export type InitiativeMode = 'individual' | 'side';
@@ -823,7 +864,53 @@ export type CharacterName = string;
 export type ArmorChoice = string;
 
 /**
- * The choices for a first-level Character.
+ * The wizard's choices so far; every field may still be missing.
+ */
+export type CharacterDraftBuild = {
+    name?: string;
+    species?: Slug;
+    class?: Slug;
+    background?: Slug;
+    method?: 'standard-array' | 'point-buy' | 'rolled';
+    base?: AbilityBase;
+    bonus?: AbilityBonus;
+    skills?: Array<Slug>;
+    armor?: ArmorChoice;
+    shield?: boolean;
+    weapons?: Array<Slug>;
+    appearance?: string;
+    backstory?: string;
+};
+
+/**
+ * A Character being made in the wizard.
+ */
+export type CharacterDraft = {
+    step: number;
+    build: CharacterDraftBuild;
+    /**
+     * The six scores the server rolled, to place on abilities.
+     */
+    rolled?: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number
+    ];
+};
+
+/**
+ * The wizard's step and choices to keep.
+ */
+export type CharacterDraftSave = {
+    step: number;
+    build: CharacterDraftBuild;
+};
+
+/**
+ * The choices for a new Character, who starts at the Campaign's starting level.
  */
 export type CharacterBuild = {
     name: CharacterName;
@@ -837,6 +924,8 @@ export type CharacterBuild = {
     armor?: ArmorChoice;
     shield: boolean;
     weapons: Array<Slug>;
+    appearance?: string;
+    backstory?: string;
 };
 
 /**
@@ -845,6 +934,26 @@ export type CharacterBuild = {
 export type CharacterEdit = {
     name?: CharacterName;
     hpCurrent?: number;
+    /**
+     * Damage taken, soaked by temporary hit points first.
+     */
+    damage?: number;
+    /**
+     * Hit points regained, up to the maximum.
+     */
+    heal?: number;
+    /**
+     * Temporary hit points gained; the higher of old and new stays.
+     */
+    tempHp?: number;
+    /**
+     * Unlock or lock the next level; DM only.
+     */
+    levelUpReady?: boolean;
+    /**
+     * Grant or take Heroic Inspiration; DM only.
+     */
+    heroicInspiration?: boolean;
     armor?: ArmorChoice;
     shield?: boolean;
     weapons?: Array<Slug>;
@@ -877,6 +986,42 @@ export type SkillLine = {
     ability: Ability;
     bonus: number;
     proficient: boolean;
+    /**
+     * Proficiency bonus counted twice.
+     */
+    expertise: boolean;
+};
+
+/**
+ * A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+ */
+export type AttackLine = {
+    name: string;
+    toHit: number;
+    damage: string;
+    damageType: string;
+    reachFeet: number;
+    rangeFeet: number;
+    longRangeFeet: number;
+    mastery?: string;
+};
+
+/**
+ * A class feature or species trait the Character has.
+ */
+export type TraitLine = {
+    name: string;
+    source: 'class' | 'species' | 'feat';
+    level: number;
+    description: string;
+};
+
+/**
+ * The armor and weapons a Character is trained with.
+ */
+export type Proficiencies = {
+    armor: Array<string>;
+    weapons: Array<string>;
 };
 
 /**
@@ -981,6 +1126,7 @@ export type CharacterSheet = {
     backgroundSkills: Array<Slug>;
     hpCurrent: number;
     hpMax: number;
+    tempHp?: number;
     armorClass: number;
     initiative: number;
     speedFeet: number;
@@ -994,6 +1140,290 @@ export type CharacterSheet = {
     warnings: Array<string>;
     portraitUrl?: AssetUrl;
     tokenUrl?: AssetUrl;
+    /**
+     * The Account's own Character this Campaign Character was made from.
+     */
+    characterId?: Id;
+    attacks?: Array<AttackLine>;
+    traits?: Array<TraitLine>;
+    proficiencies?: Proficiencies;
+    /**
+     * The next level is unlocked.
+     */
+    levelUpReady?: boolean;
+    heroicInspiration?: boolean;
+    increase?: AbilityIncrease;
+    classes?: Array<ClassLine>;
+    spells?: Array<LearnedSpellLine>;
+};
+
+/**
+ * A Character's spells in every class it casts through.
+ */
+export type Spellcasting = {
+    /**
+     * It may change its prepared spells now.
+     */
+    canPrepare: boolean;
+    classes: Array<ClassSpells>;
+    purse: Array<LiveCoins>;
+    clock: GameClock;
+};
+
+/**
+ * What a Character casts through one class.
+ */
+export type ClassSpells = {
+    class: Slug;
+    name: string;
+    level: number;
+    /**
+     * How many spells it prepares.
+     */
+    limit: number;
+    maxLevel: number;
+    keepsSpellbook: boolean;
+    /**
+     * Spells a wizard's book holds for free.
+     */
+    allotment: number;
+    cantrips: SpellPickList;
+    prepared: SpellPickList;
+    always: SpellPickList;
+    spellbook: SpellPickList;
+    options: SpellPickList;
+    copyable: SpellPickList;
+};
+
+/**
+ * Spells by slug, name and level.
+ */
+export type SpellPickList = Array<SpellPick>;
+
+/**
+ * The time on a Campaign's Game Clock.
+ */
+export type GameClock = {
+    day: number;
+    /**
+     * Minutes after midnight.
+     */
+    minute: number;
+};
+
+/**
+ * The spells to have prepared through a class.
+ */
+export type SpellPreparation = {
+    class: Slug;
+    spells: Array<Slug>;
+};
+
+/**
+ * One spell by slug.
+ */
+export type SpellChoice = {
+    spell: Slug;
+};
+
+/**
+ * A ritual cast, how long it took, and the Game Clock after it.
+ */
+export type RitualCast = {
+    spell: SpellPick;
+    minutes: number;
+    clock: GameClock;
+};
+
+/**
+ * Points from Ability Score Improvements, per ability.
+ */
+export type AbilityIncrease = {
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+};
+
+/**
+ * A pick a Character made on a level, with the options it could take instead.
+ */
+export type RetrainChoice = {
+    level: number;
+    choice: Slug;
+    name: string;
+    value: Slug;
+    options: Array<LevelUpOption>;
+};
+
+/**
+ * One value chosen for a choice on reaching a level.
+ */
+export type PickLine = {
+    level: number;
+    choice: Slug;
+    value: Slug;
+};
+
+/**
+ * A Character's rebuildable choices.
+ */
+export type BuildSnapshot = {
+    species: Slug;
+    background: Slug;
+    method: 'standard-array' | 'point-buy' | 'rolled';
+    base: AbilityBase;
+    bonus: AbilityBonus;
+    increase: AbilityIncrease;
+    skills: Array<Slug>;
+    picks: Array<PickLine>;
+};
+
+/**
+ * A rebuilt build and why.
+ */
+export type RetrainRequest = {
+    build: BuildSnapshot;
+    reason: string;
+};
+
+/**
+ * A request to rebuild a Campaign Character, and the DM's decision.
+ */
+export type Retrain = {
+    id: Id;
+    characterId: Id;
+    status: 'pending' | 'approved' | 'declined';
+    reason: string;
+    requestedBy: DisplayName;
+    decidedBy?: DisplayName;
+    createdAt: string;
+    decidedAt?: string;
+    proposed: BuildSnapshot;
+};
+
+/**
+ * A build an approved retrain replaced.
+ */
+export type CharacterRevisionLine = {
+    no: number;
+    author: DisplayName;
+    createdAt: string;
+    build: BuildSnapshot;
+    retrainId?: Id;
+};
+
+/**
+ * What the next level offers in one class.
+ */
+export type LevelUpPlan = {
+    /**
+     * The next level is unlocked.
+     */
+    ready: boolean;
+    /**
+     * The DM holds level-ups; only the DM unlocks the next level.
+     */
+    held: boolean;
+    level: number;
+    classes: Array<LevelUpClass>;
+    class: Slug;
+    classLevel: number;
+    hitDie: number;
+    /**
+     * Hit points the level adds when taking the average.
+     */
+    average: number;
+    choices: Array<LevelUpChoice>;
+    cantrips: number;
+    spells: number;
+    spellList: Array<SpellPick>;
+};
+
+/**
+ * A class the next level can go to, with what multiclassing into it still needs.
+ */
+export type LevelUpClass = {
+    slug: Slug;
+    name: string;
+    hitDie: number;
+    /**
+     * Levels the Character has in it now.
+     */
+    level: number;
+    unmet: Array<string>;
+};
+
+/**
+ * A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+ */
+export type LevelUpChoice = {
+    slug: Slug;
+    name: string;
+    pool: 'feat_category' | 'subclass' | 'skill' | 'expertise' | 'weapon' | 'listed';
+    count: number;
+    options: Array<LevelUpOption>;
+};
+
+/**
+ * One option of a choice, with the prerequisites the Character does not meet.
+ */
+export type LevelUpOption = {
+    slug: Slug;
+    name: string;
+    unmet: Array<string>;
+};
+
+/**
+ * A cantrip (level 0) or spell on a class's list.
+ */
+export type SpellPick = {
+    slug: Slug;
+    name: string;
+    level: number;
+    ritual?: boolean;
+};
+
+/**
+ * The choices made for the next level.
+ */
+export type LevelUpRequest = {
+    class: Slug;
+    /**
+     * Take the Hit Die's average, or roll it.
+     */
+    hitPoints?: 'average' | 'roll';
+    picks?: Array<LevelUpPickIn>;
+    increase?: AbilityBonus;
+    spells?: Array<Slug>;
+};
+
+/**
+ * The options picked for one choice.
+ */
+export type LevelUpPickIn = {
+    choice: Slug;
+    values: Array<Slug>;
+};
+
+/**
+ * The levels a Character has in one class, and its subclass there.
+ */
+export type ClassLine = {
+    slug: Slug;
+    name: string;
+    subclass?: Slug;
+    level: number;
+};
+
+/**
+ * A cantrip or spell a Character learned through a class.
+ */
+export type LearnedSpellLine = {
+    slug: Slug;
+    class: Slug;
 };
 
 /**
@@ -1015,6 +1445,7 @@ export type CharacterSummary = {
     hpCurrent: number;
     hpMax: number;
     tokenUrl?: AssetUrl;
+    heroicInspiration?: boolean;
 };
 
 /**
@@ -1026,6 +1457,14 @@ export type ClassChoice = {
     hitDie: number;
     saves: Array<Ability>;
     skillChoices: number;
+    /**
+     * The abilities the class leans on most, highlighted when choosing it.
+     */
+    primaryAbilities?: Array<Ability>;
+    /**
+     * How the class casts spells.
+     */
+    caster?: 'none' | 'full' | 'half' | 'pact';
 };
 
 /**
@@ -1379,7 +1818,7 @@ export type Revision = {
  */
 export type Activity = {
     revisionId: Id;
-    entityType: 'npc' | 'encounter_pool' | 'encounter_table' | 'encounter_check' | 'loot_table' | 'settlement' | 'shop';
+    entityType: 'npc' | 'encounter_pool' | 'encounter_table' | 'encounter_check' | 'loot_table' | 'settlement' | 'shop' | 'character';
     entityId: Id;
     name: string;
     no: number;
@@ -1511,6 +1950,28 @@ export type RollRequest = {
     modifiers: Array<RollModifier>;
     createdAt: string;
     resolvedAt?: string;
+    /**
+     * Every die is set; the roller keeps it or rerolls a die with Heroic Inspiration.
+     */
+    choosing?: boolean;
+    /**
+     * Heroic Inspiration was spent on this roll.
+     */
+    rerolled?: boolean;
+};
+
+/**
+ * The die to roll again.
+ */
+export type RerollIn = {
+    die: number;
+};
+
+/**
+ * The Character to give Heroic Inspiration to.
+ */
+export type InspirationPass = {
+    to: Id;
 };
 
 /**
@@ -2797,6 +3258,11 @@ export type Problem = {
 };
 
 /**
+ * Retrain id.
+ */
+export type RetrainId = Id;
+
+/**
  * Campaign id.
  */
 export type CampaignId = Id;
@@ -3726,6 +4192,467 @@ export type UpdateCharacterResponses = {
 };
 
 export type UpdateCharacterResponse = UpdateCharacterResponses[keyof UpdateCharacterResponses];
+
+export type PlanLevelUpData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: {
+        /**
+         * The class to level in; the starting class when omitted.
+         */
+        class?: Slug;
+    };
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/level-up';
+};
+
+export type PlanLevelUpErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PlanLevelUpError = PlanLevelUpErrors[keyof PlanLevelUpErrors];
+
+export type PlanLevelUpResponses = {
+    /**
+     * What the next level offers.
+     */
+    200: LevelUpPlan;
+};
+
+export type PlanLevelUpResponse = PlanLevelUpResponses[keyof PlanLevelUpResponses];
+
+export type LevelUpData = {
+    body: LevelUpRequest;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/level-up';
+};
+
+export type LevelUpErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type LevelUpError = LevelUpErrors[keyof LevelUpErrors];
+
+export type LevelUpResponses = {
+    /**
+     * The sheet at the new level.
+     */
+    200: CharacterSheet;
+};
+
+export type LevelUpResponse = LevelUpResponses[keyof LevelUpResponses];
+
+export type GetSpellcastingData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spells';
+};
+
+export type GetSpellcastingErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSpellcastingError = GetSpellcastingErrors[keyof GetSpellcastingErrors];
+
+export type GetSpellcastingResponses = {
+    /**
+     * The spells.
+     */
+    200: Spellcasting;
+};
+
+export type GetSpellcastingResponse = GetSpellcastingResponses[keyof GetSpellcastingResponses];
+
+export type PrepareSpellsData = {
+    body: SpellPreparation;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared';
+};
+
+export type PrepareSpellsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PrepareSpellsError = PrepareSpellsErrors[keyof PrepareSpellsErrors];
+
+export type PrepareSpellsResponses = {
+    /**
+     * The spells.
+     */
+    200: Spellcasting;
+};
+
+export type PrepareSpellsResponse = PrepareSpellsResponses[keyof PrepareSpellsResponses];
+
+export type CastRitualData = {
+    body: SpellChoice;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals';
+};
+
+export type CastRitualErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CastRitualError = CastRitualErrors[keyof CastRitualErrors];
+
+export type CastRitualResponses = {
+    /**
+     * The ritual and the Game Clock after it.
+     */
+    200: RitualCast;
+};
+
+export type CastRitualResponse = CastRitualResponses[keyof CastRitualResponses];
+
+export type CopySpellData = {
+    body: SpellChoice;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook';
+};
+
+export type CopySpellErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CopySpellError = CopySpellErrors[keyof CopySpellErrors];
+
+export type CopySpellResponses = {
+    /**
+     * The spells.
+     */
+    200: Spellcasting;
+};
+
+export type CopySpellResponse = CopySpellResponses[keyof CopySpellResponses];
+
+export type ListRetrainsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/retrains';
+};
+
+export type ListRetrainsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRetrainsError = ListRetrainsErrors[keyof ListRetrainsErrors];
+
+export type ListRetrainsResponses = {
+    /**
+     * The retrains.
+     */
+    200: Array<Retrain>;
+};
+
+export type ListRetrainsResponse = ListRetrainsResponses[keyof ListRetrainsResponses];
+
+export type RequestRetrainData = {
+    body: RetrainRequest;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/retrains';
+};
+
+export type RequestRetrainErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RequestRetrainError = RequestRetrainErrors[keyof RequestRetrainErrors];
+
+export type RequestRetrainResponses = {
+    /**
+     * The pending retrain.
+     */
+    201: Retrain;
+};
+
+export type RequestRetrainResponse = RequestRetrainResponses[keyof RequestRetrainResponses];
+
+export type ListRetrainChoicesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices';
+};
+
+export type ListRetrainChoicesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRetrainChoicesError = ListRetrainChoicesErrors[keyof ListRetrainChoicesErrors];
+
+export type ListRetrainChoicesResponses = {
+    /**
+     * The picks.
+     */
+    200: Array<RetrainChoice>;
+};
+
+export type ListRetrainChoicesResponse = ListRetrainChoicesResponses[keyof ListRetrainChoicesResponses];
+
+export type ListCharacterRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/revisions';
+};
+
+export type ListCharacterRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCharacterRevisionsError = ListCharacterRevisionsErrors[keyof ListCharacterRevisionsErrors];
+
+export type ListCharacterRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<CharacterRevisionLine>;
+};
+
+export type ListCharacterRevisionsResponse = ListCharacterRevisionsResponses[keyof ListCharacterRevisionsResponses];
+
+export type ApproveRetrainData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Retrain id.
+         */
+        retrainId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve';
+};
+
+export type ApproveRetrainErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ApproveRetrainError = ApproveRetrainErrors[keyof ApproveRetrainErrors];
+
+export type ApproveRetrainResponses = {
+    /**
+     * The approved retrain.
+     */
+    200: Retrain;
+};
+
+export type ApproveRetrainResponse = ApproveRetrainResponses[keyof ApproveRetrainResponses];
+
+export type DeclineRetrainData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Retrain id.
+         */
+        retrainId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline';
+};
+
+export type DeclineRetrainErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeclineRetrainError = DeclineRetrainErrors[keyof DeclineRetrainErrors];
+
+export type DeclineRetrainResponses = {
+    /**
+     * The declined retrain.
+     */
+    200: Retrain;
+};
+
+export type DeclineRetrainResponse = DeclineRetrainResponses[keyof DeclineRetrainResponses];
 
 export type GetPortraitData = {
     body?: never;
@@ -5748,6 +6675,120 @@ export type RollRestResponses = {
 };
 
 export type RollRestResponse = RollRestResponses[keyof RollRestResponses];
+
+export type KeepRollData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/keep';
+};
+
+export type KeepRollErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type KeepRollError = KeepRollErrors[keyof KeepRollErrors];
+
+export type KeepRollResponses = {
+    /**
+     * The resolved request.
+     */
+    200: RollRequest;
+};
+
+export type KeepRollResponse = KeepRollResponses[keyof KeepRollResponses];
+
+export type RerollDieData = {
+    body: RerollIn;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll';
+};
+
+export type RerollDieErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RerollDieError = RerollDieErrors[keyof RerollDieErrors];
+
+export type RerollDieResponses = {
+    /**
+     * The resolved request.
+     */
+    200: RollRequest;
+};
+
+export type RerollDieResponse = RerollDieResponses[keyof RerollDieResponses];
+
+export type PassInspirationData = {
+    body: InspirationPass;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass';
+};
+
+export type PassInspirationErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PassInspirationError = PassInspirationErrors[keyof PassInspirationErrors];
+
+export type PassInspirationResponses = {
+    /**
+     * The sheet without Heroic Inspiration.
+     */
+    200: CharacterSheet;
+};
+
+export type PassInspirationResponse = PassInspirationResponses[keyof PassInspirationResponses];
 
 export type GetActionLogData = {
     body?: never;
@@ -8335,6 +9376,142 @@ export type SeeReleaseNoteResponses = {
 };
 
 export type SeeReleaseNoteResponse = SeeReleaseNoteResponses[keyof SeeReleaseNoteResponses];
+
+export type DiscardCharacterDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft';
+};
+
+export type DiscardCharacterDraftErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DiscardCharacterDraftError = DiscardCharacterDraftErrors[keyof DiscardCharacterDraftErrors];
+
+export type DiscardCharacterDraftResponses = {
+    /**
+     * Discarded.
+     */
+    204: void;
+};
+
+export type DiscardCharacterDraftResponse = DiscardCharacterDraftResponses[keyof DiscardCharacterDraftResponses];
+
+export type GetCharacterDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft';
+};
+
+export type GetCharacterDraftErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetCharacterDraftError = GetCharacterDraftErrors[keyof GetCharacterDraftErrors];
+
+export type GetCharacterDraftResponses = {
+    /**
+     * The draft.
+     */
+    200: CharacterDraft;
+};
+
+export type GetCharacterDraftResponse = GetCharacterDraftResponses[keyof GetCharacterDraftResponses];
+
+export type SaveCharacterDraftData = {
+    body: CharacterDraftSave;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft';
+};
+
+export type SaveCharacterDraftErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveCharacterDraftError = SaveCharacterDraftErrors[keyof SaveCharacterDraftErrors];
+
+export type SaveCharacterDraftResponses = {
+    /**
+     * The draft.
+     */
+    200: CharacterDraft;
+};
+
+export type SaveCharacterDraftResponse = SaveCharacterDraftResponses[keyof SaveCharacterDraftResponses];
+
+export type RollCharacterScoresData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft/roll';
+};
+
+export type RollCharacterScoresErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RollCharacterScoresError = RollCharacterScoresErrors[keyof RollCharacterScoresErrors];
+
+export type RollCharacterScoresResponses = {
+    /**
+     * The draft with its rolled scores.
+     */
+    200: CharacterDraft;
+};
+
+export type RollCharacterScoresResponse = RollCharacterScoresResponses[keyof RollCharacterScoresResponses];
 
 export type GetHealthData = {
     body?: never;

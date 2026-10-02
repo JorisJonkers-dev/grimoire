@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptAccountInvite, acceptFriendRequest, acceptInvite, beginTwoStep, cancelFriendRequest, clearTokenIcon, confirmTwoStep, createAccessToken, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createOidcAccount, createPushSubscription, createRoll, createSettlement, createShop, declineFriendRequest, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, disableTwoStep, draftReleaseNote, editReleaseNote, endSession, finishOidc, getAccount, getAccountHistory, getActionLog, getAdminAccount, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getMyCharacter, getNotificationPreferences, getNpc, getPortrait, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpell, getStatus, getTokenIcon, getUnseenReleaseNote, joinCampaign, linkOidcAccount, listAccessTokens, listActivity, listAdminAccounts, listCampaigns, listCharacters, listConversations, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listFriends, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listMentionables, listMessages, listMyCharacters, listNotifications, listNpcRevisions, listNpcs, listReleaseNotes, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, passTwoStep, previewAccountInvite, previewCharacter, previewInvite, previewReach, previewSight, publishReleaseNote, readAllNotifications, readNotification, removeMember, requestSignInLink, rerollStock, resetAccountTwoStep, resetRecoveryCodes, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeAccessToken, revokeInvite, rollRest, seeReleaseNote, sendAdminSignInLink, sendFriendRequest, sendLiveCommand, sendMessage, setAccountDisabled, setAccountPassword, setAdminRole, setDie, setNotificationPreferences, setPortrait, setTokenIcon, signIn, signOut, startConversation, startOidcLink, startOidcSignIn, startSession, unblock, undoChange, unfriend, unlinkOidc, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateMyCharacter, updateNpc, updateSettlement, updateShop, uploadMap, useSignInLink } from '../sdk.gen';
-import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptFriendRequestData, AcceptFriendRequestError, AcceptFriendRequestResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, BeginTwoStepData, BeginTwoStepError, BeginTwoStepResponse, CancelFriendRequestData, CancelFriendRequestError, CancelFriendRequestResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, ConfirmTwoStepData, ConfirmTwoStepError, ConfirmTwoStepResponse, CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeclineFriendRequestData, DeclineFriendRequestError, DeclineFriendRequestResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, DisableTwoStepData, DisableTwoStepError, DisableTwoStepResponse, DraftReleaseNoteData, DraftReleaseNoteError, DraftReleaseNoteResponse, EditReleaseNoteData, EditReleaseNoteError, EditReleaseNoteResponse, EndSessionData, EndSessionError, EndSessionResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountHistoryData, GetAccountHistoryError, GetAccountHistoryResponse, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAdminAccountData, GetAdminAccountError, GetAdminAccountResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetMyCharacterData, GetMyCharacterError, GetMyCharacterResponse, GetNotificationPreferencesData, GetNotificationPreferencesError, GetNotificationPreferencesResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, GetUnseenReleaseNoteData, GetUnseenReleaseNoteError, GetUnseenReleaseNoteResponse, JoinCampaignData, JoinCampaignError, JoinCampaignResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListAccessTokensData, ListAccessTokensError, ListAccessTokensResponse, ListActivityData, ListActivityError, ListActivityResponse, ListAdminAccountsData, ListAdminAccountsError, ListAdminAccountsResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListFriendsData, ListFriendsError, ListFriendsResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListMentionablesData, ListMentionablesError, ListMentionablesResponse, ListMessagesData, ListMessagesError, ListMessagesResponse, ListMyCharactersData, ListMyCharactersError, ListMyCharactersResponse, ListNotificationsData, ListNotificationsError, ListNotificationsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListReleaseNotesData, ListReleaseNotesError, ListReleaseNotesResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PassTwoStepData, PassTwoStepError, PassTwoStepResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, PublishReleaseNoteData, PublishReleaseNoteError, PublishReleaseNoteResponse, ReadAllNotificationsData, ReadAllNotificationsError, ReadAllNotificationsResponse, ReadNotificationData, ReadNotificationError, ReadNotificationResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestSignInLinkData, RequestSignInLinkError, RerollStockData, RerollStockError, RerollStockResponse, ResetAccountTwoStepData, ResetAccountTwoStepError, ResetAccountTwoStepResponse, ResetRecoveryCodesData, ResetRecoveryCodesError, ResetRecoveryCodesResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeAccessTokenData, RevokeAccessTokenError, RevokeAccessTokenResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SeeReleaseNoteData, SeeReleaseNoteError, SeeReleaseNoteResponse, SendAdminSignInLinkData, SendAdminSignInLinkError, SendFriendRequestData, SendFriendRequestError, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SendMessageData, SendMessageError, SendMessageResponse, SetAccountDisabledData, SetAccountDisabledError, SetAccountDisabledResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetAdminRoleData, SetAdminRoleError, SetAdminRoleResponse, SetDieData, SetDieError, SetDieResponse, SetNotificationPreferencesData, SetNotificationPreferencesError, SetNotificationPreferencesResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartConversationData, StartConversationError, StartConversationResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, UnblockData, UnblockError, UnblockResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnfriendData, UnfriendError, UnfriendResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateMyCharacterData, UpdateMyCharacterError, UpdateMyCharacterResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
+import { acceptAccountInvite, acceptFriendRequest, acceptInvite, approveRetrain, beginTwoStep, cancelFriendRequest, castRitual, clearTokenIcon, confirmTwoStep, copySpell, createAccessToken, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createOidcAccount, createPushSubscription, createRoll, createSettlement, createShop, declineFriendRequest, declineRetrain, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, disableTwoStep, discardCharacterDraft, draftReleaseNote, editReleaseNote, endSession, finishOidc, getAccount, getAccountHistory, getActionLog, getAdminAccount, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getCharacterDraft, getEntry, getHealth, getMap, getMapImage, getMe, getMyCharacter, getNotificationPreferences, getNpc, getPortrait, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpell, getSpellcasting, getStatus, getTokenIcon, getUnseenReleaseNote, joinCampaign, keepRoll, levelUp, linkOidcAccount, listAccessTokens, listActivity, listAdminAccounts, listCampaigns, listCharacterRevisions, listCharacters, listConversations, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listFriends, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listMentionables, listMessages, listMyCharacters, listNotifications, listNpcRevisions, listNpcs, listReleaseNotes, listRetrainChoices, listRetrains, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, passInspiration, passTwoStep, planLevelUp, prepareSpells, previewAccountInvite, previewCharacter, previewInvite, previewReach, previewSight, publishReleaseNote, readAllNotifications, readNotification, removeMember, requestRetrain, requestSignInLink, rerollDie, rerollStock, resetAccountTwoStep, resetRecoveryCodes, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeAccessToken, revokeInvite, rollCharacterScores, rollRest, saveCharacterDraft, seeReleaseNote, sendAdminSignInLink, sendFriendRequest, sendLiveCommand, sendMessage, setAccountDisabled, setAccountPassword, setAdminRole, setDie, setNotificationPreferences, setPortrait, setTokenIcon, signIn, signOut, startConversation, startOidcLink, startOidcSignIn, startSession, unblock, undoChange, unfriend, unlinkOidc, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateMyCharacter, updateNpc, updateSettlement, updateShop, uploadMap, useSignInLink } from '../sdk.gen';
+import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptFriendRequestData, AcceptFriendRequestError, AcceptFriendRequestResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ApproveRetrainData, ApproveRetrainError, ApproveRetrainResponse, BeginTwoStepData, BeginTwoStepError, BeginTwoStepResponse, CancelFriendRequestData, CancelFriendRequestError, CancelFriendRequestResponse, CastRitualData, CastRitualError, CastRitualResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, ConfirmTwoStepData, ConfirmTwoStepError, ConfirmTwoStepResponse, CopySpellData, CopySpellError, CopySpellResponse, CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeclineFriendRequestData, DeclineFriendRequestError, DeclineFriendRequestResponse, DeclineRetrainData, DeclineRetrainError, DeclineRetrainResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, DisableTwoStepData, DisableTwoStepError, DisableTwoStepResponse, DiscardCharacterDraftData, DiscardCharacterDraftError, DiscardCharacterDraftResponse, DraftReleaseNoteData, DraftReleaseNoteError, DraftReleaseNoteResponse, EditReleaseNoteData, EditReleaseNoteError, EditReleaseNoteResponse, EndSessionData, EndSessionError, EndSessionResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountHistoryData, GetAccountHistoryError, GetAccountHistoryResponse, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAdminAccountData, GetAdminAccountError, GetAdminAccountResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterDraftData, GetCharacterDraftError, GetCharacterDraftResponse, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetMyCharacterData, GetMyCharacterError, GetMyCharacterResponse, GetNotificationPreferencesData, GetNotificationPreferencesError, GetNotificationPreferencesResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpellcastingData, GetSpellcastingError, GetSpellcastingResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, GetUnseenReleaseNoteData, GetUnseenReleaseNoteError, GetUnseenReleaseNoteResponse, JoinCampaignData, JoinCampaignError, JoinCampaignResponse, KeepRollData, KeepRollError, KeepRollResponse, LevelUpData, LevelUpError, LevelUpResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListAccessTokensData, ListAccessTokensError, ListAccessTokensResponse, ListActivityData, ListActivityError, ListActivityResponse, ListAdminAccountsData, ListAdminAccountsError, ListAdminAccountsResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharacterRevisionsData, ListCharacterRevisionsError, ListCharacterRevisionsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListFriendsData, ListFriendsError, ListFriendsResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListMentionablesData, ListMentionablesError, ListMentionablesResponse, ListMessagesData, ListMessagesError, ListMessagesResponse, ListMyCharactersData, ListMyCharactersError, ListMyCharactersResponse, ListNotificationsData, ListNotificationsError, ListNotificationsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListReleaseNotesData, ListReleaseNotesError, ListReleaseNotesResponse, ListRetrainChoicesData, ListRetrainChoicesError, ListRetrainChoicesResponse, ListRetrainsData, ListRetrainsError, ListRetrainsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PassInspirationData, PassInspirationError, PassInspirationResponse, PassTwoStepData, PassTwoStepError, PassTwoStepResponse, PlanLevelUpData, PlanLevelUpError, PlanLevelUpResponse, PrepareSpellsData, PrepareSpellsError, PrepareSpellsResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, PublishReleaseNoteData, PublishReleaseNoteError, PublishReleaseNoteResponse, ReadAllNotificationsData, ReadAllNotificationsError, ReadAllNotificationsResponse, ReadNotificationData, ReadNotificationError, ReadNotificationResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestRetrainData, RequestRetrainError, RequestRetrainResponse, RequestSignInLinkData, RequestSignInLinkError, RerollDieData, RerollDieError, RerollDieResponse, RerollStockData, RerollStockError, RerollStockResponse, ResetAccountTwoStepData, ResetAccountTwoStepError, ResetAccountTwoStepResponse, ResetRecoveryCodesData, ResetRecoveryCodesError, ResetRecoveryCodesResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeAccessTokenData, RevokeAccessTokenError, RevokeAccessTokenResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollCharacterScoresData, RollCharacterScoresError, RollCharacterScoresResponse, RollRestData, RollRestError, RollRestResponse, SaveCharacterDraftData, SaveCharacterDraftError, SaveCharacterDraftResponse, SeeReleaseNoteData, SeeReleaseNoteError, SeeReleaseNoteResponse, SendAdminSignInLinkData, SendAdminSignInLinkError, SendFriendRequestData, SendFriendRequestError, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SendMessageData, SendMessageError, SendMessageResponse, SetAccountDisabledData, SetAccountDisabledError, SetAccountDisabledResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetAdminRoleData, SetAdminRoleError, SetAdminRoleResponse, SetDieData, SetDieError, SetDieResponse, SetNotificationPreferencesData, SetNotificationPreferencesError, SetNotificationPreferencesResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartConversationData, StartConversationError, StartConversationResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, UnblockData, UnblockError, UnblockResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnfriendData, UnfriendError, UnfriendResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateMyCharacterData, UpdateMyCharacterError, UpdateMyCharacterResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -584,6 +584,239 @@ export const updateCharacterMutation = (options?: Partial<Options<UpdateCharacte
     const mutationOptions: UseMutationOptions<UpdateCharacterResponse, UpdateCharacterError, Options<UpdateCharacterData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateCharacter({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const planLevelUpQueryKey = (options: Options<PlanLevelUpData>) => createQueryKey('planLevelUp', options);
+
+/**
+ * See what the next level offers
+ *
+ * The classes the next level can go to and, for one of them, its hit points, choices and spells. The owner or a DM, out of combat.
+ */
+export const planLevelUpOptions = (options: Options<PlanLevelUpData>) => queryOptions<PlanLevelUpResponse, PlanLevelUpError, PlanLevelUpResponse, ReturnType<typeof planLevelUpQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await planLevelUp({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: planLevelUpQueryKey(options)
+});
+
+/**
+ * Take the next level
+ *
+ * Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+ */
+export const levelUpMutation = (options?: Partial<Options<LevelUpData>>): UseMutationOptions<LevelUpResponse, LevelUpError, Options<LevelUpData>> => {
+    const mutationOptions: UseMutationOptions<LevelUpResponse, LevelUpError, Options<LevelUpData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await levelUp({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getSpellcastingQueryKey = (options: Options<GetSpellcastingData>) => createQueryKey('getSpellcasting', options);
+
+/**
+ * Read a Character's spells
+ *
+ * Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game Clock.
+ */
+export const getSpellcastingOptions = (options: Options<GetSpellcastingData>) => queryOptions<GetSpellcastingResponse, GetSpellcastingError, GetSpellcastingResponse, ReturnType<typeof getSpellcastingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSpellcasting({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSpellcastingQueryKey(options)
+});
+
+/**
+ * Prepare spells
+ *
+ * Sets the spells prepared through one class within its limit, after a long rest or a new level.
+ */
+export const prepareSpellsMutation = (options?: Partial<Options<PrepareSpellsData>>): UseMutationOptions<PrepareSpellsResponse, PrepareSpellsError, Options<PrepareSpellsData>> => {
+    const mutationOptions: UseMutationOptions<PrepareSpellsResponse, PrepareSpellsError, Options<PrepareSpellsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await prepareSpells({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Cast a ritual
+ *
+ * Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes to the Game Clock.
+ */
+export const castRitualMutation = (options?: Partial<Options<CastRitualData>>): UseMutationOptions<CastRitualResponse, CastRitualError, Options<CastRitualData>> => {
+    const mutationOptions: UseMutationOptions<CastRitualResponse, CastRitualError, Options<CastRitualData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await castRitual({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Copy a spell into the spellbook
+ *
+ * Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2 hours per spell level.
+ */
+export const copySpellMutation = (options?: Partial<Options<CopySpellData>>): UseMutationOptions<CopySpellResponse, CopySpellError, Options<CopySpellData>> => {
+    const mutationOptions: UseMutationOptions<CopySpellResponse, CopySpellError, Options<CopySpellData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await copySpell({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listRetrainsQueryKey = (options: Options<ListRetrainsData>) => createQueryKey('listRetrains', options);
+
+/**
+ * List retrains
+ *
+ * A Character's retrain requests, newest first. Its owner or a DM.
+ */
+export const listRetrainsOptions = (options: Options<ListRetrainsData>) => queryOptions<ListRetrainsResponse, ListRetrainsError, ListRetrainsResponse, ReturnType<typeof listRetrainsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listRetrains({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listRetrainsQueryKey(options)
+});
+
+/**
+ * Ask to retrain a Character
+ *
+ * Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for each level's picks, and Ability Score Improvements). The owner only.
+ */
+export const requestRetrainMutation = (options?: Partial<Options<RequestRetrainData>>): UseMutationOptions<RequestRetrainResponse, RequestRetrainError, Options<RequestRetrainData>> => {
+    const mutationOptions: UseMutationOptions<RequestRetrainResponse, RequestRetrainError, Options<RequestRetrainData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await requestRetrain({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listRetrainChoicesQueryKey = (options: Options<ListRetrainChoicesData>) => createQueryKey('listRetrainChoices', options);
+
+/**
+ * List the picks a retrain can change
+ *
+ * Each pick the Character made on a level, with the options it could take instead. The owner only.
+ */
+export const listRetrainChoicesOptions = (options: Options<ListRetrainChoicesData>) => queryOptions<ListRetrainChoicesResponse, ListRetrainChoicesError, ListRetrainChoicesResponse, ReturnType<typeof listRetrainChoicesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listRetrainChoices({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listRetrainChoicesQueryKey(options)
+});
+
+export const listCharacterRevisionsQueryKey = (options: Options<ListCharacterRevisionsData>) => createQueryKey('listCharacterRevisions', options);
+
+/**
+ * List a Character's Revisions
+ *
+ * The builds approved retrains replaced, newest first. Its owner or a DM.
+ */
+export const listCharacterRevisionsOptions = (options: Options<ListCharacterRevisionsData>) => queryOptions<ListCharacterRevisionsResponse, ListCharacterRevisionsError, ListCharacterRevisionsResponse, ReturnType<typeof listCharacterRevisionsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listCharacterRevisions({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listCharacterRevisionsQueryKey(options)
+});
+
+/**
+ * Approve a retrain
+ *
+ * Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+ */
+export const approveRetrainMutation = (options?: Partial<Options<ApproveRetrainData>>): UseMutationOptions<ApproveRetrainResponse, ApproveRetrainError, Options<ApproveRetrainData>> => {
+    const mutationOptions: UseMutationOptions<ApproveRetrainResponse, ApproveRetrainError, Options<ApproveRetrainData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await approveRetrain({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Decline a retrain
+ *
+ * Declines a pending retrain. DM only.
+ */
+export const declineRetrainMutation = (options?: Partial<Options<DeclineRetrainData>>): UseMutationOptions<DeclineRetrainResponse, DeclineRetrainError, Options<DeclineRetrainData>> => {
+    const mutationOptions: UseMutationOptions<DeclineRetrainResponse, DeclineRetrainError, Options<DeclineRetrainData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await declineRetrain({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -1632,6 +1865,63 @@ export const rollRestMutation = (options?: Partial<Options<RollRestData>>): UseM
     const mutationOptions: UseMutationOptions<RollRestResponse, RollRestError, Options<RollRestData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await rollRest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Keep a roll
+ *
+ * Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
+ */
+export const keepRollMutation = (options?: Partial<Options<KeepRollData>>): UseMutationOptions<KeepRollResponse, KeepRollError, Options<KeepRollData>> => {
+    const mutationOptions: UseMutationOptions<KeepRollResponse, KeepRollError, Options<KeepRollData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await keepRoll({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Reroll a die with Heroic Inspiration
+ *
+ * Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll resolves. The roller only.
+ */
+export const rerollDieMutation = (options?: Partial<Options<RerollDieData>>): UseMutationOptions<RerollDieResponse, RerollDieError, Options<RerollDieData>> => {
+    const mutationOptions: UseMutationOptions<RerollDieResponse, RerollDieError, Options<RerollDieData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rerollDie({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Pass Heroic Inspiration
+ *
+ * Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The owner only.
+ */
+export const passInspirationMutation = (options?: Partial<Options<PassInspirationData>>): UseMutationOptions<PassInspirationResponse, PassInspirationError, Options<PassInspirationData>> => {
+    const mutationOptions: UseMutationOptions<PassInspirationResponse, PassInspirationError, Options<PassInspirationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await passInspiration({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -3230,6 +3520,83 @@ export const seeReleaseNoteMutation = (options?: Partial<Options<SeeReleaseNoteD
     const mutationOptions: UseMutationOptions<SeeReleaseNoteResponse, SeeReleaseNoteError, Options<SeeReleaseNoteData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await seeReleaseNote({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Discard my Character draft
+ *
+ * Starts the wizard over.
+ */
+export const discardCharacterDraftMutation = (options?: Partial<Options<DiscardCharacterDraftData>>): UseMutationOptions<DiscardCharacterDraftResponse, DiscardCharacterDraftError, Options<DiscardCharacterDraftData>> => {
+    const mutationOptions: UseMutationOptions<DiscardCharacterDraftResponse, DiscardCharacterDraftError, Options<DiscardCharacterDraftData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await discardCharacterDraft({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getCharacterDraftQueryKey = (options: Options<GetCharacterDraftData>) => createQueryKey('getCharacterDraft', options);
+
+/**
+ * Read my Character draft
+ *
+ * The Character the caller is making in this Campaign's wizard, with the step reached, the choices so far and any rolled scores.
+ */
+export const getCharacterDraftOptions = (options: Options<GetCharacterDraftData>) => queryOptions<GetCharacterDraftResponse, GetCharacterDraftError, GetCharacterDraftResponse, ReturnType<typeof getCharacterDraftQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCharacterDraft({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCharacterDraftQueryKey(options)
+});
+
+/**
+ * Save my Character draft
+ *
+ * Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server rolled them.
+ */
+export const saveCharacterDraftMutation = (options?: Partial<Options<SaveCharacterDraftData>>): UseMutationOptions<SaveCharacterDraftResponse, SaveCharacterDraftError, Options<SaveCharacterDraftData>> => {
+    const mutationOptions: UseMutationOptions<SaveCharacterDraftResponse, SaveCharacterDraftError, Options<SaveCharacterDraftData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveCharacterDraft({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Roll ability scores
+ *
+ * Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+ */
+export const rollCharacterScoresMutation = (options?: Partial<Options<RollCharacterScoresData>>): UseMutationOptions<RollCharacterScoresResponse, RollCharacterScoresError, Options<RollCharacterScoresData>> => {
+    const mutationOptions: UseMutationOptions<RollCharacterScoresResponse, RollCharacterScoresError, Options<RollCharacterScoresData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await rollCharacterScores({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

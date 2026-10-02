@@ -171,4 +171,66 @@ describe('dice tray', () => {
     const missing = await mountApp(`/campaigns/${ID}/dice`, {})
     expect(missing.wrapper.find('[data-testid="dice-missing"]').exists()).toBe(true)
   })
+
+  it('offers a holder of Heroic Inspiration a reroll or the roll as it stands', async () => {
+    reducedMotion(true)
+    const sent: { path: string; body: unknown }[] = []
+    const choosing = withDice([15, 8, 2], { choosing: true })
+    const { wrapper } = await mountApp(`/campaigns/${ID}/dice`, {
+      [`${base}/rolls/${ROLL}/reroll`]: async (u, req) => {
+        sent.push({ path: u.pathname, body: await req.clone().json() })
+        return withDice([15, 19, 2], { status: 'resolved', total: 22, rerolled: true, choosing: false })
+      },
+      [`${base}/rolls/${ROLL}/keep`]: (u) => {
+        sent.push({ path: u.pathname, body: null })
+        return withDice([15, 8, 2], { status: 'resolved', total: 20, choosing: false })
+      },
+      [`${base}/rolls`]: (_u, req) => (req.method === 'POST' ? choosing : []),
+      [base]: () => campaign(),
+    })
+    await wrapper.get('[data-testid="roll-purpose"]').setValue('Stealth')
+    await wrapper.get('[data-testid="roll-form"]').trigger('submit')
+    await flushPromises()
+    const card = () => wrapper.get('[data-testid="roll-card"]')
+    expect(card().get('[data-testid="inspiration-choice"]').text()).toContain('You have Heroic Inspiration')
+    expect(card().find('[data-testid="roll-total"]').exists()).toBe(false)
+    await expectAccessible(wrapper.element as Element)
+    await card().get('[data-testid="reroll-1"]').trigger('click')
+    await flushPromises()
+    expect(card().get('[data-testid="rerolled"]').text()).toContain('spent on a reroll')
+    expect(card().get('[data-testid="roll-total"]').text()).toContain('22')
+    expect(card().find('[data-testid="inspiration-choice"]').exists()).toBe(false)
+    document.body.innerHTML = ''
+    const again = await mountApp(`/campaigns/${ID}/dice`, {
+      [`${base}/rolls/${ROLL}/keep`]: (u) => {
+        sent.push({ path: u.pathname, body: null })
+        return withDice([15, 8, 2], { status: 'resolved', total: 20, choosing: false })
+      },
+      [`${base}/rolls`]: (_u, req) => (req.method === 'POST' ? choosing : []),
+      [base]: () => campaign(),
+    })
+    await again.wrapper.get('[data-testid="roll-purpose"]').setValue('Stealth')
+    await again.wrapper.get('[data-testid="roll-form"]').trigger('submit')
+    await flushPromises()
+    await again.wrapper.get('[data-testid="keep-roll"]').trigger('click')
+    await flushPromises()
+    expect(again.wrapper.get('[data-testid="roll-total"]').text()).toContain('20')
+    expect(sent).toEqual([
+      { path: `${base}/rolls/${ROLL}/reroll`, body: { die: 1 } },
+      { path: `${base}/rolls/${ROLL}/keep`, body: null },
+    ])
+    document.body.innerHTML = ''
+    const watching = await mountApp(`/campaigns/${ID}/dice`, {
+      [`${base}/rolls`]: (_u, req) =>
+        req.method === 'POST' ? { ...choosing, mine: false, canRoll: false, roller: { id: roller.id, name: 'Tamsin' } } : [],
+      [base]: () => campaign('player'),
+    })
+    await watching.wrapper.get('[data-testid="roll-purpose"]').setValue('Stealth')
+    await watching.wrapper.get('[data-testid="roll-form"]').trigger('submit')
+    await flushPromises()
+    const card2 = watching.wrapper.get('[data-testid="roll-card"]')
+    expect(card2.text()).toContain('Tamsin may spend Heroic Inspiration')
+    expect(card2.find('[data-testid="keep-roll"]').exists()).toBe(false)
+    expect(card2.text()).not.toContain('Waiting for Tamsin')
+  })
 })

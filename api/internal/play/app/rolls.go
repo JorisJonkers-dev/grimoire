@@ -42,6 +42,10 @@ type Repository interface {
 	Rolls(ctx context.Context, campaign uuid.UUID, limit int) ([]domain.Roll, error)
 	SetDie(ctx context.Context, id domain.RollID, no, value int, mode string) (bool, error)
 	ResolveRoll(ctx context.Context, id domain.RollID, total int, now time.Time) error
+	SetRollChoice(ctx context.Context, id domain.RollID, choosing, rerolled bool) error
+	RerollDie(ctx context.Context, id domain.RollID, no, value int) error
+	Inspired(ctx context.Context, campaign, member uuid.UUID) (bool, error)
+	SpendInspiration(ctx context.Context, campaign, member uuid.UUID) (bool, error)
 	Append(ctx context.Context, campaign uuid.UUID, e LogEntry) error
 	ActionLog(ctx context.Context, campaign uuid.UUID, limit int) ([]domain.Action, error)
 }
@@ -290,16 +294,26 @@ func (s *Rolls) apply(ctx context.Context, tx Repository, c caller.Caller, me do
 			return err
 		}
 	}
-	return s.resolve(ctx, tx, c, me, r, now)
+	return s.resolve(ctx, tx, c, me, r, now, true)
 }
 
-func (s *Rolls) resolve(ctx context.Context, tx Repository, c caller.Caller, me domain.Member, r domain.Roll, now time.Time) error {
-	spec, _ := dice.Parse(r.Notation) // stored notation was validated when the request was made
-	faces := make([][]int, len(spec.Groups))
+// resolve totals a roll once every die is set. When offer is set, a roller holding Heroic Inspiration
+// first gets to keep it or reroll a die, unless Inspiration was already spent on it.
+func (s *Rolls) resolve(ctx context.Context, tx Repository, c caller.Caller, me domain.Member, r domain.Roll, now time.Time, offer bool) error {
 	for _, d := range r.Dice {
 		if d.Value == 0 {
 			return nil
 		}
+	}
+	if offer && !r.Rerolled {
+		inspired, err := tx.Inspired(ctx, r.CampaignID, r.Roller.ID)
+		if err != nil || inspired {
+			return firstErr(err, tx.SetRollChoice(ctx, r.ID, true, false))
+		}
+	}
+	spec, _ := dice.Parse(r.Notation) // stored notation was validated when the request was made
+	faces := make([][]int, len(spec.Groups))
+	for _, d := range r.Dice {
 		faces[d.Group] = append(faces[d.Group], d.Value)
 	}
 	modifier := 0
@@ -311,4 +325,90 @@ func (s *Rolls) resolve(ctx context.Context, tx Repository, c caller.Caller, me 
 		return err
 	}
 	return tx.Append(ctx, r.CampaignID, LogEntry{Kind: domain.ActionRollResolved, Actor: me, Caller: c, RollID: r.ID, Value: res.Total, At: now})
+}
+
+func firstErr(err, otherwise error) error {
+	if err != nil {
+		return err
+	}
+	return otherwise
+}
+
+// Keep resolves a roll its roller chose not to reroll; the roller or a DM.
+func (s *Rolls) Keep(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.RollID) (domain.Roll, error) {
+	return s.choose(ctx, c, campaign, id, func(_ Repository, r domain.Roll, _ domain.Member) (domain.Roll, error) { return r, nil })
+}
+
+// Reroll spends the roller's Heroic Inspiration to roll one die again, and resolves the roll with the new
+// face; only the roller, while it chooses.
+func (s *Rolls) Reroll(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.RollID, no int) (domain.Roll, error) {
+	return s.choose(ctx, c, campaign, id, func(tx Repository, r domain.Roll, me domain.Member) (domain.Roll, error) {
+		if r.Roller.ID != me.ID {
+			return r, apperr.ErrForbidden
+		}
+		if no < 0 || no >= len(r.Dice) {
+			return r, apperr.ErrNotFound
+		}
+		spent, err := tx.SpendInspiration(ctx, campaign, me.ID)
+		if err != nil || !spent {
+			return r, firstErr(err, apperr.Refuse("you have no Heroic Inspiration to spend"))
+		}
+		seed := s.Seed()
+		d := &r.Dice[no]
+		d.Value = dice.Face(s.Source(seed), d.Faces)
+		if err := tx.RerollDie(ctx, r.ID, d.No, d.Value); err != nil {
+			return r, err
+		}
+		r.Rerolled = true
+		entry := LogEntry{Kind: domain.ActionDieRolled, Actor: me, Caller: c, Seed: &seed, RollID: r.ID, DieNo: &d.No, Value: d.Value, At: s.Now()}
+		return r, tx.Append(ctx, campaign, entry)
+	})
+}
+
+// choosing locks a roll waiting for its roller to keep or reroll it; the roller or a DM.
+func choosing(ctx context.Context, tx Repository, campaign uuid.UUID, id domain.RollID, me domain.Member) (domain.Roll, error) {
+	status, err := tx.LockRoll(ctx, campaign, id)
+	if err != nil {
+		return domain.Roll{}, err
+	}
+	r, err := tx.Roll(ctx, campaign, id)
+	if err != nil {
+		return domain.Roll{}, err
+	}
+	if r.Roller.ID != me.ID && !me.DM {
+		return domain.Roll{}, apperr.ErrForbidden
+	}
+	if status != domain.StatusPending || !r.Choosing {
+		return domain.Roll{}, apperr.ErrConflict
+	}
+	return r, nil
+}
+
+// choose ends a roll's keep-or-reroll step: the change, then the total.
+func (s *Rolls) choose(ctx context.Context, c caller.Caller, campaign uuid.UUID, id domain.RollID, change func(Repository, domain.Roll, domain.Member) (domain.Roll, error)) (domain.Roll, error) {
+	me, err := s.Members.Membership(ctx, campaign, c.Subject)
+	if err != nil {
+		return domain.Roll{}, err
+	}
+	err = s.Repo.InTx(ctx, func(tx Repository) error {
+		r, err := choosing(ctx, tx, campaign, id, me)
+		if err != nil {
+			return err
+		}
+		if r, err = change(tx, r, me); err != nil {
+			return err
+		}
+		if err := tx.SetRollChoice(ctx, r.ID, false, r.Rerolled); err != nil {
+			return err
+		}
+		return s.resolve(ctx, tx, c, me, r, s.Now(), false)
+	})
+	if err != nil {
+		return domain.Roll{}, err
+	}
+	out, err := s.Get(ctx, c, campaign, id)
+	if err == nil && s.Resolved != nil {
+		s.Resolved(campaign, id)
+	}
+	return out, err
 }

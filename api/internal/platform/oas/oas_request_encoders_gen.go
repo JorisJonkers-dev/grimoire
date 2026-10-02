@@ -38,8 +38,36 @@ func encodeAcceptInviteRequest(
 	return nil
 }
 
+func encodeCastRitualRequest(
+	req *SpellChoice,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeConfirmTwoStepRequest(
 	req *TwoStepCode,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCopySpellRequest(
+	req *SpellChoice,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -318,6 +346,20 @@ func encodeJoinCampaignRequest(
 	return nil
 }
 
+func encodeLevelUpRequest(
+	req *LevelUpRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeLinkOidcAccountRequest(
 	req *OidcAccountLink,
 	r *http.Request,
@@ -332,8 +374,36 @@ func encodeLinkOidcAccountRequest(
 	return nil
 }
 
+func encodePassInspirationRequest(
+	req *InspirationPass,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePassTwoStepRequest(
 	req *TwoStepAnswer,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePrepareSpellsRequest(
+	req *SpellPreparation,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -430,6 +500,20 @@ func encodePublishReleaseNoteRequest(
 	return nil
 }
 
+func encodeRequestRetrainRequest(
+	req *RetrainRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeRequestSignInLinkRequest(
 	req *SignInLinkRequest,
 	r *http.Request,
@@ -444,8 +528,36 @@ func encodeRequestSignInLinkRequest(
 	return nil
 }
 
+func encodeRerollDieRequest(
+	req *RerollIn,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeResetRecoveryCodesRequest(
 	req *TwoStepCode,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveCharacterDraftRequest(
+	req *CharacterDraftSave,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

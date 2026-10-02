@@ -101,14 +101,31 @@ func (q *Queries) AdoptCharacterIdentity(ctx context.Context, id uuid.UUID) erro
 	return err
 }
 
+const campaignClock = `-- name: CampaignClock :one
+SELECT game_day, game_minute FROM campaign.campaigns WHERE id = $1
+`
+
+type CampaignClockRow struct {
+	GameDay    int32
+	GameMinute int32
+}
+
+func (q *Queries) CampaignClock(ctx context.Context, id uuid.UUID) (CampaignClockRow, error) {
+	row := q.db.QueryRow(ctx, campaignClock, id)
+	var i CampaignClockRow
+	err := row.Scan(&i.GameDay, &i.GameMinute)
+	return i, err
+}
+
 const characterAbilities = `-- name: CharacterAbilities :many
-SELECT ability, base, bonus FROM campaign.character_abilities WHERE character_id = $1
+SELECT ability, base, bonus, increase FROM campaign.character_abilities WHERE character_id = $1
 `
 
 type CharacterAbilitiesRow struct {
-	Ability string
-	Base    int32
-	Bonus   int32
+	Ability  string
+	Base     int32
+	Bonus    int32
+	Increase int32
 }
 
 func (q *Queries) CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error) {
@@ -120,7 +137,105 @@ func (q *Queries) CharacterAbilities(ctx context.Context, characterID uuid.UUID)
 	items := []CharacterAbilitiesRow{}
 	for rows.Next() {
 		var i CharacterAbilitiesRow
-		if err := rows.Scan(&i.Ability, &i.Base, &i.Bonus); err != nil {
+		if err := rows.Scan(
+			&i.Ability,
+			&i.Base,
+			&i.Bonus,
+			&i.Increase,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const characterClasses = `-- name: CharacterClasses :many
+SELECT class_slug, subclass_slug, level FROM campaign.character_classes WHERE character_id = $1 ORDER BY position
+`
+
+type CharacterClassesRow struct {
+	ClassSlug    string
+	SubclassSlug pgtype.Text
+	Level        int32
+}
+
+func (q *Queries) CharacterClasses(ctx context.Context, characterID uuid.UUID) ([]CharacterClassesRow, error) {
+	rows, err := q.db.Query(ctx, characterClasses, characterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterClassesRow{}
+	for rows.Next() {
+		var i CharacterClassesRow
+		if err := rows.Scan(&i.ClassSlug, &i.SubclassSlug, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const characterPicks = `-- name: CharacterPicks :many
+SELECT level, choice, value FROM campaign.character_picks WHERE character_id = $1 ORDER BY level, choice, value
+`
+
+type CharacterPicksRow struct {
+	Level  int32
+	Choice string
+	Value  string
+}
+
+func (q *Queries) CharacterPicks(ctx context.Context, characterID uuid.UUID) ([]CharacterPicksRow, error) {
+	rows, err := q.db.Query(ctx, characterPicks, characterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterPicksRow{}
+	for rows.Next() {
+		var i CharacterPicksRow
+		if err := rows.Scan(&i.Level, &i.Choice, &i.Value); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const characterPurse = `-- name: CharacterPurse :many
+SELECT c.id AS container_id, k.coin, k.amount
+FROM campaign.containers c LEFT JOIN campaign.container_coins k ON k.container_id = c.id
+WHERE c.character_id = $1
+`
+
+type CharacterPurseRow struct {
+	ContainerID uuid.UUID
+	Coin        pgtype.Text
+	Amount      pgtype.Int4
+}
+
+// The coins in a Character's own container; none when it has never held any.
+func (q *Queries) CharacterPurse(ctx context.Context, characterID pgtype.UUID) ([]CharacterPurseRow, error) {
+	rows, err := q.db.Query(ctx, characterPurse, characterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterPurseRow{}
+	for rows.Next() {
+		var i CharacterPurseRow
+		if err := rows.Scan(&i.ContainerID, &i.Coin, &i.Amount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -160,6 +275,44 @@ func (q *Queries) CharacterSkills(ctx context.Context, characterID uuid.UUID) ([
 	return items, nil
 }
 
+const characterSpells = `-- name: CharacterSpells :many
+SELECT class_slug, spell_slug, learned_level, prepared, spellbook FROM campaign.character_spells WHERE character_id = $1 ORDER BY class_slug, spell_slug
+`
+
+type CharacterSpellsRow struct {
+	ClassSlug    string
+	SpellSlug    string
+	LearnedLevel int32
+	Prepared     bool
+	Spellbook    bool
+}
+
+func (q *Queries) CharacterSpells(ctx context.Context, characterID uuid.UUID) ([]CharacterSpellsRow, error) {
+	rows, err := q.db.Query(ctx, characterSpells, characterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterSpellsRow{}
+	for rows.Next() {
+		var i CharacterSpellsRow
+		if err := rows.Scan(
+			&i.ClassSlug,
+			&i.SpellSlug,
+			&i.LearnedLevel,
+			&i.Prepared,
+			&i.Spellbook,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const characterWeapons = `-- name: CharacterWeapons :many
 SELECT weapon_slug FROM campaign.character_weapons WHERE character_id = $1 ORDER BY ordering
 `
@@ -184,12 +337,35 @@ func (q *Queries) CharacterWeapons(ctx context.Context, characterID uuid.UUID) (
 	return items, nil
 }
 
+const clearCharacterClasses = `-- name: ClearCharacterClasses :exec
+DELETE FROM campaign.character_classes WHERE character_id = $1
+`
+
+func (q *Queries) ClearCharacterClasses(ctx context.Context, characterID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, clearCharacterClasses, characterID)
+	return err
+}
+
 const clearCharacterWeapons = `-- name: ClearCharacterWeapons :exec
 DELETE FROM campaign.character_weapons WHERE character_id = $1
 `
 
 func (q *Queries) ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, clearCharacterWeapons, characterID)
+	return err
+}
+
+const clearClassSpells = `-- name: ClearClassSpells :exec
+DELETE FROM campaign.character_spells WHERE character_id = $1 AND class_slug = $2
+`
+
+type ClearClassSpellsParams struct {
+	CharacterID uuid.UUID
+	ClassSlug   string
+}
+
+func (q *Queries) ClearClassSpells(ctx context.Context, arg ClearClassSpellsParams) error {
+	_, err := q.db.Exec(ctx, clearClassSpells, arg.CharacterID, arg.ClassSlug)
 	return err
 }
 
@@ -204,6 +380,20 @@ type DeleteCharacterParams struct {
 
 func (q *Queries) DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error {
 	_, err := q.db.Exec(ctx, deleteCharacter, arg.CampaignID, arg.ID)
+	return err
+}
+
+const deleteCharacterDraft = `-- name: DeleteCharacterDraft :exec
+DELETE FROM campaign.character_drafts WHERE campaign_id = $1 AND owner_subject = $2
+`
+
+type DeleteCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+}
+
+func (q *Queries) DeleteCharacterDraft(ctx context.Context, arg DeleteCharacterDraftParams) error {
+	_, err := q.db.Exec(ctx, deleteCharacterDraft, arg.CampaignID, arg.OwnerSubject)
 	return err
 }
 
@@ -274,7 +464,7 @@ func (q *Queries) GetAccountCharacter(ctx context.Context, id uuid.UUID) (GetAcc
 const getCharacter = `-- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare, c.heroic_inspiration
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1 AND c.id = $2
 `
@@ -285,29 +475,33 @@ type GetCharacterParams struct {
 }
 
 type GetCharacterRow struct {
-	ID             uuid.UUID
-	CampaignID     uuid.UUID
-	CharacterID    pgtype.UUID
-	OwnerMemberID  uuid.UUID
-	OwnerName      string
-	OwnerSubject   string
-	Name           string
-	Ruleset        string
-	SpeciesSlug    string
-	ClassSlug      string
-	BackgroundSlug string
-	Level          int32
-	AbilityMethod  string
-	HpMax          int32
-	HpCurrent      int32
-	ArmorSlug      pgtype.Text
-	Shield         bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	PortraitKey    pgtype.Text
-	PortraitType   pgtype.Text
-	TokenKey       pgtype.Text
-	TokenType      pgtype.Text
+	ID                uuid.UUID
+	CampaignID        uuid.UUID
+	CharacterID       pgtype.UUID
+	OwnerMemberID     uuid.UUID
+	OwnerName         string
+	OwnerSubject      string
+	Name              string
+	Ruleset           string
+	SpeciesSlug       string
+	ClassSlug         string
+	BackgroundSlug    string
+	Level             int32
+	AbilityMethod     string
+	HpMax             int32
+	HpCurrent         int32
+	ArmorSlug         pgtype.Text
+	Shield            bool
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	PortraitKey       pgtype.Text
+	PortraitType      pgtype.Text
+	TokenKey          pgtype.Text
+	TokenType         pgtype.Text
+	TempHp            int32
+	LevelUpReady      bool
+	CanPrepare        bool
+	HeroicInspiration bool
 }
 
 func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error) {
@@ -337,13 +531,62 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 		&i.PortraitType,
 		&i.TokenKey,
 		&i.TokenType,
+		&i.TempHp,
+		&i.LevelUpReady,
+		&i.CanPrepare,
+		&i.HeroicInspiration,
 	)
 	return i, err
 }
 
+const getCharacterDraft = `-- name: GetCharacterDraft :one
+SELECT step, build, rolled, updated_at FROM campaign.character_drafts WHERE campaign_id = $1 AND owner_subject = $2
+`
+
+type GetCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+}
+
+type GetCharacterDraftRow struct {
+	Step      int32
+	Build     []byte
+	Rolled    []int32
+	UpdatedAt time.Time
+}
+
+func (q *Queries) GetCharacterDraft(ctx context.Context, arg GetCharacterDraftParams) (GetCharacterDraftRow, error) {
+	row := q.db.QueryRow(ctx, getCharacterDraft, arg.CampaignID, arg.OwnerSubject)
+	var i GetCharacterDraftRow
+	err := row.Scan(
+		&i.Step,
+		&i.Build,
+		&i.Rolled,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const giveUpInspiration = `-- name: GiveUpInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = false WHERE campaign_id = $1 AND id = $2 AND heroic_inspiration
+`
+
+type GiveUpInspirationParams struct {
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) GiveUpInspiration(ctx context.Context, arg GiveUpInspirationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, giveUpInspiration, arg.CampaignID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const insertAccountCharacter = `-- name: InsertAccountCharacter :exec
-INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
+INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, appearance, backstory, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
 `
 
 type InsertAccountCharacterParams struct {
@@ -354,6 +597,8 @@ type InsertAccountCharacterParams struct {
 	SpeciesSlug    string
 	ClassSlug      string
 	BackgroundSlug string
+	Appearance     string
+	Backstory      string
 	Now            time.Time
 }
 
@@ -366,6 +611,8 @@ func (q *Queries) InsertAccountCharacter(ctx context.Context, arg InsertAccountC
 		arg.SpeciesSlug,
 		arg.ClassSlug,
 		arg.BackgroundSlug,
+		arg.Appearance,
+		arg.Backstory,
 		arg.Now,
 	)
 	return err
@@ -414,6 +661,106 @@ func (q *Queries) InsertCharacter(ctx context.Context, arg InsertCharacterParams
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const insertCharacterClass = `-- name: InsertCharacterClass :exec
+INSERT INTO campaign.character_classes (character_id, class_slug, subclass_slug, level, position)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertCharacterClassParams struct {
+	CharacterID  uuid.UUID
+	ClassSlug    string
+	SubclassSlug pgtype.Text
+	Level        int32
+	Position     int32
+}
+
+func (q *Queries) InsertCharacterClass(ctx context.Context, arg InsertCharacterClassParams) error {
+	_, err := q.db.Exec(ctx, insertCharacterClass,
+		arg.CharacterID,
+		arg.ClassSlug,
+		arg.SubclassSlug,
+		arg.Level,
+		arg.Position,
+	)
+	return err
+}
+
+const insertCharacterPick = `-- name: InsertCharacterPick :exec
+INSERT INTO campaign.character_picks (character_id, level, choice, value) VALUES ($1, $2, $3, $4)
+`
+
+type InsertCharacterPickParams struct {
+	CharacterID uuid.UUID
+	Level       int32
+	Choice      string
+	Value       string
+}
+
+func (q *Queries) InsertCharacterPick(ctx context.Context, arg InsertCharacterPickParams) error {
+	_, err := q.db.Exec(ctx, insertCharacterPick,
+		arg.CharacterID,
+		arg.Level,
+		arg.Choice,
+		arg.Value,
+	)
+	return err
+}
+
+const insertCharacterSpell = `-- name: InsertCharacterSpell :exec
+INSERT INTO campaign.character_spells (character_id, class_slug, spell_slug, learned_level, prepared, spellbook)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertCharacterSpellParams struct {
+	CharacterID  uuid.UUID
+	ClassSlug    string
+	SpellSlug    string
+	LearnedLevel int32
+	Prepared     bool
+	Spellbook    bool
+}
+
+func (q *Queries) InsertCharacterSpell(ctx context.Context, arg InsertCharacterSpellParams) error {
+	_, err := q.db.Exec(ctx, insertCharacterSpell,
+		arg.CharacterID,
+		arg.ClassSlug,
+		arg.SpellSlug,
+		arg.LearnedLevel,
+		arg.Prepared,
+		arg.Spellbook,
+	)
+	return err
+}
+
+const levelUpCharacter = `-- name: LevelUpCharacter :execrows
+UPDATE campaign.characters
+SET level = level + 1, hp_max = hp_max + $1, hp_current = hp_current + $1, level_up_ready = false, can_prepare = true, updated_at = $2
+WHERE campaign_id = $3 AND id = $4 AND level_up_ready AND level = $5
+`
+
+type LevelUpCharacterParams struct {
+	Gain       int32
+	Now        time.Time
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+	Level      int32
+}
+
+// Takes the next level once, only while it is unlocked.
+func (q *Queries) LevelUpCharacter(ctx context.Context, arg LevelUpCharacterParams) (int64, error) {
+	result, err := q.db.Exec(ctx, levelUpCharacter,
+		arg.Gain,
+		arg.Now,
+		arg.CampaignID,
+		arg.ID,
+		arg.Level,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const listAccountCharacters = `-- name: ListAccountCharacters :many
@@ -467,26 +814,27 @@ func (q *Queries) ListAccountCharacters(ctx context.Context, ownerSubject string
 
 const listCharacters = `-- name: ListCharacters :many
 SELECT c.id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name, c.ruleset,
-       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key
+       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key, c.heroic_inspiration
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1
 ORDER BY c.name, c.id
 `
 
 type ListCharactersRow struct {
-	ID            uuid.UUID
-	CharacterID   pgtype.UUID
-	OwnerMemberID uuid.UUID
-	OwnerName     string
-	OwnerSubject  string
-	Name          string
-	Ruleset       string
-	SpeciesSlug   string
-	ClassSlug     string
-	Level         int32
-	HpMax         int32
-	HpCurrent     int32
-	TokenKey      pgtype.Text
+	ID                uuid.UUID
+	CharacterID       pgtype.UUID
+	OwnerMemberID     uuid.UUID
+	OwnerName         string
+	OwnerSubject      string
+	Name              string
+	Ruleset           string
+	SpeciesSlug       string
+	ClassSlug         string
+	Level             int32
+	HpMax             int32
+	HpCurrent         int32
+	TokenKey          pgtype.Text
+	HeroicInspiration bool
 }
 
 func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error) {
@@ -512,6 +860,7 @@ func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]L
 			&i.HpMax,
 			&i.HpCurrent,
 			&i.TokenKey,
+			&i.HeroicInspiration,
 		); err != nil {
 			return nil, err
 		}
@@ -534,6 +883,101 @@ type RenameCampaignCharactersParams struct {
 
 func (q *Queries) RenameCampaignCharacters(ctx context.Context, arg RenameCampaignCharactersParams) error {
 	_, err := q.db.Exec(ctx, renameCampaignCharacters, arg.Name, arg.CharacterID)
+	return err
+}
+
+const rollCharacterDraft = `-- name: RollCharacterDraft :execrows
+INSERT INTO campaign.character_drafts (campaign_id, owner_subject, step, build, rolled, updated_at) VALUES ($1, $2, 3, '{}', $3, $4)
+ON CONFLICT (campaign_id, owner_subject) DO UPDATE SET rolled = EXCLUDED.rolled, updated_at = EXCLUDED.updated_at
+WHERE campaign.character_drafts.rolled IS NULL
+`
+
+type RollCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+	Rolled       []int32
+	Now          time.Time
+}
+
+// Rolled scores are set once per draft; a draft is started if there is none.
+func (q *Queries) RollCharacterDraft(ctx context.Context, arg RollCharacterDraftParams) (int64, error) {
+	result, err := q.db.Exec(ctx, rollCharacterDraft,
+		arg.CampaignID,
+		arg.OwnerSubject,
+		arg.Rolled,
+		arg.Now,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const saveCharacterDraft = `-- name: SaveCharacterDraft :exec
+INSERT INTO campaign.character_drafts (campaign_id, owner_subject, step, build, updated_at) VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (campaign_id, owner_subject) DO UPDATE SET step = EXCLUDED.step, build = EXCLUDED.build, updated_at = EXCLUDED.updated_at
+`
+
+type SaveCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+	Step         int32
+	Build        []byte
+	Now          time.Time
+}
+
+func (q *Queries) SaveCharacterDraft(ctx context.Context, arg SaveCharacterDraftParams) error {
+	_, err := q.db.Exec(ctx, saveCharacterDraft,
+		arg.CampaignID,
+		arg.OwnerSubject,
+		arg.Step,
+		arg.Build,
+		arg.Now,
+	)
+	return err
+}
+
+const setAbilityIncrease = `-- name: SetAbilityIncrease :exec
+UPDATE campaign.character_abilities SET increase = $1 WHERE character_id = $2 AND ability = $3
+`
+
+type SetAbilityIncreaseParams struct {
+	Increase    int32
+	CharacterID uuid.UUID
+	Ability     string
+}
+
+func (q *Queries) SetAbilityIncrease(ctx context.Context, arg SetAbilityIncreaseParams) error {
+	_, err := q.db.Exec(ctx, setAbilityIncrease, arg.Increase, arg.CharacterID, arg.Ability)
+	return err
+}
+
+const setCampaignClock = `-- name: SetCampaignClock :exec
+UPDATE campaign.campaigns SET game_day = $1, game_minute = $2 WHERE id = $3
+`
+
+type SetCampaignClockParams struct {
+	GameDay    int32
+	GameMinute int32
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetCampaignClock(ctx context.Context, arg SetCampaignClockParams) error {
+	_, err := q.db.Exec(ctx, setCampaignClock, arg.GameDay, arg.GameMinute, arg.ID)
+	return err
+}
+
+const setCanPrepare = `-- name: SetCanPrepare :exec
+UPDATE campaign.characters SET can_prepare = $1 WHERE id = $2
+`
+
+type SetCanPrepareParams struct {
+	CanPrepare bool
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetCanPrepare(ctx context.Context, arg SetCanPrepareParams) error {
+	_, err := q.db.Exec(ctx, setCanPrepare, arg.CanPrepare, arg.ID)
 	return err
 }
 
@@ -606,6 +1050,59 @@ func (q *Queries) SetCharacterToken(ctx context.Context, arg SetCharacterTokenPa
 	return err
 }
 
+const setHeroicInspiration = `-- name: SetHeroicInspiration :exec
+UPDATE campaign.characters SET heroic_inspiration = $1 WHERE campaign_id = $2 AND id = $3
+`
+
+type SetHeroicInspirationParams struct {
+	Inspired   bool
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error {
+	_, err := q.db.Exec(ctx, setHeroicInspiration, arg.Inspired, arg.CampaignID, arg.ID)
+	return err
+}
+
+const setLevelUpReady = `-- name: SetLevelUpReady :exec
+UPDATE campaign.characters SET level_up_ready = $1 AND level < 20, updated_at = $2 WHERE campaign_id = $3 AND id = $4
+`
+
+type SetLevelUpReadyParams struct {
+	Ready      bool
+	Now        time.Time
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error {
+	_, err := q.db.Exec(ctx, setLevelUpReady,
+		arg.Ready,
+		arg.Now,
+		arg.CampaignID,
+		arg.ID,
+	)
+	return err
+}
+
+const takeInspiration = `-- name: TakeInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = true WHERE campaign_id = $1 AND id = $2 AND NOT heroic_inspiration
+`
+
+type TakeInspirationParams struct {
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) TakeInspiration(ctx context.Context, arg TakeInspirationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, takeInspiration, arg.CampaignID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const updateAccountCharacter = `-- name: UpdateAccountCharacter :exec
 UPDATE campaign.account_characters SET name = $1, backstory = $2, updated_at = $3 WHERE id = $4
 `
@@ -629,13 +1126,14 @@ func (q *Queries) UpdateAccountCharacter(ctx context.Context, arg UpdateAccountC
 
 const updateCharacter = `-- name: UpdateCharacter :exec
 UPDATE campaign.characters
-SET name = $1, hp_current = $2, armor_slug = $3, shield = $4, updated_at = $5
-WHERE campaign_id = $6 AND id = $7
+SET name = $1, hp_current = $2, temp_hp = $3, armor_slug = $4, shield = $5, updated_at = $6
+WHERE campaign_id = $7 AND id = $8
 `
 
 type UpdateCharacterParams struct {
 	Name       string
 	HpCurrent  int32
+	TempHp     int32
 	ArmorSlug  pgtype.Text
 	Shield     bool
 	Now        time.Time
@@ -647,6 +1145,7 @@ func (q *Queries) UpdateCharacter(ctx context.Context, arg UpdateCharacterParams
 	_, err := q.db.Exec(ctx, updateCharacter,
 		arg.Name,
 		arg.HpCurrent,
+		arg.TempHp,
 		arg.ArmorSlug,
 		arg.Shield,
 		arg.Now,

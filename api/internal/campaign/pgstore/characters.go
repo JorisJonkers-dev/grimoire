@@ -24,7 +24,7 @@ func (s *Store) InsertCharacter(ctx context.Context, c domain.Character, now tim
 			owned = uuid.New()
 			if err := q.InsertAccountCharacter(ctx, queries.InsertAccountCharacterParams{
 				ID: owned, OwnerSubject: c.Owner.Subject, Name: c.Name, Ruleset: c.Ruleset, SpeciesSlug: c.Species,
-				ClassSlug: c.Class, BackgroundSlug: c.Background, Now: now,
+				ClassSlug: c.Class, BackgroundSlug: c.Background, Appearance: c.Appearance, Backstory: c.Backstory, Now: now,
 			}); err != nil {
 				return err
 			}
@@ -86,8 +86,9 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		},
 		ID: domain.CharacterID(r.ID), Owned: domain.OwnedID(r.CharacterID.Bytes), CampaignID: domain.CampaignID(r.CampaignID),
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
-		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), UpdatedAt: r.UpdatedAt,
+		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), TempHP: int(r.TempHp), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
+		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady, CanPrepare: r.CanPrepare, HeroicInspiration: r.HeroicInspiration,
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
 	if err != nil {
@@ -97,6 +98,9 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		c.Base[a.Ability] = int(a.Base)
 		if a.Bonus > 0 {
 			c.Bonus[a.Ability] = int(a.Bonus)
+		}
+		if a.Increase > 0 {
+			c.Increase[a.Ability] = int(a.Increase)
 		}
 	}
 	skills, err := s.q.CharacterSkills(ctx, r.ID)
@@ -113,7 +117,173 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 	if c.Weapons, err = s.q.CharacterWeapons(ctx, r.ID); err != nil {
 		return domain.Character{}, err
 	}
+	return s.progress(ctx, c)
+}
+
+// progress reads what a Character chose as it levelled: its classes, picks and spells. One that never
+// levelled has every level in its starting class.
+func (s *Store) progress(ctx context.Context, c domain.Character) (domain.Character, error) {
+	id := uuid.UUID(c.ID)
+	classes, err := s.q.CharacterClasses(ctx, id)
+	if err != nil {
+		return domain.Character{}, err
+	}
+	for _, x := range classes {
+		c.Classes = append(c.Classes, domain.ClassLevel{Class: x.ClassSlug, Subclass: x.SubclassSlug.String, Level: int(x.Level)})
+	}
+	if len(c.Classes) == 0 {
+		c.Classes = []domain.ClassLevel{{Class: c.Class, Subclass: "", Level: max(c.Level, 1)}}
+	}
+	picks, err := s.q.CharacterPicks(ctx, id)
+	if err != nil {
+		return domain.Character{}, err
+	}
+	for _, p := range picks {
+		c.Picks = append(c.Picks, domain.Pick{Level: int(p.Level), Choice: p.Choice, Value: p.Value})
+	}
+	spells, err := s.q.CharacterSpells(ctx, id)
+	if err != nil {
+		return domain.Character{}, err
+	}
+	for _, sp := range spells {
+		c.Spells = append(c.Spells, domain.LearnedSpell{Class: sp.ClassSlug, Spell: sp.SpellSlug, Level: int(sp.LearnedLevel), Prepared: sp.Prepared, Spellbook: sp.Spellbook})
+	}
 	return c, nil
+}
+
+// LevelUp takes a Character's next level once, while it is unlocked, with everything chosen for it.
+//
+//nolint:gosec // levels, hit points and increases are bounded by the rules
+func (s *Store) LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) error {
+	id := uuid.UUID(l.ID)
+	n, err := s.q.LevelUpCharacter(ctx, queries.LevelUpCharacterParams{CampaignID: uuid.UUID(l.CampaignID), ID: id, Level: int32(l.From), Gain: int32(l.Gain), Now: now})
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return domain.ErrConflict
+	}
+	if err := s.q.ClearCharacterClasses(ctx, id); err != nil {
+		return err
+	}
+	for i, x := range l.Classes {
+		p := queries.InsertCharacterClassParams{CharacterID: id, ClassSlug: x.Class, SubclassSlug: optSlug(x.Subclass), Level: int32(x.Level), Position: int32(i)}
+		if err := s.q.InsertCharacterClass(ctx, p); err != nil {
+			return err
+		}
+	}
+	for _, p := range l.Picks {
+		if err := s.q.InsertCharacterPick(ctx, queries.InsertCharacterPickParams{CharacterID: id, Level: int32(p.Level), Choice: p.Choice, Value: p.Value}); err != nil {
+			return err
+		}
+	}
+	if err := s.insertSpells(ctx, id, l.Spells); err != nil {
+		return err
+	}
+	for ability, inc := range l.Increase {
+		if err := s.q.SetAbilityIncrease(ctx, queries.SetAbilityIncreaseParams{CharacterID: id, Ability: ability, Increase: int32(inc)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//nolint:gosec // levels run 1 to 20
+func (s *Store) insertSpells(ctx context.Context, id uuid.UUID, spells []domain.LearnedSpell) error {
+	for _, sp := range spells {
+		p := queries.InsertCharacterSpellParams{
+			CharacterID: id, ClassSlug: sp.Class, SpellSlug: sp.Spell, LearnedLevel: int32(sp.Level), Prepared: sp.Prepared, Spellbook: sp.Spellbook,
+		}
+		if err := s.q.InsertCharacterSpell(ctx, p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ReplaceClassSpells sets every cantrip and spell a Character has through one class, and whether it may
+// prepare again.
+func (s *Store) ReplaceClassSpells(ctx context.Context, ch domain.CharacterID, class string, spells []domain.LearnedSpell, canPrepare bool) error {
+	id := uuid.UUID(ch)
+	if err := s.q.ClearClassSpells(ctx, queries.ClearClassSpellsParams{CharacterID: id, ClassSlug: class}); err != nil {
+		return err
+	}
+	if err := s.insertSpells(ctx, id, spells); err != nil {
+		return err
+	}
+	return s.q.SetCanPrepare(ctx, queries.SetCanPrepareParams{ID: id, CanPrepare: canPrepare})
+}
+
+// Clock reads a Campaign's Game Clock.
+func (s *Store) Clock(ctx context.Context, id domain.CampaignID) (domain.Clock, error) {
+	r, err := s.q.CampaignClock(ctx, uuid.UUID(id))
+	return domain.Clock{Day: int(r.GameDay), Minute: int(r.GameMinute)}, notFound(err)
+}
+
+// SetClock sets a Campaign's Game Clock.
+//
+//nolint:gosec // days and minutes are bounded by their constraints
+func (s *Store) SetClock(ctx context.Context, id domain.CampaignID, c domain.Clock) error {
+	return s.q.SetCampaignClock(ctx, queries.SetCampaignClockParams{ID: uuid.UUID(id), GameDay: int32(c.Day), GameMinute: int32(c.Minute)})
+}
+
+// Purse reads the coins in a Character's own container.
+func (s *Store) Purse(ctx context.Context, ch domain.CharacterID) (domain.Purse, error) {
+	rows, err := s.q.CharacterPurse(ctx, pgtype.UUID{Bytes: ch, Valid: true})
+	out := domain.Purse{Container: uuid.Nil, Coins: map[string]int{}}
+	for _, r := range rows {
+		out.Container = r.ContainerID
+		if r.Coin.Valid {
+			out.Coins[r.Coin.String] = int(r.Amount.Int32)
+		}
+	}
+	return out, err
+}
+
+// SetPurse replaces the coins in a container.
+//
+//nolint:gosec // purses are bounded by their constraints
+func (s *Store) SetPurse(ctx context.Context, p domain.Purse) error {
+	if err := s.q.ClearContainerCoins(ctx, p.Container); err != nil {
+		return err
+	}
+	for coin, n := range p.Coins {
+		if err := s.q.SetContainerCoins(ctx, queries.SetContainerCoinsParams{ContainerID: p.Container, Coin: coin, Amount: int32(n)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SetHeroicInspiration grants or takes a Character's Heroic Inspiration.
+func (s *Store) SetHeroicInspiration(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, inspired bool) error {
+	return s.q.SetHeroicInspiration(ctx, queries.SetHeroicInspirationParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Inspired: inspired})
+}
+
+// PassInspiration moves Heroic Inspiration from one Character to another that lacks it, or refuses with
+// ErrConflict when the giver has none or the taker already has it.
+func (s *Store) PassInspiration(ctx context.Context, id domain.CampaignID, from, to domain.CharacterID) error {
+	n, err := s.q.GiveUpInspiration(ctx, queries.GiveUpInspirationParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(from)})
+	if err != nil || n == 0 {
+		return firstErr(err, domain.ErrConflict)
+	}
+	n, err = s.q.TakeInspiration(ctx, queries.TakeInspirationParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(to)})
+	if err != nil || n == 0 {
+		return firstErr(err, domain.ErrConflict)
+	}
+	return nil
+}
+
+func firstErr(err, otherwise error) error {
+	if err != nil {
+		return err
+	}
+	return otherwise
+}
+
+// SetLevelUpReady unlocks or locks a Character's next level; a level 20 Character has none.
+func (s *Store) SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error {
+	return s.q.SetLevelUpReady(ctx, queries.SetLevelUpReadyParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Ready: ready, Now: now})
 }
 
 // Characters lists a Campaign's Characters.
@@ -129,6 +299,7 @@ func (s *Store) Characters(ctx context.Context, id domain.CampaignID) ([]domain.
 			ID:    domain.CharacterID(r.ID), Owned: domain.OwnedID(r.CharacterID.Bytes), CampaignID: id,
 			Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 			Ruleset: r.Ruleset, Level: int(r.Level), HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), Token: image(r.TokenKey, pgtype.Text{}),
+			HeroicInspiration: r.HeroicInspiration,
 		})
 	}
 	return out, nil
@@ -140,7 +311,7 @@ func (s *Store) UpdateCharacter(ctx context.Context, c domain.Character, now tim
 		q := r.(*Store).q
 		id := uuid.UUID(c.ID)
 		if err := q.UpdateCharacter(ctx, queries.UpdateCharacterParams{
-			CampaignID: uuid.UUID(c.CampaignID), ID: id, Name: c.Name, HpCurrent: int32(c.HPCurrent), //nolint:gosec // hit points are small
+			CampaignID: uuid.UUID(c.CampaignID), ID: id, Name: c.Name, HpCurrent: int32(c.HPCurrent), TempHp: int32(c.TempHP), //nolint:gosec // hit points are small
 			ArmorSlug: optSlug(c.Armor), Shield: c.Shield, Now: now,
 		}); err != nil {
 			return err

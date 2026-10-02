@@ -40,6 +40,15 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 	return r, ht.ErrNotImplemented
 }
 
+// ApproveRetrain implements approveRetrain operation.
+//
+// Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
+func (UnimplementedHandler) ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (r ApproveRetrainRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // BeginTwoStep implements beginTwoStep operation.
 //
 // Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
@@ -59,6 +68,16 @@ func (UnimplementedHandler) CancelFriendRequest(ctx context.Context, params Canc
 	return r, ht.ErrNotImplemented
 }
 
+// CastRitual implements castRitual operation.
+//
+// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
+// to the Game Clock.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals
+func (UnimplementedHandler) CastRitual(ctx context.Context, req *SpellChoice, params CastRitualParams) (r CastRitualRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ClearTokenIcon implements clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -74,6 +93,16 @@ func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearToke
 //
 // POST /api/v1/account/two-step/confirm
 func (UnimplementedHandler) ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (r ConfirmTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CopySpell implements copySpell operation.
+//
+// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
+// hours per spell level.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook
+func (UnimplementedHandler) CopySpell(ctx context.Context, req *SpellChoice, params CopySpellParams) (r CopySpellRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -215,6 +244,15 @@ func (UnimplementedHandler) DeclineFriendRequest(ctx context.Context, req *Frien
 	return r, ht.ErrNotImplemented
 }
 
+// DeclineRetrain implements declineRetrain operation.
+//
+// Declines a pending retrain. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline
+func (UnimplementedHandler) DeclineRetrain(ctx context.Context, params DeclineRetrainParams) (r DeclineRetrainRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteCharacter implements deleteCharacter operation.
 //
 // Removes a Character. The owner or a DM, never during Combat.
@@ -302,6 +340,15 @@ func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpc
 //
 // POST /api/v1/account/two-step/disable
 func (UnimplementedHandler) DisableTwoStep(ctx context.Context, req *TwoStepCode) (r DisableTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DiscardCharacterDraft implements discardCharacterDraft operation.
+//
+// Starts the wizard over.
+//
+// DELETE /api/v1/campaigns/{campaignId}/character-draft
+func (UnimplementedHandler) DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (r DiscardCharacterDraftRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -413,6 +460,16 @@ func (UnimplementedHandler) GetCampaign(ctx context.Context, params GetCampaignP
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) GetCharacter(ctx context.Context, params GetCharacterParams) (r GetCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetCharacterDraft implements getCharacterDraft operation.
+//
+// The Character the caller is making in this Campaign's wizard, with the step reached, the choices so
+// far and any rolled scores.
+//
+// GET /api/v1/campaigns/{campaignId}/character-draft
+func (UnimplementedHandler) GetCharacterDraft(ctx context.Context, params GetCharacterDraftParams) (r GetCharacterDraftRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -571,6 +628,16 @@ func (UnimplementedHandler) GetSpell(ctx context.Context, params GetSpellParams)
 	return r, ht.ErrNotImplemented
 }
 
+// GetSpellcasting implements getSpellcasting operation.
+//
+// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
+// Clock.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/spells
+func (UnimplementedHandler) GetSpellcasting(ctx context.Context, params GetSpellcastingParams) (r GetSpellcastingRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetStatus implements getStatus operation.
 //
 // Reports the running version and whether the database answers.
@@ -605,6 +672,24 @@ func (UnimplementedHandler) GetUnseenReleaseNote(ctx context.Context) (r GetUnse
 //
 // POST /api/v1/characters/{characterId}/campaigns
 func (UnimplementedHandler) JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (r JoinCampaignRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// KeepRoll implements keepRoll operation.
+//
+// Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/keep
+func (UnimplementedHandler) KeepRoll(ctx context.Context, params KeepRollParams) (r KeepRollRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// LevelUp implements levelUp operation.
+//
+// Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+func (UnimplementedHandler) LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (r LevelUpRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -651,6 +736,15 @@ func (UnimplementedHandler) ListAdminAccounts(ctx context.Context) (r ListAdminA
 //
 // GET /api/v1/campaigns
 func (UnimplementedHandler) ListCampaigns(ctx context.Context, params ListCampaignsParams) (r ListCampaignsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListCharacterRevisions implements listCharacterRevisions operation.
+//
+// The builds approved retrains replaced, newest first. Its owner or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/revisions
+func (UnimplementedHandler) ListCharacterRevisions(ctx context.Context, params ListCharacterRevisionsParams) (r ListCharacterRevisionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -854,6 +948,24 @@ func (UnimplementedHandler) ListReleaseNotes(ctx context.Context) (r ListRelease
 	return r, ht.ErrNotImplemented
 }
 
+// ListRetrainChoices implements listRetrainChoices operation.
+//
+// Each pick the Character made on a level, with the options it could take instead. The owner only.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices
+func (UnimplementedHandler) ListRetrainChoices(ctx context.Context, params ListRetrainChoicesParams) (r ListRetrainChoicesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListRetrains implements listRetrains operation.
+//
+// A Character's retrain requests, newest first. Its owner or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+func (UnimplementedHandler) ListRetrains(ctx context.Context, params ListRetrainsParams) (r ListRetrainsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListRolls implements listRolls operation.
 //
 // Recent Roll Requests in the Campaign. Members only.
@@ -926,6 +1038,16 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// PassInspiration implements passInspiration operation.
+//
+// Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The
+// owner only.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
+func (UnimplementedHandler) PassInspiration(ctx context.Context, req *InspirationPass, params PassInspirationParams) (r PassInspirationRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PassTwoStep implements passTwoStep operation.
 //
 // Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
@@ -933,6 +1055,25 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 //
 // POST /api/v1/sign-in/two-step
 func (UnimplementedHandler) PassTwoStep(ctx context.Context, req *TwoStepAnswer) (r PassTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PlanLevelUp implements planLevelUp operation.
+//
+// The classes the next level can go to and, for one of them, its hit points, choices and spells. The
+// owner or a DM, out of combat.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+func (UnimplementedHandler) PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (r PlanLevelUpRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PrepareSpells implements prepareSpells operation.
+//
+// Sets the spells prepared through one class within its limit, after a long rest or a new level.
+//
+// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared
+func (UnimplementedHandler) PrepareSpells(ctx context.Context, req *SpellPreparation, params PrepareSpellsParams) (r PrepareSpellsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1017,12 +1158,32 @@ func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMembe
 	return r, ht.ErrNotImplemented
 }
 
+// RequestRetrain implements requestRetrain operation.
+//
+// Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for
+// each level's picks, and Ability Score Improvements). The owner only.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+func (UnimplementedHandler) RequestRetrain(ctx context.Context, req *RetrainRequest, params RequestRetrainParams) (r RequestRetrainRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RequestSignInLink implements requestSignInLink operation.
 //
 // For a forgotten password. Answers the same whether or not an Account has the email.
 //
 // POST /api/v1/sign-in-links
 func (UnimplementedHandler) RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (r RequestSignInLinkRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RerollDie implements rerollDie operation.
+//
+// Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll
+// resolves. The roller only.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll
+func (UnimplementedHandler) RerollDie(ctx context.Context, req *RerollIn, params RerollDieParams) (r RerollDieRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1132,12 +1293,31 @@ func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInvit
 	return r, ht.ErrNotImplemented
 }
 
+// RollCharacterScores implements rollCharacterScores operation.
+//
+// Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+//
+// POST /api/v1/campaigns/{campaignId}/character-draft/roll
+func (UnimplementedHandler) RollCharacterScores(ctx context.Context, params RollCharacterScoresParams) (r RollCharacterScoresRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RollRest implements rollRest operation.
 //
 // The server rolls every die still empty. The roller or a DM.
 //
 // POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
 func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams) (r RollRestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveCharacterDraft implements saveCharacterDraft operation.
+//
+// Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
+// rolled them.
+//
+// PUT /api/v1/campaigns/{campaignId}/character-draft
+func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (r SaveCharacterDraftRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

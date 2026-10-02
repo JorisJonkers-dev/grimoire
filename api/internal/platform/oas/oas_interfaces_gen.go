@@ -13,6 +13,10 @@ type AcceptInviteRes interface {
 	acceptInviteRes()
 }
 
+type ApproveRetrainRes interface {
+	approveRetrainRes()
+}
+
 type BeginTwoStepRes interface {
 	beginTwoStepRes()
 }
@@ -21,12 +25,20 @@ type CancelFriendRequestRes interface {
 	cancelFriendRequestRes()
 }
 
+type CastRitualRes interface {
+	castRitualRes()
+}
+
 type ClearTokenIconRes interface {
 	clearTokenIconRes()
 }
 
 type ConfirmTwoStepRes interface {
 	confirmTwoStepRes()
+}
+
+type CopySpellRes interface {
+	copySpellRes()
 }
 
 type CreateAccessTokenRes interface {
@@ -89,6 +101,10 @@ type DeclineFriendRequestRes interface {
 	declineFriendRequestRes()
 }
 
+type DeclineRetrainRes interface {
+	declineRetrainRes()
+}
+
 type DeleteCharacterRes interface {
 	deleteCharacterRes()
 }
@@ -127,6 +143,10 @@ type DiffNpcRevisionsRes interface {
 
 type DisableTwoStepRes interface {
 	disableTwoStepRes()
+}
+
+type DiscardCharacterDraftRes interface {
+	discardCharacterDraftRes()
 }
 
 type DraftReleaseNoteRes interface {
@@ -171,6 +191,10 @@ type GetBuilderOptionsRes interface {
 
 type GetCampaignRes interface {
 	getCampaignRes()
+}
+
+type GetCharacterDraftRes interface {
+	getCharacterDraftRes()
 }
 
 type GetCharacterRes interface {
@@ -245,6 +269,10 @@ type GetSpellRes interface {
 	getSpellRes()
 }
 
+type GetSpellcastingRes interface {
+	getSpellcastingRes()
+}
+
 type GetStatusRes interface {
 	getStatusRes()
 }
@@ -259,6 +287,14 @@ type GetUnseenReleaseNoteRes interface {
 
 type JoinCampaignRes interface {
 	joinCampaignRes()
+}
+
+type KeepRollRes interface {
+	keepRollRes()
+}
+
+type LevelUpRes interface {
+	levelUpRes()
 }
 
 type LinkOidcAccountRes interface {
@@ -279,6 +315,10 @@ type ListAdminAccountsRes interface {
 
 type ListCampaignsRes interface {
 	listCampaignsRes()
+}
+
+type ListCharacterRevisionsRes interface {
+	listCharacterRevisionsRes()
 }
 
 type ListCharactersRes interface {
@@ -369,6 +409,14 @@ type ListReleaseNotesRes interface {
 	listReleaseNotesRes()
 }
 
+type ListRetrainChoicesRes interface {
+	listRetrainChoicesRes()
+}
+
+type ListRetrainsRes interface {
+	listRetrainsRes()
+}
+
 type ListRollsRes interface {
 	listRollsRes()
 }
@@ -401,8 +449,20 @@ type ListSpellsRes interface {
 	listSpellsRes()
 }
 
+type PassInspirationRes interface {
+	passInspirationRes()
+}
+
 type PassTwoStepRes interface {
 	passTwoStepRes()
+}
+
+type PlanLevelUpRes interface {
+	planLevelUpRes()
+}
+
+type PrepareSpellsRes interface {
+	prepareSpellsRes()
 }
 
 type PreviewAccountInviteRes interface {
@@ -441,8 +501,16 @@ type RemoveMemberRes interface {
 	removeMemberRes()
 }
 
+type RequestRetrainRes interface {
+	requestRetrainRes()
+}
+
 type RequestSignInLinkRes interface {
 	requestSignInLinkRes()
+}
+
+type RerollDieRes interface {
+	rerollDieRes()
 }
 
 type RerollStockRes interface {
@@ -489,8 +557,16 @@ type RevokeInviteRes interface {
 	revokeInviteRes()
 }
 
+type RollCharacterScoresRes interface {
+	rollCharacterScoresRes()
+}
+
 type RollRestRes interface {
 	rollRestRes()
+}
+
+type SaveCharacterDraftRes interface {
+	saveCharacterDraftRes()
 }
 
 type SeeReleaseNoteRes interface {

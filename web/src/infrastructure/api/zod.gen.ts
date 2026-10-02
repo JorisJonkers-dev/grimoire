@@ -637,6 +637,15 @@ export const zAccountInvite = z.object({
 });
 
 /**
+ * How a new Character's ability scores are set.
+ */
+export const zCreationMethod = z.enum([
+    'standard-array',
+    'point-buy',
+    'rolled'
+]);
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export const zInitiativeMode = z.enum(['individual', 'side']);
@@ -767,6 +776,42 @@ export const zAbilityLine = z.object({
 });
 
 /**
+ * A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+ */
+export const zAttackLine = z.object({
+    name: z.string().max(120),
+    toHit: z.int().gte(-10).lte(30),
+    damage: z.string().max(30),
+    damageType: z.string().max(40),
+    reachFeet: z.int().gte(0).lte(30),
+    rangeFeet: z.int().gte(0).lte(10000),
+    longRangeFeet: z.int().gte(0).lte(10000),
+    mastery: z.string().max(40).optional()
+});
+
+/**
+ * A class feature or species trait the Character has.
+ */
+export const zTraitLine = z.object({
+    name: z.string().max(120),
+    source: z.enum([
+        'class',
+        'species',
+        'feat'
+    ]),
+    level: z.int().gte(0).lte(20),
+    description: z.string().max(20000)
+});
+
+/**
+ * The armor and weapons a Character is trained with.
+ */
+export const zProficiencies = z.object({
+    armor: z.array(z.string().max(60)).max(10),
+    weapons: z.array(z.string().max(60)).max(10)
+});
+
+/**
  * An Effect currently on the Character.
  */
 export const zActiveEffect = z.object({
@@ -821,6 +866,26 @@ export const zOwnedCharacterChange = z.object({
  */
 export const zCharacterJoin = z.object({
     campaignId: zId
+});
+
+/**
+ * The time on a Campaign's Game Clock.
+ */
+export const zGameClock = z.object({
+    day: z.int().gte(0).lte(1000000),
+    minute: z.int().gte(0).lte(1439)
+});
+
+/**
+ * Points from Ability Score Improvements, per ability.
+ */
+export const zAbilityIncrease = z.object({
+    strength: z.int().gte(0).lte(20).optional(),
+    dexterity: z.int().gte(0).lte(20).optional(),
+    constitution: z.int().gte(0).lte(20).optional(),
+    intelligence: z.int().gte(0).lte(20).optional(),
+    wisdom: z.int().gte(0).lte(20).optional(),
+    charisma: z.int().gte(0).lte(20).optional()
 });
 
 /**
@@ -1025,7 +1090,8 @@ export const zActivity = z.object({
         'encounter_check',
         'loot_table',
         'settlement',
-        'shop'
+        'shop',
+        'character'
     ]),
     entityId: zId,
     name: z.string().max(120),
@@ -1167,7 +1233,23 @@ export const zRollRequest = z.object({
     dice: z.array(zRollDie).max(120),
     modifiers: z.array(zRollModifier).max(12),
     createdAt: z.iso.datetime().max(40),
-    resolvedAt: z.iso.datetime().max(40).optional()
+    resolvedAt: z.iso.datetime().max(40).optional(),
+    choosing: z.boolean().optional(),
+    rerolled: z.boolean().optional()
+});
+
+/**
+ * The die to roll again.
+ */
+export const zRerollIn = z.object({
+    die: z.int().gte(0).lte(119)
+});
+
+/**
+ * The Character to give Heroic Inspiration to.
+ */
+export const zInspirationPass = z.object({
+    to: zId
 });
 
 /**
@@ -1979,7 +2061,54 @@ export const zMapEdit = z.object({
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
 /**
- * The choices for a first-level Character.
+ * The wizard's choices so far; every field may still be missing.
+ */
+export const zCharacterDraftBuild = z.object({
+    name: z.string().max(60).optional(),
+    species: zSlug.optional(),
+    class: zSlug.optional(),
+    background: zSlug.optional(),
+    method: z.enum([
+        'standard-array',
+        'point-buy',
+        'rolled'
+    ]).optional(),
+    base: zAbilityBase.optional(),
+    bonus: zAbilityBonus.optional(),
+    skills: z.array(zSlug).max(4).optional(),
+    armor: zArmorChoice.optional(),
+    shield: z.boolean().optional(),
+    weapons: z.array(zSlug).max(4).optional(),
+    appearance: z.string().max(2000).optional(),
+    backstory: z.string().max(4000).optional()
+});
+
+/**
+ * A Character being made in the wizard.
+ */
+export const zCharacterDraft = z.object({
+    step: z.int().gte(0).lte(8),
+    build: zCharacterDraftBuild,
+    rolled: z.tuple([
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18)
+    ]).optional()
+});
+
+/**
+ * The wizard's step and choices to keep.
+ */
+export const zCharacterDraftSave = z.object({
+    step: z.int().gte(0).lte(8),
+    build: zCharacterDraftBuild
+});
+
+/**
+ * The choices for a new Character, who starts at the Campaign's starting level.
  */
 export const zCharacterBuild = z.object({
     name: zCharacterName,
@@ -1996,7 +2125,9 @@ export const zCharacterBuild = z.object({
     skills: z.array(zSlug).max(4),
     armor: zArmorChoice.optional(),
     shield: z.boolean(),
-    weapons: z.array(zSlug).max(4)
+    weapons: z.array(zSlug).max(4),
+    appearance: z.string().max(2000).optional(),
+    backstory: z.string().max(4000).optional()
 });
 
 /**
@@ -2005,6 +2136,11 @@ export const zCharacterBuild = z.object({
 export const zCharacterEdit = z.object({
     name: zCharacterName.optional(),
     hpCurrent: z.int().gte(0).lte(1000).optional(),
+    damage: z.int().gte(0).lte(1000).optional(),
+    heal: z.int().gte(0).lte(1000).optional(),
+    tempHp: z.int().gte(0).lte(1000).optional(),
+    levelUpReady: z.boolean().optional(),
+    heroicInspiration: z.boolean().optional(),
     armor: zArmorChoice.optional(),
     shield: z.boolean().optional(),
     weapons: z.array(zSlug).max(4).optional()
@@ -2025,7 +2161,8 @@ export const zSkillLine = z.object({
     skill: zSlug,
     ability: zAbility,
     bonus: z.int().gte(-5).lte(30),
-    proficient: z.boolean()
+    proficient: z.boolean(),
+    expertise: z.boolean()
 });
 
 /**
@@ -2051,6 +2188,243 @@ export const zWeaponLine = z.object({
 });
 
 /**
+ * The spells to have prepared through a class.
+ */
+export const zSpellPreparation = z.object({
+    class: zSlug,
+    spells: z.array(zSlug).max(30)
+});
+
+/**
+ * One spell by slug.
+ */
+export const zSpellChoice = z.object({
+    spell: zSlug
+});
+
+/**
+ * One value chosen for a choice on reaching a level.
+ */
+export const zPickLine = z.object({
+    level: z.int().gte(1).lte(20),
+    choice: zSlug,
+    value: zSlug
+});
+
+/**
+ * A Character's rebuildable choices.
+ */
+export const zBuildSnapshot = z.object({
+    species: zSlug,
+    background: zSlug,
+    method: z.enum([
+        'standard-array',
+        'point-buy',
+        'rolled'
+    ]),
+    base: zAbilityBase,
+    bonus: zAbilityBonus,
+    increase: zAbilityIncrease,
+    skills: z.array(zSlug).max(6),
+    picks: z.array(zPickLine).max(100)
+});
+
+/**
+ * A rebuilt build and why.
+ */
+export const zRetrainRequest = z.object({
+    build: zBuildSnapshot,
+    reason: z.string().max(500)
+});
+
+/**
+ * A request to rebuild a Campaign Character, and the DM's decision.
+ */
+export const zRetrain = z.object({
+    id: zId,
+    characterId: zId,
+    status: z.enum([
+        'pending',
+        'approved',
+        'declined'
+    ]),
+    reason: z.string().max(500),
+    requestedBy: zDisplayName,
+    decidedBy: zDisplayName.optional(),
+    createdAt: z.iso.datetime().max(40),
+    decidedAt: z.iso.datetime().max(40).optional(),
+    proposed: zBuildSnapshot
+});
+
+/**
+ * A build an approved retrain replaced.
+ */
+export const zCharacterRevisionLine = z.object({
+    no: z.int().gte(1).lte(100000),
+    author: zDisplayName,
+    createdAt: z.iso.datetime().max(40),
+    build: zBuildSnapshot,
+    retrainId: zId.optional()
+});
+
+/**
+ * A class the next level can go to, with what multiclassing into it still needs.
+ */
+export const zLevelUpClass = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    hitDie: z.int().gte(0).lte(12),
+    level: z.int().gte(0).lte(20),
+    unmet: z.array(z.string().max(200)).max(10)
+});
+
+/**
+ * One option of a choice, with the prerequisites the Character does not meet.
+ */
+export const zLevelUpOption = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    unmet: z.array(z.string().max(200)).max(10)
+});
+
+/**
+ * A pick a Character made on a level, with the options it could take instead.
+ */
+export const zRetrainChoice = z.object({
+    level: z.int().gte(1).lte(20),
+    choice: zSlug,
+    name: z.string().max(120),
+    value: zSlug,
+    options: z.array(zLevelUpOption).max(100)
+});
+
+/**
+ * A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+ */
+export const zLevelUpChoice = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    pool: z.enum([
+        'feat_category',
+        'subclass',
+        'skill',
+        'expertise',
+        'weapon',
+        'listed'
+    ]),
+    count: z.int().gte(1).lte(10),
+    options: z.array(zLevelUpOption).max(100)
+});
+
+/**
+ * A cantrip (level 0) or spell on a class's list.
+ */
+export const zSpellPick = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    level: z.int().gte(0).lte(9),
+    ritual: z.boolean().optional()
+});
+
+/**
+ * Spells by slug, name and level.
+ */
+export const zSpellPickList = z.array(zSpellPick).max(500);
+
+/**
+ * What a Character casts through one class.
+ */
+export const zClassSpells = z.object({
+    class: zSlug,
+    name: z.string().max(120),
+    level: z.int().gte(1).lte(20),
+    limit: z.int().gte(0).lte(30),
+    maxLevel: z.int().gte(0).lte(9),
+    keepsSpellbook: z.boolean(),
+    allotment: z.int().gte(0).lte(60),
+    cantrips: zSpellPickList,
+    prepared: zSpellPickList,
+    always: zSpellPickList,
+    spellbook: zSpellPickList,
+    options: zSpellPickList,
+    copyable: zSpellPickList
+});
+
+/**
+ * A Character's spells in every class it casts through.
+ */
+export const zSpellcasting = z.object({
+    canPrepare: z.boolean(),
+    classes: z.array(zClassSpells).max(12),
+    purse: z.array(zLiveCoins).max(5),
+    clock: zGameClock
+});
+
+/**
+ * A ritual cast, how long it took, and the Game Clock after it.
+ */
+export const zRitualCast = z.object({
+    spell: zSpellPick,
+    minutes: z.int().gte(10).lte(1500),
+    clock: zGameClock
+});
+
+/**
+ * What the next level offers in one class.
+ */
+export const zLevelUpPlan = z.object({
+    ready: z.boolean(),
+    held: z.boolean(),
+    level: z.int().gte(2).lte(21),
+    classes: z.array(zLevelUpClass).max(40),
+    class: zSlug,
+    classLevel: z.int().gte(1).lte(21),
+    hitDie: z.int().gte(0).lte(12),
+    average: z.int().gte(1).lte(20),
+    choices: z.array(zLevelUpChoice).max(10),
+    cantrips: z.int().gte(0).lte(10),
+    spells: z.int().gte(0).lte(30),
+    spellList: z.array(zSpellPick).max(500)
+});
+
+/**
+ * The options picked for one choice.
+ */
+export const zLevelUpPickIn = z.object({
+    choice: zSlug,
+    values: z.array(zSlug).max(10)
+});
+
+/**
+ * The choices made for the next level.
+ */
+export const zLevelUpRequest = z.object({
+    class: zSlug,
+    hitPoints: z.enum(['average', 'roll']).optional(),
+    picks: z.array(zLevelUpPickIn).max(10).optional(),
+    increase: zAbilityBonus.optional(),
+    spells: z.array(zSlug).max(40).optional()
+});
+
+/**
+ * The levels a Character has in one class, and its subclass there.
+ */
+export const zClassLine = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    subclass: zSlug.optional(),
+    level: z.int().gte(1).lte(20)
+});
+
+/**
+ * A cantrip or spell a Character learned through a class.
+ */
+export const zLearnedSpellLine = z.object({
+    slug: zSlug,
+    class: zSlug
+});
+
+/**
  * A Character in the party list.
  */
 export const zCharacterSummary = z.object({
@@ -2063,7 +2437,8 @@ export const zCharacterSummary = z.object({
     level: z.int().gte(1).lte(20),
     hpCurrent: z.int().gte(0).lte(1000),
     hpMax: z.int().gte(1).lte(1000),
-    tokenUrl: zAssetUrl.optional()
+    tokenUrl: zAssetUrl.optional(),
+    heroicInspiration: z.boolean().optional()
 });
 
 /**
@@ -2074,7 +2449,14 @@ export const zClassChoice = z.object({
     name: z.string().max(120),
     hitDie: z.int().gte(0).lte(12),
     saves: z.array(zAbility).max(6),
-    skillChoices: z.int().gte(0).lte(6)
+    skillChoices: z.int().gte(0).lte(6),
+    primaryAbilities: z.array(zAbility).max(2).optional(),
+    caster: z.enum([
+        'none',
+        'full',
+        'half',
+        'pact'
+    ]).optional()
 });
 
 /**
@@ -2723,6 +3105,9 @@ export const zCampaignSummary = z.object({
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
     initiativeMode: zInitiativeMode.optional(),
+    creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
+    startingLevel: z.int().gte(1).lte(20).optional(),
+    holdLevelUps: z.boolean().optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -2748,6 +3133,9 @@ export const zCampaign = z.object({
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
     initiativeMode: zInitiativeMode.optional(),
+    creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
+    startingLevel: z.int().gte(1).lte(20).optional(),
+    holdLevelUps: z.boolean().optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
@@ -2780,6 +3168,7 @@ export const zCharacterSheet = z.object({
     backgroundSkills: z.array(zSlug).max(4),
     hpCurrent: z.int().gte(0).lte(1000),
     hpMax: z.int().gte(1).lte(1000),
+    tempHp: z.int().gte(0).lte(1000).optional(),
     armorClass: z.int().gte(0).lte(50),
     initiative: z.int().gte(-5).lte(30),
     speedFeet: z.int().gte(0).lte(200),
@@ -2792,7 +3181,16 @@ export const zCharacterSheet = z.object({
     effects: z.array(zActiveEffect).max(50),
     warnings: z.array(z.string().max(200)).max(10),
     portraitUrl: zAssetUrl.optional(),
-    tokenUrl: zAssetUrl.optional()
+    tokenUrl: zAssetUrl.optional(),
+    characterId: zId.optional(),
+    attacks: z.array(zAttackLine).max(4).optional(),
+    traits: z.array(zTraitLine).max(200).optional(),
+    proficiencies: zProficiencies.optional(),
+    levelUpReady: z.boolean().optional(),
+    heroicInspiration: z.boolean().optional(),
+    increase: zAbilityIncrease.optional(),
+    classes: z.array(zClassLine).max(12).optional(),
+    spells: z.array(zLearnedSpellLine).max(100).optional()
 });
 
 /**
@@ -2834,6 +3232,9 @@ export const zCampaignUpdate = z.object({
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
     initiativeMode: zInitiativeMode.optional(),
+    creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
+    startingLevel: z.int().gte(1).lte(20).optional(),
+    holdLevelUps: z.boolean().optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -3040,6 +3441,11 @@ export const zProblem = z.object({
     detail: z.string().max(2000).optional(),
     instance: z.string().max(500).optional()
 });
+
+/**
+ * Retrain id.
+ */
+export const zRetrainId = zId;
 
 /**
  * Campaign id.
@@ -3368,6 +3774,140 @@ export const zUpdateCharacterPath = z.object({
  * The updated sheet.
  */
 export const zUpdateCharacterResponse = zCharacterSheet;
+
+export const zPlanLevelUpPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+export const zPlanLevelUpQuery = z.object({
+    class: zSlug.optional()
+});
+
+/**
+ * What the next level offers.
+ */
+export const zPlanLevelUpResponse = zLevelUpPlan;
+
+export const zLevelUpBody = zLevelUpRequest;
+
+export const zLevelUpPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The sheet at the new level.
+ */
+export const zLevelUpResponse = zCharacterSheet;
+
+export const zGetSpellcastingPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The spells.
+ */
+export const zGetSpellcastingResponse = zSpellcasting;
+
+export const zPrepareSpellsBody = zSpellPreparation;
+
+export const zPrepareSpellsPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The spells.
+ */
+export const zPrepareSpellsResponse = zSpellcasting;
+
+export const zCastRitualBody = zSpellChoice;
+
+export const zCastRitualPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The ritual and the Game Clock after it.
+ */
+export const zCastRitualResponse = zRitualCast;
+
+export const zCopySpellBody = zSpellChoice;
+
+export const zCopySpellPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The spells.
+ */
+export const zCopySpellResponse = zSpellcasting;
+
+export const zListRetrainsPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The retrains.
+ */
+export const zListRetrainsResponse = z.array(zRetrain).max(200);
+
+export const zRequestRetrainBody = zRetrainRequest;
+
+export const zRequestRetrainPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The pending retrain.
+ */
+export const zRequestRetrainResponse = zRetrain;
+
+export const zListRetrainChoicesPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The picks.
+ */
+export const zListRetrainChoicesResponse = z.array(zRetrainChoice).max(100);
+
+export const zListCharacterRevisionsPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListCharacterRevisionsResponse = z.array(zCharacterRevisionLine).max(200);
+
+export const zApproveRetrainPath = z.object({
+    campaignId: zId,
+    retrainId: zId
+});
+
+/**
+ * The approved retrain.
+ */
+export const zApproveRetrainResponse = zRetrain;
+
+export const zDeclineRetrainPath = z.object({
+    campaignId: zId,
+    retrainId: zId
+});
+
+/**
+ * The declined retrain.
+ */
+export const zDeclineRetrainResponse = zRetrain;
 
 export const zGetPortraitPath = z.object({
     campaignId: zId,
@@ -3938,6 +4478,40 @@ export const zRollRestPath = z.object({
  * The resolved request.
  */
 export const zRollRestResponse = zRollRequest;
+
+export const zKeepRollPath = z.object({
+    campaignId: zId,
+    rollId: zId
+});
+
+/**
+ * The resolved request.
+ */
+export const zKeepRollResponse = zRollRequest;
+
+export const zRerollDieBody = zRerollIn;
+
+export const zRerollDiePath = z.object({
+    campaignId: zId,
+    rollId: zId
+});
+
+/**
+ * The resolved request.
+ */
+export const zRerollDieResponse = zRollRequest;
+
+export const zPassInspirationBody = zInspirationPass;
+
+export const zPassInspirationPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The sheet without Heroic Inspiration.
+ */
+export const zPassInspirationResponse = zCharacterSheet;
 
 export const zGetActionLogPath = z.object({
     campaignId: zId
@@ -4569,6 +5143,44 @@ export const zSeeReleaseNotePath = z.object({
  * Seen.
  */
 export const zSeeReleaseNoteResponse = z.void();
+
+export const zDiscardCharacterDraftPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * Discarded.
+ */
+export const zDiscardCharacterDraftResponse = z.void();
+
+export const zGetCharacterDraftPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The draft.
+ */
+export const zGetCharacterDraftResponse = zCharacterDraft;
+
+export const zSaveCharacterDraftBody = zCharacterDraftSave;
+
+export const zSaveCharacterDraftPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The draft.
+ */
+export const zSaveCharacterDraftResponse = zCharacterDraft;
+
+export const zRollCharacterScoresPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The draft with its rolled scores.
+ */
+export const zRollCharacterScoresResponse = zCharacterDraft;
 
 /**
  * The process is alive.

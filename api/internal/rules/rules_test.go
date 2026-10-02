@@ -174,7 +174,7 @@ func TestArmorClassAndHP(t *testing.T) {
 func TestResourcesByCaster(t *testing.T) {
 	t.Parallel()
 	slots := func(class string) int {
-		for _, r := range rules.FirstLevelResources(class, 8) {
+		for _, r := range rules.ResourcesAt(class, 8, 1) {
 			if r.Key == "spell-slots-1" {
 				return r.Max
 			}
@@ -187,10 +187,10 @@ func TestResourcesByCaster(t *testing.T) {
 			t.Errorf("%s: %d slots", class, got)
 		}
 	}
-	if n := len(rules.FirstLevelResources("fighter", 10)); n != 1 {
+	if n := len(rules.ResourcesAt("fighter", 10, 1)); n != 1 {
 		t.Fatalf("fighter has %d resources", n)
 	}
-	if r := rules.FirstLevelResources("wizard", 6)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 {
+	if r := rules.ResourcesAt("wizard", 6, 0)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 || r.Current != 1 {
 		t.Fatalf("hit dice = %+v", r)
 	}
 }

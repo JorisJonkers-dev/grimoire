@@ -3,19 +3,32 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/mastery"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
-// Compendium is the compendium read port the builder needs.
+// Compendium is the compendium read port the builder and the sheet need.
 type Compendium interface {
 	BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error)
+	Traits(ctx context.Context, ruleset, species string, classes []compendium.ClassLevel, feats []string) ([]compendium.Trait, error)
+	LevelUpOptions(ctx context.Context, ruleset, class string, maxSpellLevel int) (compendium.LevelUpOptions, error)
+	ClassSpells(ctx context.Context, ruleset, class string, maxSpellLevel int) ([]compendium.SpellOption, error)
+	AlwaysPrepared(ctx context.Context, ruleset, class, subclass string, level int) ([]compendium.SpellOption, error)
+	Features(ctx context.Context) (features.Catalog, error)
 }
 
 // CombatStatus says whether a Character is in an active Combat, which locks its sheet.
@@ -36,6 +49,10 @@ type Characters struct {
 	Combat     CombatStatus
 	Blobs      Blobs
 	Now        func() time.Time
+	// Roll rolls six ability scores for a draft; nil means the Campaign cannot roll.
+	Roll func() []int
+	// Die rolls one die with a number of sides for a level's hit points; nil takes the average.
+	Die func(sides int) int
 }
 
 // Sheet is a Character with everything the sheet shows derived from the rules.
@@ -50,6 +67,24 @@ type Sheet struct {
 	Weapons        []compendium.WeaponOption
 	Mine           bool
 	Editable       bool
+	// ClassNames name every class of the ruleset by slug.
+	ClassNames map[string]string
+	// Attacks, Traits and Proficiencies are filled in for a saved Character's sheet.
+	Attacks       []Attack
+	Traits        []compendium.Trait
+	Proficiencies rules.Proficiencies
+}
+
+// Attack is one weapon attack as the sheet shows it, with the Weapon Mastery the Character has.
+type Attack struct {
+	Name        string
+	ToHit       int
+	Damage      string
+	DamageType  string
+	ReachFt     int
+	RangeFt     int
+	LongRangeFt int
+	Mastery     string
 }
 
 // MaxStartingWeapons caps the weapons a new character carries.
@@ -131,20 +166,53 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 	if armor != nil {
 		worn = &rules.Armor{Base: armor.ACBase, AddDex: armor.AddDex, DexCap: armor.DexCap, StrengthRequired: armor.StrengthRequired, Stealth: armor.Stealth}
 	}
+	for a, n := range c.Increase {
+		scores[rules.Ability(a)] += n
+	}
 	derived := rules.BuildSheet(rules.SheetInput{
 		Class: c.Class, Level: max(c.Level, 1), HitDie: class.HitDie, Scores: scores,
-		SaveProfs: toAbilities(class.Saves), SkillProfs: toSkills(append(slices.Clone(c.Skills), background.Skills...)),
-		Armor: worn, ShieldBonus: shield, SpeedFeet: species.SpeedFeet,
+		SaveProfs:  toAbilities(class.Saves),
+		SkillProfs: toSkills(append(append(slices.Clone(c.Skills), background.Skills...), picked(c.Picks, "skills")...)),
+		Expertise:  toSkills(picked(c.Picks, "expertise")),
+		Armor:      worn, ShieldBonus: shield, SpeedFeet: species.SpeedFeet,
 	})
+	if len(c.Classes) > 1 {
+		derived.Resources = rules.MulticlassResources(classLevels(o, c.Classes))
+	}
 	c.BackgroundSkills = background.Skills
 	if c.HPMax == 0 {
-		c.HPMax = rules.FirstLevelHP(class.HitDie, rules.Modifier(scores[rules.Constitution]))
+		c.HPMax = rules.HitPointsAt(class.HitDie, rules.Modifier(scores[rules.Constitution]), max(c.Level, 1))
 		c.HPCurrent = c.HPMax
 	}
+	names := make(map[string]string, len(o.Classes))
+	for _, x := range o.Classes {
+		names[x.Slug] = x.Name
+	}
 	return Sheet{
-		Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
+		ClassNames: names, Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
 		Derived: derived, Armor: armor, Weapons: weapons,
 	}, nil
+}
+
+// picked are the values chosen for one choice as a Character levelled.
+func picked(picks []domain.Pick, choice string) []string {
+	var out []string
+	for _, p := range picks {
+		if p.Choice == choice {
+			out = append(out, p.Value)
+		}
+	}
+	return out
+}
+
+// classLevels are a Character's classes with their Hit Dice, as the multiclass rules read them.
+func classLevels(o compendium.BuilderOptions, classes []domain.ClassLevel) []rules.ClassLevel {
+	out := make([]rules.ClassLevel, 0, len(classes))
+	for _, x := range classes {
+		cl, _ := find(o.Classes, func(c compendium.ClassOption) bool { return c.Slug == x.Class })
+		out = append(out, rules.ClassLevel{Class: x.Class, Level: x.Level, HitDie: cl.HitDie})
+	}
+	return out
 }
 
 func abilities(b domain.Build, background compendium.BackgroundOption, year int) (map[rules.Ability]int, error) {
@@ -193,15 +261,9 @@ func equipment(o compendium.BuilderOptions, b domain.Build) (*compendium.ArmorOp
 	return armor, shield, weapons, nil
 }
 
-func (s *Characters) campaignRuleset(ctx context.Context, r Repository, id domain.CampaignID) (compendium.BuilderOptions, error) {
-	camp, err := r.GetCampaign(ctx, id)
-	if err != nil {
-		return compendium.BuilderOptions{}, err
-	}
-	return s.Compendium.BuilderOptions(ctx, camp.Ruleset)
-}
-
-func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
+// prepare checks a build against the Campaign's rules and makes its sheet at the Campaign's starting
+// level. A fresh build must also use a method the Campaign allows, and rolled scores the server rolled.
+func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build, fresh bool) (Sheet, error) {
 	me, err := member(ctx, s.Repo, c, id)
 	if err != nil {
 		return Sheet{}, err
@@ -211,11 +273,23 @@ func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.Cam
 		return Sheet{}, err
 	}
 	b.Name = name
-	o, err := s.campaignRuleset(ctx, s.Repo, id)
+	if b, err = cleanStory(b); err != nil {
+		return Sheet{}, err
+	}
+	camp, err := s.Repo.GetCampaign(ctx, id)
 	if err != nil {
 		return Sheet{}, err
 	}
-	sheet, err := derive(o, domain.Character{Build: b, CampaignID: id, Owner: me, Ruleset: o.Ruleset, Level: 1})
+	if fresh {
+		if err := s.allowed(ctx, camp, c.Subject, b); err != nil {
+			return Sheet{}, err
+		}
+	}
+	o, err := s.Compendium.BuilderOptions(ctx, camp.Ruleset)
+	if err != nil {
+		return Sheet{}, err
+	}
+	sheet, err := derive(o, domain.Character{Build: b, CampaignID: id, Owner: me, Ruleset: o.Ruleset, Level: max(camp.StartingLevel, 1)})
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -223,14 +297,42 @@ func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.Cam
 	return sheet, nil
 }
 
-// Preview validates a build and shows the sheet it would make, without saving it.
-func (s *Characters) Preview(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
-	return s.prepare(ctx, c, id, b)
+// allowed checks a new build's ability scores come the way the Campaign allows.
+func (s *Characters) allowed(ctx context.Context, camp domain.Campaign, subject string, b domain.Build) error {
+	if len(camp.CreationMethods) > 0 && !slices.Contains(camp.CreationMethods, b.Method) {
+		return refuse("this Campaign sets ability scores another way")
+	}
+	if b.Method != string(rules.Rolled) {
+		return nil
+	}
+	draft, err := s.Repo.Draft(ctx, camp.ID, subject)
+	if errors.Is(err, domain.ErrNotFound) || (err == nil && draft.Rolled == nil) {
+		return refuse("roll your ability scores first")
+	}
+	if err != nil {
+		return err
+	}
+	return invalid(rules.ValidateRolled(abilityMap(b.Base), draft.Rolled))
 }
 
-// Create saves a first-level Character owned by the caller.
+// cleanStory trims a build's Appearance and Backstory and keeps them to their lengths.
+func cleanStory(b domain.Build) (domain.Build, error) {
+	b.Appearance, b.Backstory = strings.TrimSpace(b.Appearance), strings.TrimSpace(b.Backstory)
+	if utf8.RuneCountInString(b.Appearance) > 2000 || utf8.RuneCountInString(b.Backstory) > 4000 {
+		return b, domain.ErrInvalid
+	}
+	return b, nil
+}
+
+// Preview validates a build and shows the sheet it would make, without saving it.
+func (s *Characters) Preview(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
+	return s.prepare(ctx, c, id, b, true)
+}
+
+// Create saves a Character owned by the caller at the Campaign's starting level, and drops the draft it
+// was made from.
 func (s *Characters) Create(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
-	sheet, err := s.prepare(ctx, c, id, b)
+	sheet, err := s.prepare(ctx, c, id, b, true)
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -243,7 +345,7 @@ func (s *Characters) Create(ctx context.Context, c caller.Caller, id domain.Camp
 		return Sheet{}, err
 	}
 	sheet.ID, sheet.Owned = cid, stored.Owned
-	return sheet, nil
+	return sheet, s.Repo.DeleteDraft(ctx, id, c.Subject)
 }
 
 // List returns the party's Characters.
@@ -260,6 +362,7 @@ func (s *Characters) List(ctx context.Context, c caller.Caller, id domain.Campai
 		out = append(out, domain.CharacterSummary{
 			ID: ch.ID, Name: ch.Name, OwnerName: ch.Owner.DisplayName, Mine: ch.Owner.Subject == c.Subject,
 			Species: ch.Species, Class: ch.Class, Level: ch.Level, HPCurrent: ch.HPCurrent, HPMax: ch.HPMax, TokenKey: tokenKey(ch),
+			HeroicInspiration: ch.HeroicInspiration,
 		})
 	}
 	return out, nil
@@ -289,16 +392,74 @@ func (s *Characters) Get(ctx context.Context, c caller.Caller, id domain.Campaig
 	}
 	sheet.Mine = stored.Owner.ID == me.ID
 	sheet.Editable = !inCombat && (sheet.Mine || me.Role == domain.RoleDM)
+	return s.extras(ctx, sheet)
+}
+
+// extras adds what a saved Character's sheet shows beyond its build: attacks with Weapon Mastery,
+// class features and species traits up to its level, and its training.
+func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
+	cat, err := s.Compendium.Features(ctx)
+	if err != nil {
+		return Sheet{}, err
+	}
+	classes := make([]compendium.ClassLevel, 0, len(sheet.Classes))
+	masteries := 0
+	for _, x := range sheet.Classes {
+		classes = append(classes, compendium.ClassLevel{Class: x.Class, Subclass: x.Subclass, Level: x.Level})
+		masteries = max(masteries, cat.MasteryCount(x.Class, x.Level))
+	}
+	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Species, classes, pickValues(sheet.Picks)); err != nil {
+		return Sheet{}, err
+	}
+	sheet.Proficiencies = rules.ClassProficiencies(sheet.Class)
+	var carried []string
+	for _, w := range sheet.Weapons {
+		carried = append(carried, w.Slug)
+	}
+	mastered := mastery.Mastered(carried, masteries)
+	str, dex := rules.Modifier(sheet.Scores[rules.Strength]), rules.Modifier(sheet.Scores[rules.Dexterity])
+	for _, w := range sheet.Weapons {
+		props := attack.Weapon{Finesse: slices.Contains(w.Properties, "Finesse"), Ammunition: slices.Contains(w.Properties, "Ammunition"), Reach: slices.Contains(w.Properties, "Reach")}
+		toHit, bonus, reach := attack.WeaponAttack(props, str, dex, sheet.Derived.ProficiencyBonus)
+		if props.Ammunition {
+			reach = 0
+		}
+		a := Attack{Name: w.Name, ToHit: toHit, Damage: damageText(w.DamageDice, bonus), DamageType: w.DamageType, ReachFt: reach, RangeFt: w.RangeFeet, LongRangeFt: w.LongRangeFeet, Mastery: ""}
+		if m, ok := mastery.Of(w.Properties); ok && slices.Contains(mastered, w.Slug) {
+			a.Mastery = string(m)
+		}
+		sheet.Attacks = append(sheet.Attacks, a)
+	}
 	return sheet, nil
 }
 
-// Edit is an out-of-combat change to a Character; nil leaves a field alone.
+// damageText is a weapon's damage with its modifier: dice and a bonus, or a flat number such as a
+// blowgun's.
+func damageText(notation string, bonus int) string {
+	if _, err := dice.Parse(notation); err != nil {
+		n, _ := strconv.Atoi(notation)
+		return strconv.Itoa(max(n+bonus, 0))
+	}
+	if bonus == 0 {
+		return notation
+	}
+	return notation + fmt.Sprintf("%+d", bonus)
+}
+
+// Edit is an out-of-combat change to a Character; nil leaves a field alone. Damage soaks temporary hit
+// points first, Heal stops at the maximum and TempHP keeps the higher of old and new.
 type Edit struct {
 	Name      *string
 	HPCurrent *int
+	Damage    *int
+	Heal      *int
+	TempHP    *int
 	Armor     *string
 	Shield    *bool
 	Weapons   []string
+	// LevelUpReady unlocks or locks the next level, and HeroicInspiration grants or takes it; DM only.
+	LevelUpReady      *bool
+	HeroicInspiration *bool
 }
 
 // editable loads a sheet the caller may change right now.
@@ -326,6 +487,9 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 	if err != nil {
 		return Sheet{}, err
 	}
+	if err := s.mayUnlock(ctx, c, id, e); err != nil {
+		return Sheet{}, err
+	}
 	next := sheet.Character
 	if e.Name != nil {
 		if next.Name, err = cleanText(*e.Name, 60); err != nil {
@@ -338,6 +502,7 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 		}
 		next.HPCurrent = *e.HPCurrent
 	}
+	next = hitPoints(next, e)
 	if e.Armor != nil {
 		next.Armor = *e.Armor
 	}
@@ -354,10 +519,83 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 	if _, err := derive(o, next); err != nil {
 		return Sheet{}, err
 	}
-	if err := s.Repo.UpdateCharacter(ctx, next, s.Now()); err != nil {
+	if err := s.save(ctx, next, e); err != nil {
 		return Sheet{}, err
 	}
 	return s.Get(ctx, c, id, ch)
+}
+
+// mayUnlock refuses an Edit that unlocks the next level or grants Heroic Inspiration unless a DM makes it.
+func (s *Characters) mayUnlock(ctx context.Context, c caller.Caller, id domain.CampaignID, e Edit) error {
+	if e.LevelUpReady == nil && e.HeroicInspiration == nil {
+		return nil
+	}
+	me, err := member(ctx, s.Repo, c, id)
+	if err != nil {
+		return err
+	}
+	if me.Role != domain.RoleDM {
+		return domain.ErrForbidden
+	}
+	return nil
+}
+
+// save writes an edited Character, with the DM's changes to its next level and Heroic Inspiration.
+func (s *Characters) save(ctx context.Context, next domain.Character, e Edit) error {
+	return s.Repo.InTx(ctx, func(r Repository) error {
+		if err := r.UpdateCharacter(ctx, next, s.Now()); err != nil {
+			return err
+		}
+		if e.HeroicInspiration != nil {
+			if err := r.SetHeroicInspiration(ctx, next.CampaignID, next.ID, *e.HeroicInspiration); err != nil {
+				return err
+			}
+		}
+		if e.LevelUpReady == nil {
+			return nil
+		}
+		return r.SetLevelUpReady(ctx, next.CampaignID, next.ID, *e.LevelUpReady, s.Now())
+	})
+}
+
+// PassInspiration gives a Character's Heroic Inspiration to another Character in the Campaign that lacks
+// it. Only the owner passes it.
+func (s *Characters) PassInspiration(ctx context.Context, c caller.Caller, id domain.CampaignID, ch, to domain.CharacterID) (Sheet, error) {
+	sheet, err := s.Get(ctx, c, id, ch)
+	if err != nil {
+		return Sheet{}, err
+	}
+	if !sheet.Mine {
+		return Sheet{}, domain.ErrForbidden
+	}
+	if ch == to {
+		return Sheet{}, refuse("pass Heroic Inspiration to another Character")
+	}
+	if _, err := s.Repo.Character(ctx, id, to); err != nil {
+		return Sheet{}, err
+	}
+	err = s.Repo.InTx(ctx, func(r Repository) error { return r.PassInspiration(ctx, id, ch, to) })
+	if errors.Is(err, domain.ErrConflict) {
+		return Sheet{}, refuse("only a Character with Heroic Inspiration passes it, to one without")
+	}
+	if err != nil {
+		return Sheet{}, err
+	}
+	return s.Get(ctx, c, id, ch)
+}
+
+// hitPoints applies an Edit's damage, healing and temporary hit points.
+func hitPoints(c domain.Character, e Edit) domain.Character {
+	if e.Damage != nil {
+		c.HPCurrent, c.TempHP = rules.TakeDamage(c.HPCurrent, c.TempHP, *e.Damage)
+	}
+	if e.Heal != nil {
+		c.HPCurrent = rules.Heal(c.HPCurrent, c.HPMax, *e.Heal)
+	}
+	if e.TempHP != nil {
+		c.TempHP = rules.GainTempHP(c.TempHP, *e.TempHP)
+	}
+	return c
 }
 
 // Delete removes a Character. The owner or a DM, and never during Combat.

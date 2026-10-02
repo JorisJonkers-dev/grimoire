@@ -71,6 +71,21 @@ func TestEveryPresenterFaultSurfaces(t *testing.T) {
 		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).BuilderOptions(ctx, "srd-2024")
 		return err
 	})
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		f.DB = store.Pool()
+		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).LevelUpOptions(ctx, "srd-2024", "wizard", 1)
+		return err
+	})
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		f.DB = store.Pool()
+		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).AlwaysPrepared(ctx, "srd-2024", "cleric", "life-domain", 3)
+		return err
+	})
+	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+		f.DB = store.Pool()
+		_, err := (&Store{pool: store.Pool(), q: queries.New(f)}).Traits(ctx, "srd-2024", "dwarf", []compendium.ClassLevel{{Class: "fighter", Subclass: "champion", Level: 3}}, []string{"alert"})
+		return err
+	})
 	for kind, slug := range map[string]string{
 		"class": "fighter", "species": "dwarf", "background": "sage", "feat": "grappler", "weapon": "longbow",
 		"armor": "plate-armor", "item": "rope", "monster": "goblin", "condition": "prone",

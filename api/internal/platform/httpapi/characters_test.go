@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
@@ -137,6 +139,70 @@ func (b brokenCharacters) Join(context.Context, caller.Caller, domain.OwnedID, d
 	return app.Sheet{}, b.err
 }
 
+func (b brokenCharacters) Draft(context.Context, caller.Caller, domain.CampaignID) (domain.Draft, error) {
+	return domain.Draft{}, b.err
+}
+
+func (b brokenCharacters) SaveDraft(context.Context, caller.Caller, domain.CampaignID, int, []byte) (domain.Draft, error) {
+	return domain.Draft{}, b.err
+}
+
+func (b brokenCharacters) DiscardDraft(context.Context, caller.Caller, domain.CampaignID) error {
+	return b.err
+}
+
+func (b brokenCharacters) RollScores(context.Context, caller.Caller, domain.CampaignID) (domain.Draft, error) {
+	return domain.Draft{}, b.err
+}
+
+func (b brokenCharacters) PlanLevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.LevelUpPlan, error) {
+	return app.LevelUpPlan{}, b.err
+}
+
+func (b brokenCharacters) LevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, app.LevelUpRequest) (app.Sheet, error) {
+	return app.Sheet{}, b.err
+}
+
+func (b brokenCharacters) Spells(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) (app.Spellcasting, error) {
+	return app.Spellcasting{}, b.err
+}
+
+func (b brokenCharacters) Prepare(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string, []string) (app.Spellcasting, error) {
+	return app.Spellcasting{}, b.err
+}
+
+func (b brokenCharacters) CastRitual(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.Ritual, error) {
+	return app.Ritual{}, b.err
+}
+
+func (b brokenCharacters) RequestRetrain(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, app.RetrainInput) (domain.Retrain, error) {
+	return domain.Retrain{}, b.err
+}
+
+func (b brokenCharacters) RetrainChoices(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) ([]app.RetrainChoice, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) Retrains(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) ([]domain.Retrain, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) CharacterRevisions(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) ([]domain.CharacterRevision, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) DecideRetrain(context.Context, caller.Caller, domain.CampaignID, uuid.UUID, bool) (domain.Retrain, error) {
+	return domain.Retrain{}, b.err
+}
+
+func (b brokenCharacters) PassInspiration(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, domain.CharacterID) (app.Sheet, error) {
+	return app.Sheet{}, b.err
+}
+
+func (b brokenCharacters) CopySpell(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.Spellcasting, error) {
+	return app.Spellcasting{}, b.err
+}
+
 func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/characters"
@@ -155,6 +221,23 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodGet, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", ""},
 		{http.MethodPut, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", `{"name":"X","backstory":""}`},
 		{http.MethodPost, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003/campaigns", `{"campaignId":"0190c7a8-0000-7000-8000-000000000001"}`},
+		{http.MethodGet, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
+		{http.MethodPut, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", `{"step":1,"build":{}}`},
+		{http.MethodDelete, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft/roll", ""},
+		{http.MethodGet, one + "/level-up", ""},
+		{http.MethodPost, one + "/level-up", `{"class":"fighter"}`},
+		{http.MethodGet, one + "/spells", ""},
+		{http.MethodPut, one + "/spells/prepared", `{"class":"wizard","spells":[]}`},
+		{http.MethodPost, one + "/spells/rituals", `{"spell":"alarm"}`},
+		{http.MethodPost, one + "/spellbook", `{"spell":"alarm"}`},
+		{http.MethodPost, one + "/inspiration/pass", `{"to":"0190c7a8-0000-7000-8000-000000000003"}`},
+		{http.MethodGet, one + "/retrains", ""},
+		{http.MethodPost, one + "/retrains", `{"reason":"","build":{"species":"human","background":"sage","method":"point-buy","base":{"strength":8,"dexterity":8,"constitution":8,"intelligence":8,"wisdom":8,"charisma":8},"bonus":{},"increase":{},"skills":[],"picks":[]}}`},
+		{http.MethodGet, one + "/revisions", ""},
+		{http.MethodGet, one + "/retrains/choices", ""},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/retrains/0190c7a8-0000-7000-8000-000000000004/approve", ""},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/retrains/0190c7a8-0000-7000-8000-000000000004/decline", ""},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -183,6 +266,23 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.GetMyCharacter(ctx, oas.GetMyCharacterParams{}))
 	add(h.UpdateMyCharacter(ctx, &oas.OwnedCharacterChange{}, oas.UpdateMyCharacterParams{}))
 	add(h.JoinCampaign(ctx, &oas.CharacterJoin{}, oas.JoinCampaignParams{}))
+	add(h.GetCharacterDraft(ctx, oas.GetCharacterDraftParams{}))
+	add(h.SaveCharacterDraft(ctx, &oas.CharacterDraftSave{}, oas.SaveCharacterDraftParams{}))
+	add(h.DiscardCharacterDraft(ctx, oas.DiscardCharacterDraftParams{}))
+	add(h.RollCharacterScores(ctx, oas.RollCharacterScoresParams{}))
+	add(h.PlanLevelUp(ctx, oas.PlanLevelUpParams{}))
+	add(h.LevelUp(ctx, &oas.LevelUpRequest{}, oas.LevelUpParams{}))
+	add(h.GetSpellcasting(ctx, oas.GetSpellcastingParams{}))
+	add(h.PrepareSpells(ctx, &oas.SpellPreparation{}, oas.PrepareSpellsParams{}))
+	add(h.CastRitual(ctx, &oas.SpellChoice{}, oas.CastRitualParams{}))
+	add(h.CopySpell(ctx, &oas.SpellChoice{}, oas.CopySpellParams{}))
+	add(h.PassInspiration(ctx, &oas.InspirationPass{}, oas.PassInspirationParams{}))
+	add(h.RequestRetrain(ctx, &oas.RetrainRequest{}, oas.RequestRetrainParams{}))
+	add(h.ListRetrains(ctx, oas.ListRetrainsParams{}))
+	add(h.ListCharacterRevisions(ctx, oas.ListCharacterRevisionsParams{}))
+	add(h.ListRetrainChoices(ctx, oas.ListRetrainChoicesParams{}))
+	add(h.ApproveRetrain(ctx, oas.ApproveRetrainParams{}))
+	add(h.DeclineRetrain(ctx, oas.DeclineRetrainParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

@@ -39,10 +39,29 @@ type Repository interface {
 	Character(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) (domain.Character, error)
 	Characters(ctx context.Context, id domain.CampaignID) ([]domain.Character, error)
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
+	LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) error
+	SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error
+	InsertRetrain(ctx context.Context, id domain.CampaignID, r domain.Retrain, now time.Time) error
+	Retrains(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) ([]domain.Retrain, error)
+	Retrain(ctx context.Context, id domain.CampaignID, retrain uuid.UUID) (domain.Retrain, error)
+	DecideRetrain(ctx context.Context, retrain uuid.UUID, status, by string, now time.Time) error
+	ApplyRetrain(ctx context.Context, id domain.CampaignID, previous domain.Snapshot, next domain.Character, retrain uuid.UUID, c caller.Caller, author string, now time.Time) error
+	CharacterRevisions(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) ([]domain.CharacterRevision, error)
+	SetHeroicInspiration(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, inspired bool) error
+	PassInspiration(ctx context.Context, id domain.CampaignID, from, to domain.CharacterID) error
+	ReplaceClassSpells(ctx context.Context, ch domain.CharacterID, class string, spells []domain.LearnedSpell, canPrepare bool) error
+	Clock(ctx context.Context, id domain.CampaignID) (domain.Clock, error)
+	SetClock(ctx context.Context, id domain.CampaignID, c domain.Clock) error
+	Purse(ctx context.Context, ch domain.CharacterID) (domain.Purse, error)
+	SetPurse(ctx context.Context, p domain.Purse) error
 	DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error
 	OwnedCharacters(ctx context.Context, subject string) ([]domain.OwnedCharacter, error)
 	OwnedCharacter(ctx context.Context, id domain.OwnedID) (domain.OwnedCharacter, error)
 	UpdateOwnedCharacter(ctx context.Context, id domain.OwnedID, name, backstory string, now time.Time) error
+	Draft(ctx context.Context, campaign domain.CampaignID, subject string) (domain.Draft, error)
+	SaveDraft(ctx context.Context, campaign domain.CampaignID, subject string, step int, build []byte, now time.Time) error
+	RollDraft(ctx context.Context, campaign domain.CampaignID, subject string, rolled []int, now time.Time) (bool, error)
+	DeleteDraft(ctx context.Context, campaign domain.CampaignID, subject string) error
 	SetCharacterImage(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, img *domain.Image, now time.Time) error
 	InsertNPC(ctx context.Context, id domain.CampaignID, npcID *domain.NPCID, n domain.NPC, now time.Time) (domain.NPCID, error)
 	UpdateNPC(ctx context.Context, id domain.CampaignID, n domain.NPC, now time.Time) (bool, error)
@@ -186,6 +205,12 @@ type UpdateInput struct {
 	// InitiativeMode is individual or side initiative; ShareInitiative gives identical monsters one roll.
 	InitiativeMode  *string
 	ShareInitiative *bool
+	// CreationMethods are the ability score methods new Characters may use, nil to leave them;
+	// StartingLevel is the level they start at.
+	CreationMethods []string
+	StartingLevel   *int
+	// HoldLevelUps stops long rests unlocking the next level.
+	HoldLevelUps *bool
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -209,11 +234,35 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	if m := in.InitiativeMode; m != nil && *m != "individual" && *m != "side" {
 		return domain.Campaign{}, refuse("initiative is individual or by side")
 	}
+	if err := creationRules(in); err != nil {
+		return domain.Campaign{}, err
+	}
 	change := domain.SettingsChange{
 		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
-		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative,
+		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps,
 	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
+}
+
+// creationRules checks new-Character settings: at least one known ability score method, each once, and
+// a starting level from 1 to 20.
+func creationRules(in UpdateInput) error {
+	if in.CreationMethods != nil {
+		seen := map[string]bool{}
+		for _, m := range in.CreationMethods {
+			if (m != "standard-array" && m != "point-buy" && m != "rolled") || seen[m] {
+				return refuse("ability scores come from the standard array, point buy or rolling, each once")
+			}
+			seen[m] = true
+		}
+		if len(seen) == 0 {
+			return refuse("allow at least one way to set ability scores")
+		}
+	}
+	if l := in.StartingLevel; l != nil && (*l < 1 || *l > 20) {
+		return refuse("Characters start between level 1 and 20")
+	}
+	return nil
 }
 
 // SetRole makes a Member a DM or a Player. DM only; the last DM cannot step down.

@@ -10,6 +10,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 )
 
 type fakeCompendium struct {
@@ -20,6 +21,8 @@ type fakeCompendium struct {
 	entryErr   error
 	autoErr    error
 	builderErr error
+	traitsErr  error
+	catErr     error
 	spells     []compendium.SpellSummary
 	entries    []compendium.EntrySummary
 	lastFilter *compendium.SpellFilter
@@ -53,7 +56,7 @@ func (f *fakeCompendium) BuilderOptions(_ context.Context, ruleset string) (comp
 			{Slug: "half-plate", Name: "Half Plate", Category: "medium", ACBase: 15, AddDex: true, DexCap: 2},
 			{Slug: "shield", Name: "Shield", Category: "shield", Shield: true, ACBase: 2, DexCap: -1},
 		},
-		Weapons: []compendium.WeaponOption{{Slug: "longsword", Name: "Longsword", DamageDice: "1d8", DamageType: "slashing"}},
+		Weapons: []compendium.WeaponOption{{Slug: "longsword", Name: "Longsword", DamageDice: "1d8", DamageType: "slashing", Properties: []string{"Versatile", "Sap"}}, {Slug: "blowgun", Name: "Blowgun", DamageDice: "1", DamageType: "piercing", Properties: []string{"Ammunition"}, RangeFeet: 25, LongRangeFeet: 100}},
 	}, f.builderErr
 }
 
@@ -255,4 +258,24 @@ func TestGetEntryAndAutomation(t *testing.T) {
 	if rec := getWith(h, "/api/v1/compendium/automation", map[string]string{"If-None-Match": `"c7"`}); rec.Code != http.StatusNotModified {
 		t.Fatalf("conditional: %d", rec.Code)
 	}
+}
+
+func (f *fakeCompendium) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
+	return []compendium.Trait{{Name: "Second Wind", Source: "class", Level: 1, Description: "Regain hit points."}}, f.traitsErr
+}
+
+func (f *fakeCompendium) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, f.catErr
+}
+
+func (f *fakeCompendium) ClassSpells(context.Context, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, f.catErr
+}
+
+func (f *fakeCompendium) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, f.catErr
+}
+
+func (f *fakeCompendium) Features(context.Context) (features.Catalog, error) {
+	return features.Catalog{Scales: map[string]features.Named{"fighter-weapon-mastery": {Slug: "fighter-weapon-mastery", Name: "Weapon Mastery", Owner: features.Owner{}, Steps: features.Scale[string]{{Level: 1, Value: "3"}}}}}, f.catErr
 }

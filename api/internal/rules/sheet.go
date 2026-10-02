@@ -65,20 +65,73 @@ type Resource struct {
 	Max     int
 }
 
-// FirstLevelResources are the pools a first-level character starts with (SRD 5.2: half casters
-// cast from level 1).
-func FirstLevelResources(class string, hitDie int) []Resource {
-	out := []Resource{{Key: "hit-dice", Label: "Hit Dice (d" + strconv.Itoa(hitDie) + ")", Current: 1, Max: 1}}
-	slots := 0
+// fullCasterSlots are a full caster's spell slots per spell level, by character level (SRD 5.2).
+var fullCasterSlots = [20][9]int{ //nolint:gochecknoglobals // a fixed table
+	{2},
+	{3},
+	{4, 2},
+	{4, 3},
+	{4, 3, 2},
+	{4, 3, 3},
+	{4, 3, 3, 1},
+	{4, 3, 3, 2},
+	{4, 3, 3, 3, 1},
+	{4, 3, 3, 3, 2},
+	{4, 3, 3, 3, 2, 1},
+	{4, 3, 3, 3, 2, 1},
+	{4, 3, 3, 3, 2, 1, 1},
+	{4, 3, 3, 3, 2, 1, 1},
+	{4, 3, 3, 3, 2, 1, 1, 1},
+	{4, 3, 3, 3, 2, 1, 1, 1},
+	{4, 3, 3, 3, 2, 1, 1, 1, 1},
+	{4, 3, 3, 3, 3, 1, 1, 1, 1},
+	{4, 3, 3, 3, 3, 2, 1, 1, 1},
+	{4, 3, 3, 3, 3, 2, 2, 1, 1},
+}
+
+// slotsAt are the spell slots per spell level a class has at a level: half casters (who cast from
+// level 1 in SRD 5.2) as a full caster of half their level rounded up, pact casters a few slots of
+// one level.
+func slotsAt(class string, level int) [9]int {
+	level = min(max(level, 1), 20)
 	switch CasterFor(class) {
-	case FullCaster, HalfCaster:
-		slots = 2
+	case FullCaster:
+		return fullCasterSlots[level-1]
+	case HalfCaster:
+		return fullCasterSlots[(level+1)/2-1]
 	case PactCaster:
-		slots = 1
+		var out [9]int
+		out[min((level+1)/2, 5)-1] = pactSlots(level)
+		return out
 	case NoCaster:
 	}
-	if slots > 0 {
-		out = append(out, Resource{Key: "spell-slots-1", Label: "Level 1 spell slots", Current: slots, Max: slots})
+	return [9]int{}
+}
+
+// pactSlots is how many slots a pact caster has at a level.
+func pactSlots(level int) int {
+	switch {
+	case level >= 17:
+		return 4
+	case level >= 11:
+		return 3
+	case level >= 2:
+		return 2
+	default:
+		return 1
+	}
+}
+
+// ResourcesAt are the pools a new character has at a level: one Hit Die per level and the spell slots
+// of its class.
+func ResourcesAt(class string, hitDie, level int) []Resource {
+	level = max(level, 1)
+	out := []Resource{{Key: "hit-dice", Label: "Hit Dice (d" + strconv.Itoa(hitDie) + ")", Current: level, Max: level}}
+	for i, n := range slotsAt(class, level) {
+		if n > 0 {
+			spell := strconv.Itoa(i + 1)
+			out = append(out, Resource{Key: "spell-slots-" + spell, Label: "Level " + spell + " spell slots", Current: n, Max: n})
+		}
 	}
 	return out
 }
@@ -97,17 +150,20 @@ type SkillBonus struct {
 	Skill      Skill
 	Ability    Ability
 	Proficient bool
+	Expertise  bool
 	Bonus      int
 }
 
 // SheetInput is everything the sheet is derived from.
 type SheetInput struct {
-	Class       string
-	Level       int
-	HitDie      int
-	Scores      map[Ability]int
-	SaveProfs   []Ability
-	SkillProfs  []Skill
+	Class      string
+	Level      int
+	HitDie     int
+	Scores     map[Ability]int
+	SaveProfs  []Ability
+	SkillProfs []Skill
+	// Expertise doubles the proficiency bonus for skills the character is proficient in.
+	Expertise   []Skill
 	Armor       *Armor
 	ShieldBonus int
 	SpeedFeet   int
@@ -138,7 +194,7 @@ func BuildSheet(in SheetInput) Sheet {
 		PassivePerception: 0,
 		Saves:             make([]Save, 0, 6),
 		Skills:            make([]SkillBonus, 0, 18),
-		Resources:         FirstLevelResources(in.Class, in.HitDie),
+		Resources:         ResourcesAt(in.Class, in.HitDie, in.Level),
 		Warnings:          []string{},
 	}
 	for _, a := range Abilities() {
@@ -147,7 +203,8 @@ func BuildSheet(in SheetInput) Sheet {
 	}
 	for _, sk := range Skills() {
 		prof := contains(in.SkillProfs, sk.Skill)
-		b := SkillBonus{Skill: sk.Skill, Ability: sk.Ability, Proficient: prof, Bonus: mod(sk.Ability) + pbIf(prof, pb)}
+		expert := prof && contains(in.Expertise, sk.Skill)
+		b := SkillBonus{Skill: sk.Skill, Ability: sk.Ability, Proficient: prof, Expertise: expert, Bonus: mod(sk.Ability) + pbIf(prof, pb) + pbIf(expert, pb)}
 		if sk.Skill == "perception" {
 			s.PassivePerception = 10 + b.Bonus
 		}

@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
 )
 
 var feetPattern = regexp.MustCompile(`(\d+) feet`)
@@ -129,4 +132,94 @@ func (s *Store) builderWeapons(ctx context.Context, out *compendium.BuilderOptio
 		})
 	}
 	return nil
+}
+
+// Traits are a Character's class and subclass features up to its level in each, each at the first level
+// it is gained, then its species traits, then the feats it took.
+func (s *Store) Traits(ctx context.Context, ruleset, species string, classes []compendium.ClassLevel, feats []string) ([]compendium.Trait, error) {
+	out, err := s.classTraits(ctx, ruleset, classes)
+	if err != nil {
+		return nil, err
+	}
+	traits, err := s.q.SheetSpeciesTraits(ctx, queries.SheetSpeciesTraitsParams{Ruleset: ruleset, Species: species})
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range traits {
+		out = append(out, compendium.Trait{Name: t.Name, Source: "species", Level: 0, Description: t.Description})
+	}
+	if len(feats) == 0 {
+		return out, nil
+	}
+	all, err := s.q.LevelUpFeats(ctx, ruleset)
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range all {
+		if slices.Contains(feats, f.Slug) {
+			out = append(out, compendium.Trait{Name: f.Name, Source: "feat", Level: 0, Description: f.Description})
+		}
+	}
+	return out, nil
+}
+
+// classTraits are the class and subclass features up to a Character's level in each.
+func (s *Store) classTraits(ctx context.Context, ruleset string, classes []compendium.ClassLevel) ([]compendium.Trait, error) {
+	var out []compendium.Trait
+	for _, c := range classes {
+		for _, slug := range []string{c.Class, c.Subclass} {
+			if slug == "" {
+				continue
+			}
+			rows, err := s.q.SheetClassFeatures(ctx, queries.SheetClassFeaturesParams{Ruleset: ruleset, Class: slug, Level: int32(c.Level)}) //nolint:gosec // 1 to 20
+			if err != nil {
+				return nil, err
+			}
+			for _, f := range rows {
+				out = append(out, compendium.Trait{Name: f.Name, Source: "class", Level: int(f.Level), Description: f.Description})
+			}
+		}
+	}
+	return out, nil
+}
+
+// LevelUpOptions reads what a class offers on levelling up, with its spells up to a spell level.
+func (s *Store) LevelUpOptions(ctx context.Context, ruleset, class string, maxSpellLevel int) (compendium.LevelUpOptions, error) {
+	out := compendium.LevelUpOptions{Subclasses: []compendium.Named{}, Feats: []compendium.FeatOption{}, Spells: []compendium.SpellOption{}}
+	subs, err := s.q.LevelUpSubclasses(ctx, queries.LevelUpSubclassesParams{Ruleset: ruleset, Class: pgtype.Text{String: class, Valid: true}})
+	if err != nil {
+		return out, err
+	}
+	for _, x := range subs {
+		out.Subclasses = append(out.Subclasses, compendium.Named{Slug: x.Slug, Name: x.Name})
+	}
+	feats, err := s.q.LevelUpFeats(ctx, ruleset)
+	if err != nil {
+		return out, err
+	}
+	for _, f := range feats {
+		out.Feats = append(out.Feats, compendium.FeatOption{Slug: f.Slug, Name: f.Name, Category: f.FeatType, Description: f.Description})
+	}
+	out.Spells, err = s.ClassSpells(ctx, ruleset, class, maxSpellLevel)
+	return out, err
+}
+
+// ClassSpells are a class's cantrips and spells up to a spell level.
+func (s *Store) ClassSpells(ctx context.Context, ruleset, class string, maxSpellLevel int) ([]compendium.SpellOption, error) {
+	rows, err := s.q.LevelUpSpells(ctx, queries.LevelUpSpellsParams{Ruleset: ruleset, Class: class, MaxLevel: int32(maxSpellLevel)}) //nolint:gosec // 0 to 9
+	out := make([]compendium.SpellOption, 0, len(rows))
+	for _, x := range rows {
+		out = append(out, compendium.SpellOption{Slug: x.Slug, Name: x.Name, Level: int(x.Level), Ritual: x.Ritual, CastingTime: x.CastingTime})
+	}
+	return out, err
+}
+
+// AlwaysPrepared are the spells a class and its subclass always have prepared at a class level.
+func (s *Store) AlwaysPrepared(ctx context.Context, ruleset, class, subclass string, level int) ([]compendium.SpellOption, error) {
+	rows, err := s.q.AlwaysPreparedSpells(ctx, queries.AlwaysPreparedSpellsParams{Ruleset: ruleset, Class: class, Subclass: subclass, Level: int32(level)}) //nolint:gosec // 1 to 20
+	out := make([]compendium.SpellOption, 0, len(rows))
+	for _, x := range rows {
+		out = append(out, compendium.SpellOption{Slug: x.Slug, Name: x.Name, Level: int(x.Level), Ritual: x.Ritual, CastingTime: x.CastingTime})
+	}
+	return out, err
 }

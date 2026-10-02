@@ -3,6 +3,7 @@ package pgstore_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,9 +15,35 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
 type fakeOptions struct{ err error }
+
+func (f fakeOptions) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
+	return nil, f.err
+}
+
+func (f fakeOptions) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, f.err
+}
+
+func (f fakeOptions) ClassSpells(context.Context, string, string, int) ([]compendium.SpellOption, error) {
+	out := []compendium.SpellOption{{Slug: "alarm", Name: "Alarm", Level: 1, Ritual: true, CastingTime: "1minute"}}
+	for _, slug := range []string{"s1", "s2", "s3", "s4", "s5", "s6"} {
+		out = append(out, compendium.SpellOption{Slug: slug, Name: slug, Level: 1, Ritual: false, CastingTime: "action"})
+	}
+	return out, f.err
+}
+
+func (f fakeOptions) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	return nil, f.err
+}
+
+func (f fakeOptions) Features(context.Context) (features.Catalog, error) {
+	return features.Catalog{}, f.err
+}
 
 func (f fakeOptions) BuilderOptions(_ context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	year, abilities := 2024, []string{"strength", "dexterity", "constitution"}
@@ -163,7 +190,7 @@ func TestShieldNeedsTheRuleset(t *testing.T) {
 	}
 }
 
-type noShield struct{}
+type noShield struct{ fakeOptions }
 
 func (noShield) BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	o, err := fakeOptions{}.BuilderOptions(ctx, ruleset)
@@ -282,18 +309,54 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	ctx := context.Background()
 	chars, combat, d := party(t, pgstore.New(open(t).Pool()))
 	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
-	boom := errors.New("boom")
+	boom := errExtras
 	combat.err = boom
 	if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, boom) {
 		t.Fatalf("combat status error: %v", err)
 	}
 	combat.err = nil
+	wb := fighter()
+	wb.Class = "wizard"
+	wiz, err := chars.Create(ctx, playerCaller, d.ID, wb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []app.Compendium{&spellsFail{failAt: 1}, &spellsFail{failAt: 2}, &spellsFail{failAt: 3, always: true}} {
+		chars.Compendium = c
+		if _, err := chars.Spells(ctx, playerCaller, d.ID, wiz.ID); err == nil {
+			if _, err := chars.CopySpell(ctx, playerCaller, d.ID, wiz.ID, "s1"); !errors.Is(err, boom) {
+				t.Fatalf("spell list error on copy: %v", err)
+			}
+		} else if !errors.Is(err, boom) {
+			t.Fatalf("spell list error: %v", err)
+		}
+	}
+	chars.Compendium = levelUpFails{}
+	if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, ""); !errors.Is(err, boom) {
+		t.Fatalf("level-up options error: %v", err)
+	}
+	chars.Compendium = fakeOptions{}
+	var rule *app.RuleError
+	for _, class := range []string{"bard", "wizard"} {
+		if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, class); !errors.As(err, &rule) {
+			t.Fatalf("level up into %s: %v", class, err)
+		}
+	}
+	if err := chars.Repo.LevelUp(ctx, domain.LevelUp{CampaignID: d.ID, ID: sheet.ID, From: 1}, time.Now()); !errors.Is(err, domain.ErrConflict) {
+		t.Fatalf("a locked level taken: %v", err)
+	}
 	chars.Compendium = fakeOptions{err: boom}
 	if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, boom) {
 		t.Fatalf("compendium error on get: %v", err)
 	}
 	if _, err := chars.Preview(ctx, playerCaller, d.ID, fighter()); !errors.Is(err, boom) {
 		t.Fatalf("compendium error on preview: %v", err)
+	}
+	for _, c := range []app.Compendium{extrasFail{catalog: true}, extrasFail{catalog: false}} {
+		chars.Compendium = c
+		if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, boom) {
+			t.Fatalf("features or traits error on get: %v", err)
+		}
 	}
 	chars.Compendium = noShield{}
 	if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, domain.ErrInvalid) {
@@ -310,10 +373,63 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	}
 }
 
-var errSecond = errors.New("second lookup failed")
+// spellsFail reads a class's spells until a call number, then fails it; always fails the always-prepared
+// spells instead.
+type spellsFail struct {
+	fakeOptions
+	calls, failAt int
+	always        bool
+}
+
+func (f *spellsFail) ClassSpells(ctx context.Context, ruleset, class string, level int) ([]compendium.SpellOption, error) {
+	f.calls++
+	if !f.always && f.calls >= f.failAt {
+		return nil, errExtras
+	}
+	return f.fakeOptions.ClassSpells(ctx, ruleset, class, level)
+}
+
+func (f *spellsFail) AlwaysPrepared(context.Context, string, string, string, int) ([]compendium.SpellOption, error) {
+	if f.always {
+		return nil, errExtras
+	}
+	return nil, nil
+}
+
+// levelUpFails builds sheets but cannot read what a level offers.
+type levelUpFails struct{ fakeOptions }
+
+func (levelUpFails) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, errExtras
+}
+
+// extrasFail builds sheets but fails reading the feature catalogue, or the traits.
+type extrasFail struct {
+	fakeOptions
+	catalog bool
+}
+
+func (f extrasFail) Features(context.Context) (features.Catalog, error) {
+	if f.catalog {
+		return features.Catalog{}, errExtras
+	}
+	return features.Catalog{}, nil
+}
+
+func (f extrasFail) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
+	return nil, errExtras
+}
+
+var (
+	errSecond = errors.New("second lookup failed")
+	errExtras = errors.New("boom")
+)
 
 // secondFails answers the first lookup and fails the next, as a compendium outage mid-edit would.
-type secondFails struct{ calls int }
+type secondFails struct {
+	fakeOptions
+	calls int
+}
 
 func (f *secondFails) BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error) {
 	f.calls++
@@ -330,6 +446,58 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 	chars, _, d := party(t, pgstore.New(db.Pool()))
 	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
 	doomed, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	climber, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	scholar, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	store := pgstore.New(db.Pool())
+	for _, id := range []domain.CharacterID{climber.ID, scholar.ID} {
+		if err := store.SetLevelUpReady(ctx, d.ID, id, true, time.Now()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	full := domain.LevelUp{
+		CampaignID: d.ID, ID: scholar.ID, From: 1, Gain: 4,
+		Classes:  []domain.ClassLevel{{Class: "fighter", Subclass: "", Level: 1}, {Class: "wizard", Subclass: "evoker", Level: 1}},
+		Picks:    []domain.Pick{{Level: 2, Choice: "feat", Value: "alert"}},
+		Spells:   []domain.LearnedSpell{{Class: "wizard", Spell: "light", Level: 2}},
+		Increase: map[string]int{"strength": 2},
+	}
+	ready := true
+	fb := fighter()
+	rebuild := app.RetrainInput{Species: fb.Species, Background: fb.Background, Method: fb.Method, Base: fb.Base, Bonus: fb.Bonus, Skills: fb.Skills, Picks: nil, Increase: nil, Reason: "again"}
+	clearRetrains := func() {
+		if _, err := db.Pool().Exec(ctx, "DELETE FROM campaign.retrains WHERE status = 'pending'"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	pending := func() uuid.UUID {
+		clearRetrains()
+		r, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, rebuild)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return r.ID
+	}
+	wb := fighter()
+	wb.Class = "wizard"
+	wiz, err := chars.Create(ctx, playerCaller, d.ID, wb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	book := []domain.LearnedSpell{}
+	for _, slug := range []string{"alarm", "s1", "s2", "s3", "s4", "s5"} {
+		book = append(book, domain.LearnedSpell{Class: "wizard", Spell: slug, Level: 1, Prepared: false, Spellbook: true})
+	}
+	if err := store.ReplaceClassSpells(ctx, wiz.ID, "wizard", book, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
+		VALUES (gen_random_uuid(), $1, 'character', $2, 'Pack', now())`, uuid.UUID(d.ID), uuid.UUID(wiz.ID)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, `INSERT INTO campaign.container_coins (container_id, coin, amount)
+		SELECT id, 'gp', 100 FROM campaign.containers WHERE character_id = $1`, uuid.UUID(wiz.ID)); err != nil {
+		t.Fatal(err)
+	}
 	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); err != nil {
 		t.Fatal(err)
 	}
@@ -344,7 +512,26 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			_, err := c.UpdateOwned(ctx, playerCaller, sheet.Owned, "Kara Vale", "")
 			return err
 		},
-		"join":    func(c *app.Characters) error { _, err := c.Join(ctx, playerCaller, sheet.Owned, other.ID); return err },
+		"join": func(c *app.Characters) error { _, err := c.Join(ctx, playerCaller, sheet.Owned, other.ID); return err },
+		"draft": func(c *app.Characters) error {
+			_, err := c.SaveDraft(ctx, playerCaller, d.ID, 2, []byte(`{}`))
+			return err
+		},
+		"read draft": func(c *app.Characters) error {
+			_, err := c.Draft(ctx, playerCaller, d.ID)
+			if errors.Is(err, domain.ErrNotFound) {
+				return nil
+			}
+			return err
+		},
+		"discard": func(c *app.Characters) error { return c.DiscardDraft(ctx, playerCaller, d.ID) },
+		"roll": func(c *app.Characters) error {
+			_, err := c.RollScores(ctx, playerCaller, d.ID)
+			if errors.Is(err, domain.ErrConflict) {
+				return nil
+			}
+			return err
+		},
 		"create":  func(c *app.Characters) error { _, err := c.Create(ctx, playerCaller, d.ID, fighter()); return err },
 		"preview": func(c *app.Characters) error { _, err := c.Preview(ctx, playerCaller, d.ID, fighter()); return err },
 		"list":    func(c *app.Characters) error { _, err := c.List(ctx, playerCaller, d.ID); return err },
@@ -354,6 +541,94 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			return err
 		},
 		"delete": func(c *app.Characters) error { return c.Delete(ctx, playerCaller, d.ID, doomed.ID) },
+		"plan": func(c *app.Characters) error {
+			_, err := c.PlanLevelUp(ctx, playerCaller, d.ID, climber.ID, "")
+			return err
+		},
+		"level up": func(c *app.Characters) error {
+			if err := store.SetLevelUpReady(ctx, d.ID, climber.ID, true, time.Now()); err != nil {
+				t.Fatal(err)
+			}
+			_, err := c.LevelUp(ctx, playerCaller, d.ID, climber.ID, app.LevelUpRequest{Class: "fighter", Roll: false, Picks: nil, Increase: nil, Spells: nil})
+			return err
+		},
+		"store level up": func(c *app.Characters) error {
+			now, err := store.Character(ctx, d.ID, scholar.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := store.SetLevelUpReady(ctx, d.ID, scholar.ID, true, time.Now()); err != nil {
+				t.Fatal(err)
+			}
+			full.From = now.Level
+			return c.Repo.InTx(ctx, func(r app.Repository) error { return r.LevelUp(ctx, full, time.Now()) })
+		},
+		"spells": func(c *app.Characters) error { _, err := c.Spells(ctx, playerCaller, d.ID, wiz.ID); return err },
+		"prepare": func(c *app.Characters) error {
+			if _, err := db.Pool().Exec(ctx, "UPDATE campaign.characters SET can_prepare = true WHERE id = $1", uuid.UUID(wiz.ID)); err != nil {
+				t.Fatal(err)
+			}
+			_, err := c.Prepare(ctx, playerCaller, d.ID, wiz.ID, "wizard", []string{"s1", "s2"})
+			return err
+		},
+		"ritual": func(c *app.Characters) error {
+			_, err := c.CastRitual(ctx, playerCaller, d.ID, wiz.ID, "alarm")
+			return err
+		},
+		"copy": func(c *app.Characters) error {
+			if _, err := db.Pool().Exec(ctx, "DELETE FROM campaign.character_spells WHERE character_id = $1 AND spell_slug = 's6'", uuid.UUID(wiz.ID)); err != nil {
+				t.Fatal(err)
+			}
+			for _, q := range []string{
+				"DELETE FROM campaign.container_coins k USING campaign.containers c WHERE k.container_id = c.id AND c.character_id = $1",
+				"INSERT INTO campaign.container_coins (container_id, coin, amount) SELECT id, 'gp', 100 FROM campaign.containers WHERE character_id = $1",
+			} {
+				if _, err := db.Pool().Exec(ctx, q, uuid.UUID(wiz.ID)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, err := c.CopySpell(ctx, playerCaller, d.ID, wiz.ID, "s6")
+			return err
+		},
+		"grant": func(c *app.Characters) error {
+			_, err := c.Update(ctx, dmCaller, d.ID, sheet.ID, app.Edit{HeroicInspiration: &ready})
+			return err
+		},
+		"pass": func(c *app.Characters) error {
+			for id, v := range map[domain.CharacterID]bool{sheet.ID: true, climber.ID: false} {
+				if err := store.SetHeroicInspiration(ctx, d.ID, id, v); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, err := c.PassInspiration(ctx, playerCaller, d.ID, sheet.ID, climber.ID)
+			return err
+		},
+		"request retrain": func(c *app.Characters) error {
+			clearRetrains()
+			_, err := c.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, rebuild)
+			return err
+		},
+		"approve retrain": func(c *app.Characters) error {
+			_, err := c.DecideRetrain(ctx, dmCaller, d.ID, pending(), true)
+			return err
+		},
+		"decline retrain": func(c *app.Characters) error {
+			_, err := c.DecideRetrain(ctx, dmCaller, d.ID, pending(), false)
+			return err
+		},
+		"retrains": func(c *app.Characters) error { _, err := c.Retrains(ctx, playerCaller, d.ID, sheet.ID); return err },
+		"choices": func(c *app.Characters) error {
+			_, err := c.RetrainChoices(ctx, playerCaller, d.ID, sheet.ID)
+			return err
+		},
+		"revisions": func(c *app.Characters) error {
+			_, err := c.CharacterRevisions(ctx, playerCaller, d.ID, sheet.ID)
+			return err
+		},
+		"unlock": func(c *app.Characters) error {
+			_, err := c.Update(ctx, dmCaller, d.ID, sheet.ID, app.Edit{LevelUpReady: &ready})
+			return err
+		},
 		"portrait": func(c *app.Characters) error {
 			return c.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png)
 		},
@@ -365,7 +640,7 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now}
+			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now, Roll: func() []int { return []int{16, 15, 12, 11, 9, 8} }}
 			err := op(c)
 			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
 				t.Fatalf("%s: %v", name, err)
@@ -457,5 +732,136 @@ func TestPicturesAreRefused(t *testing.T) {
 	}
 	if _, _, err := chars.Image(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait); err == nil {
 		t.Fatal("storage failure on get ignored")
+	}
+}
+
+// A draft is the caller's alone, sized and stepped within limits, and a story too long is refused.
+func TestDraftLimits(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db := open(t)
+	chars, _, d := party(t, pgstore.New(db.Pool()))
+	if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, 9, []byte(`{}`)); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a step past the review = %v", err)
+	}
+	if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, 1, make([]byte, 16_001)); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a huge draft = %v", err)
+	}
+	stranger := caller.UI("nobody")
+	if _, err := chars.Draft(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger's draft = %v", err)
+	}
+	if err := chars.DiscardDraft(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger discards = %v", err)
+	}
+	if _, err := chars.RollScores(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger rolls = %v", err)
+	}
+	if _, err := chars.RollScores(ctx, playerCaller, d.ID); err == nil {
+		t.Fatal("rolling without a roller")
+	}
+	long := fighter()
+	long.Backstory = strings.Repeat("x", 4001)
+	if _, err := chars.Preview(ctx, playerCaller, d.ID, long); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a backstory too long = %v", err)
+	}
+}
+
+// retrainCompendium offers fighters a feat at level 4, and fails the feature catalogue or the level's
+// options from a call on.
+type retrainCompendium struct {
+	fakeOptions
+	features, levelUp, failFeaturesAt, failLevelUpAt int
+}
+
+func (f *retrainCompendium) Features(context.Context) (features.Catalog, error) {
+	f.features++
+	if f.failFeaturesAt > 0 && f.features >= f.failFeaturesAt {
+		return features.Catalog{}, errExtras
+	}
+	owner := features.Owner{Kind: "class", Slug: "fighter"}
+	return features.Catalog{Choices: map[features.Owner][]features.Choice{owner: {{Slug: "feat", Name: "Feat", Level: 4, Count: 1, Pool: features.FeatCategory, From: "general"}}}}, nil
+}
+
+func (f *retrainCompendium) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	f.levelUp++
+	if f.failLevelUpAt > 0 && f.levelUp >= f.failLevelUpAt {
+		return compendium.LevelUpOptions{}, errExtras
+	}
+	return compendium.LevelUpOptions{Feats: []compendium.FeatOption{
+		{Slug: "ability-score-improvement", Name: "Ability Score Improvement", Category: "General", Description: ""},
+		{Slug: "grappler", Name: "Grappler", Category: "General", Description: ""},
+	}}, nil
+}
+
+func TestRetrainChecksPicksAndSurfacesPortFailures(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db := open(t)
+	chars, _, d := party(t, pgstore.New(db.Pool()))
+	sheet, err := chars.Create(ctx, playerCaller, d.ID, fighter())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, "INSERT INTO campaign.character_picks (character_id, level, choice, value) VALUES ($1, 4, 'feat', 'ability-score-improvement')", uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, "UPDATE campaign.character_abilities SET increase = 2 WHERE character_id = $1 AND ability = 'dexterity'", uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	fb := fighter()
+	in := app.RetrainInput{
+		Species: fb.Species, Background: fb.Background, Method: fb.Method, Base: fb.Base, Bonus: fb.Bonus, Skills: fb.Skills,
+		Picks: []domain.Pick{{Level: 4, Choice: "feat", Value: "grappler"}}, Increase: nil, Reason: "",
+	}
+	chars.Compendium = &retrainCompendium{}
+	choices, err := chars.RetrainChoices(ctx, playerCaller, d.ID, sheet.ID)
+	if err != nil || len(choices) != 1 || len(choices[0].Options) != 2 {
+		t.Fatalf("choices = %+v %v", choices, err)
+	}
+	if _, err := chars.RetrainChoices(ctx, dmCaller, d.ID, sheet.ID); !errors.Is(err, domain.ErrForbidden) {
+		t.Fatalf("the DM's retrain choices: %v", err)
+	}
+	for name, c := range map[string]*retrainCompendium{
+		"features": {failFeaturesAt: 2},
+		"level up": {failLevelUpAt: 1},
+		"builder":  {fakeOptions: fakeOptions{err: errExtras}},
+	} {
+		chars.Compendium = c
+		if _, err := chars.RetrainChoices(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, errExtras) {
+			t.Fatalf("%s failing on choices: %v", name, err)
+		}
+		chars.Compendium = &retrainCompendium{failFeaturesAt: c.failFeaturesAt, failLevelUpAt: c.failLevelUpAt}
+		if c.err == nil {
+			if _, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, in); !errors.Is(err, errExtras) {
+				t.Fatalf("%s failing on request: %v", name, err)
+			}
+		}
+	}
+	chars.Compendium = fakeOptions{}
+	var rule *app.RuleError
+	if _, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, in); !errors.As(err, &rule) {
+		t.Fatalf("a pick with no choice behind it: %v", err)
+	}
+	chars.Compendium = &retrainCompendium{}
+	r, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := chars.DecideRetrain(ctx, dmCaller, d.ID, uuid.New(), true); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("an unknown retrain: %v", err)
+	}
+	chars.Compendium = &retrainCompendium{failFeaturesAt: 2}
+	if _, err := chars.DecideRetrain(ctx, dmCaller, d.ID, r.ID, true); !errors.Is(err, errExtras) {
+		t.Fatalf("approving while the catalogue fails: %v", err)
+	}
+	chars.Compendium = &retrainCompendium{}
+	done, err := chars.DecideRetrain(ctx, dmCaller, d.ID, r.ID, true)
+	if err != nil || done.Status != domain.RetrainApproved {
+		t.Fatalf("approved = %+v %v", done, err)
+	}
+	after, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID)
+	if err != nil || len(after.Picks) != 1 || after.Picks[0].Value != "grappler" || len(after.Increase) != 0 {
+		t.Fatalf("after = %+v %v", after.Picks, err)
 	}
 }

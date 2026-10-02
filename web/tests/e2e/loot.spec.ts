@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { buildFighter } from './wizard'
 
 test('loot drops into the session and the party carries it off by dragging or choosing', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
@@ -37,19 +38,7 @@ test('loot drops into the session and the party carries it off by dragging or ch
   await player.getByRole('button', { name: 'Join as Player' }).click()
   await expect(player.getByTestId('member-list')).toContainText('Aria (you)')
   await player.getByTestId('build-character').click()
-  await player.getByTestId('character-name').fill('Mira')
-  await player.getByRole('radio', { name: /Human/ }).check()
-  await player.getByRole('radio', { name: /Soldier/ }).check()
-  await player.getByTestId('next').click()
-  await player.getByRole('radio', { name: /^Fighter/ }).check()
-  await player.getByTestId('next').click()
-  await player.getByTestId('bonus-0').selectOption('strength')
-  await player.getByTestId('bonus-1').selectOption('constitution')
-  await player.getByTestId('next').click()
-  await player.getByRole('checkbox', { name: /Perception/ }).check()
-  await player.getByRole('checkbox', { name: /Survival/ }).check()
-  await player.getByTestId('next').click()
-  await player.getByTestId('next').click()
+  await buildFighter(player, 'Mira')
   await player.getByTestId('create-character').click()
   await expect(player.getByRole('heading', { name: 'Mira' })).toBeVisible()
 

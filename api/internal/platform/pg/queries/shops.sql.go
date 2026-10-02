@@ -103,7 +103,7 @@ func (q *Queries) CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]Pr
 
 const characterTrade = `-- name: CharacterTrade :many
 SELECT c.id, c.level,
-    coalesce((SELECT a.base + a.bonus FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'charisma'), 10)::int AS charisma,
+    coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'charisma'), 10)::int AS charisma,
     EXISTS (SELECT 1 FROM campaign.character_skills k WHERE k.character_id = c.id AND k.skill = 'persuasion') AS persuasive
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.id
 `

@@ -298,12 +298,25 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/invites/accept
 	AcceptInvite(ctx context.Context, req *InviteAccept) (AcceptInviteRes, error)
+	// ApproveRetrain implements approveRetrain operation.
+	//
+	// Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
+	ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (ApproveRetrainRes, error)
 	// ClearTokenIcon implements clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// CopySpell implements copySpell operation.
+	//
+	// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
+	// hours per spell level.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook
+	CopySpell(ctx context.Context, req *SpellChoice, params CopySpellParams) (CopySpellRes, error)
 	// CreateCampaign implements createCampaign operation.
 	//
 	// Starts a Campaign with the caller as its first DM.
@@ -358,6 +371,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops
 	CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (CreateShopRes, error)
+	// DeclineRetrain implements declineRetrain operation.
+	//
+	// Declines a pending retrain. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline
+	DeclineRetrain(ctx context.Context, params DeclineRetrainParams) (DeclineRetrainRes, error)
 	// DeleteCharacter implements deleteCharacter operation.
 	//
 	// Removes a Character. The owner or a DM, never during Combat.
@@ -400,6 +419,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
+	// DiscardCharacterDraft implements discardCharacterDraft operation.
+	//
+	// Starts the wizard over.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/character-draft
+	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
 	// JoinCampaign implements joinCampaign operation.
 	//
 	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -407,6 +432,18 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/characters/{characterId}/campaigns
 	JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (JoinCampaignRes, error)
+	// LevelUp implements levelUp operation.
+	//
+	// Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+	LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (LevelUpRes, error)
+	// PrepareSpells implements prepareSpells operation.
+	//
+	// Sets the spells prepared through one class within its limit, after a long rest or a new level.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared
+	PrepareSpells(ctx context.Context, req *SpellPreparation, params PrepareSpellsParams) (PrepareSpellsRes, error)
 	// PreviewCharacter implements previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -437,6 +474,13 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RequestRetrain implements requestRetrain operation.
+	//
+	// Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for
+	// each level's picks, and Ability Score Improvements). The owner only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+	RequestRetrain(ctx context.Context, req *RetrainRequest, params RequestRetrainParams) (RequestRetrainRes, error)
 	// RerollStock implements rerollStock operation.
 	//
 	// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
@@ -492,6 +536,19 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
+	// RollCharacterScores implements rollCharacterScores operation.
+	//
+	// Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+	//
+	// POST /api/v1/campaigns/{campaignId}/character-draft/roll
+	RollCharacterScores(ctx context.Context, params RollCharacterScoresParams) (RollCharacterScoresRes, error)
+	// SaveCharacterDraft implements saveCharacterDraft operation.
+	//
+	// Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
+	// rolled them.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/character-draft
+	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -591,6 +648,13 @@ type BuildHandler interface {
 //
 // x-ogen-operation-group: Play
 type PlayHandler interface {
+	// CastRitual implements castRitual operation.
+	//
+	// Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes
+	// to the Game Clock.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals
+	CastRitual(ctx context.Context, req *SpellChoice, params CastRitualParams) (CastRitualRes, error)
 	// CreateRoll implements createRoll operation.
 	//
 	// Opens a Roll Request for the caller, or, from a DM, for another Member.
@@ -603,6 +667,26 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// KeepRoll implements keepRoll operation.
+	//
+	// Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/keep
+	KeepRoll(ctx context.Context, params KeepRollParams) (KeepRollRes, error)
+	// PassInspiration implements passInspiration operation.
+	//
+	// Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The
+	// owner only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
+	PassInspiration(ctx context.Context, req *InspirationPass, params PassInspirationParams) (PassInspirationRes, error)
+	// RerollDie implements rerollDie operation.
+	//
+	// Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll
+	// resolves. The roller only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll
+	RerollDie(ctx context.Context, req *RerollIn, params RerollDieParams) (RerollDieRes, error)
 	// RollRest implements rollRest operation.
 	//
 	// The server rolls every die still empty. The roller or a DM.
@@ -692,6 +776,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}
 	GetCharacter(ctx context.Context, params GetCharacterParams) (GetCharacterRes, error)
+	// GetCharacterDraft implements getCharacterDraft operation.
+	//
+	// The Character the caller is making in this Campaign's wizard, with the step reached, the choices so
+	// far and any rolled scores.
+	//
+	// GET /api/v1/campaigns/{campaignId}/character-draft
+	GetCharacterDraft(ctx context.Context, params GetCharacterDraftParams) (GetCharacterDraftRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -796,6 +887,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/spells/{slug}
 	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
+	// GetSpellcasting implements getSpellcasting operation.
+	//
+	// Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game
+	// Clock.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/spells
+	GetSpellcasting(ctx context.Context, params GetSpellcastingParams) (GetSpellcastingRes, error)
 	// GetStatus implements getStatus operation.
 	//
 	// Reports the running version and whether the database answers.
@@ -839,6 +937,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns
 	ListCampaigns(ctx context.Context, params ListCampaignsParams) (ListCampaignsRes, error)
+	// ListCharacterRevisions implements listCharacterRevisions operation.
+	//
+	// The builds approved retrains replaced, newest first. Its owner or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/revisions
+	ListCharacterRevisions(ctx context.Context, params ListCharacterRevisionsParams) (ListCharacterRevisionsRes, error)
 	// ListCharacters implements listCharacters operation.
 	//
 	// The party's Characters. Members only.
@@ -973,6 +1077,18 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/admin/release-notes
 	ListReleaseNotes(ctx context.Context) (ListReleaseNotesRes, error)
+	// ListRetrainChoices implements listRetrainChoices operation.
+	//
+	// Each pick the Character made on a level, with the options it could take instead. The owner only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices
+	ListRetrainChoices(ctx context.Context, params ListRetrainChoicesParams) (ListRetrainChoicesRes, error)
+	// ListRetrains implements listRetrains operation.
+	//
+	// A Character's retrain requests, newest first. Its owner or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+	ListRetrains(ctx context.Context, params ListRetrainsParams) (ListRetrainsRes, error)
 	// ListRolls implements listRolls operation.
 	//
 	// Recent Roll Requests in the Campaign. Members only.
@@ -1021,6 +1137,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PlanLevelUp implements planLevelUp operation.
+	//
+	// The classes the next level can go to and, for one of them, its hit points, choices and spells. The
+	// owner or a DM, out of combat.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

@@ -231,7 +231,30 @@ func TestEveryPlayDatabaseFaultSurfaces(t *testing.T) {
 	resolved, _ := base.Create(ctx, player, tb.campaign, attack())
 	_, _ = base.RollRest(ctx, player, tb.campaign, resolved.ID)
 	n := 0
+	char := uuid.New()
+	if _, err := tb.pool.Exec(ctx, `WITH hero AS (INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+			SELECT $1, m.auth_subject, 'Hero', 'srd-2024', 'human', 'fighter', 'soldier', now(), now() FROM campaign.members m WHERE m.id = $3)
+		INSERT INTO campaign.characters (character_id, id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
+		ability_method, hp_max, hp_current, level) VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 5, 4)`, char, tb.campaign, tb.playerID); err != nil {
+		t.Fatal(err)
+	}
+	held := func() domain.RollID {
+		n++
+		if _, err := tb.pool.Exec(ctx, "UPDATE campaign.characters SET heroic_inspiration = true WHERE id = $1", char); err != nil {
+			t.Fatal(err)
+		}
+		fresh, err := base.Create(ctx, player, tb.campaign, app.RollInput{Purpose: "Save " + strconv.Itoa(n), Notation: "1d20"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if r, err := base.RollRest(ctx, player, tb.campaign, fresh.ID); err != nil || !r.Choosing {
+			t.Fatalf("held roll = %+v %v", r, err)
+		}
+		return fresh.ID
+	}
 	ops := map[string]func(r *app.Rolls) error{
+		"keep":   func(r *app.Rolls) error { _, err := r.Keep(ctx, player, tb.campaign, held()); return err },
+		"reroll": func(r *app.Rolls) error { _, err := r.Reroll(ctx, player, tb.campaign, held(), 0); return err },
 		"create": func(r *app.Rolls) error { _, err := r.Create(ctx, player, tb.campaign, attack()); return err },
 		"get":    func(r *app.Rolls) error { _, err := r.Get(ctx, player, tb.campaign, resolved.ID); return err },
 		"list":   func(r *app.Rolls) error { _, err := r.List(ctx, player, tb.campaign, 5); return err },

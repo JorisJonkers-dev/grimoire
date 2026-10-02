@@ -224,6 +224,77 @@ func (s *AbilityBonus) SetCharisma(val OptInt32) {
 	s.Charisma = val
 }
 
+// Points from Ability Score Improvements, per ability.
+// Ref: #/components/schemas/AbilityIncrease
+type AbilityIncrease struct {
+	Strength     OptInt32 `json:"strength"`
+	Dexterity    OptInt32 `json:"dexterity"`
+	Constitution OptInt32 `json:"constitution"`
+	Intelligence OptInt32 `json:"intelligence"`
+	Wisdom       OptInt32 `json:"wisdom"`
+	Charisma     OptInt32 `json:"charisma"`
+}
+
+// GetStrength returns the value of Strength.
+func (s *AbilityIncrease) GetStrength() OptInt32 {
+	return s.Strength
+}
+
+// GetDexterity returns the value of Dexterity.
+func (s *AbilityIncrease) GetDexterity() OptInt32 {
+	return s.Dexterity
+}
+
+// GetConstitution returns the value of Constitution.
+func (s *AbilityIncrease) GetConstitution() OptInt32 {
+	return s.Constitution
+}
+
+// GetIntelligence returns the value of Intelligence.
+func (s *AbilityIncrease) GetIntelligence() OptInt32 {
+	return s.Intelligence
+}
+
+// GetWisdom returns the value of Wisdom.
+func (s *AbilityIncrease) GetWisdom() OptInt32 {
+	return s.Wisdom
+}
+
+// GetCharisma returns the value of Charisma.
+func (s *AbilityIncrease) GetCharisma() OptInt32 {
+	return s.Charisma
+}
+
+// SetStrength sets the value of Strength.
+func (s *AbilityIncrease) SetStrength(val OptInt32) {
+	s.Strength = val
+}
+
+// SetDexterity sets the value of Dexterity.
+func (s *AbilityIncrease) SetDexterity(val OptInt32) {
+	s.Dexterity = val
+}
+
+// SetConstitution sets the value of Constitution.
+func (s *AbilityIncrease) SetConstitution(val OptInt32) {
+	s.Constitution = val
+}
+
+// SetIntelligence sets the value of Intelligence.
+func (s *AbilityIncrease) SetIntelligence(val OptInt32) {
+	s.Intelligence = val
+}
+
+// SetWisdom sets the value of Wisdom.
+func (s *AbilityIncrease) SetWisdom(val OptInt32) {
+	s.Wisdom = val
+}
+
+// SetCharisma sets the value of Charisma.
+func (s *AbilityIncrease) SetCharisma(val OptInt32) {
+	s.Charisma = val
+}
+
 // One ability on the sheet with its saving throw.
 // Ref: #/components/schemas/AbilityLine
 type AbilityLine struct {
@@ -1817,6 +1888,7 @@ const (
 	ActivityEntityTypeLootTable      ActivityEntityType = "loot_table"
 	ActivityEntityTypeSettlement     ActivityEntityType = "settlement"
 	ActivityEntityTypeShop           ActivityEntityType = "shop"
+	ActivityEntityTypeCharacter      ActivityEntityType = "character"
 )
 
 // AllValues returns all ActivityEntityType values.
@@ -1829,6 +1901,7 @@ func (ActivityEntityType) AllValues() []ActivityEntityType {
 		ActivityEntityTypeLootTable,
 		ActivityEntityTypeSettlement,
 		ActivityEntityTypeShop,
+		ActivityEntityTypeCharacter,
 	}
 }
 
@@ -1848,6 +1921,8 @@ func (s ActivityEntityType) MarshalText() ([]byte, error) {
 	case ActivityEntityTypeSettlement:
 		return []byte(s), nil
 	case ActivityEntityTypeShop:
+		return []byte(s), nil
+	case ActivityEntityTypeCharacter:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -1877,6 +1952,9 @@ func (s *ActivityEntityType) UnmarshalText(data []byte) error {
 		return nil
 	case ActivityEntityTypeShop:
 		*s = ActivityEntityTypeShop
+		return nil
+	case ActivityEntityTypeCharacter:
+		*s = ActivityEntityTypeCharacter
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -2669,6 +2747,99 @@ func (s *ArmorOptionItem) SetStealthDisadvantage(val bool) {
 
 type AssetUrl string
 
+// A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+// Ref: #/components/schemas/AttackLine
+type AttackLine struct {
+	Name          string    `json:"name"`
+	ToHit         int32     `json:"toHit"`
+	Damage        string    `json:"damage"`
+	DamageType    string    `json:"damageType"`
+	ReachFeet     int32     `json:"reachFeet"`
+	RangeFeet     int32     `json:"rangeFeet"`
+	LongRangeFeet int32     `json:"longRangeFeet"`
+	Mastery       OptString `json:"mastery"`
+}
+
+// GetName returns the value of Name.
+func (s *AttackLine) GetName() string {
+	return s.Name
+}
+
+// GetToHit returns the value of ToHit.
+func (s *AttackLine) GetToHit() int32 {
+	return s.ToHit
+}
+
+// GetDamage returns the value of Damage.
+func (s *AttackLine) GetDamage() string {
+	return s.Damage
+}
+
+// GetDamageType returns the value of DamageType.
+func (s *AttackLine) GetDamageType() string {
+	return s.DamageType
+}
+
+// GetReachFeet returns the value of ReachFeet.
+func (s *AttackLine) GetReachFeet() int32 {
+	return s.ReachFeet
+}
+
+// GetRangeFeet returns the value of RangeFeet.
+func (s *AttackLine) GetRangeFeet() int32 {
+	return s.RangeFeet
+}
+
+// GetLongRangeFeet returns the value of LongRangeFeet.
+func (s *AttackLine) GetLongRangeFeet() int32 {
+	return s.LongRangeFeet
+}
+
+// GetMastery returns the value of Mastery.
+func (s *AttackLine) GetMastery() OptString {
+	return s.Mastery
+}
+
+// SetName sets the value of Name.
+func (s *AttackLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetToHit sets the value of ToHit.
+func (s *AttackLine) SetToHit(val int32) {
+	s.ToHit = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *AttackLine) SetDamage(val string) {
+	s.Damage = val
+}
+
+// SetDamageType sets the value of DamageType.
+func (s *AttackLine) SetDamageType(val string) {
+	s.DamageType = val
+}
+
+// SetReachFeet sets the value of ReachFeet.
+func (s *AttackLine) SetReachFeet(val int32) {
+	s.ReachFeet = val
+}
+
+// SetRangeFeet sets the value of RangeFeet.
+func (s *AttackLine) SetRangeFeet(val int32) {
+	s.RangeFeet = val
+}
+
+// SetLongRangeFeet sets the value of LongRangeFeet.
+func (s *AttackLine) SetLongRangeFeet(val int32) {
+	s.LongRangeFeet = val
+}
+
+// SetMastery sets the value of Mastery.
+func (s *AttackLine) SetMastery(val OptString) {
+	s.Mastery = val
+}
+
 // Entries of one kind by Automation Level.
 // Ref: #/components/schemas/AutomationCount
 type AutomationCount struct {
@@ -2882,6 +3053,147 @@ func (s *BackgroundChoice) SetSkills(val []Slug) {
 	s.Skills = val
 }
 
+// A Character's rebuildable choices.
+// Ref: #/components/schemas/BuildSnapshot
+type BuildSnapshot struct {
+	Species    Slug                `json:"species"`
+	Background Slug                `json:"background"`
+	Method     BuildSnapshotMethod `json:"method"`
+	Base       AbilityBase         `json:"base"`
+	Bonus      AbilityBonus        `json:"bonus"`
+	Increase   AbilityIncrease     `json:"increase"`
+	Skills     []Slug              `json:"skills"`
+	Picks      []PickLine          `json:"picks"`
+}
+
+// GetSpecies returns the value of Species.
+func (s *BuildSnapshot) GetSpecies() Slug {
+	return s.Species
+}
+
+// GetBackground returns the value of Background.
+func (s *BuildSnapshot) GetBackground() Slug {
+	return s.Background
+}
+
+// GetMethod returns the value of Method.
+func (s *BuildSnapshot) GetMethod() BuildSnapshotMethod {
+	return s.Method
+}
+
+// GetBase returns the value of Base.
+func (s *BuildSnapshot) GetBase() AbilityBase {
+	return s.Base
+}
+
+// GetBonus returns the value of Bonus.
+func (s *BuildSnapshot) GetBonus() AbilityBonus {
+	return s.Bonus
+}
+
+// GetIncrease returns the value of Increase.
+func (s *BuildSnapshot) GetIncrease() AbilityIncrease {
+	return s.Increase
+}
+
+// GetSkills returns the value of Skills.
+func (s *BuildSnapshot) GetSkills() []Slug {
+	return s.Skills
+}
+
+// GetPicks returns the value of Picks.
+func (s *BuildSnapshot) GetPicks() []PickLine {
+	return s.Picks
+}
+
+// SetSpecies sets the value of Species.
+func (s *BuildSnapshot) SetSpecies(val Slug) {
+	s.Species = val
+}
+
+// SetBackground sets the value of Background.
+func (s *BuildSnapshot) SetBackground(val Slug) {
+	s.Background = val
+}
+
+// SetMethod sets the value of Method.
+func (s *BuildSnapshot) SetMethod(val BuildSnapshotMethod) {
+	s.Method = val
+}
+
+// SetBase sets the value of Base.
+func (s *BuildSnapshot) SetBase(val AbilityBase) {
+	s.Base = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *BuildSnapshot) SetBonus(val AbilityBonus) {
+	s.Bonus = val
+}
+
+// SetIncrease sets the value of Increase.
+func (s *BuildSnapshot) SetIncrease(val AbilityIncrease) {
+	s.Increase = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *BuildSnapshot) SetSkills(val []Slug) {
+	s.Skills = val
+}
+
+// SetPicks sets the value of Picks.
+func (s *BuildSnapshot) SetPicks(val []PickLine) {
+	s.Picks = val
+}
+
+type BuildSnapshotMethod string
+
+const (
+	BuildSnapshotMethodStandardArray BuildSnapshotMethod = "standard-array"
+	BuildSnapshotMethodPointBuy      BuildSnapshotMethod = "point-buy"
+	BuildSnapshotMethodRolled        BuildSnapshotMethod = "rolled"
+)
+
+// AllValues returns all BuildSnapshotMethod values.
+func (BuildSnapshotMethod) AllValues() []BuildSnapshotMethod {
+	return []BuildSnapshotMethod{
+		BuildSnapshotMethodStandardArray,
+		BuildSnapshotMethodPointBuy,
+		BuildSnapshotMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s BuildSnapshotMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case BuildSnapshotMethodStandardArray:
+		return []byte(s), nil
+	case BuildSnapshotMethodPointBuy:
+		return []byte(s), nil
+	case BuildSnapshotMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *BuildSnapshotMethod) UnmarshalText(data []byte) error {
+	switch BuildSnapshotMethod(data) {
+	case BuildSnapshotMethodStandardArray:
+		*s = BuildSnapshotMethodStandardArray
+		return nil
+	case BuildSnapshotMethodPointBuy:
+		*s = BuildSnapshotMethodPointBuy
+		return nil
+	case BuildSnapshotMethodRolled:
+		*s = BuildSnapshotMethodRolled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // What a first-level character can choose in one ruleset.
 // Ref: #/components/schemas/BuilderOptions
 type BuilderOptions struct {
@@ -3062,6 +3374,12 @@ type Campaign struct {
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
 	RestSupplies   OptBool           `json:"restSupplies"`
 	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// The ability score methods new Characters may use.
+	CreationMethods []CreationMethod `json:"creationMethods"`
+	// The level new Characters start at.
+	StartingLevel OptInt32 `json:"startingLevel"`
+	// Long rests stop unlocking the next level; the DM grants levels instead.
+	HoldLevelUps OptBool `json:"holdLevelUps"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool  `json:"shareInitiative"`
 	Me              Member   `json:"me"`
@@ -3116,6 +3434,21 @@ func (s *Campaign) GetRestSupplies() OptBool {
 // GetInitiativeMode returns the value of InitiativeMode.
 func (s *Campaign) GetInitiativeMode() OptInitiativeMode {
 	return s.InitiativeMode
+}
+
+// GetCreationMethods returns the value of CreationMethods.
+func (s *Campaign) GetCreationMethods() []CreationMethod {
+	return s.CreationMethods
+}
+
+// GetStartingLevel returns the value of StartingLevel.
+func (s *Campaign) GetStartingLevel() OptInt32 {
+	return s.StartingLevel
+}
+
+// GetHoldLevelUps returns the value of HoldLevelUps.
+func (s *Campaign) GetHoldLevelUps() OptBool {
+	return s.HoldLevelUps
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3181,6 +3514,21 @@ func (s *Campaign) SetRestSupplies(val OptBool) {
 // SetInitiativeMode sets the value of InitiativeMode.
 func (s *Campaign) SetInitiativeMode(val OptInitiativeMode) {
 	s.InitiativeMode = val
+}
+
+// SetCreationMethods sets the value of CreationMethods.
+func (s *Campaign) SetCreationMethods(val []CreationMethod) {
+	s.CreationMethods = val
+}
+
+// SetStartingLevel sets the value of StartingLevel.
+func (s *Campaign) SetStartingLevel(val OptInt32) {
+	s.StartingLevel = val
+}
+
+// SetHoldLevelUps sets the value of HoldLevelUps.
+func (s *Campaign) SetHoldLevelUps(val OptBool) {
+	s.HoldLevelUps = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3555,6 +3903,12 @@ type CampaignSummary struct {
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
 	RestSupplies   OptBool           `json:"restSupplies"`
 	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// The ability score methods new Characters may use.
+	CreationMethods []CreationMethod `json:"creationMethods"`
+	// The level new Characters start at.
+	StartingLevel OptInt32 `json:"startingLevel"`
+	// Long rests stop unlocking the next level; the DM grants levels instead.
+	HoldLevelUps OptBool `json:"holdLevelUps"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3607,6 +3961,21 @@ func (s *CampaignSummary) GetRestSupplies() OptBool {
 // GetInitiativeMode returns the value of InitiativeMode.
 func (s *CampaignSummary) GetInitiativeMode() OptInitiativeMode {
 	return s.InitiativeMode
+}
+
+// GetCreationMethods returns the value of CreationMethods.
+func (s *CampaignSummary) GetCreationMethods() []CreationMethod {
+	return s.CreationMethods
+}
+
+// GetStartingLevel returns the value of StartingLevel.
+func (s *CampaignSummary) GetStartingLevel() OptInt32 {
+	return s.StartingLevel
+}
+
+// GetHoldLevelUps returns the value of HoldLevelUps.
+func (s *CampaignSummary) GetHoldLevelUps() OptBool {
+	return s.HoldLevelUps
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3662,6 +4031,21 @@ func (s *CampaignSummary) SetRestSupplies(val OptBool) {
 // SetInitiativeMode sets the value of InitiativeMode.
 func (s *CampaignSummary) SetInitiativeMode(val OptInitiativeMode) {
 	s.InitiativeMode = val
+}
+
+// SetCreationMethods sets the value of CreationMethods.
+func (s *CampaignSummary) SetCreationMethods(val []CreationMethod) {
+	s.CreationMethods = val
+}
+
+// SetStartingLevel sets the value of StartingLevel.
+func (s *CampaignSummary) SetStartingLevel(val OptInt32) {
+	s.StartingLevel = val
+}
+
+// SetHoldLevelUps sets the value of HoldLevelUps.
+func (s *CampaignSummary) SetHoldLevelUps(val OptBool) {
+	s.HoldLevelUps = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3730,6 +4114,12 @@ type CampaignUpdate struct {
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
 	RestSupplies   OptBool           `json:"restSupplies"`
 	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// The ability score methods new Characters may use.
+	CreationMethods []CreationMethod `json:"creationMethods"`
+	// The level new Characters start at.
+	StartingLevel OptInt32 `json:"startingLevel"`
+	// Long rests stop unlocking the next level; the DM grants levels instead.
+	HoldLevelUps OptBool `json:"holdLevelUps"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3762,6 +4152,21 @@ func (s *CampaignUpdate) GetRestSupplies() OptBool {
 // GetInitiativeMode returns the value of InitiativeMode.
 func (s *CampaignUpdate) GetInitiativeMode() OptInitiativeMode {
 	return s.InitiativeMode
+}
+
+// GetCreationMethods returns the value of CreationMethods.
+func (s *CampaignUpdate) GetCreationMethods() []CreationMethod {
+	return s.CreationMethods
+}
+
+// GetStartingLevel returns the value of StartingLevel.
+func (s *CampaignUpdate) GetStartingLevel() OptInt32 {
+	return s.StartingLevel
+}
+
+// GetHoldLevelUps returns the value of HoldLevelUps.
+func (s *CampaignUpdate) GetHoldLevelUps() OptBool {
+	return s.HoldLevelUps
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3797,6 +4202,21 @@ func (s *CampaignUpdate) SetRestSupplies(val OptBool) {
 // SetInitiativeMode sets the value of InitiativeMode.
 func (s *CampaignUpdate) SetInitiativeMode(val OptInitiativeMode) {
 	s.InitiativeMode = val
+}
+
+// SetCreationMethods sets the value of CreationMethods.
+func (s *CampaignUpdate) SetCreationMethods(val []CreationMethod) {
+	s.CreationMethods = val
+}
+
+// SetStartingLevel sets the value of StartingLevel.
+func (s *CampaignUpdate) SetStartingLevel(val OptInt32) {
+	s.StartingLevel = val
+}
+
+// SetHoldLevelUps sets the value of HoldLevelUps.
+func (s *CampaignUpdate) SetHoldLevelUps(val OptBool) {
+	s.HoldLevelUps = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3843,7 +4263,7 @@ func (s *CancelFriendRequestNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*CancelFriendRequestNoContent) cancelFriendRequestRes() {}
 
-// The choices for a first-level Character.
+// The choices for a new Character, who starts at the Campaign's starting level.
 // Ref: #/components/schemas/CharacterBuild
 type CharacterBuild struct {
 	Name       CharacterName        `json:"name"`
@@ -3857,6 +4277,8 @@ type CharacterBuild struct {
 	Armor      OptArmorChoice       `json:"armor"`
 	Shield     bool                 `json:"shield"`
 	Weapons    []Slug               `json:"weapons"`
+	Appearance OptString            `json:"appearance"`
+	Backstory  OptString            `json:"backstory"`
 }
 
 // GetName returns the value of Name.
@@ -3914,6 +4336,16 @@ func (s *CharacterBuild) GetWeapons() []Slug {
 	return s.Weapons
 }
 
+// GetAppearance returns the value of Appearance.
+func (s *CharacterBuild) GetAppearance() OptString {
+	return s.Appearance
+}
+
+// GetBackstory returns the value of Backstory.
+func (s *CharacterBuild) GetBackstory() OptString {
+	return s.Backstory
+}
+
 // SetName sets the value of Name.
 func (s *CharacterBuild) SetName(val CharacterName) {
 	s.Name = val
@@ -3969,6 +4401,16 @@ func (s *CharacterBuild) SetWeapons(val []Slug) {
 	s.Weapons = val
 }
 
+// SetAppearance sets the value of Appearance.
+func (s *CharacterBuild) SetAppearance(val OptString) {
+	s.Appearance = val
+}
+
+// SetBackstory sets the value of Backstory.
+func (s *CharacterBuild) SetBackstory(val OptString) {
+	s.Backstory = val
+}
+
 type CharacterBuildMethod string
 
 const (
@@ -4017,14 +4459,338 @@ func (s *CharacterBuildMethod) UnmarshalText(data []byte) error {
 	}
 }
 
+// A Character being made in the wizard.
+// Ref: #/components/schemas/CharacterDraft
+type CharacterDraft struct {
+	Step  int32               `json:"step"`
+	Build CharacterDraftBuild `json:"build"`
+	// The six scores the server rolled, to place on abilities.
+	Rolled []int32 `json:"rolled"`
+}
+
+// GetStep returns the value of Step.
+func (s *CharacterDraft) GetStep() int32 {
+	return s.Step
+}
+
+// GetBuild returns the value of Build.
+func (s *CharacterDraft) GetBuild() CharacterDraftBuild {
+	return s.Build
+}
+
+// GetRolled returns the value of Rolled.
+func (s *CharacterDraft) GetRolled() []int32 {
+	return s.Rolled
+}
+
+// SetStep sets the value of Step.
+func (s *CharacterDraft) SetStep(val int32) {
+	s.Step = val
+}
+
+// SetBuild sets the value of Build.
+func (s *CharacterDraft) SetBuild(val CharacterDraftBuild) {
+	s.Build = val
+}
+
+// SetRolled sets the value of Rolled.
+func (s *CharacterDraft) SetRolled(val []int32) {
+	s.Rolled = val
+}
+
+// The wizard's choices so far; every field may still be missing.
+// Ref: #/components/schemas/CharacterDraftBuild
+type CharacterDraftBuild struct {
+	Name       OptString                    `json:"name"`
+	Species    OptSlug                      `json:"species"`
+	Class      OptSlug                      `json:"class"`
+	Background OptSlug                      `json:"background"`
+	Method     OptCharacterDraftBuildMethod `json:"method"`
+	Base       OptAbilityBase               `json:"base"`
+	Bonus      OptAbilityBonus              `json:"bonus"`
+	Skills     []Slug                       `json:"skills"`
+	Armor      OptArmorChoice               `json:"armor"`
+	Shield     OptBool                      `json:"shield"`
+	Weapons    []Slug                       `json:"weapons"`
+	Appearance OptString                    `json:"appearance"`
+	Backstory  OptString                    `json:"backstory"`
+}
+
+// GetName returns the value of Name.
+func (s *CharacterDraftBuild) GetName() OptString {
+	return s.Name
+}
+
+// GetSpecies returns the value of Species.
+func (s *CharacterDraftBuild) GetSpecies() OptSlug {
+	return s.Species
+}
+
+// GetClass returns the value of Class.
+func (s *CharacterDraftBuild) GetClass() OptSlug {
+	return s.Class
+}
+
+// GetBackground returns the value of Background.
+func (s *CharacterDraftBuild) GetBackground() OptSlug {
+	return s.Background
+}
+
+// GetMethod returns the value of Method.
+func (s *CharacterDraftBuild) GetMethod() OptCharacterDraftBuildMethod {
+	return s.Method
+}
+
+// GetBase returns the value of Base.
+func (s *CharacterDraftBuild) GetBase() OptAbilityBase {
+	return s.Base
+}
+
+// GetBonus returns the value of Bonus.
+func (s *CharacterDraftBuild) GetBonus() OptAbilityBonus {
+	return s.Bonus
+}
+
+// GetSkills returns the value of Skills.
+func (s *CharacterDraftBuild) GetSkills() []Slug {
+	return s.Skills
+}
+
+// GetArmor returns the value of Armor.
+func (s *CharacterDraftBuild) GetArmor() OptArmorChoice {
+	return s.Armor
+}
+
+// GetShield returns the value of Shield.
+func (s *CharacterDraftBuild) GetShield() OptBool {
+	return s.Shield
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *CharacterDraftBuild) GetWeapons() []Slug {
+	return s.Weapons
+}
+
+// GetAppearance returns the value of Appearance.
+func (s *CharacterDraftBuild) GetAppearance() OptString {
+	return s.Appearance
+}
+
+// GetBackstory returns the value of Backstory.
+func (s *CharacterDraftBuild) GetBackstory() OptString {
+	return s.Backstory
+}
+
+// SetName sets the value of Name.
+func (s *CharacterDraftBuild) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *CharacterDraftBuild) SetSpecies(val OptSlug) {
+	s.Species = val
+}
+
+// SetClass sets the value of Class.
+func (s *CharacterDraftBuild) SetClass(val OptSlug) {
+	s.Class = val
+}
+
+// SetBackground sets the value of Background.
+func (s *CharacterDraftBuild) SetBackground(val OptSlug) {
+	s.Background = val
+}
+
+// SetMethod sets the value of Method.
+func (s *CharacterDraftBuild) SetMethod(val OptCharacterDraftBuildMethod) {
+	s.Method = val
+}
+
+// SetBase sets the value of Base.
+func (s *CharacterDraftBuild) SetBase(val OptAbilityBase) {
+	s.Base = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *CharacterDraftBuild) SetBonus(val OptAbilityBonus) {
+	s.Bonus = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *CharacterDraftBuild) SetSkills(val []Slug) {
+	s.Skills = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *CharacterDraftBuild) SetArmor(val OptArmorChoice) {
+	s.Armor = val
+}
+
+// SetShield sets the value of Shield.
+func (s *CharacterDraftBuild) SetShield(val OptBool) {
+	s.Shield = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *CharacterDraftBuild) SetWeapons(val []Slug) {
+	s.Weapons = val
+}
+
+// SetAppearance sets the value of Appearance.
+func (s *CharacterDraftBuild) SetAppearance(val OptString) {
+	s.Appearance = val
+}
+
+// SetBackstory sets the value of Backstory.
+func (s *CharacterDraftBuild) SetBackstory(val OptString) {
+	s.Backstory = val
+}
+
+type CharacterDraftBuildMethod string
+
+const (
+	CharacterDraftBuildMethodStandardArray CharacterDraftBuildMethod = "standard-array"
+	CharacterDraftBuildMethodPointBuy      CharacterDraftBuildMethod = "point-buy"
+	CharacterDraftBuildMethodRolled        CharacterDraftBuildMethod = "rolled"
+)
+
+// AllValues returns all CharacterDraftBuildMethod values.
+func (CharacterDraftBuildMethod) AllValues() []CharacterDraftBuildMethod {
+	return []CharacterDraftBuildMethod{
+		CharacterDraftBuildMethodStandardArray,
+		CharacterDraftBuildMethodPointBuy,
+		CharacterDraftBuildMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CharacterDraftBuildMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case CharacterDraftBuildMethodStandardArray:
+		return []byte(s), nil
+	case CharacterDraftBuildMethodPointBuy:
+		return []byte(s), nil
+	case CharacterDraftBuildMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CharacterDraftBuildMethod) UnmarshalText(data []byte) error {
+	switch CharacterDraftBuildMethod(data) {
+	case CharacterDraftBuildMethodStandardArray:
+		*s = CharacterDraftBuildMethodStandardArray
+		return nil
+	case CharacterDraftBuildMethodPointBuy:
+		*s = CharacterDraftBuildMethodPointBuy
+		return nil
+	case CharacterDraftBuildMethodRolled:
+		*s = CharacterDraftBuildMethodRolled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// CharacterDraftHeaders wraps CharacterDraft with response headers.
+type CharacterDraftHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CharacterDraft
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CharacterDraftHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CharacterDraftHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CharacterDraftHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CharacterDraftHeaders) GetResponse() CharacterDraft {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CharacterDraftHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CharacterDraftHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CharacterDraftHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CharacterDraftHeaders) SetResponse(val CharacterDraft) {
+	s.Response = val
+}
+
+func (*CharacterDraftHeaders) getCharacterDraftRes()   {}
+func (*CharacterDraftHeaders) rollCharacterScoresRes() {}
+func (*CharacterDraftHeaders) saveCharacterDraftRes()  {}
+
+// The wizard's step and choices to keep.
+// Ref: #/components/schemas/CharacterDraftSave
+type CharacterDraftSave struct {
+	Step  int32               `json:"step"`
+	Build CharacterDraftBuild `json:"build"`
+}
+
+// GetStep returns the value of Step.
+func (s *CharacterDraftSave) GetStep() int32 {
+	return s.Step
+}
+
+// GetBuild returns the value of Build.
+func (s *CharacterDraftSave) GetBuild() CharacterDraftBuild {
+	return s.Build
+}
+
+// SetStep sets the value of Step.
+func (s *CharacterDraftSave) SetStep(val int32) {
+	s.Step = val
+}
+
+// SetBuild sets the value of Build.
+func (s *CharacterDraftSave) SetBuild(val CharacterDraftBuild) {
+	s.Build = val
+}
+
 // Out-of-combat changes; omitted fields stay as they are.
 // Ref: #/components/schemas/CharacterEdit
 type CharacterEdit struct {
 	Name      OptCharacterName `json:"name"`
 	HpCurrent OptInt32         `json:"hpCurrent"`
-	Armor     OptArmorChoice   `json:"armor"`
-	Shield    OptBool          `json:"shield"`
-	Weapons   []Slug           `json:"weapons"`
+	// Damage taken, soaked by temporary hit points first.
+	Damage OptInt32 `json:"damage"`
+	// Hit points regained, up to the maximum.
+	Heal OptInt32 `json:"heal"`
+	// Temporary hit points gained; the higher of old and new stays.
+	TempHp OptInt32 `json:"tempHp"`
+	// Unlock or lock the next level; DM only.
+	LevelUpReady OptBool `json:"levelUpReady"`
+	// Grant or take Heroic Inspiration; DM only.
+	HeroicInspiration OptBool        `json:"heroicInspiration"`
+	Armor             OptArmorChoice `json:"armor"`
+	Shield            OptBool        `json:"shield"`
+	Weapons           []Slug         `json:"weapons"`
 }
 
 // GetName returns the value of Name.
@@ -4035,6 +4801,31 @@ func (s *CharacterEdit) GetName() OptCharacterName {
 // GetHpCurrent returns the value of HpCurrent.
 func (s *CharacterEdit) GetHpCurrent() OptInt32 {
 	return s.HpCurrent
+}
+
+// GetDamage returns the value of Damage.
+func (s *CharacterEdit) GetDamage() OptInt32 {
+	return s.Damage
+}
+
+// GetHeal returns the value of Heal.
+func (s *CharacterEdit) GetHeal() OptInt32 {
+	return s.Heal
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *CharacterEdit) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
+// GetLevelUpReady returns the value of LevelUpReady.
+func (s *CharacterEdit) GetLevelUpReady() OptBool {
+	return s.LevelUpReady
+}
+
+// GetHeroicInspiration returns the value of HeroicInspiration.
+func (s *CharacterEdit) GetHeroicInspiration() OptBool {
+	return s.HeroicInspiration
 }
 
 // GetArmor returns the value of Armor.
@@ -4060,6 +4851,31 @@ func (s *CharacterEdit) SetName(val OptCharacterName) {
 // SetHpCurrent sets the value of HpCurrent.
 func (s *CharacterEdit) SetHpCurrent(val OptInt32) {
 	s.HpCurrent = val
+}
+
+// SetDamage sets the value of Damage.
+func (s *CharacterEdit) SetDamage(val OptInt32) {
+	s.Damage = val
+}
+
+// SetHeal sets the value of Heal.
+func (s *CharacterEdit) SetHeal(val OptInt32) {
+	s.Heal = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *CharacterEdit) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
+// SetLevelUpReady sets the value of LevelUpReady.
+func (s *CharacterEdit) SetLevelUpReady(val OptBool) {
+	s.LevelUpReady = val
+}
+
+// SetHeroicInspiration sets the value of HeroicInspiration.
+func (s *CharacterEdit) SetHeroicInspiration(val OptBool) {
+	s.HeroicInspiration = val
 }
 
 // SetArmor sets the value of Armor.
@@ -4095,6 +4911,66 @@ func (s *CharacterJoin) SetCampaignId(val ID) {
 
 type CharacterName string
 
+// A build an approved retrain replaced.
+// Ref: #/components/schemas/CharacterRevisionLine
+type CharacterRevisionLine struct {
+	No        int32         `json:"no"`
+	Author    DisplayName   `json:"author"`
+	CreatedAt time.Time     `json:"createdAt"`
+	Build     BuildSnapshot `json:"build"`
+	RetrainId OptID         `json:"retrainId"`
+}
+
+// GetNo returns the value of No.
+func (s *CharacterRevisionLine) GetNo() int32 {
+	return s.No
+}
+
+// GetAuthor returns the value of Author.
+func (s *CharacterRevisionLine) GetAuthor() DisplayName {
+	return s.Author
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CharacterRevisionLine) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetBuild returns the value of Build.
+func (s *CharacterRevisionLine) GetBuild() BuildSnapshot {
+	return s.Build
+}
+
+// GetRetrainId returns the value of RetrainId.
+func (s *CharacterRevisionLine) GetRetrainId() OptID {
+	return s.RetrainId
+}
+
+// SetNo sets the value of No.
+func (s *CharacterRevisionLine) SetNo(val int32) {
+	s.No = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *CharacterRevisionLine) SetAuthor(val DisplayName) {
+	s.Author = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CharacterRevisionLine) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetBuild sets the value of Build.
+func (s *CharacterRevisionLine) SetBuild(val BuildSnapshot) {
+	s.Build = val
+}
+
+// SetRetrainId sets the value of RetrainId.
+func (s *CharacterRevisionLine) SetRetrainId(val OptID) {
+	s.RetrainId = val
+}
+
 // A Character's sheet with every value derived by the rules.
 // Ref: #/components/schemas/CharacterSheet
 type CharacterSheet struct {
@@ -4117,6 +4993,7 @@ type CharacterSheet struct {
 	BackgroundSkills  []Slug               `json:"backgroundSkills"`
 	HpCurrent         int32                `json:"hpCurrent"`
 	HpMax             int32                `json:"hpMax"`
+	TempHp            OptInt32             `json:"tempHp"`
 	ArmorClass        int32                `json:"armorClass"`
 	Initiative        int32                `json:"initiative"`
 	SpeedFeet         int32                `json:"speedFeet"`
@@ -4130,6 +5007,17 @@ type CharacterSheet struct {
 	Warnings          []string             `json:"warnings"`
 	PortraitUrl       OptAssetUrl          `json:"portraitUrl"`
 	TokenUrl          OptAssetUrl          `json:"tokenUrl"`
+	// The Account's own Character this Campaign Character was made from.
+	CharacterId   OptID            `json:"characterId"`
+	Attacks       []AttackLine     `json:"attacks"`
+	Traits        []TraitLine      `json:"traits"`
+	Proficiencies OptProficiencies `json:"proficiencies"`
+	// The next level is unlocked.
+	LevelUpReady      OptBool            `json:"levelUpReady"`
+	HeroicInspiration OptBool            `json:"heroicInspiration"`
+	Increase          OptAbilityIncrease `json:"increase"`
+	Classes           []ClassLine        `json:"classes"`
+	Spells            []LearnedSpellLine `json:"spells"`
 }
 
 // GetID returns the value of ID.
@@ -4227,6 +5115,11 @@ func (s *CharacterSheet) GetHpMax() int32 {
 	return s.HpMax
 }
 
+// GetTempHp returns the value of TempHp.
+func (s *CharacterSheet) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
 // GetArmorClass returns the value of ArmorClass.
 func (s *CharacterSheet) GetArmorClass() int32 {
 	return s.ArmorClass
@@ -4290,6 +5183,51 @@ func (s *CharacterSheet) GetPortraitUrl() OptAssetUrl {
 // GetTokenUrl returns the value of TokenUrl.
 func (s *CharacterSheet) GetTokenUrl() OptAssetUrl {
 	return s.TokenUrl
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *CharacterSheet) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetAttacks returns the value of Attacks.
+func (s *CharacterSheet) GetAttacks() []AttackLine {
+	return s.Attacks
+}
+
+// GetTraits returns the value of Traits.
+func (s *CharacterSheet) GetTraits() []TraitLine {
+	return s.Traits
+}
+
+// GetProficiencies returns the value of Proficiencies.
+func (s *CharacterSheet) GetProficiencies() OptProficiencies {
+	return s.Proficiencies
+}
+
+// GetLevelUpReady returns the value of LevelUpReady.
+func (s *CharacterSheet) GetLevelUpReady() OptBool {
+	return s.LevelUpReady
+}
+
+// GetHeroicInspiration returns the value of HeroicInspiration.
+func (s *CharacterSheet) GetHeroicInspiration() OptBool {
+	return s.HeroicInspiration
+}
+
+// GetIncrease returns the value of Increase.
+func (s *CharacterSheet) GetIncrease() OptAbilityIncrease {
+	return s.Increase
+}
+
+// GetClasses returns the value of Classes.
+func (s *CharacterSheet) GetClasses() []ClassLine {
+	return s.Classes
+}
+
+// GetSpells returns the value of Spells.
+func (s *CharacterSheet) GetSpells() []LearnedSpellLine {
+	return s.Spells
 }
 
 // SetID sets the value of ID.
@@ -4387,6 +5325,11 @@ func (s *CharacterSheet) SetHpMax(val int32) {
 	s.HpMax = val
 }
 
+// SetTempHp sets the value of TempHp.
+func (s *CharacterSheet) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
 // SetArmorClass sets the value of ArmorClass.
 func (s *CharacterSheet) SetArmorClass(val int32) {
 	s.ArmorClass = val
@@ -4452,6 +5395,51 @@ func (s *CharacterSheet) SetTokenUrl(val OptAssetUrl) {
 	s.TokenUrl = val
 }
 
+// SetCharacterId sets the value of CharacterId.
+func (s *CharacterSheet) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetAttacks sets the value of Attacks.
+func (s *CharacterSheet) SetAttacks(val []AttackLine) {
+	s.Attacks = val
+}
+
+// SetTraits sets the value of Traits.
+func (s *CharacterSheet) SetTraits(val []TraitLine) {
+	s.Traits = val
+}
+
+// SetProficiencies sets the value of Proficiencies.
+func (s *CharacterSheet) SetProficiencies(val OptProficiencies) {
+	s.Proficiencies = val
+}
+
+// SetLevelUpReady sets the value of LevelUpReady.
+func (s *CharacterSheet) SetLevelUpReady(val OptBool) {
+	s.LevelUpReady = val
+}
+
+// SetHeroicInspiration sets the value of HeroicInspiration.
+func (s *CharacterSheet) SetHeroicInspiration(val OptBool) {
+	s.HeroicInspiration = val
+}
+
+// SetIncrease sets the value of Increase.
+func (s *CharacterSheet) SetIncrease(val OptAbilityIncrease) {
+	s.Increase = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *CharacterSheet) SetClasses(val []ClassLine) {
+	s.Classes = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *CharacterSheet) SetSpells(val []LearnedSpellLine) {
+	s.Spells = val
+}
+
 // CharacterSheetHeaders wraps CharacterSheet with response headers.
 type CharacterSheetHeaders struct {
 	RateLimitLimit     OptInt32
@@ -4503,6 +5491,8 @@ func (s *CharacterSheetHeaders) SetResponse(val CharacterSheet) {
 func (*CharacterSheetHeaders) createCharacterRes()  {}
 func (*CharacterSheetHeaders) getCharacterRes()     {}
 func (*CharacterSheetHeaders) joinCampaignRes()     {}
+func (*CharacterSheetHeaders) levelUpRes()          {}
+func (*CharacterSheetHeaders) passInspirationRes()  {}
 func (*CharacterSheetHeaders) previewCharacterRes() {}
 func (*CharacterSheetHeaders) updateCharacterRes()  {}
 
@@ -4557,16 +5547,17 @@ func (s *CharacterSheetMethod) UnmarshalText(data []byte) error {
 // A Character in the party list.
 // Ref: #/components/schemas/CharacterSummary
 type CharacterSummary struct {
-	ID        ID            `json:"id"`
-	Name      CharacterName `json:"name"`
-	OwnerName DisplayName   `json:"ownerName"`
-	Mine      bool          `json:"mine"`
-	Species   Slug          `json:"species"`
-	Class     Slug          `json:"class"`
-	Level     int32         `json:"level"`
-	HpCurrent int32         `json:"hpCurrent"`
-	HpMax     int32         `json:"hpMax"`
-	TokenUrl  OptAssetUrl   `json:"tokenUrl"`
+	ID                ID            `json:"id"`
+	Name              CharacterName `json:"name"`
+	OwnerName         DisplayName   `json:"ownerName"`
+	Mine              bool          `json:"mine"`
+	Species           Slug          `json:"species"`
+	Class             Slug          `json:"class"`
+	Level             int32         `json:"level"`
+	HpCurrent         int32         `json:"hpCurrent"`
+	HpMax             int32         `json:"hpMax"`
+	TokenUrl          OptAssetUrl   `json:"tokenUrl"`
+	HeroicInspiration OptBool       `json:"heroicInspiration"`
 }
 
 // GetID returns the value of ID.
@@ -4619,6 +5610,11 @@ func (s *CharacterSummary) GetTokenUrl() OptAssetUrl {
 	return s.TokenUrl
 }
 
+// GetHeroicInspiration returns the value of HeroicInspiration.
+func (s *CharacterSummary) GetHeroicInspiration() OptBool {
+	return s.HeroicInspiration
+}
+
 // SetID sets the value of ID.
 func (s *CharacterSummary) SetID(val ID) {
 	s.ID = val
@@ -4669,6 +5665,11 @@ func (s *CharacterSummary) SetTokenUrl(val OptAssetUrl) {
 	s.TokenUrl = val
 }
 
+// SetHeroicInspiration sets the value of HeroicInspiration.
+func (s *CharacterSummary) SetHeroicInspiration(val OptBool) {
+	s.HeroicInspiration = val
+}
+
 // A class and what it gives at level 1.
 // Ref: #/components/schemas/ClassChoice
 type ClassChoice struct {
@@ -4677,6 +5678,10 @@ type ClassChoice struct {
 	HitDie       int32     `json:"hitDie"`
 	Saves        []Ability `json:"saves"`
 	SkillChoices int32     `json:"skillChoices"`
+	// The abilities the class leans on most, highlighted when choosing it.
+	PrimaryAbilities []Ability `json:"primaryAbilities"`
+	// How the class casts spells.
+	Caster OptClassChoiceCaster `json:"caster"`
 }
 
 // GetSlug returns the value of Slug.
@@ -4704,6 +5709,16 @@ func (s *ClassChoice) GetSkillChoices() int32 {
 	return s.SkillChoices
 }
 
+// GetPrimaryAbilities returns the value of PrimaryAbilities.
+func (s *ClassChoice) GetPrimaryAbilities() []Ability {
+	return s.PrimaryAbilities
+}
+
+// GetCaster returns the value of Caster.
+func (s *ClassChoice) GetCaster() OptClassChoiceCaster {
+	return s.Caster
+}
+
 // SetSlug sets the value of Slug.
 func (s *ClassChoice) SetSlug(val Slug) {
 	s.Slug = val
@@ -4727,6 +5742,271 @@ func (s *ClassChoice) SetSaves(val []Ability) {
 // SetSkillChoices sets the value of SkillChoices.
 func (s *ClassChoice) SetSkillChoices(val int32) {
 	s.SkillChoices = val
+}
+
+// SetPrimaryAbilities sets the value of PrimaryAbilities.
+func (s *ClassChoice) SetPrimaryAbilities(val []Ability) {
+	s.PrimaryAbilities = val
+}
+
+// SetCaster sets the value of Caster.
+func (s *ClassChoice) SetCaster(val OptClassChoiceCaster) {
+	s.Caster = val
+}
+
+// How the class casts spells.
+type ClassChoiceCaster string
+
+const (
+	ClassChoiceCasterNone ClassChoiceCaster = "none"
+	ClassChoiceCasterFull ClassChoiceCaster = "full"
+	ClassChoiceCasterHalf ClassChoiceCaster = "half"
+	ClassChoiceCasterPact ClassChoiceCaster = "pact"
+)
+
+// AllValues returns all ClassChoiceCaster values.
+func (ClassChoiceCaster) AllValues() []ClassChoiceCaster {
+	return []ClassChoiceCaster{
+		ClassChoiceCasterNone,
+		ClassChoiceCasterFull,
+		ClassChoiceCasterHalf,
+		ClassChoiceCasterPact,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ClassChoiceCaster) MarshalText() ([]byte, error) {
+	switch s {
+	case ClassChoiceCasterNone:
+		return []byte(s), nil
+	case ClassChoiceCasterFull:
+		return []byte(s), nil
+	case ClassChoiceCasterHalf:
+		return []byte(s), nil
+	case ClassChoiceCasterPact:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ClassChoiceCaster) UnmarshalText(data []byte) error {
+	switch ClassChoiceCaster(data) {
+	case ClassChoiceCasterNone:
+		*s = ClassChoiceCasterNone
+		return nil
+	case ClassChoiceCasterFull:
+		*s = ClassChoiceCasterFull
+		return nil
+	case ClassChoiceCasterHalf:
+		*s = ClassChoiceCasterHalf
+		return nil
+	case ClassChoiceCasterPact:
+		*s = ClassChoiceCasterPact
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The levels a Character has in one class, and its subclass there.
+// Ref: #/components/schemas/ClassLine
+type ClassLine struct {
+	Slug     Slug    `json:"slug"`
+	Name     string  `json:"name"`
+	Subclass OptSlug `json:"subclass"`
+	Level    int32   `json:"level"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *ClassLine) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ClassLine) GetName() string {
+	return s.Name
+}
+
+// GetSubclass returns the value of Subclass.
+func (s *ClassLine) GetSubclass() OptSlug {
+	return s.Subclass
+}
+
+// GetLevel returns the value of Level.
+func (s *ClassLine) GetLevel() int32 {
+	return s.Level
+}
+
+// SetSlug sets the value of Slug.
+func (s *ClassLine) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetSubclass sets the value of Subclass.
+func (s *ClassLine) SetSubclass(val OptSlug) {
+	s.Subclass = val
+}
+
+// SetLevel sets the value of Level.
+func (s *ClassLine) SetLevel(val int32) {
+	s.Level = val
+}
+
+// What a Character casts through one class.
+// Ref: #/components/schemas/ClassSpells
+type ClassSpells struct {
+	Class Slug   `json:"class"`
+	Name  string `json:"name"`
+	Level int32  `json:"level"`
+	// How many spells it prepares.
+	Limit          int32 `json:"limit"`
+	MaxLevel       int32 `json:"maxLevel"`
+	KeepsSpellbook bool  `json:"keepsSpellbook"`
+	// Spells a wizard's book holds for free.
+	Allotment int32         `json:"allotment"`
+	Cantrips  SpellPickList `json:"cantrips"`
+	Prepared  SpellPickList `json:"prepared"`
+	Always    SpellPickList `json:"always"`
+	Spellbook SpellPickList `json:"spellbook"`
+	Options   SpellPickList `json:"options"`
+	Copyable  SpellPickList `json:"copyable"`
+}
+
+// GetClass returns the value of Class.
+func (s *ClassSpells) GetClass() Slug {
+	return s.Class
+}
+
+// GetName returns the value of Name.
+func (s *ClassSpells) GetName() string {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *ClassSpells) GetLevel() int32 {
+	return s.Level
+}
+
+// GetLimit returns the value of Limit.
+func (s *ClassSpells) GetLimit() int32 {
+	return s.Limit
+}
+
+// GetMaxLevel returns the value of MaxLevel.
+func (s *ClassSpells) GetMaxLevel() int32 {
+	return s.MaxLevel
+}
+
+// GetKeepsSpellbook returns the value of KeepsSpellbook.
+func (s *ClassSpells) GetKeepsSpellbook() bool {
+	return s.KeepsSpellbook
+}
+
+// GetAllotment returns the value of Allotment.
+func (s *ClassSpells) GetAllotment() int32 {
+	return s.Allotment
+}
+
+// GetCantrips returns the value of Cantrips.
+func (s *ClassSpells) GetCantrips() SpellPickList {
+	return s.Cantrips
+}
+
+// GetPrepared returns the value of Prepared.
+func (s *ClassSpells) GetPrepared() SpellPickList {
+	return s.Prepared
+}
+
+// GetAlways returns the value of Always.
+func (s *ClassSpells) GetAlways() SpellPickList {
+	return s.Always
+}
+
+// GetSpellbook returns the value of Spellbook.
+func (s *ClassSpells) GetSpellbook() SpellPickList {
+	return s.Spellbook
+}
+
+// GetOptions returns the value of Options.
+func (s *ClassSpells) GetOptions() SpellPickList {
+	return s.Options
+}
+
+// GetCopyable returns the value of Copyable.
+func (s *ClassSpells) GetCopyable() SpellPickList {
+	return s.Copyable
+}
+
+// SetClass sets the value of Class.
+func (s *ClassSpells) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassSpells) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *ClassSpells) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *ClassSpells) SetLimit(val int32) {
+	s.Limit = val
+}
+
+// SetMaxLevel sets the value of MaxLevel.
+func (s *ClassSpells) SetMaxLevel(val int32) {
+	s.MaxLevel = val
+}
+
+// SetKeepsSpellbook sets the value of KeepsSpellbook.
+func (s *ClassSpells) SetKeepsSpellbook(val bool) {
+	s.KeepsSpellbook = val
+}
+
+// SetAllotment sets the value of Allotment.
+func (s *ClassSpells) SetAllotment(val int32) {
+	s.Allotment = val
+}
+
+// SetCantrips sets the value of Cantrips.
+func (s *ClassSpells) SetCantrips(val SpellPickList) {
+	s.Cantrips = val
+}
+
+// SetPrepared sets the value of Prepared.
+func (s *ClassSpells) SetPrepared(val SpellPickList) {
+	s.Prepared = val
+}
+
+// SetAlways sets the value of Always.
+func (s *ClassSpells) SetAlways(val SpellPickList) {
+	s.Always = val
+}
+
+// SetSpellbook sets the value of Spellbook.
+func (s *ClassSpells) SetSpellbook(val SpellPickList) {
+	s.Spellbook = val
+}
+
+// SetOptions sets the value of Options.
+func (s *ClassSpells) SetOptions(val SpellPickList) {
+	s.Options = val
+}
+
+// SetCopyable sets the value of Copyable.
+func (s *ClassSpells) SetCopyable(val SpellPickList) {
+	s.Copyable = val
 }
 
 // ClearTokenIconNoContent is response for ClearTokenIcon operation.
@@ -5151,6 +6431,56 @@ func (s *CoverLevel) UnmarshalText(data []byte) error {
 		return nil
 	case CoverLevelTotal:
 		*s = CoverLevelTotal
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// How a new Character's ability scores are set.
+// Ref: #/components/schemas/CreationMethod
+type CreationMethod string
+
+const (
+	CreationMethodStandardArray CreationMethod = "standard-array"
+	CreationMethodPointBuy      CreationMethod = "point-buy"
+	CreationMethodRolled        CreationMethod = "rolled"
+)
+
+// AllValues returns all CreationMethod values.
+func (CreationMethod) AllValues() []CreationMethod {
+	return []CreationMethod{
+		CreationMethodStandardArray,
+		CreationMethodPointBuy,
+		CreationMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CreationMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case CreationMethodStandardArray:
+		return []byte(s), nil
+	case CreationMethodPointBuy:
+		return []byte(s), nil
+	case CreationMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CreationMethod) UnmarshalText(data []byte) error {
+	switch CreationMethod(data) {
+	case CreationMethodStandardArray:
+		*s = CreationMethodStandardArray
+		return nil
+	case CreationMethodPointBuy:
+		*s = CreationMethodPointBuy
+		return nil
+	case CreationMethodRolled:
+		*s = CreationMethodRolled
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -5825,6 +7155,45 @@ func (s *DisableTwoStepNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DisableTwoStepNoContent) disableTwoStepRes() {}
+
+// DiscardCharacterDraftNoContent is response for DiscardCharacterDraft operation.
+type DiscardCharacterDraftNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DiscardCharacterDraftNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DiscardCharacterDraftNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DiscardCharacterDraftNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DiscardCharacterDraftNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DiscardCharacterDraftNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DiscardCharacterDraftNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DiscardCharacterDraftNoContent) discardCharacterDraftRes() {}
 
 type DisplayName string
 
@@ -7610,6 +8979,34 @@ func (s *FriendsPageHeaders) SetResponse(val FriendsPage) {
 
 func (*FriendsPageHeaders) listFriendsRes() {}
 
+// The time on a Campaign's Game Clock.
+// Ref: #/components/schemas/GameClock
+type GameClock struct {
+	Day int32 `json:"day"`
+	// Minutes after midnight.
+	Minute int32 `json:"minute"`
+}
+
+// GetDay returns the value of Day.
+func (s *GameClock) GetDay() int32 {
+	return s.Day
+}
+
+// GetMinute returns the value of Minute.
+func (s *GameClock) GetMinute() int32 {
+	return s.Minute
+}
+
+// SetDay sets the value of Day.
+func (s *GameClock) SetDay(val int32) {
+	s.Day = val
+}
+
+// SetMinute sets the value of Minute.
+func (s *GameClock) SetMinute(val int32) {
+	s.Minute = val
+}
+
 // GetActionLogOKHeaders wraps []ActionEntry with response headers.
 type GetActionLogOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -8793,6 +10190,22 @@ func (s *InitiativeMode) UnmarshalText(data []byte) error {
 	}
 }
 
+// The Character to give Heroic Inspiration to.
+// Ref: #/components/schemas/InspirationPass
+type InspirationPass struct {
+	To ID `json:"to"`
+}
+
+// GetTo returns the value of To.
+func (s *InspirationPass) GetTo() ID {
+	return s.To
+}
+
+// SetTo sets the value of To.
+func (s *InspirationPass) SetTo(val ID) {
+	s.To = val
+}
+
 // An open invite link.
 // Ref: #/components/schemas/Invite
 type Invite struct {
@@ -8962,6 +10375,581 @@ func (s *InviteToken) SetToken(val Token) {
 	s.Token = val
 }
 
+// A cantrip or spell a Character learned through a class.
+// Ref: #/components/schemas/LearnedSpellLine
+type LearnedSpellLine struct {
+	Slug  Slug `json:"slug"`
+	Class Slug `json:"class"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LearnedSpellLine) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetClass returns the value of Class.
+func (s *LearnedSpellLine) GetClass() Slug {
+	return s.Class
+}
+
+// SetSlug sets the value of Slug.
+func (s *LearnedSpellLine) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetClass sets the value of Class.
+func (s *LearnedSpellLine) SetClass(val Slug) {
+	s.Class = val
+}
+
+// A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+// Ref: #/components/schemas/LevelUpChoice
+type LevelUpChoice struct {
+	Slug    Slug              `json:"slug"`
+	Name    string            `json:"name"`
+	Pool    LevelUpChoicePool `json:"pool"`
+	Count   int32             `json:"count"`
+	Options []LevelUpOption   `json:"options"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LevelUpChoice) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LevelUpChoice) GetName() string {
+	return s.Name
+}
+
+// GetPool returns the value of Pool.
+func (s *LevelUpChoice) GetPool() LevelUpChoicePool {
+	return s.Pool
+}
+
+// GetCount returns the value of Count.
+func (s *LevelUpChoice) GetCount() int32 {
+	return s.Count
+}
+
+// GetOptions returns the value of Options.
+func (s *LevelUpChoice) GetOptions() []LevelUpOption {
+	return s.Options
+}
+
+// SetSlug sets the value of Slug.
+func (s *LevelUpChoice) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LevelUpChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetPool sets the value of Pool.
+func (s *LevelUpChoice) SetPool(val LevelUpChoicePool) {
+	s.Pool = val
+}
+
+// SetCount sets the value of Count.
+func (s *LevelUpChoice) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetOptions sets the value of Options.
+func (s *LevelUpChoice) SetOptions(val []LevelUpOption) {
+	s.Options = val
+}
+
+type LevelUpChoicePool string
+
+const (
+	LevelUpChoicePoolFeatCategory LevelUpChoicePool = "feat_category"
+	LevelUpChoicePoolSubclass     LevelUpChoicePool = "subclass"
+	LevelUpChoicePoolSkill        LevelUpChoicePool = "skill"
+	LevelUpChoicePoolExpertise    LevelUpChoicePool = "expertise"
+	LevelUpChoicePoolWeapon       LevelUpChoicePool = "weapon"
+	LevelUpChoicePoolListed       LevelUpChoicePool = "listed"
+)
+
+// AllValues returns all LevelUpChoicePool values.
+func (LevelUpChoicePool) AllValues() []LevelUpChoicePool {
+	return []LevelUpChoicePool{
+		LevelUpChoicePoolFeatCategory,
+		LevelUpChoicePoolSubclass,
+		LevelUpChoicePoolSkill,
+		LevelUpChoicePoolExpertise,
+		LevelUpChoicePoolWeapon,
+		LevelUpChoicePoolListed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LevelUpChoicePool) MarshalText() ([]byte, error) {
+	switch s {
+	case LevelUpChoicePoolFeatCategory:
+		return []byte(s), nil
+	case LevelUpChoicePoolSubclass:
+		return []byte(s), nil
+	case LevelUpChoicePoolSkill:
+		return []byte(s), nil
+	case LevelUpChoicePoolExpertise:
+		return []byte(s), nil
+	case LevelUpChoicePoolWeapon:
+		return []byte(s), nil
+	case LevelUpChoicePoolListed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LevelUpChoicePool) UnmarshalText(data []byte) error {
+	switch LevelUpChoicePool(data) {
+	case LevelUpChoicePoolFeatCategory:
+		*s = LevelUpChoicePoolFeatCategory
+		return nil
+	case LevelUpChoicePoolSubclass:
+		*s = LevelUpChoicePoolSubclass
+		return nil
+	case LevelUpChoicePoolSkill:
+		*s = LevelUpChoicePoolSkill
+		return nil
+	case LevelUpChoicePoolExpertise:
+		*s = LevelUpChoicePoolExpertise
+		return nil
+	case LevelUpChoicePoolWeapon:
+		*s = LevelUpChoicePoolWeapon
+		return nil
+	case LevelUpChoicePoolListed:
+		*s = LevelUpChoicePoolListed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A class the next level can go to, with what multiclassing into it still needs.
+// Ref: #/components/schemas/LevelUpClass
+type LevelUpClass struct {
+	Slug   Slug   `json:"slug"`
+	Name   string `json:"name"`
+	HitDie int32  `json:"hitDie"`
+	// Levels the Character has in it now.
+	Level int32    `json:"level"`
+	Unmet []string `json:"unmet"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LevelUpClass) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LevelUpClass) GetName() string {
+	return s.Name
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *LevelUpClass) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetLevel returns the value of Level.
+func (s *LevelUpClass) GetLevel() int32 {
+	return s.Level
+}
+
+// GetUnmet returns the value of Unmet.
+func (s *LevelUpClass) GetUnmet() []string {
+	return s.Unmet
+}
+
+// SetSlug sets the value of Slug.
+func (s *LevelUpClass) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LevelUpClass) SetName(val string) {
+	s.Name = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *LevelUpClass) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetLevel sets the value of Level.
+func (s *LevelUpClass) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetUnmet sets the value of Unmet.
+func (s *LevelUpClass) SetUnmet(val []string) {
+	s.Unmet = val
+}
+
+// One option of a choice, with the prerequisites the Character does not meet.
+// Ref: #/components/schemas/LevelUpOption
+type LevelUpOption struct {
+	Slug  Slug     `json:"slug"`
+	Name  string   `json:"name"`
+	Unmet []string `json:"unmet"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LevelUpOption) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LevelUpOption) GetName() string {
+	return s.Name
+}
+
+// GetUnmet returns the value of Unmet.
+func (s *LevelUpOption) GetUnmet() []string {
+	return s.Unmet
+}
+
+// SetSlug sets the value of Slug.
+func (s *LevelUpOption) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LevelUpOption) SetName(val string) {
+	s.Name = val
+}
+
+// SetUnmet sets the value of Unmet.
+func (s *LevelUpOption) SetUnmet(val []string) {
+	s.Unmet = val
+}
+
+// The options picked for one choice.
+// Ref: #/components/schemas/LevelUpPickIn
+type LevelUpPickIn struct {
+	Choice Slug   `json:"choice"`
+	Values []Slug `json:"values"`
+}
+
+// GetChoice returns the value of Choice.
+func (s *LevelUpPickIn) GetChoice() Slug {
+	return s.Choice
+}
+
+// GetValues returns the value of Values.
+func (s *LevelUpPickIn) GetValues() []Slug {
+	return s.Values
+}
+
+// SetChoice sets the value of Choice.
+func (s *LevelUpPickIn) SetChoice(val Slug) {
+	s.Choice = val
+}
+
+// SetValues sets the value of Values.
+func (s *LevelUpPickIn) SetValues(val []Slug) {
+	s.Values = val
+}
+
+// What the next level offers in one class.
+// Ref: #/components/schemas/LevelUpPlan
+type LevelUpPlan struct {
+	// The next level is unlocked.
+	Ready bool `json:"ready"`
+	// The DM holds level-ups; only the DM unlocks the next level.
+	Held       bool           `json:"held"`
+	Level      int32          `json:"level"`
+	Classes    []LevelUpClass `json:"classes"`
+	Class      Slug           `json:"class"`
+	ClassLevel int32          `json:"classLevel"`
+	HitDie     int32          `json:"hitDie"`
+	// Hit points the level adds when taking the average.
+	Average   int32           `json:"average"`
+	Choices   []LevelUpChoice `json:"choices"`
+	Cantrips  int32           `json:"cantrips"`
+	Spells    int32           `json:"spells"`
+	SpellList []SpellPick     `json:"spellList"`
+}
+
+// GetReady returns the value of Ready.
+func (s *LevelUpPlan) GetReady() bool {
+	return s.Ready
+}
+
+// GetHeld returns the value of Held.
+func (s *LevelUpPlan) GetHeld() bool {
+	return s.Held
+}
+
+// GetLevel returns the value of Level.
+func (s *LevelUpPlan) GetLevel() int32 {
+	return s.Level
+}
+
+// GetClasses returns the value of Classes.
+func (s *LevelUpPlan) GetClasses() []LevelUpClass {
+	return s.Classes
+}
+
+// GetClass returns the value of Class.
+func (s *LevelUpPlan) GetClass() Slug {
+	return s.Class
+}
+
+// GetClassLevel returns the value of ClassLevel.
+func (s *LevelUpPlan) GetClassLevel() int32 {
+	return s.ClassLevel
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *LevelUpPlan) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetAverage returns the value of Average.
+func (s *LevelUpPlan) GetAverage() int32 {
+	return s.Average
+}
+
+// GetChoices returns the value of Choices.
+func (s *LevelUpPlan) GetChoices() []LevelUpChoice {
+	return s.Choices
+}
+
+// GetCantrips returns the value of Cantrips.
+func (s *LevelUpPlan) GetCantrips() int32 {
+	return s.Cantrips
+}
+
+// GetSpells returns the value of Spells.
+func (s *LevelUpPlan) GetSpells() int32 {
+	return s.Spells
+}
+
+// GetSpellList returns the value of SpellList.
+func (s *LevelUpPlan) GetSpellList() []SpellPick {
+	return s.SpellList
+}
+
+// SetReady sets the value of Ready.
+func (s *LevelUpPlan) SetReady(val bool) {
+	s.Ready = val
+}
+
+// SetHeld sets the value of Held.
+func (s *LevelUpPlan) SetHeld(val bool) {
+	s.Held = val
+}
+
+// SetLevel sets the value of Level.
+func (s *LevelUpPlan) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *LevelUpPlan) SetClasses(val []LevelUpClass) {
+	s.Classes = val
+}
+
+// SetClass sets the value of Class.
+func (s *LevelUpPlan) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetClassLevel sets the value of ClassLevel.
+func (s *LevelUpPlan) SetClassLevel(val int32) {
+	s.ClassLevel = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *LevelUpPlan) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetAverage sets the value of Average.
+func (s *LevelUpPlan) SetAverage(val int32) {
+	s.Average = val
+}
+
+// SetChoices sets the value of Choices.
+func (s *LevelUpPlan) SetChoices(val []LevelUpChoice) {
+	s.Choices = val
+}
+
+// SetCantrips sets the value of Cantrips.
+func (s *LevelUpPlan) SetCantrips(val int32) {
+	s.Cantrips = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *LevelUpPlan) SetSpells(val int32) {
+	s.Spells = val
+}
+
+// SetSpellList sets the value of SpellList.
+func (s *LevelUpPlan) SetSpellList(val []SpellPick) {
+	s.SpellList = val
+}
+
+// LevelUpPlanHeaders wraps LevelUpPlan with response headers.
+type LevelUpPlanHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LevelUpPlan
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LevelUpPlanHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LevelUpPlanHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LevelUpPlanHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LevelUpPlanHeaders) GetResponse() LevelUpPlan {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LevelUpPlanHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LevelUpPlanHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LevelUpPlanHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LevelUpPlanHeaders) SetResponse(val LevelUpPlan) {
+	s.Response = val
+}
+
+func (*LevelUpPlanHeaders) planLevelUpRes() {}
+
+// The choices made for the next level.
+// Ref: #/components/schemas/LevelUpRequest
+type LevelUpRequest struct {
+	Class Slug `json:"class"`
+	// Take the Hit Die's average, or roll it.
+	HitPoints OptLevelUpRequestHitPoints `json:"hitPoints"`
+	Picks     []LevelUpPickIn            `json:"picks"`
+	Increase  OptAbilityBonus            `json:"increase"`
+	Spells    []Slug                     `json:"spells"`
+}
+
+// GetClass returns the value of Class.
+func (s *LevelUpRequest) GetClass() Slug {
+	return s.Class
+}
+
+// GetHitPoints returns the value of HitPoints.
+func (s *LevelUpRequest) GetHitPoints() OptLevelUpRequestHitPoints {
+	return s.HitPoints
+}
+
+// GetPicks returns the value of Picks.
+func (s *LevelUpRequest) GetPicks() []LevelUpPickIn {
+	return s.Picks
+}
+
+// GetIncrease returns the value of Increase.
+func (s *LevelUpRequest) GetIncrease() OptAbilityBonus {
+	return s.Increase
+}
+
+// GetSpells returns the value of Spells.
+func (s *LevelUpRequest) GetSpells() []Slug {
+	return s.Spells
+}
+
+// SetClass sets the value of Class.
+func (s *LevelUpRequest) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetHitPoints sets the value of HitPoints.
+func (s *LevelUpRequest) SetHitPoints(val OptLevelUpRequestHitPoints) {
+	s.HitPoints = val
+}
+
+// SetPicks sets the value of Picks.
+func (s *LevelUpRequest) SetPicks(val []LevelUpPickIn) {
+	s.Picks = val
+}
+
+// SetIncrease sets the value of Increase.
+func (s *LevelUpRequest) SetIncrease(val OptAbilityBonus) {
+	s.Increase = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *LevelUpRequest) SetSpells(val []Slug) {
+	s.Spells = val
+}
+
+// Take the Hit Die's average, or roll it.
+type LevelUpRequestHitPoints string
+
+const (
+	LevelUpRequestHitPointsAverage LevelUpRequestHitPoints = "average"
+	LevelUpRequestHitPointsRoll    LevelUpRequestHitPoints = "roll"
+)
+
+// AllValues returns all LevelUpRequestHitPoints values.
+func (LevelUpRequestHitPoints) AllValues() []LevelUpRequestHitPoints {
+	return []LevelUpRequestHitPoints{
+		LevelUpRequestHitPointsAverage,
+		LevelUpRequestHitPointsRoll,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LevelUpRequestHitPoints) MarshalText() ([]byte, error) {
+	switch s {
+	case LevelUpRequestHitPointsAverage:
+		return []byte(s), nil
+	case LevelUpRequestHitPointsRoll:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LevelUpRequestHitPoints) UnmarshalText(data []byte) error {
+	switch LevelUpRequestHitPoints(data) {
+	case LevelUpRequestHitPointsAverage:
+		*s = LevelUpRequestHitPointsAverage
+		return nil
+	case LevelUpRequestHitPointsRoll:
+		*s = LevelUpRequestHitPointsRoll
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // The token an invite or sign-in link carries.
 // Ref: #/components/schemas/LinkToken
 type LinkToken struct {
@@ -9027,6 +11015,56 @@ func (s *ListActivityOKHeaders) SetResponse(val []Activity) {
 }
 
 func (*ListActivityOKHeaders) listActivityRes() {}
+
+// ListCharacterRevisionsOKHeaders wraps []CharacterRevisionLine with response headers.
+type ListCharacterRevisionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []CharacterRevisionLine
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListCharacterRevisionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListCharacterRevisionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListCharacterRevisionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListCharacterRevisionsOKHeaders) GetResponse() []CharacterRevisionLine {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListCharacterRevisionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListCharacterRevisionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListCharacterRevisionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListCharacterRevisionsOKHeaders) SetResponse(val []CharacterRevisionLine) {
+	s.Response = val
+}
+
+func (*ListCharacterRevisionsOKHeaders) listCharacterRevisionsRes() {}
 
 // ListCharactersOKHeaders wraps []CharacterSummary with response headers.
 type ListCharactersOKHeaders struct {
@@ -9744,6 +11782,106 @@ func (s *ListNpcsOKHeaders) SetResponse(val []Npc) {
 }
 
 func (*ListNpcsOKHeaders) listNpcsRes() {}
+
+// ListRetrainChoicesOKHeaders wraps []RetrainChoice with response headers.
+type ListRetrainChoicesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []RetrainChoice
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListRetrainChoicesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListRetrainChoicesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListRetrainChoicesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListRetrainChoicesOKHeaders) GetResponse() []RetrainChoice {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListRetrainChoicesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListRetrainChoicesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListRetrainChoicesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListRetrainChoicesOKHeaders) SetResponse(val []RetrainChoice) {
+	s.Response = val
+}
+
+func (*ListRetrainChoicesOKHeaders) listRetrainChoicesRes() {}
+
+// ListRetrainsOKHeaders wraps []Retrain with response headers.
+type ListRetrainsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Retrain
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListRetrainsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListRetrainsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListRetrainsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListRetrainsOKHeaders) GetResponse() []Retrain {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListRetrainsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListRetrainsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListRetrainsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListRetrainsOKHeaders) SetResponse(val []Retrain) {
+	s.Response = val
+}
+
+func (*ListRetrainsOKHeaders) listRetrainsRes() {}
 
 // ListRollsOKHeaders wraps []RollRequest with response headers.
 type ListRollsOKHeaders struct {
@@ -20215,6 +22353,144 @@ func (o OptAbility) Or(d Ability) Ability {
 	return d
 }
 
+// NewOptAbilityBase returns new OptAbilityBase with value set to v.
+func NewOptAbilityBase(v AbilityBase) OptAbilityBase {
+	return OptAbilityBase{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAbilityBase is optional AbilityBase.
+type OptAbilityBase struct {
+	Value AbilityBase
+	Set   bool
+}
+
+// IsSet returns true if OptAbilityBase was set.
+func (o OptAbilityBase) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAbilityBase) Reset() {
+	var v AbilityBase
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAbilityBase) SetTo(v AbilityBase) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAbilityBase) Get() (v AbilityBase, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAbilityBase) Or(d AbilityBase) AbilityBase {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAbilityBonus returns new OptAbilityBonus with value set to v.
+func NewOptAbilityBonus(v AbilityBonus) OptAbilityBonus {
+	return OptAbilityBonus{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAbilityBonus is optional AbilityBonus.
+type OptAbilityBonus struct {
+	Value AbilityBonus
+	Set   bool
+}
+
+// IsSet returns true if OptAbilityBonus was set.
+func (o OptAbilityBonus) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAbilityBonus) Reset() {
+	var v AbilityBonus
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAbilityBonus) SetTo(v AbilityBonus) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAbilityBonus) Get() (v AbilityBonus, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAbilityBonus) Or(d AbilityBonus) AbilityBonus {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAbilityIncrease returns new OptAbilityIncrease with value set to v.
+func NewOptAbilityIncrease(v AbilityIncrease) OptAbilityIncrease {
+	return OptAbilityIncrease{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAbilityIncrease is optional AbilityIncrease.
+type OptAbilityIncrease struct {
+	Value AbilityIncrease
+	Set   bool
+}
+
+// IsSet returns true if OptAbilityIncrease was set.
+func (o OptAbilityIncrease) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAbilityIncrease) Reset() {
+	var v AbilityIncrease
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAbilityIncrease) SetTo(v AbilityIncrease) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAbilityIncrease) Get() (v AbilityIncrease, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAbilityIncrease) Or(d AbilityIncrease) AbilityIncrease {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptAccount returns new OptAccount with value set to v.
 func NewOptAccount(v Account) OptAccount {
 	return OptAccount{
@@ -20537,6 +22813,52 @@ func (o OptCampaignRuleset) Or(d CampaignRuleset) CampaignRuleset {
 	return d
 }
 
+// NewOptCharacterDraftBuildMethod returns new OptCharacterDraftBuildMethod with value set to v.
+func NewOptCharacterDraftBuildMethod(v CharacterDraftBuildMethod) OptCharacterDraftBuildMethod {
+	return OptCharacterDraftBuildMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCharacterDraftBuildMethod is optional CharacterDraftBuildMethod.
+type OptCharacterDraftBuildMethod struct {
+	Value CharacterDraftBuildMethod
+	Set   bool
+}
+
+// IsSet returns true if OptCharacterDraftBuildMethod was set.
+func (o OptCharacterDraftBuildMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCharacterDraftBuildMethod) Reset() {
+	var v CharacterDraftBuildMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCharacterDraftBuildMethod) SetTo(v CharacterDraftBuildMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCharacterDraftBuildMethod) Get() (v CharacterDraftBuildMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCharacterDraftBuildMethod) Or(d CharacterDraftBuildMethod) CharacterDraftBuildMethod {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptCharacterName returns new OptCharacterName with value set to v.
 func NewOptCharacterName(v CharacterName) OptCharacterName {
 	return OptCharacterName{
@@ -20577,6 +22899,52 @@ func (o OptCharacterName) Get() (v CharacterName, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptCharacterName) Or(d CharacterName) CharacterName {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptClassChoiceCaster returns new OptClassChoiceCaster with value set to v.
+func NewOptClassChoiceCaster(v ClassChoiceCaster) OptClassChoiceCaster {
+	return OptClassChoiceCaster{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptClassChoiceCaster is optional ClassChoiceCaster.
+type OptClassChoiceCaster struct {
+	Value ClassChoiceCaster
+	Set   bool
+}
+
+// IsSet returns true if OptClassChoiceCaster was set.
+func (o OptClassChoiceCaster) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptClassChoiceCaster) Reset() {
+	var v ClassChoiceCaster
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptClassChoiceCaster) SetTo(v ClassChoiceCaster) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptClassChoiceCaster) Get() (v ClassChoiceCaster, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptClassChoiceCaster) Or(d ClassChoiceCaster) ClassChoiceCaster {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -20761,6 +23129,52 @@ func (o OptDiceGroupKeep) Get() (v DiceGroupKeep, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptDiceGroupKeep) Or(d DiceGroupKeep) DiceGroupKeep {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDisplayName returns new OptDisplayName with value set to v.
+func NewOptDisplayName(v DisplayName) OptDisplayName {
+	return OptDisplayName{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDisplayName is optional DisplayName.
+type OptDisplayName struct {
+	Value DisplayName
+	Set   bool
+}
+
+// IsSet returns true if OptDisplayName was set.
+func (o OptDisplayName) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDisplayName) Reset() {
+	var v DisplayName
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDisplayName) SetTo(v DisplayName) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDisplayName) Get() (v DisplayName, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDisplayName) Or(d DisplayName) DisplayName {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -21083,6 +23497,52 @@ func (o OptInt32) Get() (v int32, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptInt32) Or(d int32) int32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLevelUpRequestHitPoints returns new OptLevelUpRequestHitPoints with value set to v.
+func NewOptLevelUpRequestHitPoints(v LevelUpRequestHitPoints) OptLevelUpRequestHitPoints {
+	return OptLevelUpRequestHitPoints{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLevelUpRequestHitPoints is optional LevelUpRequestHitPoints.
+type OptLevelUpRequestHitPoints struct {
+	Value LevelUpRequestHitPoints
+	Set   bool
+}
+
+// IsSet returns true if OptLevelUpRequestHitPoints was set.
+func (o OptLevelUpRequestHitPoints) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLevelUpRequestHitPoints) Reset() {
+	var v LevelUpRequestHitPoints
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLevelUpRequestHitPoints) SetTo(v LevelUpRequestHitPoints) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLevelUpRequestHitPoints) Get() (v LevelUpRequestHitPoints, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLevelUpRequestHitPoints) Or(d LevelUpRequestHitPoints) LevelUpRequestHitPoints {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -22883,6 +25343,52 @@ func (o OptOidcPending) Or(d OidcPending) OidcPending {
 	return d
 }
 
+// NewOptProficiencies returns new OptProficiencies with value set to v.
+func NewOptProficiencies(v Proficiencies) OptProficiencies {
+	return OptProficiencies{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptProficiencies is optional Proficiencies.
+type OptProficiencies struct {
+	Value Proficiencies
+	Set   bool
+}
+
+// IsSet returns true if OptProficiencies was set.
+func (o OptProficiencies) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptProficiencies) Reset() {
+	var v Proficiencies
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptProficiencies) SetTo(v Proficiencies) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptProficiencies) Get() (v Proficiencies, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptProficiencies) Or(d Proficiencies) Proficiencies {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptReactionTimeout returns new OptReactionTimeout with value set to v.
 func NewOptReactionTimeout(v ReactionTimeout) OptReactionTimeout {
 	return OptReactionTimeout{
@@ -23691,6 +26197,44 @@ func (s *Person) SetNickname(val string) {
 	s.Nickname = val
 }
 
+// One value chosen for a choice on reaching a level.
+// Ref: #/components/schemas/PickLine
+type PickLine struct {
+	Level  int32 `json:"level"`
+	Choice Slug  `json:"choice"`
+	Value  Slug  `json:"value"`
+}
+
+// GetLevel returns the value of Level.
+func (s *PickLine) GetLevel() int32 {
+	return s.Level
+}
+
+// GetChoice returns the value of Choice.
+func (s *PickLine) GetChoice() Slug {
+	return s.Choice
+}
+
+// GetValue returns the value of Value.
+func (s *PickLine) GetValue() Slug {
+	return s.Value
+}
+
+// SetLevel sets the value of Level.
+func (s *PickLine) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetChoice sets the value of Choice.
+func (s *PickLine) SetChoice(val Slug) {
+	s.Choice = val
+}
+
+// SetValue sets the value of Value.
+func (s *PickLine) SetValue(val Slug) {
+	s.Value = val
+}
+
 // One evening of play.
 // Ref: #/components/schemas/PlaySession
 type PlaySession struct {
@@ -23988,10 +26532,13 @@ func (s *ProblemStatusCodeWithHeaders) SetResponse(val Problem) {
 func (*ProblemStatusCodeWithHeaders) acceptAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) acceptInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) approveRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
 func (*ProblemStatusCodeWithHeaders) cancelFriendRequestRes()           {}
+func (*ProblemStatusCodeWithHeaders) castRitualRes()                    {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
 func (*ProblemStatusCodeWithHeaders) confirmTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) copySpellRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
@@ -24007,6 +26554,7 @@ func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
+func (*ProblemStatusCodeWithHeaders) declineRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
@@ -24017,6 +26565,7 @@ func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
 func (*ProblemStatusCodeWithHeaders) draftReleaseNoteRes()              {}
 func (*ProblemStatusCodeWithHeaders) editReleaseNoteRes()               {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
@@ -24028,6 +26577,7 @@ func (*ProblemStatusCodeWithHeaders) getAdminAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
@@ -24046,15 +26596,19 @@ func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
 func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
+func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
+func (*ProblemStatusCodeWithHeaders) keepRollRes()                      {}
+func (*ProblemStatusCodeWithHeaders) levelUpRes()                       {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listAdminAccountsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
+func (*ProblemStatusCodeWithHeaders) listCharacterRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
 func (*ProblemStatusCodeWithHeaders) listConversationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
@@ -24077,6 +26631,8 @@ func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
 func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
+func (*ProblemStatusCodeWithHeaders) listRetrainChoicesRes()            {}
+func (*ProblemStatusCodeWithHeaders) listRetrainsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
@@ -24085,7 +26641,10 @@ func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) passInspirationRes()               {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
+func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
+func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
@@ -24095,7 +26654,9 @@ func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
+func (*ProblemStatusCodeWithHeaders) requestRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) requestSignInLinkRes()             {}
+func (*ProblemStatusCodeWithHeaders) rerollDieRes()                     {}
 func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
 func (*ProblemStatusCodeWithHeaders) resetAccountTwoStepRes()           {}
 func (*ProblemStatusCodeWithHeaders) resetRecoveryCodesRes()            {}
@@ -24107,7 +26668,9 @@ func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
@@ -24144,6 +26707,33 @@ func (*ProblemStatusCodeWithHeaders) updateSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) updateShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) uploadMapRes()                     {}
 func (*ProblemStatusCodeWithHeaders) useSignInLinkRes()                 {}
+
+// The armor and weapons a Character is trained with.
+// Ref: #/components/schemas/Proficiencies
+type Proficiencies struct {
+	Armor   []string `json:"armor"`
+	Weapons []string `json:"weapons"`
+}
+
+// GetArmor returns the value of Armor.
+func (s *Proficiencies) GetArmor() []string {
+	return s.Armor
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *Proficiencies) GetWeapons() []string {
+	return s.Weapons
+}
+
+// SetArmor sets the value of Armor.
+func (s *Proficiencies) SetArmor(val []string) {
+	s.Armor = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *Proficiencies) SetWeapons(val []string) {
+	s.Weapons = val
+}
 
 // The VAPID public key devices subscribe with, base64url-encoded.
 // Ref: #/components/schemas/PushKey
@@ -25091,6 +27681,22 @@ func (s *RequestSignInLinkAccepted) SetRateLimitReset(val OptInt32) {
 
 func (*RequestSignInLinkAccepted) requestSignInLinkRes() {}
 
+// The die to roll again.
+// Ref: #/components/schemas/RerollIn
+type RerollIn struct {
+	Die int32 `json:"die"`
+}
+
+// GetDie returns the value of Die.
+func (s *RerollIn) GetDie() int32 {
+	return s.Die
+}
+
+// SetDie sets the value of Die.
+func (s *RerollIn) SetDie(val int32) {
+	s.Die = val
+}
+
 // ResetAccountTwoStepNoContent is response for ResetAccountTwoStep operation.
 type ResetAccountTwoStepNoContent struct {
 	RateLimitLimit     OptInt32
@@ -25177,6 +27783,297 @@ func (s *ResourcePool) SetCurrent(val int32) {
 // SetMax sets the value of Max.
 func (s *ResourcePool) SetMax(val int32) {
 	s.Max = val
+}
+
+// A request to rebuild a Campaign Character, and the DM's decision.
+// Ref: #/components/schemas/Retrain
+type Retrain struct {
+	ID          ID             `json:"id"`
+	CharacterId ID             `json:"characterId"`
+	Status      RetrainStatus  `json:"status"`
+	Reason      string         `json:"reason"`
+	RequestedBy DisplayName    `json:"requestedBy"`
+	DecidedBy   OptDisplayName `json:"decidedBy"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	DecidedAt   OptDateTime    `json:"decidedAt"`
+	Proposed    BuildSnapshot  `json:"proposed"`
+}
+
+// GetID returns the value of ID.
+func (s *Retrain) GetID() ID {
+	return s.ID
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *Retrain) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetStatus returns the value of Status.
+func (s *Retrain) GetStatus() RetrainStatus {
+	return s.Status
+}
+
+// GetReason returns the value of Reason.
+func (s *Retrain) GetReason() string {
+	return s.Reason
+}
+
+// GetRequestedBy returns the value of RequestedBy.
+func (s *Retrain) GetRequestedBy() DisplayName {
+	return s.RequestedBy
+}
+
+// GetDecidedBy returns the value of DecidedBy.
+func (s *Retrain) GetDecidedBy() OptDisplayName {
+	return s.DecidedBy
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Retrain) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetDecidedAt returns the value of DecidedAt.
+func (s *Retrain) GetDecidedAt() OptDateTime {
+	return s.DecidedAt
+}
+
+// GetProposed returns the value of Proposed.
+func (s *Retrain) GetProposed() BuildSnapshot {
+	return s.Proposed
+}
+
+// SetID sets the value of ID.
+func (s *Retrain) SetID(val ID) {
+	s.ID = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *Retrain) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Retrain) SetStatus(val RetrainStatus) {
+	s.Status = val
+}
+
+// SetReason sets the value of Reason.
+func (s *Retrain) SetReason(val string) {
+	s.Reason = val
+}
+
+// SetRequestedBy sets the value of RequestedBy.
+func (s *Retrain) SetRequestedBy(val DisplayName) {
+	s.RequestedBy = val
+}
+
+// SetDecidedBy sets the value of DecidedBy.
+func (s *Retrain) SetDecidedBy(val OptDisplayName) {
+	s.DecidedBy = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Retrain) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetDecidedAt sets the value of DecidedAt.
+func (s *Retrain) SetDecidedAt(val OptDateTime) {
+	s.DecidedAt = val
+}
+
+// SetProposed sets the value of Proposed.
+func (s *Retrain) SetProposed(val BuildSnapshot) {
+	s.Proposed = val
+}
+
+// A pick a Character made on a level, with the options it could take instead.
+// Ref: #/components/schemas/RetrainChoice
+type RetrainChoice struct {
+	Level   int32           `json:"level"`
+	Choice  Slug            `json:"choice"`
+	Name    string          `json:"name"`
+	Value   Slug            `json:"value"`
+	Options []LevelUpOption `json:"options"`
+}
+
+// GetLevel returns the value of Level.
+func (s *RetrainChoice) GetLevel() int32 {
+	return s.Level
+}
+
+// GetChoice returns the value of Choice.
+func (s *RetrainChoice) GetChoice() Slug {
+	return s.Choice
+}
+
+// GetName returns the value of Name.
+func (s *RetrainChoice) GetName() string {
+	return s.Name
+}
+
+// GetValue returns the value of Value.
+func (s *RetrainChoice) GetValue() Slug {
+	return s.Value
+}
+
+// GetOptions returns the value of Options.
+func (s *RetrainChoice) GetOptions() []LevelUpOption {
+	return s.Options
+}
+
+// SetLevel sets the value of Level.
+func (s *RetrainChoice) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetChoice sets the value of Choice.
+func (s *RetrainChoice) SetChoice(val Slug) {
+	s.Choice = val
+}
+
+// SetName sets the value of Name.
+func (s *RetrainChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetValue sets the value of Value.
+func (s *RetrainChoice) SetValue(val Slug) {
+	s.Value = val
+}
+
+// SetOptions sets the value of Options.
+func (s *RetrainChoice) SetOptions(val []LevelUpOption) {
+	s.Options = val
+}
+
+// RetrainHeaders wraps Retrain with response headers.
+type RetrainHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Retrain
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RetrainHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RetrainHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RetrainHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RetrainHeaders) GetResponse() Retrain {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RetrainHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RetrainHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RetrainHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RetrainHeaders) SetResponse(val Retrain) {
+	s.Response = val
+}
+
+func (*RetrainHeaders) approveRetrainRes() {}
+func (*RetrainHeaders) declineRetrainRes() {}
+func (*RetrainHeaders) requestRetrainRes() {}
+
+// A rebuilt build and why.
+// Ref: #/components/schemas/RetrainRequest
+type RetrainRequest struct {
+	Build  BuildSnapshot `json:"build"`
+	Reason string        `json:"reason"`
+}
+
+// GetBuild returns the value of Build.
+func (s *RetrainRequest) GetBuild() BuildSnapshot {
+	return s.Build
+}
+
+// GetReason returns the value of Reason.
+func (s *RetrainRequest) GetReason() string {
+	return s.Reason
+}
+
+// SetBuild sets the value of Build.
+func (s *RetrainRequest) SetBuild(val BuildSnapshot) {
+	s.Build = val
+}
+
+// SetReason sets the value of Reason.
+func (s *RetrainRequest) SetReason(val string) {
+	s.Reason = val
+}
+
+type RetrainStatus string
+
+const (
+	RetrainStatusPending  RetrainStatus = "pending"
+	RetrainStatusApproved RetrainStatus = "approved"
+	RetrainStatusDeclined RetrainStatus = "declined"
+)
+
+// AllValues returns all RetrainStatus values.
+func (RetrainStatus) AllValues() []RetrainStatus {
+	return []RetrainStatus{
+		RetrainStatusPending,
+		RetrainStatusApproved,
+		RetrainStatusDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s RetrainStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case RetrainStatusPending:
+		return []byte(s), nil
+	case RetrainStatusApproved:
+		return []byte(s), nil
+	case RetrainStatusDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *RetrainStatus) UnmarshalText(data []byte) error {
+	switch RetrainStatus(data) {
+	case RetrainStatusPending:
+		*s = RetrainStatusPending
+		return nil
+	case RetrainStatusApproved:
+		*s = RetrainStatusApproved
+		return nil
+	case RetrainStatusDeclined:
+		*s = RetrainStatusDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // One recorded version of a piece of prep data.
@@ -25449,6 +28346,94 @@ func (s *RevokeInviteNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*RevokeInviteNoContent) revokeInviteRes() {}
 
+// A ritual cast, how long it took, and the Game Clock after it.
+// Ref: #/components/schemas/RitualCast
+type RitualCast struct {
+	Spell   SpellPick `json:"spell"`
+	Minutes int32     `json:"minutes"`
+	Clock   GameClock `json:"clock"`
+}
+
+// GetSpell returns the value of Spell.
+func (s *RitualCast) GetSpell() SpellPick {
+	return s.Spell
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *RitualCast) GetMinutes() int32 {
+	return s.Minutes
+}
+
+// GetClock returns the value of Clock.
+func (s *RitualCast) GetClock() GameClock {
+	return s.Clock
+}
+
+// SetSpell sets the value of Spell.
+func (s *RitualCast) SetSpell(val SpellPick) {
+	s.Spell = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *RitualCast) SetMinutes(val int32) {
+	s.Minutes = val
+}
+
+// SetClock sets the value of Clock.
+func (s *RitualCast) SetClock(val GameClock) {
+	s.Clock = val
+}
+
+// RitualCastHeaders wraps RitualCast with response headers.
+type RitualCastHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RitualCast
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RitualCastHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RitualCastHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RitualCastHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RitualCastHeaders) GetResponse() RitualCast {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RitualCastHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RitualCastHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RitualCastHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RitualCastHeaders) SetResponse(val RitualCast) {
+	s.Response = val
+}
+
+func (*RitualCastHeaders) castRitualRes() {}
+
 // What a Member may do in a Campaign.
 // Ref: #/components/schemas/Role
 type Role string
@@ -25708,6 +28693,10 @@ type RollRequest struct {
 	Modifiers   []RollModifier    `json:"modifiers"`
 	CreatedAt   time.Time         `json:"createdAt"`
 	ResolvedAt  OptDateTime       `json:"resolvedAt"`
+	// Every die is set; the roller keeps it or rerolls a die with Heroic Inspiration.
+	Choosing OptBool `json:"choosing"`
+	// Heroic Inspiration was spent on this roll.
+	Rerolled OptBool `json:"rerolled"`
 }
 
 // GetID returns the value of ID.
@@ -25780,6 +28769,16 @@ func (s *RollRequest) GetResolvedAt() OptDateTime {
 	return s.ResolvedAt
 }
 
+// GetChoosing returns the value of Choosing.
+func (s *RollRequest) GetChoosing() OptBool {
+	return s.Choosing
+}
+
+// GetRerolled returns the value of Rerolled.
+func (s *RollRequest) GetRerolled() OptBool {
+	return s.Rerolled
+}
+
 // SetID sets the value of ID.
 func (s *RollRequest) SetID(val ID) {
 	s.ID = val
@@ -25850,6 +28849,16 @@ func (s *RollRequest) SetResolvedAt(val OptDateTime) {
 	s.ResolvedAt = val
 }
 
+// SetChoosing sets the value of Choosing.
+func (s *RollRequest) SetChoosing(val OptBool) {
+	s.Choosing = val
+}
+
+// SetRerolled sets the value of Rerolled.
+func (s *RollRequest) SetRerolled(val OptBool) {
+	s.Rerolled = val
+}
+
 // RollRequestHeaders wraps RollRequest with response headers.
 type RollRequestHeaders struct {
 	RateLimitLimit     OptInt32
@@ -25900,6 +28909,8 @@ func (s *RollRequestHeaders) SetResponse(val RollRequest) {
 
 func (*RollRequestHeaders) createRollRes() {}
 func (*RollRequestHeaders) getRollRes()    {}
+func (*RollRequestHeaders) keepRollRes()   {}
+func (*RollRequestHeaders) rerollDieRes()  {}
 func (*RollRequestHeaders) rollRestRes()   {}
 func (*RollRequestHeaders) setDieRes()     {}
 
@@ -27574,6 +30585,8 @@ type SkillLine struct {
 	Ability    Ability `json:"ability"`
 	Bonus      int32   `json:"bonus"`
 	Proficient bool    `json:"proficient"`
+	// Proficiency bonus counted twice.
+	Expertise bool `json:"expertise"`
 }
 
 // GetSkill returns the value of Skill.
@@ -27596,6 +30609,11 @@ func (s *SkillLine) GetProficient() bool {
 	return s.Proficient
 }
 
+// GetExpertise returns the value of Expertise.
+func (s *SkillLine) GetExpertise() bool {
+	return s.Expertise
+}
+
 // SetSkill sets the value of Skill.
 func (s *SkillLine) SetSkill(val Slug) {
 	s.Skill = val
@@ -27614,6 +30632,11 @@ func (s *SkillLine) SetBonus(val int32) {
 // SetProficient sets the value of Proficient.
 func (s *SkillLine) SetProficient(val bool) {
 	s.Proficient = val
+}
+
+// SetExpertise sets the value of Expertise.
+func (s *SkillLine) SetExpertise(val bool) {
+	s.Expertise = val
 }
 
 type Slug string
@@ -28023,6 +31046,22 @@ func (s *Spell) SetMentions(val []ConditionRef) {
 	s.Mentions = val
 }
 
+// One spell by slug.
+// Ref: #/components/schemas/SpellChoice
+type SpellChoice struct {
+	Spell Slug `json:"spell"`
+}
+
+// GetSpell returns the value of Spell.
+func (s *SpellChoice) GetSpell() Slug {
+	return s.Spell
+}
+
+// SetSpell sets the value of Spell.
+func (s *SpellChoice) SetSpell(val Slug) {
+	s.Spell = val
+}
+
 // SpellHeaders wraps Spell with response headers.
 type SpellHeaders struct {
 	ETag               OptString
@@ -28171,6 +31210,84 @@ func (s *SpellPageHeaders) SetResponse(val SpellPage) {
 }
 
 func (*SpellPageHeaders) listSpellsRes() {}
+
+// A cantrip (level 0) or spell on a class's list.
+// Ref: #/components/schemas/SpellPick
+type SpellPick struct {
+	Slug   Slug    `json:"slug"`
+	Name   string  `json:"name"`
+	Level  int32   `json:"level"`
+	Ritual OptBool `json:"ritual"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *SpellPick) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *SpellPick) GetName() string {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *SpellPick) GetLevel() int32 {
+	return s.Level
+}
+
+// GetRitual returns the value of Ritual.
+func (s *SpellPick) GetRitual() OptBool {
+	return s.Ritual
+}
+
+// SetSlug sets the value of Slug.
+func (s *SpellPick) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *SpellPick) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *SpellPick) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetRitual sets the value of Ritual.
+func (s *SpellPick) SetRitual(val OptBool) {
+	s.Ritual = val
+}
+
+type SpellPickList []SpellPick
+
+// The spells to have prepared through a class.
+// Ref: #/components/schemas/SpellPreparation
+type SpellPreparation struct {
+	Class  Slug   `json:"class"`
+	Spells []Slug `json:"spells"`
+}
+
+// GetClass returns the value of Class.
+func (s *SpellPreparation) GetClass() Slug {
+	return s.Class
+}
+
+// GetSpells returns the value of Spells.
+func (s *SpellPreparation) GetSpells() []Slug {
+	return s.Spells
+}
+
+// SetClass sets the value of Class.
+func (s *SpellPreparation) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *SpellPreparation) SetSpells(val []Slug) {
+	s.Spells = val
+}
 
 // Damage at a higher slot or character level.
 // Ref: #/components/schemas/SpellScaling
@@ -28332,6 +31449,108 @@ func (s *SpellSummary) SetRitual(val bool) {
 func (s *SpellSummary) SetConcentration(val bool) {
 	s.Concentration = val
 }
+
+// A Character's spells in every class it casts through.
+// Ref: #/components/schemas/Spellcasting
+type Spellcasting struct {
+	// It may change its prepared spells now.
+	CanPrepare bool          `json:"canPrepare"`
+	Classes    []ClassSpells `json:"classes"`
+	Purse      []LiveCoins   `json:"purse"`
+	Clock      GameClock     `json:"clock"`
+}
+
+// GetCanPrepare returns the value of CanPrepare.
+func (s *Spellcasting) GetCanPrepare() bool {
+	return s.CanPrepare
+}
+
+// GetClasses returns the value of Classes.
+func (s *Spellcasting) GetClasses() []ClassSpells {
+	return s.Classes
+}
+
+// GetPurse returns the value of Purse.
+func (s *Spellcasting) GetPurse() []LiveCoins {
+	return s.Purse
+}
+
+// GetClock returns the value of Clock.
+func (s *Spellcasting) GetClock() GameClock {
+	return s.Clock
+}
+
+// SetCanPrepare sets the value of CanPrepare.
+func (s *Spellcasting) SetCanPrepare(val bool) {
+	s.CanPrepare = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *Spellcasting) SetClasses(val []ClassSpells) {
+	s.Classes = val
+}
+
+// SetPurse sets the value of Purse.
+func (s *Spellcasting) SetPurse(val []LiveCoins) {
+	s.Purse = val
+}
+
+// SetClock sets the value of Clock.
+func (s *Spellcasting) SetClock(val GameClock) {
+	s.Clock = val
+}
+
+// SpellcastingHeaders wraps Spellcasting with response headers.
+type SpellcastingHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Spellcasting
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SpellcastingHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SpellcastingHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SpellcastingHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SpellcastingHeaders) GetResponse() Spellcasting {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SpellcastingHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SpellcastingHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SpellcastingHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SpellcastingHeaders) SetResponse(val Spellcasting) {
+	s.Response = val
+}
+
+func (*SpellcastingHeaders) copySpellRes()       {}
+func (*SpellcastingHeaders) getSpellcastingRes() {}
+func (*SpellcastingHeaders) prepareSpellsRes()   {}
 
 // Service status.
 // Ref: #/components/schemas/Status
@@ -28737,6 +31956,103 @@ func (s *TokenKind) UnmarshalText(data []byte) error {
 		return nil
 	case TokenKindObject:
 		*s = TokenKindObject
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A class feature or species trait the Character has.
+// Ref: #/components/schemas/TraitLine
+type TraitLine struct {
+	Name        string          `json:"name"`
+	Source      TraitLineSource `json:"source"`
+	Level       int32           `json:"level"`
+	Description string          `json:"description"`
+}
+
+// GetName returns the value of Name.
+func (s *TraitLine) GetName() string {
+	return s.Name
+}
+
+// GetSource returns the value of Source.
+func (s *TraitLine) GetSource() TraitLineSource {
+	return s.Source
+}
+
+// GetLevel returns the value of Level.
+func (s *TraitLine) GetLevel() int32 {
+	return s.Level
+}
+
+// GetDescription returns the value of Description.
+func (s *TraitLine) GetDescription() string {
+	return s.Description
+}
+
+// SetName sets the value of Name.
+func (s *TraitLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetSource sets the value of Source.
+func (s *TraitLine) SetSource(val TraitLineSource) {
+	s.Source = val
+}
+
+// SetLevel sets the value of Level.
+func (s *TraitLine) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetDescription sets the value of Description.
+func (s *TraitLine) SetDescription(val string) {
+	s.Description = val
+}
+
+type TraitLineSource string
+
+const (
+	TraitLineSourceClass   TraitLineSource = "class"
+	TraitLineSourceSpecies TraitLineSource = "species"
+	TraitLineSourceFeat    TraitLineSource = "feat"
+)
+
+// AllValues returns all TraitLineSource values.
+func (TraitLineSource) AllValues() []TraitLineSource {
+	return []TraitLineSource{
+		TraitLineSourceClass,
+		TraitLineSourceSpecies,
+		TraitLineSourceFeat,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TraitLineSource) MarshalText() ([]byte, error) {
+	switch s {
+	case TraitLineSourceClass:
+		return []byte(s), nil
+	case TraitLineSourceSpecies:
+		return []byte(s), nil
+	case TraitLineSourceFeat:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TraitLineSource) UnmarshalText(data []byte) error {
+	switch TraitLineSource(data) {
+	case TraitLineSourceClass:
+		*s = TraitLineSourceClass
+		return nil
+	case TraitLineSourceSpecies:
+		*s = TraitLineSourceSpecies
+		return nil
+	case TraitLineSourceFeat:
+		*s = TraitLineSourceFeat
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

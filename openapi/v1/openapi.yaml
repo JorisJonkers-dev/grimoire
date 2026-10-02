@@ -783,6 +783,384 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up:
+    get:
+      operationId: planLevelUp
+      x-ogen-operation-group: Read
+      summary: See what the next level offers
+      description: The classes the next level can go to and, for one of them, its hit points, choices and spells. The owner or a DM, out of combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+        - name: class
+          in: query
+          required: false
+          description: The class to level in; the starting class when omitted.
+          schema: { $ref: "#/components/schemas/Slug" }
+      responses:
+        "200":
+          description: What the next level offers.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LevelUpPlan"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: levelUp
+      x-ogen-operation-group: Build
+      summary: Take the next level
+      description: Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LevelUpRequest"
+      responses:
+        "200":
+          description: The sheet at the new level.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spells:
+    get:
+      operationId: getSpellcasting
+      x-ogen-operation-group: Read
+      summary: Read a Character's spells
+      description: Cantrips, prepared and always-prepared spells per class, a wizard's spellbook, coins and the Game Clock.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The spells.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spellcasting"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/prepared:
+    put:
+      operationId: prepareSpells
+      x-ogen-operation-group: Build
+      summary: Prepare spells
+      description: Sets the spells prepared through one class within its limit, after a long rest or a new level.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellPreparation"
+      responses:
+        "200":
+          description: The spells.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spellcasting"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spells/rituals:
+    post:
+      operationId: castRitual
+      x-ogen-operation-group: Play
+      summary: Cast a ritual
+      description: Casts a prepared ritual spell out of combat without a slot, adding its casting time and 10 minutes to the Game Clock.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellChoice"
+      responses:
+        "200":
+          description: The ritual and the Game Clock after it.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RitualCast"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/spellbook:
+    post:
+      operationId: copySpell
+      x-ogen-operation-group: Build
+      summary: Copy a spell into the spellbook
+      description: Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2 hours per spell level.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpellChoice"
+      responses:
+        "200":
+          description: The spells.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Spellcasting"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains:
+    get:
+      operationId: listRetrains
+      x-ogen-operation-group: Read
+      summary: List retrains
+      description: A Character's retrain requests, newest first. Its owner or a DM.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The retrains.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: requestRetrain
+      x-ogen-operation-group: Build
+      summary: Ask to retrain a Character
+      description: "Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for each level's picks, and Ability Score Improvements). The owner only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetrainRequest"
+      responses:
+        "201":
+          description: The pending retrain.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices:
+    get:
+      operationId: listRetrainChoices
+      x-ogen-operation-group: Read
+      summary: List the picks a retrain can change
+      description: Each pick the Character made on a level, with the options it could take instead. The owner only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The picks.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/RetrainChoice"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/revisions:
+    get:
+      operationId: listCharacterRevisions
+      x-ogen-operation-group: Read
+      summary: List a Character's Revisions
+      description: The builds approved retrains replaced, newest first. Its owner or a DM.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The Revisions.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/CharacterRevisionLine"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve:
+    post:
+      operationId: approveRetrain
+      x-ogen-operation-group: Build
+      summary: Approve a retrain
+      description: Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RetrainId"
+      responses:
+        "200":
+          description: The approved retrain.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline:
+    post:
+      operationId: declineRetrain
+      x-ogen-operation-group: Build
+      summary: Decline a retrain
+      description: Declines a pending retrain. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RetrainId"
+      responses:
+        "200":
+          description: The declined retrain.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
     get:
       operationId: getPortrait
@@ -2457,6 +2835,102 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/rolls/{rollId}/keep:
+    post:
+      operationId: keepRoll
+      x-ogen-operation-group: Play
+      summary: Keep a roll
+      description: Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RollId"
+      responses:
+        "200":
+          description: The resolved request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll:
+    post:
+      operationId: rerollDie
+      x-ogen-operation-group: Play
+      summary: Reroll a die with Heroic Inspiration
+      description: Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll resolves. The roller only.
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RollId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RerollIn"
+      responses:
+        "200":
+          description: The resolved request.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RollRequest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass:
+    post:
+      operationId: passInspiration
+      x-ogen-operation-group: Play
+      summary: Pass Heroic Inspiration
+      description: Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The owner only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InspirationPass"
+      responses:
+        "200":
+          description: The sheet without Heroic Inspiration.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -4956,6 +5430,114 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/character-draft:
+    get:
+      operationId: getCharacterDraft
+      x-ogen-operation-group: Read
+      summary: Read my Character draft
+      description: "The Character the caller is making in this Campaign's wizard, with the step reached, the choices so far and any rolled scores."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The draft.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterDraft"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveCharacterDraft
+      x-ogen-operation-group: Build
+      summary: Save my Character draft
+      description: Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server rolled them.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterDraftSave"
+      responses:
+        "200":
+          description: The draft.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterDraft"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: discardCharacterDraft
+      x-ogen-operation-group: Build
+      summary: Discard my Character draft
+      description: Starts the wizard over.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "204":
+          description: Discarded.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/character-draft/roll:
+    post:
+      operationId: rollCharacterScores
+      x-ogen-operation-group: Build
+      summary: Roll ability scores
+      description: Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The draft with its rolled scores.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterDraft"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -5033,6 +5615,12 @@ components:
       name: X-User-Id
       description: Identity injected by the platform's forward-auth; never sent by clients directly.
   parameters:
+    RetrainId:
+      name: retrainId
+      in: path
+      required: true
+      description: Retrain id.
+      schema: { $ref: "#/components/schemas/Id" }
     CampaignId:
       name: campaignId
       in: path
@@ -5208,6 +5796,15 @@ components:
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        creationMethods:
+          type: array
+          description: The ability score methods new Characters may use.
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CreationMethod" }
+        startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
+        holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
       type: object
@@ -5250,6 +5847,15 @@ components:
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        creationMethods:
+          type: array
+          description: The ability score methods new Characters may use.
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CreationMethod" }
+        startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
+        holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
         members:
@@ -5276,6 +5882,15 @@ components:
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        creationMethods:
+          type: array
+          description: The ability score methods new Characters may use.
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CreationMethod" }
+        startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
+        holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
       type: object
@@ -5914,6 +6529,10 @@ components:
       properties:
         expiresAt: { type: string, format: date-time, maxLength: 40 }
         admin: { type: boolean }
+    CreationMethod:
+      type: string
+      description: How a new Character's ability scores are set.
+      enum: [standard-array, point-buy, rolled]
     InitiativeMode:
       type: string
       description: How a fight rolls initiative, each Combatant for itself or one roll per side.
@@ -6025,9 +6644,55 @@ components:
       description: Body armour slug, or empty for none.
       maxLength: 80
       pattern: "^([a-z0-9]+(-[a-z0-9]+)*)?$"
+    CharacterDraftBuild:
+      type: object
+      description: The wizard's choices so far; every field may still be missing.
+      additionalProperties: false
+      properties:
+        name: { type: string, maxLength: 60 }
+        species: { $ref: "#/components/schemas/Slug" }
+        class: { $ref: "#/components/schemas/Slug" }
+        background: { $ref: "#/components/schemas/Slug" }
+        method: { type: string, enum: [standard-array, point-buy, rolled] }
+        base: { $ref: "#/components/schemas/AbilityBase" }
+        bonus: { $ref: "#/components/schemas/AbilityBonus" }
+        skills:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        armor: { $ref: "#/components/schemas/ArmorChoice" }
+        shield: { type: boolean }
+        weapons:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        appearance: { type: string, maxLength: 2000 }
+        backstory: { type: string, maxLength: 4000 }
+    CharacterDraft:
+      type: object
+      description: A Character being made in the wizard.
+      additionalProperties: false
+      required: [step, build]
+      properties:
+        step: { type: integer, format: int32, minimum: 0, maximum: 8 }
+        build: { $ref: "#/components/schemas/CharacterDraftBuild" }
+        rolled:
+          type: array
+          description: The six scores the server rolled, to place on abilities.
+          minItems: 6
+          maxItems: 6
+          items: { type: integer, format: int32, minimum: 3, maximum: 18 }
+    CharacterDraftSave:
+      type: object
+      description: The wizard's step and choices to keep.
+      additionalProperties: false
+      required: [step, build]
+      properties:
+        step: { type: integer, format: int32, minimum: 0, maximum: 8 }
+        build: { $ref: "#/components/schemas/CharacterDraftBuild" }
     CharacterBuild:
       type: object
-      description: The choices for a first-level Character.
+      description: The choices for a new Character, who starts at the Campaign's starting level.
       additionalProperties: false
       required: [name, species, class, background, method, base, bonus, skills, shield, weapons]
       properties:
@@ -6048,6 +6713,8 @@ components:
           type: array
           maxItems: 4
           items: { $ref: "#/components/schemas/Slug" }
+        appearance: { type: string, maxLength: 2000 }
+        backstory: { type: string, maxLength: 4000 }
     CharacterEdit:
       type: object
       description: Out-of-combat changes; omitted fields stay as they are.
@@ -6055,6 +6722,11 @@ components:
       properties:
         name: { $ref: "#/components/schemas/CharacterName" }
         hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        damage: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Damage taken, soaked by temporary hit points first." }
+        heal: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Hit points regained, up to the maximum." }
+        tempHp: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Temporary hit points gained; the higher of old and new stays." }
+        levelUpReady: { type: boolean, description: "Unlock or lock the next level; DM only." }
+        heroicInspiration: { type: boolean, description: "Grant or take Heroic Inspiration; DM only." }
         armor: { $ref: "#/components/schemas/ArmorChoice" }
         shield: { type: boolean }
         weapons:
@@ -6084,12 +6756,51 @@ components:
       type: object
       description: One skill on the sheet.
       additionalProperties: false
-      required: [skill, ability, bonus, proficient]
+      required: [skill, ability, bonus, proficient, expertise]
       properties:
         skill: { $ref: "#/components/schemas/Slug" }
         ability: { $ref: "#/components/schemas/Ability" }
         bonus: { type: integer, format: int32, minimum: -5, maximum: 30 }
         proficient: { type: boolean }
+        expertise: { type: boolean, description: "Proficiency bonus counted twice." }
+    AttackLine:
+      type: object
+      description: A weapon attack with its bonus to hit, damage and the Weapon Mastery the Character uses with it.
+      additionalProperties: false
+      required: [name, toHit, damage, damageType, reachFeet, rangeFeet, longRangeFeet]
+      properties:
+        name: { type: string, maxLength: 120 }
+        toHit: { type: integer, format: int32, minimum: -10, maximum: 30 }
+        damage: { type: string, maxLength: 30 }
+        damageType: { type: string, maxLength: 40 }
+        reachFeet: { type: integer, format: int32, minimum: 0, maximum: 30 }
+        rangeFeet: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        longRangeFeet: { type: integer, format: int32, minimum: 0, maximum: 10000 }
+        mastery: { type: string, maxLength: 40 }
+    TraitLine:
+      type: object
+      description: A class feature or species trait the Character has.
+      additionalProperties: false
+      required: [name, source, level, description]
+      properties:
+        name: { type: string, maxLength: 120 }
+        source: { type: string, enum: [class, species, feat] }
+        level: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        description: { type: string, maxLength: 20000 }
+    Proficiencies:
+      type: object
+      description: The armor and weapons a Character is trained with.
+      additionalProperties: false
+      required: [armor, weapons]
+      properties:
+        armor:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 60 }
+        weapons:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 60 }
     ResourcePool:
       type: object
       description: A spendable pool such as hit dice or spell slots.
@@ -6212,6 +6923,7 @@ components:
           items: { $ref: "#/components/schemas/Slug" }
         hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
+        tempHp: { type: integer, format: int32, minimum: 0, maximum: 1000 }
         armorClass: { type: integer, format: int32, minimum: 0, maximum: 50 }
         initiative: { type: integer, format: int32, minimum: -5, maximum: 30 }
         speedFeet: { type: integer, format: int32, minimum: 0, maximum: 200 }
@@ -6237,6 +6949,315 @@ components:
           items: { type: string, maxLength: 200 }
         portraitUrl: { $ref: "#/components/schemas/AssetUrl" }
         tokenUrl: { $ref: "#/components/schemas/AssetUrl" }
+        characterId:
+          $ref: "#/components/schemas/Id"
+          description: The Account's own Character this Campaign Character was made from.
+        attacks:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/AttackLine" }
+        traits:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/TraitLine" }
+        proficiencies: { $ref: "#/components/schemas/Proficiencies" }
+        levelUpReady: { type: boolean, description: "The next level is unlocked." }
+        heroicInspiration: { type: boolean }
+        increase: { $ref: "#/components/schemas/AbilityIncrease" }
+        classes:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ClassLine" }
+        spells:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LearnedSpellLine" }
+    Spellcasting:
+      type: object
+      description: A Character's spells in every class it casts through.
+      additionalProperties: false
+      required: [canPrepare, classes, purse, clock]
+      properties:
+        canPrepare: { type: boolean, description: "It may change its prepared spells now." }
+        classes:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ClassSpells" }
+        purse:
+          type: array
+          maxItems: 5
+          items: { $ref: "#/components/schemas/LiveCoins" }
+        clock: { $ref: "#/components/schemas/GameClock" }
+    ClassSpells:
+      type: object
+      description: What a Character casts through one class.
+      additionalProperties: false
+      required: [class, name, level, limit, maxLevel, keepsSpellbook, allotment, cantrips, prepared, always, spellbook, options, copyable]
+      properties:
+        class: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        limit: { type: integer, format: int32, minimum: 0, maximum: 30, description: "How many spells it prepares." }
+        maxLevel: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        keepsSpellbook: { type: boolean }
+        allotment: { type: integer, format: int32, minimum: 0, maximum: 60, description: "Spells a wizard's book holds for free." }
+        cantrips: { $ref: "#/components/schemas/SpellPickList" }
+        prepared: { $ref: "#/components/schemas/SpellPickList" }
+        always: { $ref: "#/components/schemas/SpellPickList" }
+        spellbook: { $ref: "#/components/schemas/SpellPickList" }
+        options: { $ref: "#/components/schemas/SpellPickList" }
+        copyable: { $ref: "#/components/schemas/SpellPickList" }
+    SpellPickList:
+      type: array
+      description: Spells by slug, name and level.
+      maxItems: 500
+      items: { $ref: "#/components/schemas/SpellPick" }
+    GameClock:
+      type: object
+      description: The time on a Campaign's Game Clock.
+      additionalProperties: false
+      required: [day, minute]
+      properties:
+        day: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        minute: { type: integer, format: int32, minimum: 0, maximum: 1439, description: "Minutes after midnight." }
+    SpellPreparation:
+      type: object
+      description: The spells to have prepared through a class.
+      additionalProperties: false
+      required: [class, spells]
+      properties:
+        class: { $ref: "#/components/schemas/Slug" }
+        spells:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/Slug" }
+    SpellChoice:
+      type: object
+      description: One spell by slug.
+      additionalProperties: false
+      required: [spell]
+      properties:
+        spell: { $ref: "#/components/schemas/Slug" }
+    RitualCast:
+      type: object
+      description: A ritual cast, how long it took, and the Game Clock after it.
+      additionalProperties: false
+      required: [spell, minutes, clock]
+      properties:
+        spell: { $ref: "#/components/schemas/SpellPick" }
+        minutes: { type: integer, format: int32, minimum: 10, maximum: 1500 }
+        clock: { $ref: "#/components/schemas/GameClock" }
+    AbilityIncrease:
+      type: object
+      description: Points from Ability Score Improvements, per ability.
+      additionalProperties: false
+      properties:
+        strength: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        dexterity: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        constitution: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        intelligence: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        wisdom: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        charisma: { type: integer, format: int32, minimum: 0, maximum: 20 }
+    RetrainChoice:
+      type: object
+      description: A pick a Character made on a level, with the options it could take instead.
+      additionalProperties: false
+      required: [level, choice, name, value, options]
+      properties:
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        choice: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        value: { $ref: "#/components/schemas/Slug" }
+        options:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LevelUpOption" }
+    PickLine:
+      type: object
+      description: One value chosen for a choice on reaching a level.
+      additionalProperties: false
+      required: [level, choice, value]
+      properties:
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        choice: { $ref: "#/components/schemas/Slug" }
+        value: { $ref: "#/components/schemas/Slug" }
+    BuildSnapshot:
+      type: object
+      description: A Character's rebuildable choices.
+      additionalProperties: false
+      required: [species, background, method, base, bonus, increase, skills, picks]
+      properties:
+        species: { $ref: "#/components/schemas/Slug" }
+        background: { $ref: "#/components/schemas/Slug" }
+        method: { type: string, enum: [standard-array, point-buy, rolled] }
+        base: { $ref: "#/components/schemas/AbilityBase" }
+        bonus: { $ref: "#/components/schemas/AbilityBonus" }
+        increase: { $ref: "#/components/schemas/AbilityIncrease" }
+        skills:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/Slug" }
+        picks:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/PickLine" }
+    RetrainRequest:
+      type: object
+      description: A rebuilt build and why.
+      additionalProperties: false
+      required: [build, reason]
+      properties:
+        build: { $ref: "#/components/schemas/BuildSnapshot" }
+        reason: { type: string, maxLength: 500 }
+    Retrain:
+      type: object
+      description: A request to rebuild a Campaign Character, and the DM's decision.
+      additionalProperties: false
+      required: [id, characterId, status, reason, requestedBy, createdAt, proposed]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        characterId: { $ref: "#/components/schemas/Id" }
+        status: { type: string, enum: [pending, approved, declined] }
+        reason: { type: string, maxLength: 500 }
+        requestedBy: { $ref: "#/components/schemas/DisplayName" }
+        decidedBy: { $ref: "#/components/schemas/DisplayName" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        decidedAt: { type: string, format: date-time, maxLength: 40 }
+        proposed: { $ref: "#/components/schemas/BuildSnapshot" }
+    CharacterRevisionLine:
+      type: object
+      description: A build an approved retrain replaced.
+      additionalProperties: false
+      required: [no, author, createdAt, build]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        author: { $ref: "#/components/schemas/DisplayName" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        build: { $ref: "#/components/schemas/BuildSnapshot" }
+        retrainId: { $ref: "#/components/schemas/Id" }
+    LevelUpPlan:
+      type: object
+      description: What the next level offers in one class.
+      additionalProperties: false
+      required: [ready, held, level, classes, class, classLevel, hitDie, average, choices, cantrips, spells, spellList]
+      properties:
+        ready: { type: boolean, description: "The next level is unlocked." }
+        held: { type: boolean, description: "The DM holds level-ups; only the DM unlocks the next level." }
+        level: { type: integer, format: int32, minimum: 2, maximum: 21 }
+        classes:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/LevelUpClass" }
+        class: { $ref: "#/components/schemas/Slug" }
+        classLevel: { type: integer, format: int32, minimum: 1, maximum: 21 }
+        hitDie: { type: integer, format: int32, minimum: 0, maximum: 12 }
+        average: { type: integer, format: int32, minimum: 1, maximum: 20, description: "Hit points the level adds when taking the average." }
+        choices:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/LevelUpChoice" }
+        cantrips: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        spells: { type: integer, format: int32, minimum: 0, maximum: 30 }
+        spellList:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/SpellPick" }
+    LevelUpClass:
+      type: object
+      description: A class the next level can go to, with what multiclassing into it still needs.
+      additionalProperties: false
+      required: [slug, name, hitDie, level, unmet]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        hitDie: { type: integer, format: int32, minimum: 0, maximum: 12 }
+        level: { type: integer, format: int32, minimum: 0, maximum: 20, description: "Levels the Character has in it now." }
+        unmet:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 200 }
+    LevelUpChoice:
+      type: object
+      description: A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+      additionalProperties: false
+      required: [slug, name, pool, count, options]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        pool: { type: string, enum: [feat_category, subclass, skill, expertise, weapon, listed] }
+        count: { type: integer, format: int32, minimum: 1, maximum: 10 }
+        options:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LevelUpOption" }
+    LevelUpOption:
+      type: object
+      description: One option of a choice, with the prerequisites the Character does not meet.
+      additionalProperties: false
+      required: [slug, name, unmet]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        unmet:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 200 }
+    SpellPick:
+      type: object
+      description: A cantrip (level 0) or spell on a class's list.
+      additionalProperties: false
+      required: [slug, name, level]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: 0, maximum: 9 }
+        ritual: { type: boolean }
+    LevelUpRequest:
+      type: object
+      description: The choices made for the next level.
+      additionalProperties: false
+      required: [class]
+      properties:
+        class: { $ref: "#/components/schemas/Slug" }
+        hitPoints: { type: string, enum: [average, roll], description: "Take the Hit Die's average, or roll it." }
+        picks:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/LevelUpPickIn" }
+        increase: { $ref: "#/components/schemas/AbilityBonus" }
+        spells:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/Slug" }
+    LevelUpPickIn:
+      type: object
+      description: The options picked for one choice.
+      additionalProperties: false
+      required: [choice, values]
+      properties:
+        choice: { $ref: "#/components/schemas/Slug" }
+        values:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/Slug" }
+    ClassLine:
+      type: object
+      description: The levels a Character has in one class, and its subclass there.
+      additionalProperties: false
+      required: [slug, name, level]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        subclass: { $ref: "#/components/schemas/Slug" }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+    LearnedSpellLine:
+      type: object
+      description: A cantrip or spell a Character learned through a class.
+      additionalProperties: false
+      required: [slug, class]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        class: { $ref: "#/components/schemas/Slug" }
     AssetUrl:
       type: string
       description: Same-origin path of a stored picture; it changes when the picture does.
@@ -6258,6 +7279,7 @@ components:
         hpCurrent: { type: integer, format: int32, minimum: 0, maximum: 1000 }
         hpMax: { type: integer, format: int32, minimum: 1, maximum: 1000 }
         tokenUrl: { $ref: "#/components/schemas/AssetUrl" }
+        heroicInspiration: { type: boolean }
     ClassChoice:
       type: object
       description: A class and what it gives at level 1.
@@ -6272,6 +7294,12 @@ components:
           maxItems: 6
           items: { $ref: "#/components/schemas/Ability" }
         skillChoices: { type: integer, format: int32, minimum: 0, maximum: 6 }
+        primaryAbilities:
+          type: array
+          description: The abilities the class leans on most, highlighted when choosing it.
+          maxItems: 2
+          items: { $ref: "#/components/schemas/Ability" }
+        caster: { type: string, enum: [none, full, half, pact], description: "How the class casts spells." }
     SpeciesChoice:
       type: object
       description: A playable species.
@@ -6669,7 +7697,7 @@ components:
       required: [revisionId, entityType, entityId, name, no, action, author, origin, createdAt, undoable]
       properties:
         revisionId: { $ref: "#/components/schemas/Id" }
-        entityType: { type: string, enum: [npc, encounter_pool, encounter_table, encounter_check, loot_table, settlement, shop] }
+        entityType: { type: string, enum: [npc, encounter_pool, encounter_table, encounter_check, loot_table, settlement, shop, character] }
         entityId: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 120 }
         no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
@@ -6819,6 +7847,22 @@ components:
           items: { $ref: "#/components/schemas/RollModifier" }
         createdAt: { type: string, format: date-time, maxLength: 40 }
         resolvedAt: { type: string, format: date-time, maxLength: 40 }
+        choosing: { type: boolean, description: "Every die is set; the roller keeps it or rerolls a die with Heroic Inspiration." }
+        rerolled: { type: boolean, description: "Heroic Inspiration was spent on this roll." }
+    RerollIn:
+      type: object
+      description: The die to roll again.
+      additionalProperties: false
+      required: [die]
+      properties:
+        die: { type: integer, format: int32, minimum: 0, maximum: 119 }
+    InspirationPass:
+      type: object
+      description: The Character to give Heroic Inspiration to.
+      additionalProperties: false
+      required: [to]
+      properties:
+        to: { $ref: "#/components/schemas/Id" }
     ActionEntry:
       type: object
       description: One entry of the Action Log.

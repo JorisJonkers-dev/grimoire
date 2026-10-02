@@ -63,10 +63,30 @@ const shareInitiative = computed({
   get: () => shareChoice.value ?? campaign.data.value?.shareInitiative ?? false,
   set: (v: boolean) => (shareChoice.value = v),
 })
+type CreationMethod = 'standard-array' | 'point-buy' | 'rolled'
+const methodsChoice = ref<CreationMethod[] | null>(null)
+const creationMethods = computed({
+  get: () => methodsChoice.value ?? campaign.data.value?.creationMethods ?? ['standard-array', 'point-buy', 'rolled'],
+  set: (v: CreationMethod[]) => (methodsChoice.value = v),
+})
+const levelChoice = ref<number | null>(null)
+const startingLevel = computed({
+  get: () => levelChoice.value ?? campaign.data.value?.startingLevel ?? 1,
+  set: (v: number) => (levelChoice.value = v),
+})
+const holdChoice = ref<boolean | null>(null)
+const holdLevelUps = computed({
+  get: () => holdChoice.value ?? campaign.data.value?.holdLevelUps ?? false,
+  set: (v: boolean) => (holdChoice.value = v),
+})
 const settings = useMutation(updateCampaignMutation())
 function saveSettings() {
   failed.value = ''
-  settings.mutate({ ...path.value, body: { reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value, shareInitiative: shareInitiative.value } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
+  settings.mutate({ ...path.value, body: {
+    reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value,
+    shareInitiative: shareInitiative.value, creationMethods: creationMethods.value, startingLevel: startingLevel.value,
+    holdLevelUps: holdLevelUps.value,
+  } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
 const onError = (what: string) => () => (failed.value = what)
@@ -169,6 +189,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
               <span class="who">{{ ch.name }}<template v-if="ch.mine"> (yours)</template></span>
               <span class="hint">Level {{ ch.level }} {{ ch.species }} {{ ch.class }} · {{ ch.ownerName }}</span>
               <span class="g-tag">{{ ch.hpCurrent }}/{{ ch.hpMax }} HP</span>
+              <span v-if="ch.heroicInspiration" class="g-tag inspired" :data-testid="`inspired-${ch.name}`">Heroic Inspiration</span>
             </RouterLink>
           </li>
         </ul>
@@ -236,7 +257,21 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
           <input v-model="shareInitiative" type="checkbox" data-testid="share-initiative" />
           <span>Identical monsters share one roll</span>
         </label>
-        <GButton type="submit">Save settings</GButton>
+        <fieldset class="methods">
+          <legend>New Characters set ability scores by</legend>
+          <label class="check"><input v-model="creationMethods" type="checkbox" value="standard-array" data-testid="method-standard-array" /><span>Standard array</span></label>
+          <label class="check"><input v-model="creationMethods" type="checkbox" value="point-buy" data-testid="method-point-buy" /><span>Point buy</span></label>
+          <label class="check"><input v-model="creationMethods" type="checkbox" value="rolled" data-testid="method-rolled" /><span>Rolling 4d6, dropping the lowest</span></label>
+        </fieldset>
+        <label class="g-field">
+          <span>New Characters start at level</span>
+          <input v-model.number="startingLevel" type="number" min="1" max="20" data-testid="starting-level-input" />
+        </label>
+        <label class="check">
+          <input v-model="holdLevelUps" type="checkbox" data-testid="hold-level-ups" />
+          <span>Hold level-ups: long rests stop unlocking the next level, and you grant levels from each sheet</span>
+        </label>
+        <GButton type="submit" :disabled="!creationMethods.length">Save settings</GButton>
         <p v-if="settings.isSuccess.value" role="status" data-testid="settings-saved">Saved.</p>
       </form>
     </template>
@@ -244,6 +279,14 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
 </template>
 
 <style scoped>
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 .back {
   color: var(--color-gold-high);
 }
@@ -328,5 +371,9 @@ section {
   align-items: center;
   gap: 8px;
   min-height: 44px;
+}
+.inspired {
+  border-color: var(--color-gold-high);
+  color: var(--color-gold-high);
 }
 </style>

@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
+import { buildFighter } from './wizard'
 
 async function enter(page: Page, faces: string[]) {
   const card = page.getByTestId('roll-card')
@@ -55,19 +56,7 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
   await player.getByRole('button', { name: 'Join as Player' }).click()
   await expect(player.getByTestId('member-list')).toContainText('Aria (you)')
   await player.getByTestId('build-character').click()
-  await player.getByTestId('character-name').fill('Mira')
-  await player.getByRole('radio', { name: /Human/ }).check()
-  await player.getByRole('radio', { name: /Soldier/ }).check()
-  await player.getByTestId('next').click()
-  await player.getByRole('radio', { name: /^Fighter/ }).check()
-  await player.getByTestId('next').click()
-  await player.getByTestId('bonus-0').selectOption('strength')
-  await player.getByTestId('bonus-1').selectOption('constitution')
-  await player.getByTestId('next').click()
-  await player.getByRole('checkbox', { name: /Perception/ }).check()
-  await player.getByRole('checkbox', { name: /Survival/ }).check()
-  await player.getByTestId('next').click()
-  await player.getByTestId('next').click()
+  await buildFighter(player, 'Mira')
   await player.getByTestId('create-character').click()
   await expect(player.getByRole('heading', { name: 'Mira' })).toBeVisible()
 

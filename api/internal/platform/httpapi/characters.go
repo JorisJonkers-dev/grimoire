@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
@@ -26,6 +28,22 @@ type CharacterService interface {
 	Owned(ctx context.Context, c caller.Caller, id domain.OwnedID) (domain.OwnedCharacter, error)
 	UpdateOwned(ctx context.Context, c caller.Caller, id domain.OwnedID, name, backstory string) (domain.OwnedCharacter, error)
 	Join(ctx context.Context, c caller.Caller, id domain.OwnedID, campaign domain.CampaignID) (app.Sheet, error)
+	Draft(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
+	SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error)
+	DiscardDraft(ctx context.Context, c caller.Caller, id domain.CampaignID) error
+	RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
+	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (app.LevelUpPlan, error)
+	LevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, req app.LevelUpRequest) (app.Sheet, error)
+	Spells(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (app.Spellcasting, error)
+	Prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string, spells []string) (app.Spellcasting, error)
+	CastRitual(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Ritual, error)
+	CopySpell(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Spellcasting, error)
+	PassInspiration(ctx context.Context, c caller.Caller, id domain.CampaignID, ch, to domain.CharacterID) (app.Sheet, error)
+	RequestRetrain(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, in app.RetrainInput) (domain.Retrain, error)
+	Retrains(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]domain.Retrain, error)
+	RetrainChoices(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]app.RetrainChoice, error)
+	CharacterRevisions(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]domain.CharacterRevision, error)
+	DecideRetrain(ctx context.Context, c caller.Caller, id domain.CampaignID, retrain uuid.UUID, approve bool) (domain.Retrain, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -61,6 +79,7 @@ func buildIn(b *oas.CharacterBuild) domain.Build {
 		Name: string(b.Name), Species: string(b.Species), Class: string(b.Class), Background: string(b.Background),
 		Method: string(b.Method), Base: baseMap(b.Base), Bonus: bonusMap(b.Bonus), Skills: slugList(b.Skills),
 		Armor: string(b.Armor.Or("")), Shield: b.Shield, Weapons: slugList(b.Weapons),
+		Appearance: b.Appearance.Or(""), Backstory: b.Backstory.Or(""),
 	}
 }
 
@@ -78,7 +97,7 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 		},
 		Abilities: make([]oas.AbilityLine, 0, 6), Skills: make([]oas.SkillLine, 0, 18),
 		ClassSkills: slugsOf(s.Skills), BackgroundSkills: slugsOf(s.BackgroundSkills),
-		HpCurrent: int32(s.HPCurrent), HpMax: int32(s.HPMax), ArmorClass: int32(s.Derived.ArmorClass),
+		HpCurrent: int32(s.HPCurrent), HpMax: int32(s.HPMax), TempHp: oas.NewOptInt32(int32(s.TempHP)), ArmorClass: int32(s.Derived.ArmorClass),
 		Initiative: int32(s.Derived.Initiative), SpeedFeet: int32(s.Derived.SpeedFeet), ProficiencyBonus: int32(s.Derived.ProficiencyBonus),
 		PassivePerception: int32(s.Derived.PassivePerception), Shield: s.Shield, Weapons: make([]oas.WeaponLine, 0, len(s.Weapons)),
 		Resources: make([]oas.ResourcePool, 0, len(s.Derived.Resources)), Effects: []oas.ActiveEffect{}, Warnings: s.Derived.Warnings,
@@ -99,7 +118,7 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 		})
 	}
 	for _, sk := range s.Derived.Skills {
-		out.Skills = append(out.Skills, oas.SkillLine{Skill: oas.Slug(sk.Skill), Ability: oas.Ability(sk.Ability), Bonus: int32(sk.Bonus), Proficient: sk.Proficient})
+		out.Skills = append(out.Skills, oas.SkillLine{Skill: oas.Slug(sk.Skill), Ability: oas.Ability(sk.Ability), Bonus: int32(sk.Bonus), Proficient: sk.Proficient, Expertise: sk.Expertise})
 	}
 	if s.Armor != nil {
 		out.Armor = oas.NewOptNamedRef(oas.NamedRef{Slug: oas.Slug(s.Armor.Slug), Name: s.Armor.Name})
@@ -110,7 +129,54 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 	for _, r := range s.Derived.Resources {
 		out.Resources = append(out.Resources, oas.ResourcePool{Key: oas.Slug(r.Key), Label: r.Label, Current: int32(r.Current), Max: int32(r.Max)})
 	}
+	extrasOut(&out, s)
 	return out
+}
+
+// extrasOut adds what only a saved Character's sheet carries: its own Character, attacks, traits and
+// training.
+//
+//nolint:gosec // values are bounded by the rules
+func extrasOut(out *oas.CharacterSheet, s app.Sheet) {
+	if s.Owned != (domain.OwnedID{}) {
+		out.CharacterId = oas.NewOptID(oas.ID(s.Owned))
+	}
+	out.LevelUpReady = oas.NewOptBool(s.LevelUpReady && s.Level < 20)
+	out.HeroicInspiration = oas.NewOptBool(s.HeroicInspiration)
+	out.Increase = oas.NewOptAbilityIncrease(increaseOut(s.Increase))
+	for _, x := range s.Classes {
+		line := oas.ClassLine{Slug: oas.Slug(x.Class), Name: s.ClassNames[x.Class], Level: int32(x.Level)}
+		if x.Subclass != "" {
+			line.Subclass = oas.NewOptSlug(oas.Slug(x.Subclass))
+		}
+		out.Classes = append(out.Classes, line)
+	}
+	for _, sp := range s.Spells {
+		out.Spells = append(out.Spells, oas.LearnedSpellLine{Slug: oas.Slug(sp.Spell), Class: oas.Slug(sp.Class)})
+	}
+	for _, a := range s.Attacks {
+		line := oas.AttackLine{
+			Name: a.Name, ToHit: int32(a.ToHit), Damage: a.Damage, DamageType: a.DamageType,
+			ReachFeet: int32(a.ReachFt), RangeFeet: int32(a.RangeFt), LongRangeFeet: int32(a.LongRangeFt),
+		}
+		if a.Mastery != "" {
+			line.Mastery = oas.NewOptString(a.Mastery)
+		}
+		out.Attacks = append(out.Attacks, line)
+	}
+	for _, t := range s.Traits {
+		out.Traits = append(out.Traits, oas.TraitLine{Name: t.Name, Source: oas.TraitLineSource(t.Source), Level: int32(t.Level), Description: t.Description})
+	}
+	if s.Proficiencies.Armor != nil || s.Proficiencies.Weapons != nil {
+		out.Proficiencies = oas.NewOptProficiencies(oas.Proficiencies{Armor: nonNil(s.Proficiencies.Armor), Weapons: nonNil(s.Proficiencies.Weapons)})
+	}
+}
+
+func nonNil(in []string) []string {
+	if in == nil {
+		return []string{}
+	}
+	return in
 }
 
 func bonusOut(m map[string]int) oas.AbilityBonus {
@@ -133,6 +199,15 @@ func weaponOut(w compendium.WeaponOption) oas.WeaponLine {
 		Slug: oas.Slug(w.Slug), Name: w.Name, DamageDice: w.DamageDice, DamageType: w.DamageType,
 		RangeFeet: int32(w.RangeFeet), LongRangeFeet: int32(w.LongRangeFeet),
 	}
+}
+
+func optInt(v oas.OptInt32) *int {
+	n, set := v.Get()
+	if !set {
+		return nil
+	}
+	i := int(n)
+	return &i
 }
 
 func slugsOf(in []string) []oas.Slug {
@@ -174,8 +249,13 @@ func builderOut(o compendium.BuilderOptions) oas.BuilderOptions {
 		for _, a := range c.Saves {
 			saves = append(saves, oas.Ability(a))
 		}
+		primary := make([]oas.Ability, 0, 2)
+		for _, a := range rules.PrimaryAbilities(c.Slug) {
+			primary = append(primary, oas.Ability(a))
+		}
 		out.Classes = append(out.Classes, oas.ClassChoice{
 			Slug: oas.Slug(c.Slug), Name: c.Name, HitDie: int32(c.HitDie), Saves: saves, SkillChoices: int32(rules.ClassSkillCount(c.Slug)),
+			PrimaryAbilities: primary, Caster: oas.NewOptClassChoiceCaster(oas.ClassChoiceCaster(rules.CasterFor(c.Slug))),
 		})
 	}
 	for _, s := range o.Species {
@@ -228,6 +308,7 @@ func (h *Handler) ListCharacters(ctx context.Context, p oas.ListCharactersParams
 			ID:       oas.ID(ch.ID), Name: oas.CharacterName(ch.Name), OwnerName: oas.DisplayName(ch.OwnerName), Mine: ch.Mine,
 			Species: oas.Slug(ch.Species), Class: oas.Slug(ch.Class), Level: int32(ch.Level), //nolint:gosec // 1..20
 			HpCurrent: int32(ch.HPCurrent), HpMax: int32(ch.HPMax), //nolint:gosec // hit points are small
+			HeroicInspiration: oas.NewOptBool(ch.HeroicInspiration),
 		})
 	}
 	return &oas.ListCharactersOKHeaders{Response: out}, nil
@@ -278,14 +359,16 @@ func (h *Handler) UpdateCharacter(ctx context.Context, req *oas.CharacterEdit, p
 	if !ok {
 		return unauthorized(), nil
 	}
-	var e app.Edit
+	e := app.Edit{HPCurrent: optInt(req.HpCurrent), Damage: optInt(req.Damage), Heal: optInt(req.Heal), TempHP: optInt(req.TempHp)}
+	if v, set := req.LevelUpReady.Get(); set {
+		e.LevelUpReady = &v
+	}
+	if v, set := req.HeroicInspiration.Get(); set {
+		e.HeroicInspiration = &v
+	}
 	if v, set := req.Name.Get(); set {
 		name := string(v)
 		e.Name = &name
-	}
-	if v, set := req.HpCurrent.Get(); set {
-		hp := int(v)
-		e.HPCurrent = &hp
 	}
 	if v, set := req.Armor.Get(); set {
 		armor := string(v)
@@ -314,4 +397,17 @@ func (h *Handler) DeleteCharacter(ctx context.Context, p oas.DeleteCharacterPara
 		return h.campaignProblem(ctx, "delete character", err), nil
 	}
 	return &oas.DeleteCharacterNoContent{}, nil
+}
+
+// PassInspiration gives a Character's Heroic Inspiration to another Character.
+func (h *Handler) PassInspiration(ctx context.Context, req *oas.InspirationPass, p oas.PassInspirationParams) (oas.PassInspirationRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	s, err := h.Characters.PassInspiration(ctx, c, domain.CampaignID(p.CampaignId), domain.CharacterID(p.CharacterId), domain.CharacterID(req.To))
+	if err != nil {
+		return h.campaignProblem(ctx, "pass inspiration", err), nil
+	}
+	return &oas.CharacterSheetHeaders{Response: sheetOut(s)}, nil
 }

@@ -11,6 +11,62 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const alwaysPreparedSpells = `-- name: AlwaysPreparedSpells :many
+SELECT s.slug, s.name, s.level, s.ritual, s.casting_time FROM compendium.always_prepared a
+JOIN compendium.spells s ON s.slug = a.spell_slug
+JOIN compendium.documents d ON d.id = s.document_id
+WHERE d.key = $1 AND a.level <= $2
+    AND ((a.owner_kind = 'class' AND a.owner_slug = $3) OR (a.owner_kind = 'subclass' AND a.owner_slug = $4))
+ORDER BY s.level, s.name
+`
+
+type AlwaysPreparedSpellsParams struct {
+	Ruleset  string
+	Level    int32
+	Class    string
+	Subclass string
+}
+
+type AlwaysPreparedSpellsRow struct {
+	Slug        string
+	Name        string
+	Level       int32
+	Ritual      bool
+	CastingTime string
+}
+
+// The spells a class and its subclass always have prepared at a class level.
+func (q *Queries) AlwaysPreparedSpells(ctx context.Context, arg AlwaysPreparedSpellsParams) ([]AlwaysPreparedSpellsRow, error) {
+	rows, err := q.db.Query(ctx, alwaysPreparedSpells,
+		arg.Ruleset,
+		arg.Level,
+		arg.Class,
+		arg.Subclass,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AlwaysPreparedSpellsRow{}
+	for rows.Next() {
+		var i AlwaysPreparedSpellsRow
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.Level,
+			&i.Ritual,
+			&i.CastingTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const builderArmor = `-- name: BuilderArmor :many
 SELECT a.slug, a.name, a.category, a.ac_base, a.add_dex, a.dex_cap, a.stealth_disadvantage, a.strength_required
 FROM compendium.armor a
@@ -230,6 +286,131 @@ func (q *Queries) BuilderWeapons(ctx context.Context, key string) ([]BuilderWeap
 	return items, nil
 }
 
+const levelUpFeats = `-- name: LevelUpFeats :many
+SELECT f.slug, f.name, f.feat_type, f.description FROM compendium.feats f
+JOIN compendium.documents d ON d.id = f.document_id
+WHERE d.key = $1
+ORDER BY f.name
+`
+
+type LevelUpFeatsRow struct {
+	Slug        string
+	Name        string
+	FeatType    string
+	Description string
+}
+
+func (q *Queries) LevelUpFeats(ctx context.Context, ruleset string) ([]LevelUpFeatsRow, error) {
+	rows, err := q.db.Query(ctx, levelUpFeats, ruleset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LevelUpFeatsRow{}
+	for rows.Next() {
+		var i LevelUpFeatsRow
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.FeatType,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const levelUpSpells = `-- name: LevelUpSpells :many
+SELECT s.slug, s.name, s.level, s.ritual, s.casting_time FROM compendium.spells s
+JOIN compendium.documents d ON d.id = s.document_id
+JOIN compendium.spell_classes sc ON sc.spell_id = s.id
+WHERE d.key = $1 AND sc.class_slug = $2 AND s.level <= $3
+ORDER BY s.level, s.name
+`
+
+type LevelUpSpellsParams struct {
+	Ruleset  string
+	Class    string
+	MaxLevel int32
+}
+
+type LevelUpSpellsRow struct {
+	Slug        string
+	Name        string
+	Level       int32
+	Ritual      bool
+	CastingTime string
+}
+
+// A class's cantrips and spells up to a spell level.
+func (q *Queries) LevelUpSpells(ctx context.Context, arg LevelUpSpellsParams) ([]LevelUpSpellsRow, error) {
+	rows, err := q.db.Query(ctx, levelUpSpells, arg.Ruleset, arg.Class, arg.MaxLevel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LevelUpSpellsRow{}
+	for rows.Next() {
+		var i LevelUpSpellsRow
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.Level,
+			&i.Ritual,
+			&i.CastingTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const levelUpSubclasses = `-- name: LevelUpSubclasses :many
+SELECT c.slug, c.name FROM compendium.classes c
+JOIN compendium.documents d ON d.id = c.document_id
+WHERE d.key = $1 AND c.parent_slug = $2
+ORDER BY c.name
+`
+
+type LevelUpSubclassesParams struct {
+	Ruleset string
+	Class   pgtype.Text
+}
+
+type LevelUpSubclassesRow struct {
+	Slug string
+	Name string
+}
+
+func (q *Queries) LevelUpSubclasses(ctx context.Context, arg LevelUpSubclassesParams) ([]LevelUpSubclassesRow, error) {
+	rows, err := q.db.Query(ctx, levelUpSubclasses, arg.Ruleset, arg.Class)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LevelUpSubclassesRow{}
+	for rows.Next() {
+		var i LevelUpSubclassesRow
+		if err := rows.Scan(&i.Slug, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const rulesetYear = `-- name: RulesetYear :one
 SELECT ruleset_year FROM compendium.documents WHERE key = $1
 `
@@ -239,4 +420,86 @@ func (q *Queries) RulesetYear(ctx context.Context, key string) (int32, error) {
 	var ruleset_year int32
 	err := row.Scan(&ruleset_year)
 	return ruleset_year, err
+}
+
+const sheetClassFeatures = `-- name: SheetClassFeatures :many
+SELECT f.name, f.description, min(l.level)::integer AS level
+FROM compendium.class_features f
+JOIN compendium.classes c ON c.id = f.class_id
+JOIN compendium.documents d ON d.id = c.document_id
+JOIN compendium.class_feature_levels l ON l.feature_id = f.id
+WHERE d.key = $1 AND c.slug = $2 AND l.level <= $3
+GROUP BY f.id, f.name, f.description, f.ordering
+ORDER BY min(l.level), f.ordering
+`
+
+type SheetClassFeaturesParams struct {
+	Ruleset string
+	Class   string
+	Level   int32
+}
+
+type SheetClassFeaturesRow struct {
+	Name        string
+	Description string
+	Level       int32
+}
+
+// A class's features up to a level, each at the first level it is gained.
+func (q *Queries) SheetClassFeatures(ctx context.Context, arg SheetClassFeaturesParams) ([]SheetClassFeaturesRow, error) {
+	rows, err := q.db.Query(ctx, sheetClassFeatures, arg.Ruleset, arg.Class, arg.Level)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SheetClassFeaturesRow{}
+	for rows.Next() {
+		var i SheetClassFeaturesRow
+		if err := rows.Scan(&i.Name, &i.Description, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sheetSpeciesTraits = `-- name: SheetSpeciesTraits :many
+SELECT t.name, t.description FROM compendium.species_traits t
+JOIN compendium.species s ON s.id = t.species_id
+JOIN compendium.documents d ON d.id = s.document_id
+WHERE d.key = $1 AND s.slug = $2
+ORDER BY t.ordering
+`
+
+type SheetSpeciesTraitsParams struct {
+	Ruleset string
+	Species string
+}
+
+type SheetSpeciesTraitsRow struct {
+	Name        string
+	Description string
+}
+
+func (q *Queries) SheetSpeciesTraits(ctx context.Context, arg SheetSpeciesTraitsParams) ([]SheetSpeciesTraitsRow, error) {
+	rows, err := q.db.Query(ctx, sheetSpeciesTraits, arg.Ruleset, arg.Species)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SheetSpeciesTraitsRow{}
+	for rows.Next() {
+		var i SheetSpeciesTraitsRow
+		if err := rows.Scan(&i.Name, &i.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

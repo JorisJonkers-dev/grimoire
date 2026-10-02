@@ -202,9 +202,7 @@ func (s Statblocks) masteryCount(ctx context.Context, class string, level int) i
 	if err != nil {
 		return 0
 	}
-	n, _ := cat.Scales[class+"-weapon-mastery"].Steps.At(level)
-	count, _ := strconv.Atoi(n)
-	return count
+	return cat.MasteryCount(class, level)
 }
 
 // masteryOf is a weapon's mastery when the Character has mastered it.

@@ -81,6 +81,7 @@ func realCampaigns(t *testing.T) http.Handler {
 	parts := []any{
 		&app.Characters{
 			Repo: repo, Compendium: &fakeCompendium{}, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
+			Roll: func() []int { return []int{16, 15, 12, 11, 9, 8} },
 		},
 		&app.NPCs{Repo: repo, Now: time.Now},
 		httpapi.RollService(&playapp.Rolls{
