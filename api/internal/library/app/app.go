@@ -1,0 +1,213 @@
+// Package app runs the Library: an account's entries, their Revisions, and their links into the
+// Campaigns its owner runs, with a Campaign Override and an optional pinned Revision.
+package app
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	playdomain "github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
+)
+
+// Repository persists Library entries, their Revisions and Campaign links.
+type Repository interface {
+	InsertEntry(ctx context.Context, e domain.Entry) error
+	// UpdateEntry saves a new base and returns its Revision number.
+	UpdateEntry(ctx context.Context, id uuid.UUID, name string, fields domain.Fields, now time.Time) (int, error)
+	InsertRevision(ctx context.Context, entry uuid.UUID, r domain.Revision) error
+	Entry(ctx context.Context, id uuid.UUID) (domain.Entry, error)
+	Entries(ctx context.Context, owner, kind string) ([]domain.Entry, error)
+	Revisions(ctx context.Context, entry uuid.UUID) ([]domain.Revision, error)
+	RevisionExists(ctx context.Context, entry uuid.UUID, no int) (bool, error)
+	Uses(ctx context.Context, entry uuid.UUID) ([]domain.Use, error)
+	Link(ctx context.Context, campaign, entry uuid.UUID, now time.Time) error
+	// Unlink, SetOverride and Pin report false when the entry is not linked into the Campaign.
+	Unlink(ctx context.Context, campaign, entry uuid.UUID) (bool, error)
+	SetOverride(ctx context.Context, campaign, entry uuid.UUID, override domain.Fields, now time.Time) (bool, error)
+	Pin(ctx context.Context, campaign, entry uuid.UUID, revision *int, now time.Time) (bool, error)
+	// Linked reads the Campaign's links, or one when entry is set.
+	Linked(ctx context.Context, campaign uuid.UUID, entry *uuid.UUID) ([]domain.Linked, error)
+	InTx(ctx context.Context, fn func(Repository) error) error
+}
+
+// Members finds who a caller is in a Campaign.
+type Members interface {
+	Membership(ctx context.Context, campaign uuid.UUID, subject string) (playdomain.Member, error)
+}
+
+// Service is the Library use cases.
+type Service struct {
+	Repo    Repository
+	Members Members
+	Now     func() time.Time
+}
+
+// Entries lists the caller's entries, of one kind when kind is set.
+func (s *Service) Entries(ctx context.Context, c caller.Caller, kind string) ([]domain.Entry, error) {
+	return s.Repo.Entries(ctx, c.Subject, kind)
+}
+
+// Create adds an entry to the caller's Library as its first Revision.
+func (s *Service) Create(ctx context.Context, c caller.Caller, d domain.Draft) (domain.Entry, error) {
+	d, err := d.Clean()
+	if err != nil {
+		return domain.Entry{}, err
+	}
+	now := s.Now()
+	e := domain.Entry{ID: uuid.New(), Owner: c.Subject, Kind: d.Kind, Name: d.Name, Fields: d.Fields, Revision: 1, CreatedAt: now, UpdatedAt: now}
+	err = s.Repo.InTx(ctx, func(r Repository) error {
+		if err := r.InsertEntry(ctx, e); err != nil {
+			return err
+		}
+		return r.InsertRevision(ctx, e.ID, domain.Revision{No: 1, Name: e.Name, Fields: e.Fields, Author: c.Subject, At: now})
+	})
+	return e, err
+}
+
+// owned reads an entry the caller owns; anyone else's looks like no entry at all.
+func (s *Service) owned(ctx context.Context, c caller.Caller, id uuid.UUID) (domain.Entry, error) {
+	e, err := s.Repo.Entry(ctx, id)
+	if err == nil && e.Owner != c.Subject {
+		return domain.Entry{}, apperr.ErrNotFound
+	}
+	return e, err
+}
+
+// Get reads one of the caller's entries with its Revisions and the Campaigns it is linked into.
+func (s *Service) Get(ctx context.Context, c caller.Caller, id uuid.UUID) (domain.Detail, error) {
+	e, err := s.owned(ctx, c, id)
+	if err != nil {
+		return domain.Detail{}, err
+	}
+	d := domain.Detail{Entry: e}
+	if d.Revisions, err = s.Repo.Revisions(ctx, id); err != nil {
+		return d, err
+	}
+	d.Uses, err = s.Repo.Uses(ctx, id)
+	return d, err
+}
+
+// Update saves a new base for one of the caller's entries as its next Revision; its kind stays.
+// Every Campaign that follows the latest Revision sees the change; a pinned one does not.
+func (s *Service) Update(ctx context.Context, c caller.Caller, id uuid.UUID, d domain.Draft) (domain.Detail, error) {
+	e, err := s.owned(ctx, c, id)
+	if err != nil {
+		return domain.Detail{}, err
+	}
+	d.Kind = e.Kind
+	if d, err = d.Clean(); err != nil {
+		return domain.Detail{}, err
+	}
+	now := s.Now()
+	err = s.Repo.InTx(ctx, func(r Repository) error {
+		no, err := r.UpdateEntry(ctx, id, d.Name, d.Fields, now)
+		if err != nil {
+			return err
+		}
+		return r.InsertRevision(ctx, id, domain.Revision{No: no, Name: d.Name, Fields: d.Fields, Author: c.Subject, At: now})
+	})
+	if err != nil {
+		return domain.Detail{}, err
+	}
+	return s.Get(ctx, c, id)
+}
+
+// dm checks the caller runs the Campaign.
+func (s *Service) dm(ctx context.Context, c caller.Caller, campaign uuid.UUID) error {
+	me, err := s.Members.Membership(ctx, campaign, c.Subject)
+	if err == nil && !me.DM {
+		return apperr.ErrForbidden
+	}
+	return err
+}
+
+// Linked lists the entries linked into a Campaign as it sees them. DM only.
+func (s *Service) Linked(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Linked, error) {
+	if err := s.dm(ctx, c, campaign); err != nil {
+		return nil, err
+	}
+	return s.Repo.Linked(ctx, campaign, nil)
+}
+
+// one reads a single link as the Campaign sees it.
+func (s *Service) one(ctx context.Context, campaign, entry uuid.UUID) (domain.Linked, error) {
+	l, err := s.Repo.Linked(ctx, campaign, &entry)
+	if err != nil {
+		return domain.Linked{}, err
+	}
+	if len(l) == 0 {
+		return domain.Linked{}, apperr.ErrNotFound
+	}
+	return l[0], nil
+}
+
+// Link links one of the caller's entries into a Campaign they run; linking it twice changes nothing.
+func (s *Service) Link(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) (domain.Linked, error) {
+	if err := s.dm(ctx, c, campaign); err != nil {
+		return domain.Linked{}, err
+	}
+	if _, err := s.owned(ctx, c, entry); err != nil {
+		return domain.Linked{}, err
+	}
+	if err := s.Repo.Link(ctx, campaign, entry, s.Now()); err != nil {
+		return domain.Linked{}, err
+	}
+	return s.one(ctx, campaign, entry)
+}
+
+// Unlink takes an entry out of a Campaign, with its Campaign Override.
+func (s *Service) Unlink(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) error {
+	if err := s.dm(ctx, c, campaign); err != nil {
+		return err
+	}
+	return found(s.Repo.Unlink(ctx, campaign, entry))
+}
+
+// Override replaces a linked entry's Campaign Override: the fields this Campaign sees differently.
+func (s *Service) Override(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, fields domain.Fields) (domain.Linked, error) {
+	if err := s.dm(ctx, c, campaign); err != nil {
+		return domain.Linked{}, err
+	}
+	clean, err := domain.CleanFields(fields)
+	if err != nil {
+		return domain.Linked{}, err
+	}
+	if err := found(s.Repo.SetOverride(ctx, campaign, entry, clean, s.Now())); err != nil {
+		return domain.Linked{}, err
+	}
+	return s.one(ctx, campaign, entry)
+}
+
+// Pin holds a Campaign to one Revision of a linked entry, so later edits to the base pass it by; nil
+// follows the latest again.
+func (s *Service) Pin(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, revision *int) (domain.Linked, error) {
+	if err := s.dm(ctx, c, campaign); err != nil {
+		return domain.Linked{}, err
+	}
+	if revision != nil {
+		ok, err := s.Repo.RevisionExists(ctx, entry, *revision)
+		if err != nil {
+			return domain.Linked{}, err
+		}
+		if !ok {
+			return domain.Linked{}, apperr.Refuse("pin a Revision the entry has")
+		}
+	}
+	if err := found(s.Repo.Pin(ctx, campaign, entry, revision, s.Now())); err != nil {
+		return domain.Linked{}, err
+	}
+	return s.one(ctx, campaign, entry)
+}
+
+// found turns a change that touched no link into ErrNotFound.
+func found(ok bool, err error) error {
+	if err == nil && !ok {
+		return apperr.ErrNotFound
+	}
+	return err
+}

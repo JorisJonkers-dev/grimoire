@@ -1122,6 +1122,35 @@ type IdentityTwoStepChallenge struct {
 	Attempts  int32
 }
 
+type LibraryCampaignLink struct {
+	CampaignID     uuid.UUID
+	EntryID        uuid.UUID
+	PinnedRevision pgtype.Int4
+	Override       []byte
+	LinkedAt       time.Time
+	UpdatedAt      time.Time
+}
+
+type LibraryEntry struct {
+	ID           uuid.UUID
+	OwnerSubject string
+	Kind         string
+	Name         string
+	Fields       []byte
+	Revision     int32
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type LibraryEntryRevision struct {
+	EntryID       uuid.UUID
+	No            int32
+	Name          string
+	Fields        []byte
+	AuthorSubject string
+	CreatedAt     time.Time
+}
+
 type OpsCompendiumImport struct {
 	ID           int64
 	SnapshotHash string

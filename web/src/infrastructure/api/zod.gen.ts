@@ -1544,6 +1544,123 @@ export const zSessionAction = z.object({
 });
 
 /**
+ * What a Library entry is.
+ */
+export const zLibraryKind = z.enum([
+    'creature',
+    'npc',
+    'location',
+    'shop',
+    'item',
+    'spell',
+    'table'
+]);
+
+/**
+ * One named value of a Library entry.
+ */
+export const zLibraryField = z.object({
+    name: z.string().min(1).max(60),
+    value: z.string().max(4000)
+});
+
+/**
+ * Named values, in name order.
+ */
+export const zLibraryFields = z.array(zLibraryField).max(100);
+
+/**
+ * A Library entry's base at its latest Revision.
+ */
+export const zLibraryEntry = z.object({
+    id: zId,
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    revision: z.int().gte(1).lte(1000000),
+    createdAt: z.iso.datetime().max(40),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A new Library entry.
+ */
+export const zLibraryEntryInput = z.object({
+    kind: zLibraryKind,
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields
+});
+
+/**
+ * A Library entry's new base; its kind stays.
+ */
+export const zLibraryEntryUpdate = z.object({
+    name: z.string().min(1).max(80),
+    fields: zLibraryFields
+});
+
+/**
+ * One saved version of an entry's base.
+ */
+export const zLibraryRevision = z.object({
+    no: z.int().gte(1).lte(1000000),
+    name: z.string().max(80),
+    fields: zLibraryFields,
+    createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Campaign an entry is linked into, and the Revision it is pinned to there.
+ */
+export const zLibraryUse = z.object({
+    campaignId: zId,
+    campaign: z.string().max(80),
+    pinnedRevision: z.int().gte(1).lte(1000000).optional()
+});
+
+/**
+ * A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+ */
+export const zLibraryEntryDetail = z.object({
+    entry: zLibraryEntry,
+    revisions: z.array(zLibraryRevision).max(10000),
+    uses: z.array(zLibraryUse).max(1000)
+});
+
+/**
+ * A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
+ */
+export const zLinkedEntry = z.object({
+    entry: zLibraryEntry,
+    pinnedRevision: z.int().gte(1).lte(1000000).optional(),
+    baseName: z.string().max(80),
+    base: zLibraryFields,
+    override: zLibraryFields,
+    fields: zLibraryFields
+});
+
+/**
+ * The entry to link.
+ */
+export const zLibraryLinkInput = z.object({
+    entryId: zId
+});
+
+/**
+ * Every field this Campaign sees differently; an empty list follows the base again.
+ */
+export const zCampaignOverrideInput = z.object({
+    fields: zLibraryFields
+});
+
+/**
+ * The Revision to pin.
+ */
+export const zLibraryPinInput = z.object({
+    revision: z.int().gte(1).lte(1000000)
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -3673,6 +3790,11 @@ export const zPoolId = zId;
 export const zTableId = zId;
 
 /**
+ * Library entry id.
+ */
+export const zLibraryEntryId = zId;
+
+/**
  * NPC id.
  */
 export const zNpcId = zId;
@@ -4914,6 +5036,106 @@ export const zPreviewSightBody = zSightRequest;
  * The preview.
  */
 export const zPreviewSightResponse = zSightPreview;
+
+export const zListLibraryEntriesQuery = z.object({
+    kind: zLibraryKind.optional()
+});
+
+/**
+ * The entries.
+ */
+export const zListLibraryEntriesResponse = z.array(zLibraryEntry).max(1000);
+
+export const zCreateLibraryEntryBody = zLibraryEntryInput;
+
+/**
+ * The new entry.
+ */
+export const zCreateLibraryEntryResponse = zLibraryEntry;
+
+export const zGetLibraryEntryPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The entry.
+ */
+export const zGetLibraryEntryResponse = zLibraryEntryDetail;
+
+export const zUpdateLibraryEntryBody = zLibraryEntryUpdate;
+
+export const zUpdateLibraryEntryPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The entry.
+ */
+export const zUpdateLibraryEntryResponse = zLibraryEntryDetail;
+
+export const zListLinkedEntriesPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The linked entries.
+ */
+export const zListLinkedEntriesResponse = z.array(zLinkedEntry).max(1000);
+
+export const zLinkLibraryEntryBody = zLibraryLinkInput;
+
+export const zLinkLibraryEntryPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zLinkLibraryEntryResponse = zLinkedEntry;
+
+export const zUnlinkLibraryEntryPath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * Unlinked.
+ */
+export const zUnlinkLibraryEntryResponse = z.void();
+
+export const zSetCampaignOverrideBody = zCampaignOverrideInput;
+
+export const zSetCampaignOverridePath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zSetCampaignOverrideResponse = zLinkedEntry;
+
+export const zUnpinLibraryRevisionPath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zUnpinLibraryRevisionResponse = zLinkedEntry;
+
+export const zPinLibraryRevisionBody = zLibraryPinInput;
+
+export const zPinLibraryRevisionPath = z.object({
+    campaignId: zId,
+    entryId: zId
+});
+
+/**
+ * The linked entry.
+ */
+export const zPinLibraryRevisionResponse = zLinkedEntry;
 
 /**
  * The signed-in account.

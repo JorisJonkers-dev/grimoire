@@ -69,6 +69,10 @@ type CreateInviteRes interface {
 	createInviteRes()
 }
 
+type CreateLibraryEntryRes interface {
+	createLibraryEntryRes()
+}
+
 type CreateLootTableRes interface {
 	createLootTableRes()
 }
@@ -213,6 +217,10 @@ type GetInventoryRes interface {
 	getInventoryRes()
 }
 
+type GetLibraryEntryRes interface {
+	getLibraryEntryRes()
+}
+
 type GetMapImageRes interface {
 	getMapImageRes()
 }
@@ -301,6 +309,10 @@ type LevelUpRes interface {
 	levelUpRes()
 }
 
+type LinkLibraryEntryRes interface {
+	linkLibraryEntryRes()
+}
+
 type LinkOidcAccountRes interface {
 	linkOidcAccountRes()
 }
@@ -367,6 +379,14 @@ type ListFriendsRes interface {
 
 type ListInvitesRes interface {
 	listInvitesRes()
+}
+
+type ListLibraryEntriesRes interface {
+	listLibraryEntriesRes()
+}
+
+type ListLinkedEntriesRes interface {
+	listLinkedEntriesRes()
 }
 
 type ListLocationsRes interface {
@@ -463,6 +483,10 @@ type PassInspirationRes interface {
 
 type PassTwoStepRes interface {
 	passTwoStepRes()
+}
+
+type PinLibraryRevisionRes interface {
+	pinLibraryRevisionRes()
 }
 
 type PlanLevelUpRes interface {
@@ -609,6 +633,10 @@ type SetAdminRoleRes interface {
 	setAdminRoleRes()
 }
 
+type SetCampaignOverrideRes interface {
+	setCampaignOverrideRes()
+}
+
 type SetDieRes interface {
 	setDieRes()
 }
@@ -669,8 +697,16 @@ type UnfriendRes interface {
 	unfriendRes()
 }
 
+type UnlinkLibraryEntryRes interface {
+	unlinkLibraryEntryRes()
+}
+
 type UnlinkOidcRes interface {
 	unlinkOidcRes()
+}
+
+type UnpinLibraryRevisionRes interface {
+	unpinLibraryRevisionRes()
 }
 
 type UpdateAccountRes interface {
@@ -691,6 +727,10 @@ type UpdateEncounterPoolRes interface {
 
 type UpdateEncounterTableRes interface {
 	updateEncounterTableRes()
+}
+
+type UpdateLibraryEntryRes interface {
+	updateLibraryEntryRes()
 }
 
 type UpdateLootTableRes interface {

@@ -27,6 +27,8 @@ import (
 	identityapp "github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/oidc"
 	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
+	libraryapp "github.com/JorisJonkers-dev/grimoire/api/internal/library/app"
+	librarypg "github.com/JorisJonkers-dev/grimoire/api/internal/library/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
@@ -273,6 +275,9 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,
 			NPCs:       &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
+			Library: &libraryapp.Service{
+				Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now,
+			},
 			Sessions: &playapp.Sessions{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Live: hub, Now: time.Now,
 			},

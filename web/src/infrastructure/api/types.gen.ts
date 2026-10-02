@@ -2506,6 +2506,115 @@ export type SessionAction = {
 };
 
 /**
+ * What a Library entry is.
+ */
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table';
+
+/**
+ * One named value of a Library entry.
+ */
+export type LibraryField = {
+    name: string;
+    value: string;
+};
+
+/**
+ * Named values, in name order.
+ */
+export type LibraryFields = Array<LibraryField>;
+
+/**
+ * A Library entry's base at its latest Revision.
+ */
+export type LibraryEntry = {
+    id: Id;
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+    revision: number;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/**
+ * A new Library entry.
+ */
+export type LibraryEntryInput = {
+    kind: LibraryKind;
+    name: string;
+    fields: LibraryFields;
+};
+
+/**
+ * A Library entry's new base; its kind stays.
+ */
+export type LibraryEntryUpdate = {
+    name: string;
+    fields: LibraryFields;
+};
+
+/**
+ * One saved version of an entry's base.
+ */
+export type LibraryRevision = {
+    no: number;
+    name: string;
+    fields: LibraryFields;
+    createdAt: string;
+};
+
+/**
+ * A Campaign an entry is linked into, and the Revision it is pinned to there.
+ */
+export type LibraryUse = {
+    campaignId: Id;
+    campaign: string;
+    pinnedRevision?: number;
+};
+
+/**
+ * A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+ */
+export type LibraryEntryDetail = {
+    entry: LibraryEntry;
+    revisions: Array<LibraryRevision>;
+    uses: Array<LibraryUse>;
+};
+
+/**
+ * A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
+ */
+export type LinkedEntry = {
+    entry: LibraryEntry;
+    pinnedRevision?: number;
+    baseName: string;
+    base: LibraryFields;
+    override: LibraryFields;
+    fields: LibraryFields;
+};
+
+/**
+ * The entry to link.
+ */
+export type LibraryLinkInput = {
+    entryId: Id;
+};
+
+/**
+ * Every field this Campaign sees differently; an empty list follows the base again.
+ */
+export type CampaignOverrideInput = {
+    fields: LibraryFields;
+};
+
+/**
+ * The Revision to pin.
+ */
+export type LibraryPinInput = {
+    revision: number;
+};
+
+/**
  * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
@@ -3472,6 +3581,11 @@ export type PoolId = Id;
  * Encounter Table id.
  */
 export type TableId = Id;
+
+/**
+ * Library entry id.
+ */
+export type LibraryEntryId = Id;
 
 /**
  * NPC id.
@@ -7749,6 +7863,357 @@ export type PreviewSightResponses = {
 };
 
 export type PreviewSightResponse = PreviewSightResponses[keyof PreviewSightResponses];
+
+export type ListLibraryEntriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only entries of this kind.
+         */
+        kind?: LibraryKind;
+    };
+    url: '/api/v1/library';
+};
+
+export type ListLibraryEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLibraryEntriesError = ListLibraryEntriesErrors[keyof ListLibraryEntriesErrors];
+
+export type ListLibraryEntriesResponses = {
+    /**
+     * The entries.
+     */
+    200: Array<LibraryEntry>;
+};
+
+export type ListLibraryEntriesResponse = ListLibraryEntriesResponses[keyof ListLibraryEntriesResponses];
+
+export type CreateLibraryEntryData = {
+    body: LibraryEntryInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library';
+};
+
+export type CreateLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateLibraryEntryError = CreateLibraryEntryErrors[keyof CreateLibraryEntryErrors];
+
+export type CreateLibraryEntryResponses = {
+    /**
+     * The new entry.
+     */
+    201: LibraryEntry;
+};
+
+export type CreateLibraryEntryResponse = CreateLibraryEntryResponses[keyof CreateLibraryEntryResponses];
+
+export type GetLibraryEntryData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/library/{entryId}';
+};
+
+export type GetLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetLibraryEntryError = GetLibraryEntryErrors[keyof GetLibraryEntryErrors];
+
+export type GetLibraryEntryResponses = {
+    /**
+     * The entry.
+     */
+    200: LibraryEntryDetail;
+};
+
+export type GetLibraryEntryResponse = GetLibraryEntryResponses[keyof GetLibraryEntryResponses];
+
+export type UpdateLibraryEntryData = {
+    body: LibraryEntryUpdate;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/library/{entryId}';
+};
+
+export type UpdateLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateLibraryEntryError = UpdateLibraryEntryErrors[keyof UpdateLibraryEntryErrors];
+
+export type UpdateLibraryEntryResponses = {
+    /**
+     * The entry.
+     */
+    200: LibraryEntryDetail;
+};
+
+export type UpdateLibraryEntryResponse = UpdateLibraryEntryResponses[keyof UpdateLibraryEntryResponses];
+
+export type ListLinkedEntriesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library';
+};
+
+export type ListLinkedEntriesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListLinkedEntriesError = ListLinkedEntriesErrors[keyof ListLinkedEntriesErrors];
+
+export type ListLinkedEntriesResponses = {
+    /**
+     * The linked entries.
+     */
+    200: Array<LinkedEntry>;
+};
+
+export type ListLinkedEntriesResponse = ListLinkedEntriesResponses[keyof ListLinkedEntriesResponses];
+
+export type LinkLibraryEntryData = {
+    body: LibraryLinkInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library';
+};
+
+export type LinkLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type LinkLibraryEntryError = LinkLibraryEntryErrors[keyof LinkLibraryEntryErrors];
+
+export type LinkLibraryEntryResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type LinkLibraryEntryResponse = LinkLibraryEntryResponses[keyof LinkLibraryEntryResponses];
+
+export type UnlinkLibraryEntryData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}';
+};
+
+export type UnlinkLibraryEntryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnlinkLibraryEntryError = UnlinkLibraryEntryErrors[keyof UnlinkLibraryEntryErrors];
+
+export type UnlinkLibraryEntryResponses = {
+    /**
+     * Unlinked.
+     */
+    204: void;
+};
+
+export type UnlinkLibraryEntryResponse = UnlinkLibraryEntryResponses[keyof UnlinkLibraryEntryResponses];
+
+export type SetCampaignOverrideData = {
+    body: CampaignOverrideInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}/override';
+};
+
+export type SetCampaignOverrideErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetCampaignOverrideError = SetCampaignOverrideErrors[keyof SetCampaignOverrideErrors];
+
+export type SetCampaignOverrideResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type SetCampaignOverrideResponse = SetCampaignOverrideResponses[keyof SetCampaignOverrideResponses];
+
+export type UnpinLibraryRevisionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}/pin';
+};
+
+export type UnpinLibraryRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnpinLibraryRevisionError = UnpinLibraryRevisionErrors[keyof UnpinLibraryRevisionErrors];
+
+export type UnpinLibraryRevisionResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type UnpinLibraryRevisionResponse = UnpinLibraryRevisionResponses[keyof UnpinLibraryRevisionResponses];
+
+export type PinLibraryRevisionData = {
+    body: LibraryPinInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/library/{entryId}/pin';
+};
+
+export type PinLibraryRevisionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PinLibraryRevisionError = PinLibraryRevisionErrors[keyof PinLibraryRevisionErrors];
+
+export type PinLibraryRevisionResponses = {
+    /**
+     * The linked entry.
+     */
+    200: LinkedEntry;
+};
+
+export type PinLibraryRevisionResponse = PinLibraryRevisionResponses[keyof PinLibraryRevisionResponses];
 
 export type GetMeData = {
     body?: never;

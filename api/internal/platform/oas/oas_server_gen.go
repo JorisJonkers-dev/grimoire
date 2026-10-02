@@ -347,6 +347,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/invites
 	CreateInvite(ctx context.Context, params CreateInviteParams) (CreateInviteRes, error)
+	// CreateLibraryEntry implements createLibraryEntry operation.
+	//
+	// Adds an entry to the caller's Library as its first Revision.
+	//
+	// POST /api/v1/library
+	CreateLibraryEntry(ctx context.Context, req *LibraryEntryInput) (CreateLibraryEntryRes, error)
 	// CreateLootTable implements createLootTable operation.
 	//
 	// Adds a Loot Table and records its first Revision. DM only.
@@ -438,6 +444,20 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (LevelUpRes, error)
+	// LinkLibraryEntry implements linkLibraryEntry operation.
+	//
+	// Links one of the caller's entries into a Campaign they run; linking it again changes nothing. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/library
+	LinkLibraryEntry(ctx context.Context, req *LibraryLinkInput, params LinkLibraryEntryParams) (LinkLibraryEntryRes, error)
+	// PinLibraryRevision implements pinLibraryRevision operation.
+	//
+	// Holds the Campaign to one Revision of the entry, so later edits to its base pass the Campaign by. DM
+	// only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/pin
+	PinLibraryRevision(ctx context.Context, req *LibraryPinInput, params PinLibraryRevisionParams) (PinLibraryRevisionRes, error)
 	// PrepareSpells implements prepareSpells operation.
 	//
 	// Sets the spells prepared through one class within its limit, after a long rest or a new level.
@@ -549,6 +569,12 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/character-draft
 	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
+	// SetCampaignOverride implements setCampaignOverride operation.
+	//
+	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/override
+	SetCampaignOverride(ctx context.Context, req *CampaignOverrideInput, params SetCampaignOverrideParams) (SetCampaignOverrideRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -569,6 +595,19 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
+	// UnlinkLibraryEntry implements unlinkLibraryEntry operation.
+	//
+	// Takes the entry out of the Campaign with its Campaign Override; the entry stays in the Library. DM
+	// only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/library/{entryId}
+	UnlinkLibraryEntry(ctx context.Context, params UnlinkLibraryEntryParams) (UnlinkLibraryEntryRes, error)
+	// UnpinLibraryRevision implements unpinLibraryRevision operation.
+	//
+	// The Campaign follows the entry's latest Revision again. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/library/{entryId}/pin
+	UnpinLibraryRevision(ctx context.Context, params UnpinLibraryRevisionParams) (UnpinLibraryRevisionRes, error)
 	// UpdateCampaign implements updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
@@ -593,6 +632,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
+	// UpdateLibraryEntry implements updateLibraryEntry operation.
+	//
+	// Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees
+	// it; a pinned Campaign does not.
+	//
+	// PUT /api/v1/library/{entryId}
+	UpdateLibraryEntry(ctx context.Context, req *LibraryEntryUpdate, params UpdateLibraryEntryParams) (UpdateLibraryEntryRes, error)
 	// UpdateLootTable implements updateLootTable operation.
 	//
 	// Replaces the Loot Table and records a Revision. DM only.
@@ -828,6 +874,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
 	GetInventory(ctx context.Context, params GetInventoryParams) (GetInventoryRes, error)
+	// GetLibraryEntry implements getLibraryEntry operation.
+	//
+	// One of the caller's entries with its Revisions and the Campaigns it is linked into.
+	//
+	// GET /api/v1/library/{entryId}
+	GetLibraryEntry(ctx context.Context, params GetLibraryEntryParams) (GetLibraryEntryRes, error)
 	// GetMap implements getMap operation.
 	//
 	// One Map with its calibration. DM only.
@@ -1043,6 +1095,19 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/invites
 	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListLibraryEntries implements listLibraryEntries operation.
+	//
+	// The caller's Library entries in kind and name order.
+	//
+	// GET /api/v1/library
+	ListLibraryEntries(ctx context.Context, params ListLibraryEntriesParams) (ListLibraryEntriesRes, error)
+	// ListLinkedEntries implements listLinkedEntries operation.
+	//
+	// The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision
+	// resolved. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/library
+	ListLinkedEntries(ctx context.Context, params ListLinkedEntriesParams) (ListLinkedEntriesRes, error)
 	// ListLocations implements listLocations operation.
 	//
 	// The places on the Campaign's world maps an Encounter Table can belong to. DM only.

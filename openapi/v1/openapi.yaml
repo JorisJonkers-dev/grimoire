@@ -33,6 +33,8 @@ tags:
     description: The signed-in account.
   - name: Social
     description: Friends, Conversations and Notifications between Accounts.
+  - name: Library
+    description: An account's reusable entries, linked into Campaigns with Campaign Overrides and pinned Revisions.
   - name: Operations
     description: Liveness, readiness and service status.
 paths:
@@ -3689,6 +3691,309 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/library:
+    get:
+      operationId: listLibraryEntries
+      x-ogen-operation-group: Read
+      summary: List Library entries
+      description: "The caller's Library entries in kind and name order."
+      tags: [Library]
+      parameters:
+        - name: kind
+          in: query
+          description: Only entries of this kind.
+          schema: { $ref: "#/components/schemas/LibraryKind" }
+      responses:
+        "200":
+          description: The entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LibraryEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Create a Library entry
+      description: "Adds an entry to the caller's Library as its first Revision."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryEntryInput"
+      responses:
+        "201":
+          description: The new entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/{entryId}:
+    get:
+      operationId: getLibraryEntry
+      x-ogen-operation-group: Read
+      summary: Get a Library entry
+      description: "One of the caller's entries with its Revisions and the Campaigns it is linked into."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntryDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: updateLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Edit a Library entry
+      description: "Saves a new base as the entry's next Revision. Every Campaign that follows the latest Revision sees it; a pinned Campaign does not."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryEntryUpdate"
+      responses:
+        "200":
+          description: The entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryEntryDetail"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library:
+    get:
+      operationId: listLinkedEntries
+      x-ogen-operation-group: Read
+      summary: List linked Library entries
+      description: "The Library entries linked into the Campaign, each with its Campaign Override and pinned Revision resolved. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The linked entries.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 1000
+                items:
+                  $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: linkLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Link a Library entry
+      description: "Links one of the caller's entries into a Campaign they run; linking it again changes nothing. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryLinkInput"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library/{entryId}:
+    delete:
+      operationId: unlinkLibraryEntry
+      x-ogen-operation-group: Build
+      summary: Unlink a Library entry
+      description: "Takes the entry out of the Campaign with its Campaign Override; the entry stays in the Library. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "204":
+          description: Unlinked.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library/{entryId}/override:
+    put:
+      operationId: setCampaignOverride
+      x-ogen-operation-group: Build
+      summary: Set a Campaign Override
+      description: "Replaces the fields this Campaign sees differently from the entry's base. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignOverrideInput"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/library/{entryId}/pin:
+    put:
+      operationId: pinLibraryRevision
+      x-ogen-operation-group: Build
+      summary: Pin a Revision
+      description: "Holds the Campaign to one Revision of the entry, so later edits to its base pass the Campaign by. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryPinInput"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: unpinLibraryRevision
+      x-ogen-operation-group: Build
+      summary: Follow the latest Revision
+      description: "The Campaign follows the entry's latest Revision again. DM only."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The linked entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkedEntry"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -5844,6 +6149,12 @@ components:
       in: path
       required: true
       description: Encounter Table id.
+      schema: { $ref: "#/components/schemas/Id" }
+    LibraryEntryId:
+      name: entryId
+      in: path
+      required: true
+      description: Library entry id.
       schema: { $ref: "#/components/schemas/Id" }
     NpcId:
       name: npcId
@@ -8548,6 +8859,120 @@ components:
         label: { type: string, maxLength: 2000 }
         undoable: { type: boolean }
         createdAt: { type: string, format: date-time, maxLength: 40 }
+    LibraryKind:
+      type: string
+      description: What a Library entry is.
+      enum: [creature, npc, location, shop, item, spell, table]
+    LibraryField:
+      type: object
+      description: One named value of a Library entry.
+      additionalProperties: false
+      required: [name, value]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        value: { type: string, maxLength: 4000 }
+    LibraryFields:
+      type: array
+      description: Named values, in name order.
+      maxItems: 100
+      items: { $ref: "#/components/schemas/LibraryField" }
+    LibraryEntry:
+      type: object
+      description: A Library entry's base at its latest Revision.
+      additionalProperties: false
+      required: [id, kind, name, fields, revision, createdAt, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    LibraryEntryInput:
+      type: object
+      description: A new Library entry.
+      additionalProperties: false
+      required: [kind, name, fields]
+      properties:
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryEntryUpdate:
+      type: object
+      description: A Library entry's new base; its kind stays.
+      additionalProperties: false
+      required: [name, fields]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryRevision:
+      type: object
+      description: One saved version of an entry's base.
+      additionalProperties: false
+      required: [no, name, fields, createdAt]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        name: { type: string, maxLength: 80 }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+    LibraryUse:
+      type: object
+      description: A Campaign an entry is linked into, and the Revision it is pinned to there.
+      additionalProperties: false
+      required: [campaignId, campaign]
+      properties:
+        campaignId: { $ref: "#/components/schemas/Id" }
+        campaign: { type: string, maxLength: 80 }
+        pinnedRevision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+    LibraryEntryDetail:
+      type: object
+      description: A Library entry with its Revisions, newest first, and the Campaigns it is linked into.
+      additionalProperties: false
+      required: [entry, revisions, uses]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        revisions:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/LibraryRevision" }
+        uses:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LibraryUse" }
+    LinkedEntry:
+      type: object
+      description: A Library entry as one Campaign sees it. The base is the pinned Revision, or the latest; the Campaign Override sits on top; fields are the two resolved together.
+      additionalProperties: false
+      required: [entry, baseName, base, override, fields]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        pinnedRevision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
+        baseName: { type: string, maxLength: 80 }
+        base: { $ref: "#/components/schemas/LibraryFields" }
+        override: { $ref: "#/components/schemas/LibraryFields" }
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryLinkInput:
+      type: object
+      description: The entry to link.
+      additionalProperties: false
+      required: [entryId]
+      properties:
+        entryId: { $ref: "#/components/schemas/Id" }
+    CampaignOverrideInput:
+      type: object
+      description: Every field this Campaign sees differently; an empty list follows the base again.
+      additionalProperties: false
+      required: [fields]
+      properties:
+        fields: { $ref: "#/components/schemas/LibraryFields" }
+    LibraryPinInput:
+      type: object
+      description: The Revision to pin.
+      additionalProperties: false
+      required: [revision]
+      properties:
+        revision: { type: integer, format: int32, minimum: 1, maximum: 1000000 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.

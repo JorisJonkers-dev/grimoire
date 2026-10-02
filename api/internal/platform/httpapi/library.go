@@ -1,0 +1,237 @@
+package httpapi
+
+import (
+	"context"
+	"errors"
+	"maps"
+	"net/http"
+	"slices"
+
+	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/library/app"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
+)
+
+// LibraryService is an account's Library and its links into Campaigns.
+type LibraryService interface {
+	Entries(ctx context.Context, c caller.Caller, kind string) ([]domain.Entry, error)
+	Create(ctx context.Context, c caller.Caller, d domain.Draft) (domain.Entry, error)
+	Get(ctx context.Context, c caller.Caller, id uuid.UUID) (domain.Detail, error)
+	Update(ctx context.Context, c caller.Caller, id uuid.UUID, d domain.Draft) (domain.Detail, error)
+	Linked(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]domain.Linked, error)
+	Link(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) (domain.Linked, error)
+	Unlink(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID) error
+	Override(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, fields domain.Fields) (domain.Linked, error)
+	Pin(ctx context.Context, c caller.Caller, campaign, entry uuid.UUID, revision *int) (domain.Linked, error)
+}
+
+var _ LibraryService = (*app.Service)(nil)
+
+// libraryProblem maps a Library error to a problem; anything unexpected is logged and hidden.
+func (h *Handler) libraryProblem(ctx context.Context, op string, err error) *oas.ProblemStatusCodeWithHeaders {
+	var rule *apperr.RuleError
+	switch {
+	case errors.Is(err, apperr.ErrNotFound):
+		return problem(http.StatusNotFound, "Not found", "No such Library entry, Campaign or link.")
+	case errors.Is(err, apperr.ErrForbidden):
+		return problem(http.StatusForbidden, "Forbidden", "Only the Campaign's DM can do that.")
+	case errors.As(err, &rule):
+		return problem(http.StatusUnprocessableEntity, "Not allowed", rule.Reason)
+	}
+	h.Log.ErrorContext(ctx, op, "error", err)
+	return unavailable()
+}
+
+func fieldsIn(in oas.LibraryFields) domain.Fields {
+	out := domain.Fields{}
+	for _, f := range in {
+		out[f.Name] = f.Value
+	}
+	return out
+}
+
+func fieldsOut(in domain.Fields) oas.LibraryFields {
+	out := oas.LibraryFields{}
+	for _, name := range slices.Sorted(maps.Keys(in)) {
+		out = append(out, oas.LibraryField{Name: name, Value: in[name]})
+	}
+	return out
+}
+
+func optRevision(n *int) oas.OptInt32 {
+	if n == nil {
+		return oas.OptInt32{}
+	}
+	return oas.NewOptInt32(int32(*n)) //nolint:gosec // revision numbers are small
+}
+
+func libraryEntryOut(e domain.Entry) oas.LibraryEntry {
+	return oas.LibraryEntry{
+		ID: oas.ID(e.ID), Kind: oas.LibraryKind(e.Kind), Name: e.Name, Fields: fieldsOut(e.Fields), Revision: int32(e.Revision), //nolint:gosec // revision numbers are small
+		CreatedAt: e.CreatedAt.UTC(), UpdatedAt: e.UpdatedAt.UTC(),
+	}
+}
+
+func libraryDetailOut(d domain.Detail) *oas.LibraryEntryDetailHeaders {
+	out := oas.LibraryEntryDetail{Entry: libraryEntryOut(d.Entry), Revisions: []oas.LibraryRevision{}, Uses: []oas.LibraryUse{}}
+	for _, r := range d.Revisions {
+		out.Revisions = append(out.Revisions, oas.LibraryRevision{No: int32(r.No), Name: r.Name, Fields: fieldsOut(r.Fields), CreatedAt: r.At.UTC()}) //nolint:gosec // revision numbers are small
+	}
+	for _, u := range d.Uses {
+		out.Uses = append(out.Uses, oas.LibraryUse{CampaignId: oas.ID(u.CampaignID), Campaign: u.Campaign, PinnedRevision: optRevision(u.Pinned)})
+	}
+	return &oas.LibraryEntryDetailHeaders{Response: out}
+}
+
+func linkedOut(l domain.Linked) oas.LinkedEntry {
+	return oas.LinkedEntry{
+		Entry: libraryEntryOut(l.Entry), PinnedRevision: optRevision(l.Pinned), BaseName: l.BaseName,
+		Base: fieldsOut(l.Base), Override: fieldsOut(l.Override), Fields: fieldsOut(l.Resolved()),
+	}
+}
+
+// libraryCall runs a Library use case as the caller and maps its error.
+func libraryCall[T any](ctx context.Context, h *Handler, op string, run func(c caller.Caller) (T, error)) (T, *oas.ProblemStatusCodeWithHeaders) {
+	var zero T
+	c, signed := uiCaller(ctx)
+	if !signed {
+		return zero, unauthorized()
+	}
+	v, err := run(c)
+	if err != nil {
+		return zero, h.libraryProblem(ctx, op, err)
+	}
+	return v, nil
+}
+
+// ListLibraryEntries lists the caller's Library.
+func (h *Handler) ListLibraryEntries(ctx context.Context, p oas.ListLibraryEntriesParams) (oas.ListLibraryEntriesRes, error) {
+	list, bad := libraryCall(ctx, h, "list library", func(c caller.Caller) ([]domain.Entry, error) {
+		return h.Library.Entries(ctx, c, string(p.Kind.Or("")))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	out := make([]oas.LibraryEntry, 0, len(list))
+	for _, e := range list {
+		out = append(out, libraryEntryOut(e))
+	}
+	return &oas.ListLibraryEntriesOKHeaders{Response: out}, nil
+}
+
+// CreateLibraryEntry adds an entry to the caller's Library.
+func (h *Handler) CreateLibraryEntry(ctx context.Context, req *oas.LibraryEntryInput) (oas.CreateLibraryEntryRes, error) {
+	e, bad := libraryCall(ctx, h, "create library entry", func(c caller.Caller) (domain.Entry, error) {
+		return h.Library.Create(ctx, c, domain.Draft{Kind: string(req.Kind), Name: req.Name, Fields: fieldsIn(req.Fields)})
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.LibraryEntryHeaders{Response: libraryEntryOut(e)}, nil
+}
+
+// GetLibraryEntry reads one of the caller's entries.
+func (h *Handler) GetLibraryEntry(ctx context.Context, p oas.GetLibraryEntryParams) (oas.GetLibraryEntryRes, error) {
+	d, bad := libraryCall(ctx, h, "get library entry", func(c caller.Caller) (domain.Detail, error) {
+		return h.Library.Get(ctx, c, uuid.UUID(p.EntryId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return libraryDetailOut(d), nil
+}
+
+// UpdateLibraryEntry saves a new base for one of the caller's entries.
+func (h *Handler) UpdateLibraryEntry(ctx context.Context, req *oas.LibraryEntryUpdate, p oas.UpdateLibraryEntryParams) (oas.UpdateLibraryEntryRes, error) {
+	d, bad := libraryCall(ctx, h, "update library entry", func(c caller.Caller) (domain.Detail, error) {
+		return h.Library.Update(ctx, c, uuid.UUID(p.EntryId), domain.Draft{Name: req.Name, Fields: fieldsIn(req.Fields)})
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return libraryDetailOut(d), nil
+}
+
+// ListLinkedEntries lists what a Campaign links from Libraries.
+func (h *Handler) ListLinkedEntries(ctx context.Context, p oas.ListLinkedEntriesParams) (oas.ListLinkedEntriesRes, error) {
+	list, bad := libraryCall(ctx, h, "list linked entries", func(c caller.Caller) ([]domain.Linked, error) {
+		return h.Library.Linked(ctx, c, uuid.UUID(p.CampaignId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	out := make([]oas.LinkedEntry, 0, len(list))
+	for _, l := range list {
+		out = append(out, linkedOut(l))
+	}
+	return &oas.ListLinkedEntriesOKHeaders{Response: out}, nil
+}
+
+// linkedCall runs a change to one link and answers with the link as the Campaign now sees it.
+func (h *Handler) linkedCall(ctx context.Context, op string, run func(c caller.Caller) (domain.Linked, error)) (*oas.LinkedEntryHeaders, *oas.ProblemStatusCodeWithHeaders) {
+	l, bad := libraryCall(ctx, h, op, run)
+	if bad != nil {
+		return nil, bad
+	}
+	return &oas.LinkedEntryHeaders{Response: linkedOut(l)}, nil
+}
+
+// LinkLibraryEntry links one of the caller's entries into a Campaign.
+func (h *Handler) LinkLibraryEntry(ctx context.Context, req *oas.LibraryLinkInput, p oas.LinkLibraryEntryParams) (oas.LinkLibraryEntryRes, error) {
+	out, bad := h.linkedCall(ctx, "link library entry", func(c caller.Caller) (domain.Linked, error) {
+		return h.Library.Link(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(req.EntryId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return out, nil
+}
+
+// UnlinkLibraryEntry takes an entry out of a Campaign.
+func (h *Handler) UnlinkLibraryEntry(ctx context.Context, p oas.UnlinkLibraryEntryParams) (oas.UnlinkLibraryEntryRes, error) {
+	_, bad := libraryCall(ctx, h, "unlink library entry", func(c caller.Caller) (struct{}, error) {
+		return struct{}{}, h.Library.Unlink(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.EntryId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return &oas.UnlinkLibraryEntryNoContent{}, nil
+}
+
+// SetCampaignOverride replaces a linked entry's Campaign Override.
+func (h *Handler) SetCampaignOverride(ctx context.Context, req *oas.CampaignOverrideInput, p oas.SetCampaignOverrideParams) (oas.SetCampaignOverrideRes, error) {
+	out, bad := h.linkedCall(ctx, "set campaign override", func(c caller.Caller) (domain.Linked, error) {
+		return h.Library.Override(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.EntryId), fieldsIn(req.Fields))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return out, nil
+}
+
+// PinLibraryRevision holds a Campaign to one Revision of a linked entry.
+func (h *Handler) PinLibraryRevision(ctx context.Context, req *oas.LibraryPinInput, p oas.PinLibraryRevisionParams) (oas.PinLibraryRevisionRes, error) {
+	out, bad := h.linkedCall(ctx, "pin library revision", func(c caller.Caller) (domain.Linked, error) {
+		no := int(req.Revision)
+		return h.Library.Pin(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.EntryId), &no)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return out, nil
+}
+
+// UnpinLibraryRevision makes a Campaign follow a linked entry's latest Revision again.
+func (h *Handler) UnpinLibraryRevision(ctx context.Context, p oas.UnpinLibraryRevisionParams) (oas.UnpinLibraryRevisionRes, error) {
+	out, bad := h.linkedCall(ctx, "unpin library revision", func(c caller.Caller) (domain.Linked, error) {
+		return h.Library.Pin(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.EntryId), nil)
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	return out, nil
+}

@@ -79,6 +79,7 @@ type Querier interface {
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
+	CampaignLibraryLinks(ctx context.Context, arg CampaignLibraryLinksParams) ([]CampaignLibraryLinksRow, error)
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
 	CampaignLootClaims(ctx context.Context, campaignID uuid.UUID) ([]CampaignLootClaim, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
@@ -300,6 +301,8 @@ type Querier interface {
 	InsertInstance(ctx context.Context, arg InsertInstanceParams) error
 	InsertInvite(ctx context.Context, arg InsertInviteParams) error
 	InsertItemEvent(ctx context.Context, arg InsertItemEventParams) error
+	InsertLibraryEntry(ctx context.Context, arg InsertLibraryEntryParams) error
+	InsertLibraryRevision(ctx context.Context, arg InsertLibraryRevisionParams) error
 	InsertLight(ctx context.Context, arg InsertLightParams) error
 	InsertLootEntry(ctx context.Context, arg InsertLootEntryParams) error
 	InsertLootRevisionEntry(ctx context.Context, arg InsertLootRevisionEntryParams) error
@@ -367,6 +370,12 @@ type Querier interface {
 	// A class's cantrips and spells up to a spell level.
 	LevelUpSpells(ctx context.Context, arg LevelUpSpellsParams) ([]LevelUpSpellsRow, error)
 	LevelUpSubclasses(ctx context.Context, arg LevelUpSubclassesParams) ([]LevelUpSubclassesRow, error)
+	LibraryEntries(ctx context.Context, arg LibraryEntriesParams) ([]LibraryEntry, error)
+	LibraryEntry(ctx context.Context, id uuid.UUID) (LibraryEntry, error)
+	LibraryEntryUses(ctx context.Context, entryID uuid.UUID) ([]LibraryEntryUsesRow, error)
+	LibraryRevisionExists(ctx context.Context, arg LibraryRevisionExistsParams) (bool, error)
+	LibraryRevisions(ctx context.Context, entryID uuid.UUID) ([]LibraryRevisionsRow, error)
+	LinkLibraryEntry(ctx context.Context, arg LinkLibraryEntryParams) error
 	ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
 	ListAccountCharacters(ctx context.Context, ownerSubject string) ([]ListAccountCharactersRow, error)
 	ListAccountEvents(ctx context.Context, accountID uuid.UUID) ([]ListAccountEventsRow, error)
@@ -487,6 +496,7 @@ type Querier interface {
 	PartyLevels(ctx context.Context, campaignID uuid.UUID) ([]int32, error)
 	PendingBetween(ctx context.Context, arg PendingBetweenParams) (uuid.UUID, error)
 	PendingRequest(ctx context.Context, id uuid.UUID) (PendingRequestRow, error)
+	PinLibraryRevision(ctx context.Context, arg PinLibraryRevisionParams) (int64, error)
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
 	PushSubscriptions(ctx context.Context, subject string) ([]PushSubscriptionsRow, error)
@@ -591,6 +601,7 @@ type Querier interface {
 	SetInstanceCharges(ctx context.Context, arg SetInstanceChargesParams) error
 	SetInstanceSlot(ctx context.Context, arg SetInstanceSlotParams) error
 	SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error
+	SetLibraryOverride(ctx context.Context, arg SetLibraryOverrideParams) (int64, error)
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
@@ -639,6 +650,7 @@ type Querier interface {
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	TouchConversation(ctx context.Context, arg TouchConversationParams) error
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
+	UnlinkLibraryEntry(ctx context.Context, arg UnlinkLibraryEntryParams) (int64, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UnreadNotifications(ctx context.Context, accountID uuid.UUID) (int32, error)
 	// The newest live Release Note an Account has not seen.
@@ -647,6 +659,7 @@ type Querier interface {
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error
+	UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntryParams) (int32, error)
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)
 	UpdateNPC(ctx context.Context, arg UpdateNPCParams) (int64, error)
 	UpdateOIDCLink(ctx context.Context, arg UpdateOIDCLinkParams) error

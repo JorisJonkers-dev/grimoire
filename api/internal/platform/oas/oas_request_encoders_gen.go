@@ -164,6 +164,20 @@ func encodeCreateEncounterTableRequest(
 	return nil
 }
 
+func encodeCreateLibraryEntryRequest(
+	req *LibraryEntryInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateLootTableRequest(
 	req *LootTableInput,
 	r *http.Request,
@@ -360,6 +374,20 @@ func encodeLevelUpRequest(
 	return nil
 }
 
+func encodeLinkLibraryEntryRequest(
+	req *LibraryLinkInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeLinkOidcAccountRequest(
 	req *OidcAccountLink,
 	r *http.Request,
@@ -404,6 +432,20 @@ func encodePassInspirationRequest(
 
 func encodePassTwoStepRequest(
 	req *TwoStepAnswer,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePinLibraryRevisionRequest(
+	req *LibraryPinInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -668,6 +710,20 @@ func encodeSetAdminRoleRequest(
 	return nil
 }
 
+func encodeSetCampaignOverrideRequest(
+	req *CampaignOverrideInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeSetDieRequest(
 	req *DieFill,
 	r *http.Request,
@@ -816,6 +872,20 @@ func encodeUpdateEncounterPoolRequest(
 
 func encodeUpdateEncounterTableRequest(
 	req *EncounterTableInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateLibraryEntryRequest(
+	req *LibraryEntryUpdate,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

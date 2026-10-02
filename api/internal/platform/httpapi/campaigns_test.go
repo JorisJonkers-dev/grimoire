@@ -41,8 +41,11 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var ms httpapi.MapService
 	var ps httpapi.PrepService
 	var is httpapi.InventoryService
+	var ls httpapi.LibraryService
 	for _, e := range extra {
 		switch v := e.(type) {
+		case httpapi.LibraryService:
+			ls = v
 		case httpapi.InventoryService:
 			is = v
 		case httpapi.PrepService:
@@ -64,7 +67,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
