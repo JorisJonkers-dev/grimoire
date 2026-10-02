@@ -30,7 +30,7 @@ INSERT INTO play.roll_dice (roll_id, die_no, group_no, faces) VALUES (@roll_id, 
 
 -- name: GetRoll :one
 SELECT id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name, status, total,
-       created_at, resolved_at
+       created_at, resolved_at, choosing, rerolled
 FROM play.roll_requests WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: LockRoll :one
@@ -59,3 +59,17 @@ SELECT a.seq, a.kind, a.actor_name, a.origin, a.client, a.seed, a.created_at, e.
 FROM play.actions a LEFT JOIN play.action_roll_events e ON e.action_id = a.id
 WHERE a.campaign_id = @campaign_id
 ORDER BY a.seq DESC LIMIT @page_size;
+
+-- name: SetRollChoice :exec
+UPDATE play.roll_requests SET choosing = @choosing, rerolled = rerolled OR @rerolled WHERE id = @id;
+
+-- name: MemberInspired :one
+-- Whether a member plays a Character in the Campaign that holds Heroic Inspiration.
+SELECT EXISTS (SELECT 1 FROM campaign.characters WHERE campaign_id = @campaign_id AND owner_member_id = @member_id AND heroic_inspiration)::boolean;
+
+-- name: SpendMemberInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = false
+WHERE id = (SELECT id FROM campaign.characters c WHERE c.campaign_id = @campaign_id AND c.owner_member_id = @member_id AND c.heroic_inspiration ORDER BY c.id LIMIT 1);
+
+-- name: RerollDie :execrows
+UPDATE play.roll_dice SET value = @value, mode = 'auto' WHERE roll_id = @roll_id AND die_no = @die_no AND value IS NOT NULL;

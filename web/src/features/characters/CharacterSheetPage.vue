@@ -6,6 +6,8 @@ import {
   deleteCharacterMutation,
   getCharacterOptions,
   getMyCharacterOptions,
+  listCharactersOptions,
+  passInspirationMutation,
   updateCharacterMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton, TokenBadge } from '@/shared/ui'
@@ -31,6 +33,10 @@ const owned = useQuery(
 )
 const campaigns = computed(() => owned.data.value?.campaigns ?? [])
 const update = useMutation(updateCharacterMutation())
+const pass = useMutation(passInspirationMutation())
+const party = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId: path.value.path.campaignId } }), enabled: Boolean(s.value?.heroicInspiration && s.value.mine) })))
+const allies = computed(() => (party.data.value ?? []).filter((c) => c.id !== s.value?.id && !c.heroicInspiration))
+const passTo = ref('')
 const remove = useMutation(deleteCharacterMutation())
 const failed = ref(false)
 
@@ -57,6 +63,14 @@ const classLine = computed(() => {
   if (c.length <= 1) return s.value?.class.name ?? ''
   return c.map((x) => `${x.name} ${String(x.level)}${x.subclass ? ` (${titleCase(x.subclass)})` : ''}`).join(' / ')
 })
+function inspire(inspired: boolean) {
+  failed.value = false
+  update.mutate({ ...path.value, body: { heroicInspiration: inspired } }, { onSuccess: refresh, onError: () => (failed.value = true) })
+}
+function passInspiration() {
+  failed.value = false
+  pass.mutate({ ...path.value, body: { to: passTo.value } }, { onSuccess: refresh, onError: () => (failed.value = true) })
+}
 function unlock() {
   failed.value = false
   update.mutate({ ...path.value, body: { levelUpReady: true } }, { onSuccess: refresh, onError: () => (failed.value = true) })
@@ -107,6 +121,22 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
         <div class="stat"><span class="label">Speed</span><strong>{{ s.speedFeet }} ft</strong></div>
         <div class="stat"><span class="label">Proficiency</span><strong>{{ signed(s.proficiencyBonus) }}</strong></div>
         <div class="stat"><span class="label">Passive Perception</span><strong>{{ s.passivePerception }}</strong></div>
+      </section>
+      <section class="inspiration" :class="{ on: s.heroicInspiration }" aria-label="Heroic Inspiration" data-testid="inspiration">
+        <span><strong class="small">Heroic Inspiration</strong> {{ s.heroicInspiration ? 'yours to spend on a reroll' : 'none' }}</span>
+        <GButton v-if="s.editable && !s.mine" :data-testid="s.heroicInspiration ? 'take-inspiration' : 'grant-inspiration'" @click="inspire(!s.heroicInspiration)">
+          {{ s.heroicInspiration ? 'Take it back' : 'Grant it' }}
+        </GButton>
+        <template v-if="s.mine && s.heroicInspiration && allies.length">
+          <label class="pass">
+            <span class="label">Pass it to</span>
+            <select v-model="passTo" data-testid="pass-to">
+              <option value="">Choose an ally</option>
+              <option v-for="a in allies" :key="a.id" :value="a.id">{{ a.name }}</option>
+            </select>
+          </label>
+          <GButton :disabled="!passTo || pass.isPending.value" data-testid="pass-inspiration" @click="passInspiration()">Pass</GButton>
+        </template>
       </section>
       <HitPointsPanel :current="s.hpCurrent" :max="s.hpMax" :temp="s.tempHp ?? 0" :editable="s.editable" @change="changeHp" />
       <p v-if="failed" role="alert" class="g-alert">That change was not saved.</p>
@@ -258,6 +288,33 @@ h1 {
 .locked {
   display: inline-block;
   margin-top: 6px;
+}
+.inspiration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.inspiration.on {
+  border-color: var(--color-gold-high);
+}
+.pass {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pass select {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-raised);
+  color: var(--color-text);
+  font: inherit;
 }
 .level-actions {
   display: flex;

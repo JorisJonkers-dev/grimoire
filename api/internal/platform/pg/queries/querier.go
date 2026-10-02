@@ -226,6 +226,7 @@ type Querier interface {
 	GetSpell(ctx context.Context, arg GetSpellParams) (GetSpellRow, error)
 	GetTableRevision(ctx context.Context, arg GetTableRevisionParams) (GetTableRevisionRow, error)
 	GetWeaponDetail(ctx context.Context, id int64) (GetWeaponDetailRow, error)
+	GiveUpInspiration(ctx context.Context, arg GiveUpInspirationParams) (int64, error)
 	InsertAccessToken(ctx context.Context, arg InsertAccessTokenParams) error
 	InsertAccount(ctx context.Context, arg InsertAccountParams) (InsertAccountRow, error)
 	InsertAccountCharacter(ctx context.Context, arg InsertAccountCharacterParams) error
@@ -431,6 +432,8 @@ type Querier interface {
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error
 	MarkDigest(ctx context.Context, arg MarkDigestParams) error
+	// Whether a member plays a Character in the Campaign that holds Heroic Inspiration.
+	MemberInspired(ctx context.Context, arg MemberInspiredParams) (bool, error)
 	MentionableCharacters(ctx context.Context, arg MentionableCharactersParams) ([]MentionableCharactersRow, error)
 	MentionableLocations(ctx context.Context, arg MentionableLocationsParams) ([]MentionableLocationsRow, error)
 	// A Campaign Character a reader may open: they are a Member of its Campaign.
@@ -472,6 +475,7 @@ type Querier interface {
 	RemoveReveal(ctx context.Context, arg RemoveRevealParams) error
 	RemoveWall(ctx context.Context, arg RemoveWallParams) error
 	RenameCampaignCharacters(ctx context.Context, arg RenameCampaignCharactersParams) error
+	RerollDie(ctx context.Context, arg RerollDieParams) (int64, error)
 	ResolveRoll(ctx context.Context, arg ResolveRollParams) error
 	RestAbilities(ctx context.Context, ids []uuid.UUID) ([]RestAbilitiesRow, error)
 	RestCharacters(ctx context.Context, arg RestCharactersParams) ([]RestCharactersRow, error)
@@ -556,12 +560,14 @@ type Querier interface {
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
+	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
 	SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetNotificationPreference(ctx context.Context, arg SetNotificationPreferenceParams) error
 	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
+	SetRollChoice(ctx context.Context, arg SetRollChoiceParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
 	SetSessionMap(ctx context.Context, arg SetSessionMapParams) error
 	SetSessionShop(ctx context.Context, arg SetSessionShopParams) error
@@ -587,11 +593,13 @@ type Querier interface {
 	SpellDamageTypes(ctx context.Context, spellID int64) ([]string, error)
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
 	SpendHitDie(ctx context.Context, id uuid.UUID) error
+	SpendMemberInspiration(ctx context.Context, arg SpendMemberInspirationParams) (int64, error)
 	StartTOTP(ctx context.Context, arg StartTOTPParams) (int64, error)
 	StrengthenSession(ctx context.Context, arg StrengthenSessionParams) error
 	TOTPFactor(ctx context.Context, accountID uuid.UUID) (TOTPFactorRow, error)
 	TableRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionEntriesRow, error)
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
+	TakeInspiration(ctx context.Context, arg TakeInspirationParams) (int64, error)
 	TakeQueuedEmail(ctx context.Context, accountID uuid.UUID) ([]TakeQueuedEmailRow, error)
 	TouchAccessToken(ctx context.Context, arg TouchAccessTokenParams) error
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error

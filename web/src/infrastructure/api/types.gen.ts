@@ -950,6 +950,10 @@ export type CharacterEdit = {
      * Unlock or lock the next level; DM only.
      */
     levelUpReady?: boolean;
+    /**
+     * Grant or take Heroic Inspiration; DM only.
+     */
+    heroicInspiration?: boolean;
     armor?: ArmorChoice;
     shield?: boolean;
     weapons?: Array<Slug>;
@@ -1147,6 +1151,7 @@ export type CharacterSheet = {
      * The next level is unlocked.
      */
     levelUpReady?: boolean;
+    heroicInspiration?: boolean;
     classes?: Array<ClassLine>;
     spells?: Array<LearnedSpellLine>;
 };
@@ -1359,6 +1364,7 @@ export type CharacterSummary = {
     hpCurrent: number;
     hpMax: number;
     tokenUrl?: AssetUrl;
+    heroicInspiration?: boolean;
 };
 
 /**
@@ -1863,6 +1869,28 @@ export type RollRequest = {
     modifiers: Array<RollModifier>;
     createdAt: string;
     resolvedAt?: string;
+    /**
+     * Every die is set; the roller keeps it or rerolls a die with Heroic Inspiration.
+     */
+    choosing?: boolean;
+    /**
+     * Heroic Inspiration was spent on this roll.
+     */
+    rerolled?: boolean;
+};
+
+/**
+ * The die to roll again.
+ */
+export type RerollIn = {
+    die: number;
+};
+
+/**
+ * The Character to give Heroic Inspiration to.
+ */
+export type InspirationPass = {
+    to: Id;
 };
 
 /**
@@ -6333,6 +6361,120 @@ export type RollRestResponses = {
 };
 
 export type RollRestResponse = RollRestResponses[keyof RollRestResponses];
+
+export type KeepRollData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/keep';
+};
+
+export type KeepRollErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type KeepRollError = KeepRollErrors[keyof KeepRollErrors];
+
+export type KeepRollResponses = {
+    /**
+     * The resolved request.
+     */
+    200: RollRequest;
+};
+
+export type KeepRollResponse = KeepRollResponses[keyof KeepRollResponses];
+
+export type RerollDieData = {
+    body: RerollIn;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Roll Request id.
+         */
+        rollId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll';
+};
+
+export type RerollDieErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RerollDieError = RerollDieErrors[keyof RerollDieErrors];
+
+export type RerollDieResponses = {
+    /**
+     * The resolved request.
+     */
+    200: RollRequest;
+};
+
+export type RerollDieResponse = RerollDieResponses[keyof RerollDieResponses];
+
+export type PassInspirationData = {
+    body: InspirationPass;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass';
+};
+
+export type PassInspirationErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PassInspirationError = PassInspirationErrors[keyof PassInspirationErrors];
+
+export type PassInspirationResponses = {
+    /**
+     * The sheet without Heroic Inspiration.
+     */
+    200: CharacterSheet;
+};
+
+export type PassInspirationResponse = PassInspirationResponses[keyof PassInspirationResponses];
 
 export type GetActionLogData = {
     body?: never;

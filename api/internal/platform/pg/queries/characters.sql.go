@@ -464,7 +464,7 @@ func (q *Queries) GetAccountCharacter(ctx context.Context, id uuid.UUID) (GetAcc
 const getCharacter = `-- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare, c.heroic_inspiration
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1 AND c.id = $2
 `
@@ -475,32 +475,33 @@ type GetCharacterParams struct {
 }
 
 type GetCharacterRow struct {
-	ID             uuid.UUID
-	CampaignID     uuid.UUID
-	CharacterID    pgtype.UUID
-	OwnerMemberID  uuid.UUID
-	OwnerName      string
-	OwnerSubject   string
-	Name           string
-	Ruleset        string
-	SpeciesSlug    string
-	ClassSlug      string
-	BackgroundSlug string
-	Level          int32
-	AbilityMethod  string
-	HpMax          int32
-	HpCurrent      int32
-	ArmorSlug      pgtype.Text
-	Shield         bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	PortraitKey    pgtype.Text
-	PortraitType   pgtype.Text
-	TokenKey       pgtype.Text
-	TokenType      pgtype.Text
-	TempHp         int32
-	LevelUpReady   bool
-	CanPrepare     bool
+	ID                uuid.UUID
+	CampaignID        uuid.UUID
+	CharacterID       pgtype.UUID
+	OwnerMemberID     uuid.UUID
+	OwnerName         string
+	OwnerSubject      string
+	Name              string
+	Ruleset           string
+	SpeciesSlug       string
+	ClassSlug         string
+	BackgroundSlug    string
+	Level             int32
+	AbilityMethod     string
+	HpMax             int32
+	HpCurrent         int32
+	ArmorSlug         pgtype.Text
+	Shield            bool
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	PortraitKey       pgtype.Text
+	PortraitType      pgtype.Text
+	TokenKey          pgtype.Text
+	TokenType         pgtype.Text
+	TempHp            int32
+	LevelUpReady      bool
+	CanPrepare        bool
+	HeroicInspiration bool
 }
 
 func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error) {
@@ -533,6 +534,7 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 		&i.TempHp,
 		&i.LevelUpReady,
 		&i.CanPrepare,
+		&i.HeroicInspiration,
 	)
 	return i, err
 }
@@ -563,6 +565,23 @@ func (q *Queries) GetCharacterDraft(ctx context.Context, arg GetCharacterDraftPa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const giveUpInspiration = `-- name: GiveUpInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = false WHERE campaign_id = $1 AND id = $2 AND heroic_inspiration
+`
+
+type GiveUpInspirationParams struct {
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) GiveUpInspiration(ctx context.Context, arg GiveUpInspirationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, giveUpInspiration, arg.CampaignID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const insertAccountCharacter = `-- name: InsertAccountCharacter :exec
@@ -795,26 +814,27 @@ func (q *Queries) ListAccountCharacters(ctx context.Context, ownerSubject string
 
 const listCharacters = `-- name: ListCharacters :many
 SELECT c.id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name, c.ruleset,
-       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key
+       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key, c.heroic_inspiration
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1
 ORDER BY c.name, c.id
 `
 
 type ListCharactersRow struct {
-	ID            uuid.UUID
-	CharacterID   pgtype.UUID
-	OwnerMemberID uuid.UUID
-	OwnerName     string
-	OwnerSubject  string
-	Name          string
-	Ruleset       string
-	SpeciesSlug   string
-	ClassSlug     string
-	Level         int32
-	HpMax         int32
-	HpCurrent     int32
-	TokenKey      pgtype.Text
+	ID                uuid.UUID
+	CharacterID       pgtype.UUID
+	OwnerMemberID     uuid.UUID
+	OwnerName         string
+	OwnerSubject      string
+	Name              string
+	Ruleset           string
+	SpeciesSlug       string
+	ClassSlug         string
+	Level             int32
+	HpMax             int32
+	HpCurrent         int32
+	TokenKey          pgtype.Text
+	HeroicInspiration bool
 }
 
 func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error) {
@@ -840,6 +860,7 @@ func (q *Queries) ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]L
 			&i.HpMax,
 			&i.HpCurrent,
 			&i.TokenKey,
+			&i.HeroicInspiration,
 		); err != nil {
 			return nil, err
 		}
@@ -1029,6 +1050,21 @@ func (q *Queries) SetCharacterToken(ctx context.Context, arg SetCharacterTokenPa
 	return err
 }
 
+const setHeroicInspiration = `-- name: SetHeroicInspiration :exec
+UPDATE campaign.characters SET heroic_inspiration = $1 WHERE campaign_id = $2 AND id = $3
+`
+
+type SetHeroicInspirationParams struct {
+	Inspired   bool
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error {
+	_, err := q.db.Exec(ctx, setHeroicInspiration, arg.Inspired, arg.CampaignID, arg.ID)
+	return err
+}
+
 const setLevelUpReady = `-- name: SetLevelUpReady :exec
 UPDATE campaign.characters SET level_up_ready = $1 AND level < 20, updated_at = $2 WHERE campaign_id = $3 AND id = $4
 `
@@ -1048,6 +1084,23 @@ func (q *Queries) SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams
 		arg.ID,
 	)
 	return err
+}
+
+const takeInspiration = `-- name: TakeInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = true WHERE campaign_id = $1 AND id = $2 AND NOT heroic_inspiration
+`
+
+type TakeInspirationParams struct {
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) TakeInspiration(ctx context.Context, arg TakeInspirationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, takeInspiration, arg.CampaignID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updateAccountCharacter = `-- name: UpdateAccountCharacter :exec

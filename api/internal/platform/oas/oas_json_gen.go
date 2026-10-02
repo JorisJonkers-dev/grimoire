@@ -7866,6 +7866,12 @@ func (s *CharacterEdit) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.HeroicInspiration.Set {
+			e.FieldStart("heroicInspiration")
+			s.HeroicInspiration.Encode(e)
+		}
+	}
+	{
 		if s.Armor.Set {
 			e.FieldStart("armor")
 			s.Armor.Encode(e)
@@ -7889,16 +7895,17 @@ func (s *CharacterEdit) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCharacterEdit = [9]string{
+var jsonFieldsNameOfCharacterEdit = [10]string{
 	0: "name",
 	1: "hpCurrent",
 	2: "damage",
 	3: "heal",
 	4: "tempHp",
 	5: "levelUpReady",
-	6: "armor",
-	7: "shield",
-	8: "weapons",
+	6: "heroicInspiration",
+	7: "armor",
+	8: "shield",
+	9: "weapons",
 }
 
 // Decode decodes CharacterEdit from json.
@@ -7968,6 +7975,16 @@ func (s *CharacterEdit) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"levelUpReady\"")
+			}
+		case "heroicInspiration":
+			if err := func() error {
+				s.HeroicInspiration.Reset()
+				if err := s.HeroicInspiration.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"heroicInspiration\"")
 			}
 		case "armor":
 			if err := func() error {
@@ -8386,6 +8403,12 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.HeroicInspiration.Set {
+			e.FieldStart("heroicInspiration")
+			s.HeroicInspiration.Encode(e)
+		}
+	}
+	{
 		if s.Classes != nil {
 			e.FieldStart("classes")
 			e.ArrStart()
@@ -8407,7 +8430,7 @@ func (s *CharacterSheet) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCharacterSheet = [40]string{
+var jsonFieldsNameOfCharacterSheet = [41]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -8446,8 +8469,9 @@ var jsonFieldsNameOfCharacterSheet = [40]string{
 	35: "traits",
 	36: "proficiencies",
 	37: "levelUpReady",
-	38: "classes",
-	39: "spells",
+	38: "heroicInspiration",
+	39: "classes",
+	40: "spells",
 }
 
 // Decode decodes CharacterSheet from json.
@@ -8455,7 +8479,7 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode CharacterSheet to nil")
 	}
-	var requiredBitSet [5]uint8
+	var requiredBitSet [6]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -8941,6 +8965,16 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"levelUpReady\"")
 			}
+		case "heroicInspiration":
+			if err := func() error {
+				s.HeroicInspiration.Reset()
+				if err := s.HeroicInspiration.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"heroicInspiration\"")
+			}
 		case "classes":
 			if err := func() error {
 				s.Classes = make([]ClassLine, 0)
@@ -8984,11 +9018,12 @@ func (s *CharacterSheet) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [5]uint8{
+	for i, mask := range [6]uint8{
 		0b11111110,
 		0b11111111,
 		0b11110111,
 		0b01111101,
+		0b00000000,
 		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
@@ -9128,19 +9163,26 @@ func (s *CharacterSummary) encodeFields(e *jx.Encoder) {
 			s.TokenUrl.Encode(e)
 		}
 	}
+	{
+		if s.HeroicInspiration.Set {
+			e.FieldStart("heroicInspiration")
+			s.HeroicInspiration.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCharacterSummary = [10]string{
-	0: "id",
-	1: "name",
-	2: "ownerName",
-	3: "mine",
-	4: "species",
-	5: "class",
-	6: "level",
-	7: "hpCurrent",
-	8: "hpMax",
-	9: "tokenUrl",
+var jsonFieldsNameOfCharacterSummary = [11]string{
+	0:  "id",
+	1:  "name",
+	2:  "ownerName",
+	3:  "mine",
+	4:  "species",
+	5:  "class",
+	6:  "level",
+	7:  "hpCurrent",
+	8:  "hpMax",
+	9:  "tokenUrl",
+	10: "heroicInspiration",
 }
 
 // Decode decodes CharacterSummary from json.
@@ -9259,6 +9301,16 @@ func (s *CharacterSummary) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"tokenUrl\"")
+			}
+		case "heroicInspiration":
+			if err := func() error {
+				s.HeroicInspiration.Reset()
+				if err := s.HeroicInspiration.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"heroicInspiration\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -15562,6 +15614,100 @@ func (s InitiativeMode) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *InitiativeMode) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *InspirationPass) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *InspirationPass) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("to")
+		s.To.Encode(e)
+	}
+}
+
+var jsonFieldsNameOfInspirationPass = [1]string{
+	0: "to",
+}
+
+// Decode decodes InspirationPass from json.
+func (s *InspirationPass) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode InspirationPass to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "to":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.To.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"to\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode InspirationPass")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000001,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfInspirationPass) {
+					name = jsonFieldsNameOfInspirationPass[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *InspirationPass) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *InspirationPass) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -41430,6 +41576,102 @@ func (s *ReleaseNoteStatus) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *RerollIn) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *RerollIn) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("die")
+		e.Int32(s.Die)
+	}
+}
+
+var jsonFieldsNameOfRerollIn = [1]string{
+	0: "die",
+}
+
+// Decode decodes RerollIn from json.
+func (s *RerollIn) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode RerollIn to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "die":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.Die = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"die\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode RerollIn")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000001,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfRerollIn) {
+					name = jsonFieldsNameOfRerollIn[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *RerollIn) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *RerollIn) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *ResourcePool) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -42621,9 +42863,21 @@ func (s *RollRequest) encodeFields(e *jx.Encoder) {
 			s.ResolvedAt.Encode(e, json.EncodeDateTime)
 		}
 	}
+	{
+		if s.Choosing.Set {
+			e.FieldStart("choosing")
+			s.Choosing.Encode(e)
+		}
+	}
+	{
+		if s.Rerolled.Set {
+			e.FieldStart("rerolled")
+			s.Rerolled.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfRollRequest = [14]string{
+var jsonFieldsNameOfRollRequest = [16]string{
 	0:  "id",
 	1:  "purpose",
 	2:  "notation",
@@ -42638,6 +42892,8 @@ var jsonFieldsNameOfRollRequest = [14]string{
 	11: "modifiers",
 	12: "createdAt",
 	13: "resolvedAt",
+	14: "choosing",
+	15: "rerolled",
 }
 
 // Decode decodes RollRequest from json.
@@ -42822,6 +43078,26 @@ func (s *RollRequest) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"resolvedAt\"")
+			}
+		case "choosing":
+			if err := func() error {
+				s.Choosing.Reset()
+				if err := s.Choosing.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"choosing\"")
+			}
+		case "rerolled":
+			if err := func() error {
+				s.Rerolled.Reset()
+				if err := s.Rerolled.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rerolled\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)

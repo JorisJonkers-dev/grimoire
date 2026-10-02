@@ -108,7 +108,7 @@ describe('campaign home', () => {
               { id: '0190c7a8-0000-7000-8000-00000000000c', number: 0 + 1, status: 'ended', seq: 3, gridRadius: 10, startedAt: '2026-09-30T20:00:00Z', endedAt: '2026-09-30T21:00:00Z' },
             ],
       [`/api/v1/campaigns/${ID}/characters`]: () => [
-        { id: '0190c7a8-0000-7000-8000-000000000009', name: 'Kara', ownerName: 'Joris', mine: true, species: 'human', class: 'fighter', level: 1, hpCurrent: 12, hpMax: 12 },
+        { id: '0190c7a8-0000-7000-8000-000000000009', name: 'Kara', ownerName: 'Joris', mine: true, species: 'human', class: 'fighter', level: 1, hpCurrent: 12, hpMax: 12, heroicInspiration: true },
       ],
       [`/api/v1/campaigns/${ID}/members`]: record((req) =>
         req.method === 'DELETE' ? new Response(null, { status: 204 }) : { ...player, role: 'dm' },
@@ -117,6 +117,7 @@ describe('campaign home', () => {
     })
     expect(wrapper.get('h1').text()).toBe('Morvain')
     expect(wrapper.get('[data-testid="party"]').text()).toContain('Kara (yours)')
+    expect(wrapper.get('[data-testid="inspired-Kara"]').text()).toBe('Heroic Inspiration')
     expect(wrapper.find('[data-testid="npcs-link"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="maps-link"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="sessions"]').text()).toContain('Session 1 is live')

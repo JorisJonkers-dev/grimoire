@@ -88,7 +88,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), TempHP: int(r.TempHp), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
-		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady, CanPrepare: r.CanPrepare,
+		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady, CanPrepare: r.CanPrepare, HeroicInspiration: r.HeroicInspiration,
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
 	if err != nil {
@@ -255,6 +255,32 @@ func (s *Store) SetPurse(ctx context.Context, p domain.Purse) error {
 	return nil
 }
 
+// SetHeroicInspiration grants or takes a Character's Heroic Inspiration.
+func (s *Store) SetHeroicInspiration(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, inspired bool) error {
+	return s.q.SetHeroicInspiration(ctx, queries.SetHeroicInspirationParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Inspired: inspired})
+}
+
+// PassInspiration moves Heroic Inspiration from one Character to another that lacks it, or refuses with
+// ErrConflict when the giver has none or the taker already has it.
+func (s *Store) PassInspiration(ctx context.Context, id domain.CampaignID, from, to domain.CharacterID) error {
+	n, err := s.q.GiveUpInspiration(ctx, queries.GiveUpInspirationParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(from)})
+	if err != nil || n == 0 {
+		return firstErr(err, domain.ErrConflict)
+	}
+	n, err = s.q.TakeInspiration(ctx, queries.TakeInspirationParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(to)})
+	if err != nil || n == 0 {
+		return firstErr(err, domain.ErrConflict)
+	}
+	return nil
+}
+
+func firstErr(err, otherwise error) error {
+	if err != nil {
+		return err
+	}
+	return otherwise
+}
+
 // SetLevelUpReady unlocks or locks a Character's next level; a level 20 Character has none.
 func (s *Store) SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error {
 	return s.q.SetLevelUpReady(ctx, queries.SetLevelUpReadyParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Ready: ready, Now: now})
@@ -273,6 +299,7 @@ func (s *Store) Characters(ctx context.Context, id domain.CampaignID) ([]domain.
 			ID:    domain.CharacterID(r.ID), Owned: domain.OwnedID(r.CharacterID.Bytes), CampaignID: id,
 			Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 			Ruleset: r.Ruleset, Level: int(r.Level), HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), Token: image(r.TokenKey, pgtype.Text{}),
+			HeroicInspiration: r.HeroicInspiration,
 		})
 	}
 	return out, nil

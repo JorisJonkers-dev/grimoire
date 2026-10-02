@@ -24,13 +24,13 @@ INSERT INTO campaign.character_weapons (character_id, weapon_slug, ordering) VAL
 -- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready, c.can_prepare, c.heroic_inspiration
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = @campaign_id AND c.id = @id;
 
 -- name: ListCharacters :many
 SELECT c.id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name, c.ruleset,
-       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key
+       c.species_slug, c.class_slug, c.level, c.hp_max, c.hp_current, c.token_key, c.heroic_inspiration
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = $1
 ORDER BY c.name, c.id;
@@ -168,3 +168,12 @@ UPDATE campaign.campaigns SET game_day = @game_day, game_minute = @game_minute W
 SELECT c.id AS container_id, k.coin, k.amount
 FROM campaign.containers c LEFT JOIN campaign.container_coins k ON k.container_id = c.id
 WHERE c.character_id = $1;
+
+-- name: SetHeroicInspiration :exec
+UPDATE campaign.characters SET heroic_inspiration = @inspired WHERE campaign_id = @campaign_id AND id = @id;
+
+-- name: GiveUpInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = false WHERE campaign_id = @campaign_id AND id = @id AND heroic_inspiration;
+
+-- name: TakeInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = true WHERE campaign_id = @campaign_id AND id = @id AND NOT heroic_inspiration;

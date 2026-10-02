@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { RollDie, RollRequest } from '@/infrastructure/api/types.gen'
-import { rollRest, setDie } from '@/infrastructure/api/sdk.gen'
+import { keepRoll, rerollDie, rollRest, setDie } from '@/infrastructure/api/sdk.gen'
 import { DieFace, GButton } from '@/shared/ui'
 import { describeGroup, signed } from './notation'
 
@@ -65,6 +65,12 @@ function enter(d: RollDie, value: number) {
   padFor.value = null
   void run([], async () => (await setDie({ path: { ...path.value, dieNo: d.no }, body: { mode: 'manual', value }, throwOnError: true })).data)
 }
+function keep() {
+  void run([], async () => (await keepRoll({ path: path.value, throwOnError: true })).data)
+}
+function reroll(d: RollDie) {
+  void run([d], async () => (await rerollDie({ path: path.value, body: { die: d.no }, throwOnError: true })).data)
+}
 function rest() {
   const empty = props.roll.dice.filter((d) => d.value === undefined)
   void run(empty, async () => (await rollRest({ path: path.value, throwOnError: true })).data)
@@ -84,6 +90,7 @@ function rest() {
       <div v-for="d in roll.dice" :key="d.no" class="slot" :data-testid="`die-${String(d.no)}`">
         <DieFace :sides="d.faces as Sides" :value="shown(d)" :state="dieState(d)" :size="72" />
         <span v-if="d.mode" class="mode">{{ d.mode === 'auto' ? 'rolled for you' : 'your die' }}</span>
+        <GButton v-if="roll.choosing && roll.mine" :disabled="busy" :data-testid="`reroll-${String(d.no)}`" @click="reroll(d)">Reroll</GButton>
         <template v-else-if="pending && roll.canRoll">
           <GButton :disabled="busy" :data-testid="`auto-${String(d.no)}`" @click="auto(d)">Roll for me</GButton>
           <GButton :disabled="busy" :aria-expanded="padFor === d.no" :data-testid="`manual-${String(d.no)}`" @click="padFor = padFor === d.no ? null : d.no">
@@ -98,6 +105,12 @@ function rest() {
     <GButton v-if="pending && roll.canRoll && roll.dice.some((d) => d.value === undefined)" variant="primary" :disabled="busy" data-testid="roll-rest" @click="rest()">
       Roll the rest for me
     </GButton>
+    <div v-if="roll.choosing" class="inspiration" data-testid="inspiration-choice">
+      <p v-if="roll.mine">You have Heroic Inspiration: reroll one die and keep the new face, or keep this roll.</p>
+      <p v-else>{{ roll.roller.name }} may spend Heroic Inspiration on this roll.</p>
+      <GButton v-if="roll.canRoll" variant="primary" :disabled="busy" data-testid="keep-roll" @click="keep()">Keep this roll</GButton>
+    </div>
+    <p v-if="roll.rerolled" class="who" data-testid="rerolled">Heroic Inspiration spent on a reroll.</p>
     <ul class="breakdown" aria-label="Modifiers">
       <li v-for="m in roll.modifiers" :key="m.label"><span>{{ m.label }}</span><span>{{ signed(m.value) }}</span></li>
     </ul>
@@ -105,7 +118,7 @@ function rest() {
       Total <strong>{{ roll.total }}</strong>
       <small v-if="roll.modifiers.length">(modifiers {{ signed(modifierTotal) }})</small>
     </p>
-    <p v-else-if="!roll.canRoll" class="who">Waiting for {{ roll.roller.name }}…</p>
+    <p v-else-if="!roll.canRoll && !roll.choosing" class="who">Waiting for {{ roll.roller.name }}…</p>
     <p v-if="failed" role="alert" class="g-alert">{{ failed }}</p>
   </article>
 </template>
@@ -163,6 +176,17 @@ h2 {
   background: var(--color-raised);
   color: var(--color-text);
   font-size: 16px;
+}
+.inspiration {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-gold-high);
+  border-radius: var(--radius-md);
+}
+.inspiration p {
+  margin: 0;
 }
 .breakdown {
   margin: 0;

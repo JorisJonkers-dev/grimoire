@@ -71,7 +71,7 @@ func (q *Queries) ActionLog(ctx context.Context, arg ActionLogParams) ([]ActionL
 
 const getRoll = `-- name: GetRoll :one
 SELECT id, campaign_id, purpose, notation, requested_by_name, roller_member_id, roller_subject, roller_name, status, total,
-       created_at, resolved_at
+       created_at, resolved_at, choosing, rerolled
 FROM play.roll_requests WHERE campaign_id = $1 AND id = $2
 `
 
@@ -96,6 +96,8 @@ func (q *Queries) GetRoll(ctx context.Context, arg GetRollParams) (PlayRollReque
 		&i.Total,
 		&i.CreatedAt,
 		&i.ResolvedAt,
+		&i.Choosing,
+		&i.Rerolled,
 	)
 	return i, err
 }
@@ -304,6 +306,23 @@ func (q *Queries) LockRoll(ctx context.Context, arg LockRollParams) (string, err
 	return status, err
 }
 
+const memberInspired = `-- name: MemberInspired :one
+SELECT EXISTS (SELECT 1 FROM campaign.characters WHERE campaign_id = $1 AND owner_member_id = $2 AND heroic_inspiration)::boolean
+`
+
+type MemberInspiredParams struct {
+	CampaignID uuid.UUID
+	MemberID   uuid.UUID
+}
+
+// Whether a member plays a Character in the Campaign that holds Heroic Inspiration.
+func (q *Queries) MemberInspired(ctx context.Context, arg MemberInspiredParams) (bool, error) {
+	row := q.db.QueryRow(ctx, memberInspired, arg.CampaignID, arg.MemberID)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const nextActionSeq = `-- name: NextActionSeq :one
 SELECT coalesce(max(seq), 0)::bigint + 1 FROM play.actions WHERE campaign_id = $1
 `
@@ -313,6 +332,24 @@ func (q *Queries) NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int3
 	var column_1 int32
 	err := row.Scan(&column_1)
 	return column_1, err
+}
+
+const rerollDie = `-- name: RerollDie :execrows
+UPDATE play.roll_dice SET value = $1, mode = 'auto' WHERE roll_id = $2 AND die_no = $3 AND value IS NOT NULL
+`
+
+type RerollDieParams struct {
+	Value  pgtype.Int4
+	RollID uuid.UUID
+	DieNo  int32
+}
+
+func (q *Queries) RerollDie(ctx context.Context, arg RerollDieParams) (int64, error) {
+	result, err := q.db.Exec(ctx, rerollDie, arg.Value, arg.RollID, arg.DieNo)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const resolveRoll = `-- name: ResolveRoll :exec
@@ -426,6 +463,21 @@ func (q *Queries) RollModifiers(ctx context.Context, rollID uuid.UUID) ([]RollMo
 	return items, nil
 }
 
+const setRollChoice = `-- name: SetRollChoice :exec
+UPDATE play.roll_requests SET choosing = $1, rerolled = rerolled OR $2 WHERE id = $3
+`
+
+type SetRollChoiceParams struct {
+	Choosing bool
+	Rerolled bool
+	ID       uuid.UUID
+}
+
+func (q *Queries) SetRollChoice(ctx context.Context, arg SetRollChoiceParams) error {
+	_, err := q.db.Exec(ctx, setRollChoice, arg.Choosing, arg.Rerolled, arg.ID)
+	return err
+}
+
 const setRollDie = `-- name: SetRollDie :execrows
 UPDATE play.roll_dice SET value = $1, mode = $2 WHERE roll_id = $3 AND die_no = $4 AND value IS NULL
 `
@@ -444,6 +496,24 @@ func (q *Queries) SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, 
 		arg.RollID,
 		arg.DieNo,
 	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const spendMemberInspiration = `-- name: SpendMemberInspiration :execrows
+UPDATE campaign.characters SET heroic_inspiration = false
+WHERE id = (SELECT id FROM campaign.characters c WHERE c.campaign_id = $1 AND c.owner_member_id = $2 AND c.heroic_inspiration ORDER BY c.id LIMIT 1)
+`
+
+type SpendMemberInspirationParams struct {
+	CampaignID uuid.UUID
+	MemberID   uuid.UUID
+}
+
+func (q *Queries) SpendMemberInspiration(ctx context.Context, arg SpendMemberInspirationParams) (int64, error) {
+	result, err := q.db.Exec(ctx, spendMemberInspiration, arg.CampaignID, arg.MemberID)
 	if err != nil {
 		return 0, err
 	}

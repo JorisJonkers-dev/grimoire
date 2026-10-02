@@ -192,6 +192,8 @@ type Character struct {
 	LevelUpReady bool
 	// CanPrepare means it may change its prepared spells: after a long rest or a new level.
 	CanPrepare bool
+	// HeroicInspiration is held or not; it is spent on a reroll or passed to an ally.
+	HeroicInspiration bool
 }
 
 // ClassLevel is the levels a Character has in one class, and the subclass it chose there.
@@ -255,6 +257,8 @@ type CharacterSummary struct {
 	HPCurrent int
 	HPMax     int
 	TokenKey  string
+	// HeroicInspiration shows in the party roster.
+	HeroicInspiration bool
 }
 
 // OwnedCharacter is a Character as its Account sees it: identity, build and Backstory, and its progress

@@ -648,6 +648,26 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// KeepRoll implements keepRoll operation.
+	//
+	// Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/keep
+	KeepRoll(ctx context.Context, params KeepRollParams) (KeepRollRes, error)
+	// PassInspiration implements passInspiration operation.
+	//
+	// Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The
+	// owner only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
+	PassInspiration(ctx context.Context, req *InspirationPass, params PassInspirationParams) (PassInspirationRes, error)
+	// RerollDie implements rerollDie operation.
+	//
+	// Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll
+	// resolves. The roller only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll
+	RerollDie(ctx context.Context, req *RerollIn, params RerollDieParams) (RerollDieRes, error)
 	// RollRest implements rollRest operation.
 	//
 	// The server rolls every die still empty. The roller or a DM.

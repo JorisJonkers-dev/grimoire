@@ -281,6 +281,10 @@ type JoinCampaignRes interface {
 	joinCampaignRes()
 }
 
+type KeepRollRes interface {
+	keepRollRes()
+}
+
 type LevelUpRes interface {
 	levelUpRes()
 }
@@ -425,6 +429,10 @@ type ListSpellsRes interface {
 	listSpellsRes()
 }
 
+type PassInspirationRes interface {
+	passInspirationRes()
+}
+
 type PassTwoStepRes interface {
 	passTwoStepRes()
 }
@@ -475,6 +483,10 @@ type RemoveMemberRes interface {
 
 type RequestSignInLinkRes interface {
 	requestSignInLinkRes()
+}
+
+type RerollDieRes interface {
+	rerollDieRes()
 }
 
 type RerollStockRes interface {

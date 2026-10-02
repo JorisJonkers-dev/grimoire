@@ -106,6 +106,14 @@ func (b brokenRolls) RollRest(context.Context, caller.Caller, uuid.UUID, playdom
 	return playdomain.Roll{}, b.err
 }
 
+func (b brokenRolls) Keep(context.Context, caller.Caller, uuid.UUID, playdomain.RollID) (playdomain.Roll, error) {
+	return playdomain.Roll{}, b.err
+}
+
+func (b brokenRolls) Reroll(context.Context, caller.Caller, uuid.UUID, playdomain.RollID, int) (playdomain.Roll, error) {
+	return playdomain.Roll{}, b.err
+}
+
 func TestRollErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	h := campaignServer(t, brokenCampaigns{}, httpapi.RollService(brokenRolls{err: errors.New("disk")}))
@@ -117,6 +125,8 @@ func TestRollErrorsBecomeProblems(t *testing.T) {
 		{http.MethodGet, one, ""},
 		{http.MethodPost, one + "/dice/0", `{"mode":"auto"}`},
 		{http.MethodPost, one + "/rest", ""},
+		{http.MethodPost, one + "/keep", ""},
+		{http.MethodPost, one + "/reroll", `{"die":0}`},
 		{http.MethodGet, c + "/log", ""},
 	} {
 		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
@@ -132,6 +142,8 @@ func TestRollErrorsBecomeProblems(t *testing.T) {
 	add(hh.GetRoll(ctx, oas.GetRollParams{}))
 	add(hh.SetDie(ctx, &oas.DieFill{}, oas.SetDieParams{}))
 	add(hh.RollRest(ctx, oas.RollRestParams{}))
+	add(hh.KeepRoll(ctx, oas.KeepRollParams{}))
+	add(hh.RerollDie(ctx, &oas.RerollIn{}, oas.RerollDieParams{}))
 	add(hh.GetActionLog(ctx, oas.GetActionLogParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {

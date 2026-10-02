@@ -4566,10 +4566,12 @@ type CharacterEdit struct {
 	// Temporary hit points gained; the higher of old and new stays.
 	TempHp OptInt32 `json:"tempHp"`
 	// Unlock or lock the next level; DM only.
-	LevelUpReady OptBool        `json:"levelUpReady"`
-	Armor        OptArmorChoice `json:"armor"`
-	Shield       OptBool        `json:"shield"`
-	Weapons      []Slug         `json:"weapons"`
+	LevelUpReady OptBool `json:"levelUpReady"`
+	// Grant or take Heroic Inspiration; DM only.
+	HeroicInspiration OptBool        `json:"heroicInspiration"`
+	Armor             OptArmorChoice `json:"armor"`
+	Shield            OptBool        `json:"shield"`
+	Weapons           []Slug         `json:"weapons"`
 }
 
 // GetName returns the value of Name.
@@ -4600,6 +4602,11 @@ func (s *CharacterEdit) GetTempHp() OptInt32 {
 // GetLevelUpReady returns the value of LevelUpReady.
 func (s *CharacterEdit) GetLevelUpReady() OptBool {
 	return s.LevelUpReady
+}
+
+// GetHeroicInspiration returns the value of HeroicInspiration.
+func (s *CharacterEdit) GetHeroicInspiration() OptBool {
+	return s.HeroicInspiration
 }
 
 // GetArmor returns the value of Armor.
@@ -4645,6 +4652,11 @@ func (s *CharacterEdit) SetTempHp(val OptInt32) {
 // SetLevelUpReady sets the value of LevelUpReady.
 func (s *CharacterEdit) SetLevelUpReady(val OptBool) {
 	s.LevelUpReady = val
+}
+
+// SetHeroicInspiration sets the value of HeroicInspiration.
+func (s *CharacterEdit) SetHeroicInspiration(val OptBool) {
+	s.HeroicInspiration = val
 }
 
 // SetArmor sets the value of Armor.
@@ -4722,9 +4734,10 @@ type CharacterSheet struct {
 	Traits        []TraitLine      `json:"traits"`
 	Proficiencies OptProficiencies `json:"proficiencies"`
 	// The next level is unlocked.
-	LevelUpReady OptBool            `json:"levelUpReady"`
-	Classes      []ClassLine        `json:"classes"`
-	Spells       []LearnedSpellLine `json:"spells"`
+	LevelUpReady      OptBool            `json:"levelUpReady"`
+	HeroicInspiration OptBool            `json:"heroicInspiration"`
+	Classes           []ClassLine        `json:"classes"`
+	Spells            []LearnedSpellLine `json:"spells"`
 }
 
 // GetID returns the value of ID.
@@ -4915,6 +4928,11 @@ func (s *CharacterSheet) GetProficiencies() OptProficiencies {
 // GetLevelUpReady returns the value of LevelUpReady.
 func (s *CharacterSheet) GetLevelUpReady() OptBool {
 	return s.LevelUpReady
+}
+
+// GetHeroicInspiration returns the value of HeroicInspiration.
+func (s *CharacterSheet) GetHeroicInspiration() OptBool {
+	return s.HeroicInspiration
 }
 
 // GetClasses returns the value of Classes.
@@ -5117,6 +5135,11 @@ func (s *CharacterSheet) SetLevelUpReady(val OptBool) {
 	s.LevelUpReady = val
 }
 
+// SetHeroicInspiration sets the value of HeroicInspiration.
+func (s *CharacterSheet) SetHeroicInspiration(val OptBool) {
+	s.HeroicInspiration = val
+}
+
 // SetClasses sets the value of Classes.
 func (s *CharacterSheet) SetClasses(val []ClassLine) {
 	s.Classes = val
@@ -5179,6 +5202,7 @@ func (*CharacterSheetHeaders) createCharacterRes()  {}
 func (*CharacterSheetHeaders) getCharacterRes()     {}
 func (*CharacterSheetHeaders) joinCampaignRes()     {}
 func (*CharacterSheetHeaders) levelUpRes()          {}
+func (*CharacterSheetHeaders) passInspirationRes()  {}
 func (*CharacterSheetHeaders) previewCharacterRes() {}
 func (*CharacterSheetHeaders) updateCharacterRes()  {}
 
@@ -5233,16 +5257,17 @@ func (s *CharacterSheetMethod) UnmarshalText(data []byte) error {
 // A Character in the party list.
 // Ref: #/components/schemas/CharacterSummary
 type CharacterSummary struct {
-	ID        ID            `json:"id"`
-	Name      CharacterName `json:"name"`
-	OwnerName DisplayName   `json:"ownerName"`
-	Mine      bool          `json:"mine"`
-	Species   Slug          `json:"species"`
-	Class     Slug          `json:"class"`
-	Level     int32         `json:"level"`
-	HpCurrent int32         `json:"hpCurrent"`
-	HpMax     int32         `json:"hpMax"`
-	TokenUrl  OptAssetUrl   `json:"tokenUrl"`
+	ID                ID            `json:"id"`
+	Name              CharacterName `json:"name"`
+	OwnerName         DisplayName   `json:"ownerName"`
+	Mine              bool          `json:"mine"`
+	Species           Slug          `json:"species"`
+	Class             Slug          `json:"class"`
+	Level             int32         `json:"level"`
+	HpCurrent         int32         `json:"hpCurrent"`
+	HpMax             int32         `json:"hpMax"`
+	TokenUrl          OptAssetUrl   `json:"tokenUrl"`
+	HeroicInspiration OptBool       `json:"heroicInspiration"`
 }
 
 // GetID returns the value of ID.
@@ -5295,6 +5320,11 @@ func (s *CharacterSummary) GetTokenUrl() OptAssetUrl {
 	return s.TokenUrl
 }
 
+// GetHeroicInspiration returns the value of HeroicInspiration.
+func (s *CharacterSummary) GetHeroicInspiration() OptBool {
+	return s.HeroicInspiration
+}
+
 // SetID sets the value of ID.
 func (s *CharacterSummary) SetID(val ID) {
 	s.ID = val
@@ -5343,6 +5373,11 @@ func (s *CharacterSummary) SetHpMax(val int32) {
 // SetTokenUrl sets the value of TokenUrl.
 func (s *CharacterSummary) SetTokenUrl(val OptAssetUrl) {
 	s.TokenUrl = val
+}
+
+// SetHeroicInspiration sets the value of HeroicInspiration.
+func (s *CharacterSummary) SetHeroicInspiration(val OptBool) {
+	s.HeroicInspiration = val
 }
 
 // A class and what it gives at level 1.
@@ -9863,6 +9898,22 @@ func (s *InitiativeMode) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// The Character to give Heroic Inspiration to.
+// Ref: #/components/schemas/InspirationPass
+type InspirationPass struct {
+	To ID `json:"to"`
+}
+
+// GetTo returns the value of To.
+func (s *InspirationPass) GetTo() ID {
+	return s.To
+}
+
+// SetTo sets the value of To.
+func (s *InspirationPass) SetTo(val ID) {
+	s.To = val
 }
 
 // An open invite link.
@@ -25978,6 +26029,7 @@ func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
+func (*ProblemStatusCodeWithHeaders) keepRollRes()                      {}
 func (*ProblemStatusCodeWithHeaders) levelUpRes()                       {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
@@ -26014,6 +26066,7 @@ func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
+func (*ProblemStatusCodeWithHeaders) passInspirationRes()               {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
 func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
@@ -26027,6 +26080,7 @@ func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
 func (*ProblemStatusCodeWithHeaders) requestSignInLinkRes()             {}
+func (*ProblemStatusCodeWithHeaders) rerollDieRes()                     {}
 func (*ProblemStatusCodeWithHeaders) rerollStockRes()                   {}
 func (*ProblemStatusCodeWithHeaders) resetAccountTwoStepRes()           {}
 func (*ProblemStatusCodeWithHeaders) resetRecoveryCodesRes()            {}
@@ -27051,6 +27105,22 @@ func (s *RequestSignInLinkAccepted) SetRateLimitReset(val OptInt32) {
 
 func (*RequestSignInLinkAccepted) requestSignInLinkRes() {}
 
+// The die to roll again.
+// Ref: #/components/schemas/RerollIn
+type RerollIn struct {
+	Die int32 `json:"die"`
+}
+
+// GetDie returns the value of Die.
+func (s *RerollIn) GetDie() int32 {
+	return s.Die
+}
+
+// SetDie sets the value of Die.
+func (s *RerollIn) SetDie(val int32) {
+	s.Die = val
+}
+
 // ResetAccountTwoStepNoContent is response for ResetAccountTwoStep operation.
 type ResetAccountTwoStepNoContent struct {
 	RateLimitLimit     OptInt32
@@ -27756,6 +27826,10 @@ type RollRequest struct {
 	Modifiers   []RollModifier    `json:"modifiers"`
 	CreatedAt   time.Time         `json:"createdAt"`
 	ResolvedAt  OptDateTime       `json:"resolvedAt"`
+	// Every die is set; the roller keeps it or rerolls a die with Heroic Inspiration.
+	Choosing OptBool `json:"choosing"`
+	// Heroic Inspiration was spent on this roll.
+	Rerolled OptBool `json:"rerolled"`
 }
 
 // GetID returns the value of ID.
@@ -27828,6 +27902,16 @@ func (s *RollRequest) GetResolvedAt() OptDateTime {
 	return s.ResolvedAt
 }
 
+// GetChoosing returns the value of Choosing.
+func (s *RollRequest) GetChoosing() OptBool {
+	return s.Choosing
+}
+
+// GetRerolled returns the value of Rerolled.
+func (s *RollRequest) GetRerolled() OptBool {
+	return s.Rerolled
+}
+
 // SetID sets the value of ID.
 func (s *RollRequest) SetID(val ID) {
 	s.ID = val
@@ -27898,6 +27982,16 @@ func (s *RollRequest) SetResolvedAt(val OptDateTime) {
 	s.ResolvedAt = val
 }
 
+// SetChoosing sets the value of Choosing.
+func (s *RollRequest) SetChoosing(val OptBool) {
+	s.Choosing = val
+}
+
+// SetRerolled sets the value of Rerolled.
+func (s *RollRequest) SetRerolled(val OptBool) {
+	s.Rerolled = val
+}
+
 // RollRequestHeaders wraps RollRequest with response headers.
 type RollRequestHeaders struct {
 	RateLimitLimit     OptInt32
@@ -27948,6 +28042,8 @@ func (s *RollRequestHeaders) SetResponse(val RollRequest) {
 
 func (*RollRequestHeaders) createRollRes() {}
 func (*RollRequestHeaders) getRollRes()    {}
+func (*RollRequestHeaders) keepRollRes()   {}
+func (*RollRequestHeaders) rerollDieRes()  {}
 func (*RollRequestHeaders) rollRestRes()   {}
 func (*RollRequestHeaders) setDieRes()     {}
 

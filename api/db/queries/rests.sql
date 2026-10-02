@@ -46,7 +46,10 @@ UPDATE campaign.characters SET hit_dice_spent = hit_dice_spent + 1 WHERE id = $1
 UPDATE campaign.characters c
 SET hp_current = LEAST(c.hp_max, GREATEST(0, @hp_current::integer)), hit_dice_spent = @hit_dice_spent,
     level_up_ready = c.level_up_ready OR (@level_up_ready AND c.level < 20 AND NOT p.hold_level_ups),
-    can_prepare = c.can_prepare OR @level_up_ready
+    can_prepare = c.can_prepare OR @level_up_ready,
+    heroic_inspiration = c.heroic_inspiration OR (@level_up_ready AND EXISTS (
+        SELECT 1 FROM compendium.inspiration_grants g WHERE g.on_event = 'long_rest'
+            AND ((g.owner_kind = 'species' AND g.owner_slug = c.species_slug) OR (g.owner_kind = 'background' AND g.owner_slug = c.background_slug))))
 FROM campaign.campaigns p
 WHERE c.id = @id AND p.id = c.campaign_id;
 

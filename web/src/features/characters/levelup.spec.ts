@@ -174,3 +174,53 @@ describe('sheet level-up controls', () => {
     expect(patches).toEqual([{ levelUpReady: true }])
   })
 })
+
+describe('heroic inspiration on the sheet', () => {
+  it('lets the DM grant and take it', async () => {
+    const patches: unknown[] = []
+    let inspired = false
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [base]: async (_u, req) => {
+        if (req.method === 'PATCH') {
+          const body = (await req.clone().json()) as { heroicInspiration?: boolean }
+          patches.push(body)
+          inspired = body.heroicInspiration ?? inspired
+        }
+        return sheet({ mine: false, heroicInspiration: inspired })
+      },
+    })
+    expect(wrapper.get('[data-testid="inspiration"]').text()).toContain('none')
+    await wrapper.get('[data-testid="grant-inspiration"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="inspiration"]').text()).toContain('yours to spend')
+    await wrapper.get('[data-testid="take-inspiration"]').trigger('click')
+    await flushPromises()
+    expect(patches).toEqual([{ heroicInspiration: true }, { heroicInspiration: false }])
+  })
+
+  it('lets its holder pass it to an ally without it', async () => {
+    const passed: unknown[] = []
+    const ally = (id: string, name: string, heroicInspiration: boolean) => ({
+      id, name, ownerName: 'Tamsin', mine: false, species: 'human', class: 'fighter', level: 1, hpCurrent: 12, hpMax: 12, heroicInspiration,
+    })
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}`, {
+      [`${base}/inspiration/pass`]: async (_u, req) => {
+        passed.push(await req.clone().json())
+        return sheet({ heroicInspiration: false })
+      },
+      [base]: () => sheet({ heroicInspiration: true }),
+      [`/api/v1/campaigns/${ID}/characters`]: () => [
+        ally(CH, 'Kara', true),
+        ally('0190c7a8-0000-7000-8000-0000000000a1', 'Ines', false),
+        ally('0190c7a8-0000-7000-8000-0000000000a2', 'Bran', true),
+      ],
+    })
+    const select = await vi.waitFor(() => wrapper.get('[data-testid="pass-to"]'))
+    expect(select.findAll('option').map((o) => o.text())).toEqual(['Choose an ally', 'Ines'])
+    await select.setValue('0190c7a8-0000-7000-8000-0000000000a1')
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="pass-inspiration"]').trigger('click')
+    await flushPromises()
+    expect(passed).toEqual([{ to: '0190c7a8-0000-7000-8000-0000000000a1' }])
+  })
+})

@@ -325,7 +325,10 @@ const saveRestResult = `-- name: SaveRestResult :exec
 UPDATE campaign.characters c
 SET hp_current = LEAST(c.hp_max, GREATEST(0, $1::integer)), hit_dice_spent = $2,
     level_up_ready = c.level_up_ready OR ($3 AND c.level < 20 AND NOT p.hold_level_ups),
-    can_prepare = c.can_prepare OR $3
+    can_prepare = c.can_prepare OR $3,
+    heroic_inspiration = c.heroic_inspiration OR ($3 AND EXISTS (
+        SELECT 1 FROM compendium.inspiration_grants g WHERE g.on_event = 'long_rest'
+            AND ((g.owner_kind = 'species' AND g.owner_slug = c.species_slug) OR (g.owner_kind = 'background' AND g.owner_slug = c.background_slug))))
 FROM campaign.campaigns p
 WHERE c.id = $4 AND p.id = c.campaign_id
 `

@@ -49,31 +49,32 @@ type CampaignCampaign struct {
 }
 
 type CampaignCharacter struct {
-	ID             uuid.UUID
-	CampaignID     uuid.UUID
-	OwnerMemberID  uuid.UUID
-	Name           string
-	Ruleset        string
-	SpeciesSlug    string
-	ClassSlug      string
-	BackgroundSlug string
-	Level          int32
-	AbilityMethod  string
-	HpMax          int32
-	HpCurrent      int32
-	ArmorSlug      pgtype.Text
-	Shield         bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	PortraitKey    pgtype.Text
-	PortraitType   pgtype.Text
-	TokenKey       pgtype.Text
-	TokenType      pgtype.Text
-	HitDiceSpent   int32
-	LevelUpReady   bool
-	CharacterID    pgtype.UUID
-	TempHp         int32
-	CanPrepare     bool
+	ID                uuid.UUID
+	CampaignID        uuid.UUID
+	OwnerMemberID     uuid.UUID
+	Name              string
+	Ruleset           string
+	SpeciesSlug       string
+	ClassSlug         string
+	BackgroundSlug    string
+	Level             int32
+	AbilityMethod     string
+	HpMax             int32
+	HpCurrent         int32
+	ArmorSlug         pgtype.Text
+	Shield            bool
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	PortraitKey       pgtype.Text
+	PortraitType      pgtype.Text
+	TokenKey          pgtype.Text
+	TokenType         pgtype.Text
+	HitDiceSpent      int32
+	LevelUpReady      bool
+	CharacterID       pgtype.UUID
+	TempHp            int32
+	CanPrepare        bool
+	HeroicInspiration bool
 }
 
 type CampaignCharacterAbility struct {
@@ -686,6 +687,12 @@ type CompendiumFeatBenefit struct {
 	FeatID      int64
 	Ordering    int32
 	Description string
+}
+
+type CompendiumInspirationGrant struct {
+	OwnerKind string
+	OwnerSlug string
+	OnEvent   string
 }
 
 type CompendiumItem struct {
@@ -1356,6 +1363,8 @@ type PlayRollRequest struct {
 	Total           pgtype.Int4
 	CreatedAt       time.Time
 	ResolvedAt      pgtype.Timestamptz
+	Choosing        bool
+	Rerolled        bool
 }
 
 type PlayRollRequestLabel struct {

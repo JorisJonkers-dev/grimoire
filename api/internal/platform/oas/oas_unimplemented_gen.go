@@ -657,6 +657,15 @@ func (UnimplementedHandler) JoinCampaign(ctx context.Context, req *CharacterJoin
 	return r, ht.ErrNotImplemented
 }
 
+// KeepRoll implements keepRoll operation.
+//
+// Keeps a roll its roller could reroll with Heroic Inspiration, and resolves it. The roller or a DM.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/keep
+func (UnimplementedHandler) KeepRoll(ctx context.Context, params KeepRollParams) (r KeepRollRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // LevelUp implements levelUp operation.
 //
 // Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
@@ -984,6 +993,16 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// PassInspiration implements passInspiration operation.
+//
+// Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The
+// owner only.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
+func (UnimplementedHandler) PassInspiration(ctx context.Context, req *InspirationPass, params PassInspirationParams) (r PassInspirationRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PassTwoStep implements passTwoStep operation.
 //
 // Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
@@ -1100,6 +1119,16 @@ func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMembe
 //
 // POST /api/v1/sign-in-links
 func (UnimplementedHandler) RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (r RequestSignInLinkRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RerollDie implements rerollDie operation.
+//
+// Spends the roller's Heroic Inspiration to roll one die again; the new face stands and the roll
+// resolves. The roller only.
+//
+// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/reroll
+func (UnimplementedHandler) RerollDie(ctx context.Context, req *RerollIn, params RerollDieParams) (r RerollDieRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

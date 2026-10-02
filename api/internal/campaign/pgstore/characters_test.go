@@ -575,6 +575,19 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			_, err := c.CopySpell(ctx, playerCaller, d.ID, wiz.ID, "s6")
 			return err
 		},
+		"grant": func(c *app.Characters) error {
+			_, err := c.Update(ctx, dmCaller, d.ID, sheet.ID, app.Edit{HeroicInspiration: &ready})
+			return err
+		},
+		"pass": func(c *app.Characters) error {
+			for id, v := range map[domain.CharacterID]bool{sheet.ID: true, climber.ID: false} {
+				if err := store.SetHeroicInspiration(ctx, d.ID, id, v); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, err := c.PassInspiration(ctx, playerCaller, d.ID, sheet.ID, climber.ID)
+			return err
+		},
 		"unlock": func(c *app.Characters) error {
 			_, err := c.Update(ctx, dmCaller, d.ID, sheet.ID, app.Edit{LevelUpReady: &ready})
 			return err

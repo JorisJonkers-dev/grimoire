@@ -41,6 +41,8 @@ type Repository interface {
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
 	LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) error
 	SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error
+	SetHeroicInspiration(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, inspired bool) error
+	PassInspiration(ctx context.Context, id domain.CampaignID, from, to domain.CharacterID) error
 	ReplaceClassSpells(ctx context.Context, ch domain.CharacterID, class string, spells []domain.LearnedSpell, canPrepare bool) error
 	Clock(ctx context.Context, id domain.CampaignID) (domain.Clock, error)
 	SetClock(ctx context.Context, id domain.CampaignID, c domain.Clock) error

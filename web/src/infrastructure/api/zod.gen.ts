@@ -1220,7 +1220,23 @@ export const zRollRequest = z.object({
     dice: z.array(zRollDie).max(120),
     modifiers: z.array(zRollModifier).max(12),
     createdAt: z.iso.datetime().max(40),
-    resolvedAt: z.iso.datetime().max(40).optional()
+    resolvedAt: z.iso.datetime().max(40).optional(),
+    choosing: z.boolean().optional(),
+    rerolled: z.boolean().optional()
+});
+
+/**
+ * The die to roll again.
+ */
+export const zRerollIn = z.object({
+    die: z.int().gte(0).lte(119)
+});
+
+/**
+ * The Character to give Heroic Inspiration to.
+ */
+export const zInspirationPass = z.object({
+    to: zId
 });
 
 /**
@@ -2111,6 +2127,7 @@ export const zCharacterEdit = z.object({
     heal: z.int().gte(0).lte(1000).optional(),
     tempHp: z.int().gte(0).lte(1000).optional(),
     levelUpReady: z.boolean().optional(),
+    heroicInspiration: z.boolean().optional(),
     armor: zArmorChoice.optional(),
     shield: z.boolean().optional(),
     weapons: z.array(zSlug).max(4).optional()
@@ -2331,7 +2348,8 @@ export const zCharacterSummary = z.object({
     level: z.int().gte(1).lte(20),
     hpCurrent: z.int().gte(0).lte(1000),
     hpMax: z.int().gte(1).lte(1000),
-    tokenUrl: zAssetUrl.optional()
+    tokenUrl: zAssetUrl.optional(),
+    heroicInspiration: z.boolean().optional()
 });
 
 /**
@@ -3080,6 +3098,7 @@ export const zCharacterSheet = z.object({
     traits: z.array(zTraitLine).max(200).optional(),
     proficiencies: zProficiencies.optional(),
     levelUpReady: z.boolean().optional(),
+    heroicInspiration: z.boolean().optional(),
     classes: z.array(zClassLine).max(12).optional(),
     spells: z.array(zLearnedSpellLine).max(100).optional()
 });
@@ -4302,6 +4321,40 @@ export const zRollRestPath = z.object({
  * The resolved request.
  */
 export const zRollRestResponse = zRollRequest;
+
+export const zKeepRollPath = z.object({
+    campaignId: zId,
+    rollId: zId
+});
+
+/**
+ * The resolved request.
+ */
+export const zKeepRollResponse = zRollRequest;
+
+export const zRerollDieBody = zRerollIn;
+
+export const zRerollDiePath = z.object({
+    campaignId: zId,
+    rollId: zId
+});
+
+/**
+ * The resolved request.
+ */
+export const zRerollDieResponse = zRollRequest;
+
+export const zPassInspirationBody = zInspirationPass;
+
+export const zPassInspirationPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The sheet without Heroic Inspiration.
+ */
+export const zPassInspirationResponse = zCharacterSheet;
 
 export const zGetActionLogPath = z.object({
     campaignId: zId

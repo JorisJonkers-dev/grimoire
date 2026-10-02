@@ -94,7 +94,7 @@ func (s *Store) Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) 
 		ID: domain.RollID(r.ID), CampaignID: r.CampaignID, Purpose: r.Purpose, Notation: r.Notation, Labels: map[int]string{},
 		Modifiers: []domain.Modifier{}, RequestedBy: r.RequestedByName, Status: r.Status, Total: int(r.Total.Int32),
 		Roller: domain.Member{ID: r.RollerMemberID, Subject: r.RollerSubject, Name: r.RollerName}, CreatedAt: r.CreatedAt,
-		ResolvedAt: r.ResolvedAt.Time,
+		ResolvedAt: r.ResolvedAt.Time, Choosing: r.Choosing, Rerolled: r.Rerolled,
 	}
 	labels, err := s.q.RollLabels(ctx, r.ID)
 	if err != nil {
@@ -149,6 +149,28 @@ func (s *Store) SetDie(ctx context.Context, id domain.RollID, no, value int, mod
 // ResolveRoll records the total.
 func (s *Store) ResolveRoll(ctx context.Context, id domain.RollID, total int, now time.Time) error {
 	return s.q.ResolveRoll(ctx, queries.ResolveRollParams{ID: uuid.UUID(id), Total: pgtype.Int4{Int32: int32(total), Valid: true}, Now: pgtype.Timestamptz{Time: now, Valid: true}}) //nolint:gosec // totals are small
+}
+
+// SetRollChoice opens or closes a roll's keep-or-reroll step, and marks it rerolled.
+func (s *Store) SetRollChoice(ctx context.Context, id domain.RollID, choosing, rerolled bool) error {
+	return s.q.SetRollChoice(ctx, queries.SetRollChoiceParams{ID: uuid.UUID(id), Choosing: choosing, Rerolled: rerolled})
+}
+
+// RerollDie replaces a die already set with a new face the server rolled.
+func (s *Store) RerollDie(ctx context.Context, id domain.RollID, no, value int) error {
+	_, err := s.q.RerollDie(ctx, queries.RerollDieParams{RollID: uuid.UUID(id), DieNo: int32(no), Value: pgtype.Int4{Int32: int32(value), Valid: true}}) //nolint:gosec // die faces
+	return err
+}
+
+// Inspired reports whether a member plays a Character in the Campaign that holds Heroic Inspiration.
+func (s *Store) Inspired(ctx context.Context, campaign, member uuid.UUID) (bool, error) {
+	return s.q.MemberInspired(ctx, queries.MemberInspiredParams{CampaignID: campaign, MemberID: member})
+}
+
+// SpendInspiration takes Heroic Inspiration from one of a member's Characters; false when none has it.
+func (s *Store) SpendInspiration(ctx context.Context, campaign, member uuid.UUID) (bool, error) {
+	n, err := s.q.SpendMemberInspiration(ctx, queries.SpendMemberInspirationParams{CampaignID: campaign, MemberID: member})
+	return n == 1, err
 }
 
 // Append adds an Action to the Campaign's log with the next sequence number. Call it inside a transaction.

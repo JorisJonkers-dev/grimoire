@@ -36,6 +36,7 @@ type CharacterService interface {
 	Prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string, spells []string) (app.Spellcasting, error)
 	CastRitual(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Ritual, error)
 	CopySpell(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Spellcasting, error)
+	PassInspiration(ctx context.Context, c caller.Caller, id domain.CampaignID, ch, to domain.CharacterID) (app.Sheet, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -134,6 +135,7 @@ func extrasOut(out *oas.CharacterSheet, s app.Sheet) {
 		out.CharacterId = oas.NewOptID(oas.ID(s.Owned))
 	}
 	out.LevelUpReady = oas.NewOptBool(s.LevelUpReady && s.Level < 20)
+	out.HeroicInspiration = oas.NewOptBool(s.HeroicInspiration)
 	for _, x := range s.Classes {
 		line := oas.ClassLine{Slug: oas.Slug(x.Class), Name: s.ClassNames[x.Class], Level: int32(x.Level)}
 		if x.Subclass != "" {
@@ -298,6 +300,7 @@ func (h *Handler) ListCharacters(ctx context.Context, p oas.ListCharactersParams
 			ID:       oas.ID(ch.ID), Name: oas.CharacterName(ch.Name), OwnerName: oas.DisplayName(ch.OwnerName), Mine: ch.Mine,
 			Species: oas.Slug(ch.Species), Class: oas.Slug(ch.Class), Level: int32(ch.Level), //nolint:gosec // 1..20
 			HpCurrent: int32(ch.HPCurrent), HpMax: int32(ch.HPMax), //nolint:gosec // hit points are small
+			HeroicInspiration: oas.NewOptBool(ch.HeroicInspiration),
 		})
 	}
 	return &oas.ListCharactersOKHeaders{Response: out}, nil
@@ -352,6 +355,9 @@ func (h *Handler) UpdateCharacter(ctx context.Context, req *oas.CharacterEdit, p
 	if v, set := req.LevelUpReady.Get(); set {
 		e.LevelUpReady = &v
 	}
+	if v, set := req.HeroicInspiration.Get(); set {
+		e.HeroicInspiration = &v
+	}
 	if v, set := req.Name.Get(); set {
 		name := string(v)
 		e.Name = &name
@@ -383,4 +389,17 @@ func (h *Handler) DeleteCharacter(ctx context.Context, p oas.DeleteCharacterPara
 		return h.campaignProblem(ctx, "delete character", err), nil
 	}
 	return &oas.DeleteCharacterNoContent{}, nil
+}
+
+// PassInspiration gives a Character's Heroic Inspiration to another Character.
+func (h *Handler) PassInspiration(ctx context.Context, req *oas.InspirationPass, p oas.PassInspirationParams) (oas.PassInspirationRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	s, err := h.Characters.PassInspiration(ctx, c, domain.CampaignID(p.CampaignId), domain.CharacterID(p.CharacterId), domain.CharacterID(req.To))
+	if err != nil {
+		return h.campaignProblem(ctx, "pass inspiration", err), nil
+	}
+	return &oas.CharacterSheetHeaders{Response: sheetOut(s)}, nil
 }

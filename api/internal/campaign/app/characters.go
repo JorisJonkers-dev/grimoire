@@ -362,6 +362,7 @@ func (s *Characters) List(ctx context.Context, c caller.Caller, id domain.Campai
 		out = append(out, domain.CharacterSummary{
 			ID: ch.ID, Name: ch.Name, OwnerName: ch.Owner.DisplayName, Mine: ch.Owner.Subject == c.Subject,
 			Species: ch.Species, Class: ch.Class, Level: ch.Level, HPCurrent: ch.HPCurrent, HPMax: ch.HPMax, TokenKey: tokenKey(ch),
+			HeroicInspiration: ch.HeroicInspiration,
 		})
 	}
 	return out, nil
@@ -456,8 +457,9 @@ type Edit struct {
 	Armor     *string
 	Shield    *bool
 	Weapons   []string
-	// LevelUpReady unlocks or locks the next level; DM only.
-	LevelUpReady *bool
+	// LevelUpReady unlocks or locks the next level, and HeroicInspiration grants or takes it; DM only.
+	LevelUpReady      *bool
+	HeroicInspiration *bool
 }
 
 // editable loads a sheet the caller may change right now.
@@ -517,15 +519,15 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 	if _, err := derive(o, next); err != nil {
 		return Sheet{}, err
 	}
-	if err := s.save(ctx, next, e.LevelUpReady); err != nil {
+	if err := s.save(ctx, next, e); err != nil {
 		return Sheet{}, err
 	}
 	return s.Get(ctx, c, id, ch)
 }
 
-// mayUnlock refuses an Edit that unlocks or locks the next level unless a DM makes it.
+// mayUnlock refuses an Edit that unlocks the next level or grants Heroic Inspiration unless a DM makes it.
 func (s *Characters) mayUnlock(ctx context.Context, c caller.Caller, id domain.CampaignID, e Edit) error {
-	if e.LevelUpReady == nil {
+	if e.LevelUpReady == nil && e.HeroicInspiration == nil {
 		return nil
 	}
 	me, err := member(ctx, s.Repo, c, id)
@@ -538,14 +540,48 @@ func (s *Characters) mayUnlock(ctx context.Context, c caller.Caller, id domain.C
 	return nil
 }
 
-// save writes an edited Character, and whether its next level is unlocked when that changes.
-func (s *Characters) save(ctx context.Context, next domain.Character, ready *bool) error {
+// save writes an edited Character, with the DM's changes to its next level and Heroic Inspiration.
+func (s *Characters) save(ctx context.Context, next domain.Character, e Edit) error {
 	return s.Repo.InTx(ctx, func(r Repository) error {
-		if err := r.UpdateCharacter(ctx, next, s.Now()); err != nil || ready == nil {
+		if err := r.UpdateCharacter(ctx, next, s.Now()); err != nil {
 			return err
 		}
-		return r.SetLevelUpReady(ctx, next.CampaignID, next.ID, *ready, s.Now())
+		if e.HeroicInspiration != nil {
+			if err := r.SetHeroicInspiration(ctx, next.CampaignID, next.ID, *e.HeroicInspiration); err != nil {
+				return err
+			}
+		}
+		if e.LevelUpReady == nil {
+			return nil
+		}
+		return r.SetLevelUpReady(ctx, next.CampaignID, next.ID, *e.LevelUpReady, s.Now())
 	})
+}
+
+// PassInspiration gives a Character's Heroic Inspiration to another Character in the Campaign that lacks
+// it. Only the owner passes it.
+func (s *Characters) PassInspiration(ctx context.Context, c caller.Caller, id domain.CampaignID, ch, to domain.CharacterID) (Sheet, error) {
+	sheet, err := s.Get(ctx, c, id, ch)
+	if err != nil {
+		return Sheet{}, err
+	}
+	if !sheet.Mine {
+		return Sheet{}, domain.ErrForbidden
+	}
+	if ch == to {
+		return Sheet{}, refuse("pass Heroic Inspiration to another Character")
+	}
+	if _, err := s.Repo.Character(ctx, id, to); err != nil {
+		return Sheet{}, err
+	}
+	err = s.Repo.InTx(ctx, func(r Repository) error { return r.PassInspiration(ctx, id, ch, to) })
+	if errors.Is(err, domain.ErrConflict) {
+		return Sheet{}, refuse("only a Character with Heroic Inspiration passes it, to one without")
+	}
+	if err != nil {
+		return Sheet{}, err
+	}
+	return s.Get(ctx, c, id, ch)
 }
 
 // hitPoints applies an Edit's damage, healing and temporary hit points.

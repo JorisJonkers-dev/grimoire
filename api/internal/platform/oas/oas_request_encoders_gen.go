@@ -374,6 +374,20 @@ func encodeLinkOidcAccountRequest(
 	return nil
 }
 
+func encodePassInspirationRequest(
+	req *InspirationPass,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePassTwoStepRequest(
 	req *TwoStepAnswer,
 	r *http.Request,
@@ -488,6 +502,20 @@ func encodePublishReleaseNoteRequest(
 
 func encodeRequestSignInLinkRequest(
 	req *SignInLinkRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeRerollDieRequest(
+	req *RerollIn,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

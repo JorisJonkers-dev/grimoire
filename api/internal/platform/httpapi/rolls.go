@@ -21,6 +21,8 @@ type RollService interface {
 	Log(ctx context.Context, c caller.Caller, campaign uuid.UUID, limit int) ([]playdomain.Action, error)
 	SetDie(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.RollID, no int, f playapp.Fill) (playdomain.Roll, error)
 	RollRest(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.RollID) (playdomain.Roll, error)
+	Keep(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.RollID) (playdomain.Roll, error)
+	Reroll(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.RollID, die int) (playdomain.Roll, error)
 }
 
 const defaultLogPage = 30
@@ -34,6 +36,7 @@ func rollOut(r playdomain.Roll, c caller.Caller, dm bool) oas.RollRequest {
 		Modifiers: make([]oas.RollModifier, 0, len(r.Modifiers)), CreatedAt: r.CreatedAt.UTC(),
 	}
 	out.CanRoll = out.Mine || dm
+	out.Choosing, out.Rerolled = oas.NewOptBool(r.Choosing), oas.NewOptBool(r.Rerolled)
 	if r.Status == playdomain.StatusResolved {
 		out.Total = oas.NewOptInt32(int32(r.Total))
 		out.ResolvedAt = oas.NewOptDateTime(r.ResolvedAt.UTC())
@@ -151,6 +154,34 @@ func (h *Handler) RollRest(ctx context.Context, p oas.RollRestParams) (oas.RollR
 	r, err := h.Rolls.RollRest(ctx, c, campaign, playdomain.RollID(p.RollId))
 	if err != nil {
 		return h.campaignProblem(ctx, "roll rest", err), nil
+	}
+	return &oas.RollRequestHeaders{Response: rollOut(r, c, h.isDM(ctx, c, campaign))}, nil
+}
+
+// KeepRoll keeps a roll that could be rerolled with Heroic Inspiration.
+func (h *Handler) KeepRoll(ctx context.Context, p oas.KeepRollParams) (oas.KeepRollRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	campaign := uuid.UUID(p.CampaignId)
+	r, err := h.Rolls.Keep(ctx, c, campaign, playdomain.RollID(p.RollId))
+	if err != nil {
+		return h.campaignProblem(ctx, "keep roll", err), nil
+	}
+	return &oas.RollRequestHeaders{Response: rollOut(r, c, h.isDM(ctx, c, campaign))}, nil
+}
+
+// RerollDie spends Heroic Inspiration to roll a die again.
+func (h *Handler) RerollDie(ctx context.Context, req *oas.RerollIn, p oas.RerollDieParams) (oas.RerollDieRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	campaign := uuid.UUID(p.CampaignId)
+	r, err := h.Rolls.Reroll(ctx, c, campaign, playdomain.RollID(p.RollId), int(req.Die))
+	if err != nil {
+		return h.campaignProblem(ctx, "reroll", err), nil
 	}
 	return &oas.RollRequestHeaders{Response: rollOut(r, c, h.isDM(ctx, c, campaign))}, nil
 }

@@ -189,6 +189,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
               <span class="who">{{ ch.name }}<template v-if="ch.mine"> (yours)</template></span>
               <span class="hint">Level {{ ch.level }} {{ ch.species }} {{ ch.class }} · {{ ch.ownerName }}</span>
               <span class="g-tag">{{ ch.hpCurrent }}/{{ ch.hpMax }} HP</span>
+              <span v-if="ch.heroicInspiration" class="g-tag inspired" :data-testid="`inspired-${ch.name}`">Heroic Inspiration</span>
             </RouterLink>
           </li>
         </ul>
@@ -370,5 +371,9 @@ section {
   align-items: center;
   gap: 8px;
   min-height: 44px;
+}
+.inspired {
+  border-color: var(--color-gold-high);
+  color: var(--color-gold-high);
 }
 </style>

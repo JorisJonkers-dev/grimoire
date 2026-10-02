@@ -173,6 +173,10 @@ func (b brokenCharacters) CastRitual(context.Context, caller.Caller, domain.Camp
 	return app.Ritual{}, b.err
 }
 
+func (b brokenCharacters) PassInspiration(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, domain.CharacterID) (app.Sheet, error) {
+	return app.Sheet{}, b.err
+}
+
 func (b brokenCharacters) CopySpell(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.Spellcasting, error) {
 	return app.Spellcasting{}, b.err
 }
@@ -205,6 +209,7 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPut, one + "/spells/prepared", `{"class":"wizard","spells":[]}`},
 		{http.MethodPost, one + "/spells/rituals", `{"spell":"alarm"}`},
 		{http.MethodPost, one + "/spellbook", `{"spell":"alarm"}`},
+		{http.MethodPost, one + "/inspiration/pass", `{"to":"0190c7a8-0000-7000-8000-000000000003"}`},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -243,6 +248,7 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.PrepareSpells(ctx, &oas.SpellPreparation{}, oas.PrepareSpellsParams{}))
 	add(h.CastRitual(ctx, &oas.SpellChoice{}, oas.CastRitualParams{}))
 	add(h.CopySpell(ctx, &oas.SpellChoice{}, oas.CopySpellParams{}))
+	add(h.PassInspiration(ctx, &oas.InspirationPass{}, oas.PassInspirationParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

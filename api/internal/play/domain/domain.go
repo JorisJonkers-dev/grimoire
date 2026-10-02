@@ -61,6 +61,10 @@ type Roll struct {
 	Dice        []Die
 	CreatedAt   time.Time
 	ResolvedAt  time.Time
+	// Choosing means every die is set and the roller, who holds Heroic Inspiration, keeps the roll or
+	// spends it to reroll a die; Rerolled means it was spent on this roll.
+	Choosing bool
+	Rerolled bool
 }
 
 // Action kinds in the Action Log.
