@@ -44,6 +44,7 @@ type CampaignCampaign struct {
 	ShareInitiative  bool
 	CreationMethods  []string
 	StartingLevel    int32
+	HoldLevelUps     bool
 }
 
 type CampaignCharacter struct {
@@ -78,6 +79,15 @@ type CampaignCharacterAbility struct {
 	Ability     string
 	Base        int32
 	Bonus       int32
+	Increase    int32
+}
+
+type CampaignCharacterClass struct {
+	CharacterID  uuid.UUID
+	ClassSlug    string
+	SubclassSlug pgtype.Text
+	Level        int32
+	Position     int32
 }
 
 type CampaignCharacterDraft struct {
@@ -87,6 +97,13 @@ type CampaignCharacterDraft struct {
 	Build        []byte
 	Rolled       []int32
 	UpdatedAt    time.Time
+}
+
+type CampaignCharacterPick struct {
+	CharacterID uuid.UUID
+	Level       int32
+	Choice      string
+	Value       string
 }
 
 type CampaignCharacterResource struct {
@@ -99,6 +116,13 @@ type CampaignCharacterSkill struct {
 	CharacterID uuid.UUID
 	Skill       string
 	Source      string
+}
+
+type CampaignCharacterSpell struct {
+	CharacterID  uuid.UUID
+	ClassSlug    string
+	SpellSlug    string
+	LearnedLevel int32
 }
 
 type CampaignCharacterWeapon struct {

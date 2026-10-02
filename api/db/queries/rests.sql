@@ -31,7 +31,7 @@ SELECT c.id, c.name, c.class_slug, c.level, c.hit_dice_spent,
 FROM campaign.characters c WHERE c.campaign_id = @campaign_id AND c.id = ANY(@ids::uuid[]) ORDER BY c.name, c.id;
 
 -- name: RestAbilities :many
-SELECT character_id, ability, base + bonus AS score FROM campaign.character_abilities WHERE character_id = ANY(@ids::uuid[]);
+SELECT character_id, ability, base + bonus + increase AS score FROM campaign.character_abilities WHERE character_id = ANY(@ids::uuid[]);
 
 -- name: RestResourcesUsed :many
 SELECT character_id, resource_slug, used FROM campaign.character_resources WHERE character_id = ANY(@ids::uuid[]);
@@ -43,9 +43,11 @@ SELECT rest_supplies FROM campaign.campaigns WHERE id = $1;
 UPDATE campaign.characters SET hit_dice_spent = hit_dice_spent + 1 WHERE id = $1;
 
 -- name: SaveRestResult :exec
-UPDATE campaign.characters
-SET hp_current = LEAST(hp_max, GREATEST(0, @hp_current::integer)), hit_dice_spent = @hit_dice_spent, level_up_ready = level_up_ready OR @level_up_ready
-WHERE id = @id;
+UPDATE campaign.characters c
+SET hp_current = LEAST(c.hp_max, GREATEST(0, @hp_current::integer)), hit_dice_spent = @hit_dice_spent,
+    level_up_ready = c.level_up_ready OR (@level_up_ready AND c.level < 20 AND NOT p.hold_level_ups)
+FROM campaign.campaigns p
+WHERE c.id = @id AND p.id = c.campaign_id;
 
 -- name: SetResourceUsed :exec
 INSERT INTO campaign.character_resources (character_id, resource_slug, used) VALUES (@character_id, @resource_slug, @used)
@@ -64,6 +66,6 @@ SELECT gen_random_uuid(), a.id, 'level_up', left(c.name || ' can level up', 120)
 FROM campaign.characters c
 JOIN campaign.account_characters o ON o.id = c.character_id
 JOIN identity.accounts a ON a.subject = o.owner_subject
-WHERE c.id = @character_id
+WHERE c.id = @character_id AND c.level_up_ready
     AND coalesce((SELECT p.enabled FROM social.notification_preferences p WHERE p.account_id = a.id AND p.kind = 'level_up' AND p.channel = 'in_app'), true)
 ON CONFLICT (account_id, dedupe_key) WHERE read_at IS NULL AND dedupe_key <> '' DO UPDATE SET created_at = EXCLUDED.created_at;

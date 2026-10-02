@@ -153,6 +153,14 @@ func (b brokenCharacters) RollScores(context.Context, caller.Caller, domain.Camp
 	return domain.Draft{}, b.err
 }
 
+func (b brokenCharacters) PlanLevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.LevelUpPlan, error) {
+	return app.LevelUpPlan{}, b.err
+}
+
+func (b brokenCharacters) LevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, app.LevelUpRequest) (app.Sheet, error) {
+	return app.Sheet{}, b.err
+}
+
 func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/characters"
@@ -175,6 +183,8 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPut, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", `{"step":1,"build":{}}`},
 		{http.MethodDelete, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
 		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft/roll", ""},
+		{http.MethodGet, one + "/level-up", ""},
+		{http.MethodPost, one + "/level-up", `{"class":"fighter"}`},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -207,6 +217,8 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.SaveCharacterDraft(ctx, &oas.CharacterDraftSave{}, oas.SaveCharacterDraftParams{}))
 	add(h.DiscardCharacterDraft(ctx, oas.DiscardCharacterDraftParams{}))
 	add(h.RollCharacterScores(ctx, oas.RollCharacterScoresParams{}))
+	add(h.PlanLevelUp(ctx, oas.PlanLevelUpParams{}))
+	add(h.LevelUp(ctx, &oas.LevelUpRequest{}, oas.LevelUpParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

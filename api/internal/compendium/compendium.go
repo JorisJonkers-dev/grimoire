@@ -227,7 +227,44 @@ type BuilderOptions struct {
 	Weapons     []WeaponOption
 }
 
-// Trait is a feature or trait a Character has: from its class at a level, or from its species.
+// ClassLevel is the levels a Character has in a class, and its subclass there, as its traits need them.
+type ClassLevel struct {
+	Class    string
+	Subclass string
+	Level    int
+}
+
+// Named is a compendium entry by slug and name.
+type Named struct {
+	Slug string
+	Name string
+}
+
+// FeatOption is a feat and the category it belongs to: General, Fighting Style, Epic Boon or Origin.
+type FeatOption struct {
+	Slug        string
+	Name        string
+	Category    string
+	Description string
+}
+
+// SpellOption is a cantrip (level 0) or spell on a class's list.
+type SpellOption struct {
+	Slug  string
+	Name  string
+	Level int
+}
+
+// LevelUpOptions are what a class offers on levelling up: its subclasses, every feat, and the cantrips
+// and spells on its list up to a spell level.
+type LevelUpOptions struct {
+	Subclasses []Named
+	Feats      []FeatOption
+	Spells     []SpellOption
+}
+
+// Trait is a feature or trait a Character has: from its class or subclass at a level, its species, or a
+// feat it took.
 type Trait struct {
 	Name        string
 	Source      string

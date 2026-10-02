@@ -62,3 +62,23 @@ JOIN compendium.species s ON s.id = t.species_id
 JOIN compendium.documents d ON d.id = s.document_id
 WHERE d.key = @ruleset AND s.slug = @species
 ORDER BY t.ordering;
+
+-- name: LevelUpSubclasses :many
+SELECT c.slug, c.name FROM compendium.classes c
+JOIN compendium.documents d ON d.id = c.document_id
+WHERE d.key = @ruleset AND c.parent_slug = @class
+ORDER BY c.name;
+
+-- name: LevelUpFeats :many
+SELECT f.slug, f.name, f.feat_type, f.description FROM compendium.feats f
+JOIN compendium.documents d ON d.id = f.document_id
+WHERE d.key = @ruleset
+ORDER BY f.name;
+
+-- name: LevelUpSpells :many
+-- A class's cantrips and spells up to a spell level.
+SELECT s.slug, s.name, s.level FROM compendium.spells s
+JOIN compendium.documents d ON d.id = s.document_id
+JOIN compendium.spell_classes sc ON sc.spell_id = s.id
+WHERE d.key = @ruleset AND sc.class_slug = @class AND s.level <= @max_level
+ORDER BY s.level, s.name;

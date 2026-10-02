@@ -24,7 +24,8 @@ import (
 // Compendium is the compendium read port the builder and the sheet need.
 type Compendium interface {
 	BuilderOptions(ctx context.Context, ruleset string) (compendium.BuilderOptions, error)
-	Traits(ctx context.Context, ruleset, class, species string, level int) ([]compendium.Trait, error)
+	Traits(ctx context.Context, ruleset, species string, classes []compendium.ClassLevel, feats []string) ([]compendium.Trait, error)
+	LevelUpOptions(ctx context.Context, ruleset, class string, maxSpellLevel int) (compendium.LevelUpOptions, error)
 	Features(ctx context.Context) (features.Catalog, error)
 }
 
@@ -48,6 +49,8 @@ type Characters struct {
 	Now        func() time.Time
 	// Roll rolls six ability scores for a draft; nil means the Campaign cannot roll.
 	Roll func() []int
+	// Die rolls one die with a number of sides for a level's hit points; nil takes the average.
+	Die func(sides int) int
 }
 
 // Sheet is a Character with everything the sheet shows derived from the rules.
@@ -62,6 +65,8 @@ type Sheet struct {
 	Weapons        []compendium.WeaponOption
 	Mine           bool
 	Editable       bool
+	// ClassNames name every class of the ruleset by slug.
+	ClassNames map[string]string
 	// Attacks, Traits and Proficiencies are filled in for a saved Character's sheet.
 	Attacks       []Attack
 	Traits        []compendium.Trait
@@ -159,20 +164,53 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 	if armor != nil {
 		worn = &rules.Armor{Base: armor.ACBase, AddDex: armor.AddDex, DexCap: armor.DexCap, StrengthRequired: armor.StrengthRequired, Stealth: armor.Stealth}
 	}
+	for a, n := range c.Increase {
+		scores[rules.Ability(a)] += n
+	}
 	derived := rules.BuildSheet(rules.SheetInput{
 		Class: c.Class, Level: max(c.Level, 1), HitDie: class.HitDie, Scores: scores,
-		SaveProfs: toAbilities(class.Saves), SkillProfs: toSkills(append(slices.Clone(c.Skills), background.Skills...)),
-		Armor: worn, ShieldBonus: shield, SpeedFeet: species.SpeedFeet,
+		SaveProfs:  toAbilities(class.Saves),
+		SkillProfs: toSkills(append(append(slices.Clone(c.Skills), background.Skills...), picked(c.Picks, "skills")...)),
+		Expertise:  toSkills(picked(c.Picks, "expertise")),
+		Armor:      worn, ShieldBonus: shield, SpeedFeet: species.SpeedFeet,
 	})
+	if len(c.Classes) > 1 {
+		derived.Resources = rules.MulticlassResources(classLevels(o, c.Classes))
+	}
 	c.BackgroundSkills = background.Skills
 	if c.HPMax == 0 {
 		c.HPMax = rules.HitPointsAt(class.HitDie, rules.Modifier(scores[rules.Constitution]), max(c.Level, 1))
 		c.HPCurrent = c.HPMax
 	}
+	names := make(map[string]string, len(o.Classes))
+	for _, x := range o.Classes {
+		names[x.Slug] = x.Name
+	}
 	return Sheet{
-		Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
+		ClassNames: names, Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
 		Derived: derived, Armor: armor, Weapons: weapons,
 	}, nil
+}
+
+// picked are the values chosen for one choice as a Character levelled.
+func picked(picks []domain.Pick, choice string) []string {
+	var out []string
+	for _, p := range picks {
+		if p.Choice == choice {
+			out = append(out, p.Value)
+		}
+	}
+	return out
+}
+
+// classLevels are a Character's classes with their Hit Dice, as the multiclass rules read them.
+func classLevels(o compendium.BuilderOptions, classes []domain.ClassLevel) []rules.ClassLevel {
+	out := make([]rules.ClassLevel, 0, len(classes))
+	for _, x := range classes {
+		cl, _ := find(o.Classes, func(c compendium.ClassOption) bool { return c.Slug == x.Class })
+		out = append(out, rules.ClassLevel{Class: x.Class, Level: x.Level, HitDie: cl.HitDie})
+	}
+	return out
 }
 
 func abilities(b domain.Build, background compendium.BackgroundOption, year int) (map[rules.Ability]int, error) {
@@ -361,7 +399,13 @@ func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
 	if err != nil {
 		return Sheet{}, err
 	}
-	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Class, sheet.Species, sheet.Level); err != nil {
+	classes := make([]compendium.ClassLevel, 0, len(sheet.Classes))
+	masteries := 0
+	for _, x := range sheet.Classes {
+		classes = append(classes, compendium.ClassLevel{Class: x.Class, Subclass: x.Subclass, Level: x.Level})
+		masteries = max(masteries, cat.MasteryCount(x.Class, x.Level))
+	}
+	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Species, classes, pickValues(sheet.Picks)); err != nil {
 		return Sheet{}, err
 	}
 	sheet.Proficiencies = rules.ClassProficiencies(sheet.Class)
@@ -369,7 +413,7 @@ func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
 	for _, w := range sheet.Weapons {
 		carried = append(carried, w.Slug)
 	}
-	mastered := mastery.Mastered(carried, cat.MasteryCount(sheet.Class, sheet.Level))
+	mastered := mastery.Mastered(carried, masteries)
 	str, dex := rules.Modifier(sheet.Scores[rules.Strength]), rules.Modifier(sheet.Scores[rules.Dexterity])
 	for _, w := range sheet.Weapons {
 		props := attack.Weapon{Finesse: slices.Contains(w.Properties, "Finesse"), Ammunition: slices.Contains(w.Properties, "Ammunition"), Reach: slices.Contains(w.Properties, "Reach")}
@@ -410,6 +454,8 @@ type Edit struct {
 	Armor     *string
 	Shield    *bool
 	Weapons   []string
+	// LevelUpReady unlocks or locks the next level; DM only.
+	LevelUpReady *bool
 }
 
 // editable loads a sheet the caller may change right now.
@@ -435,6 +481,9 @@ func (s *Characters) editable(ctx context.Context, c caller.Caller, id domain.Ca
 func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, e Edit) (Sheet, error) {
 	sheet, err := s.editable(ctx, c, id, ch)
 	if err != nil {
+		return Sheet{}, err
+	}
+	if err := s.mayUnlock(ctx, c, id, e); err != nil {
 		return Sheet{}, err
 	}
 	next := sheet.Character
@@ -466,10 +515,35 @@ func (s *Characters) Update(ctx context.Context, c caller.Caller, id domain.Camp
 	if _, err := derive(o, next); err != nil {
 		return Sheet{}, err
 	}
-	if err := s.Repo.UpdateCharacter(ctx, next, s.Now()); err != nil {
+	if err := s.save(ctx, next, e.LevelUpReady); err != nil {
 		return Sheet{}, err
 	}
 	return s.Get(ctx, c, id, ch)
+}
+
+// mayUnlock refuses an Edit that unlocks or locks the next level unless a DM makes it.
+func (s *Characters) mayUnlock(ctx context.Context, c caller.Caller, id domain.CampaignID, e Edit) error {
+	if e.LevelUpReady == nil {
+		return nil
+	}
+	me, err := member(ctx, s.Repo, c, id)
+	if err != nil {
+		return err
+	}
+	if me.Role != domain.RoleDM {
+		return domain.ErrForbidden
+	}
+	return nil
+}
+
+// save writes an edited Character, and whether its next level is unlocked when that changes.
+func (s *Characters) save(ctx context.Context, next domain.Character, ready *bool) error {
+	return s.Repo.InTx(ctx, func(r Repository) error {
+		if err := r.UpdateCharacter(ctx, next, s.Now()); err != nil || ready == nil {
+			return err
+		}
+		return r.SetLevelUpReady(ctx, next.CampaignID, next.ID, *ready, s.Now())
+	})
 }
 
 // hitPoints applies an Edit's damage, healing and temporary hit points.

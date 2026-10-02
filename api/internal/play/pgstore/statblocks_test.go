@@ -23,8 +23,12 @@ import (
 
 type armoury struct{}
 
-func (armoury) Traits(context.Context, string, string, string, int) ([]compendium.Trait, error) {
+func (armoury) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
 	return nil, nil
+}
+
+func (armoury) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, nil
 }
 
 func (armoury) Features(context.Context) (features.Catalog, error) { return features.Catalog{}, nil }

@@ -269,6 +269,10 @@ type JoinCampaignRes interface {
 	joinCampaignRes()
 }
 
+type LevelUpRes interface {
+	levelUpRes()
+}
+
 type LinkOidcAccountRes interface {
 	linkOidcAccountRes()
 }
@@ -411,6 +415,10 @@ type ListSpellsRes interface {
 
 type PassTwoStepRes interface {
 	passTwoStepRes()
+}
+
+type PlanLevelUpRes interface {
+	planLevelUpRes()
 }
 
 type PreviewAccountInviteRes interface {

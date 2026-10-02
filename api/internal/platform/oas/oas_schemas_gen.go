@@ -3159,6 +3159,8 @@ type Campaign struct {
 	CreationMethods []CreationMethod `json:"creationMethods"`
 	// The level new Characters start at.
 	StartingLevel OptInt32 `json:"startingLevel"`
+	// Long rests stop unlocking the next level; the DM grants levels instead.
+	HoldLevelUps OptBool `json:"holdLevelUps"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool  `json:"shareInitiative"`
 	Me              Member   `json:"me"`
@@ -3223,6 +3225,11 @@ func (s *Campaign) GetCreationMethods() []CreationMethod {
 // GetStartingLevel returns the value of StartingLevel.
 func (s *Campaign) GetStartingLevel() OptInt32 {
 	return s.StartingLevel
+}
+
+// GetHoldLevelUps returns the value of HoldLevelUps.
+func (s *Campaign) GetHoldLevelUps() OptBool {
+	return s.HoldLevelUps
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3298,6 +3305,11 @@ func (s *Campaign) SetCreationMethods(val []CreationMethod) {
 // SetStartingLevel sets the value of StartingLevel.
 func (s *Campaign) SetStartingLevel(val OptInt32) {
 	s.StartingLevel = val
+}
+
+// SetHoldLevelUps sets the value of HoldLevelUps.
+func (s *Campaign) SetHoldLevelUps(val OptBool) {
+	s.HoldLevelUps = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3676,6 +3688,8 @@ type CampaignSummary struct {
 	CreationMethods []CreationMethod `json:"creationMethods"`
 	// The level new Characters start at.
 	StartingLevel OptInt32 `json:"startingLevel"`
+	// Long rests stop unlocking the next level; the DM grants levels instead.
+	HoldLevelUps OptBool `json:"holdLevelUps"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3738,6 +3752,11 @@ func (s *CampaignSummary) GetCreationMethods() []CreationMethod {
 // GetStartingLevel returns the value of StartingLevel.
 func (s *CampaignSummary) GetStartingLevel() OptInt32 {
 	return s.StartingLevel
+}
+
+// GetHoldLevelUps returns the value of HoldLevelUps.
+func (s *CampaignSummary) GetHoldLevelUps() OptBool {
+	return s.HoldLevelUps
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3803,6 +3822,11 @@ func (s *CampaignSummary) SetCreationMethods(val []CreationMethod) {
 // SetStartingLevel sets the value of StartingLevel.
 func (s *CampaignSummary) SetStartingLevel(val OptInt32) {
 	s.StartingLevel = val
+}
+
+// SetHoldLevelUps sets the value of HoldLevelUps.
+func (s *CampaignSummary) SetHoldLevelUps(val OptBool) {
+	s.HoldLevelUps = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3875,6 +3899,8 @@ type CampaignUpdate struct {
 	CreationMethods []CreationMethod `json:"creationMethods"`
 	// The level new Characters start at.
 	StartingLevel OptInt32 `json:"startingLevel"`
+	// Long rests stop unlocking the next level; the DM grants levels instead.
+	HoldLevelUps OptBool `json:"holdLevelUps"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3917,6 +3943,11 @@ func (s *CampaignUpdate) GetCreationMethods() []CreationMethod {
 // GetStartingLevel returns the value of StartingLevel.
 func (s *CampaignUpdate) GetStartingLevel() OptInt32 {
 	return s.StartingLevel
+}
+
+// GetHoldLevelUps returns the value of HoldLevelUps.
+func (s *CampaignUpdate) GetHoldLevelUps() OptBool {
+	return s.HoldLevelUps
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3962,6 +3993,11 @@ func (s *CampaignUpdate) SetCreationMethods(val []CreationMethod) {
 // SetStartingLevel sets the value of StartingLevel.
 func (s *CampaignUpdate) SetStartingLevel(val OptInt32) {
 	s.StartingLevel = val
+}
+
+// SetHoldLevelUps sets the value of HoldLevelUps.
+func (s *CampaignUpdate) SetHoldLevelUps(val OptBool) {
+	s.HoldLevelUps = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -4528,10 +4564,12 @@ type CharacterEdit struct {
 	// Hit points regained, up to the maximum.
 	Heal OptInt32 `json:"heal"`
 	// Temporary hit points gained; the higher of old and new stays.
-	TempHp  OptInt32       `json:"tempHp"`
-	Armor   OptArmorChoice `json:"armor"`
-	Shield  OptBool        `json:"shield"`
-	Weapons []Slug         `json:"weapons"`
+	TempHp OptInt32 `json:"tempHp"`
+	// Unlock or lock the next level; DM only.
+	LevelUpReady OptBool        `json:"levelUpReady"`
+	Armor        OptArmorChoice `json:"armor"`
+	Shield       OptBool        `json:"shield"`
+	Weapons      []Slug         `json:"weapons"`
 }
 
 // GetName returns the value of Name.
@@ -4557,6 +4595,11 @@ func (s *CharacterEdit) GetHeal() OptInt32 {
 // GetTempHp returns the value of TempHp.
 func (s *CharacterEdit) GetTempHp() OptInt32 {
 	return s.TempHp
+}
+
+// GetLevelUpReady returns the value of LevelUpReady.
+func (s *CharacterEdit) GetLevelUpReady() OptBool {
+	return s.LevelUpReady
 }
 
 // GetArmor returns the value of Armor.
@@ -4597,6 +4640,11 @@ func (s *CharacterEdit) SetHeal(val OptInt32) {
 // SetTempHp sets the value of TempHp.
 func (s *CharacterEdit) SetTempHp(val OptInt32) {
 	s.TempHp = val
+}
+
+// SetLevelUpReady sets the value of LevelUpReady.
+func (s *CharacterEdit) SetLevelUpReady(val OptBool) {
+	s.LevelUpReady = val
 }
 
 // SetArmor sets the value of Armor.
@@ -4673,6 +4721,10 @@ type CharacterSheet struct {
 	Attacks       []AttackLine     `json:"attacks"`
 	Traits        []TraitLine      `json:"traits"`
 	Proficiencies OptProficiencies `json:"proficiencies"`
+	// The next level is unlocked.
+	LevelUpReady OptBool            `json:"levelUpReady"`
+	Classes      []ClassLine        `json:"classes"`
+	Spells       []LearnedSpellLine `json:"spells"`
 }
 
 // GetID returns the value of ID.
@@ -4860,6 +4912,21 @@ func (s *CharacterSheet) GetProficiencies() OptProficiencies {
 	return s.Proficiencies
 }
 
+// GetLevelUpReady returns the value of LevelUpReady.
+func (s *CharacterSheet) GetLevelUpReady() OptBool {
+	return s.LevelUpReady
+}
+
+// GetClasses returns the value of Classes.
+func (s *CharacterSheet) GetClasses() []ClassLine {
+	return s.Classes
+}
+
+// GetSpells returns the value of Spells.
+func (s *CharacterSheet) GetSpells() []LearnedSpellLine {
+	return s.Spells
+}
+
 // SetID sets the value of ID.
 func (s *CharacterSheet) SetID(val OptID) {
 	s.ID = val
@@ -5045,6 +5112,21 @@ func (s *CharacterSheet) SetProficiencies(val OptProficiencies) {
 	s.Proficiencies = val
 }
 
+// SetLevelUpReady sets the value of LevelUpReady.
+func (s *CharacterSheet) SetLevelUpReady(val OptBool) {
+	s.LevelUpReady = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *CharacterSheet) SetClasses(val []ClassLine) {
+	s.Classes = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *CharacterSheet) SetSpells(val []LearnedSpellLine) {
+	s.Spells = val
+}
+
 // CharacterSheetHeaders wraps CharacterSheet with response headers.
 type CharacterSheetHeaders struct {
 	RateLimitLimit     OptInt32
@@ -5096,6 +5178,7 @@ func (s *CharacterSheetHeaders) SetResponse(val CharacterSheet) {
 func (*CharacterSheetHeaders) createCharacterRes()  {}
 func (*CharacterSheetHeaders) getCharacterRes()     {}
 func (*CharacterSheetHeaders) joinCampaignRes()     {}
+func (*CharacterSheetHeaders) levelUpRes()          {}
 func (*CharacterSheetHeaders) previewCharacterRes() {}
 func (*CharacterSheetHeaders) updateCharacterRes()  {}
 
@@ -5400,6 +5483,55 @@ func (s *ClassChoiceCaster) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// The levels a Character has in one class, and its subclass there.
+// Ref: #/components/schemas/ClassLine
+type ClassLine struct {
+	Slug     Slug    `json:"slug"`
+	Name     string  `json:"name"`
+	Subclass OptSlug `json:"subclass"`
+	Level    int32   `json:"level"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *ClassLine) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *ClassLine) GetName() string {
+	return s.Name
+}
+
+// GetSubclass returns the value of Subclass.
+func (s *ClassLine) GetSubclass() OptSlug {
+	return s.Subclass
+}
+
+// GetLevel returns the value of Level.
+func (s *ClassLine) GetLevel() int32 {
+	return s.Level
+}
+
+// SetSlug sets the value of Slug.
+func (s *ClassLine) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassLine) SetName(val string) {
+	s.Name = val
+}
+
+// SetSubclass sets the value of Subclass.
+func (s *ClassLine) SetSubclass(val OptSlug) {
+	s.Subclass = val
+}
+
+// SetLevel sets the value of Level.
+func (s *ClassLine) SetLevel(val int32) {
+	s.Level = val
 }
 
 // ClearTokenIconNoContent is response for ClearTokenIcon operation.
@@ -9722,6 +9854,581 @@ func (s *InviteToken) GetToken() Token {
 // SetToken sets the value of Token.
 func (s *InviteToken) SetToken(val Token) {
 	s.Token = val
+}
+
+// A cantrip or spell a Character learned through a class.
+// Ref: #/components/schemas/LearnedSpellLine
+type LearnedSpellLine struct {
+	Slug  Slug `json:"slug"`
+	Class Slug `json:"class"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LearnedSpellLine) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetClass returns the value of Class.
+func (s *LearnedSpellLine) GetClass() Slug {
+	return s.Class
+}
+
+// SetSlug sets the value of Slug.
+func (s *LearnedSpellLine) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetClass sets the value of Class.
+func (s *LearnedSpellLine) SetClass(val Slug) {
+	s.Class = val
+}
+
+// A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+// Ref: #/components/schemas/LevelUpChoice
+type LevelUpChoice struct {
+	Slug    Slug              `json:"slug"`
+	Name    string            `json:"name"`
+	Pool    LevelUpChoicePool `json:"pool"`
+	Count   int32             `json:"count"`
+	Options []LevelUpOption   `json:"options"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LevelUpChoice) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LevelUpChoice) GetName() string {
+	return s.Name
+}
+
+// GetPool returns the value of Pool.
+func (s *LevelUpChoice) GetPool() LevelUpChoicePool {
+	return s.Pool
+}
+
+// GetCount returns the value of Count.
+func (s *LevelUpChoice) GetCount() int32 {
+	return s.Count
+}
+
+// GetOptions returns the value of Options.
+func (s *LevelUpChoice) GetOptions() []LevelUpOption {
+	return s.Options
+}
+
+// SetSlug sets the value of Slug.
+func (s *LevelUpChoice) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LevelUpChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetPool sets the value of Pool.
+func (s *LevelUpChoice) SetPool(val LevelUpChoicePool) {
+	s.Pool = val
+}
+
+// SetCount sets the value of Count.
+func (s *LevelUpChoice) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetOptions sets the value of Options.
+func (s *LevelUpChoice) SetOptions(val []LevelUpOption) {
+	s.Options = val
+}
+
+type LevelUpChoicePool string
+
+const (
+	LevelUpChoicePoolFeatCategory LevelUpChoicePool = "feat_category"
+	LevelUpChoicePoolSubclass     LevelUpChoicePool = "subclass"
+	LevelUpChoicePoolSkill        LevelUpChoicePool = "skill"
+	LevelUpChoicePoolExpertise    LevelUpChoicePool = "expertise"
+	LevelUpChoicePoolWeapon       LevelUpChoicePool = "weapon"
+	LevelUpChoicePoolListed       LevelUpChoicePool = "listed"
+)
+
+// AllValues returns all LevelUpChoicePool values.
+func (LevelUpChoicePool) AllValues() []LevelUpChoicePool {
+	return []LevelUpChoicePool{
+		LevelUpChoicePoolFeatCategory,
+		LevelUpChoicePoolSubclass,
+		LevelUpChoicePoolSkill,
+		LevelUpChoicePoolExpertise,
+		LevelUpChoicePoolWeapon,
+		LevelUpChoicePoolListed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LevelUpChoicePool) MarshalText() ([]byte, error) {
+	switch s {
+	case LevelUpChoicePoolFeatCategory:
+		return []byte(s), nil
+	case LevelUpChoicePoolSubclass:
+		return []byte(s), nil
+	case LevelUpChoicePoolSkill:
+		return []byte(s), nil
+	case LevelUpChoicePoolExpertise:
+		return []byte(s), nil
+	case LevelUpChoicePoolWeapon:
+		return []byte(s), nil
+	case LevelUpChoicePoolListed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LevelUpChoicePool) UnmarshalText(data []byte) error {
+	switch LevelUpChoicePool(data) {
+	case LevelUpChoicePoolFeatCategory:
+		*s = LevelUpChoicePoolFeatCategory
+		return nil
+	case LevelUpChoicePoolSubclass:
+		*s = LevelUpChoicePoolSubclass
+		return nil
+	case LevelUpChoicePoolSkill:
+		*s = LevelUpChoicePoolSkill
+		return nil
+	case LevelUpChoicePoolExpertise:
+		*s = LevelUpChoicePoolExpertise
+		return nil
+	case LevelUpChoicePoolWeapon:
+		*s = LevelUpChoicePoolWeapon
+		return nil
+	case LevelUpChoicePoolListed:
+		*s = LevelUpChoicePoolListed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A class the next level can go to, with what multiclassing into it still needs.
+// Ref: #/components/schemas/LevelUpClass
+type LevelUpClass struct {
+	Slug   Slug   `json:"slug"`
+	Name   string `json:"name"`
+	HitDie int32  `json:"hitDie"`
+	// Levels the Character has in it now.
+	Level int32    `json:"level"`
+	Unmet []string `json:"unmet"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LevelUpClass) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LevelUpClass) GetName() string {
+	return s.Name
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *LevelUpClass) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetLevel returns the value of Level.
+func (s *LevelUpClass) GetLevel() int32 {
+	return s.Level
+}
+
+// GetUnmet returns the value of Unmet.
+func (s *LevelUpClass) GetUnmet() []string {
+	return s.Unmet
+}
+
+// SetSlug sets the value of Slug.
+func (s *LevelUpClass) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LevelUpClass) SetName(val string) {
+	s.Name = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *LevelUpClass) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetLevel sets the value of Level.
+func (s *LevelUpClass) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetUnmet sets the value of Unmet.
+func (s *LevelUpClass) SetUnmet(val []string) {
+	s.Unmet = val
+}
+
+// One option of a choice, with the prerequisites the Character does not meet.
+// Ref: #/components/schemas/LevelUpOption
+type LevelUpOption struct {
+	Slug  Slug     `json:"slug"`
+	Name  string   `json:"name"`
+	Unmet []string `json:"unmet"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LevelUpOption) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LevelUpOption) GetName() string {
+	return s.Name
+}
+
+// GetUnmet returns the value of Unmet.
+func (s *LevelUpOption) GetUnmet() []string {
+	return s.Unmet
+}
+
+// SetSlug sets the value of Slug.
+func (s *LevelUpOption) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LevelUpOption) SetName(val string) {
+	s.Name = val
+}
+
+// SetUnmet sets the value of Unmet.
+func (s *LevelUpOption) SetUnmet(val []string) {
+	s.Unmet = val
+}
+
+// The options picked for one choice.
+// Ref: #/components/schemas/LevelUpPickIn
+type LevelUpPickIn struct {
+	Choice Slug   `json:"choice"`
+	Values []Slug `json:"values"`
+}
+
+// GetChoice returns the value of Choice.
+func (s *LevelUpPickIn) GetChoice() Slug {
+	return s.Choice
+}
+
+// GetValues returns the value of Values.
+func (s *LevelUpPickIn) GetValues() []Slug {
+	return s.Values
+}
+
+// SetChoice sets the value of Choice.
+func (s *LevelUpPickIn) SetChoice(val Slug) {
+	s.Choice = val
+}
+
+// SetValues sets the value of Values.
+func (s *LevelUpPickIn) SetValues(val []Slug) {
+	s.Values = val
+}
+
+// What the next level offers in one class.
+// Ref: #/components/schemas/LevelUpPlan
+type LevelUpPlan struct {
+	// The next level is unlocked.
+	Ready bool `json:"ready"`
+	// The DM holds level-ups; only the DM unlocks the next level.
+	Held       bool           `json:"held"`
+	Level      int32          `json:"level"`
+	Classes    []LevelUpClass `json:"classes"`
+	Class      Slug           `json:"class"`
+	ClassLevel int32          `json:"classLevel"`
+	HitDie     int32          `json:"hitDie"`
+	// Hit points the level adds when taking the average.
+	Average   int32           `json:"average"`
+	Choices   []LevelUpChoice `json:"choices"`
+	Cantrips  int32           `json:"cantrips"`
+	Spells    int32           `json:"spells"`
+	SpellList []SpellPick     `json:"spellList"`
+}
+
+// GetReady returns the value of Ready.
+func (s *LevelUpPlan) GetReady() bool {
+	return s.Ready
+}
+
+// GetHeld returns the value of Held.
+func (s *LevelUpPlan) GetHeld() bool {
+	return s.Held
+}
+
+// GetLevel returns the value of Level.
+func (s *LevelUpPlan) GetLevel() int32 {
+	return s.Level
+}
+
+// GetClasses returns the value of Classes.
+func (s *LevelUpPlan) GetClasses() []LevelUpClass {
+	return s.Classes
+}
+
+// GetClass returns the value of Class.
+func (s *LevelUpPlan) GetClass() Slug {
+	return s.Class
+}
+
+// GetClassLevel returns the value of ClassLevel.
+func (s *LevelUpPlan) GetClassLevel() int32 {
+	return s.ClassLevel
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *LevelUpPlan) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetAverage returns the value of Average.
+func (s *LevelUpPlan) GetAverage() int32 {
+	return s.Average
+}
+
+// GetChoices returns the value of Choices.
+func (s *LevelUpPlan) GetChoices() []LevelUpChoice {
+	return s.Choices
+}
+
+// GetCantrips returns the value of Cantrips.
+func (s *LevelUpPlan) GetCantrips() int32 {
+	return s.Cantrips
+}
+
+// GetSpells returns the value of Spells.
+func (s *LevelUpPlan) GetSpells() int32 {
+	return s.Spells
+}
+
+// GetSpellList returns the value of SpellList.
+func (s *LevelUpPlan) GetSpellList() []SpellPick {
+	return s.SpellList
+}
+
+// SetReady sets the value of Ready.
+func (s *LevelUpPlan) SetReady(val bool) {
+	s.Ready = val
+}
+
+// SetHeld sets the value of Held.
+func (s *LevelUpPlan) SetHeld(val bool) {
+	s.Held = val
+}
+
+// SetLevel sets the value of Level.
+func (s *LevelUpPlan) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetClasses sets the value of Classes.
+func (s *LevelUpPlan) SetClasses(val []LevelUpClass) {
+	s.Classes = val
+}
+
+// SetClass sets the value of Class.
+func (s *LevelUpPlan) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetClassLevel sets the value of ClassLevel.
+func (s *LevelUpPlan) SetClassLevel(val int32) {
+	s.ClassLevel = val
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *LevelUpPlan) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetAverage sets the value of Average.
+func (s *LevelUpPlan) SetAverage(val int32) {
+	s.Average = val
+}
+
+// SetChoices sets the value of Choices.
+func (s *LevelUpPlan) SetChoices(val []LevelUpChoice) {
+	s.Choices = val
+}
+
+// SetCantrips sets the value of Cantrips.
+func (s *LevelUpPlan) SetCantrips(val int32) {
+	s.Cantrips = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *LevelUpPlan) SetSpells(val int32) {
+	s.Spells = val
+}
+
+// SetSpellList sets the value of SpellList.
+func (s *LevelUpPlan) SetSpellList(val []SpellPick) {
+	s.SpellList = val
+}
+
+// LevelUpPlanHeaders wraps LevelUpPlan with response headers.
+type LevelUpPlanHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LevelUpPlan
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LevelUpPlanHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LevelUpPlanHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LevelUpPlanHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LevelUpPlanHeaders) GetResponse() LevelUpPlan {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LevelUpPlanHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LevelUpPlanHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LevelUpPlanHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LevelUpPlanHeaders) SetResponse(val LevelUpPlan) {
+	s.Response = val
+}
+
+func (*LevelUpPlanHeaders) planLevelUpRes() {}
+
+// The choices made for the next level.
+// Ref: #/components/schemas/LevelUpRequest
+type LevelUpRequest struct {
+	Class Slug `json:"class"`
+	// Take the Hit Die's average, or roll it.
+	HitPoints OptLevelUpRequestHitPoints `json:"hitPoints"`
+	Picks     []LevelUpPickIn            `json:"picks"`
+	Increase  OptAbilityBonus            `json:"increase"`
+	Spells    []Slug                     `json:"spells"`
+}
+
+// GetClass returns the value of Class.
+func (s *LevelUpRequest) GetClass() Slug {
+	return s.Class
+}
+
+// GetHitPoints returns the value of HitPoints.
+func (s *LevelUpRequest) GetHitPoints() OptLevelUpRequestHitPoints {
+	return s.HitPoints
+}
+
+// GetPicks returns the value of Picks.
+func (s *LevelUpRequest) GetPicks() []LevelUpPickIn {
+	return s.Picks
+}
+
+// GetIncrease returns the value of Increase.
+func (s *LevelUpRequest) GetIncrease() OptAbilityBonus {
+	return s.Increase
+}
+
+// GetSpells returns the value of Spells.
+func (s *LevelUpRequest) GetSpells() []Slug {
+	return s.Spells
+}
+
+// SetClass sets the value of Class.
+func (s *LevelUpRequest) SetClass(val Slug) {
+	s.Class = val
+}
+
+// SetHitPoints sets the value of HitPoints.
+func (s *LevelUpRequest) SetHitPoints(val OptLevelUpRequestHitPoints) {
+	s.HitPoints = val
+}
+
+// SetPicks sets the value of Picks.
+func (s *LevelUpRequest) SetPicks(val []LevelUpPickIn) {
+	s.Picks = val
+}
+
+// SetIncrease sets the value of Increase.
+func (s *LevelUpRequest) SetIncrease(val OptAbilityBonus) {
+	s.Increase = val
+}
+
+// SetSpells sets the value of Spells.
+func (s *LevelUpRequest) SetSpells(val []Slug) {
+	s.Spells = val
+}
+
+// Take the Hit Die's average, or roll it.
+type LevelUpRequestHitPoints string
+
+const (
+	LevelUpRequestHitPointsAverage LevelUpRequestHitPoints = "average"
+	LevelUpRequestHitPointsRoll    LevelUpRequestHitPoints = "roll"
+)
+
+// AllValues returns all LevelUpRequestHitPoints values.
+func (LevelUpRequestHitPoints) AllValues() []LevelUpRequestHitPoints {
+	return []LevelUpRequestHitPoints{
+		LevelUpRequestHitPointsAverage,
+		LevelUpRequestHitPointsRoll,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LevelUpRequestHitPoints) MarshalText() ([]byte, error) {
+	switch s {
+	case LevelUpRequestHitPointsAverage:
+		return []byte(s), nil
+	case LevelUpRequestHitPointsRoll:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LevelUpRequestHitPoints) UnmarshalText(data []byte) error {
+	switch LevelUpRequestHitPoints(data) {
+	case LevelUpRequestHitPointsAverage:
+		*s = LevelUpRequestHitPointsAverage
+		return nil
+	case LevelUpRequestHitPointsRoll:
+		*s = LevelUpRequestHitPointsRoll
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // The token an invite or sign-in link carries.
@@ -22035,6 +22742,52 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptLevelUpRequestHitPoints returns new OptLevelUpRequestHitPoints with value set to v.
+func NewOptLevelUpRequestHitPoints(v LevelUpRequestHitPoints) OptLevelUpRequestHitPoints {
+	return OptLevelUpRequestHitPoints{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLevelUpRequestHitPoints is optional LevelUpRequestHitPoints.
+type OptLevelUpRequestHitPoints struct {
+	Value LevelUpRequestHitPoints
+	Set   bool
+}
+
+// IsSet returns true if OptLevelUpRequestHitPoints was set.
+func (o OptLevelUpRequestHitPoints) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLevelUpRequestHitPoints) Reset() {
+	var v LevelUpRequestHitPoints
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLevelUpRequestHitPoints) SetTo(v LevelUpRequestHitPoints) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLevelUpRequestHitPoints) Get() (v LevelUpRequestHitPoints, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLevelUpRequestHitPoints) Or(d LevelUpRequestHitPoints) LevelUpRequestHitPoints {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveArea returns new OptLiveArea with value set to v.
 func NewOptLiveArea(v LiveArea) OptLiveArea {
 	return OptLiveArea{
@@ -25044,6 +25797,7 @@ func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
+func (*ProblemStatusCodeWithHeaders) levelUpRes()                       {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
@@ -25080,6 +25834,7 @@ func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
+func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
@@ -29207,6 +29962,44 @@ func (s *SpellPageHeaders) SetResponse(val SpellPage) {
 
 func (*SpellPageHeaders) listSpellsRes() {}
 
+// A cantrip (level 0) or spell on a class's list.
+// Ref: #/components/schemas/SpellPick
+type SpellPick struct {
+	Slug  Slug   `json:"slug"`
+	Name  string `json:"name"`
+	Level int32  `json:"level"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *SpellPick) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *SpellPick) GetName() string {
+	return s.Name
+}
+
+// GetLevel returns the value of Level.
+func (s *SpellPick) GetLevel() int32 {
+	return s.Level
+}
+
+// SetSlug sets the value of Slug.
+func (s *SpellPick) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *SpellPick) SetName(val string) {
+	s.Name = val
+}
+
+// SetLevel sets the value of Level.
+func (s *SpellPick) SetLevel(val int32) {
+	s.Level = val
+}
+
 // Damage at a higher slot or character level.
 // Ref: #/components/schemas/SpellScaling
 type SpellScaling struct {
@@ -29832,6 +30625,7 @@ type TraitLineSource string
 const (
 	TraitLineSourceClass   TraitLineSource = "class"
 	TraitLineSourceSpecies TraitLineSource = "species"
+	TraitLineSourceFeat    TraitLineSource = "feat"
 )
 
 // AllValues returns all TraitLineSource values.
@@ -29839,6 +30633,7 @@ func (TraitLineSource) AllValues() []TraitLineSource {
 	return []TraitLineSource{
 		TraitLineSourceClass,
 		TraitLineSourceSpecies,
+		TraitLineSourceFeat,
 	}
 }
 
@@ -29848,6 +30643,8 @@ func (s TraitLineSource) MarshalText() ([]byte, error) {
 	case TraitLineSourceClass:
 		return []byte(s), nil
 	case TraitLineSourceSpecies:
+		return []byte(s), nil
+	case TraitLineSourceFeat:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -29862,6 +30659,9 @@ func (s *TraitLineSource) UnmarshalText(data []byte) error {
 		return nil
 	case TraitLineSourceSpecies:
 		*s = TraitLineSourceSpecies
+		return nil
+	case TraitLineSourceFeat:
+		*s = TraitLineSourceFeat
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

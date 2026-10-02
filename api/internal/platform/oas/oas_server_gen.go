@@ -413,6 +413,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/characters/{characterId}/campaigns
 	JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (JoinCampaignRes, error)
+	// LevelUp implements levelUp operation.
+	//
+	// Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+	LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (LevelUpRes, error)
 	// PreviewCharacter implements previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -1047,6 +1053,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/spells
 	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// PlanLevelUp implements planLevelUp operation.
+	//
+	// The classes the next level can go to and, for one of them, its hit points, choices and spells. The
+	// owner or a DM, out of combat.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

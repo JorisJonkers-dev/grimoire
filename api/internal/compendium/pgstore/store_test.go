@@ -219,7 +219,7 @@ func TestEmbeddedSnapshotImports(t *testing.T) {
 func assertTraits(t *testing.T, s *pgstore.Store) {
 	t.Helper()
 	ctx := context.Background()
-	traits, err := s.Traits(ctx, "srd-2024", "fighter", "dwarf", 2)
+	traits, err := s.Traits(ctx, "srd-2024", "dwarf", []compendium.ClassLevel{{Class: "fighter", Subclass: "champion", Level: 3}}, []string{"alert"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +231,21 @@ func assertTraits(t *testing.T, s *pgstore.Store) {
 		t.Fatalf("traits = %+v", traits)
 	}
 	if _, ok := got["Indomitable"]; ok {
-		t.Fatal("a level 9 feature at level 2")
+		t.Fatal("a level 9 feature at level 3")
+	}
+	if got["Improved Critical"].Level != 3 || got["Alert"].Source != "feat" {
+		t.Fatalf("subclass and feat traits = %+v", traits)
+	}
+	lu, err := s.LevelUpOptions(ctx, "srd-2024", "wizard", 1)
+	if err != nil || len(lu.Subclasses) != 1 || lu.Subclasses[0].Slug != "evoker" || len(lu.Feats) != 17 {
+		t.Fatalf("wizard options = %+v %v", lu.Subclasses, err)
+	}
+	levels := map[int]bool{}
+	for _, sp := range lu.Spells {
+		levels[sp.Level] = true
+	}
+	if !levels[0] || !levels[1] || levels[2] {
+		t.Fatalf("wizard spells to level 1 = %v", levels)
 	}
 	cat, err := s.Features(ctx)
 	if err != nil || cat.MasteryCount("fighter", 1) != 3 || cat.MasteryCount("fighter", 4) != 4 || cat.MasteryCount("wizard", 5) != 0 {

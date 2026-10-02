@@ -260,8 +260,12 @@ func TestGetEntryAndAutomation(t *testing.T) {
 	}
 }
 
-func (f *fakeCompendium) Traits(_ context.Context, _, _, _ string, level int) ([]compendium.Trait, error) {
-	return []compendium.Trait{{Name: "Second Wind", Source: "class", Level: min(level, 1), Description: "Regain hit points."}}, f.traitsErr
+func (f *fakeCompendium) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
+	return []compendium.Trait{{Name: "Second Wind", Source: "class", Level: 1, Description: "Regain hit points."}}, f.traitsErr
+}
+
+func (f *fakeCompendium) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, f.catErr
 }
 
 func (f *fakeCompendium) Features(context.Context) (features.Catalog, error) {

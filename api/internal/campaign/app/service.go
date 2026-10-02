@@ -39,6 +39,8 @@ type Repository interface {
 	Character(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) (domain.Character, error)
 	Characters(ctx context.Context, id domain.CampaignID) ([]domain.Character, error)
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
+	LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) error
+	SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error
 	DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error
 	OwnedCharacters(ctx context.Context, subject string) ([]domain.OwnedCharacter, error)
 	OwnedCharacter(ctx context.Context, id domain.OwnedID) (domain.OwnedCharacter, error)
@@ -194,6 +196,8 @@ type UpdateInput struct {
 	// StartingLevel is the level they start at.
 	CreationMethods []string
 	StartingLevel   *int
+	// HoldLevelUps stops long rests unlocking the next level.
+	HoldLevelUps *bool
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -222,7 +226,7 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	}
 	change := domain.SettingsChange{
 		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
-		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel,
+		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps,
 	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
 }

@@ -382,7 +382,7 @@ func (q *Queries) InsertLootTableRevision(ctx context.Context, arg InsertLootTab
 }
 
 const inventoryCharacters = `-- name: InventoryCharacters :many
-SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength
+SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id
 `
 

@@ -783,6 +783,72 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up:
+    get:
+      operationId: planLevelUp
+      x-ogen-operation-group: Read
+      summary: See what the next level offers
+      description: The classes the next level can go to and, for one of them, its hit points, choices and spells. The owner or a DM, out of combat.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+        - name: class
+          in: query
+          required: false
+          description: The class to level in; the starting class when omitted.
+          schema: { $ref: "#/components/schemas/Slug" }
+      responses:
+        "200":
+          description: What the next level offers.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LevelUpPlan"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: levelUp
+      x-ogen-operation-group: Build
+      summary: Take the next level
+      description: Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LevelUpRequest"
+      responses:
+        "200":
+          description: The sheet at the new level.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterSheet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
     get:
       operationId: getPortrait
@@ -5324,6 +5390,7 @@ components:
           uniqueItems: true
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
+        holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
       type: object
@@ -5374,6 +5441,7 @@ components:
           uniqueItems: true
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
+        holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
         members:
@@ -5408,6 +5476,7 @@ components:
           uniqueItems: true
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
+        holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
       type: object
@@ -6242,6 +6311,7 @@ components:
         damage: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Damage taken, soaked by temporary hit points first." }
         heal: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Hit points regained, up to the maximum." }
         tempHp: { type: integer, format: int32, minimum: 0, maximum: 1000, description: "Temporary hit points gained; the higher of old and new stays." }
+        levelUpReady: { type: boolean, description: "Unlock or lock the next level; DM only." }
         armor: { $ref: "#/components/schemas/ArmorChoice" }
         shield: { type: boolean }
         weapons:
@@ -6299,7 +6369,7 @@ components:
       required: [name, source, level, description]
       properties:
         name: { type: string, maxLength: 120 }
-        source: { type: string, enum: [class, species] }
+        source: { type: string, enum: [class, species, feat] }
         level: { type: integer, format: int32, minimum: 0, maximum: 20 }
         description: { type: string, maxLength: 20000 }
     Proficiencies:
@@ -6476,6 +6546,137 @@ components:
           maxItems: 200
           items: { $ref: "#/components/schemas/TraitLine" }
         proficiencies: { $ref: "#/components/schemas/Proficiencies" }
+        levelUpReady: { type: boolean, description: "The next level is unlocked." }
+        classes:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/ClassLine" }
+        spells:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LearnedSpellLine" }
+    LevelUpPlan:
+      type: object
+      description: What the next level offers in one class.
+      additionalProperties: false
+      required: [ready, held, level, classes, class, classLevel, hitDie, average, choices, cantrips, spells, spellList]
+      properties:
+        ready: { type: boolean, description: "The next level is unlocked." }
+        held: { type: boolean, description: "The DM holds level-ups; only the DM unlocks the next level." }
+        level: { type: integer, format: int32, minimum: 2, maximum: 21 }
+        classes:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/LevelUpClass" }
+        class: { $ref: "#/components/schemas/Slug" }
+        classLevel: { type: integer, format: int32, minimum: 1, maximum: 21 }
+        hitDie: { type: integer, format: int32, minimum: 0, maximum: 12 }
+        average: { type: integer, format: int32, minimum: 1, maximum: 20, description: "Hit points the level adds when taking the average." }
+        choices:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/LevelUpChoice" }
+        cantrips: { type: integer, format: int32, minimum: 0, maximum: 10 }
+        spells: { type: integer, format: int32, minimum: 0, maximum: 30 }
+        spellList:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/SpellPick" }
+    LevelUpClass:
+      type: object
+      description: A class the next level can go to, with what multiclassing into it still needs.
+      additionalProperties: false
+      required: [slug, name, hitDie, level, unmet]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        hitDie: { type: integer, format: int32, minimum: 0, maximum: 12 }
+        level: { type: integer, format: int32, minimum: 0, maximum: 20, description: "Levels the Character has in it now." }
+        unmet:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 200 }
+    LevelUpChoice:
+      type: object
+      description: A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+      additionalProperties: false
+      required: [slug, name, pool, count, options]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        pool: { type: string, enum: [feat_category, subclass, skill, expertise, weapon, listed] }
+        count: { type: integer, format: int32, minimum: 1, maximum: 10 }
+        options:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LevelUpOption" }
+    LevelUpOption:
+      type: object
+      description: One option of a choice, with the prerequisites the Character does not meet.
+      additionalProperties: false
+      required: [slug, name, unmet]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        unmet:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 200 }
+    SpellPick:
+      type: object
+      description: A cantrip (level 0) or spell on a class's list.
+      additionalProperties: false
+      required: [slug, name, level]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        level: { type: integer, format: int32, minimum: 0, maximum: 9 }
+    LevelUpRequest:
+      type: object
+      description: The choices made for the next level.
+      additionalProperties: false
+      required: [class]
+      properties:
+        class: { $ref: "#/components/schemas/Slug" }
+        hitPoints: { type: string, enum: [average, roll], description: "Take the Hit Die's average, or roll it." }
+        picks:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/LevelUpPickIn" }
+        increase: { $ref: "#/components/schemas/AbilityBonus" }
+        spells:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/Slug" }
+    LevelUpPickIn:
+      type: object
+      description: The options picked for one choice.
+      additionalProperties: false
+      required: [choice, values]
+      properties:
+        choice: { $ref: "#/components/schemas/Slug" }
+        values:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/Slug" }
+    ClassLine:
+      type: object
+      description: The levels a Character has in one class, and its subclass there.
+      additionalProperties: false
+      required: [slug, name, level]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        subclass: { $ref: "#/components/schemas/Slug" }
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+    LearnedSpellLine:
+      type: object
+      description: A cantrip or spell a Character learned through a class.
+      additionalProperties: false
+      required: [slug, class]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        class: { $ref: "#/components/schemas/Slug" }
     AssetUrl:
       type: string
       description: Same-origin path of a stored picture; it changes when the picture does.

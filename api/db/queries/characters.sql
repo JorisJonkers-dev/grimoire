@@ -24,7 +24,7 @@ INSERT INTO campaign.character_weapons (character_id, weapon_slug, ordering) VAL
 -- name: GetCharacter :one
 SELECT c.id, c.campaign_id, c.character_id, c.owner_member_id, m.display_name AS owner_name, m.auth_subject AS owner_subject, c.name,
        c.ruleset, c.species_slug, c.class_slug, c.background_slug, c.level, c.ability_method, c.hp_max, c.hp_current,
-       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp
+       c.armor_slug, c.shield, c.created_at, c.updated_at, c.portrait_key, c.portrait_type, c.token_key, c.token_type, c.temp_hp, c.level_up_ready
 FROM campaign.characters c JOIN campaign.members m ON m.id = c.owner_member_id
 WHERE c.campaign_id = @campaign_id AND c.id = @id;
 
@@ -36,7 +36,7 @@ WHERE c.campaign_id = $1
 ORDER BY c.name, c.id;
 
 -- name: CharacterAbilities :many
-SELECT ability, base, bonus FROM campaign.character_abilities WHERE character_id = $1;
+SELECT ability, base, bonus, increase FROM campaign.character_abilities WHERE character_id = $1;
 
 -- name: CharacterSkills :many
 SELECT skill, source FROM campaign.character_skills WHERE character_id = $1 ORDER BY skill;
@@ -115,3 +115,38 @@ WHERE campaign.character_drafts.rolled IS NULL;
 
 -- name: DeleteCharacterDraft :exec
 DELETE FROM campaign.character_drafts WHERE campaign_id = @campaign_id AND owner_subject = @owner_subject;
+
+-- name: CharacterClasses :many
+SELECT class_slug, subclass_slug, level FROM campaign.character_classes WHERE character_id = $1 ORDER BY position;
+
+-- name: CharacterPicks :many
+SELECT level, choice, value FROM campaign.character_picks WHERE character_id = $1 ORDER BY level, choice, value;
+
+-- name: CharacterSpells :many
+SELECT class_slug, spell_slug, learned_level FROM campaign.character_spells WHERE character_id = $1 ORDER BY class_slug, spell_slug;
+
+-- name: ClearCharacterClasses :exec
+DELETE FROM campaign.character_classes WHERE character_id = $1;
+
+-- name: InsertCharacterClass :exec
+INSERT INTO campaign.character_classes (character_id, class_slug, subclass_slug, level, position)
+VALUES (@character_id, @class_slug, sqlc.narg(subclass_slug), @level, @position);
+
+-- name: InsertCharacterPick :exec
+INSERT INTO campaign.character_picks (character_id, level, choice, value) VALUES (@character_id, @level, @choice, @value);
+
+-- name: InsertCharacterSpell :exec
+INSERT INTO campaign.character_spells (character_id, class_slug, spell_slug, learned_level)
+VALUES (@character_id, @class_slug, @spell_slug, @learned_level);
+
+-- name: SetAbilityIncrease :exec
+UPDATE campaign.character_abilities SET increase = @increase WHERE character_id = @character_id AND ability = @ability;
+
+-- name: LevelUpCharacter :execrows
+-- Takes the next level once, only while it is unlocked.
+UPDATE campaign.characters
+SET level = level + 1, hp_max = hp_max + @gain, hp_current = hp_current + @gain, level_up_ready = false, updated_at = @now
+WHERE campaign_id = @campaign_id AND id = @id AND level_up_ready AND level = @level;
+
+-- name: SetLevelUpReady :exec
+UPDATE campaign.characters SET level_up_ready = @ready AND level < 20, updated_at = @now WHERE campaign_id = @campaign_id AND id = @id;

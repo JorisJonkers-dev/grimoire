@@ -79,6 +79,22 @@ func TestRestsAreStored(t *testing.T) {
 		title != "Aria can level up" || !strings.HasSuffix(path, "/characters/"+char.String()) {
 		t.Fatalf("level-up notice = %q %q %v", title, path, err)
 	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.campaigns SET hold_level_ups = true WHERE id = $1", tb.campaign); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.characters SET level_up_ready = false WHERE id = $1", char); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tb.pool.Exec(ctx, "DELETE FROM social.notifications"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Commit(ctx, s, nil, finish, me, dm, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	var notices int
+	if err := tb.pool.QueryRow(ctx, "SELECT level_up_ready, (SELECT count(*) FROM social.notifications) FROM campaign.characters WHERE id = $1", char).Scan(&ready, &notices); err != nil || ready || notices != 0 {
+		t.Fatalf("a held rest unlocked a level: ready %v notices %d %v", ready, notices, err)
+	}
 	ops := map[string]func(repo *pgstore.Store) error{
 		"info": func(repo *pgstore.Store) error {
 			_, err := repo.RestInfo(ctx, tb.campaign, []uuid.UUID{char})

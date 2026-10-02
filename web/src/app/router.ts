@@ -13,6 +13,7 @@ const CampaignHomePage = () => import('@/features/campaigns/CampaignHomePage.vue
 const JoinPage = () => import('@/features/campaigns/JoinPage.vue')
 const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilderPage.vue')
 const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
+const LevelUpPage = () => import('@/features/characters/LevelUpPage.vue')
 const MyCharactersPage = () => import('@/features/characters/MyCharactersPage.vue')
 const MyCharacterPage = () => import('@/features/characters/MyCharacterPage.vue')
 const FriendsPage = () => import('@/features/friends/FriendsPage.vue')
@@ -56,6 +57,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id', name: 'campaign', component: CampaignHomePage },
       { path: '/campaigns/:id/characters/new', name: 'character-new', component: CharacterBuilderPage },
       { path: '/campaigns/:id/characters/:characterId', name: 'character', component: CharacterSheetPage },
+      { path: '/campaigns/:id/characters/:characterId/level-up', name: 'level-up', component: LevelUpPage },
       { path: '/campaigns/:id/npcs', name: 'npcs', component: NpcListPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },

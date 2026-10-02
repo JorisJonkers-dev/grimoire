@@ -52,6 +52,15 @@ function switchCampaign(ev: Event) {
   const entry = campaigns.value.find((c) => c.campaignId === (ev.target as HTMLSelectElement).value)
   if (entry) void router.push({ name: 'character', params: { id: entry.campaignId, characterId: entry.characterId } })
 }
+const classLine = computed(() => {
+  const c = s.value?.classes ?? []
+  if (c.length <= 1) return s.value?.class.name ?? ''
+  return c.map((x) => `${x.name} ${String(x.level)}${x.subclass ? ` (${titleCase(x.subclass)})` : ''}`).join(' / ')
+})
+function unlock() {
+  failed.value = false
+  update.mutate({ ...path.value, body: { levelUpReady: true } }, { onSuccess: refresh, onError: () => (failed.value = true) })
+}
 function destroy() {
   remove.mutate(path.value, {
     onSuccess: () => void router.push({ name: 'campaign', params: { id: path.value.path.campaignId } }),
@@ -72,8 +81,16 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
         <TokenBadge :name="s.name" allegiance="party" :icon-url="s.tokenUrl ?? ''" :size="56" data-testid="sheet-token" />
         <div class="title">
           <h1>{{ s.name }}</h1>
-          <p class="sub">Level {{ s.level }} {{ s.species.name }} {{ s.class.name }} · {{ s.background.name }} · {{ s.ownerName }}</p>
+          <p class="sub" data-testid="sheet-classes">
+            Level {{ s.level }} {{ s.species.name }} {{ classLine }} · {{ s.background.name }} · {{ s.ownerName }}
+          </p>
           <p v-if="!s.editable" class="g-tag locked" data-testid="sheet-locked">Read only</p>
+          <p v-if="s.editable" class="level-actions">
+            <GButton v-if="s.levelUpReady" variant="primary" data-testid="level-up" @click="router.push({ name: 'level-up', params: path.path })">
+              Level up to {{ s.level + 1 }}
+            </GButton>
+            <GButton v-else-if="!s.mine && s.level < 20" data-testid="unlock-level" @click="unlock()">Grant level {{ s.level + 1 }}</GButton>
+          </p>
         </div>
         <label v-if="campaigns.length > 1" class="switch">
           <span class="label">Campaign</span>
@@ -240,6 +257,9 @@ h1 {
 .locked {
   display: inline-block;
   margin-top: 6px;
+}
+.level-actions {
+  margin: 8px 0 0;
 }
 .switch {
   display: flex;

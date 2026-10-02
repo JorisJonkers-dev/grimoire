@@ -30,6 +30,8 @@ type CharacterService interface {
 	SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error)
 	DiscardDraft(ctx context.Context, c caller.Caller, id domain.CampaignID) error
 	RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
+	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (app.LevelUpPlan, error)
+	LevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, req app.LevelUpRequest) (app.Sheet, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -126,6 +128,17 @@ func sheetOut(s app.Sheet) oas.CharacterSheet {
 func extrasOut(out *oas.CharacterSheet, s app.Sheet) {
 	if s.Owned != (domain.OwnedID{}) {
 		out.CharacterId = oas.NewOptID(oas.ID(s.Owned))
+	}
+	out.LevelUpReady = oas.NewOptBool(s.LevelUpReady && s.Level < 20)
+	for _, x := range s.Classes {
+		line := oas.ClassLine{Slug: oas.Slug(x.Class), Name: s.ClassNames[x.Class], Level: int32(x.Level)}
+		if x.Subclass != "" {
+			line.Subclass = oas.NewOptSlug(oas.Slug(x.Subclass))
+		}
+		out.Classes = append(out.Classes, line)
+	}
+	for _, sp := range s.Spells {
+		out.Spells = append(out.Spells, oas.LearnedSpellLine{Slug: oas.Slug(sp.Spell), Class: oas.Slug(sp.Class)})
 	}
 	for _, a := range s.Attacks {
 		line := oas.AttackLine{
@@ -332,6 +345,9 @@ func (h *Handler) UpdateCharacter(ctx context.Context, req *oas.CharacterEdit, p
 		return unauthorized(), nil
 	}
 	e := app.Edit{HPCurrent: optInt(req.HpCurrent), Damage: optInt(req.Damage), Heal: optInt(req.Heal), TempHP: optInt(req.TempHp)}
+	if v, set := req.LevelUpReady.Get(); set {
+		e.LevelUpReady = &v
+	}
 	if v, set := req.Name.Get(); set {
 		name := string(v)
 		e.Name = &name

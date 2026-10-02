@@ -55,6 +55,10 @@ export type CampaignSummary = {
      */
     startingLevel?: number;
     /**
+     * Long rests stop unlocking the next level; the DM grants levels instead.
+     */
+    holdLevelUps?: boolean;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -108,6 +112,10 @@ export type Campaign = {
      */
     startingLevel?: number;
     /**
+     * Long rests stop unlocking the next level; the DM grants levels instead.
+     */
+    holdLevelUps?: boolean;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -148,6 +156,10 @@ export type CampaignUpdate = {
      * The level new Characters start at.
      */
     startingLevel?: number;
+    /**
+     * Long rests stop unlocking the next level; the DM grants levels instead.
+     */
+    holdLevelUps?: boolean;
     /**
      * Identical monsters share one initiative roll.
      */
@@ -934,6 +946,10 @@ export type CharacterEdit = {
      * Temporary hit points gained; the higher of old and new stays.
      */
     tempHp?: number;
+    /**
+     * Unlock or lock the next level; DM only.
+     */
+    levelUpReady?: boolean;
     armor?: ArmorChoice;
     shield?: boolean;
     weapons?: Array<Slug>;
@@ -991,7 +1007,7 @@ export type AttackLine = {
  */
 export type TraitLine = {
     name: string;
-    source: 'class' | 'species';
+    source: 'class' | 'species' | 'feat';
     level: number;
     description: string;
 };
@@ -1127,6 +1143,122 @@ export type CharacterSheet = {
     attacks?: Array<AttackLine>;
     traits?: Array<TraitLine>;
     proficiencies?: Proficiencies;
+    /**
+     * The next level is unlocked.
+     */
+    levelUpReady?: boolean;
+    classes?: Array<ClassLine>;
+    spells?: Array<LearnedSpellLine>;
+};
+
+/**
+ * What the next level offers in one class.
+ */
+export type LevelUpPlan = {
+    /**
+     * The next level is unlocked.
+     */
+    ready: boolean;
+    /**
+     * The DM holds level-ups; only the DM unlocks the next level.
+     */
+    held: boolean;
+    level: number;
+    classes: Array<LevelUpClass>;
+    class: Slug;
+    classLevel: number;
+    hitDie: number;
+    /**
+     * Hit points the level adds when taking the average.
+     */
+    average: number;
+    choices: Array<LevelUpChoice>;
+    cantrips: number;
+    spells: number;
+    spellList: Array<SpellPick>;
+};
+
+/**
+ * A class the next level can go to, with what multiclassing into it still needs.
+ */
+export type LevelUpClass = {
+    slug: Slug;
+    name: string;
+    hitDie: number;
+    /**
+     * Levels the Character has in it now.
+     */
+    level: number;
+    unmet: Array<string>;
+};
+
+/**
+ * A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+ */
+export type LevelUpChoice = {
+    slug: Slug;
+    name: string;
+    pool: 'feat_category' | 'subclass' | 'skill' | 'expertise' | 'weapon' | 'listed';
+    count: number;
+    options: Array<LevelUpOption>;
+};
+
+/**
+ * One option of a choice, with the prerequisites the Character does not meet.
+ */
+export type LevelUpOption = {
+    slug: Slug;
+    name: string;
+    unmet: Array<string>;
+};
+
+/**
+ * A cantrip (level 0) or spell on a class's list.
+ */
+export type SpellPick = {
+    slug: Slug;
+    name: string;
+    level: number;
+};
+
+/**
+ * The choices made for the next level.
+ */
+export type LevelUpRequest = {
+    class: Slug;
+    /**
+     * Take the Hit Die's average, or roll it.
+     */
+    hitPoints?: 'average' | 'roll';
+    picks?: Array<LevelUpPickIn>;
+    increase?: AbilityBonus;
+    spells?: Array<Slug>;
+};
+
+/**
+ * The options picked for one choice.
+ */
+export type LevelUpPickIn = {
+    choice: Slug;
+    values: Array<Slug>;
+};
+
+/**
+ * The levels a Character has in one class, and its subclass there.
+ */
+export type ClassLine = {
+    slug: Slug;
+    name: string;
+    subclass?: Slug;
+    level: number;
+};
+
+/**
+ * A cantrip or spell a Character learned through a class.
+ */
+export type LearnedSpellLine = {
+    slug: Slug;
+    class: Slug;
 };
 
 /**
@@ -3867,6 +3999,87 @@ export type UpdateCharacterResponses = {
 };
 
 export type UpdateCharacterResponse = UpdateCharacterResponses[keyof UpdateCharacterResponses];
+
+export type PlanLevelUpData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: {
+        /**
+         * The class to level in; the starting class when omitted.
+         */
+        class?: Slug;
+    };
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/level-up';
+};
+
+export type PlanLevelUpErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PlanLevelUpError = PlanLevelUpErrors[keyof PlanLevelUpErrors];
+
+export type PlanLevelUpResponses = {
+    /**
+     * What the next level offers.
+     */
+    200: LevelUpPlan;
+};
+
+export type PlanLevelUpResponse = PlanLevelUpResponses[keyof PlanLevelUpResponses];
+
+export type LevelUpData = {
+    body: LevelUpRequest;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/level-up';
+};
+
+export type LevelUpErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type LevelUpError = LevelUpErrors[keyof LevelUpErrors];
+
+export type LevelUpResponses = {
+    /**
+     * The sheet at the new level.
+     */
+    200: CharacterSheet;
+};
+
+export type LevelUpResponse = LevelUpResponses[keyof LevelUpResponses];
 
 export type GetPortraitData = {
     body?: never;

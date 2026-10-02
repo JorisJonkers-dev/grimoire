@@ -794,7 +794,11 @@ export const zAttackLine = z.object({
  */
 export const zTraitLine = z.object({
     name: z.string().max(120),
-    source: z.enum(['class', 'species']),
+    source: z.enum([
+        'class',
+        'species',
+        'feat'
+    ]),
     level: z.int().gte(0).lte(20),
     description: z.string().max(20000)
 });
@@ -2098,6 +2102,7 @@ export const zCharacterEdit = z.object({
     damage: z.int().gte(0).lte(1000).optional(),
     heal: z.int().gte(0).lte(1000).optional(),
     tempHp: z.int().gte(0).lte(1000).optional(),
+    levelUpReady: z.boolean().optional(),
     armor: zArmorChoice.optional(),
     shield: z.boolean().optional(),
     weapons: z.array(zSlug).max(4).optional()
@@ -2142,6 +2147,108 @@ export const zWeaponLine = z.object({
     damageType: z.string().max(40),
     rangeFeet: z.int().gte(0).lte(10000),
     longRangeFeet: z.int().gte(0).lte(10000)
+});
+
+/**
+ * A class the next level can go to, with what multiclassing into it still needs.
+ */
+export const zLevelUpClass = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    hitDie: z.int().gte(0).lte(12),
+    level: z.int().gte(0).lte(20),
+    unmet: z.array(z.string().max(200)).max(10)
+});
+
+/**
+ * One option of a choice, with the prerequisites the Character does not meet.
+ */
+export const zLevelUpOption = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    unmet: z.array(z.string().max(200)).max(10)
+});
+
+/**
+ * A pick the level asks for, such as a Fighting Style, a feat or Expertise.
+ */
+export const zLevelUpChoice = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    pool: z.enum([
+        'feat_category',
+        'subclass',
+        'skill',
+        'expertise',
+        'weapon',
+        'listed'
+    ]),
+    count: z.int().gte(1).lte(10),
+    options: z.array(zLevelUpOption).max(100)
+});
+
+/**
+ * A cantrip (level 0) or spell on a class's list.
+ */
+export const zSpellPick = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    level: z.int().gte(0).lte(9)
+});
+
+/**
+ * What the next level offers in one class.
+ */
+export const zLevelUpPlan = z.object({
+    ready: z.boolean(),
+    held: z.boolean(),
+    level: z.int().gte(2).lte(21),
+    classes: z.array(zLevelUpClass).max(40),
+    class: zSlug,
+    classLevel: z.int().gte(1).lte(21),
+    hitDie: z.int().gte(0).lte(12),
+    average: z.int().gte(1).lte(20),
+    choices: z.array(zLevelUpChoice).max(10),
+    cantrips: z.int().gte(0).lte(10),
+    spells: z.int().gte(0).lte(30),
+    spellList: z.array(zSpellPick).max(500)
+});
+
+/**
+ * The options picked for one choice.
+ */
+export const zLevelUpPickIn = z.object({
+    choice: zSlug,
+    values: z.array(zSlug).max(10)
+});
+
+/**
+ * The choices made for the next level.
+ */
+export const zLevelUpRequest = z.object({
+    class: zSlug,
+    hitPoints: z.enum(['average', 'roll']).optional(),
+    picks: z.array(zLevelUpPickIn).max(10).optional(),
+    increase: zAbilityBonus.optional(),
+    spells: z.array(zSlug).max(40).optional()
+});
+
+/**
+ * The levels a Character has in one class, and its subclass there.
+ */
+export const zClassLine = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    subclass: zSlug.optional(),
+    level: z.int().gte(1).lte(20)
+});
+
+/**
+ * A cantrip or spell a Character learned through a class.
+ */
+export const zLearnedSpellLine = z.object({
+    slug: zSlug,
+    class: zSlug
 });
 
 /**
@@ -2826,6 +2933,7 @@ export const zCampaignSummary = z.object({
     initiativeMode: zInitiativeMode.optional(),
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
+    holdLevelUps: z.boolean().optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -2853,6 +2961,7 @@ export const zCampaign = z.object({
     initiativeMode: zInitiativeMode.optional(),
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
+    holdLevelUps: z.boolean().optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
@@ -2902,7 +3011,10 @@ export const zCharacterSheet = z.object({
     characterId: zId.optional(),
     attacks: z.array(zAttackLine).max(4).optional(),
     traits: z.array(zTraitLine).max(200).optional(),
-    proficiencies: zProficiencies.optional()
+    proficiencies: zProficiencies.optional(),
+    levelUpReady: z.boolean().optional(),
+    classes: z.array(zClassLine).max(12).optional(),
+    spells: z.array(zLearnedSpellLine).max(100).optional()
 });
 
 /**
@@ -2946,6 +3058,7 @@ export const zCampaignUpdate = z.object({
     initiativeMode: zInitiativeMode.optional(),
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
+    holdLevelUps: z.boolean().optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -3480,6 +3593,32 @@ export const zUpdateCharacterPath = z.object({
  * The updated sheet.
  */
 export const zUpdateCharacterResponse = zCharacterSheet;
+
+export const zPlanLevelUpPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+export const zPlanLevelUpQuery = z.object({
+    class: zSlug.optional()
+});
+
+/**
+ * What the next level offers.
+ */
+export const zPlanLevelUpResponse = zLevelUpPlan;
+
+export const zLevelUpBody = zLevelUpRequest;
+
+export const zLevelUpPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The sheet at the new level.
+ */
+export const zLevelUpResponse = zCharacterSheet;
 
 export const zGetPortraitPath = z.object({
     campaignId: zId,

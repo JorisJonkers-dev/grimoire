@@ -627,6 +627,15 @@ func (UnimplementedHandler) JoinCampaign(ctx context.Context, req *CharacterJoin
 	return r, ht.ErrNotImplemented
 }
 
+// LevelUp implements levelUp operation.
+//
+// Takes the unlocked next level with its choices, multiclassing when the prerequisites hold.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+func (UnimplementedHandler) LevelUp(ctx context.Context, req *LevelUpRequest, params LevelUpParams) (r LevelUpRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // LinkOidcAccount implements linkOidcAccount operation.
 //
 // Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
@@ -952,6 +961,16 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 //
 // POST /api/v1/sign-in/two-step
 func (UnimplementedHandler) PassTwoStep(ctx context.Context, req *TwoStepAnswer) (r PassTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PlanLevelUp implements planLevelUp operation.
+//
+// The classes the next level can go to and, for one of them, its hit points, choices and spells. The
+// owner or a DM, out of combat.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
+func (UnimplementedHandler) PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (r PlanLevelUpRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

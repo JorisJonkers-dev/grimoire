@@ -245,11 +245,12 @@ describe('table settings', () => {
     await wrapper.get('[data-testid="share-initiative"]').setValue(true)
     await wrapper.get('[data-testid="method-rolled"]').setValue(false)
     await wrapper.get('[data-testid="starting-level-input"]').setValue(3)
+    await wrapper.get('[data-testid="hold-level-ups"]').setValue(true)
     await wrapper.get('[data-testid="settings"]').trigger('submit')
     await flushPromises()
     expect(sent).toEqual([{
       reactionTimeoutS: 5, highGround: true, restSupplies: true, initiativeMode: 'side', shareInitiative: true,
-      creationMethods: ['standard-array', 'point-buy'], startingLevel: 3,
+      creationMethods: ['standard-array', 'point-buy'], startingLevel: 3, holdLevelUps: true,
     }])
     expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
   })

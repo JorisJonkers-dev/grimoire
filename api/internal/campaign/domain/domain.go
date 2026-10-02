@@ -71,6 +71,8 @@ type Campaign struct {
 	// they start at.
 	CreationMethods []string
 	StartingLevel   int
+	// HoldLevelUps stops long rests unlocking the next level; the DM grants levels instead.
+	HoldLevelUps bool
 }
 
 // SettingsChange is a change to a Campaign's settings; nil leaves a field alone.
@@ -84,6 +86,7 @@ type SettingsChange struct {
 	ShareInitiative  *bool
 	CreationMethods  []string
 	StartingLevel    *int
+	HoldLevelUps     *bool
 }
 
 // Member is an account's participation in a Campaign.
@@ -180,6 +183,47 @@ type Character struct {
 	UpdatedAt        time.Time
 	Portrait         *Image
 	Token            *Image
+	// Classes are its levels in each class, the starting class first; Picks and Spells what it chose on
+	// the way; Increase its Ability Score Improvements. LevelUpReady means the next level is unlocked.
+	Classes      []ClassLevel
+	Picks        []Pick
+	Spells       []LearnedSpell
+	Increase     map[string]int
+	LevelUpReady bool
+}
+
+// ClassLevel is the levels a Character has in one class, and the subclass it chose there.
+type ClassLevel struct {
+	Class    string
+	Subclass string
+	Level    int
+}
+
+// Pick is one value chosen for a choice on reaching a level: "fighting-style" = "defense".
+type Pick struct {
+	Level  int
+	Choice string
+	Value  string
+}
+
+// LearnedSpell is a cantrip or spell a Character learned through a class, and the level it learned it at.
+type LearnedSpell struct {
+	Class string
+	Spell string
+	Level int
+}
+
+// LevelUp is a Character taking its next level: the hit points it gains, its classes afterwards, what it
+// picked and learned, and its Ability Score Improvements afterwards.
+type LevelUp struct {
+	CampaignID CampaignID
+	ID         CharacterID
+	From       int
+	Gain       int
+	Classes    []ClassLevel
+	Picks      []Pick
+	Spells     []LearnedSpell
+	Increase   map[string]int
 }
 
 // CharacterSummary is a Character as it appears in the party list.

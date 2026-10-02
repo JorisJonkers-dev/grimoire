@@ -230,6 +230,123 @@ func (q *Queries) BuilderWeapons(ctx context.Context, key string) ([]BuilderWeap
 	return items, nil
 }
 
+const levelUpFeats = `-- name: LevelUpFeats :many
+SELECT f.slug, f.name, f.feat_type, f.description FROM compendium.feats f
+JOIN compendium.documents d ON d.id = f.document_id
+WHERE d.key = $1
+ORDER BY f.name
+`
+
+type LevelUpFeatsRow struct {
+	Slug        string
+	Name        string
+	FeatType    string
+	Description string
+}
+
+func (q *Queries) LevelUpFeats(ctx context.Context, ruleset string) ([]LevelUpFeatsRow, error) {
+	rows, err := q.db.Query(ctx, levelUpFeats, ruleset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LevelUpFeatsRow{}
+	for rows.Next() {
+		var i LevelUpFeatsRow
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.FeatType,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const levelUpSpells = `-- name: LevelUpSpells :many
+SELECT s.slug, s.name, s.level FROM compendium.spells s
+JOIN compendium.documents d ON d.id = s.document_id
+JOIN compendium.spell_classes sc ON sc.spell_id = s.id
+WHERE d.key = $1 AND sc.class_slug = $2 AND s.level <= $3
+ORDER BY s.level, s.name
+`
+
+type LevelUpSpellsParams struct {
+	Ruleset  string
+	Class    string
+	MaxLevel int32
+}
+
+type LevelUpSpellsRow struct {
+	Slug  string
+	Name  string
+	Level int32
+}
+
+// A class's cantrips and spells up to a spell level.
+func (q *Queries) LevelUpSpells(ctx context.Context, arg LevelUpSpellsParams) ([]LevelUpSpellsRow, error) {
+	rows, err := q.db.Query(ctx, levelUpSpells, arg.Ruleset, arg.Class, arg.MaxLevel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LevelUpSpellsRow{}
+	for rows.Next() {
+		var i LevelUpSpellsRow
+		if err := rows.Scan(&i.Slug, &i.Name, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const levelUpSubclasses = `-- name: LevelUpSubclasses :many
+SELECT c.slug, c.name FROM compendium.classes c
+JOIN compendium.documents d ON d.id = c.document_id
+WHERE d.key = $1 AND c.parent_slug = $2
+ORDER BY c.name
+`
+
+type LevelUpSubclassesParams struct {
+	Ruleset string
+	Class   pgtype.Text
+}
+
+type LevelUpSubclassesRow struct {
+	Slug string
+	Name string
+}
+
+func (q *Queries) LevelUpSubclasses(ctx context.Context, arg LevelUpSubclassesParams) ([]LevelUpSubclassesRow, error) {
+	rows, err := q.db.Query(ctx, levelUpSubclasses, arg.Ruleset, arg.Class)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LevelUpSubclassesRow{}
+	for rows.Next() {
+		var i LevelUpSubclassesRow
+		if err := rows.Scan(&i.Slug, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const rulesetYear = `-- name: RulesetYear :one
 SELECT ruleset_year FROM compendium.documents WHERE key = $1
 `

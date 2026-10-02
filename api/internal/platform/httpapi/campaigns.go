@@ -123,6 +123,7 @@ func summaryOut(s domain.Summary) oas.CampaignSummary {
 		ShareInitiative:  oas.NewOptBool(s.ShareInitiative),
 		CreationMethods:  methodsOut(s.CreationMethods),
 		StartingLevel:    oas.NewOptInt32(int32(s.StartingLevel)), //nolint:gosec // 1 to 20
+		HoldLevelUps:     oas.NewOptBool(s.HoldLevelUps),
 	}
 }
 
@@ -137,6 +138,7 @@ func detailOut(d domain.Detail) oas.Campaign {
 		ShareInitiative:  oas.NewOptBool(d.ShareInitiative),
 		CreationMethods:  methodsOut(d.CreationMethods),
 		StartingLevel:    oas.NewOptInt32(int32(d.StartingLevel)), //nolint:gosec // 1 to 20
+		HoldLevelUps:     oas.NewOptBool(d.HoldLevelUps),
 		Members:          make([]oas.Member, 0, len(d.Members)),
 	}
 	for _, m := range d.Members {
@@ -246,6 +248,9 @@ func (h *Handler) UpdateCampaign(ctx context.Context, req *oas.CampaignUpdate, p
 	if v, set := req.StartingLevel.Get(); set {
 		level := int(v)
 		in.StartingLevel = &level
+	}
+	if v, set := req.HoldLevelUps.Get(); set {
+		in.HoldLevelUps = &v
 	}
 	camp, err := h.Campaigns.Update(ctx, c, domain.CampaignID(p.CampaignId), in)
 	if err != nil {

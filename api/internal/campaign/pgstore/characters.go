@@ -88,6 +88,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), TempHP: int(r.TempHp), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
+		Increase: map[string]int{}, LevelUpReady: r.LevelUpReady,
 	}
 	scores, err := s.q.CharacterAbilities(ctx, r.ID)
 	if err != nil {
@@ -97,6 +98,9 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 		c.Base[a.Ability] = int(a.Base)
 		if a.Bonus > 0 {
 			c.Bonus[a.Ability] = int(a.Bonus)
+		}
+		if a.Increase > 0 {
+			c.Increase[a.Ability] = int(a.Increase)
 		}
 	}
 	skills, err := s.q.CharacterSkills(ctx, r.ID)
@@ -113,7 +117,82 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 	if c.Weapons, err = s.q.CharacterWeapons(ctx, r.ID); err != nil {
 		return domain.Character{}, err
 	}
+	return s.progress(ctx, c)
+}
+
+// progress reads what a Character chose as it levelled: its classes, picks and spells. One that never
+// levelled has every level in its starting class.
+func (s *Store) progress(ctx context.Context, c domain.Character) (domain.Character, error) {
+	id := uuid.UUID(c.ID)
+	classes, err := s.q.CharacterClasses(ctx, id)
+	if err != nil {
+		return domain.Character{}, err
+	}
+	for _, x := range classes {
+		c.Classes = append(c.Classes, domain.ClassLevel{Class: x.ClassSlug, Subclass: x.SubclassSlug.String, Level: int(x.Level)})
+	}
+	if len(c.Classes) == 0 {
+		c.Classes = []domain.ClassLevel{{Class: c.Class, Subclass: "", Level: max(c.Level, 1)}}
+	}
+	picks, err := s.q.CharacterPicks(ctx, id)
+	if err != nil {
+		return domain.Character{}, err
+	}
+	for _, p := range picks {
+		c.Picks = append(c.Picks, domain.Pick{Level: int(p.Level), Choice: p.Choice, Value: p.Value})
+	}
+	spells, err := s.q.CharacterSpells(ctx, id)
+	if err != nil {
+		return domain.Character{}, err
+	}
+	for _, sp := range spells {
+		c.Spells = append(c.Spells, domain.LearnedSpell{Class: sp.ClassSlug, Spell: sp.SpellSlug, Level: int(sp.LearnedLevel)})
+	}
 	return c, nil
+}
+
+// LevelUp takes a Character's next level once, while it is unlocked, with everything chosen for it.
+//
+//nolint:gosec // levels, hit points and increases are bounded by the rules
+func (s *Store) LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) error {
+	id := uuid.UUID(l.ID)
+	n, err := s.q.LevelUpCharacter(ctx, queries.LevelUpCharacterParams{CampaignID: uuid.UUID(l.CampaignID), ID: id, Level: int32(l.From), Gain: int32(l.Gain), Now: now})
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return domain.ErrConflict
+	}
+	if err := s.q.ClearCharacterClasses(ctx, id); err != nil {
+		return err
+	}
+	for i, x := range l.Classes {
+		p := queries.InsertCharacterClassParams{CharacterID: id, ClassSlug: x.Class, SubclassSlug: optSlug(x.Subclass), Level: int32(x.Level), Position: int32(i)}
+		if err := s.q.InsertCharacterClass(ctx, p); err != nil {
+			return err
+		}
+	}
+	for _, p := range l.Picks {
+		if err := s.q.InsertCharacterPick(ctx, queries.InsertCharacterPickParams{CharacterID: id, Level: int32(p.Level), Choice: p.Choice, Value: p.Value}); err != nil {
+			return err
+		}
+	}
+	for _, sp := range l.Spells {
+		if err := s.q.InsertCharacterSpell(ctx, queries.InsertCharacterSpellParams{CharacterID: id, ClassSlug: sp.Class, SpellSlug: sp.Spell, LearnedLevel: int32(sp.Level)}); err != nil {
+			return err
+		}
+	}
+	for ability, inc := range l.Increase {
+		if err := s.q.SetAbilityIncrease(ctx, queries.SetAbilityIncreaseParams{CharacterID: id, Ability: ability, Increase: int32(inc)}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SetLevelUpReady unlocks or locks a Character's next level; a level 20 Character has none.
+func (s *Store) SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error {
+	return s.q.SetLevelUpReady(ctx, queries.SetLevelUpReadyParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Ready: ready, Now: now})
 }
 
 // Characters lists a Campaign's Characters.

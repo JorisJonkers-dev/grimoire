@@ -21,8 +21,12 @@ import (
 
 type fakeOptions struct{ err error }
 
-func (f fakeOptions) Traits(context.Context, string, string, string, int) ([]compendium.Trait, error) {
+func (f fakeOptions) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
 	return nil, f.err
+}
+
+func (f fakeOptions) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, f.err
 }
 
 func (f fakeOptions) Features(context.Context) (features.Catalog, error) {
@@ -299,6 +303,20 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 		t.Fatalf("combat status error: %v", err)
 	}
 	combat.err = nil
+	chars.Compendium = levelUpFails{}
+	if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, ""); !errors.Is(err, boom) {
+		t.Fatalf("level-up options error: %v", err)
+	}
+	chars.Compendium = fakeOptions{}
+	var rule *app.RuleError
+	for _, class := range []string{"bard", "wizard"} {
+		if _, err := chars.PlanLevelUp(ctx, playerCaller, d.ID, sheet.ID, class); !errors.As(err, &rule) {
+			t.Fatalf("level up into %s: %v", class, err)
+		}
+	}
+	if err := chars.Repo.LevelUp(ctx, domain.LevelUp{CampaignID: d.ID, ID: sheet.ID, From: 1}, time.Now()); !errors.Is(err, domain.ErrConflict) {
+		t.Fatalf("a locked level taken: %v", err)
+	}
 	chars.Compendium = fakeOptions{err: boom}
 	if _, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, boom) {
 		t.Fatalf("compendium error on get: %v", err)
@@ -327,6 +345,13 @@ func TestCharacterPortFailuresSurface(t *testing.T) {
 	}
 }
 
+// levelUpFails builds sheets but cannot read what a level offers.
+type levelUpFails struct{ fakeOptions }
+
+func (levelUpFails) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	return compendium.LevelUpOptions{}, errExtras
+}
+
 // extrasFail builds sheets but fails reading the feature catalogue, or the traits.
 type extrasFail struct {
 	fakeOptions
@@ -340,7 +365,7 @@ func (f extrasFail) Features(context.Context) (features.Catalog, error) {
 	return features.Catalog{}, nil
 }
 
-func (f extrasFail) Traits(context.Context, string, string, string, int) ([]compendium.Trait, error) {
+func (f extrasFail) Traits(context.Context, string, string, []compendium.ClassLevel, []string) ([]compendium.Trait, error) {
 	return nil, errExtras
 }
 
@@ -370,6 +395,22 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 	chars, _, d := party(t, pgstore.New(db.Pool()))
 	sheet, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
 	doomed, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	climber, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	scholar, _ := chars.Create(ctx, playerCaller, d.ID, fighter())
+	store := pgstore.New(db.Pool())
+	for _, id := range []domain.CharacterID{climber.ID, scholar.ID} {
+		if err := store.SetLevelUpReady(ctx, d.ID, id, true, time.Now()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	full := domain.LevelUp{
+		CampaignID: d.ID, ID: scholar.ID, From: 1, Gain: 4,
+		Classes:  []domain.ClassLevel{{Class: "fighter", Subclass: "", Level: 1}, {Class: "wizard", Subclass: "evoker", Level: 1}},
+		Picks:    []domain.Pick{{Level: 2, Choice: "feat", Value: "alert"}},
+		Spells:   []domain.LearnedSpell{{Class: "wizard", Spell: "light", Level: 2}},
+		Increase: map[string]int{"strength": 2},
+	}
+	ready := true
 	if err := chars.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png); err != nil {
 		t.Fatal(err)
 	}
@@ -413,6 +454,32 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			return err
 		},
 		"delete": func(c *app.Characters) error { return c.Delete(ctx, playerCaller, d.ID, doomed.ID) },
+		"plan": func(c *app.Characters) error {
+			_, err := c.PlanLevelUp(ctx, playerCaller, d.ID, climber.ID, "")
+			return err
+		},
+		"level up": func(c *app.Characters) error {
+			if err := store.SetLevelUpReady(ctx, d.ID, climber.ID, true, time.Now()); err != nil {
+				t.Fatal(err)
+			}
+			_, err := c.LevelUp(ctx, playerCaller, d.ID, climber.ID, app.LevelUpRequest{Class: "fighter", Roll: false, Picks: nil, Increase: nil, Spells: nil})
+			return err
+		},
+		"store level up": func(c *app.Characters) error {
+			now, err := store.Character(ctx, d.ID, scholar.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := store.SetLevelUpReady(ctx, d.ID, scholar.ID, true, time.Now()); err != nil {
+				t.Fatal(err)
+			}
+			full.From = now.Level
+			return c.Repo.InTx(ctx, func(r app.Repository) error { return r.LevelUp(ctx, full, time.Now()) })
+		},
+		"unlock": func(c *app.Characters) error {
+			_, err := c.Update(ctx, dmCaller, d.ID, sheet.ID, app.Edit{LevelUpReady: &ready})
+			return err
+		},
 		"portrait": func(c *app.Characters) error {
 			return c.SetImage(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait, png)
 		},

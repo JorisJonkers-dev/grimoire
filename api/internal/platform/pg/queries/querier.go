@@ -90,7 +90,10 @@ type Querier interface {
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
 	ChangeResourceUsed(ctx context.Context, arg ChangeResourceUsedParams) error
 	CharacterAbilities(ctx context.Context, characterID uuid.UUID) ([]CharacterAbilitiesRow, error)
+	CharacterClasses(ctx context.Context, characterID uuid.UUID) ([]CharacterClassesRow, error)
+	CharacterPicks(ctx context.Context, characterID uuid.UUID) ([]CharacterPicksRow, error)
 	CharacterSkills(ctx context.Context, characterID uuid.UUID) ([]CharacterSkillsRow, error)
+	CharacterSpells(ctx context.Context, characterID uuid.UUID) ([]CharacterSpellsRow, error)
 	CharacterTrade(ctx context.Context, campaignID uuid.UUID) ([]CharacterTradeRow, error)
 	CharacterWeapons(ctx context.Context, characterID uuid.UUID) ([]string, error)
 	CheckMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepCheckMonster, error)
@@ -99,6 +102,7 @@ type Querier interface {
 	ClearAttacks(ctx context.Context, combatID uuid.UUID) error
 	ClearBackgroundBenefits(ctx context.Context, backgroundID int64) error
 	ClearCasts(ctx context.Context, sessionID uuid.UUID) error
+	ClearCharacterClasses(ctx context.Context, characterID uuid.UUID) error
 	ClearCharacterWeapons(ctx context.Context, characterID uuid.UUID) error
 	ClearClassChildren(ctx context.Context, classID int64) error
 	ClearContainerCoins(ctx context.Context, containerID uuid.UUID) error
@@ -227,6 +231,9 @@ type Querier interface {
 	InsertCastHex(ctx context.Context, arg InsertCastHexParams) error
 	InsertCastTarget(ctx context.Context, arg InsertCastTargetParams) error
 	InsertCharacter(ctx context.Context, arg InsertCharacterParams) (uuid.UUID, error)
+	InsertCharacterClass(ctx context.Context, arg InsertCharacterClassParams) error
+	InsertCharacterPick(ctx context.Context, arg InsertCharacterPickParams) error
+	InsertCharacterSpell(ctx context.Context, arg InsertCharacterSpellParams) error
 	InsertCheckMonster(ctx context.Context, arg InsertCheckMonsterParams) error
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
 	InsertConversation(ctx context.Context, arg InsertConversationParams) error
@@ -324,6 +331,12 @@ type Querier interface {
 	ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error)
 	LastDamage(ctx context.Context, sessionID pgtype.UUID) (LastDamageRow, error)
 	LatestSnapshotHash(ctx context.Context) (string, error)
+	// Takes the next level once, only while it is unlocked.
+	LevelUpCharacter(ctx context.Context, arg LevelUpCharacterParams) (int64, error)
+	LevelUpFeats(ctx context.Context, ruleset string) ([]LevelUpFeatsRow, error)
+	// A class's cantrips and spells up to a spell level.
+	LevelUpSpells(ctx context.Context, arg LevelUpSpellsParams) ([]LevelUpSpellsRow, error)
+	LevelUpSubclasses(ctx context.Context, arg LevelUpSubclassesParams) ([]LevelUpSubclassesRow, error)
 	ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
 	ListAccountCharacters(ctx context.Context, ownerSubject string) ([]ListAccountCharactersRow, error)
 	ListAccountEvents(ctx context.Context, accountID uuid.UUID) ([]ListAccountEventsRow, error)
@@ -525,6 +538,7 @@ type Querier interface {
 	SessionZoneChecks(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCheck, error)
 	SessionZoneCreatures(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCreature, error)
 	SessionZones(ctx context.Context, sessionID uuid.UUID) ([]SessionZonesRow, error)
+	SetAbilityIncrease(ctx context.Context, arg SetAbilityIncreaseParams) error
 	SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error
 	SetAccountDisabled(ctx context.Context, arg SetAccountDisabledParams) error
 	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
@@ -534,6 +548,7 @@ type Querier interface {
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
+	SetLevelUpReady(ctx context.Context, arg SetLevelUpReadyParams) error
 	SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error

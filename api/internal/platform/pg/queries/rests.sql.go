@@ -179,7 +179,7 @@ SELECT gen_random_uuid(), a.id, 'level_up', left(c.name || ' can level up', 120)
 FROM campaign.characters c
 JOIN campaign.account_characters o ON o.id = c.character_id
 JOIN identity.accounts a ON a.subject = o.owner_subject
-WHERE c.id = $2
+WHERE c.id = $2 AND c.level_up_ready
     AND coalesce((SELECT p.enabled FROM social.notification_preferences p WHERE p.account_id = a.id AND p.kind = 'level_up' AND p.channel = 'in_app'), true)
 ON CONFLICT (account_id, dedupe_key) WHERE read_at IS NULL AND dedupe_key <> '' DO UPDATE SET created_at = EXCLUDED.created_at
 `
@@ -196,7 +196,7 @@ func (q *Queries) NotifyLevelUp(ctx context.Context, arg NotifyLevelUpParams) er
 }
 
 const restAbilities = `-- name: RestAbilities :many
-SELECT character_id, ability, base + bonus AS score FROM campaign.character_abilities WHERE character_id = ANY($1::uuid[])
+SELECT character_id, ability, base + bonus + increase AS score FROM campaign.character_abilities WHERE character_id = ANY($1::uuid[])
 `
 
 type RestAbilitiesRow struct {
@@ -322,9 +322,11 @@ func (q *Queries) SaveRest(ctx context.Context, arg SaveRestParams) error {
 }
 
 const saveRestResult = `-- name: SaveRestResult :exec
-UPDATE campaign.characters
-SET hp_current = LEAST(hp_max, GREATEST(0, $1::integer)), hit_dice_spent = $2, level_up_ready = level_up_ready OR $3
-WHERE id = $4
+UPDATE campaign.characters c
+SET hp_current = LEAST(c.hp_max, GREATEST(0, $1::integer)), hit_dice_spent = $2,
+    level_up_ready = c.level_up_ready OR ($3 AND c.level < 20 AND NOT p.hold_level_ups)
+FROM campaign.campaigns p
+WHERE c.id = $4 AND p.id = c.campaign_id
 `
 
 type SaveRestResultParams struct {

@@ -74,12 +74,18 @@ const startingLevel = computed({
   get: () => levelChoice.value ?? campaign.data.value?.startingLevel ?? 1,
   set: (v: number) => (levelChoice.value = v),
 })
+const holdChoice = ref<boolean | null>(null)
+const holdLevelUps = computed({
+  get: () => holdChoice.value ?? campaign.data.value?.holdLevelUps ?? false,
+  set: (v: boolean) => (holdChoice.value = v),
+})
 const settings = useMutation(updateCampaignMutation())
 function saveSettings() {
   failed.value = ''
   settings.mutate({ ...path.value, body: {
     reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value,
     shareInitiative: shareInitiative.value, creationMethods: creationMethods.value, startingLevel: startingLevel.value,
+    holdLevelUps: holdLevelUps.value,
   } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
@@ -259,6 +265,10 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <label class="g-field">
           <span>New Characters start at level</span>
           <input v-model.number="startingLevel" type="number" min="1" max="20" data-testid="starting-level-input" />
+        </label>
+        <label class="check">
+          <input v-model="holdLevelUps" type="checkbox" data-testid="hold-level-ups" />
+          <span>Hold level-ups: long rests stop unlocking the next level, and you grant levels from each sheet</span>
         </label>
         <GButton type="submit" :disabled="!creationMethods.length">Save settings</GButton>
         <p v-if="settings.isSuccess.value" role="status" data-testid="settings-saved">Saved.</p>
