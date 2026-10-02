@@ -129,6 +129,10 @@ type DisableTwoStepRes interface {
 	disableTwoStepRes()
 }
 
+type DiscardCharacterDraftRes interface {
+	discardCharacterDraftRes()
+}
+
 type DraftReleaseNoteRes interface {
 	draftReleaseNoteRes()
 }
@@ -171,6 +175,10 @@ type GetBuilderOptionsRes interface {
 
 type GetCampaignRes interface {
 	getCampaignRes()
+}
+
+type GetCharacterDraftRes interface {
+	getCharacterDraftRes()
 }
 
 type GetCharacterRes interface {
@@ -489,8 +497,16 @@ type RevokeInviteRes interface {
 	revokeInviteRes()
 }
 
+type RollCharacterScoresRes interface {
+	rollCharacterScoresRes()
+}
+
 type RollRestRes interface {
 	rollRestRes()
+}
+
+type SaveCharacterDraftRes interface {
+	saveCharacterDraftRes()
 }
 
 type SeeReleaseNoteRes interface {

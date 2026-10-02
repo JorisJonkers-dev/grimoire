@@ -62,7 +62,7 @@ func (q *Queries) CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, er
 const createCampaign = `-- name: CreateCampaign :one
 INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $4)
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, created_at
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, created_at
 `
 
 type CreateCampaignParams struct {
@@ -81,6 +81,8 @@ type CreateCampaignRow struct {
 	RestSupplies     bool
 	InitiativeMode   string
 	ShareInitiative  bool
+	CreationMethods  []string
+	StartingLevel    int32
 	CreatedAt        time.Time
 }
 
@@ -101,6 +103,8 @@ func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) 
 		&i.RestSupplies,
 		&i.InitiativeMode,
 		&i.ShareInitiative,
+		&i.CreationMethods,
+		&i.StartingLevel,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -172,7 +176,7 @@ func (q *Queries) FindInvite(ctx context.Context, arg FindInviteParams) (FindInv
 }
 
 const getCampaign = `-- name: GetCampaign :one
-SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, created_at FROM campaign.campaigns WHERE id = $1
+SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, created_at FROM campaign.campaigns WHERE id = $1
 `
 
 type GetCampaignRow struct {
@@ -184,6 +188,8 @@ type GetCampaignRow struct {
 	RestSupplies     bool
 	InitiativeMode   string
 	ShareInitiative  bool
+	CreationMethods  []string
+	StartingLevel    int32
 	CreatedAt        time.Time
 }
 
@@ -199,6 +205,8 @@ func (q *Queries) GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow
 		&i.RestSupplies,
 		&i.InitiativeMode,
 		&i.ShareInitiative,
+		&i.CreationMethods,
+		&i.StartingLevel,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -253,7 +261,7 @@ func (q *Queries) GetMembership(ctx context.Context, arg GetMembershipParams) (C
 }
 
 const listCampaignsForSubject = `-- name: ListCampaignsForSubject :many
-SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.created_at, m.role,
+SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.created_at, m.role,
        (SELECT count(*) FROM campaign.members x WHERE x.campaign_id = c.id)::int AS member_count
 FROM campaign.campaigns c
 JOIN campaign.members m ON m.campaign_id = c.id AND m.auth_subject = $1
@@ -279,6 +287,8 @@ type ListCampaignsForSubjectRow struct {
 	RestSupplies     bool
 	InitiativeMode   string
 	ShareInitiative  bool
+	CreationMethods  []string
+	StartingLevel    int32
 	CreatedAt        time.Time
 	Role             string
 	MemberCount      int32
@@ -307,6 +317,8 @@ func (q *Queries) ListCampaignsForSubject(ctx context.Context, arg ListCampaigns
 			&i.RestSupplies,
 			&i.InitiativeMode,
 			&i.ShareInitiative,
+			&i.CreationMethods,
+			&i.StartingLevel,
 			&i.CreatedAt,
 			&i.Role,
 			&i.MemberCount,
@@ -463,9 +475,11 @@ SET name = coalesce($1::text, name),
     rest_supplies = coalesce($5::boolean, rest_supplies),
     initiative_mode = coalesce($6::text, initiative_mode),
     share_initiative = coalesce($7::boolean, share_initiative),
-    updated_at = $8
-WHERE id = $9
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, created_at
+    creation_methods = coalesce($8::text[], creation_methods),
+    starting_level = coalesce($9::integer, starting_level),
+    updated_at = $10
+WHERE id = $11
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, created_at
 `
 
 type UpdateCampaignParams struct {
@@ -476,6 +490,8 @@ type UpdateCampaignParams struct {
 	RestSupplies     pgtype.Bool
 	InitiativeMode   pgtype.Text
 	ShareInitiative  pgtype.Bool
+	CreationMethods  []string
+	StartingLevel    pgtype.Int4
 	Now              time.Time
 	ID               uuid.UUID
 }
@@ -489,6 +505,8 @@ type UpdateCampaignRow struct {
 	RestSupplies     bool
 	InitiativeMode   string
 	ShareInitiative  bool
+	CreationMethods  []string
+	StartingLevel    int32
 	CreatedAt        time.Time
 }
 
@@ -501,6 +519,8 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		arg.RestSupplies,
 		arg.InitiativeMode,
 		arg.ShareInitiative,
+		arg.CreationMethods,
+		arg.StartingLevel,
 		arg.Now,
 		arg.ID,
 	)
@@ -514,6 +534,8 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		&i.RestSupplies,
 		&i.InitiativeMode,
 		&i.ShareInitiative,
+		&i.CreationMethods,
+		&i.StartingLevel,
 		&i.CreatedAt,
 	)
 	return i, err

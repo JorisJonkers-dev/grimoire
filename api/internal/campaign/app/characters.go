@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
@@ -36,6 +38,8 @@ type Characters struct {
 	Combat     CombatStatus
 	Blobs      Blobs
 	Now        func() time.Time
+	// Roll rolls six ability scores for a draft; nil means the Campaign cannot roll.
+	Roll func() []int
 }
 
 // Sheet is a Character with everything the sheet shows derived from the rules.
@@ -138,7 +142,7 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 	})
 	c.BackgroundSkills = background.Skills
 	if c.HPMax == 0 {
-		c.HPMax = rules.FirstLevelHP(class.HitDie, rules.Modifier(scores[rules.Constitution]))
+		c.HPMax = rules.HitPointsAt(class.HitDie, rules.Modifier(scores[rules.Constitution]), max(c.Level, 1))
 		c.HPCurrent = c.HPMax
 	}
 	return Sheet{
@@ -193,15 +197,9 @@ func equipment(o compendium.BuilderOptions, b domain.Build) (*compendium.ArmorOp
 	return armor, shield, weapons, nil
 }
 
-func (s *Characters) campaignRuleset(ctx context.Context, r Repository, id domain.CampaignID) (compendium.BuilderOptions, error) {
-	camp, err := r.GetCampaign(ctx, id)
-	if err != nil {
-		return compendium.BuilderOptions{}, err
-	}
-	return s.Compendium.BuilderOptions(ctx, camp.Ruleset)
-}
-
-func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
+// prepare checks a build against the Campaign's rules and makes its sheet at the Campaign's starting
+// level. A fresh build must also use a method the Campaign allows, and rolled scores the server rolled.
+func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build, fresh bool) (Sheet, error) {
 	me, err := member(ctx, s.Repo, c, id)
 	if err != nil {
 		return Sheet{}, err
@@ -211,11 +209,23 @@ func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.Cam
 		return Sheet{}, err
 	}
 	b.Name = name
-	o, err := s.campaignRuleset(ctx, s.Repo, id)
+	if b, err = cleanStory(b); err != nil {
+		return Sheet{}, err
+	}
+	camp, err := s.Repo.GetCampaign(ctx, id)
 	if err != nil {
 		return Sheet{}, err
 	}
-	sheet, err := derive(o, domain.Character{Build: b, CampaignID: id, Owner: me, Ruleset: o.Ruleset, Level: 1})
+	if fresh {
+		if err := s.allowed(ctx, camp, c.Subject, b); err != nil {
+			return Sheet{}, err
+		}
+	}
+	o, err := s.Compendium.BuilderOptions(ctx, camp.Ruleset)
+	if err != nil {
+		return Sheet{}, err
+	}
+	sheet, err := derive(o, domain.Character{Build: b, CampaignID: id, Owner: me, Ruleset: o.Ruleset, Level: max(camp.StartingLevel, 1)})
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -223,14 +233,42 @@ func (s *Characters) prepare(ctx context.Context, c caller.Caller, id domain.Cam
 	return sheet, nil
 }
 
-// Preview validates a build and shows the sheet it would make, without saving it.
-func (s *Characters) Preview(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
-	return s.prepare(ctx, c, id, b)
+// allowed checks a new build's ability scores come the way the Campaign allows.
+func (s *Characters) allowed(ctx context.Context, camp domain.Campaign, subject string, b domain.Build) error {
+	if len(camp.CreationMethods) > 0 && !slices.Contains(camp.CreationMethods, b.Method) {
+		return refuse("this Campaign sets ability scores another way")
+	}
+	if b.Method != string(rules.Rolled) {
+		return nil
+	}
+	draft, err := s.Repo.Draft(ctx, camp.ID, subject)
+	if errors.Is(err, domain.ErrNotFound) || (err == nil && draft.Rolled == nil) {
+		return refuse("roll your ability scores first")
+	}
+	if err != nil {
+		return err
+	}
+	return invalid(rules.ValidateRolled(abilityMap(b.Base), draft.Rolled))
 }
 
-// Create saves a first-level Character owned by the caller.
+// cleanStory trims a build's Appearance and Backstory and keeps them to their lengths.
+func cleanStory(b domain.Build) (domain.Build, error) {
+	b.Appearance, b.Backstory = strings.TrimSpace(b.Appearance), strings.TrimSpace(b.Backstory)
+	if utf8.RuneCountInString(b.Appearance) > 2000 || utf8.RuneCountInString(b.Backstory) > 4000 {
+		return b, domain.ErrInvalid
+	}
+	return b, nil
+}
+
+// Preview validates a build and shows the sheet it would make, without saving it.
+func (s *Characters) Preview(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
+	return s.prepare(ctx, c, id, b, true)
+}
+
+// Create saves a Character owned by the caller at the Campaign's starting level, and drops the draft it
+// was made from.
 func (s *Characters) Create(ctx context.Context, c caller.Caller, id domain.CampaignID, b domain.Build) (Sheet, error) {
-	sheet, err := s.prepare(ctx, c, id, b)
+	sheet, err := s.prepare(ctx, c, id, b, true)
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -243,7 +281,7 @@ func (s *Characters) Create(ctx context.Context, c caller.Caller, id domain.Camp
 		return Sheet{}, err
 	}
 	sheet.ID, sheet.Owned = cid, stored.Owned
-	return sheet, nil
+	return sheet, s.Repo.DeleteDraft(ctx, id, c.Subject)
 }
 
 // List returns the party's Characters.

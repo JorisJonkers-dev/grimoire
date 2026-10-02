@@ -12,7 +12,7 @@ const campaign = {
 }
 const options = {
   ruleset: 'srd-2024', rulesetYear: 2024, pointBuyBudget: 27,
-  classes: [{ slug: 'fighter', name: 'Fighter', hitDie: 10, saves: ['strength', 'constitution'], skillChoices: 2 }],
+  classes: [{ slug: 'fighter', name: 'Fighter', hitDie: 10, saves: ['strength', 'constitution'], skillChoices: 2, primaryAbilities: ['strength', 'dexterity'], caster: 'none' }],
   species: [{ slug: 'human', name: 'Human', speedFeet: 30 }],
   backgrounds: [{ slug: 'soldier', name: 'Soldier', abilities: ['strength', 'dexterity', 'constitution'], skills: ['athletics', 'intimidation'] }],
   armor: [
@@ -57,25 +57,35 @@ async function next(w: VueWrapper) {
 }
 
 describe('character builder', () => {
-  it('walks every step, previews and creates', async () => {
+  it('walks all nine steps, keeps a draft, previews and creates', async () => {
     const bodies: unknown[] = []
+    const drafts: unknown[] = []
     const { wrapper, router } = await mountApp(`/campaigns/${ID}/characters/new`, {
       [`/api/v1/campaigns/${ID}/characters/preview`]: async (_u, req) => {
         bodies.push(await req.clone().json())
-        return sheet({ id: undefined })
+        return sheet({ id: undefined, level: 3 })
+      },
+      [`/api/v1/campaigns/${ID}/character-draft`]: async (_u, req) => {
+        if (req.method === 'PUT') {
+          drafts.push(await req.clone().json())
+          return { step: 1, build: {} }
+        }
+        return problem(404)()
       },
       [`/api/v1/campaigns/${ID}/characters/${CH}`]: () => sheet(),
       [`/api/v1/campaigns/${ID}/characters`]: () => sheet(),
-      [`/api/v1/campaigns/${ID}`]: () => campaign,
+      [`/api/v1/campaigns/${ID}`]: () => ({ ...campaign, startingLevel: 3 }),
       '/api/v1/compendium/builder': () => options,
     })
+    expect(wrapper.get('[data-testid="starting-level"]').text()).toContain('level 3')
     expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
-    await wrapper.get('[data-testid="character-name"]').setValue('Kara')
     await wrapper.get('input[value="human"]').setValue(true)
-    await wrapper.get('input[value="soldier"]').setValue(true)
     await expectAccessible(wrapper.element as Element)
     await next(wrapper)
+    expect(wrapper.get('[data-testid="primary-fighter"]').text()).toBe('Main: STR or DEX')
     await wrapper.get('input[value="fighter"]').setValue(true)
+    await next(wrapper)
+    await wrapper.get('input[value="soldier"]').setValue(true)
     await next(wrapper)
     expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
     await wrapper.get('[data-testid="bonus-0"]').setValue('strength')
@@ -90,25 +100,40 @@ describe('character builder', () => {
     await wrapper.get('[data-testid="shield"]').setValue(true)
     await wrapper.get('input[value="longsword"]').setValue(true)
     await next(wrapper)
-    expect(wrapper.get('[data-testid="step-review"]').text()).toContain('18')
-    expect(bodies[0]).toMatchObject({ name: 'Kara', class: 'fighter', bonus: { strength: 2, constitution: 1 }, armor: 'chain-mail', shield: true })
+    await wrapper.get('[data-testid="appearance"]').setValue('Tall, scarred')
+    await next(wrapper)
+    expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="character-name"]').setValue('Kara')
+    await wrapper.get('[data-testid="backstory"]').setValue('Raised in the barracks')
+    await next(wrapper)
+    expect(wrapper.get('[data-testid="step-review"]').text()).toContain('Level 3')
+    expect(bodies[0]).toMatchObject({ name: 'Kara', class: 'fighter', bonus: { strength: 2, constitution: 1 }, armor: 'chain-mail', shield: true, appearance: 'Tall, scarred', backstory: 'Raised in the barracks' })
+    expect(drafts).toHaveLength(8)
+    expect(drafts[7]).toMatchObject({ step: 8, build: { name: 'Kara', species: 'human', class: 'fighter' } })
     await wrapper.get('[data-testid="create-character"]').trigger('click')
     await vi.waitFor(() => { expect(router.currentRoute.value.name).toBe('character') }, { timeout: 5000 })
   })
 
-  it('supports point buy, rolled scores, going back and showing rule errors', async () => {
+  it('offers only the Campaign\'s methods, rolls on the server and places each score once', async () => {
+    let rolledOnce = false
     const { wrapper } = await mountApp(`/campaigns/${ID}/characters/new`, {
-      [`/api/v1/campaigns/${ID}/characters/preview`]: problem(422, 'choose 2 class skills'),
-      [`/api/v1/campaigns/${ID}`]: () => campaign,
+      [`/api/v1/campaigns/${ID}/characters/preview`]: problem(422, 'place the six scores you rolled'),
+      [`/api/v1/campaigns/${ID}/character-draft/roll`]: () => {
+        rolledOnce = true
+        return { step: 3, build: {}, rolled: [16, 15, 12, 11, 9, 8] }
+      },
+      [`/api/v1/campaigns/${ID}/character-draft`]: (_u, req) => (req.method === 'PUT' ? { step: 1, build: {} } : problem(404)()),
+      [`/api/v1/campaigns/${ID}`]: () => ({ ...campaign, creationMethods: ['point-buy', 'rolled'] }),
       '/api/v1/compendium/builder': () => options,
     })
-    await wrapper.get('[data-testid="character-name"]').setValue('Kara')
     await wrapper.get('input[value="human"]').setValue(true)
-    await wrapper.get('input[value="soldier"]').setValue(true)
     await next(wrapper)
     await wrapper.get('input[value="fighter"]').setValue(true)
     await next(wrapper)
-    await wrapper.get('[data-testid="ability-method"]').setValue('point-buy')
+    await wrapper.get('input[value="soldier"]').setValue(true)
+    await next(wrapper)
+    const methods = wrapper.get('[data-testid="ability-method"]').findAll('option').map((x) => x.text())
+    expect(methods).toEqual(['Point buy', 'Rolled (4d6, drop lowest)'])
     expect(wrapper.get('[data-testid="points-left"]').text()).toContain('27 of 27')
     await wrapper.get('[aria-label="Raise strength"]').trigger('click')
     await wrapper.get('[aria-label="Lower dexterity"]').trigger('click')
@@ -117,17 +142,55 @@ describe('character builder', () => {
     await wrapper.get('input[value="one-one-one"]').setValue(true)
     for (const [i, a] of ['strength', 'dexterity', 'constitution'].entries()) await wrapper.get(`[data-testid="bonus-${String(i)}"]`).setValue(a)
     await wrapper.get('[data-testid="ability-method"]').setValue('rolled')
-    await wrapper.get('input[type="number"]').setValue(17)
+    expect(wrapper.get('[data-testid="place-strength"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="roll-scores"]').trigger('click')
+    await flushPromises()
+    expect(rolledOnce).toBe(true)
+    expect(wrapper.get('[data-testid="rolled"]').text()).toContain('16, 15, 12, 11, 9, 8')
+    expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
+    for (const [i, a] of ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].entries()) {
+      await wrapper.get(`[data-testid="place-${a}"]`).setValue(String(i))
+    }
+    expect(wrapper.get('[data-testid="place-dexterity"] option[value="0"]').attributes('disabled')).toBeDefined()
     await next(wrapper)
     await wrapper.findAll('[data-testid="step-skills"] input').at(0)?.setValue(true)
     await wrapper.findAll('[data-testid="step-skills"] input').at(1)?.setValue(true)
     await next(wrapper)
     await next(wrapper)
-    expect(wrapper.get('[data-testid="builder-error"]').text()).toBe('choose 2 class skills')
+    await next(wrapper)
+    await wrapper.get('[data-testid="character-name"]').setValue('Ros')
+    await next(wrapper)
+    expect(wrapper.get('[data-testid="builder-error"]').text()).toBe('place the six scores you rolled')
     expect(wrapper.get('[data-testid="create-character"]').attributes('disabled')).toBeDefined()
-    const back = wrapper.findAll('.nav button').at(0)
-    await back?.trigger('click')
-    expect(wrapper.find('[data-testid="step-equipment"]').exists()).toBe(true)
+    await wrapper.get('[data-testid="back"]').trigger('click')
+    expect(wrapper.find('[data-testid="step-story"]').exists()).toBe(true)
+  })
+
+  it('picks up a saved draft and starts over', async () => {
+    let discarded = false
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/new`, {
+      [`/api/v1/campaigns/${ID}/character-draft`]: (_u, req) => {
+        if (req.method === 'DELETE') {
+          discarded = true
+          return new Response(null, { status: 204 })
+        }
+        return {
+          step: 4,
+          build: { name: 'Kara', species: 'human', class: 'fighter', background: 'soldier', method: 'standard-array', base: { strength: 15, dexterity: 14, constitution: 13, intelligence: 12, wisdom: 10, charisma: 8 }, bonus: { strength: 2, constitution: 1 }, skills: ['perception'], shield: true, weapons: [], appearance: 'Tall', backstory: 'Old' },
+          rolled: [16, 15, 12, 11, 9, 8],
+        }
+      },
+      [`/api/v1/campaigns/${ID}`]: () => campaign,
+      '/api/v1/compendium/builder': () => options,
+    })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="step-skills"]').exists()).toBe(true)
+    expect((wrapper.get('input[value="perception"]').element as HTMLInputElement).checked).toBe(true)
+    await wrapper.get('[data-testid="start-over"]').trigger('click')
+    await flushPromises()
+    expect(discarded).toBe(true)
+    expect(wrapper.find('[data-testid="step-species"]').exists()).toBe(true)
+    expect((wrapper.get('input[value="human"]').element as HTMLInputElement).checked).toBe(false)
   })
 
   it('reports a builder that cannot load', async () => {

@@ -47,6 +47,14 @@ export type CampaignSummary = {
     restSupplies?: boolean;
     initiativeMode?: InitiativeMode;
     /**
+     * The ability score methods new Characters may use.
+     */
+    creationMethods?: Array<CreationMethod>;
+    /**
+     * The level new Characters start at.
+     */
+    startingLevel?: number;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -92,6 +100,14 @@ export type Campaign = {
     restSupplies?: boolean;
     initiativeMode?: InitiativeMode;
     /**
+     * The ability score methods new Characters may use.
+     */
+    creationMethods?: Array<CreationMethod>;
+    /**
+     * The level new Characters start at.
+     */
+    startingLevel?: number;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -124,6 +140,14 @@ export type CampaignUpdate = {
      */
     restSupplies?: boolean;
     initiativeMode?: InitiativeMode;
+    /**
+     * The ability score methods new Characters may use.
+     */
+    creationMethods?: Array<CreationMethod>;
+    /**
+     * The level new Characters start at.
+     */
+    startingLevel?: number;
     /**
      * Identical monsters share one initiative roll.
      */
@@ -711,6 +735,11 @@ export type AccountInvite = {
 };
 
 /**
+ * How a new Character's ability scores are set.
+ */
+export type CreationMethod = 'standard-array' | 'point-buy' | 'rolled';
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export type InitiativeMode = 'individual' | 'side';
@@ -823,7 +852,53 @@ export type CharacterName = string;
 export type ArmorChoice = string;
 
 /**
- * The choices for a first-level Character.
+ * The wizard's choices so far; every field may still be missing.
+ */
+export type CharacterDraftBuild = {
+    name?: string;
+    species?: Slug;
+    class?: Slug;
+    background?: Slug;
+    method?: 'standard-array' | 'point-buy' | 'rolled';
+    base?: AbilityBase;
+    bonus?: AbilityBonus;
+    skills?: Array<Slug>;
+    armor?: ArmorChoice;
+    shield?: boolean;
+    weapons?: Array<Slug>;
+    appearance?: string;
+    backstory?: string;
+};
+
+/**
+ * A Character being made in the wizard.
+ */
+export type CharacterDraft = {
+    step: number;
+    build: CharacterDraftBuild;
+    /**
+     * The six scores the server rolled, to place on abilities.
+     */
+    rolled?: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number
+    ];
+};
+
+/**
+ * The wizard's step and choices to keep.
+ */
+export type CharacterDraftSave = {
+    step: number;
+    build: CharacterDraftBuild;
+};
+
+/**
+ * The choices for a new Character, who starts at the Campaign's starting level.
  */
 export type CharacterBuild = {
     name: CharacterName;
@@ -837,6 +912,8 @@ export type CharacterBuild = {
     armor?: ArmorChoice;
     shield: boolean;
     weapons: Array<Slug>;
+    appearance?: string;
+    backstory?: string;
 };
 
 /**
@@ -1026,6 +1103,14 @@ export type ClassChoice = {
     hitDie: number;
     saves: Array<Ability>;
     skillChoices: number;
+    /**
+     * The abilities the class leans on most, highlighted when choosing it.
+     */
+    primaryAbilities?: Array<Ability>;
+    /**
+     * How the class casts spells.
+     */
+    caster?: 'none' | 'full' | 'half' | 'pact';
 };
 
 /**
@@ -8335,6 +8420,142 @@ export type SeeReleaseNoteResponses = {
 };
 
 export type SeeReleaseNoteResponse = SeeReleaseNoteResponses[keyof SeeReleaseNoteResponses];
+
+export type DiscardCharacterDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft';
+};
+
+export type DiscardCharacterDraftErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DiscardCharacterDraftError = DiscardCharacterDraftErrors[keyof DiscardCharacterDraftErrors];
+
+export type DiscardCharacterDraftResponses = {
+    /**
+     * Discarded.
+     */
+    204: void;
+};
+
+export type DiscardCharacterDraftResponse = DiscardCharacterDraftResponses[keyof DiscardCharacterDraftResponses];
+
+export type GetCharacterDraftData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft';
+};
+
+export type GetCharacterDraftErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetCharacterDraftError = GetCharacterDraftErrors[keyof GetCharacterDraftErrors];
+
+export type GetCharacterDraftResponses = {
+    /**
+     * The draft.
+     */
+    200: CharacterDraft;
+};
+
+export type GetCharacterDraftResponse = GetCharacterDraftResponses[keyof GetCharacterDraftResponses];
+
+export type SaveCharacterDraftData = {
+    body: CharacterDraftSave;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft';
+};
+
+export type SaveCharacterDraftErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveCharacterDraftError = SaveCharacterDraftErrors[keyof SaveCharacterDraftErrors];
+
+export type SaveCharacterDraftResponses = {
+    /**
+     * The draft.
+     */
+    200: CharacterDraft;
+};
+
+export type SaveCharacterDraftResponse = SaveCharacterDraftResponses[keyof SaveCharacterDraftResponses];
+
+export type RollCharacterScoresData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/character-draft/roll';
+};
+
+export type RollCharacterScoresErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RollCharacterScoresError = RollCharacterScoresErrors[keyof RollCharacterScoresErrors];
+
+export type RollCharacterScoresResponses = {
+    /**
+     * The draft with its rolled scores.
+     */
+    200: CharacterDraft;
+};
+
+export type RollCharacterScoresResponse = RollCharacterScoresResponses[keyof RollCharacterScoresResponses];
 
 export type GetHealthData = {
     body?: never;

@@ -5222,6 +5222,22 @@ func (s *Campaign) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.CreationMethods != nil {
+			e.FieldStart("creationMethods")
+			e.ArrStart()
+			for _, elem := range s.CreationMethods {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.StartingLevel.Set {
+			e.FieldStart("startingLevel")
+			s.StartingLevel.Encode(e)
+		}
+	}
+	{
 		if s.ShareInitiative.Set {
 			e.FieldStart("shareInitiative")
 			s.ShareInitiative.Encode(e)
@@ -5241,7 +5257,7 @@ func (s *Campaign) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaign = [13]string{
+var jsonFieldsNameOfCampaign = [15]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -5252,9 +5268,11 @@ var jsonFieldsNameOfCampaign = [13]string{
 	7:  "highGround",
 	8:  "restSupplies",
 	9:  "initiativeMode",
-	10: "shareInitiative",
-	11: "me",
-	12: "members",
+	10: "creationMethods",
+	11: "startingLevel",
+	12: "shareInitiative",
+	13: "me",
+	14: "members",
 }
 
 // Decode decodes Campaign from json.
@@ -5370,6 +5388,33 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"initiativeMode\"")
 			}
+		case "creationMethods":
+			if err := func() error {
+				s.CreationMethods = make([]CreationMethod, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem CreationMethod
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.CreationMethods = append(s.CreationMethods, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"creationMethods\"")
+			}
+		case "startingLevel":
+			if err := func() error {
+				s.StartingLevel.Reset()
+				if err := s.StartingLevel.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"startingLevel\"")
+			}
 		case "shareInitiative":
 			if err := func() error {
 				s.ShareInitiative.Reset()
@@ -5381,7 +5426,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"shareInitiative\"")
 			}
 		case "me":
-			requiredBitSet[1] |= 1 << 3
+			requiredBitSet[1] |= 1 << 5
 			if err := func() error {
 				if err := s.Me.Decode(d); err != nil {
 					return err
@@ -5391,7 +5436,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"me\"")
 			}
 		case "members":
-			requiredBitSet[1] |= 1 << 4
+			requiredBitSet[1] |= 1 << 6
 			if err := func() error {
 				s.Members = make([]Member, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -5419,7 +5464,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b00111111,
-		0b00011000,
+		0b01100000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -6121,6 +6166,22 @@ func (s *CampaignSummary) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.CreationMethods != nil {
+			e.FieldStart("creationMethods")
+			e.ArrStart()
+			for _, elem := range s.CreationMethods {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.StartingLevel.Set {
+			e.FieldStart("startingLevel")
+			s.StartingLevel.Encode(e)
+		}
+	}
+	{
 		if s.ShareInitiative.Set {
 			e.FieldStart("shareInitiative")
 			s.ShareInitiative.Encode(e)
@@ -6128,7 +6189,7 @@ func (s *CampaignSummary) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaignSummary = [11]string{
+var jsonFieldsNameOfCampaignSummary = [13]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -6139,7 +6200,9 @@ var jsonFieldsNameOfCampaignSummary = [11]string{
 	7:  "highGround",
 	8:  "restSupplies",
 	9:  "initiativeMode",
-	10: "shareInitiative",
+	10: "creationMethods",
+	11: "startingLevel",
+	12: "shareInitiative",
 }
 
 // Decode decodes CampaignSummary from json.
@@ -6255,6 +6318,33 @@ func (s *CampaignSummary) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"initiativeMode\"")
 			}
+		case "creationMethods":
+			if err := func() error {
+				s.CreationMethods = make([]CreationMethod, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem CreationMethod
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.CreationMethods = append(s.CreationMethods, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"creationMethods\"")
+			}
+		case "startingLevel":
+			if err := func() error {
+				s.StartingLevel.Reset()
+				if err := s.StartingLevel.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"startingLevel\"")
+			}
 		case "shareInitiative":
 			if err := func() error {
 				s.ShareInitiative.Reset()
@@ -6368,6 +6458,22 @@ func (s *CampaignUpdate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.CreationMethods != nil {
+			e.FieldStart("creationMethods")
+			e.ArrStart()
+			for _, elem := range s.CreationMethods {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.StartingLevel.Set {
+			e.FieldStart("startingLevel")
+			s.StartingLevel.Encode(e)
+		}
+	}
+	{
 		if s.ShareInitiative.Set {
 			e.FieldStart("shareInitiative")
 			s.ShareInitiative.Encode(e)
@@ -6375,14 +6481,16 @@ func (s *CampaignUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaignUpdate = [7]string{
+var jsonFieldsNameOfCampaignUpdate = [9]string{
 	0: "name",
 	1: "ruleset",
 	2: "reactionTimeoutS",
 	3: "highGround",
 	4: "restSupplies",
 	5: "initiativeMode",
-	6: "shareInitiative",
+	6: "creationMethods",
+	7: "startingLevel",
+	8: "shareInitiative",
 }
 
 // Decode decodes CampaignUpdate from json.
@@ -6452,6 +6560,33 @@ func (s *CampaignUpdate) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"initiativeMode\"")
+			}
+		case "creationMethods":
+			if err := func() error {
+				s.CreationMethods = make([]CreationMethod, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem CreationMethod
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.CreationMethods = append(s.CreationMethods, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"creationMethods\"")
+			}
+		case "startingLevel":
+			if err := func() error {
+				s.StartingLevel.Reset()
+				if err := s.StartingLevel.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"startingLevel\"")
 			}
 		case "shareInitiative":
 			if err := func() error {
@@ -6550,9 +6685,21 @@ func (s *CharacterBuild) encodeFields(e *jx.Encoder) {
 		}
 		e.ArrEnd()
 	}
+	{
+		if s.Appearance.Set {
+			e.FieldStart("appearance")
+			s.Appearance.Encode(e)
+		}
+	}
+	{
+		if s.Backstory.Set {
+			e.FieldStart("backstory")
+			s.Backstory.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfCharacterBuild = [11]string{
+var jsonFieldsNameOfCharacterBuild = [13]string{
 	0:  "name",
 	1:  "species",
 	2:  "class",
@@ -6564,6 +6711,8 @@ var jsonFieldsNameOfCharacterBuild = [11]string{
 	8:  "armor",
 	9:  "shield",
 	10: "weapons",
+	11: "appearance",
+	12: "backstory",
 }
 
 // Decode decodes CharacterBuild from json.
@@ -6703,6 +6852,26 @@ func (s *CharacterBuild) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"weapons\"")
 			}
+		case "appearance":
+			if err := func() error {
+				s.Appearance.Reset()
+				if err := s.Appearance.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"appearance\"")
+			}
+		case "backstory":
+			if err := func() error {
+				s.Backstory.Reset()
+				if err := s.Backstory.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"backstory\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -6798,6 +6967,589 @@ func (s CharacterBuildMethod) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *CharacterBuildMethod) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *CharacterDraft) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *CharacterDraft) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("step")
+		e.Int32(s.Step)
+	}
+	{
+		e.FieldStart("build")
+		s.Build.Encode(e)
+	}
+	{
+		if s.Rolled != nil {
+			e.FieldStart("rolled")
+			e.ArrStart()
+			for _, elem := range s.Rolled {
+				e.Int32(elem)
+			}
+			e.ArrEnd()
+		}
+	}
+}
+
+var jsonFieldsNameOfCharacterDraft = [3]string{
+	0: "step",
+	1: "build",
+	2: "rolled",
+}
+
+// Decode decodes CharacterDraft from json.
+func (s *CharacterDraft) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CharacterDraft to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "step":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.Step = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"step\"")
+			}
+		case "build":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Build.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"build\"")
+			}
+		case "rolled":
+			if err := func() error {
+				s.Rolled = make([]int32, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem int32
+					v, err := d.Int32()
+					elem = int32(v)
+					if err != nil {
+						return err
+					}
+					s.Rolled = append(s.Rolled, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rolled\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode CharacterDraft")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfCharacterDraft) {
+					name = jsonFieldsNameOfCharacterDraft[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *CharacterDraft) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CharacterDraft) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *CharacterDraftBuild) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *CharacterDraftBuild) encodeFields(e *jx.Encoder) {
+	{
+		if s.Name.Set {
+			e.FieldStart("name")
+			s.Name.Encode(e)
+		}
+	}
+	{
+		if s.Species.Set {
+			e.FieldStart("species")
+			s.Species.Encode(e)
+		}
+	}
+	{
+		if s.Class.Set {
+			e.FieldStart("class")
+			s.Class.Encode(e)
+		}
+	}
+	{
+		if s.Background.Set {
+			e.FieldStart("background")
+			s.Background.Encode(e)
+		}
+	}
+	{
+		if s.Method.Set {
+			e.FieldStart("method")
+			s.Method.Encode(e)
+		}
+	}
+	{
+		if s.Base.Set {
+			e.FieldStart("base")
+			s.Base.Encode(e)
+		}
+	}
+	{
+		if s.Bonus.Set {
+			e.FieldStart("bonus")
+			s.Bonus.Encode(e)
+		}
+	}
+	{
+		if s.Skills != nil {
+			e.FieldStart("skills")
+			e.ArrStart()
+			for _, elem := range s.Skills {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Armor.Set {
+			e.FieldStart("armor")
+			s.Armor.Encode(e)
+		}
+	}
+	{
+		if s.Shield.Set {
+			e.FieldStart("shield")
+			s.Shield.Encode(e)
+		}
+	}
+	{
+		if s.Weapons != nil {
+			e.FieldStart("weapons")
+			e.ArrStart()
+			for _, elem := range s.Weapons {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Appearance.Set {
+			e.FieldStart("appearance")
+			s.Appearance.Encode(e)
+		}
+	}
+	{
+		if s.Backstory.Set {
+			e.FieldStart("backstory")
+			s.Backstory.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfCharacterDraftBuild = [13]string{
+	0:  "name",
+	1:  "species",
+	2:  "class",
+	3:  "background",
+	4:  "method",
+	5:  "base",
+	6:  "bonus",
+	7:  "skills",
+	8:  "armor",
+	9:  "shield",
+	10: "weapons",
+	11: "appearance",
+	12: "backstory",
+}
+
+// Decode decodes CharacterDraftBuild from json.
+func (s *CharacterDraftBuild) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CharacterDraftBuild to nil")
+	}
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "name":
+			if err := func() error {
+				s.Name.Reset()
+				if err := s.Name.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "species":
+			if err := func() error {
+				s.Species.Reset()
+				if err := s.Species.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"species\"")
+			}
+		case "class":
+			if err := func() error {
+				s.Class.Reset()
+				if err := s.Class.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"class\"")
+			}
+		case "background":
+			if err := func() error {
+				s.Background.Reset()
+				if err := s.Background.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"background\"")
+			}
+		case "method":
+			if err := func() error {
+				s.Method.Reset()
+				if err := s.Method.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"method\"")
+			}
+		case "base":
+			if err := func() error {
+				s.Base.Reset()
+				if err := s.Base.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"base\"")
+			}
+		case "bonus":
+			if err := func() error {
+				s.Bonus.Reset()
+				if err := s.Bonus.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"bonus\"")
+			}
+		case "skills":
+			if err := func() error {
+				s.Skills = make([]Slug, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem Slug
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Skills = append(s.Skills, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"skills\"")
+			}
+		case "armor":
+			if err := func() error {
+				s.Armor.Reset()
+				if err := s.Armor.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"armor\"")
+			}
+		case "shield":
+			if err := func() error {
+				s.Shield.Reset()
+				if err := s.Shield.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"shield\"")
+			}
+		case "weapons":
+			if err := func() error {
+				s.Weapons = make([]Slug, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem Slug
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Weapons = append(s.Weapons, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"weapons\"")
+			}
+		case "appearance":
+			if err := func() error {
+				s.Appearance.Reset()
+				if err := s.Appearance.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"appearance\"")
+			}
+		case "backstory":
+			if err := func() error {
+				s.Backstory.Reset()
+				if err := s.Backstory.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"backstory\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode CharacterDraftBuild")
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *CharacterDraftBuild) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CharacterDraftBuild) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes CharacterDraftBuildMethod as json.
+func (s CharacterDraftBuildMethod) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes CharacterDraftBuildMethod from json.
+func (s *CharacterDraftBuildMethod) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CharacterDraftBuildMethod to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch CharacterDraftBuildMethod(v) {
+	case CharacterDraftBuildMethodStandardArray:
+		*s = CharacterDraftBuildMethodStandardArray
+	case CharacterDraftBuildMethodPointBuy:
+		*s = CharacterDraftBuildMethodPointBuy
+	case CharacterDraftBuildMethodRolled:
+		*s = CharacterDraftBuildMethodRolled
+	default:
+		*s = CharacterDraftBuildMethod(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s CharacterDraftBuildMethod) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CharacterDraftBuildMethod) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *CharacterDraftSave) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *CharacterDraftSave) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("step")
+		e.Int32(s.Step)
+	}
+	{
+		e.FieldStart("build")
+		s.Build.Encode(e)
+	}
+}
+
+var jsonFieldsNameOfCharacterDraftSave = [2]string{
+	0: "step",
+	1: "build",
+}
+
+// Decode decodes CharacterDraftSave from json.
+func (s *CharacterDraftSave) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CharacterDraftSave to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "step":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.Step = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"step\"")
+			}
+		case "build":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				if err := s.Build.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"build\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode CharacterDraftSave")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfCharacterDraftSave) {
+					name = jsonFieldsNameOfCharacterDraftSave[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *CharacterDraftSave) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CharacterDraftSave) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -8083,14 +8835,32 @@ func (s *ClassChoice) encodeFields(e *jx.Encoder) {
 		e.FieldStart("skillChoices")
 		e.Int32(s.SkillChoices)
 	}
+	{
+		if s.PrimaryAbilities != nil {
+			e.FieldStart("primaryAbilities")
+			e.ArrStart()
+			for _, elem := range s.PrimaryAbilities {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.Caster.Set {
+			e.FieldStart("caster")
+			s.Caster.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfClassChoice = [5]string{
+var jsonFieldsNameOfClassChoice = [7]string{
 	0: "slug",
 	1: "name",
 	2: "hitDie",
 	3: "saves",
 	4: "skillChoices",
+	5: "primaryAbilities",
+	6: "caster",
 }
 
 // Decode decodes ClassChoice from json.
@@ -8166,6 +8936,33 @@ func (s *ClassChoice) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"skillChoices\"")
 			}
+		case "primaryAbilities":
+			if err := func() error {
+				s.PrimaryAbilities = make([]Ability, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem Ability
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.PrimaryAbilities = append(s.PrimaryAbilities, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"primaryAbilities\"")
+			}
+		case "caster":
+			if err := func() error {
+				s.Caster.Reset()
+				if err := s.Caster.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"caster\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -8218,6 +9015,50 @@ func (s *ClassChoice) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ClassChoice) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ClassChoiceCaster as json.
+func (s ClassChoiceCaster) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes ClassChoiceCaster from json.
+func (s *ClassChoiceCaster) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ClassChoiceCaster to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch ClassChoiceCaster(v) {
+	case ClassChoiceCasterNone:
+		*s = ClassChoiceCasterNone
+	case ClassChoiceCasterFull:
+		*s = ClassChoiceCasterFull
+	case ClassChoiceCasterHalf:
+		*s = ClassChoiceCasterHalf
+	case ClassChoiceCasterPact:
+		*s = ClassChoiceCasterPact
+	default:
+		*s = ClassChoiceCaster(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ClassChoiceCaster) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ClassChoiceCaster) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -8948,6 +9789,48 @@ func (s CoverLevel) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *CoverLevel) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes CreationMethod as json.
+func (s CreationMethod) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes CreationMethod from json.
+func (s *CreationMethod) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode CreationMethod to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch CreationMethod(v) {
+	case CreationMethodStandardArray:
+		*s = CreationMethodStandardArray
+	case CreationMethodPointBuy:
+		*s = CreationMethodPointBuy
+	case CreationMethodRolled:
+		*s = CreationMethodRolled
+	default:
+		*s = CreationMethod(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s CreationMethod) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *CreationMethod) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -32779,6 +33662,72 @@ func (s *OptAbility) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes AbilityBase as json.
+func (o OptAbilityBase) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes AbilityBase from json.
+func (o *OptAbilityBase) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptAbilityBase to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptAbilityBase) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptAbilityBase) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes AbilityBonus as json.
+func (o OptAbilityBonus) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes AbilityBonus from json.
+func (o *OptAbilityBonus) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptAbilityBonus to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptAbilityBonus) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptAbilityBonus) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes Account as json.
 func (o OptAccount) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -33012,6 +33961,39 @@ func (s *OptCampaignRuleset) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes CharacterDraftBuildMethod as json.
+func (o OptCharacterDraftBuildMethod) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes CharacterDraftBuildMethod from json.
+func (o *OptCharacterDraftBuildMethod) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptCharacterDraftBuildMethod to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptCharacterDraftBuildMethod) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptCharacterDraftBuildMethod) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes CharacterName as json.
 func (o OptCharacterName) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -33041,6 +34023,39 @@ func (s OptCharacterName) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptCharacterName) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ClassChoiceCaster as json.
+func (o OptClassChoiceCaster) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes ClassChoiceCaster from json.
+func (o *OptClassChoiceCaster) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptClassChoiceCaster to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptClassChoiceCaster) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptClassChoiceCaster) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

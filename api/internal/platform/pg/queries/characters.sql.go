@@ -207,6 +207,20 @@ func (q *Queries) DeleteCharacter(ctx context.Context, arg DeleteCharacterParams
 	return err
 }
 
+const deleteCharacterDraft = `-- name: DeleteCharacterDraft :exec
+DELETE FROM campaign.character_drafts WHERE campaign_id = $1 AND owner_subject = $2
+`
+
+type DeleteCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+}
+
+func (q *Queries) DeleteCharacterDraft(ctx context.Context, arg DeleteCharacterDraftParams) error {
+	_, err := q.db.Exec(ctx, deleteCharacterDraft, arg.CampaignID, arg.OwnerSubject)
+	return err
+}
+
 const flowCharacterIdentity = `-- name: FlowCharacterIdentity :exec
 WITH source AS (
     SELECT character_id, name, portrait_key, portrait_type, token_key, token_type FROM campaign.characters WHERE id = $1
@@ -341,9 +355,37 @@ func (q *Queries) GetCharacter(ctx context.Context, arg GetCharacterParams) (Get
 	return i, err
 }
 
+const getCharacterDraft = `-- name: GetCharacterDraft :one
+SELECT step, build, rolled, updated_at FROM campaign.character_drafts WHERE campaign_id = $1 AND owner_subject = $2
+`
+
+type GetCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+}
+
+type GetCharacterDraftRow struct {
+	Step      int32
+	Build     []byte
+	Rolled    []int32
+	UpdatedAt time.Time
+}
+
+func (q *Queries) GetCharacterDraft(ctx context.Context, arg GetCharacterDraftParams) (GetCharacterDraftRow, error) {
+	row := q.db.QueryRow(ctx, getCharacterDraft, arg.CampaignID, arg.OwnerSubject)
+	var i GetCharacterDraftRow
+	err := row.Scan(
+		&i.Step,
+		&i.Build,
+		&i.Rolled,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insertAccountCharacter = `-- name: InsertAccountCharacter :exec
-INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
+INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, appearance, backstory, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
 `
 
 type InsertAccountCharacterParams struct {
@@ -354,6 +396,8 @@ type InsertAccountCharacterParams struct {
 	SpeciesSlug    string
 	ClassSlug      string
 	BackgroundSlug string
+	Appearance     string
+	Backstory      string
 	Now            time.Time
 }
 
@@ -366,6 +410,8 @@ func (q *Queries) InsertAccountCharacter(ctx context.Context, arg InsertAccountC
 		arg.SpeciesSlug,
 		arg.ClassSlug,
 		arg.BackgroundSlug,
+		arg.Appearance,
+		arg.Backstory,
 		arg.Now,
 	)
 	return err
@@ -534,6 +580,57 @@ type RenameCampaignCharactersParams struct {
 
 func (q *Queries) RenameCampaignCharacters(ctx context.Context, arg RenameCampaignCharactersParams) error {
 	_, err := q.db.Exec(ctx, renameCampaignCharacters, arg.Name, arg.CharacterID)
+	return err
+}
+
+const rollCharacterDraft = `-- name: RollCharacterDraft :execrows
+INSERT INTO campaign.character_drafts (campaign_id, owner_subject, step, build, rolled, updated_at) VALUES ($1, $2, 3, '{}', $3, $4)
+ON CONFLICT (campaign_id, owner_subject) DO UPDATE SET rolled = EXCLUDED.rolled, updated_at = EXCLUDED.updated_at
+WHERE campaign.character_drafts.rolled IS NULL
+`
+
+type RollCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+	Rolled       []int32
+	Now          time.Time
+}
+
+// Rolled scores are set once per draft; a draft is started if there is none.
+func (q *Queries) RollCharacterDraft(ctx context.Context, arg RollCharacterDraftParams) (int64, error) {
+	result, err := q.db.Exec(ctx, rollCharacterDraft,
+		arg.CampaignID,
+		arg.OwnerSubject,
+		arg.Rolled,
+		arg.Now,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const saveCharacterDraft = `-- name: SaveCharacterDraft :exec
+INSERT INTO campaign.character_drafts (campaign_id, owner_subject, step, build, updated_at) VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (campaign_id, owner_subject) DO UPDATE SET step = EXCLUDED.step, build = EXCLUDED.build, updated_at = EXCLUDED.updated_at
+`
+
+type SaveCharacterDraftParams struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+	Step         int32
+	Build        []byte
+	Now          time.Time
+}
+
+func (q *Queries) SaveCharacterDraft(ctx context.Context, arg SaveCharacterDraftParams) error {
+	_, err := q.db.Exec(ctx, saveCharacterDraft,
+		arg.CampaignID,
+		arg.OwnerSubject,
+		arg.Step,
+		arg.Build,
+		arg.Now,
+	)
 	return err
 }
 

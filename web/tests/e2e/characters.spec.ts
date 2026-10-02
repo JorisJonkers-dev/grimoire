@@ -1,29 +1,16 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { buildFighter } from './wizard'
 
-test('a player builds a level-1 character and reads the phone sheet', async ({ page }, info) => {
+test('a player builds a Character through the wizard and reads the phone sheet', async ({ page }, info) => {
   await page.goto('/campaigns')
   await page.getByTestId('campaign-name').fill(`Builder ${info.project.name} ${String(Date.now())}`)
   await page.getByTestId('campaign-display-name').fill('Tester')
   await page.getByRole('button', { name: 'Start as DM' }).click()
   await page.getByTestId('build-character').click()
 
-  await page.getByTestId('character-name').fill('Kara')
-  await page.getByRole('radio', { name: /Human/ }).check()
-  await page.getByRole('radio', { name: /Soldier/ }).check()
-  await page.getByTestId('next').click()
-  await page.getByRole('radio', { name: /^Fighter/ }).check()
-  await page.getByTestId('next').click()
-  await page.getByTestId('bonus-0').selectOption('strength')
-  await page.getByTestId('bonus-1').selectOption('constitution')
-  await page.getByTestId('next').click()
-  await page.getByRole('checkbox', { name: /Perception/ }).check()
-  await page.getByRole('checkbox', { name: /Survival/ }).check()
-  await page.getByTestId('next').click()
-  await page.getByTestId('armor').selectOption('chain-mail')
-  await page.getByTestId('shield').check()
-  await page.getByRole('checkbox', { name: /^Longsword/ }).check()
-  await page.getByTestId('next').click()
+  await expect(page.getByTestId('starting-level')).toContainText('level 1')
+  await buildFighter(page, 'Kara', true)
   await expect(page.getByTestId('step-review')).toContainText('Kara')
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.getByTestId('create-character').click()

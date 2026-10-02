@@ -137,6 +137,22 @@ func (b brokenCharacters) Join(context.Context, caller.Caller, domain.OwnedID, d
 	return app.Sheet{}, b.err
 }
 
+func (b brokenCharacters) Draft(context.Context, caller.Caller, domain.CampaignID) (domain.Draft, error) {
+	return domain.Draft{}, b.err
+}
+
+func (b brokenCharacters) SaveDraft(context.Context, caller.Caller, domain.CampaignID, int, []byte) (domain.Draft, error) {
+	return domain.Draft{}, b.err
+}
+
+func (b brokenCharacters) DiscardDraft(context.Context, caller.Caller, domain.CampaignID) error {
+	return b.err
+}
+
+func (b brokenCharacters) RollScores(context.Context, caller.Caller, domain.CampaignID) (domain.Draft, error) {
+	return domain.Draft{}, b.err
+}
+
 func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/characters"
@@ -155,6 +171,10 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodGet, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", ""},
 		{http.MethodPut, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", `{"name":"X","backstory":""}`},
 		{http.MethodPost, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003/campaigns", `{"campaignId":"0190c7a8-0000-7000-8000-000000000001"}`},
+		{http.MethodGet, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
+		{http.MethodPut, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", `{"step":1,"build":{}}`},
+		{http.MethodDelete, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft/roll", ""},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -183,6 +203,10 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.GetMyCharacter(ctx, oas.GetMyCharacterParams{}))
 	add(h.UpdateMyCharacter(ctx, &oas.OwnedCharacterChange{}, oas.UpdateMyCharacterParams{}))
 	add(h.JoinCampaign(ctx, &oas.CharacterJoin{}, oas.JoinCampaignParams{}))
+	add(h.GetCharacterDraft(ctx, oas.GetCharacterDraftParams{}))
+	add(h.SaveCharacterDraft(ctx, &oas.CharacterDraftSave{}, oas.SaveCharacterDraftParams{}))
+	add(h.DiscardCharacterDraft(ctx, oas.DiscardCharacterDraftParams{}))
+	add(h.RollCharacterScores(ctx, oas.RollCharacterScoresParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

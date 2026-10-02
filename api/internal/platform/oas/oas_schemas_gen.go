@@ -3062,6 +3062,10 @@ type Campaign struct {
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
 	RestSupplies   OptBool           `json:"restSupplies"`
 	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// The ability score methods new Characters may use.
+	CreationMethods []CreationMethod `json:"creationMethods"`
+	// The level new Characters start at.
+	StartingLevel OptInt32 `json:"startingLevel"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool  `json:"shareInitiative"`
 	Me              Member   `json:"me"`
@@ -3116,6 +3120,16 @@ func (s *Campaign) GetRestSupplies() OptBool {
 // GetInitiativeMode returns the value of InitiativeMode.
 func (s *Campaign) GetInitiativeMode() OptInitiativeMode {
 	return s.InitiativeMode
+}
+
+// GetCreationMethods returns the value of CreationMethods.
+func (s *Campaign) GetCreationMethods() []CreationMethod {
+	return s.CreationMethods
+}
+
+// GetStartingLevel returns the value of StartingLevel.
+func (s *Campaign) GetStartingLevel() OptInt32 {
+	return s.StartingLevel
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3181,6 +3195,16 @@ func (s *Campaign) SetRestSupplies(val OptBool) {
 // SetInitiativeMode sets the value of InitiativeMode.
 func (s *Campaign) SetInitiativeMode(val OptInitiativeMode) {
 	s.InitiativeMode = val
+}
+
+// SetCreationMethods sets the value of CreationMethods.
+func (s *Campaign) SetCreationMethods(val []CreationMethod) {
+	s.CreationMethods = val
+}
+
+// SetStartingLevel sets the value of StartingLevel.
+func (s *Campaign) SetStartingLevel(val OptInt32) {
+	s.StartingLevel = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3555,6 +3579,10 @@ type CampaignSummary struct {
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
 	RestSupplies   OptBool           `json:"restSupplies"`
 	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// The ability score methods new Characters may use.
+	CreationMethods []CreationMethod `json:"creationMethods"`
+	// The level new Characters start at.
+	StartingLevel OptInt32 `json:"startingLevel"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3607,6 +3635,16 @@ func (s *CampaignSummary) GetRestSupplies() OptBool {
 // GetInitiativeMode returns the value of InitiativeMode.
 func (s *CampaignSummary) GetInitiativeMode() OptInitiativeMode {
 	return s.InitiativeMode
+}
+
+// GetCreationMethods returns the value of CreationMethods.
+func (s *CampaignSummary) GetCreationMethods() []CreationMethod {
+	return s.CreationMethods
+}
+
+// GetStartingLevel returns the value of StartingLevel.
+func (s *CampaignSummary) GetStartingLevel() OptInt32 {
+	return s.StartingLevel
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3662,6 +3700,16 @@ func (s *CampaignSummary) SetRestSupplies(val OptBool) {
 // SetInitiativeMode sets the value of InitiativeMode.
 func (s *CampaignSummary) SetInitiativeMode(val OptInitiativeMode) {
 	s.InitiativeMode = val
+}
+
+// SetCreationMethods sets the value of CreationMethods.
+func (s *CampaignSummary) SetCreationMethods(val []CreationMethod) {
+	s.CreationMethods = val
+}
+
+// SetStartingLevel sets the value of StartingLevel.
+func (s *CampaignSummary) SetStartingLevel(val OptInt32) {
+	s.StartingLevel = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3730,6 +3778,10 @@ type CampaignUpdate struct {
 	// Optional rule: a Long Rest costs each resting Character a day of Rations.
 	RestSupplies   OptBool           `json:"restSupplies"`
 	InitiativeMode OptInitiativeMode `json:"initiativeMode"`
+	// The ability score methods new Characters may use.
+	CreationMethods []CreationMethod `json:"creationMethods"`
+	// The level new Characters start at.
+	StartingLevel OptInt32 `json:"startingLevel"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -3762,6 +3814,16 @@ func (s *CampaignUpdate) GetRestSupplies() OptBool {
 // GetInitiativeMode returns the value of InitiativeMode.
 func (s *CampaignUpdate) GetInitiativeMode() OptInitiativeMode {
 	return s.InitiativeMode
+}
+
+// GetCreationMethods returns the value of CreationMethods.
+func (s *CampaignUpdate) GetCreationMethods() []CreationMethod {
+	return s.CreationMethods
+}
+
+// GetStartingLevel returns the value of StartingLevel.
+func (s *CampaignUpdate) GetStartingLevel() OptInt32 {
+	return s.StartingLevel
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3797,6 +3859,16 @@ func (s *CampaignUpdate) SetRestSupplies(val OptBool) {
 // SetInitiativeMode sets the value of InitiativeMode.
 func (s *CampaignUpdate) SetInitiativeMode(val OptInitiativeMode) {
 	s.InitiativeMode = val
+}
+
+// SetCreationMethods sets the value of CreationMethods.
+func (s *CampaignUpdate) SetCreationMethods(val []CreationMethod) {
+	s.CreationMethods = val
+}
+
+// SetStartingLevel sets the value of StartingLevel.
+func (s *CampaignUpdate) SetStartingLevel(val OptInt32) {
+	s.StartingLevel = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -3843,7 +3915,7 @@ func (s *CancelFriendRequestNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*CancelFriendRequestNoContent) cancelFriendRequestRes() {}
 
-// The choices for a first-level Character.
+// The choices for a new Character, who starts at the Campaign's starting level.
 // Ref: #/components/schemas/CharacterBuild
 type CharacterBuild struct {
 	Name       CharacterName        `json:"name"`
@@ -3857,6 +3929,8 @@ type CharacterBuild struct {
 	Armor      OptArmorChoice       `json:"armor"`
 	Shield     bool                 `json:"shield"`
 	Weapons    []Slug               `json:"weapons"`
+	Appearance OptString            `json:"appearance"`
+	Backstory  OptString            `json:"backstory"`
 }
 
 // GetName returns the value of Name.
@@ -3914,6 +3988,16 @@ func (s *CharacterBuild) GetWeapons() []Slug {
 	return s.Weapons
 }
 
+// GetAppearance returns the value of Appearance.
+func (s *CharacterBuild) GetAppearance() OptString {
+	return s.Appearance
+}
+
+// GetBackstory returns the value of Backstory.
+func (s *CharacterBuild) GetBackstory() OptString {
+	return s.Backstory
+}
+
 // SetName sets the value of Name.
 func (s *CharacterBuild) SetName(val CharacterName) {
 	s.Name = val
@@ -3969,6 +4053,16 @@ func (s *CharacterBuild) SetWeapons(val []Slug) {
 	s.Weapons = val
 }
 
+// SetAppearance sets the value of Appearance.
+func (s *CharacterBuild) SetAppearance(val OptString) {
+	s.Appearance = val
+}
+
+// SetBackstory sets the value of Backstory.
+func (s *CharacterBuild) SetBackstory(val OptString) {
+	s.Backstory = val
+}
+
 type CharacterBuildMethod string
 
 const (
@@ -4015,6 +4109,320 @@ func (s *CharacterBuildMethod) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A Character being made in the wizard.
+// Ref: #/components/schemas/CharacterDraft
+type CharacterDraft struct {
+	Step  int32               `json:"step"`
+	Build CharacterDraftBuild `json:"build"`
+	// The six scores the server rolled, to place on abilities.
+	Rolled []int32 `json:"rolled"`
+}
+
+// GetStep returns the value of Step.
+func (s *CharacterDraft) GetStep() int32 {
+	return s.Step
+}
+
+// GetBuild returns the value of Build.
+func (s *CharacterDraft) GetBuild() CharacterDraftBuild {
+	return s.Build
+}
+
+// GetRolled returns the value of Rolled.
+func (s *CharacterDraft) GetRolled() []int32 {
+	return s.Rolled
+}
+
+// SetStep sets the value of Step.
+func (s *CharacterDraft) SetStep(val int32) {
+	s.Step = val
+}
+
+// SetBuild sets the value of Build.
+func (s *CharacterDraft) SetBuild(val CharacterDraftBuild) {
+	s.Build = val
+}
+
+// SetRolled sets the value of Rolled.
+func (s *CharacterDraft) SetRolled(val []int32) {
+	s.Rolled = val
+}
+
+// The wizard's choices so far; every field may still be missing.
+// Ref: #/components/schemas/CharacterDraftBuild
+type CharacterDraftBuild struct {
+	Name       OptString                    `json:"name"`
+	Species    OptSlug                      `json:"species"`
+	Class      OptSlug                      `json:"class"`
+	Background OptSlug                      `json:"background"`
+	Method     OptCharacterDraftBuildMethod `json:"method"`
+	Base       OptAbilityBase               `json:"base"`
+	Bonus      OptAbilityBonus              `json:"bonus"`
+	Skills     []Slug                       `json:"skills"`
+	Armor      OptArmorChoice               `json:"armor"`
+	Shield     OptBool                      `json:"shield"`
+	Weapons    []Slug                       `json:"weapons"`
+	Appearance OptString                    `json:"appearance"`
+	Backstory  OptString                    `json:"backstory"`
+}
+
+// GetName returns the value of Name.
+func (s *CharacterDraftBuild) GetName() OptString {
+	return s.Name
+}
+
+// GetSpecies returns the value of Species.
+func (s *CharacterDraftBuild) GetSpecies() OptSlug {
+	return s.Species
+}
+
+// GetClass returns the value of Class.
+func (s *CharacterDraftBuild) GetClass() OptSlug {
+	return s.Class
+}
+
+// GetBackground returns the value of Background.
+func (s *CharacterDraftBuild) GetBackground() OptSlug {
+	return s.Background
+}
+
+// GetMethod returns the value of Method.
+func (s *CharacterDraftBuild) GetMethod() OptCharacterDraftBuildMethod {
+	return s.Method
+}
+
+// GetBase returns the value of Base.
+func (s *CharacterDraftBuild) GetBase() OptAbilityBase {
+	return s.Base
+}
+
+// GetBonus returns the value of Bonus.
+func (s *CharacterDraftBuild) GetBonus() OptAbilityBonus {
+	return s.Bonus
+}
+
+// GetSkills returns the value of Skills.
+func (s *CharacterDraftBuild) GetSkills() []Slug {
+	return s.Skills
+}
+
+// GetArmor returns the value of Armor.
+func (s *CharacterDraftBuild) GetArmor() OptArmorChoice {
+	return s.Armor
+}
+
+// GetShield returns the value of Shield.
+func (s *CharacterDraftBuild) GetShield() OptBool {
+	return s.Shield
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *CharacterDraftBuild) GetWeapons() []Slug {
+	return s.Weapons
+}
+
+// GetAppearance returns the value of Appearance.
+func (s *CharacterDraftBuild) GetAppearance() OptString {
+	return s.Appearance
+}
+
+// GetBackstory returns the value of Backstory.
+func (s *CharacterDraftBuild) GetBackstory() OptString {
+	return s.Backstory
+}
+
+// SetName sets the value of Name.
+func (s *CharacterDraftBuild) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetSpecies sets the value of Species.
+func (s *CharacterDraftBuild) SetSpecies(val OptSlug) {
+	s.Species = val
+}
+
+// SetClass sets the value of Class.
+func (s *CharacterDraftBuild) SetClass(val OptSlug) {
+	s.Class = val
+}
+
+// SetBackground sets the value of Background.
+func (s *CharacterDraftBuild) SetBackground(val OptSlug) {
+	s.Background = val
+}
+
+// SetMethod sets the value of Method.
+func (s *CharacterDraftBuild) SetMethod(val OptCharacterDraftBuildMethod) {
+	s.Method = val
+}
+
+// SetBase sets the value of Base.
+func (s *CharacterDraftBuild) SetBase(val OptAbilityBase) {
+	s.Base = val
+}
+
+// SetBonus sets the value of Bonus.
+func (s *CharacterDraftBuild) SetBonus(val OptAbilityBonus) {
+	s.Bonus = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *CharacterDraftBuild) SetSkills(val []Slug) {
+	s.Skills = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *CharacterDraftBuild) SetArmor(val OptArmorChoice) {
+	s.Armor = val
+}
+
+// SetShield sets the value of Shield.
+func (s *CharacterDraftBuild) SetShield(val OptBool) {
+	s.Shield = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *CharacterDraftBuild) SetWeapons(val []Slug) {
+	s.Weapons = val
+}
+
+// SetAppearance sets the value of Appearance.
+func (s *CharacterDraftBuild) SetAppearance(val OptString) {
+	s.Appearance = val
+}
+
+// SetBackstory sets the value of Backstory.
+func (s *CharacterDraftBuild) SetBackstory(val OptString) {
+	s.Backstory = val
+}
+
+type CharacterDraftBuildMethod string
+
+const (
+	CharacterDraftBuildMethodStandardArray CharacterDraftBuildMethod = "standard-array"
+	CharacterDraftBuildMethodPointBuy      CharacterDraftBuildMethod = "point-buy"
+	CharacterDraftBuildMethodRolled        CharacterDraftBuildMethod = "rolled"
+)
+
+// AllValues returns all CharacterDraftBuildMethod values.
+func (CharacterDraftBuildMethod) AllValues() []CharacterDraftBuildMethod {
+	return []CharacterDraftBuildMethod{
+		CharacterDraftBuildMethodStandardArray,
+		CharacterDraftBuildMethodPointBuy,
+		CharacterDraftBuildMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CharacterDraftBuildMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case CharacterDraftBuildMethodStandardArray:
+		return []byte(s), nil
+	case CharacterDraftBuildMethodPointBuy:
+		return []byte(s), nil
+	case CharacterDraftBuildMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CharacterDraftBuildMethod) UnmarshalText(data []byte) error {
+	switch CharacterDraftBuildMethod(data) {
+	case CharacterDraftBuildMethodStandardArray:
+		*s = CharacterDraftBuildMethodStandardArray
+		return nil
+	case CharacterDraftBuildMethodPointBuy:
+		*s = CharacterDraftBuildMethodPointBuy
+		return nil
+	case CharacterDraftBuildMethodRolled:
+		*s = CharacterDraftBuildMethodRolled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// CharacterDraftHeaders wraps CharacterDraft with response headers.
+type CharacterDraftHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           CharacterDraft
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *CharacterDraftHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *CharacterDraftHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *CharacterDraftHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *CharacterDraftHeaders) GetResponse() CharacterDraft {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *CharacterDraftHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *CharacterDraftHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *CharacterDraftHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *CharacterDraftHeaders) SetResponse(val CharacterDraft) {
+	s.Response = val
+}
+
+func (*CharacterDraftHeaders) getCharacterDraftRes()   {}
+func (*CharacterDraftHeaders) rollCharacterScoresRes() {}
+func (*CharacterDraftHeaders) saveCharacterDraftRes()  {}
+
+// The wizard's step and choices to keep.
+// Ref: #/components/schemas/CharacterDraftSave
+type CharacterDraftSave struct {
+	Step  int32               `json:"step"`
+	Build CharacterDraftBuild `json:"build"`
+}
+
+// GetStep returns the value of Step.
+func (s *CharacterDraftSave) GetStep() int32 {
+	return s.Step
+}
+
+// GetBuild returns the value of Build.
+func (s *CharacterDraftSave) GetBuild() CharacterDraftBuild {
+	return s.Build
+}
+
+// SetStep sets the value of Step.
+func (s *CharacterDraftSave) SetStep(val int32) {
+	s.Step = val
+}
+
+// SetBuild sets the value of Build.
+func (s *CharacterDraftSave) SetBuild(val CharacterDraftBuild) {
+	s.Build = val
 }
 
 // Out-of-combat changes; omitted fields stay as they are.
@@ -4677,6 +5085,10 @@ type ClassChoice struct {
 	HitDie       int32     `json:"hitDie"`
 	Saves        []Ability `json:"saves"`
 	SkillChoices int32     `json:"skillChoices"`
+	// The abilities the class leans on most, highlighted when choosing it.
+	PrimaryAbilities []Ability `json:"primaryAbilities"`
+	// How the class casts spells.
+	Caster OptClassChoiceCaster `json:"caster"`
 }
 
 // GetSlug returns the value of Slug.
@@ -4704,6 +5116,16 @@ func (s *ClassChoice) GetSkillChoices() int32 {
 	return s.SkillChoices
 }
 
+// GetPrimaryAbilities returns the value of PrimaryAbilities.
+func (s *ClassChoice) GetPrimaryAbilities() []Ability {
+	return s.PrimaryAbilities
+}
+
+// GetCaster returns the value of Caster.
+func (s *ClassChoice) GetCaster() OptClassChoiceCaster {
+	return s.Caster
+}
+
 // SetSlug sets the value of Slug.
 func (s *ClassChoice) SetSlug(val Slug) {
 	s.Slug = val
@@ -4727,6 +5149,72 @@ func (s *ClassChoice) SetSaves(val []Ability) {
 // SetSkillChoices sets the value of SkillChoices.
 func (s *ClassChoice) SetSkillChoices(val int32) {
 	s.SkillChoices = val
+}
+
+// SetPrimaryAbilities sets the value of PrimaryAbilities.
+func (s *ClassChoice) SetPrimaryAbilities(val []Ability) {
+	s.PrimaryAbilities = val
+}
+
+// SetCaster sets the value of Caster.
+func (s *ClassChoice) SetCaster(val OptClassChoiceCaster) {
+	s.Caster = val
+}
+
+// How the class casts spells.
+type ClassChoiceCaster string
+
+const (
+	ClassChoiceCasterNone ClassChoiceCaster = "none"
+	ClassChoiceCasterFull ClassChoiceCaster = "full"
+	ClassChoiceCasterHalf ClassChoiceCaster = "half"
+	ClassChoiceCasterPact ClassChoiceCaster = "pact"
+)
+
+// AllValues returns all ClassChoiceCaster values.
+func (ClassChoiceCaster) AllValues() []ClassChoiceCaster {
+	return []ClassChoiceCaster{
+		ClassChoiceCasterNone,
+		ClassChoiceCasterFull,
+		ClassChoiceCasterHalf,
+		ClassChoiceCasterPact,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ClassChoiceCaster) MarshalText() ([]byte, error) {
+	switch s {
+	case ClassChoiceCasterNone:
+		return []byte(s), nil
+	case ClassChoiceCasterFull:
+		return []byte(s), nil
+	case ClassChoiceCasterHalf:
+		return []byte(s), nil
+	case ClassChoiceCasterPact:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ClassChoiceCaster) UnmarshalText(data []byte) error {
+	switch ClassChoiceCaster(data) {
+	case ClassChoiceCasterNone:
+		*s = ClassChoiceCasterNone
+		return nil
+	case ClassChoiceCasterFull:
+		*s = ClassChoiceCasterFull
+		return nil
+	case ClassChoiceCasterHalf:
+		*s = ClassChoiceCasterHalf
+		return nil
+	case ClassChoiceCasterPact:
+		*s = ClassChoiceCasterPact
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // ClearTokenIconNoContent is response for ClearTokenIcon operation.
@@ -5151,6 +5639,56 @@ func (s *CoverLevel) UnmarshalText(data []byte) error {
 		return nil
 	case CoverLevelTotal:
 		*s = CoverLevelTotal
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// How a new Character's ability scores are set.
+// Ref: #/components/schemas/CreationMethod
+type CreationMethod string
+
+const (
+	CreationMethodStandardArray CreationMethod = "standard-array"
+	CreationMethodPointBuy      CreationMethod = "point-buy"
+	CreationMethodRolled        CreationMethod = "rolled"
+)
+
+// AllValues returns all CreationMethod values.
+func (CreationMethod) AllValues() []CreationMethod {
+	return []CreationMethod{
+		CreationMethodStandardArray,
+		CreationMethodPointBuy,
+		CreationMethodRolled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CreationMethod) MarshalText() ([]byte, error) {
+	switch s {
+	case CreationMethodStandardArray:
+		return []byte(s), nil
+	case CreationMethodPointBuy:
+		return []byte(s), nil
+	case CreationMethodRolled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CreationMethod) UnmarshalText(data []byte) error {
+	switch CreationMethod(data) {
+	case CreationMethodStandardArray:
+		*s = CreationMethodStandardArray
+		return nil
+	case CreationMethodPointBuy:
+		*s = CreationMethodPointBuy
+		return nil
+	case CreationMethodRolled:
+		*s = CreationMethodRolled
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -5825,6 +6363,45 @@ func (s *DisableTwoStepNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DisableTwoStepNoContent) disableTwoStepRes() {}
+
+// DiscardCharacterDraftNoContent is response for DiscardCharacterDraft operation.
+type DiscardCharacterDraftNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DiscardCharacterDraftNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DiscardCharacterDraftNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DiscardCharacterDraftNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DiscardCharacterDraftNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DiscardCharacterDraftNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DiscardCharacterDraftNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DiscardCharacterDraftNoContent) discardCharacterDraftRes() {}
 
 type DisplayName string
 
@@ -20215,6 +20792,98 @@ func (o OptAbility) Or(d Ability) Ability {
 	return d
 }
 
+// NewOptAbilityBase returns new OptAbilityBase with value set to v.
+func NewOptAbilityBase(v AbilityBase) OptAbilityBase {
+	return OptAbilityBase{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAbilityBase is optional AbilityBase.
+type OptAbilityBase struct {
+	Value AbilityBase
+	Set   bool
+}
+
+// IsSet returns true if OptAbilityBase was set.
+func (o OptAbilityBase) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAbilityBase) Reset() {
+	var v AbilityBase
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAbilityBase) SetTo(v AbilityBase) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAbilityBase) Get() (v AbilityBase, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAbilityBase) Or(d AbilityBase) AbilityBase {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAbilityBonus returns new OptAbilityBonus with value set to v.
+func NewOptAbilityBonus(v AbilityBonus) OptAbilityBonus {
+	return OptAbilityBonus{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAbilityBonus is optional AbilityBonus.
+type OptAbilityBonus struct {
+	Value AbilityBonus
+	Set   bool
+}
+
+// IsSet returns true if OptAbilityBonus was set.
+func (o OptAbilityBonus) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAbilityBonus) Reset() {
+	var v AbilityBonus
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAbilityBonus) SetTo(v AbilityBonus) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAbilityBonus) Get() (v AbilityBonus, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAbilityBonus) Or(d AbilityBonus) AbilityBonus {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptAccount returns new OptAccount with value set to v.
 func NewOptAccount(v Account) OptAccount {
 	return OptAccount{
@@ -20537,6 +21206,52 @@ func (o OptCampaignRuleset) Or(d CampaignRuleset) CampaignRuleset {
 	return d
 }
 
+// NewOptCharacterDraftBuildMethod returns new OptCharacterDraftBuildMethod with value set to v.
+func NewOptCharacterDraftBuildMethod(v CharacterDraftBuildMethod) OptCharacterDraftBuildMethod {
+	return OptCharacterDraftBuildMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCharacterDraftBuildMethod is optional CharacterDraftBuildMethod.
+type OptCharacterDraftBuildMethod struct {
+	Value CharacterDraftBuildMethod
+	Set   bool
+}
+
+// IsSet returns true if OptCharacterDraftBuildMethod was set.
+func (o OptCharacterDraftBuildMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCharacterDraftBuildMethod) Reset() {
+	var v CharacterDraftBuildMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCharacterDraftBuildMethod) SetTo(v CharacterDraftBuildMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCharacterDraftBuildMethod) Get() (v CharacterDraftBuildMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCharacterDraftBuildMethod) Or(d CharacterDraftBuildMethod) CharacterDraftBuildMethod {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptCharacterName returns new OptCharacterName with value set to v.
 func NewOptCharacterName(v CharacterName) OptCharacterName {
 	return OptCharacterName{
@@ -20577,6 +21292,52 @@ func (o OptCharacterName) Get() (v CharacterName, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptCharacterName) Or(d CharacterName) CharacterName {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptClassChoiceCaster returns new OptClassChoiceCaster with value set to v.
+func NewOptClassChoiceCaster(v ClassChoiceCaster) OptClassChoiceCaster {
+	return OptClassChoiceCaster{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptClassChoiceCaster is optional ClassChoiceCaster.
+type OptClassChoiceCaster struct {
+	Value ClassChoiceCaster
+	Set   bool
+}
+
+// IsSet returns true if OptClassChoiceCaster was set.
+func (o OptClassChoiceCaster) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptClassChoiceCaster) Reset() {
+	var v ClassChoiceCaster
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptClassChoiceCaster) SetTo(v ClassChoiceCaster) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptClassChoiceCaster) Get() (v ClassChoiceCaster, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptClassChoiceCaster) Or(d ClassChoiceCaster) ClassChoiceCaster {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -24017,6 +24778,7 @@ func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
 func (*ProblemStatusCodeWithHeaders) draftReleaseNoteRes()              {}
 func (*ProblemStatusCodeWithHeaders) editReleaseNoteRes()               {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
@@ -24028,6 +24790,7 @@ func (*ProblemStatusCodeWithHeaders) getAdminAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
+func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
@@ -24107,7 +24870,9 @@ func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
+func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}

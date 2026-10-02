@@ -637,6 +637,15 @@ export const zAccountInvite = z.object({
 });
 
 /**
+ * How a new Character's ability scores are set.
+ */
+export const zCreationMethod = z.enum([
+    'standard-array',
+    'point-buy',
+    'rolled'
+]);
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export const zInitiativeMode = z.enum(['individual', 'side']);
@@ -1979,7 +1988,54 @@ export const zMapEdit = z.object({
 export const zSlug = z.string().min(1).max(80).regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
 /**
- * The choices for a first-level Character.
+ * The wizard's choices so far; every field may still be missing.
+ */
+export const zCharacterDraftBuild = z.object({
+    name: z.string().max(60).optional(),
+    species: zSlug.optional(),
+    class: zSlug.optional(),
+    background: zSlug.optional(),
+    method: z.enum([
+        'standard-array',
+        'point-buy',
+        'rolled'
+    ]).optional(),
+    base: zAbilityBase.optional(),
+    bonus: zAbilityBonus.optional(),
+    skills: z.array(zSlug).max(4).optional(),
+    armor: zArmorChoice.optional(),
+    shield: z.boolean().optional(),
+    weapons: z.array(zSlug).max(4).optional(),
+    appearance: z.string().max(2000).optional(),
+    backstory: z.string().max(4000).optional()
+});
+
+/**
+ * A Character being made in the wizard.
+ */
+export const zCharacterDraft = z.object({
+    step: z.int().gte(0).lte(8),
+    build: zCharacterDraftBuild,
+    rolled: z.tuple([
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18),
+        z.int().gte(3).lte(18)
+    ]).optional()
+});
+
+/**
+ * The wizard's step and choices to keep.
+ */
+export const zCharacterDraftSave = z.object({
+    step: z.int().gte(0).lte(8),
+    build: zCharacterDraftBuild
+});
+
+/**
+ * The choices for a new Character, who starts at the Campaign's starting level.
  */
 export const zCharacterBuild = z.object({
     name: zCharacterName,
@@ -1996,7 +2052,9 @@ export const zCharacterBuild = z.object({
     skills: z.array(zSlug).max(4),
     armor: zArmorChoice.optional(),
     shield: z.boolean(),
-    weapons: z.array(zSlug).max(4)
+    weapons: z.array(zSlug).max(4),
+    appearance: z.string().max(2000).optional(),
+    backstory: z.string().max(4000).optional()
 });
 
 /**
@@ -2074,7 +2132,14 @@ export const zClassChoice = z.object({
     name: z.string().max(120),
     hitDie: z.int().gte(0).lte(12),
     saves: z.array(zAbility).max(6),
-    skillChoices: z.int().gte(0).lte(6)
+    skillChoices: z.int().gte(0).lte(6),
+    primaryAbilities: z.array(zAbility).max(2).optional(),
+    caster: z.enum([
+        'none',
+        'full',
+        'half',
+        'pact'
+    ]).optional()
 });
 
 /**
@@ -2723,6 +2788,8 @@ export const zCampaignSummary = z.object({
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
     initiativeMode: zInitiativeMode.optional(),
+    creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
+    startingLevel: z.int().gte(1).lte(20).optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -2748,6 +2815,8 @@ export const zCampaign = z.object({
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
     initiativeMode: zInitiativeMode.optional(),
+    creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
+    startingLevel: z.int().gte(1).lte(20).optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
@@ -2834,6 +2903,8 @@ export const zCampaignUpdate = z.object({
     highGround: z.boolean().optional(),
     restSupplies: z.boolean().optional(),
     initiativeMode: zInitiativeMode.optional(),
+    creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
+    startingLevel: z.int().gte(1).lte(20).optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -4569,6 +4640,44 @@ export const zSeeReleaseNotePath = z.object({
  * Seen.
  */
 export const zSeeReleaseNoteResponse = z.void();
+
+export const zDiscardCharacterDraftPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * Discarded.
+ */
+export const zDiscardCharacterDraftResponse = z.void();
+
+export const zGetCharacterDraftPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The draft.
+ */
+export const zGetCharacterDraftResponse = zCharacterDraft;
+
+export const zSaveCharacterDraftBody = zCharacterDraftSave;
+
+export const zSaveCharacterDraftPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The draft.
+ */
+export const zSaveCharacterDraftResponse = zCharacterDraft;
+
+export const zRollCharacterScoresPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The draft with its rolled scores.
+ */
+export const zRollCharacterScoresResponse = zCharacterDraft;
 
 /**
  * The process is alive.

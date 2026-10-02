@@ -6,8 +6,8 @@ VALUES (@campaign_id, @owner_member_id, @character_id, @name, @ruleset, @species
 RETURNING id;
 
 -- name: InsertAccountCharacter :exec
-INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
-VALUES (@id, @owner_subject, @name, @ruleset, @species_slug, @class_slug, @background_slug, @now, @now);
+INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, appearance, backstory, created_at, updated_at)
+VALUES (@id, @owner_subject, @name, @ruleset, @species_slug, @class_slug, @background_slug, @appearance, @backstory, @now, @now);
 
 -- name: SetCharacterAbility :exec
 INSERT INTO campaign.character_abilities (character_id, ability, base, bonus) VALUES (@character_id, @ability, @base, @bonus);
@@ -99,3 +99,19 @@ UPDATE campaign.characters SET name = @name WHERE character_id = @character_id;
 UPDATE campaign.characters c
 SET name = a.name, portrait_key = a.portrait_key, portrait_type = a.portrait_type, token_key = a.token_key, token_type = a.token_type
 FROM campaign.account_characters a WHERE c.id = @id AND a.id = c.character_id;
+
+-- name: GetCharacterDraft :one
+SELECT step, build, rolled, updated_at FROM campaign.character_drafts WHERE campaign_id = @campaign_id AND owner_subject = @owner_subject;
+
+-- name: SaveCharacterDraft :exec
+INSERT INTO campaign.character_drafts (campaign_id, owner_subject, step, build, updated_at) VALUES (@campaign_id, @owner_subject, @step, @build, @now)
+ON CONFLICT (campaign_id, owner_subject) DO UPDATE SET step = EXCLUDED.step, build = EXCLUDED.build, updated_at = EXCLUDED.updated_at;
+
+-- name: RollCharacterDraft :execrows
+-- Rolled scores are set once per draft; a draft is started if there is none.
+INSERT INTO campaign.character_drafts (campaign_id, owner_subject, step, build, rolled, updated_at) VALUES (@campaign_id, @owner_subject, 3, '{}', @rolled, @now)
+ON CONFLICT (campaign_id, owner_subject) DO UPDATE SET rolled = EXCLUDED.rolled, updated_at = EXCLUDED.updated_at
+WHERE campaign.character_drafts.rolled IS NULL;
+
+-- name: DeleteCharacterDraft :exec
+DELETE FROM campaign.character_drafts WHERE campaign_id = @campaign_id AND owner_subject = @owner_subject;

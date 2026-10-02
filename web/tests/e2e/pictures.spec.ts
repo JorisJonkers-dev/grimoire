@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { buildFighter } from './wizard'
 
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP4z8DAwMDAwMAAAB0ABvS+bjsAAAAASUVORK5CYII=',
@@ -11,19 +12,7 @@ test('a player uploads a portrait and crops a token icon from it', async ({ page
   await page.getByTestId('campaign-display-name').fill('Painter')
   await page.getByRole('button', { name: 'Start as DM' }).click()
   await page.getByTestId('build-character').click()
-  await page.getByTestId('character-name').fill('Mira')
-  await page.getByRole('radio', { name: /Human/ }).check()
-  await page.getByRole('radio', { name: /Soldier/ }).check()
-  await page.getByTestId('next').click()
-  await page.getByRole('radio', { name: /^Fighter/ }).check()
-  await page.getByTestId('next').click()
-  await page.getByTestId('bonus-0').selectOption('strength')
-  await page.getByTestId('bonus-1').selectOption('constitution')
-  await page.getByTestId('next').click()
-  await page.getByRole('checkbox', { name: /Perception/ }).check()
-  await page.getByRole('checkbox', { name: /Survival/ }).check()
-  await page.getByTestId('next').click()
-  await page.getByTestId('next').click()
+  await buildFighter(page, 'Mira')
   await page.getByTestId('create-character').click()
 
   await page.getByTestId('portrait-file').setInputFiles({ name: 'mira.png', mimeType: 'image/png', buffer: png })

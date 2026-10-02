@@ -26,6 +26,7 @@ type CampaignAccountCharacter struct {
 	TokenType      pgtype.Text
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	Appearance     string
 }
 
 type CampaignCampaign struct {
@@ -41,6 +42,8 @@ type CampaignCampaign struct {
 	RestSupplies     bool
 	InitiativeMode   string
 	ShareInitiative  bool
+	CreationMethods  []string
+	StartingLevel    int32
 }
 
 type CampaignCharacter struct {
@@ -74,6 +77,15 @@ type CampaignCharacterAbility struct {
 	Ability     string
 	Base        int32
 	Bonus       int32
+}
+
+type CampaignCharacterDraft struct {
+	CampaignID   uuid.UUID
+	OwnerSubject string
+	Step         int32
+	Build        []byte
+	Rolled       []int32
+	UpdatedAt    time.Time
 }
 
 type CampaignCharacterResource struct {

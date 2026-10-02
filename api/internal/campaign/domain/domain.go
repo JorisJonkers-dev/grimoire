@@ -67,6 +67,10 @@ type Campaign struct {
 	// monsters one roll.
 	InitiativeMode  string
 	ShareInitiative bool
+	// CreationMethods are the ability score methods new Characters may use; StartingLevel is the level
+	// they start at.
+	CreationMethods []string
+	StartingLevel   int
 }
 
 // SettingsChange is a change to a Campaign's settings; nil leaves a field alone.
@@ -78,6 +82,8 @@ type SettingsChange struct {
 	RestSupplies     *bool
 	InitiativeMode   *string
 	ShareInitiative  *bool
+	CreationMethods  []string
+	StartingLevel    *int
 }
 
 // Member is an account's participation in a Campaign.
@@ -138,6 +144,9 @@ type Build struct {
 	Armor      string
 	Shield     bool
 	Weapons    []string
+	// Appearance and Backstory are written at creation and kept on the Character.
+	Appearance string
+	Backstory  string
 }
 
 // Image is a stored picture, addressed by the hash of its content.
@@ -211,4 +220,13 @@ type CampaignEntry struct {
 	Level        int
 	HPCurrent    int
 	HPMax        int
+}
+
+// Draft is a Character being made in the wizard: the step reached, the choices so far as the client
+// keeps them, and the six scores the server rolled for it, if any.
+type Draft struct {
+	Step      int
+	Build     []byte
+	Rolled    []int
+	UpdatedAt time.Time
 }

@@ -3,6 +3,7 @@ package pgstore_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
 type fakeOptions struct{ err error }
@@ -344,7 +346,26 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			_, err := c.UpdateOwned(ctx, playerCaller, sheet.Owned, "Kara Vale", "")
 			return err
 		},
-		"join":    func(c *app.Characters) error { _, err := c.Join(ctx, playerCaller, sheet.Owned, other.ID); return err },
+		"join": func(c *app.Characters) error { _, err := c.Join(ctx, playerCaller, sheet.Owned, other.ID); return err },
+		"draft": func(c *app.Characters) error {
+			_, err := c.SaveDraft(ctx, playerCaller, d.ID, 2, []byte(`{}`))
+			return err
+		},
+		"read draft": func(c *app.Characters) error {
+			_, err := c.Draft(ctx, playerCaller, d.ID)
+			if errors.Is(err, domain.ErrNotFound) {
+				return nil
+			}
+			return err
+		},
+		"discard": func(c *app.Characters) error { return c.DiscardDraft(ctx, playerCaller, d.ID) },
+		"roll": func(c *app.Characters) error {
+			_, err := c.RollScores(ctx, playerCaller, d.ID)
+			if errors.Is(err, domain.ErrConflict) {
+				return nil
+			}
+			return err
+		},
 		"create":  func(c *app.Characters) error { _, err := c.Create(ctx, playerCaller, d.ID, fighter()); return err },
 		"preview": func(c *app.Characters) error { _, err := c.Preview(ctx, playerCaller, d.ID, fighter()); return err },
 		"list":    func(c *app.Characters) error { _, err := c.List(ctx, playerCaller, d.ID); return err },
@@ -365,7 +386,7 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
-			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now}
+			c := &app.Characters{Repo: pgstore.NewFaulty(db.Pool(), f), Compendium: fakeOptions{}, Combat: app.NoCombat{}, Blobs: chars.Blobs, Now: time.Now, Roll: func() []int { return []int{16, 15, 12, 11, 9, 8} }}
 			err := op(c)
 			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
 				t.Fatalf("%s: %v", name, err)
@@ -457,5 +478,37 @@ func TestPicturesAreRefused(t *testing.T) {
 	}
 	if _, _, err := chars.Image(ctx, playerCaller, d.ID, sheet.ID, domain.Portrait); err == nil {
 		t.Fatal("storage failure on get ignored")
+	}
+}
+
+// A draft is the caller's alone, sized and stepped within limits, and a story too long is refused.
+func TestDraftLimits(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db := open(t)
+	chars, _, d := party(t, pgstore.New(db.Pool()))
+	if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, 9, []byte(`{}`)); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a step past the review = %v", err)
+	}
+	if _, err := chars.SaveDraft(ctx, playerCaller, d.ID, 1, make([]byte, 16_001)); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a huge draft = %v", err)
+	}
+	stranger := caller.UI("nobody")
+	if _, err := chars.Draft(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger's draft = %v", err)
+	}
+	if err := chars.DiscardDraft(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger discards = %v", err)
+	}
+	if _, err := chars.RollScores(ctx, stranger, d.ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger rolls = %v", err)
+	}
+	if _, err := chars.RollScores(ctx, playerCaller, d.ID); err == nil {
+		t.Fatal("rolling without a roller")
+	}
+	long := fighter()
+	long.Backstory = strings.Repeat("x", 4001)
+	if _, err := chars.Preview(ctx, playerCaller, d.ID, long); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a backstory too long = %v", err)
 	}
 }

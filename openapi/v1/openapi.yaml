@@ -4956,6 +4956,114 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/character-draft:
+    get:
+      operationId: getCharacterDraft
+      x-ogen-operation-group: Read
+      summary: Read my Character draft
+      description: "The Character the caller is making in this Campaign's wizard, with the step reached, the choices so far and any rolled scores."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The draft.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterDraft"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveCharacterDraft
+      x-ogen-operation-group: Build
+      summary: Save my Character draft
+      description: Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server rolled them.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CharacterDraftSave"
+      responses:
+        "200":
+          description: The draft.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterDraft"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: discardCharacterDraft
+      x-ogen-operation-group: Build
+      summary: Discard my Character draft
+      description: Starts the wizard over.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "204":
+          description: Discarded.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/character-draft/roll:
+    post:
+      operationId: rollCharacterScores
+      x-ogen-operation-group: Build
+      summary: Roll ability scores
+      description: Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The draft with its rolled scores.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CharacterDraft"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -5208,6 +5316,14 @@ components:
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        creationMethods:
+          type: array
+          description: The ability score methods new Characters may use.
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CreationMethod" }
+        startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
       type: object
@@ -5250,6 +5366,14 @@ components:
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        creationMethods:
+          type: array
+          description: The ability score methods new Characters may use.
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CreationMethod" }
+        startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
         members:
@@ -5276,6 +5400,14 @@ components:
         highGround: { type: boolean, description: "Optional rule: attacks from higher ground get +2 to hit." }
         restSupplies: { type: boolean, description: "Optional rule: a Long Rest costs each resting Character a day of Rations." }
         initiativeMode: { $ref: "#/components/schemas/InitiativeMode" }
+        creationMethods:
+          type: array
+          description: The ability score methods new Characters may use.
+          minItems: 1
+          maxItems: 3
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CreationMethod" }
+        startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
       type: object
@@ -5914,6 +6046,10 @@ components:
       properties:
         expiresAt: { type: string, format: date-time, maxLength: 40 }
         admin: { type: boolean }
+    CreationMethod:
+      type: string
+      description: How a new Character's ability scores are set.
+      enum: [standard-array, point-buy, rolled]
     InitiativeMode:
       type: string
       description: How a fight rolls initiative, each Combatant for itself or one roll per side.
@@ -6025,9 +6161,55 @@ components:
       description: Body armour slug, or empty for none.
       maxLength: 80
       pattern: "^([a-z0-9]+(-[a-z0-9]+)*)?$"
+    CharacterDraftBuild:
+      type: object
+      description: The wizard's choices so far; every field may still be missing.
+      additionalProperties: false
+      properties:
+        name: { type: string, maxLength: 60 }
+        species: { $ref: "#/components/schemas/Slug" }
+        class: { $ref: "#/components/schemas/Slug" }
+        background: { $ref: "#/components/schemas/Slug" }
+        method: { type: string, enum: [standard-array, point-buy, rolled] }
+        base: { $ref: "#/components/schemas/AbilityBase" }
+        bonus: { $ref: "#/components/schemas/AbilityBonus" }
+        skills:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        armor: { $ref: "#/components/schemas/ArmorChoice" }
+        shield: { type: boolean }
+        weapons:
+          type: array
+          maxItems: 4
+          items: { $ref: "#/components/schemas/Slug" }
+        appearance: { type: string, maxLength: 2000 }
+        backstory: { type: string, maxLength: 4000 }
+    CharacterDraft:
+      type: object
+      description: A Character being made in the wizard.
+      additionalProperties: false
+      required: [step, build]
+      properties:
+        step: { type: integer, format: int32, minimum: 0, maximum: 8 }
+        build: { $ref: "#/components/schemas/CharacterDraftBuild" }
+        rolled:
+          type: array
+          description: The six scores the server rolled, to place on abilities.
+          minItems: 6
+          maxItems: 6
+          items: { type: integer, format: int32, minimum: 3, maximum: 18 }
+    CharacterDraftSave:
+      type: object
+      description: The wizard's step and choices to keep.
+      additionalProperties: false
+      required: [step, build]
+      properties:
+        step: { type: integer, format: int32, minimum: 0, maximum: 8 }
+        build: { $ref: "#/components/schemas/CharacterDraftBuild" }
     CharacterBuild:
       type: object
-      description: The choices for a first-level Character.
+      description: The choices for a new Character, who starts at the Campaign's starting level.
       additionalProperties: false
       required: [name, species, class, background, method, base, bonus, skills, shield, weapons]
       properties:
@@ -6048,6 +6230,8 @@ components:
           type: array
           maxItems: 4
           items: { $ref: "#/components/schemas/Slug" }
+        appearance: { type: string, maxLength: 2000 }
+        backstory: { type: string, maxLength: 4000 }
     CharacterEdit:
       type: object
       description: Out-of-combat changes; omitted fields stay as they are.
@@ -6272,6 +6456,12 @@ components:
           maxItems: 6
           items: { $ref: "#/components/schemas/Ability" }
         skillChoices: { type: integer, format: int32, minimum: 0, maximum: 6 }
+        primaryAbilities:
+          type: array
+          description: The abilities the class leans on most, highlighted when choosing it.
+          maxItems: 2
+          items: { $ref: "#/components/schemas/Ability" }
+        caster: { type: string, enum: [none, full, half, pact], description: "How the class casts spells." }
     SpeciesChoice:
       type: object
       description: A playable species.

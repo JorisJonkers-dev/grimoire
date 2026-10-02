@@ -400,6 +400,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
+	// DiscardCharacterDraft implements discardCharacterDraft operation.
+	//
+	// Starts the wizard over.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/character-draft
+	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
 	// JoinCampaign implements joinCampaign operation.
 	//
 	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -492,6 +498,19 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
+	// RollCharacterScores implements rollCharacterScores operation.
+	//
+	// Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+	//
+	// POST /api/v1/campaigns/{campaignId}/character-draft/roll
+	RollCharacterScores(ctx context.Context, params RollCharacterScoresParams) (RollCharacterScoresRes, error)
+	// SaveCharacterDraft implements saveCharacterDraft operation.
+	//
+	// Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
+	// rolled them.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/character-draft
+	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -692,6 +711,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}
 	GetCharacter(ctx context.Context, params GetCharacterParams) (GetCharacterRes, error)
+	// GetCharacterDraft implements getCharacterDraft operation.
+	//
+	// The Character the caller is making in this Campaign's wizard, with the step reached, the choices so
+	// far and any rolled scores.
+	//
+	// GET /api/v1/campaigns/{campaignId}/character-draft
+	GetCharacterDraft(ctx context.Context, params GetCharacterDraftParams) (GetCharacterDraftRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.

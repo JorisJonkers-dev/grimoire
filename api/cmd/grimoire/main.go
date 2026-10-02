@@ -41,6 +41,7 @@ import (
 	playpg "github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
 	prepapp "github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
 	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	socialapp "github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
 	socialpg "github.com/JorisJonkers-dev/grimoire/api/internal/social/pgstore"
@@ -227,7 +228,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 
 	characters := &campaignapp.Characters{
 		Repo: campaignpg.New(store.Pool()), Compendium: compendiumStore, Combat: campaignapp.NoCombat{}, Now: time.Now,
-		Blobs: blobs(cfg, logger),
+		Blobs: blobs(cfg, logger), Roll: func() []int { return rules.RollAbilityScores(rng.New(rng.Seed())) },
 	}
 	hub := &live.Hub{
 		Store: playpg.New(store.Pool()), Stats: playpg.Statblocks{Store: playpg.New(store.Pool()), Characters: characters}, Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Owner: playpg.Owner{Pool: store.Pool()}, Now: time.Now, Log: logger,

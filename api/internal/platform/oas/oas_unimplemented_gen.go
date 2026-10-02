@@ -305,6 +305,15 @@ func (UnimplementedHandler) DisableTwoStep(ctx context.Context, req *TwoStepCode
 	return r, ht.ErrNotImplemented
 }
 
+// DiscardCharacterDraft implements discardCharacterDraft operation.
+//
+// Starts the wizard over.
+//
+// DELETE /api/v1/campaigns/{campaignId}/character-draft
+func (UnimplementedHandler) DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (r DiscardCharacterDraftRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DraftReleaseNote implements draftReleaseNote operation.
 //
 // Starts the one Release Note of a full release, listing the features its changelog says it added. For
@@ -413,6 +422,16 @@ func (UnimplementedHandler) GetCampaign(ctx context.Context, params GetCampaignP
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}
 func (UnimplementedHandler) GetCharacter(ctx context.Context, params GetCharacterParams) (r GetCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetCharacterDraft implements getCharacterDraft operation.
+//
+// The Character the caller is making in this Campaign's wizard, with the step reached, the choices so
+// far and any rolled scores.
+//
+// GET /api/v1/campaigns/{campaignId}/character-draft
+func (UnimplementedHandler) GetCharacterDraft(ctx context.Context, params GetCharacterDraftParams) (r GetCharacterDraftRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1132,12 +1151,31 @@ func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInvit
 	return r, ht.ErrNotImplemented
 }
 
+// RollCharacterScores implements rollCharacterScores operation.
+//
+// Rolls six scores of 4d6 dropping the lowest, once per draft, when the Campaign allows rolling.
+//
+// POST /api/v1/campaigns/{campaignId}/character-draft/roll
+func (UnimplementedHandler) RollCharacterScores(ctx context.Context, params RollCharacterScoresParams) (r RollCharacterScoresRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RollRest implements rollRest operation.
 //
 // The server rolls every die still empty. The roller or a DM.
 //
 // POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
 func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams) (r RollRestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveCharacterDraft implements saveCharacterDraft operation.
+//
+// Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
+// rolled them.
+//
+// PUT /api/v1/campaigns/{campaignId}/character-draft
+func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (r SaveCharacterDraftRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

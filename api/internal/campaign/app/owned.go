@@ -2,10 +2,12 @@ package app
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -68,7 +70,7 @@ func (s *Characters) Join(ctx context.Context, c caller.Caller, id domain.OwnedI
 	}
 	b := source.Build
 	b.Name = o.Name
-	sheet, err := s.prepare(ctx, c, campaign, b)
+	sheet, err := s.prepare(ctx, c, campaign, b, false)
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -80,4 +82,56 @@ func (s *Characters) Join(ctx context.Context, c caller.Caller, id domain.OwnedI
 	}
 	sheet.ID = cid
 	return sheet, nil
+}
+
+// Draft reads the caller's Character draft in a Campaign.
+func (s *Characters) Draft(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error) {
+	if _, err := member(ctx, s.Repo, c, id); err != nil {
+		return domain.Draft{}, err
+	}
+	return s.Repo.Draft(ctx, id, c.Subject)
+}
+
+// SaveDraft keeps the wizard's step and choices for the caller.
+func (s *Characters) SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error) {
+	if _, err := member(ctx, s.Repo, c, id); err != nil {
+		return domain.Draft{}, err
+	}
+	if step < 0 || step > 8 || len(build) > 16_000 {
+		return domain.Draft{}, domain.ErrInvalid
+	}
+	if err := s.Repo.SaveDraft(ctx, id, c.Subject, step, build, s.Now()); err != nil {
+		return domain.Draft{}, err
+	}
+	return s.Repo.Draft(ctx, id, c.Subject)
+}
+
+// DiscardDraft starts the caller's wizard over, rolled scores and all.
+func (s *Characters) DiscardDraft(ctx context.Context, c caller.Caller, id domain.CampaignID) error {
+	if _, err := member(ctx, s.Repo, c, id); err != nil {
+		return err
+	}
+	return s.Repo.DeleteDraft(ctx, id, c.Subject)
+}
+
+// RollScores rolls six ability scores for the caller's draft, once, when the Campaign allows rolling.
+func (s *Characters) RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error) {
+	if _, err := member(ctx, s.Repo, c, id); err != nil {
+		return domain.Draft{}, err
+	}
+	camp, err := s.Repo.GetCampaign(ctx, id)
+	if err != nil {
+		return domain.Draft{}, err
+	}
+	if s.Roll == nil || !slices.Contains(camp.CreationMethods, string(rules.Rolled)) {
+		return domain.Draft{}, refuse("this Campaign does not roll ability scores")
+	}
+	rolled, err := s.Repo.RollDraft(ctx, id, c.Subject, s.Roll(), s.Now())
+	if err != nil {
+		return domain.Draft{}, err
+	}
+	if !rolled {
+		return domain.Draft{}, domain.ErrConflict
+	}
+	return s.Repo.Draft(ctx, id, c.Subject)
 }

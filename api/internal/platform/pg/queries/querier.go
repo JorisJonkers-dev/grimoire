@@ -146,6 +146,7 @@ type Querier interface {
 	DeclineFriendRequest(ctx context.Context, arg DeclineFriendRequestParams) error
 	DeleteBlock(ctx context.Context, arg DeleteBlockParams) (int64, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
+	DeleteCharacterDraft(ctx context.Context, arg DeleteCharacterDraftParams) error
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
 	DeleteDying(ctx context.Context, tokenID uuid.UUID) error
@@ -191,6 +192,7 @@ type Querier interface {
 	GetBackgroundDetail(ctx context.Context, id int64) (string, error)
 	GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow, error)
 	GetCharacter(ctx context.Context, arg GetCharacterParams) (GetCharacterRow, error)
+	GetCharacterDraft(ctx context.Context, arg GetCharacterDraftParams) (GetCharacterDraftRow, error)
 	GetClassDetail(ctx context.Context, id int64) (GetClassDetailRow, error)
 	GetConditionDetail(ctx context.Context, id int64) (string, error)
 	GetFeatDetail(ctx context.Context, id int64) (GetFeatDetailRow, error)
@@ -461,12 +463,15 @@ type Querier interface {
 	RevokeAccountSessions(ctx context.Context, arg RevokeAccountSessionsParams) error
 	RevokeAccountTokens(ctx context.Context, arg RevokeAccountTokensParams) error
 	RevokeInvite(ctx context.Context, arg RevokeInviteParams) (int64, error)
+	// Rolled scores are set once per draft; a draft is started if there is none.
+	RollCharacterDraft(ctx context.Context, arg RollCharacterDraftParams) (int64, error)
 	RollDice(ctx context.Context, rollID uuid.UUID) ([]RollDiceRow, error)
 	RollLabels(ctx context.Context, rollID uuid.UUID) ([]RollLabelsRow, error)
 	RollModifiers(ctx context.Context, rollID uuid.UUID) ([]RollModifiersRow, error)
 	RulesetYear(ctx context.Context, key string) (int32, error)
 	RunningCombat(ctx context.Context, sessionID uuid.UUID) (PlayCombat, error)
 	SaveAttack(ctx context.Context, arg SaveAttackParams) error
+	SaveCharacterDraft(ctx context.Context, arg SaveCharacterDraftParams) error
 	SaveCombat(ctx context.Context, arg SaveCombatParams) error
 	SaveCombatant(ctx context.Context, arg SaveCombatantParams) error
 	SaveDying(ctx context.Context, arg SaveDyingParams) error

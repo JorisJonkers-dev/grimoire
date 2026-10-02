@@ -26,6 +26,10 @@ type CharacterService interface {
 	Owned(ctx context.Context, c caller.Caller, id domain.OwnedID) (domain.OwnedCharacter, error)
 	UpdateOwned(ctx context.Context, c caller.Caller, id domain.OwnedID, name, backstory string) (domain.OwnedCharacter, error)
 	Join(ctx context.Context, c caller.Caller, id domain.OwnedID, campaign domain.CampaignID) (app.Sheet, error)
+	Draft(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
+	SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error)
+	DiscardDraft(ctx context.Context, c caller.Caller, id domain.CampaignID) error
+	RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -61,6 +65,7 @@ func buildIn(b *oas.CharacterBuild) domain.Build {
 		Name: string(b.Name), Species: string(b.Species), Class: string(b.Class), Background: string(b.Background),
 		Method: string(b.Method), Base: baseMap(b.Base), Bonus: bonusMap(b.Bonus), Skills: slugList(b.Skills),
 		Armor: string(b.Armor.Or("")), Shield: b.Shield, Weapons: slugList(b.Weapons),
+		Appearance: b.Appearance.Or(""), Backstory: b.Backstory.Or(""),
 	}
 }
 
@@ -174,8 +179,13 @@ func builderOut(o compendium.BuilderOptions) oas.BuilderOptions {
 		for _, a := range c.Saves {
 			saves = append(saves, oas.Ability(a))
 		}
+		primary := make([]oas.Ability, 0, 2)
+		for _, a := range rules.PrimaryAbilities(c.Slug) {
+			primary = append(primary, oas.Ability(a))
+		}
 		out.Classes = append(out.Classes, oas.ClassChoice{
 			Slug: oas.Slug(c.Slug), Name: c.Name, HitDie: int32(c.HitDie), Saves: saves, SkillChoices: int32(rules.ClassSkillCount(c.Slug)),
+			PrimaryAbilities: primary, Caster: oas.NewOptClassChoiceCaster(oas.ClassChoiceCaster(rules.CasterFor(c.Slug))),
 		})
 	}
 	for _, s := range o.Species {

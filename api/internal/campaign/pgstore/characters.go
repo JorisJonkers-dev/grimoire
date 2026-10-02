@@ -24,7 +24,7 @@ func (s *Store) InsertCharacter(ctx context.Context, c domain.Character, now tim
 			owned = uuid.New()
 			if err := q.InsertAccountCharacter(ctx, queries.InsertAccountCharacterParams{
 				ID: owned, OwnerSubject: c.Owner.Subject, Name: c.Name, Ruleset: c.Ruleset, SpeciesSlug: c.Species,
-				ClassSlug: c.Class, BackgroundSlug: c.Background, Now: now,
+				ClassSlug: c.Class, BackgroundSlug: c.Background, Appearance: c.Appearance, Backstory: c.Backstory, Now: now,
 			}); err != nil {
 				return err
 			}
