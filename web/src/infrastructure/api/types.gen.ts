@@ -1152,6 +1152,7 @@ export type CharacterSheet = {
      */
     levelUpReady?: boolean;
     heroicInspiration?: boolean;
+    increase?: AbilityIncrease;
     classes?: Array<ClassLine>;
     spells?: Array<LearnedSpellLine>;
 };
@@ -1232,6 +1233,86 @@ export type RitualCast = {
     spell: SpellPick;
     minutes: number;
     clock: GameClock;
+};
+
+/**
+ * Points from Ability Score Improvements, per ability.
+ */
+export type AbilityIncrease = {
+    strength?: number;
+    dexterity?: number;
+    constitution?: number;
+    intelligence?: number;
+    wisdom?: number;
+    charisma?: number;
+};
+
+/**
+ * A pick a Character made on a level, with the options it could take instead.
+ */
+export type RetrainChoice = {
+    level: number;
+    choice: Slug;
+    name: string;
+    value: Slug;
+    options: Array<LevelUpOption>;
+};
+
+/**
+ * One value chosen for a choice on reaching a level.
+ */
+export type PickLine = {
+    level: number;
+    choice: Slug;
+    value: Slug;
+};
+
+/**
+ * A Character's rebuildable choices.
+ */
+export type BuildSnapshot = {
+    species: Slug;
+    background: Slug;
+    method: 'standard-array' | 'point-buy' | 'rolled';
+    base: AbilityBase;
+    bonus: AbilityBonus;
+    increase: AbilityIncrease;
+    skills: Array<Slug>;
+    picks: Array<PickLine>;
+};
+
+/**
+ * A rebuilt build and why.
+ */
+export type RetrainRequest = {
+    build: BuildSnapshot;
+    reason: string;
+};
+
+/**
+ * A request to rebuild a Campaign Character, and the DM's decision.
+ */
+export type Retrain = {
+    id: Id;
+    characterId: Id;
+    status: 'pending' | 'approved' | 'declined';
+    reason: string;
+    requestedBy: DisplayName;
+    decidedBy?: DisplayName;
+    createdAt: string;
+    decidedAt?: string;
+    proposed: BuildSnapshot;
+};
+
+/**
+ * A build an approved retrain replaced.
+ */
+export type CharacterRevisionLine = {
+    no: number;
+    author: DisplayName;
+    createdAt: string;
+    build: BuildSnapshot;
+    retrainId?: Id;
 };
 
 /**
@@ -1737,7 +1818,7 @@ export type Revision = {
  */
 export type Activity = {
     revisionId: Id;
-    entityType: 'npc' | 'encounter_pool' | 'encounter_table' | 'encounter_check' | 'loot_table' | 'settlement' | 'shop';
+    entityType: 'npc' | 'encounter_pool' | 'encounter_table' | 'encounter_check' | 'loot_table' | 'settlement' | 'shop' | 'character';
     entityId: Id;
     name: string;
     no: number;
@@ -3177,6 +3258,11 @@ export type Problem = {
 };
 
 /**
+ * Retrain id.
+ */
+export type RetrainId = Id;
+
+/**
  * Campaign id.
  */
 export type CampaignId = Id;
@@ -4339,6 +4425,234 @@ export type CopySpellResponses = {
 };
 
 export type CopySpellResponse = CopySpellResponses[keyof CopySpellResponses];
+
+export type ListRetrainsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/retrains';
+};
+
+export type ListRetrainsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRetrainsError = ListRetrainsErrors[keyof ListRetrainsErrors];
+
+export type ListRetrainsResponses = {
+    /**
+     * The retrains.
+     */
+    200: Array<Retrain>;
+};
+
+export type ListRetrainsResponse = ListRetrainsResponses[keyof ListRetrainsResponses];
+
+export type RequestRetrainData = {
+    body: RetrainRequest;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/retrains';
+};
+
+export type RequestRetrainErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RequestRetrainError = RequestRetrainErrors[keyof RequestRetrainErrors];
+
+export type RequestRetrainResponses = {
+    /**
+     * The pending retrain.
+     */
+    201: Retrain;
+};
+
+export type RequestRetrainResponse = RequestRetrainResponses[keyof RequestRetrainResponses];
+
+export type ListRetrainChoicesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices';
+};
+
+export type ListRetrainChoicesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRetrainChoicesError = ListRetrainChoicesErrors[keyof ListRetrainChoicesErrors];
+
+export type ListRetrainChoicesResponses = {
+    /**
+     * The picks.
+     */
+    200: Array<RetrainChoice>;
+};
+
+export type ListRetrainChoicesResponse = ListRetrainChoicesResponses[keyof ListRetrainChoicesResponses];
+
+export type ListCharacterRevisionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/revisions';
+};
+
+export type ListCharacterRevisionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListCharacterRevisionsError = ListCharacterRevisionsErrors[keyof ListCharacterRevisionsErrors];
+
+export type ListCharacterRevisionsResponses = {
+    /**
+     * The Revisions.
+     */
+    200: Array<CharacterRevisionLine>;
+};
+
+export type ListCharacterRevisionsResponse = ListCharacterRevisionsResponses[keyof ListCharacterRevisionsResponses];
+
+export type ApproveRetrainData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Retrain id.
+         */
+        retrainId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve';
+};
+
+export type ApproveRetrainErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ApproveRetrainError = ApproveRetrainErrors[keyof ApproveRetrainErrors];
+
+export type ApproveRetrainResponses = {
+    /**
+     * The approved retrain.
+     */
+    200: Retrain;
+};
+
+export type ApproveRetrainResponse = ApproveRetrainResponses[keyof ApproveRetrainResponses];
+
+export type DeclineRetrainData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Retrain id.
+         */
+        retrainId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline';
+};
+
+export type DeclineRetrainErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeclineRetrainError = DeclineRetrainErrors[keyof DeclineRetrainErrors];
+
+export type DeclineRetrainResponses = {
+    /**
+     * The declined retrain.
+     */
+    200: Retrain;
+};
+
+export type DeclineRetrainResponse = DeclineRetrainResponses[keyof DeclineRetrainResponses];
 
 export type GetPortraitData = {
     body?: never;

@@ -10,7 +10,10 @@ import (
 type EntityType string
 
 // Revisioned entity types.
-const EntityNPC EntityType = "npc"
+const (
+	EntityNPC       EntityType = "npc"
+	EntityCharacter EntityType = "character"
+)
 
 // RevisionAction is what a Revision recorded.
 type RevisionAction string

@@ -462,6 +462,21 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 		Increase: map[string]int{"strength": 2},
 	}
 	ready := true
+	fb := fighter()
+	rebuild := app.RetrainInput{Species: fb.Species, Background: fb.Background, Method: fb.Method, Base: fb.Base, Bonus: fb.Bonus, Skills: fb.Skills, Picks: nil, Increase: nil, Reason: "again"}
+	clearRetrains := func() {
+		if _, err := db.Pool().Exec(ctx, "DELETE FROM campaign.retrains WHERE status = 'pending'"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	pending := func() uuid.UUID {
+		clearRetrains()
+		r, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, rebuild)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return r.ID
+	}
 	wb := fighter()
 	wb.Class = "wizard"
 	wiz, err := chars.Create(ctx, playerCaller, d.ID, wb)
@@ -586,6 +601,28 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 				}
 			}
 			_, err := c.PassInspiration(ctx, playerCaller, d.ID, sheet.ID, climber.ID)
+			return err
+		},
+		"request retrain": func(c *app.Characters) error {
+			clearRetrains()
+			_, err := c.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, rebuild)
+			return err
+		},
+		"approve retrain": func(c *app.Characters) error {
+			_, err := c.DecideRetrain(ctx, dmCaller, d.ID, pending(), true)
+			return err
+		},
+		"decline retrain": func(c *app.Characters) error {
+			_, err := c.DecideRetrain(ctx, dmCaller, d.ID, pending(), false)
+			return err
+		},
+		"retrains": func(c *app.Characters) error { _, err := c.Retrains(ctx, playerCaller, d.ID, sheet.ID); return err },
+		"choices": func(c *app.Characters) error {
+			_, err := c.RetrainChoices(ctx, playerCaller, d.ID, sheet.ID)
+			return err
+		},
+		"revisions": func(c *app.Characters) error {
+			_, err := c.CharacterRevisions(ctx, playerCaller, d.ID, sheet.ID)
 			return err
 		},
 		"unlock": func(c *app.Characters) error {
@@ -727,5 +764,104 @@ func TestDraftLimits(t *testing.T) {
 	long.Backstory = strings.Repeat("x", 4001)
 	if _, err := chars.Preview(ctx, playerCaller, d.ID, long); !errors.Is(err, domain.ErrInvalid) {
 		t.Fatalf("a backstory too long = %v", err)
+	}
+}
+
+// retrainCompendium offers fighters a feat at level 4, and fails the feature catalogue or the level's
+// options from a call on.
+type retrainCompendium struct {
+	fakeOptions
+	features, levelUp, failFeaturesAt, failLevelUpAt int
+}
+
+func (f *retrainCompendium) Features(context.Context) (features.Catalog, error) {
+	f.features++
+	if f.failFeaturesAt > 0 && f.features >= f.failFeaturesAt {
+		return features.Catalog{}, errExtras
+	}
+	owner := features.Owner{Kind: "class", Slug: "fighter"}
+	return features.Catalog{Choices: map[features.Owner][]features.Choice{owner: {{Slug: "feat", Name: "Feat", Level: 4, Count: 1, Pool: features.FeatCategory, From: "general"}}}}, nil
+}
+
+func (f *retrainCompendium) LevelUpOptions(context.Context, string, string, int) (compendium.LevelUpOptions, error) {
+	f.levelUp++
+	if f.failLevelUpAt > 0 && f.levelUp >= f.failLevelUpAt {
+		return compendium.LevelUpOptions{}, errExtras
+	}
+	return compendium.LevelUpOptions{Feats: []compendium.FeatOption{
+		{Slug: "ability-score-improvement", Name: "Ability Score Improvement", Category: "General", Description: ""},
+		{Slug: "grappler", Name: "Grappler", Category: "General", Description: ""},
+	}}, nil
+}
+
+func TestRetrainChecksPicksAndSurfacesPortFailures(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db := open(t)
+	chars, _, d := party(t, pgstore.New(db.Pool()))
+	sheet, err := chars.Create(ctx, playerCaller, d.ID, fighter())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, "INSERT INTO campaign.character_picks (character_id, level, choice, value) VALUES ($1, 4, 'feat', 'ability-score-improvement')", uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Pool().Exec(ctx, "UPDATE campaign.character_abilities SET increase = 2 WHERE character_id = $1 AND ability = 'dexterity'", uuid.UUID(sheet.ID)); err != nil {
+		t.Fatal(err)
+	}
+	fb := fighter()
+	in := app.RetrainInput{
+		Species: fb.Species, Background: fb.Background, Method: fb.Method, Base: fb.Base, Bonus: fb.Bonus, Skills: fb.Skills,
+		Picks: []domain.Pick{{Level: 4, Choice: "feat", Value: "grappler"}}, Increase: nil, Reason: "",
+	}
+	chars.Compendium = &retrainCompendium{}
+	choices, err := chars.RetrainChoices(ctx, playerCaller, d.ID, sheet.ID)
+	if err != nil || len(choices) != 1 || len(choices[0].Options) != 2 {
+		t.Fatalf("choices = %+v %v", choices, err)
+	}
+	if _, err := chars.RetrainChoices(ctx, dmCaller, d.ID, sheet.ID); !errors.Is(err, domain.ErrForbidden) {
+		t.Fatalf("the DM's retrain choices: %v", err)
+	}
+	for name, c := range map[string]*retrainCompendium{
+		"features": {failFeaturesAt: 2},
+		"level up": {failLevelUpAt: 1},
+		"builder":  {fakeOptions: fakeOptions{err: errExtras}},
+	} {
+		chars.Compendium = c
+		if _, err := chars.RetrainChoices(ctx, playerCaller, d.ID, sheet.ID); !errors.Is(err, errExtras) {
+			t.Fatalf("%s failing on choices: %v", name, err)
+		}
+		chars.Compendium = &retrainCompendium{failFeaturesAt: c.failFeaturesAt, failLevelUpAt: c.failLevelUpAt}
+		if c.err == nil {
+			if _, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, in); !errors.Is(err, errExtras) {
+				t.Fatalf("%s failing on request: %v", name, err)
+			}
+		}
+	}
+	chars.Compendium = fakeOptions{}
+	var rule *app.RuleError
+	if _, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, in); !errors.As(err, &rule) {
+		t.Fatalf("a pick with no choice behind it: %v", err)
+	}
+	chars.Compendium = &retrainCompendium{}
+	r, err := chars.RequestRetrain(ctx, playerCaller, d.ID, sheet.ID, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := chars.DecideRetrain(ctx, dmCaller, d.ID, uuid.New(), true); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("an unknown retrain: %v", err)
+	}
+	chars.Compendium = &retrainCompendium{failFeaturesAt: 2}
+	if _, err := chars.DecideRetrain(ctx, dmCaller, d.ID, r.ID, true); !errors.Is(err, errExtras) {
+		t.Fatalf("approving while the catalogue fails: %v", err)
+	}
+	chars.Compendium = &retrainCompendium{}
+	done, err := chars.DecideRetrain(ctx, dmCaller, d.ID, r.ID, true)
+	if err != nil || done.Status != domain.RetrainApproved {
+		t.Fatalf("approved = %+v %v", done, err)
+	}
+	after, err := chars.Get(ctx, playerCaller, d.ID, sheet.ID)
+	if err != nil || len(after.Picks) != 1 || after.Picks[0].Value != "grappler" || len(after.Increase) != 0 {
+		t.Fatalf("after = %+v %v", after.Picks, err)
 	}
 }

@@ -15,6 +15,7 @@ const CharacterBuilderPage = () => import('@/features/characters/CharacterBuilde
 const CharacterSheetPage = () => import('@/features/characters/CharacterSheetPage.vue')
 const LevelUpPage = () => import('@/features/characters/LevelUpPage.vue')
 const SpellsPage = () => import('@/features/characters/SpellsPage.vue')
+const RetrainPage = () => import('@/features/characters/RetrainPage.vue')
 const MyCharactersPage = () => import('@/features/characters/MyCharactersPage.vue')
 const MyCharacterPage = () => import('@/features/characters/MyCharacterPage.vue')
 const FriendsPage = () => import('@/features/friends/FriendsPage.vue')
@@ -60,6 +61,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/campaigns/:id/characters/:characterId', name: 'character', component: CharacterSheetPage },
       { path: '/campaigns/:id/characters/:characterId/level-up', name: 'level-up', component: LevelUpPage },
       { path: '/campaigns/:id/characters/:characterId/spells', name: 'character-spells', component: SpellsPage },
+      { path: '/campaigns/:id/characters/:characterId/retrain', name: 'character-retrain', component: RetrainPage },
       { path: '/campaigns/:id/npcs', name: 'npcs', component: NpcListPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },

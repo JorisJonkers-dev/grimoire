@@ -877,6 +877,18 @@ export const zGameClock = z.object({
 });
 
 /**
+ * Points from Ability Score Improvements, per ability.
+ */
+export const zAbilityIncrease = z.object({
+    strength: z.int().gte(0).lte(20).optional(),
+    dexterity: z.int().gte(0).lte(20).optional(),
+    constitution: z.int().gte(0).lte(20).optional(),
+    intelligence: z.int().gte(0).lte(20).optional(),
+    wisdom: z.int().gte(0).lte(20).optional(),
+    charisma: z.int().gte(0).lte(20).optional()
+});
+
+/**
  * Same-origin path of a stored picture; it changes when the picture does.
  */
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
@@ -1078,7 +1090,8 @@ export const zActivity = z.object({
         'encounter_check',
         'loot_table',
         'settlement',
-        'shop'
+        'shop',
+        'character'
     ]),
     entityId: zId,
     name: z.string().max(120),
@@ -2190,6 +2203,71 @@ export const zSpellChoice = z.object({
 });
 
 /**
+ * One value chosen for a choice on reaching a level.
+ */
+export const zPickLine = z.object({
+    level: z.int().gte(1).lte(20),
+    choice: zSlug,
+    value: zSlug
+});
+
+/**
+ * A Character's rebuildable choices.
+ */
+export const zBuildSnapshot = z.object({
+    species: zSlug,
+    background: zSlug,
+    method: z.enum([
+        'standard-array',
+        'point-buy',
+        'rolled'
+    ]),
+    base: zAbilityBase,
+    bonus: zAbilityBonus,
+    increase: zAbilityIncrease,
+    skills: z.array(zSlug).max(6),
+    picks: z.array(zPickLine).max(100)
+});
+
+/**
+ * A rebuilt build and why.
+ */
+export const zRetrainRequest = z.object({
+    build: zBuildSnapshot,
+    reason: z.string().max(500)
+});
+
+/**
+ * A request to rebuild a Campaign Character, and the DM's decision.
+ */
+export const zRetrain = z.object({
+    id: zId,
+    characterId: zId,
+    status: z.enum([
+        'pending',
+        'approved',
+        'declined'
+    ]),
+    reason: z.string().max(500),
+    requestedBy: zDisplayName,
+    decidedBy: zDisplayName.optional(),
+    createdAt: z.iso.datetime().max(40),
+    decidedAt: z.iso.datetime().max(40).optional(),
+    proposed: zBuildSnapshot
+});
+
+/**
+ * A build an approved retrain replaced.
+ */
+export const zCharacterRevisionLine = z.object({
+    no: z.int().gte(1).lte(100000),
+    author: zDisplayName,
+    createdAt: z.iso.datetime().max(40),
+    build: zBuildSnapshot,
+    retrainId: zId.optional()
+});
+
+/**
  * A class the next level can go to, with what multiclassing into it still needs.
  */
 export const zLevelUpClass = z.object({
@@ -2207,6 +2285,17 @@ export const zLevelUpOption = z.object({
     slug: zSlug,
     name: z.string().max(120),
     unmet: z.array(z.string().max(200)).max(10)
+});
+
+/**
+ * A pick a Character made on a level, with the options it could take instead.
+ */
+export const zRetrainChoice = z.object({
+    level: z.int().gte(1).lte(20),
+    choice: zSlug,
+    name: z.string().max(120),
+    value: zSlug,
+    options: z.array(zLevelUpOption).max(100)
 });
 
 /**
@@ -3099,6 +3188,7 @@ export const zCharacterSheet = z.object({
     proficiencies: zProficiencies.optional(),
     levelUpReady: z.boolean().optional(),
     heroicInspiration: z.boolean().optional(),
+    increase: zAbilityIncrease.optional(),
     classes: z.array(zClassLine).max(12).optional(),
     spells: z.array(zLearnedSpellLine).max(100).optional()
 });
@@ -3351,6 +3441,11 @@ export const zProblem = z.object({
     detail: z.string().max(2000).optional(),
     instance: z.string().max(500).optional()
 });
+
+/**
+ * Retrain id.
+ */
+export const zRetrainId = zId;
 
 /**
  * Campaign id.
@@ -3751,6 +3846,68 @@ export const zCopySpellPath = z.object({
  * The spells.
  */
 export const zCopySpellResponse = zSpellcasting;
+
+export const zListRetrainsPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The retrains.
+ */
+export const zListRetrainsResponse = z.array(zRetrain).max(200);
+
+export const zRequestRetrainBody = zRetrainRequest;
+
+export const zRequestRetrainPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The pending retrain.
+ */
+export const zRequestRetrainResponse = zRetrain;
+
+export const zListRetrainChoicesPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The picks.
+ */
+export const zListRetrainChoicesResponse = z.array(zRetrainChoice).max(100);
+
+export const zListCharacterRevisionsPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Revisions.
+ */
+export const zListCharacterRevisionsResponse = z.array(zCharacterRevisionLine).max(200);
+
+export const zApproveRetrainPath = z.object({
+    campaignId: zId,
+    retrainId: zId
+});
+
+/**
+ * The approved retrain.
+ */
+export const zApproveRetrainResponse = zRetrain;
+
+export const zDeclineRetrainPath = z.object({
+    campaignId: zId,
+    retrainId: zId
+});
+
+/**
+ * The declined retrain.
+ */
+export const zDeclineRetrainResponse = zRetrain;
 
 export const zGetPortraitPath = z.object({
     campaignId: zId,

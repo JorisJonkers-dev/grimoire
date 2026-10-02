@@ -15,7 +15,7 @@ const failed = ref('')
 const endpoint = `${window.location.origin}/mcp`
 const kinds: Record<Activity['entityType'], string> = {
   npc: 'NPC', encounter_pool: 'encounter pool', encounter_table: 'encounter table', encounter_check: 'encounter check',
-  loot_table: 'loot table', settlement: 'settlement', shop: 'shop',
+  loot_table: 'loot table', settlement: 'settlement', shop: 'shop', character: 'Character',
 }
 const verbs: Record<Activity['action'], string> = { create: 'created', update: 'changed', delete: 'deleted', restore: 'restored' }
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })

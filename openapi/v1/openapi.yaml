@@ -979,6 +979,188 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains:
+    get:
+      operationId: listRetrains
+      x-ogen-operation-group: Read
+      summary: List retrains
+      description: A Character's retrain requests, newest first. Its owner or a DM.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The retrains.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: requestRetrain
+      x-ogen-operation-group: Build
+      summary: Ask to retrain a Character
+      description: "Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for each level's picks, and Ability Score Improvements). The owner only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RetrainRequest"
+      responses:
+        "201":
+          description: The pending retrain.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices:
+    get:
+      operationId: listRetrainChoices
+      x-ogen-operation-group: Read
+      summary: List the picks a retrain can change
+      description: Each pick the Character made on a level, with the options it could take instead. The owner only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The picks.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/RetrainChoice"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/revisions:
+    get:
+      operationId: listCharacterRevisions
+      x-ogen-operation-group: Read
+      summary: List a Character's Revisions
+      description: The builds approved retrains replaced, newest first. Its owner or a DM.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The Revisions.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 200
+                items:
+                  $ref: "#/components/schemas/CharacterRevisionLine"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve:
+    post:
+      operationId: approveRetrain
+      x-ogen-operation-group: Build
+      summary: Approve a retrain
+      description: Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RetrainId"
+      responses:
+        "200":
+          description: The approved retrain.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline:
+    post:
+      operationId: declineRetrain
+      x-ogen-operation-group: Build
+      summary: Decline a retrain
+      description: Declines a pending retrain. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/RetrainId"
+      responses:
+        "200":
+          description: The declined retrain.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retrain"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
     get:
       operationId: getPortrait
@@ -5433,6 +5615,12 @@ components:
       name: X-User-Id
       description: Identity injected by the platform's forward-auth; never sent by clients directly.
   parameters:
+    RetrainId:
+      name: retrainId
+      in: path
+      required: true
+      description: Retrain id.
+      schema: { $ref: "#/components/schemas/Id" }
     CampaignId:
       name: campaignId
       in: path
@@ -6775,6 +6963,7 @@ components:
         proficiencies: { $ref: "#/components/schemas/Proficiencies" }
         levelUpReady: { type: boolean, description: "The next level is unlocked." }
         heroicInspiration: { type: boolean }
+        increase: { $ref: "#/components/schemas/AbilityIncrease" }
         classes:
           type: array
           maxItems: 12
@@ -6858,6 +7047,94 @@ components:
         spell: { $ref: "#/components/schemas/SpellPick" }
         minutes: { type: integer, format: int32, minimum: 10, maximum: 1500 }
         clock: { $ref: "#/components/schemas/GameClock" }
+    AbilityIncrease:
+      type: object
+      description: Points from Ability Score Improvements, per ability.
+      additionalProperties: false
+      properties:
+        strength: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        dexterity: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        constitution: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        intelligence: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        wisdom: { type: integer, format: int32, minimum: 0, maximum: 20 }
+        charisma: { type: integer, format: int32, minimum: 0, maximum: 20 }
+    RetrainChoice:
+      type: object
+      description: A pick a Character made on a level, with the options it could take instead.
+      additionalProperties: false
+      required: [level, choice, name, value, options]
+      properties:
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        choice: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        value: { $ref: "#/components/schemas/Slug" }
+        options:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LevelUpOption" }
+    PickLine:
+      type: object
+      description: One value chosen for a choice on reaching a level.
+      additionalProperties: false
+      required: [level, choice, value]
+      properties:
+        level: { type: integer, format: int32, minimum: 1, maximum: 20 }
+        choice: { $ref: "#/components/schemas/Slug" }
+        value: { $ref: "#/components/schemas/Slug" }
+    BuildSnapshot:
+      type: object
+      description: A Character's rebuildable choices.
+      additionalProperties: false
+      required: [species, background, method, base, bonus, increase, skills, picks]
+      properties:
+        species: { $ref: "#/components/schemas/Slug" }
+        background: { $ref: "#/components/schemas/Slug" }
+        method: { type: string, enum: [standard-array, point-buy, rolled] }
+        base: { $ref: "#/components/schemas/AbilityBase" }
+        bonus: { $ref: "#/components/schemas/AbilityBonus" }
+        increase: { $ref: "#/components/schemas/AbilityIncrease" }
+        skills:
+          type: array
+          maxItems: 6
+          items: { $ref: "#/components/schemas/Slug" }
+        picks:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/PickLine" }
+    RetrainRequest:
+      type: object
+      description: A rebuilt build and why.
+      additionalProperties: false
+      required: [build, reason]
+      properties:
+        build: { $ref: "#/components/schemas/BuildSnapshot" }
+        reason: { type: string, maxLength: 500 }
+    Retrain:
+      type: object
+      description: A request to rebuild a Campaign Character, and the DM's decision.
+      additionalProperties: false
+      required: [id, characterId, status, reason, requestedBy, createdAt, proposed]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        characterId: { $ref: "#/components/schemas/Id" }
+        status: { type: string, enum: [pending, approved, declined] }
+        reason: { type: string, maxLength: 500 }
+        requestedBy: { $ref: "#/components/schemas/DisplayName" }
+        decidedBy: { $ref: "#/components/schemas/DisplayName" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        decidedAt: { type: string, format: date-time, maxLength: 40 }
+        proposed: { $ref: "#/components/schemas/BuildSnapshot" }
+    CharacterRevisionLine:
+      type: object
+      description: A build an approved retrain replaced.
+      additionalProperties: false
+      required: [no, author, createdAt, build]
+      properties:
+        no: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        author: { $ref: "#/components/schemas/DisplayName" }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        build: { $ref: "#/components/schemas/BuildSnapshot" }
+        retrainId: { $ref: "#/components/schemas/Id" }
     LevelUpPlan:
       type: object
       description: What the next level offers in one class.
@@ -7420,7 +7697,7 @@ components:
       required: [revisionId, entityType, entityId, name, no, action, author, origin, createdAt, undoable]
       properties:
         revisionId: { $ref: "#/components/schemas/Id" }
-        entityType: { type: string, enum: [npc, encounter_pool, encounter_table, encounter_check, loot_table, settlement, shop] }
+        entityType: { type: string, enum: [npc, encounter_pool, encounter_table, encounter_check, loot_table, settlement, shop, character] }
         entityId: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 120 }
         no: { type: integer, format: int32, minimum: 1, maximum: 100000 }

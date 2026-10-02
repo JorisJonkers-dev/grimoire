@@ -13,6 +13,10 @@ type AcceptInviteRes interface {
 	acceptInviteRes()
 }
 
+type ApproveRetrainRes interface {
+	approveRetrainRes()
+}
+
 type BeginTwoStepRes interface {
 	beginTwoStepRes()
 }
@@ -95,6 +99,10 @@ type CreateShopRes interface {
 
 type DeclineFriendRequestRes interface {
 	declineFriendRequestRes()
+}
+
+type DeclineRetrainRes interface {
+	declineRetrainRes()
 }
 
 type DeleteCharacterRes interface {
@@ -309,6 +317,10 @@ type ListCampaignsRes interface {
 	listCampaignsRes()
 }
 
+type ListCharacterRevisionsRes interface {
+	listCharacterRevisionsRes()
+}
+
 type ListCharactersRes interface {
 	listCharactersRes()
 }
@@ -397,6 +409,14 @@ type ListReleaseNotesRes interface {
 	listReleaseNotesRes()
 }
 
+type ListRetrainChoicesRes interface {
+	listRetrainChoicesRes()
+}
+
+type ListRetrainsRes interface {
+	listRetrainsRes()
+}
+
 type ListRollsRes interface {
 	listRollsRes()
 }
@@ -479,6 +499,10 @@ type ReadNotificationRes interface {
 
 type RemoveMemberRes interface {
 	removeMemberRes()
+}
+
+type RequestRetrainRes interface {
+	requestRetrainRes()
 }
 
 type RequestSignInLinkRes interface {

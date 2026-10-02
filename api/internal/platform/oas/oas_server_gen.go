@@ -298,6 +298,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/invites/accept
 	AcceptInvite(ctx context.Context, req *InviteAccept) (AcceptInviteRes, error)
+	// ApproveRetrain implements approveRetrain operation.
+	//
+	// Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
+	ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (ApproveRetrainRes, error)
 	// ClearTokenIcon implements clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -365,6 +371,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/shops
 	CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (CreateShopRes, error)
+	// DeclineRetrain implements declineRetrain operation.
+	//
+	// Declines a pending retrain. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline
+	DeclineRetrain(ctx context.Context, params DeclineRetrainParams) (DeclineRetrainRes, error)
 	// DeleteCharacter implements deleteCharacter operation.
 	//
 	// Removes a Character. The owner or a DM, never during Combat.
@@ -462,6 +474,13 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 	RemoveMember(ctx context.Context, params RemoveMemberParams) (RemoveMemberRes, error)
+	// RequestRetrain implements requestRetrain operation.
+	//
+	// Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for
+	// each level's picks, and Ability Score Improvements). The owner only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+	RequestRetrain(ctx context.Context, req *RetrainRequest, params RequestRetrainParams) (RequestRetrainRes, error)
 	// RerollStock implements rerollStock operation.
 	//
 	// Generates the Shop's Stock afresh from its Loot Table, scaled by its Settlement, and records it as a
@@ -918,6 +937,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns
 	ListCampaigns(ctx context.Context, params ListCampaignsParams) (ListCampaignsRes, error)
+	// ListCharacterRevisions implements listCharacterRevisions operation.
+	//
+	// The builds approved retrains replaced, newest first. Its owner or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/revisions
+	ListCharacterRevisions(ctx context.Context, params ListCharacterRevisionsParams) (ListCharacterRevisionsRes, error)
 	// ListCharacters implements listCharacters operation.
 	//
 	// The party's Characters. Members only.
@@ -1052,6 +1077,18 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/admin/release-notes
 	ListReleaseNotes(ctx context.Context) (ListReleaseNotesRes, error)
+	// ListRetrainChoices implements listRetrainChoices operation.
+	//
+	// Each pick the Character made on a level, with the options it could take instead. The owner only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices
+	ListRetrainChoices(ctx context.Context, params ListRetrainChoicesParams) (ListRetrainChoicesRes, error)
+	// ListRetrains implements listRetrains operation.
+	//
+	// A Character's retrain requests, newest first. Its owner or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+	ListRetrains(ctx context.Context, params ListRetrainsParams) (ListRetrainsRes, error)
 	// ListRolls implements listRolls operation.
 	//
 	// Recent Roll Requests in the Campaign. Members only.

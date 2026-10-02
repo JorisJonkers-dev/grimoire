@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
@@ -37,6 +39,11 @@ type CharacterService interface {
 	CastRitual(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Ritual, error)
 	CopySpell(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, spell string) (app.Spellcasting, error)
 	PassInspiration(ctx context.Context, c caller.Caller, id domain.CampaignID, ch, to domain.CharacterID) (app.Sheet, error)
+	RequestRetrain(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, in app.RetrainInput) (domain.Retrain, error)
+	Retrains(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]domain.Retrain, error)
+	RetrainChoices(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]app.RetrainChoice, error)
+	CharacterRevisions(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]domain.CharacterRevision, error)
+	DecideRetrain(ctx context.Context, c caller.Caller, id domain.CampaignID, retrain uuid.UUID, approve bool) (domain.Retrain, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -136,6 +143,7 @@ func extrasOut(out *oas.CharacterSheet, s app.Sheet) {
 	}
 	out.LevelUpReady = oas.NewOptBool(s.LevelUpReady && s.Level < 20)
 	out.HeroicInspiration = oas.NewOptBool(s.HeroicInspiration)
+	out.Increase = oas.NewOptAbilityIncrease(increaseOut(s.Increase))
 	for _, x := range s.Classes {
 		line := oas.ClassLine{Slug: oas.Slug(x.Class), Name: s.ClassNames[x.Class], Level: int32(x.Level)}
 		if x.Subclass != "" {

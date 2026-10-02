@@ -160,3 +160,37 @@ func TestMulticlassResources(t *testing.T) {
 		t.Fatalf("martial = %v", martial)
 	}
 }
+
+func TestRetrainedIncreasesMatchTheImprovementsTaken(t *testing.T) {
+	t.Parallel()
+	base := abilitySet(15, 14, 13, 8, 10, 10)
+	ok := []struct {
+		inc  map[rules.Ability]int
+		asis int
+	}{
+		{map[rules.Ability]int{}, 0},
+		{map[rules.Ability]int{rules.Strength: 2}, 1},
+		{map[rules.Ability]int{rules.Strength: 3, rules.Constitution: 1}, 2},
+		{map[rules.Ability]int{rules.Strength: 5, rules.Dexterity: 1}, 3},
+	}
+	for _, c := range ok {
+		if err := rules.CheckIncreases(base, c.inc, c.asis); err != nil {
+			t.Errorf("%v with %d: %v", c.inc, c.asis, err)
+		}
+	}
+	bad := []struct {
+		inc  map[rules.Ability]int
+		asis int
+	}{
+		{map[rules.Ability]int{rules.Strength: 2}, 0},
+		{map[rules.Ability]int{rules.Strength: 1}, 1},
+		{map[rules.Ability]int{rules.Strength: 6}, 3},
+		{map[rules.Ability]int{"luck": 2}, 1},
+		{map[rules.Ability]int{rules.Strength: 3, rules.Dexterity: -1}, 1},
+	}
+	for _, c := range bad {
+		if err := rules.CheckIncreases(base, c.inc, c.asis); err == nil {
+			t.Errorf("%v with %d accepted", c.inc, c.asis)
+		}
+	}
+}

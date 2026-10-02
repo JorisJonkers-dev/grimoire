@@ -102,6 +102,8 @@ func (h *Handler) undo(ctx context.Context, c caller.Caller, campaign uuid.UUID,
 	case prep.EntityShop:
 		return pick(func() error { return h.Prep.DeleteShop(ctx, c, campaign, prep.ShopID(id)) },
 			func() error { _, err := h.Prep.RestoreShop(ctx, c, campaign, prep.ShopID(id), no); return err })
+	case campaigndomain.EntityCharacter:
+		// A retrain is undone by asking for another one.
 	}
 	return errNoUndo
 }

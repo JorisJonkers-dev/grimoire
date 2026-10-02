@@ -6,7 +6,10 @@ import {
   deleteCharacterMutation,
   getCharacterOptions,
   getMyCharacterOptions,
+  approveRetrainMutation,
+  declineRetrainMutation,
   listCharactersOptions,
+  listRetrainsOptions,
   passInspirationMutation,
   updateCharacterMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
@@ -37,6 +40,20 @@ const pass = useMutation(passInspirationMutation())
 const party = useQuery(computed(() => ({ ...listCharactersOptions({ path: { campaignId: path.value.path.campaignId } }), enabled: Boolean(s.value?.heroicInspiration && s.value.mine) })))
 const allies = computed(() => (party.data.value ?? []).filter((c) => c.id !== s.value?.id && !c.heroicInspiration))
 const passTo = ref('')
+const isDM = computed(() => Boolean(s.value && !s.value.mine && s.value.editable))
+const retrains = useQuery(computed(() => ({ ...listRetrainsOptions(path.value), enabled: isDM.value, retry: false })))
+const waiting = computed(() => (retrains.data.value ?? []).find((r) => r.status === 'pending'))
+const approve = useMutation(approveRetrainMutation())
+const decline = useMutation(declineRetrainMutation())
+function decide(ok: boolean) {
+  const r = waiting.value
+  if (!r) return
+  failed.value = false
+  const opts = { path: { campaignId: path.value.path.campaignId, retrainId: r.id } }
+  const done = { onSuccess: refresh, onError: () => (failed.value = true) }
+  if (ok) approve.mutate(opts, done)
+  else decline.mutate(opts, done)
+}
 const remove = useMutation(deleteCharacterMutation())
 const failed = ref(false)
 
@@ -105,6 +122,7 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
             </GButton>
             <GButton v-else-if="!s.mine && s.level < 20" data-testid="unlock-level" @click="unlock()">Grant level {{ s.level + 1 }}</GButton>
             <RouterLink class="spells-link" :to="{ name: 'character-spells', params: { id: path.path.campaignId, characterId: path.path.characterId } }" data-testid="open-spells">Spells</RouterLink>
+            <RouterLink v-if="s.mine" class="spells-link" :to="{ name: 'character-retrain', params: { id: path.path.campaignId, characterId: path.path.characterId } }" data-testid="open-retrain">Retrain</RouterLink>
           </p>
         </div>
         <label v-if="campaigns.length > 1" class="switch">
@@ -121,6 +139,17 @@ const reach = (feet: number, range: number, long: number) => (range ? `${String(
         <div class="stat"><span class="label">Speed</span><strong>{{ s.speedFeet }} ft</strong></div>
         <div class="stat"><span class="label">Proficiency</span><strong>{{ signed(s.proficiencyBonus) }}</strong></div>
         <div class="stat"><span class="label">Passive Perception</span><strong>{{ s.passivePerception }}</strong></div>
+      </section>
+      <section v-if="waiting" class="g-card retrain-request" aria-label="Retrain request" data-testid="retrain-waiting">
+        <p>
+          {{ waiting.requestedBy }} asks to retrain {{ s.name }}<template v-if="waiting.reason">: {{ waiting.reason }}</template>.
+          New build: {{ titleCase(waiting.proposed.species) }} {{ titleCase(waiting.proposed.background) }},
+          {{ waiting.proposed.picks.map((p) => titleCase(p.value)).join(', ') || 'no level choices' }}.
+        </p>
+        <span class="decide">
+          <GButton variant="primary" data-testid="approve-retrain" @click="decide(true)">Approve</GButton>
+          <GButton data-testid="decline-retrain" @click="decide(false)">Decline</GButton>
+        </span>
       </section>
       <section class="inspiration" :class="{ on: s.heroicInspiration }" aria-label="Heroic Inspiration" data-testid="inspiration">
         <span><strong class="small">Heroic Inspiration</strong> {{ s.heroicInspiration ? 'yours to spend on a reroll' : 'none' }}</span>
@@ -288,6 +317,19 @@ h1 {
 .locked {
   display: inline-block;
   margin-top: 6px;
+}
+.retrain-request {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-color: var(--color-gold-high);
+}
+.retrain-request p {
+  margin: 0;
+}
+.decide {
+  display: flex;
+  gap: 8px;
 }
 .inspiration {
   display: flex;

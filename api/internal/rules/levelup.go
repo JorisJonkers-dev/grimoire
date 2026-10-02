@@ -203,3 +203,22 @@ func MulticlassResources(classes []ClassLevel) []Resource {
 	}
 	return out
 }
+
+// CheckIncreases checks a retrained set of Ability Score Improvements: two points for each improvement
+// taken, none negative, and no score past 20.
+func CheckIncreases(scores, increase map[Ability]int, improvements int) error {
+	total := 0
+	for a, n := range increase {
+		if !a.Valid() || n < 0 {
+			return violation("raise abilities only, by whole points")
+		}
+		if scores[a]+n > AbilityCap {
+			return violation("%s cannot go past %d", abilityName(a), AbilityCap)
+		}
+		total += n
+	}
+	if total != 2*improvements {
+		return violation("spend %d points on Ability Score Improvements", 2*improvements)
+	}
+	return nil
+}

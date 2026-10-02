@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
@@ -173,6 +175,26 @@ func (b brokenCharacters) CastRitual(context.Context, caller.Caller, domain.Camp
 	return app.Ritual{}, b.err
 }
 
+func (b brokenCharacters) RequestRetrain(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, app.RetrainInput) (domain.Retrain, error) {
+	return domain.Retrain{}, b.err
+}
+
+func (b brokenCharacters) RetrainChoices(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) ([]app.RetrainChoice, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) Retrains(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) ([]domain.Retrain, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) CharacterRevisions(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID) ([]domain.CharacterRevision, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) DecideRetrain(context.Context, caller.Caller, domain.CampaignID, uuid.UUID, bool) (domain.Retrain, error) {
+	return domain.Retrain{}, b.err
+}
+
 func (b brokenCharacters) PassInspiration(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, domain.CharacterID) (app.Sheet, error) {
 	return app.Sheet{}, b.err
 }
@@ -210,6 +232,12 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPost, one + "/spells/rituals", `{"spell":"alarm"}`},
 		{http.MethodPost, one + "/spellbook", `{"spell":"alarm"}`},
 		{http.MethodPost, one + "/inspiration/pass", `{"to":"0190c7a8-0000-7000-8000-000000000003"}`},
+		{http.MethodGet, one + "/retrains", ""},
+		{http.MethodPost, one + "/retrains", `{"reason":"","build":{"species":"human","background":"sage","method":"point-buy","base":{"strength":8,"dexterity":8,"constitution":8,"intelligence":8,"wisdom":8,"charisma":8},"bonus":{},"increase":{},"skills":[],"picks":[]}}`},
+		{http.MethodGet, one + "/revisions", ""},
+		{http.MethodGet, one + "/retrains/choices", ""},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/retrains/0190c7a8-0000-7000-8000-000000000004/approve", ""},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/retrains/0190c7a8-0000-7000-8000-000000000004/decline", ""},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -249,6 +277,12 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.CastRitual(ctx, &oas.SpellChoice{}, oas.CastRitualParams{}))
 	add(h.CopySpell(ctx, &oas.SpellChoice{}, oas.CopySpellParams{}))
 	add(h.PassInspiration(ctx, &oas.InspirationPass{}, oas.PassInspirationParams{}))
+	add(h.RequestRetrain(ctx, &oas.RetrainRequest{}, oas.RequestRetrainParams{}))
+	add(h.ListRetrains(ctx, oas.ListRetrainsParams{}))
+	add(h.ListCharacterRevisions(ctx, oas.ListCharacterRevisionsParams{}))
+	add(h.ListRetrainChoices(ctx, oas.ListRetrainChoicesParams{}))
+	add(h.ApproveRetrain(ctx, oas.ApproveRetrainParams{}))
+	add(h.DeclineRetrain(ctx, oas.DeclineRetrainParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

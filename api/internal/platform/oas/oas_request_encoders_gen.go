@@ -500,6 +500,20 @@ func encodePublishReleaseNoteRequest(
 	return nil
 }
 
+func encodeRequestRetrainRequest(
+	req *RetrainRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeRequestSignInLinkRequest(
 	req *SignInLinkRequest,
 	r *http.Request,

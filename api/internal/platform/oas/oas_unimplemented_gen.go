@@ -40,6 +40,15 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 	return r, ht.ErrNotImplemented
 }
 
+// ApproveRetrain implements approveRetrain operation.
+//
+// Checks the build again, keeps the old one as a Revision and rebuilds the Character. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
+func (UnimplementedHandler) ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (r ApproveRetrainRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // BeginTwoStep implements beginTwoStep operation.
 //
 // Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
@@ -232,6 +241,15 @@ func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, para
 //
 // POST /api/v1/friend-requests/{requestId}/decline
 func (UnimplementedHandler) DeclineFriendRequest(ctx context.Context, req *FriendRequestDecline, params DeclineFriendRequestParams) (r DeclineFriendRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeclineRetrain implements declineRetrain operation.
+//
+// Declines a pending retrain. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/decline
+func (UnimplementedHandler) DeclineRetrain(ctx context.Context, params DeclineRetrainParams) (r DeclineRetrainRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -721,6 +739,15 @@ func (UnimplementedHandler) ListCampaigns(ctx context.Context, params ListCampai
 	return r, ht.ErrNotImplemented
 }
 
+// ListCharacterRevisions implements listCharacterRevisions operation.
+//
+// The builds approved retrains replaced, newest first. Its owner or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/revisions
+func (UnimplementedHandler) ListCharacterRevisions(ctx context.Context, params ListCharacterRevisionsParams) (r ListCharacterRevisionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListCharacters implements listCharacters operation.
 //
 // The party's Characters. Members only.
@@ -921,6 +948,24 @@ func (UnimplementedHandler) ListReleaseNotes(ctx context.Context) (r ListRelease
 	return r, ht.ErrNotImplemented
 }
 
+// ListRetrainChoices implements listRetrainChoices operation.
+//
+// Each pick the Character made on a level, with the options it could take instead. The owner only.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains/choices
+func (UnimplementedHandler) ListRetrainChoices(ctx context.Context, params ListRetrainChoicesParams) (r ListRetrainChoicesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListRetrains implements listRetrains operation.
+//
+// A Character's retrain requests, newest first. Its owner or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+func (UnimplementedHandler) ListRetrains(ctx context.Context, params ListRetrainsParams) (r ListRetrainsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListRolls implements listRolls operation.
 //
 // Recent Roll Requests in the Campaign. Members only.
@@ -1110,6 +1155,16 @@ func (UnimplementedHandler) ReadNotification(ctx context.Context, params ReadNot
 //
 // DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMemberParams) (r RemoveMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RequestRetrain implements requestRetrain operation.
+//
+// Proposes a rebuilt build for the DM to approve (origin, ability scores, class skills, new values for
+// each level's picks, and Ability Score Improvements). The owner only.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/retrains
+func (UnimplementedHandler) RequestRetrain(ctx context.Context, req *RetrainRequest, params RequestRetrainParams) (r RequestRetrainRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

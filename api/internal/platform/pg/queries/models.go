@@ -115,10 +115,45 @@ type CampaignCharacterResource struct {
 	Used         int32
 }
 
+type CampaignCharacterRevision struct {
+	RevisionID uuid.UUID
+	SnapshotID uuid.UUID
+	RetrainID  pgtype.UUID
+}
+
 type CampaignCharacterSkill struct {
 	CharacterID uuid.UUID
 	Skill       string
 	Source      string
+}
+
+type CampaignCharacterSnapshot struct {
+	ID             uuid.UUID
+	CharacterID    uuid.UUID
+	SpeciesSlug    string
+	BackgroundSlug string
+	AbilityMethod  string
+	CreatedAt      time.Time
+}
+
+type CampaignCharacterSnapshotAbility struct {
+	SnapshotID uuid.UUID
+	Ability    string
+	Base       int32
+	Bonus      int32
+	Increase   int32
+}
+
+type CampaignCharacterSnapshotPick struct {
+	SnapshotID uuid.UUID
+	Level      int32
+	Choice     string
+	Value      string
+}
+
+type CampaignCharacterSnapshotSkill struct {
+	SnapshotID uuid.UUID
+	Skill      string
 }
 
 type CampaignCharacterSpell struct {
@@ -306,6 +341,19 @@ type CampaignPushSubscription struct {
 	P256dh    string
 	Auth      string
 	CreatedAt time.Time
+}
+
+type CampaignRetrain struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	CharacterID uuid.UUID
+	ProposedID  uuid.UUID
+	Status      string
+	Reason      string
+	RequestedBy string
+	DecidedBy   string
+	CreatedAt   time.Time
+	DecidedAt   pgtype.Timestamptz
 }
 
 type CampaignRevision struct {

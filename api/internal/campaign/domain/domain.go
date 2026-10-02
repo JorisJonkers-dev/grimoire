@@ -296,3 +296,47 @@ type Draft struct {
 	Rolled    []int
 	UpdatedAt time.Time
 }
+
+// Snapshot is a Character's rebuildable choices at one moment: what a retrain proposes, or what a
+// Revision kept.
+type Snapshot struct {
+	ID         uuid.UUID
+	Species    string
+	Background string
+	Method     string
+	Base       map[string]int
+	Bonus      map[string]int
+	Increase   map[string]int
+	Skills     []string
+	Picks      []Pick
+	CreatedAt  time.Time
+}
+
+// Retrain statuses.
+const (
+	RetrainPending  = "pending"
+	RetrainApproved = "approved"
+	RetrainDeclined = "declined"
+)
+
+// Retrain is a player's request to rebuild a Campaign Character, which the DM approves or declines.
+type Retrain struct {
+	ID          uuid.UUID
+	CharacterID CharacterID
+	Proposed    Snapshot
+	Status      string
+	Reason      string
+	RequestedBy string
+	DecidedBy   string
+	CreatedAt   time.Time
+	DecidedAt   *time.Time
+}
+
+// CharacterRevision is a build an approved retrain replaced, kept as a Revision.
+type CharacterRevision struct {
+	No        int
+	Author    string
+	CreatedAt time.Time
+	Build     Snapshot
+	RetrainID *uuid.UUID
+}

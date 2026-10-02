@@ -41,6 +41,12 @@ type Repository interface {
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
 	LevelUp(ctx context.Context, l domain.LevelUp, now time.Time) error
 	SetLevelUpReady(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, ready bool, now time.Time) error
+	InsertRetrain(ctx context.Context, id domain.CampaignID, r domain.Retrain, now time.Time) error
+	Retrains(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) ([]domain.Retrain, error)
+	Retrain(ctx context.Context, id domain.CampaignID, retrain uuid.UUID) (domain.Retrain, error)
+	DecideRetrain(ctx context.Context, retrain uuid.UUID, status, by string, now time.Time) error
+	ApplyRetrain(ctx context.Context, id domain.CampaignID, previous domain.Snapshot, next domain.Character, retrain uuid.UUID, c caller.Caller, author string, now time.Time) error
+	CharacterRevisions(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) ([]domain.CharacterRevision, error)
 	SetHeroicInspiration(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, inspired bool) error
 	PassInspiration(ctx context.Context, id domain.CampaignID, from, to domain.CharacterID) error
 	ReplaceClassSpells(ctx context.Context, ch domain.CharacterID, class string, spells []domain.LearnedSpell, canPrepare bool) error
