@@ -8,6 +8,290 @@ import (
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	AccountHandler
+	BuildHandler
+	PlayHandler
+	ReadHandler
+}
+
+// AccountHandler handles operations described by OpenAPI v3 specification.
+//
+// x-ogen-operation-group: Account
+type AccountHandler interface {
+	// AcceptAccountInvite implements acceptAccountInvite operation.
+	//
+	// Creates the Account the invite was for and signs it in on this device.
+	//
+	// POST /api/v1/account-invites/accept
+	AcceptAccountInvite(ctx context.Context, req *AccountSetup) (AcceptAccountInviteRes, error)
+	// AcceptFriendRequest implements acceptFriendRequest operation.
+	//
+	// The two are Friends from now on.
+	//
+	// POST /api/v1/friend-requests/{requestId}/accept
+	AcceptFriendRequest(ctx context.Context, params AcceptFriendRequestParams) (AcceptFriendRequestRes, error)
+	// BeginTwoStep implements beginTwoStep operation.
+	//
+	// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
+	// on.
+	//
+	// POST /api/v1/account/two-step
+	BeginTwoStep(ctx context.Context) (BeginTwoStepRes, error)
+	// CancelFriendRequest implements cancelFriendRequest operation.
+	//
+	// Withdraws a request the signed-in Account sent.
+	//
+	// DELETE /api/v1/friend-requests/{requestId}
+	CancelFriendRequest(ctx context.Context, params CancelFriendRequestParams) (CancelFriendRequestRes, error)
+	// ConfirmTwoStep implements confirmTwoStep operation.
+	//
+	// Checks a first code from the app and returns the recovery codes, shown only now.
+	//
+	// POST /api/v1/account/two-step/confirm
+	ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error)
+	// CreateAccessToken implements createAccessToken operation.
+	//
+	// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
+	// now.
+	//
+	// POST /api/v1/account/access-tokens
+	CreateAccessToken(ctx context.Context, req *AccessTokenRequest) (CreateAccessTokenRes, error)
+	// CreateAccountInvite implements createAccountInvite operation.
+	//
+	// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
+	// another Admin.
+	//
+	// POST /api/v1/admin/account-invites
+	CreateAccountInvite(ctx context.Context, req *AccountInviteRequest) (CreateAccountInviteRes, error)
+	// CreateOidcAccount implements createOidcAccount operation.
+	//
+	// Sets up an Account for a login no Account has yet, and signs it in.
+	//
+	// POST /api/v1/oidc/accounts
+	CreateOidcAccount(ctx context.Context, req *OidcAccountSetup) (CreateOidcAccountRes, error)
+	// CreatePushSubscription implements createPushSubscription operation.
+	//
+	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
+	// closed.
+	//
+	// POST /api/v1/push/subscriptions
+	CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
+	// DeclineFriendRequest implements declineFriendRequest operation.
+	//
+	// Turns the request down; with block, the sender's later requests never show.
+	//
+	// POST /api/v1/friend-requests/{requestId}/decline
+	DeclineFriendRequest(ctx context.Context, req *FriendRequestDecline, params DeclineFriendRequestParams) (DeclineFriendRequestRes, error)
+	// DeletePushSubscription implements deletePushSubscription operation.
+	//
+	// Stops notifications to one of the caller's devices.
+	//
+	// DELETE /api/v1/push/subscriptions/{subscriptionId}
+	DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (DeletePushSubscriptionRes, error)
+	// DisableTwoStep implements disableTwoStep operation.
+	//
+	// Needs a current code or a recovery code; the recovery codes go too.
+	//
+	// POST /api/v1/account/two-step/disable
+	DisableTwoStep(ctx context.Context, req *TwoStepCode) (DisableTwoStepRes, error)
+	// DraftReleaseNote implements draftReleaseNote operation.
+	//
+	// Starts the one Release Note of a full release, listing the features its changelog says it added. For
+	// Admins.
+	//
+	// POST /api/v1/admin/release-notes
+	DraftReleaseNote(ctx context.Context, req *ReleaseNoteDraft) (DraftReleaseNoteRes, error)
+	// EditReleaseNote implements editReleaseNote operation.
+	//
+	// Changes its words until it has been announced. For Admins.
+	//
+	// PUT /api/v1/admin/release-notes/{noteId}
+	EditReleaseNote(ctx context.Context, req *ReleaseNoteChange, params EditReleaseNoteParams) (EditReleaseNoteRes, error)
+	// FinishOidc implements finishOidc operation.
+	//
+	// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+	// Account page started it, or leaves it waiting for an Account.
+	//
+	// POST /api/v1/oidc/callback
+	FinishOidc(ctx context.Context, req *OidcCallback, params FinishOidcParams) (FinishOidcRes, error)
+	// LinkOidcAccount implements linkOidcAccount operation.
+	//
+	// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+	//
+	// POST /api/v1/oidc/links
+	LinkOidcAccount(ctx context.Context, req *OidcAccountLink) (LinkOidcAccountRes, error)
+	// PassTwoStep implements passTwoStep operation.
+	//
+	// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+	// and five wrong codes.
+	//
+	// POST /api/v1/sign-in/two-step
+	PassTwoStep(ctx context.Context, req *TwoStepAnswer) (PassTwoStepRes, error)
+	// PreviewAccountInvite implements previewAccountInvite operation.
+	//
+	// Whether an invite link can still set up an Account; gone once used or expired.
+	//
+	// POST /api/v1/account-invites/preview
+	PreviewAccountInvite(ctx context.Context, req *LinkToken) (PreviewAccountInviteRes, error)
+	// PublishReleaseNote implements publishReleaseNote operation.
+	//
+	// Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+	//
+	// POST /api/v1/admin/release-notes/{noteId}/publish
+	PublishReleaseNote(ctx context.Context, req *ReleaseNotePublish, params PublishReleaseNoteParams) (PublishReleaseNoteRes, error)
+	// ReadAllNotifications implements readAllNotifications operation.
+	//
+	// Clears the bell.
+	//
+	// POST /api/v1/notifications/read
+	ReadAllNotifications(ctx context.Context) (ReadAllNotificationsRes, error)
+	// ReadNotification implements readNotification operation.
+	//
+	// Marks one Notification read, as acting on it does.
+	//
+	// POST /api/v1/notifications/{notificationId}/read
+	ReadNotification(ctx context.Context, params ReadNotificationParams) (ReadNotificationRes, error)
+	// RequestSignInLink implements requestSignInLink operation.
+	//
+	// For a forgotten password. Answers the same whether or not an Account has the email.
+	//
+	// POST /api/v1/sign-in-links
+	RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (RequestSignInLinkRes, error)
+	// ResetAccountTwoStep implements resetAccountTwoStep operation.
+	//
+	// Turns two-step off for a holder who lost their phone and recovery codes.
+	//
+	// POST /api/v1/admin/accounts/{accountId}/two-step/reset
+	ResetAccountTwoStep(ctx context.Context, params ResetAccountTwoStepParams) (ResetAccountTwoStepRes, error)
+	// ResetRecoveryCodes implements resetRecoveryCodes operation.
+	//
+	// Needs a current code; the old recovery codes stop working.
+	//
+	// POST /api/v1/account/two-step/recovery-codes
+	ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (ResetRecoveryCodesRes, error)
+	// RevokeAccessToken implements revokeAccessToken operation.
+	//
+	// The token stops working at once.
+	//
+	// DELETE /api/v1/account/access-tokens/{accessId}
+	RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (RevokeAccessTokenRes, error)
+	// SeeReleaseNote implements seeReleaseNote operation.
+	//
+	// It no longer shows on the Dashboard.
+	//
+	// POST /api/v1/release-notes/{noteId}/seen
+	SeeReleaseNote(ctx context.Context, params SeeReleaseNoteParams) (SeeReleaseNoteRes, error)
+	// SendAdminSignInLink implements sendAdminSignInLink operation.
+	//
+	// Sends the holder a link that signs them in once, within 30 minutes.
+	//
+	// POST /api/v1/admin/accounts/{accountId}/sign-in-link
+	SendAdminSignInLink(ctx context.Context, params SendAdminSignInLinkParams) (SendAdminSignInLinkRes, error)
+	// SendFriendRequest implements sendFriendRequest operation.
+	//
+	// Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The
+	// answer is the same whether or not they blocked the sender.
+	//
+	// POST /api/v1/friend-requests
+	SendFriendRequest(ctx context.Context, req *FriendRequestCreate) (SendFriendRequestRes, error)
+	// SendMessage implements sendMessage operation.
+	//
+	// Posts a message, with Mentions of game content the sender may open.
+	//
+	// POST /api/v1/conversations/{conversationId}/messages
+	SendMessage(ctx context.Context, req *MessageSend, params SendMessageParams) (SendMessageRes, error)
+	// SetAccountDisabled implements setAccountDisabled operation.
+	//
+	// Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+	//
+	// PUT /api/v1/admin/accounts/{accountId}/disabled
+	SetAccountDisabled(ctx context.Context, req *Toggle, params SetAccountDisabledParams) (SetAccountDisabledRes, error)
+	// SetAccountPassword implements setAccountPassword operation.
+	//
+	// Replaces the signed-in Account's password, for example after signing in with an emailed link.
+	//
+	// PUT /api/v1/account/password
+	SetAccountPassword(ctx context.Context, req *PasswordChange) (SetAccountPasswordRes, error)
+	// SetAdminRole implements setAdminRole operation.
+	//
+	// Nobody removes their own Admin role.
+	//
+	// PUT /api/v1/admin/accounts/{accountId}/admin
+	SetAdminRole(ctx context.Context, req *Toggle, params SetAdminRoleParams) (SetAdminRoleRes, error)
+	// SetNotificationPreferences implements setNotificationPreferences operation.
+	//
+	// Sets the channels for each kind given; security Notifications always show in app.
+	//
+	// PUT /api/v1/notification-preferences
+	SetNotificationPreferences(ctx context.Context, req *NotificationPreferences) (SetNotificationPreferencesRes, error)
+	// SignIn implements signIn operation.
+	//
+	// Signs the Account in on this device. Every failure answers the same.
+	//
+	// POST /api/v1/sign-in
+	SignIn(ctx context.Context, req *SignInRequest) (SignInRes, error)
+	// SignOut implements signOut operation.
+	//
+	// Ends this device's session and clears its cookie.
+	//
+	// POST /api/v1/sign-out
+	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
+	// StartConversation implements startConversation operation.
+	//
+	// Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to
+	// ten.
+	//
+	// POST /api/v1/conversations
+	StartConversation(ctx context.Context, req *ConversationStart) (StartConversationRes, error)
+	// StartOidcLink implements startOidcLink operation.
+	//
+	// Returns where to send the browser to link a login to the signed-in Account.
+	//
+	// POST /api/v1/account/oidc-link
+	StartOidcLink(ctx context.Context) (StartOidcLinkRes, error)
+	// StartOidcSignIn implements startOidcSignIn operation.
+	//
+	// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+	//
+	// POST /api/v1/oidc/sign-ins
+	StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error)
+	// Unblock implements unblock operation.
+	//
+	// Lets the Account's Friend requests through again.
+	//
+	// DELETE /api/v1/blocks/{accountId}
+	Unblock(ctx context.Context, params UnblockParams) (UnblockRes, error)
+	// Unfriend implements unfriend operation.
+	//
+	// The two are no longer Friends.
+	//
+	// DELETE /api/v1/friends/{accountId}
+	Unfriend(ctx context.Context, params UnfriendParams) (UnfriendRes, error)
+	// UnlinkOidc implements unlinkOidc operation.
+	//
+	// Removes the linked login; the Account stays. An Account without a password keeps its login.
+	//
+	// DELETE /api/v1/account/oidc-link
+	UnlinkOidc(ctx context.Context) (UnlinkOidcRes, error)
+	// UpdateAccount implements updateAccount operation.
+	//
+	// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+	// read-only.
+	//
+	// PUT /api/v1/account
+	UpdateAccount(ctx context.Context, req *AccountChange) (UpdateAccountRes, error)
+	// UseSignInLink implements useSignInLink operation.
+	//
+	// Signs the Account in on this device; a link works once, within 30 minutes.
+	//
+	// POST /api/v1/sign-in-links/use
+	UseSignInLink(ctx context.Context, req *LinkToken) (UseSignInLinkRes, error)
+}
+
+// BuildHandler handles operations described by OpenAPI v3 specification.
+//
+// x-ogen-operation-group: Build
+type BuildHandler interface {
 	// AcceptInvite implements acceptInvite operation.
 	//
 	// Joins the caller to the Campaign as a Player. A Member keeps their role.
@@ -62,19 +346,6 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
-	// CreatePushSubscription implements createPushSubscription operation.
-	//
-	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
-	// closed.
-	//
-	// POST /api/v1/push/subscriptions
-	CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
-	// CreateRoll implements createRoll operation.
-	//
-	// Opens a Roll Request for the caller, or, from a DM, for another Member.
-	//
-	// POST /api/v1/campaigns/{campaignId}/rolls
-	CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (CreateRollRes, error)
 	// CreateSettlement implements createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -117,12 +388,6 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/npcs/{npcId}
 	DeleteNpc(ctx context.Context, params DeleteNpcParams) (DeleteNpcRes, error)
-	// DeletePushSubscription implements deletePushSubscription operation.
-	//
-	// Stops notifications to one of the caller's devices.
-	//
-	// DELETE /api/v1/push/subscriptions/{subscriptionId}
-	DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (DeletePushSubscriptionRes, error)
 	// DeleteSettlement implements deleteSettlement operation.
 	//
 	// Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -135,299 +400,13 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/shops/{shopId}
 	DeleteShop(ctx context.Context, params DeleteShopParams) (DeleteShopRes, error)
-	// DiffNpcRevisions implements diffNpcRevisions operation.
+	// JoinCampaign implements joinCampaign operation.
 	//
-	// The fields that differ between two Revisions. DM only.
+	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
+	// that Campaign's rules and its own progress from first level.
 	//
-	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
-	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
-	// EndSession implements endSession operation.
-	//
-	// Ends a live Session and disconnects everyone. DM only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
-	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
-	// GetActionLog implements getActionLog operation.
-	//
-	// The Campaign's recent Actions with their seeds. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/log
-	GetActionLog(ctx context.Context, params GetActionLogParams) (GetActionLogRes, error)
-	// GetAutomationCoverage implements getAutomationCoverage operation.
-	//
-	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
-	//
-	// GET /api/v1/compendium/automation
-	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
-	// GetBuilderOptions implements getBuilderOptions operation.
-	//
-	// Every class, species, background, armour and weapon a first-level character can choose in one
-	// ruleset.
-	//
-	// GET /api/v1/compendium/builder
-	GetBuilderOptions(ctx context.Context, params GetBuilderOptionsParams) (GetBuilderOptionsRes, error)
-	// GetCampaign implements getCampaign operation.
-	//
-	// A Campaign's home with its settings, the caller's role and every Member. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}
-	GetCampaign(ctx context.Context, params GetCampaignParams) (GetCampaignRes, error)
-	// GetCharacter implements getCharacter operation.
-	//
-	// A Character's sheet. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}
-	GetCharacter(ctx context.Context, params GetCharacterParams) (GetCharacterRes, error)
-	// GetEntry implements getEntry operation.
-	//
-	// One entry rendered for reading, with the conditions its text mentions.
-	//
-	// GET /api/v1/compendium/entries/{kind}/{slug}
-	GetEntry(ctx context.Context, params GetEntryParams) (GetEntryRes, error)
-	// GetHealth implements getHealth operation.
-	//
-	// Returns ok while the process is serving requests.
-	//
-	// GET /healthz
-	GetHealth(ctx context.Context) (GetHealthRes, error)
-	// GetMap implements getMap operation.
-	//
-	// One Map with its calibration. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/maps/{mapId}
-	GetMap(ctx context.Context, params GetMapParams) (GetMapRes, error)
-	// GetMapImage implements getMapImage operation.
-	//
-	// The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted
-	// black on the server.
-	//
-	// GET /api/v1/campaigns/{campaignId}/maps/{mapId}/image
-	GetMapImage(ctx context.Context, params GetMapImageParams) (GetMapImageRes, error)
-	// GetMe implements getMe operation.
-	//
-	// Returns the identity the platform authenticated for this request.
-	//
-	// GET /api/v1/me
-	GetMe(ctx context.Context) (GetMeRes, error)
-	// GetNpc implements getNpc operation.
-	//
-	// One NPC. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}
-	GetNpc(ctx context.Context, params GetNpcParams) (GetNpcRes, error)
-	// GetPortrait implements getPortrait operation.
-	//
-	// The picture itself, served only to Members of the Campaign.
-	//
-	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
-	GetPortrait(ctx context.Context, params GetPortraitParams) (GetPortraitRes, error)
-	// GetPushKey implements getPushKey operation.
-	//
-	// The server's VAPID public key, for a device to subscribe to notifications with. Not found when the
-	// server sends none.
-	//
-	// GET /api/v1/push/key
-	GetPushKey(ctx context.Context) (GetPushKeyRes, error)
-	// GetReadiness implements getReadiness operation.
-	//
-	// Returns ok once the API can serve traffic.
-	//
-	// GET /readyz
-	GetReadiness(ctx context.Context) (GetReadinessRes, error)
-	// GetRoll implements getRoll operation.
-	//
-	// One Roll Request with every die. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
-	GetRoll(ctx context.Context, params GetRollParams) (GetRollRes, error)
-	// GetSession implements getSession operation.
-	//
-	// One Session. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}
-	GetSession(ctx context.Context, params GetSessionParams) (GetSessionRes, error)
-	// GetSessionLog implements getSessionLog operation.
-	//
-	// The Session's latest Actions, newest first, and whether each can still be undone. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/log
-	GetSessionLog(ctx context.Context, params GetSessionLogParams) (GetSessionLogRes, error)
-	// GetSessionView implements getSessionView operation.
-	//
-	// What the caller may see of a live Session now; the DM sees everything. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view
-	GetSessionView(ctx context.Context, params GetSessionViewParams) (GetSessionViewRes, error)
-	// GetSpell implements getSpell operation.
-	//
-	// One spell with its rules text and the conditions it mentions.
-	//
-	// GET /api/v1/compendium/spells/{slug}
-	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
-	// GetStatus implements getStatus operation.
-	//
-	// Reports the running version and whether the database answers.
-	//
-	// GET /api/v1/status
-	GetStatus(ctx context.Context) (GetStatusRes, error)
-	// GetTokenIcon implements getTokenIcon operation.
-	//
-	// The picture itself, served only to Members of the Campaign.
-	//
-	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
-	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
-	// ListActivity implements listActivity operation.
-	//
-	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
-	// only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/activity
-	ListActivity(ctx context.Context, params ListActivityParams) (ListActivityRes, error)
-	// ListCampaigns implements listCampaigns operation.
-	//
-	// The Campaigns the caller is a Member of, newest first.
-	//
-	// GET /api/v1/campaigns
-	ListCampaigns(ctx context.Context, params ListCampaignsParams) (ListCampaignsRes, error)
-	// ListCharacters implements listCharacters operation.
-	//
-	// The party's Characters. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/characters
-	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
-	// ListDeletedNpcs implements listDeletedNpcs operation.
-	//
-	// NPCs that were deleted and can still be restored from their Revisions. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
-	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
-	// ListEncounterChecks implements listEncounterChecks operation.
-	//
-	// The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/encounter-checks
-	ListEncounterChecks(ctx context.Context, params ListEncounterChecksParams) (ListEncounterChecksRes, error)
-	// ListEncounterPoolRevisions implements listEncounterPoolRevisions operation.
-	//
-	// Every Revision of the Encounter Pool, newest first. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions
-	ListEncounterPoolRevisions(ctx context.Context, params ListEncounterPoolRevisionsParams) (ListEncounterPoolRevisionsRes, error)
-	// ListEncounterPools implements listEncounterPools operation.
-	//
-	// The Campaign's Encounter Pools. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/encounter-pools
-	ListEncounterPools(ctx context.Context, params ListEncounterPoolsParams) (ListEncounterPoolsRes, error)
-	// ListEncounterTableRevisions implements listEncounterTableRevisions operation.
-	//
-	// Every Revision of the Encounter Table, newest first. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions
-	ListEncounterTableRevisions(ctx context.Context, params ListEncounterTableRevisionsParams) (ListEncounterTableRevisionsRes, error)
-	// ListEncounterTables implements listEncounterTables operation.
-	//
-	// The Campaign's Encounter Tables. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/encounter-tables
-	ListEncounterTables(ctx context.Context, params ListEncounterTablesParams) (ListEncounterTablesRes, error)
-	// ListEntries implements listEntries operation.
-	//
-	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
-	// blend.
-	//
-	// GET /api/v1/compendium/entries
-	ListEntries(ctx context.Context, params ListEntriesParams) (ListEntriesRes, error)
-	// ListInvites implements listInvites operation.
-	//
-	// Invite links that still work. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/invites
-	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
-	// ListLocations implements listLocations operation.
-	//
-	// The places on the Campaign's world maps an Encounter Table can belong to. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/locations
-	ListLocations(ctx context.Context, params ListLocationsParams) (ListLocationsRes, error)
-	// ListLootTableRevisions implements listLootTableRevisions operation.
-	//
-	// Every Revision of the Loot Table, newest first. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions
-	ListLootTableRevisions(ctx context.Context, params ListLootTableRevisionsParams) (ListLootTableRevisionsRes, error)
-	// ListLootTables implements listLootTables operation.
-	//
-	// The Campaign's Loot Tables. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/loot-tables
-	ListLootTables(ctx context.Context, params ListLootTablesParams) (ListLootTablesRes, error)
-	// ListMaps implements listMaps operation.
-	//
-	// The Campaign's local and world Maps. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/maps
-	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)
-	// ListNpcRevisions implements listNpcRevisions operation.
-	//
-	// Every Revision of the NPC, newest first, with its author and origin. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions
-	ListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (ListNpcRevisionsRes, error)
-	// ListNpcs implements listNpcs operation.
-	//
-	// The Campaign's NPCs. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/npcs
-	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
-	// ListRolls implements listRolls operation.
-	//
-	// Recent Roll Requests in the Campaign. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/rolls
-	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
-	// ListSessions implements listSessions operation.
-	//
-	// The Campaign's Sessions, newest first. Members only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/sessions
-	ListSessions(ctx context.Context, params ListSessionsParams) (ListSessionsRes, error)
-	// ListSettlementRevisions implements listSettlementRevisions operation.
-	//
-	// Every Revision of the Settlement, newest first. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions
-	ListSettlementRevisions(ctx context.Context, params ListSettlementRevisionsParams) (ListSettlementRevisionsRes, error)
-	// ListSettlements implements listSettlements operation.
-	//
-	// The Campaign's Settlements. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/settlements
-	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
-	// ListShopRevisions implements listShopRevisions operation.
-	//
-	// Every Revision of the Shop, newest first. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions
-	ListShopRevisions(ctx context.Context, params ListShopRevisionsParams) (ListShopRevisionsRes, error)
-	// ListShops implements listShops operation.
-	//
-	// The Campaign's Shops. DM only.
-	//
-	// GET /api/v1/campaigns/{campaignId}/shops
-	ListShops(ctx context.Context, params ListShopsParams) (ListShopsRes, error)
-	// ListSources implements listSources operation.
-	//
-	// The documents the compendium draws from, with the attribution each license requires.
-	//
-	// GET /api/v1/compendium/sources
-	ListSources(ctx context.Context) (ListSourcesRes, error)
-	// ListSpells implements listSpells operation.
-	//
-	// Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
-	//
-	// GET /api/v1/compendium/spells
-	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
+	// POST /api/v1/characters/{characterId}/campaigns
+	JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (JoinCampaignRes, error)
 	// PreviewCharacter implements previewCharacter operation.
 	//
 	// Validates a build and returns the sheet it would make, without saving it.
@@ -513,26 +492,6 @@ type Handler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/invites/{inviteId}
 	RevokeInvite(ctx context.Context, params RevokeInviteParams) (RevokeInviteRes, error)
-	// RollRest implements rollRest operation.
-	//
-	// The server rolls every die still empty. The roller or a DM.
-	//
-	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
-	RollRest(ctx context.Context, params RollRestParams) (RollRestRes, error)
-	// SendLiveCommand implements sendLiveCommand operation.
-	//
-	// Sends one command to a live Session as the caller, with the same authority as their live connection,
-	// and answers once the Session has applied it. Members only.
-	//
-	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
-	SendLiveCommand(ctx context.Context, req *LiveCommand, params SendLiveCommandParams) (SendLiveCommandRes, error)
-	// SetDie implements setDie operation.
-	//
-	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
-	// or a DM; the last die resolves the request.
-	//
-	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
-	SetDie(ctx context.Context, req *DieFill, params SetDieParams) (SetDieRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -545,14 +504,6 @@ type Handler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
-	// StartSession implements startSession operation.
-	//
-	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
-	// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are
-	// LiveCommand and LiveUpdate.
-	//
-	// POST /api/v1/campaigns/{campaignId}/sessions
-	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
 	// UndoChange implements undoChange operation.
 	//
 	// Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
@@ -603,6 +554,12 @@ type Handler interface {
 	//
 	// PATCH /api/v1/campaigns/{campaignId}/members/{memberId}
 	UpdateMember(ctx context.Context, req *MemberUpdate, params UpdateMemberParams) (UpdateMemberRes, error)
+	// UpdateMyCharacter implements updateMyCharacter operation.
+	//
+	// Sets a Character's name and Backstory; the name shows in every Campaign it plays in.
+	//
+	// PUT /api/v1/characters/{characterId}
+	UpdateMyCharacter(ctx context.Context, req *OwnedCharacterChange, params UpdateMyCharacterParams) (UpdateMyCharacterRes, error)
 	// UpdateNpc implements updateNpc operation.
 	//
 	// Replaces the NPC and records a Revision. DM only.
@@ -628,6 +585,442 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/maps
 	UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (UploadMapRes, error)
+}
+
+// PlayHandler handles operations described by OpenAPI v3 specification.
+//
+// x-ogen-operation-group: Play
+type PlayHandler interface {
+	// CreateRoll implements createRoll operation.
+	//
+	// Opens a Roll Request for the caller, or, from a DM, for another Member.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls
+	CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (CreateRollRes, error)
+	// EndSession implements endSession operation.
+	//
+	// Ends a live Session and disconnects everyone. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
+	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// RollRest implements rollRest operation.
+	//
+	// The server rolls every die still empty. The roller or a DM.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
+	RollRest(ctx context.Context, params RollRestParams) (RollRestRes, error)
+	// SendLiveCommand implements sendLiveCommand operation.
+	//
+	// Sends one command to a live Session as the caller, with the same authority as their live connection,
+	// and answers once the Session has applied it. Members only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/commands
+	SendLiveCommand(ctx context.Context, req *LiveCommand, params SendLiveCommandParams) (SendLiveCommandRes, error)
+	// SetDie implements setDie operation.
+	//
+	// The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
+	// or a DM; the last die resolves the request.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
+	SetDie(ctx context.Context, req *DieFill, params SetDieParams) (SetDieRes, error)
+	// StartSession implements startSession operation.
+	//
+	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
+	// /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live?audience=dm|party|table, whose messages are
+	// LiveCommand and LiveUpdate.
+	//
+	// POST /api/v1/campaigns/{campaignId}/sessions
+	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
+}
+
+// ReadHandler handles operations described by OpenAPI v3 specification.
+//
+// x-ogen-operation-group: Read
+type ReadHandler interface {
+	// DiffNpcRevisions implements diffNpcRevisions operation.
+	//
+	// The fields that differ between two Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
+	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// GetAccount implements getAccount operation.
+	//
+	// The Account the caller is signed in as.
+	//
+	// GET /api/v1/account
+	GetAccount(ctx context.Context) (GetAccountRes, error)
+	// GetAccountHistory implements getAccountHistory operation.
+	//
+	// What happened to the signed-in Account and who did it, newest first.
+	//
+	// GET /api/v1/account/history
+	GetAccountHistory(ctx context.Context) (GetAccountHistoryRes, error)
+	// GetActionLog implements getActionLog operation.
+	//
+	// The Campaign's recent Actions with their seeds. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/log
+	GetActionLog(ctx context.Context, params GetActionLogParams) (GetActionLogRes, error)
+	// GetAdminAccount implements getAdminAccount operation.
+	//
+	// How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+	//
+	// GET /api/v1/admin/accounts/{accountId}
+	GetAdminAccount(ctx context.Context, params GetAdminAccountParams) (GetAdminAccountRes, error)
+	// GetAutomationCoverage implements getAutomationCoverage operation.
+	//
+	// How many entries of each kind the rules engine computes fully, partly, or leaves to the DM.
+	//
+	// GET /api/v1/compendium/automation
+	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
+	// GetBuilderOptions implements getBuilderOptions operation.
+	//
+	// Every class, species, background, armour and weapon a first-level character can choose in one
+	// ruleset.
+	//
+	// GET /api/v1/compendium/builder
+	GetBuilderOptions(ctx context.Context, params GetBuilderOptionsParams) (GetBuilderOptionsRes, error)
+	// GetCampaign implements getCampaign operation.
+	//
+	// A Campaign's home with its settings, the caller's role and every Member. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}
+	GetCampaign(ctx context.Context, params GetCampaignParams) (GetCampaignRes, error)
+	// GetCharacter implements getCharacter operation.
+	//
+	// A Character's sheet. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}
+	GetCharacter(ctx context.Context, params GetCharacterParams) (GetCharacterRes, error)
+	// GetEntry implements getEntry operation.
+	//
+	// One entry rendered for reading, with the conditions its text mentions.
+	//
+	// GET /api/v1/compendium/entries/{kind}/{slug}
+	GetEntry(ctx context.Context, params GetEntryParams) (GetEntryRes, error)
+	// GetHealth implements getHealth operation.
+	//
+	// Returns ok while the process is serving requests.
+	//
+	// GET /healthz
+	GetHealth(ctx context.Context) (GetHealthRes, error)
+	// GetMap implements getMap operation.
+	//
+	// One Map with its calibration. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/maps/{mapId}
+	GetMap(ctx context.Context, params GetMapParams) (GetMapRes, error)
+	// GetMapImage implements getMapImage operation.
+	//
+	// The whole picture for a DM; for everyone else a PNG with every hex the party has never seen painted
+	// black on the server.
+	//
+	// GET /api/v1/campaigns/{campaignId}/maps/{mapId}/image
+	GetMapImage(ctx context.Context, params GetMapImageParams) (GetMapImageRes, error)
+	// GetMe implements getMe operation.
+	//
+	// Returns the identity the platform authenticated for this request.
+	//
+	// GET /api/v1/me
+	GetMe(ctx context.Context) (GetMeRes, error)
+	// GetMyCharacter implements getMyCharacter operation.
+	//
+	// A Character the signed-in Account owns; anyone else's is not found.
+	//
+	// GET /api/v1/characters/{characterId}
+	GetMyCharacter(ctx context.Context, params GetMyCharacterParams) (GetMyCharacterRes, error)
+	// GetNotificationPreferences implements getNotificationPreferences operation.
+	//
+	// Which kinds reach the signed-in Account in app, on its devices and by email.
+	//
+	// GET /api/v1/notification-preferences
+	GetNotificationPreferences(ctx context.Context) (GetNotificationPreferencesRes, error)
+	// GetNpc implements getNpc operation.
+	//
+	// One NPC. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}
+	GetNpc(ctx context.Context, params GetNpcParams) (GetNpcRes, error)
+	// GetPortrait implements getPortrait operation.
+	//
+	// The picture itself, served only to Members of the Campaign.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
+	GetPortrait(ctx context.Context, params GetPortraitParams) (GetPortraitRes, error)
+	// GetPushKey implements getPushKey operation.
+	//
+	// The server's VAPID public key, for a device to subscribe to notifications with. Not found when the
+	// server sends none.
+	//
+	// GET /api/v1/push/key
+	GetPushKey(ctx context.Context) (GetPushKeyRes, error)
+	// GetReadiness implements getReadiness operation.
+	//
+	// Returns ok once the API can serve traffic.
+	//
+	// GET /readyz
+	GetReadiness(ctx context.Context) (GetReadinessRes, error)
+	// GetRoll implements getRoll operation.
+	//
+	// One Roll Request with every die. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
+	GetRoll(ctx context.Context, params GetRollParams) (GetRollRes, error)
+	// GetSession implements getSession operation.
+	//
+	// One Session. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}
+	GetSession(ctx context.Context, params GetSessionParams) (GetSessionRes, error)
+	// GetSessionLog implements getSessionLog operation.
+	//
+	// The Session's latest Actions, newest first, and whether each can still be undone. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/log
+	GetSessionLog(ctx context.Context, params GetSessionLogParams) (GetSessionLogRes, error)
+	// GetSessionView implements getSessionView operation.
+	//
+	// What the caller may see of a live Session now; the DM sees everything. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view
+	GetSessionView(ctx context.Context, params GetSessionViewParams) (GetSessionViewRes, error)
+	// GetSignInMethods implements getSignInMethods operation.
+	//
+	// Which external sign-in, if any, the sign-in page offers beside a password.
+	//
+	// GET /api/v1/sign-in-methods
+	GetSignInMethods(ctx context.Context) (GetSignInMethodsRes, error)
+	// GetSpell implements getSpell operation.
+	//
+	// One spell with its rules text and the conditions it mentions.
+	//
+	// GET /api/v1/compendium/spells/{slug}
+	GetSpell(ctx context.Context, params GetSpellParams) (GetSpellRes, error)
+	// GetStatus implements getStatus operation.
+	//
+	// Reports the running version and whether the database answers.
+	//
+	// GET /api/v1/status
+	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// GetTokenIcon implements getTokenIcon operation.
+	//
+	// The picture itself, served only to Members of the Campaign.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
+	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
+	// GetUnseenReleaseNote implements getUnseenReleaseNote operation.
+	//
+	// The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+	//
+	// GET /api/v1/release-notes/unseen
+	GetUnseenReleaseNote(ctx context.Context) (GetUnseenReleaseNoteRes, error)
+	// ListAccessTokens implements listAccessTokens operation.
+	//
+	// The signed-in Account's live Access Tokens, newest first, with when each was last used.
+	//
+	// GET /api/v1/account/access-tokens
+	ListAccessTokens(ctx context.Context) (ListAccessTokensRes, error)
+	// ListActivity implements listActivity operation.
+	//
+	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
+	// only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/activity
+	ListActivity(ctx context.Context, params ListActivityParams) (ListActivityRes, error)
+	// ListAdminAccounts implements listAdminAccounts operation.
+	//
+	// Every Account with its status, and every Invite nobody has used yet. For Admins.
+	//
+	// GET /api/v1/admin/accounts
+	ListAdminAccounts(ctx context.Context) (ListAdminAccountsRes, error)
+	// ListCampaigns implements listCampaigns operation.
+	//
+	// The Campaigns the caller is a Member of, newest first.
+	//
+	// GET /api/v1/campaigns
+	ListCampaigns(ctx context.Context, params ListCampaignsParams) (ListCampaignsRes, error)
+	// ListCharacters implements listCharacters operation.
+	//
+	// The party's Characters. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters
+	ListCharacters(ctx context.Context, params ListCharactersParams) (ListCharactersRes, error)
+	// ListConversations implements listConversations operation.
+	//
+	// The signed-in Account's Conversations, newest first, with how many messages each has unread.
+	//
+	// GET /api/v1/conversations
+	ListConversations(ctx context.Context) (ListConversationsRes, error)
+	// ListDeletedNpcs implements listDeletedNpcs operation.
+	//
+	// NPCs that were deleted and can still be restored from their Revisions. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
+	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
+	// ListEncounterChecks implements listEncounterChecks operation.
+	//
+	// The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-checks
+	ListEncounterChecks(ctx context.Context, params ListEncounterChecksParams) (ListEncounterChecksRes, error)
+	// ListEncounterPoolRevisions implements listEncounterPoolRevisions operation.
+	//
+	// Every Revision of the Encounter Pool, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-pools/{poolId}/revisions
+	ListEncounterPoolRevisions(ctx context.Context, params ListEncounterPoolRevisionsParams) (ListEncounterPoolRevisionsRes, error)
+	// ListEncounterPools implements listEncounterPools operation.
+	//
+	// The Campaign's Encounter Pools. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-pools
+	ListEncounterPools(ctx context.Context, params ListEncounterPoolsParams) (ListEncounterPoolsRes, error)
+	// ListEncounterTableRevisions implements listEncounterTableRevisions operation.
+	//
+	// Every Revision of the Encounter Table, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}/revisions
+	ListEncounterTableRevisions(ctx context.Context, params ListEncounterTableRevisionsParams) (ListEncounterTableRevisionsRes, error)
+	// ListEncounterTables implements listEncounterTables operation.
+	//
+	// The Campaign's Encounter Tables. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/encounter-tables
+	ListEncounterTables(ctx context.Context, params ListEncounterTablesParams) (ListEncounterTablesRes, error)
+	// ListEntries implements listEntries operation.
+	//
+	// Entries of one kind in name order, one page at a time. Without a ruleset the 2024 rules lead the
+	// blend.
+	//
+	// GET /api/v1/compendium/entries
+	ListEntries(ctx context.Context, params ListEntriesParams) (ListEntriesRes, error)
+	// ListFriends implements listFriends operation.
+	//
+	// The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+	//
+	// GET /api/v1/friends
+	ListFriends(ctx context.Context) (ListFriendsRes, error)
+	// ListInvites implements listInvites operation.
+	//
+	// Invite links that still work. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/invites
+	ListInvites(ctx context.Context, params ListInvitesParams) (ListInvitesRes, error)
+	// ListLocations implements listLocations operation.
+	//
+	// The places on the Campaign's world maps an Encounter Table can belong to. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/locations
+	ListLocations(ctx context.Context, params ListLocationsParams) (ListLocationsRes, error)
+	// ListLootTableRevisions implements listLootTableRevisions operation.
+	//
+	// Every Revision of the Loot Table, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/loot-tables/{lootTableId}/revisions
+	ListLootTableRevisions(ctx context.Context, params ListLootTableRevisionsParams) (ListLootTableRevisionsRes, error)
+	// ListLootTables implements listLootTables operation.
+	//
+	// The Campaign's Loot Tables. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/loot-tables
+	ListLootTables(ctx context.Context, params ListLootTablesParams) (ListLootTablesRes, error)
+	// ListMaps implements listMaps operation.
+	//
+	// The Campaign's local and world Maps. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/maps
+	ListMaps(ctx context.Context, params ListMapsParams) (ListMapsRes, error)
+	// ListMentionables implements listMentionables operation.
+	//
+	// Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+	//
+	// GET /api/v1/mentionables
+	ListMentionables(ctx context.Context, params ListMentionablesParams) (ListMentionablesRes, error)
+	// ListMessages implements listMessages operation.
+	//
+	// A page of messages, newest first; reading the newest page marks the Conversation read. Only members
+	// read it.
+	//
+	// GET /api/v1/conversations/{conversationId}/messages
+	ListMessages(ctx context.Context, params ListMessagesParams) (ListMessagesRes, error)
+	// ListMyCharacters implements listMyCharacters operation.
+	//
+	// The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.
+	//
+	// GET /api/v1/characters
+	ListMyCharacters(ctx context.Context) (ListMyCharactersRes, error)
+	// ListNotifications implements listNotifications operation.
+	//
+	// The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+	//
+	// GET /api/v1/notifications
+	ListNotifications(ctx context.Context) (ListNotificationsRes, error)
+	// ListNpcRevisions implements listNpcRevisions operation.
+	//
+	// Every Revision of the NPC, newest first, with its author and origin. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions
+	ListNpcRevisions(ctx context.Context, params ListNpcRevisionsParams) (ListNpcRevisionsRes, error)
+	// ListNpcs implements listNpcs operation.
+	//
+	// The Campaign's NPCs. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/npcs
+	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListReleaseNotes implements listReleaseNotes operation.
+	//
+	// Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+	//
+	// GET /api/v1/admin/release-notes
+	ListReleaseNotes(ctx context.Context) (ListReleaseNotesRes, error)
+	// ListRolls implements listRolls operation.
+	//
+	// Recent Roll Requests in the Campaign. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rolls
+	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
+	// ListSessions implements listSessions operation.
+	//
+	// The Campaign's Sessions, newest first. Members only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/sessions
+	ListSessions(ctx context.Context, params ListSessionsParams) (ListSessionsRes, error)
+	// ListSettlementRevisions implements listSettlementRevisions operation.
+	//
+	// Every Revision of the Settlement, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/settlements/{settlementId}/revisions
+	ListSettlementRevisions(ctx context.Context, params ListSettlementRevisionsParams) (ListSettlementRevisionsRes, error)
+	// ListSettlements implements listSettlements operation.
+	//
+	// The Campaign's Settlements. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/settlements
+	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
+	// ListShopRevisions implements listShopRevisions operation.
+	//
+	// Every Revision of the Shop, newest first. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/shops/{shopId}/revisions
+	ListShopRevisions(ctx context.Context, params ListShopRevisionsParams) (ListShopRevisionsRes, error)
+	// ListShops implements listShops operation.
+	//
+	// The Campaign's Shops. DM only.
+	//
+	// GET /api/v1/campaigns/{campaignId}/shops
+	ListShops(ctx context.Context, params ListShopsParams) (ListShopsRes, error)
+	// ListSources implements listSources operation.
+	//
+	// The documents the compendium draws from, with the attribution each license requires.
+	//
+	// GET /api/v1/compendium/sources
+	ListSources(ctx context.Context) (ListSourcesRes, error)
+	// ListSpells implements listSpells operation.
+	//
+	// Spells in name order, one page at a time. Without a ruleset the 2024 rules lead the blend.
+	//
+	// GET /api/v1/compendium/spells
+	ListSpells(ctx context.Context, params ListSpellsParams) (ListSpellsRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

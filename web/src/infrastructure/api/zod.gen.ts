@@ -34,6 +34,609 @@ export const zMember = z.object({
 });
 
 /**
+ * Turns a setting on or off.
+ */
+export const zToggle = z.object({
+    value: z.boolean()
+});
+
+/**
+ * One thing that happened to an Account, and who did it.
+ */
+export const zAccountEvent = z.object({
+    at: z.iso.datetime().max(40),
+    actor: z.string().max(200),
+    action: z.enum([
+        'created',
+        'password_set',
+        'two_step_on',
+        'two_step_off',
+        'two_step_reset',
+        'linked',
+        'unlinked',
+        'sign_in_link_sent',
+        'admin_granted',
+        'admin_revoked',
+        'disabled',
+        'enabled',
+        'new_sign_in'
+    ]),
+    detail: z.string().max(200)
+});
+
+/**
+ * An Account's history, newest first.
+ */
+export const zAccountEventList = z.object({
+    items: z.array(zAccountEvent).max(100)
+});
+
+/**
+ * An Invite nobody has used, open until it expires.
+ */
+export const zAdminInviteRow = z.object({
+    id: zId,
+    admin: z.boolean(),
+    status: z.enum(['invited', 'expired']),
+    createdAt: z.iso.datetime().max(40),
+    expiresAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Campaign an Account belongs to, and its role there.
+ */
+export const zAdminCampaign = z.object({
+    id: zId,
+    name: z.string().max(120),
+    role: z.string().max(20)
+});
+
+/**
+ * What a Mention points at.
+ */
+export const zMentionKind = z.enum(['character', 'location']);
+
+/**
+ * Game content a message mentions.
+ */
+export const zMentionRef = z.object({
+    kind: zMentionKind,
+    campaignId: zId,
+    id: zId
+});
+
+/**
+ * A Mention as the reader sees it; label and mapId appear only when they may open it.
+ */
+export const zMentionView = z.object({
+    kind: zMentionKind,
+    campaignId: zId,
+    id: zId,
+    open: z.boolean(),
+    label: z.string().max(120).optional(),
+    mapId: zId.optional()
+});
+
+/**
+ * A new message and what it mentions.
+ */
+export const zMessageSend = z.object({
+    body: z.string().min(1).max(4000),
+    mentions: z.array(zMentionRef).max(10).optional()
+});
+
+/**
+ * The Friends to talk with, and a title for a group.
+ */
+export const zConversationStart = z.object({
+    with: z.array(zId).min(1).max(9),
+    title: z.string().max(80).optional()
+});
+
+/**
+ * A Conversation's id.
+ */
+export const zConversationRef = z.object({
+    id: zId
+});
+
+/**
+ * Something the caller may mention.
+ */
+export const zMentionable = z.object({
+    kind: zMentionKind,
+    id: zId,
+    name: z.string().max(120),
+    campaignId: zId,
+    campaignName: z.string().max(80)
+});
+
+/**
+ * What the caller may mention.
+ */
+export const zMentionableList = z.object({
+    items: z.array(zMentionable).max(40)
+});
+
+/**
+ * What one full release brought; status says whether it is a draft, scheduled or live.
+ */
+export const zReleaseNote = z.object({
+    id: zId,
+    version: z.string().max(20).regex(/^[0-9]+\.[0-9]+\.[0-9]+$/),
+    title: z.string().min(1).max(120),
+    body: z.string().max(8000),
+    status: z.enum([
+        'draft',
+        'scheduled',
+        'published'
+    ]),
+    publishAt: z.iso.datetime().max(40).optional(),
+    createdAt: z.iso.datetime().max(40),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * Release Notes, newest first.
+ */
+export const zReleaseNoteList = z.object({
+    items: z.array(zReleaseNote).max(100)
+});
+
+/**
+ * The full release to draft a Release Note for.
+ */
+export const zReleaseNoteDraft = z.object({
+    version: z.string().min(5).max(21)
+});
+
+/**
+ * A Release Note's new title and body.
+ */
+export const zReleaseNoteChange = z.object({
+    title: z.string().min(1).max(120),
+    body: z.string().max(8000)
+});
+
+/**
+ * When the Release Note goes live; omitted, now.
+ */
+export const zReleaseNotePublish = z.object({
+    at: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * The newest live Release Note the caller has not seen, when there is one.
+ */
+export const zUnseenReleaseNote = z.object({
+    note: zReleaseNote.optional()
+});
+
+/**
+ * What a Notification is about.
+ */
+export const zNotificationKind = z.enum([
+    'proposal',
+    'join_request',
+    'level_up',
+    'friend_request',
+    'conversation',
+    'session_reminder',
+    'release_note',
+    'security'
+]);
+
+/**
+ * A Notification with the one action it offers.
+ */
+export const zNotificationEntry = z.object({
+    id: zId,
+    kind: zNotificationKind,
+    title: z.string().max(120),
+    body: z.string().max(200),
+    actionLabel: z.string().max(20),
+    actionPath: z.string().max(300).regex(/^\//),
+    at: z.iso.datetime().max(40),
+    read: z.boolean()
+});
+
+/**
+ * The latest Notifications and the unread count.
+ */
+export const zNotificationList = z.object({
+    items: z.array(zNotificationEntry).max(50),
+    unread: z.int().gte(0).lte(1000000)
+});
+
+/**
+ * Which channels one kind reaches.
+ */
+export const zNotificationPreference = z.object({
+    kind: zNotificationKind,
+    inApp: z.boolean(),
+    push: z.boolean(),
+    email: z.boolean()
+});
+
+/**
+ * The channels each Notification kind reaches.
+ */
+export const zNotificationPreferences = z.object({
+    items: z.array(zNotificationPreference).max(8)
+});
+
+/**
+ * The Username to ask.
+ */
+export const zFriendRequestCreate = z.object({
+    username: z.string().min(1).max(32)
+});
+
+/**
+ * Whether to block the sender too.
+ */
+export const zFriendRequestDecline = z.object({
+    block: z.boolean().optional()
+});
+
+/**
+ * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
+ */
+export const zAccessTokenScope = z.enum([
+    'read',
+    'build',
+    'play'
+]);
+
+/**
+ * An Access Token, without the token itself.
+ */
+export const zAccessToken = z.object({
+    id: zId,
+    name: z.string().min(1).max(60),
+    scopes: z.array(zAccessTokenScope).min(1).max(3),
+    createdAt: z.iso.datetime().max(40),
+    expiresAt: z.iso.datetime().max(40),
+    lastUsedAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * An Account's live Access Tokens.
+ */
+export const zAccessTokenList = z.object({
+    items: z.array(zAccessToken).max(200)
+});
+
+/**
+ * A name, the scopes and how many days a new Access Token lives.
+ */
+export const zAccessTokenRequest = z.object({
+    name: z.string().min(1).max(60),
+    scopes: z.array(zAccessTokenScope).min(1).max(3),
+    days: z.int().gte(1).lte(365)
+});
+
+/**
+ * A new Access Token; token is shown only now.
+ */
+export const zAccessTokenCreated = z.object({
+    token: z.string().length(47).regex(/^gmt_[A-Za-z0-9_-]{43}$/),
+    accessToken: zAccessToken
+});
+
+/**
+ * A sign-in waiting for its second step.
+ */
+export const zTwoStepChallenge = z.object({
+    challenge: z.string().min(20).max(64)
+});
+
+/**
+ * A challenge and the code that answers it, from the authenticator app or a recovery code.
+ */
+export const zTwoStepAnswer = z.object({
+    challenge: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    code: z.string().min(6).max(16).regex(/^[0-9A-Za-z -]{6,16}$/)
+});
+
+/**
+ * A code from the authenticator app or a recovery code.
+ */
+export const zTwoStepCode = z.object({
+    code: z.string().min(6).max(16).regex(/^[0-9A-Za-z -]{6,16}$/)
+});
+
+/**
+ * A new authenticator secret and the otpauth URI that adds it to an app.
+ */
+export const zTwoStepSetup = z.object({
+    secret: z.string().length(32).regex(/^[A-Z2-7]{32}$/),
+    uri: z.string().min(1).max(500)
+});
+
+/**
+ * Recovery codes, each good once; shown only when made.
+ */
+export const zRecoveryCodes = z.object({
+    codes: z.array(z.string().length(11).regex(/^[a-z1-9]{5}-[a-z1-9]{5}$/)).max(10)
+});
+
+/**
+ * The external login linked to an Account, as the provider last described it; read-only.
+ */
+export const zOidcLink = z.object({
+    email: z.string().max(254),
+    username: z.string().max(200),
+    name: z.string().max(200),
+    linkedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A new Username, Nickname and email for the signed-in Account.
+ */
+export const zAccountChange = z.object({
+    username: z.string().min(3).max(32),
+    nickname: z.string().min(1).max(40),
+    email: z.email().max(254)
+});
+
+/**
+ * The sign-in methods beside a password; oidc names the external login, when one is set up.
+ */
+export const zSignInMethods = z.object({
+    oidc: z.string().min(1).max(60).optional()
+});
+
+/**
+ * Where to send the browser to sign in with the external login.
+ */
+export const zOidcRedirect = z.object({
+    url: z.url().max(2000)
+});
+
+/**
+ * What the provider sent the browser back with.
+ */
+export const zOidcCallback = z.object({
+    code: z.string().min(1).max(2000),
+    state: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/)
+});
+
+/**
+ * A login no Account has yet, with the token that creates or links one within 15 minutes.
+ */
+export const zOidcPending = z.object({
+    token: z.string().min(20).max(64),
+    email: z.string().max(254),
+    username: z.string().max(200),
+    name: z.string().max(200)
+});
+
+/**
+ * A Username and Nickname for a new Account for a waiting login.
+ */
+export const zOidcAccountSetup = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    username: z.string().min(3).max(32),
+    nickname: z.string().min(1).max(40)
+});
+
+/**
+ * The Username and password of the Account to link a waiting login to.
+ */
+export const zOidcAccountLink = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    username: z.string().min(1).max(32),
+    password: z.string().min(1).max(200)
+});
+
+/**
+ * Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.
+ */
+export const zUsername = z.string().min(3).max(32).regex(/^[a-z0-9][a-z0-9_.-]{2,31}$/);
+
+/**
+ * A Grimoire Account.
+ */
+export const zAccount = z.object({
+    id: zId,
+    username: zUsername,
+    nickname: z.string().min(1).max(40),
+    email: z.email().max(254),
+    admin: z.boolean(),
+    hasPassword: z.boolean(),
+    twoStep: z.boolean(),
+    recoveryCodesLeft: z.int().gte(0).lte(10),
+    adminPowers: z.boolean(),
+    oidc: zOidcLink.optional()
+});
+
+/**
+ * An Account in the Admin list.
+ */
+export const zAdminAccountRow = z.object({
+    id: zId,
+    username: zUsername,
+    nickname: z.string().min(1).max(40),
+    email: z.string().max(254),
+    admin: z.boolean(),
+    status: z.enum(['active', 'disabled']),
+    createdAt: z.iso.datetime().max(40),
+    lastSeenAt: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * Every Account and every unused Invite.
+ */
+export const zAdminAccountList = z.object({
+    accounts: z.array(zAdminAccountRow).max(10000),
+    invites: z.array(zAdminInviteRow).max(200)
+});
+
+/**
+ * One Account as its Admin page shows it.
+ */
+export const zAdminAccountDetail = z.object({
+    account: zAccount,
+    status: z.enum(['active', 'disabled']),
+    createdAt: z.iso.datetime().max(40),
+    sessions: z.int().gte(0).lte(100000),
+    tokens: z.int().gte(0).lte(100000),
+    campaigns: z.array(zAdminCampaign).max(200),
+    history: z.array(zAccountEvent).max(100)
+});
+
+/**
+ * Another Account as social pages show it.
+ */
+export const zPerson = z.object({
+    id: zId,
+    username: zUsername,
+    nickname: z.string().min(1).max(40)
+});
+
+/**
+ * One message in a Conversation.
+ */
+export const zMessageEntry = z.object({
+    id: zId,
+    author: zPerson,
+    body: z.string().min(1).max(4000),
+    at: z.iso.datetime().max(40),
+    mentions: z.array(zMentionView).max(10)
+});
+
+/**
+ * A page of messages, newest first.
+ */
+export const zMessagePage = z.object({
+    items: z.array(zMessageEntry).max(50)
+});
+
+/**
+ * A Conversation in its members' list.
+ */
+export const zConversationEntry = z.object({
+    id: zId,
+    title: z.string().max(80),
+    members: z.array(zPerson).max(10),
+    updatedAt: z.iso.datetime().max(40),
+    unread: z.int().gte(0).lte(1000000),
+    lastBody: z.string().max(120)
+});
+
+/**
+ * An Account's Conversations.
+ */
+export const zConversationList = z.object({
+    items: z.array(zConversationEntry).max(1000)
+});
+
+/**
+ * A Friend, and since when.
+ */
+export const zFriendEntry = z.object({
+    person: zPerson,
+    since: z.iso.datetime().max(40)
+});
+
+/**
+ * A Friend request and the Account on its other side.
+ */
+export const zFriendRequestEntry = z.object({
+    id: zId,
+    person: zPerson,
+    at: z.iso.datetime().max(40)
+});
+
+/**
+ * Friends, Friend requests both ways, and blocked Accounts.
+ */
+export const zFriendsPage = z.object({
+    friends: z.array(zFriendEntry).max(1000),
+    incoming: z.array(zFriendRequestEntry).max(1000),
+    outgoing: z.array(zFriendRequestEntry).max(1000),
+    blocked: z.array(zFriendRequestEntry).max(1000)
+});
+
+/**
+ * How an external sign-in ended. signed_in and linked carry the Account; choose carries a login waiting for an Account.
+ */
+export const zOidcOutcome = z.object({
+    status: z.enum([
+        'signed_in',
+        'linked',
+        'choose'
+    ]),
+    account: zAccount.optional(),
+    pending: zOidcPending.optional()
+});
+
+/**
+ * The token an invite or sign-in link carries.
+ */
+export const zLinkToken = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/)
+});
+
+/**
+ * What an invitee chooses for their Account, with the token its invite link carries.
+ */
+export const zAccountSetup = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    username: z.string().min(3).max(32),
+    nickname: z.string().min(1).max(40),
+    email: z.email().max(254),
+    password: z.string().min(10).max(200)
+});
+
+/**
+ * A Username and password.
+ */
+export const zSignInRequest = z.object({
+    username: z.string().min(1).max(32),
+    password: z.string().min(1).max(200)
+});
+
+/**
+ * Where to email a sign-in link.
+ */
+export const zSignInLinkRequest = z.object({
+    email: z.email().max(254)
+});
+
+/**
+ * A new password.
+ */
+export const zPasswordChange = z.object({
+    password: z.string().min(10).max(200)
+});
+
+/**
+ * How long an Account Invite stays open, and whether it sets up an Admin.
+ */
+export const zAccountInviteRequest = z.object({
+    hours: z.int().gte(1).lte(720),
+    admin: z.boolean().optional()
+});
+
+/**
+ * A new Account Invite and the token its link carries; the token is shown only now.
+ */
+export const zAccountInviteCreated = z.object({
+    token: z.string().min(20).max(64),
+    expiresAt: z.iso.datetime().max(40)
+});
+
+/**
+ * An open Account Invite.
+ */
+export const zAccountInvite = z.object({
+    expiresAt: z.iso.datetime().max(40),
+    admin: z.boolean()
+});
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export const zInitiativeMode = z.enum(['individual', 'side']);
@@ -169,6 +772,55 @@ export const zAbilityLine = z.object({
 export const zActiveEffect = z.object({
     name: z.string().max(120),
     detail: z.string().max(500)
+});
+
+/**
+ * A Character's progress in one Campaign.
+ */
+export const zCampaignEntry = z.object({
+    campaignId: zId,
+    campaignName: z.string().max(80),
+    characterId: zId,
+    level: z.int().gte(1).lte(20),
+    hpCurrent: z.int().gte(0).lte(1000),
+    hpMax: z.int().gte(1).lte(1000)
+});
+
+/**
+ * A Character an Account owns (ADR-0010), with its progress in each Campaign.
+ */
+export const zOwnedCharacter = z.object({
+    id: zId,
+    name: z.string().min(1).max(60),
+    ruleset: z.string().max(20),
+    species: z.string().max(80),
+    class: z.string().max(80),
+    background: z.string().max(80),
+    backstory: z.string().max(4000),
+    hasPortrait: z.boolean(),
+    campaigns: z.array(zCampaignEntry).max(200)
+});
+
+/**
+ * The Characters an Account owns.
+ */
+export const zOwnedCharacterList = z.object({
+    items: z.array(zOwnedCharacter).max(500)
+});
+
+/**
+ * A Character's new name and Backstory.
+ */
+export const zOwnedCharacterChange = z.object({
+    name: z.string().min(1).max(60),
+    backstory: z.string().max(4000)
+});
+
+/**
+ * The Campaign a Character joins.
+ */
+export const zCharacterJoin = z.object({
+    campaignId: zId
 });
 
 /**
@@ -3493,6 +4145,430 @@ export const zDeletePushSubscriptionResponse = z.void();
  * The service status.
  */
 export const zGetStatusResponse = zStatus;
+
+export const zCreateAccountInviteBody = zAccountInviteRequest;
+
+/**
+ * The invite, with the token its link carries.
+ */
+export const zCreateAccountInviteResponse = zAccountInviteCreated;
+
+export const zPreviewAccountInviteBody = zLinkToken;
+
+/**
+ * The open invite.
+ */
+export const zPreviewAccountInviteResponse = zAccountInvite;
+
+export const zAcceptAccountInviteBody = zAccountSetup;
+
+/**
+ * The new Account, signed in.
+ */
+export const zAcceptAccountInviteResponse = zAccount;
+
+export const zSignInBody = zSignInRequest;
+
+export const zSignInResponse = z.union([
+    zAccount,
+    zTwoStepChallenge
+]);
+
+export const zPassTwoStepBody = zTwoStepAnswer;
+
+/**
+ * The Account, signed in.
+ */
+export const zPassTwoStepResponse = zAccount;
+
+/**
+ * Signed out.
+ */
+export const zSignOutResponse = z.void();
+
+export const zRequestSignInLinkBody = zSignInLinkRequest;
+
+export const zUseSignInLinkBody = zLinkToken;
+
+export const zUseSignInLinkResponse = z.union([
+    zAccount,
+    zTwoStepChallenge
+]);
+
+/**
+ * The sign-in methods.
+ */
+export const zGetSignInMethodsResponse = zSignInMethods;
+
+/**
+ * Where to send the browser.
+ */
+export const zStartOidcSignInResponse = zOidcRedirect;
+
+export const zFinishOidcBody = zOidcCallback;
+
+/**
+ * How the sign-in ended.
+ */
+export const zFinishOidcResponse = zOidcOutcome;
+
+export const zCreateOidcAccountBody = zOidcAccountSetup;
+
+/**
+ * The Account, signed in.
+ */
+export const zCreateOidcAccountResponse = zAccount;
+
+export const zLinkOidcAccountBody = zOidcAccountLink;
+
+/**
+ * The Account, signed in.
+ */
+export const zLinkOidcAccountResponse = zAccount;
+
+/**
+ * The Account.
+ */
+export const zGetAccountResponse = zAccount;
+
+export const zUpdateAccountBody = zAccountChange;
+
+/**
+ * The Account.
+ */
+export const zUpdateAccountResponse = zAccount;
+
+export const zSetAccountPasswordBody = zPasswordChange;
+
+/**
+ * The password is set.
+ */
+export const zSetAccountPasswordResponse = z.void();
+
+/**
+ * Unlinked.
+ */
+export const zUnlinkOidcResponse = z.void();
+
+/**
+ * Where to send the browser.
+ */
+export const zStartOidcLinkResponse = zOidcRedirect;
+
+/**
+ * The secret and the URI an authenticator app scans.
+ */
+export const zBeginTwoStepResponse = zTwoStepSetup;
+
+export const zConfirmTwoStepBody = zTwoStepCode;
+
+/**
+ * The recovery codes.
+ */
+export const zConfirmTwoStepResponse = zRecoveryCodes;
+
+export const zDisableTwoStepBody = zTwoStepCode;
+
+/**
+ * Two-step is off.
+ */
+export const zDisableTwoStepResponse = z.void();
+
+export const zResetRecoveryCodesBody = zTwoStepCode;
+
+/**
+ * The new recovery codes.
+ */
+export const zResetRecoveryCodesResponse = zRecoveryCodes;
+
+/**
+ * The Access Tokens.
+ */
+export const zListAccessTokensResponse = zAccessTokenList;
+
+export const zCreateAccessTokenBody = zAccessTokenRequest;
+
+/**
+ * The token and its details.
+ */
+export const zCreateAccessTokenResponse = zAccessTokenCreated;
+
+export const zRevokeAccessTokenPath = z.object({
+    accessId: zId
+});
+
+/**
+ * Revoked.
+ */
+export const zRevokeAccessTokenResponse = z.void();
+
+/**
+ * The Accounts and Invites.
+ */
+export const zListAdminAccountsResponse = zAdminAccountList;
+
+export const zGetAdminAccountPath = z.object({
+    accountId: zId
+});
+
+/**
+ * The Account.
+ */
+export const zGetAdminAccountResponse = zAdminAccountDetail;
+
+export const zSendAdminSignInLinkPath = z.object({
+    accountId: zId
+});
+
+export const zSetAdminRoleBody = zToggle;
+
+export const zSetAdminRolePath = z.object({
+    accountId: zId
+});
+
+/**
+ * Changed.
+ */
+export const zSetAdminRoleResponse = z.void();
+
+export const zSetAccountDisabledBody = zToggle;
+
+export const zSetAccountDisabledPath = z.object({
+    accountId: zId
+});
+
+/**
+ * Changed.
+ */
+export const zSetAccountDisabledResponse = z.void();
+
+export const zResetAccountTwoStepPath = z.object({
+    accountId: zId
+});
+
+/**
+ * Two-step is off.
+ */
+export const zResetAccountTwoStepResponse = z.void();
+
+/**
+ * The history.
+ */
+export const zGetAccountHistoryResponse = zAccountEventList;
+
+/**
+ * The Characters.
+ */
+export const zListMyCharactersResponse = zOwnedCharacterList;
+
+export const zGetMyCharacterPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The Character.
+ */
+export const zGetMyCharacterResponse = zOwnedCharacter;
+
+export const zUpdateMyCharacterBody = zOwnedCharacterChange;
+
+export const zUpdateMyCharacterPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The Character.
+ */
+export const zUpdateMyCharacterResponse = zOwnedCharacter;
+
+export const zJoinCampaignBody = zCharacterJoin;
+
+export const zJoinCampaignPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The new Campaign Character.
+ */
+export const zJoinCampaignResponse = zCharacterSheet;
+
+/**
+ * The Friends page.
+ */
+export const zListFriendsResponse = zFriendsPage;
+
+export const zUnfriendPath = z.object({
+    accountId: zId
+});
+
+/**
+ * No longer Friends.
+ */
+export const zUnfriendResponse = z.void();
+
+export const zSendFriendRequestBody = zFriendRequestCreate;
+
+export const zCancelFriendRequestPath = z.object({
+    requestId: zId
+});
+
+/**
+ * Withdrawn.
+ */
+export const zCancelFriendRequestResponse = z.void();
+
+export const zAcceptFriendRequestPath = z.object({
+    requestId: zId
+});
+
+/**
+ * Friends.
+ */
+export const zAcceptFriendRequestResponse = z.void();
+
+export const zDeclineFriendRequestBody = zFriendRequestDecline;
+
+export const zDeclineFriendRequestPath = z.object({
+    requestId: zId
+});
+
+/**
+ * Declined.
+ */
+export const zDeclineFriendRequestResponse = z.void();
+
+export const zUnblockPath = z.object({
+    accountId: zId
+});
+
+/**
+ * Unblocked.
+ */
+export const zUnblockResponse = z.void();
+
+/**
+ * The Conversations.
+ */
+export const zListConversationsResponse = zConversationList;
+
+export const zStartConversationBody = zConversationStart;
+
+/**
+ * The Conversation.
+ */
+export const zStartConversationResponse = zConversationRef;
+
+export const zListMessagesPath = z.object({
+    conversationId: zId
+});
+
+export const zListMessagesQuery = z.object({
+    before: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * The messages.
+ */
+export const zListMessagesResponse = zMessagePage;
+
+export const zSendMessageBody = zMessageSend;
+
+export const zSendMessagePath = z.object({
+    conversationId: zId
+});
+
+/**
+ * The message.
+ */
+export const zSendMessageResponse = zMessageEntry;
+
+export const zListMentionablesQuery = z.object({
+    q: z.string().max(60).optional()
+});
+
+/**
+ * What may be mentioned.
+ */
+export const zListMentionablesResponse = zMentionableList;
+
+/**
+ * The Notifications.
+ */
+export const zListNotificationsResponse = zNotificationList;
+
+/**
+ * All read.
+ */
+export const zReadAllNotificationsResponse = z.void();
+
+export const zReadNotificationPath = z.object({
+    notificationId: zId
+});
+
+/**
+ * Read.
+ */
+export const zReadNotificationResponse = z.void();
+
+/**
+ * The preferences.
+ */
+export const zGetNotificationPreferencesResponse = zNotificationPreferences;
+
+export const zSetNotificationPreferencesBody = zNotificationPreferences;
+
+/**
+ * The preferences.
+ */
+export const zSetNotificationPreferencesResponse = zNotificationPreferences;
+
+/**
+ * The Release Notes.
+ */
+export const zListReleaseNotesResponse = zReleaseNoteList;
+
+export const zDraftReleaseNoteBody = zReleaseNoteDraft;
+
+/**
+ * The draft.
+ */
+export const zDraftReleaseNoteResponse = zReleaseNote;
+
+export const zEditReleaseNoteBody = zReleaseNoteChange;
+
+export const zEditReleaseNotePath = z.object({
+    noteId: zId
+});
+
+/**
+ * The Release Note.
+ */
+export const zEditReleaseNoteResponse = zReleaseNote;
+
+export const zPublishReleaseNoteBody = zReleaseNotePublish;
+
+export const zPublishReleaseNotePath = z.object({
+    noteId: zId
+});
+
+/**
+ * The Release Note.
+ */
+export const zPublishReleaseNoteResponse = zReleaseNote;
+
+/**
+ * The Release Note, if there is one.
+ */
+export const zGetUnseenReleaseNoteResponse = zUnseenReleaseNote;
+
+export const zSeeReleaseNotePath = z.object({
+    noteId: zId
+});
+
+/**
+ * Seen.
+ */
+export const zSeeReleaseNoteResponse = z.void();
 
 /**
  * The process is alive.

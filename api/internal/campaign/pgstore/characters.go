@@ -19,13 +19,26 @@ func (s *Store) InsertCharacter(ctx context.Context, c domain.Character, now tim
 	var id uuid.UUID
 	err := s.InTx(ctx, func(r app.Repository) error {
 		q := r.(*Store).q
+		owned := uuid.UUID(c.Owned)
+		if owned == uuid.Nil {
+			owned = uuid.New()
+			if err := q.InsertAccountCharacter(ctx, queries.InsertAccountCharacterParams{
+				ID: owned, OwnerSubject: c.Owner.Subject, Name: c.Name, Ruleset: c.Ruleset, SpeciesSlug: c.Species,
+				ClassSlug: c.Class, BackgroundSlug: c.Background, Now: now,
+			}); err != nil {
+				return err
+			}
+		}
 		var err error
 		id, err = q.InsertCharacter(ctx, queries.InsertCharacterParams{
-			CampaignID: uuid.UUID(c.CampaignID), OwnerMemberID: uuid.UUID(c.Owner.ID), Name: c.Name, Ruleset: c.Ruleset,
+			CampaignID: uuid.UUID(c.CampaignID), OwnerMemberID: uuid.UUID(c.Owner.ID), CharacterID: pgtype.UUID{Bytes: owned, Valid: true}, Name: c.Name, Ruleset: c.Ruleset,
 			SpeciesSlug: c.Species, ClassSlug: c.Class, BackgroundSlug: c.Background, AbilityMethod: c.Method,
 			HpMax: int32(c.HPMax), ArmorSlug: optSlug(c.Armor), Shield: c.Shield, Now: now, //nolint:gosec // hit points are small
 		})
 		if err != nil {
+			return conflict(err)
+		}
+		if err := q.AdoptCharacterIdentity(ctx, id); err != nil {
 			return err
 		}
 		return addBuild(ctx, q, id, c)
@@ -71,7 +84,7 @@ func (s *Store) Character(ctx context.Context, id domain.CampaignID, ch domain.C
 			Name: r.Name, Species: r.SpeciesSlug, Class: r.ClassSlug, Background: r.BackgroundSlug, Method: r.AbilityMethod,
 			Base: map[string]int{}, Bonus: map[string]int{}, Skills: []string{}, Armor: r.ArmorSlug.String, Shield: r.Shield,
 		},
-		ID: domain.CharacterID(r.ID), CampaignID: domain.CampaignID(r.CampaignID),
+		ID: domain.CharacterID(r.ID), Owned: domain.OwnedID(r.CharacterID.Bytes), CampaignID: domain.CampaignID(r.CampaignID),
 		Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), CampaignID: domain.CampaignID(r.CampaignID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 		Ruleset: r.Ruleset, Level: int(r.Level), BackgroundSkills: []string{}, HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), UpdatedAt: r.UpdatedAt,
 		Portrait: image(r.PortraitKey, r.PortraitType), Token: image(r.TokenKey, r.TokenType),
@@ -113,7 +126,7 @@ func (s *Store) Characters(ctx context.Context, id domain.CampaignID) ([]domain.
 	for _, r := range rows {
 		out = append(out, domain.Character{
 			Build: domain.Build{Name: r.Name, Species: r.SpeciesSlug, Class: r.ClassSlug},
-			ID:    domain.CharacterID(r.ID), CampaignID: id,
+			ID:    domain.CharacterID(r.ID), Owned: domain.OwnedID(r.CharacterID.Bytes), CampaignID: id,
 			Owner:   domain.Member{ID: domain.MemberID(r.OwnerMemberID), Subject: r.OwnerSubject, DisplayName: r.OwnerName},
 			Ruleset: r.Ruleset, Level: int(r.Level), HPMax: int(r.HpMax), HPCurrent: int(r.HpCurrent), Token: image(r.TokenKey, pgtype.Text{}),
 		})
@@ -135,7 +148,10 @@ func (s *Store) UpdateCharacter(ctx context.Context, c domain.Character, now tim
 		if err := q.ClearCharacterWeapons(ctx, id); err != nil {
 			return err
 		}
-		return addWeapons(ctx, q, id, c.Weapons)
+		if err := addWeapons(ctx, q, id, c.Weapons); err != nil {
+			return err
+		}
+		return q.FlowCharacterIdentity(ctx, queries.FlowCharacterIdentityParams{ID: id, Now: now})
 	})
 }
 
@@ -157,8 +173,17 @@ func (s *Store) SetCharacterImage(ctx context.Context, id domain.CampaignID, ch 
 	if img != nil {
 		key, contentType = optSlug(img.Key), optSlug(img.Type)
 	}
-	if kind == domain.Portrait {
-		return s.q.SetCharacterPortrait(ctx, queries.SetCharacterPortraitParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Key: key, ContentType: contentType, Now: now})
-	}
-	return s.q.SetCharacterToken(ctx, queries.SetCharacterTokenParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Key: key, ContentType: contentType, Now: now})
+	return s.InTx(ctx, func(r app.Repository) error {
+		q := r.(*Store).q
+		var err error
+		if kind == domain.Portrait {
+			err = q.SetCharacterPortrait(ctx, queries.SetCharacterPortraitParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Key: key, ContentType: contentType, Now: now})
+		} else {
+			err = q.SetCharacterToken(ctx, queries.SetCharacterTokenParams{CampaignID: uuid.UUID(id), ID: uuid.UUID(ch), Key: key, ContentType: contentType, Now: now})
+		}
+		if err != nil {
+			return err
+		}
+		return q.FlowCharacterIdentity(ctx, queries.FlowCharacterIdentityParams{ID: uuid.UUID(ch), Now: now})
+	})
 }

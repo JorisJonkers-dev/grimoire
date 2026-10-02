@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateEncounterPoolData, CreateEncounterPoolErrors, CreateEncounterPoolResponses, CreateEncounterTableData, CreateEncounterTableErrors, CreateEncounterTableResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateLootTableData, CreateLootTableErrors, CreateLootTableResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreatePushSubscriptionData, CreatePushSubscriptionErrors, CreatePushSubscriptionResponses, CreateRollData, CreateRollErrors, CreateRollResponses, CreateSettlementData, CreateSettlementErrors, CreateSettlementResponses, CreateShopData, CreateShopErrors, CreateShopResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteEncounterPoolData, DeleteEncounterPoolErrors, DeleteEncounterPoolResponses, DeleteEncounterTableData, DeleteEncounterTableErrors, DeleteEncounterTableResponses, DeleteLootTableData, DeleteLootTableErrors, DeleteLootTableResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DeletePushSubscriptionData, DeletePushSubscriptionErrors, DeletePushSubscriptionResponses, DeleteSettlementData, DeleteSettlementErrors, DeleteSettlementResponses, DeleteShopData, DeleteShopErrors, DeleteShopResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMapData, GetMapErrors, GetMapImageData, GetMapImageErrors, GetMapImageResponses, GetMapResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetPushKeyData, GetPushKeyErrors, GetPushKeyResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSessionData, GetSessionErrors, GetSessionLogData, GetSessionLogErrors, GetSessionLogResponses, GetSessionResponses, GetSessionViewData, GetSessionViewErrors, GetSessionViewResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListActivityData, ListActivityErrors, ListActivityResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEncounterChecksData, ListEncounterChecksErrors, ListEncounterChecksResponses, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsErrors, ListEncounterPoolRevisionsResponses, ListEncounterPoolsData, ListEncounterPoolsErrors, ListEncounterPoolsResponses, ListEncounterTableRevisionsData, ListEncounterTableRevisionsErrors, ListEncounterTableRevisionsResponses, ListEncounterTablesData, ListEncounterTablesErrors, ListEncounterTablesResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListLocationsData, ListLocationsErrors, ListLocationsResponses, ListLootTableRevisionsData, ListLootTableRevisionsErrors, ListLootTableRevisionsResponses, ListLootTablesData, ListLootTablesErrors, ListLootTablesResponses, ListMapsData, ListMapsErrors, ListMapsResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListSettlementRevisionsData, ListSettlementRevisionsErrors, ListSettlementRevisionsResponses, ListSettlementsData, ListSettlementsErrors, ListSettlementsResponses, ListShopRevisionsData, ListShopRevisionsErrors, ListShopRevisionsResponses, ListShopsData, ListShopsErrors, ListShopsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, PreviewReachData, PreviewReachErrors, PreviewReachResponses, PreviewSightData, PreviewSightErrors, PreviewSightResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RerollStockData, RerollStockErrors, RerollStockResponses, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionErrors, RestoreEncounterPoolRevisionResponses, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionErrors, RestoreEncounterTableRevisionResponses, RestoreLootTableRevisionData, RestoreLootTableRevisionErrors, RestoreLootTableRevisionResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RestoreSettlementRevisionData, RestoreSettlementRevisionErrors, RestoreSettlementRevisionResponses, RestoreShopRevisionData, RestoreShopRevisionErrors, RestoreShopRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SendLiveCommandData, SendLiveCommandErrors, SendLiveCommandResponses, SetDieData, SetDieErrors, SetDieResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, StartSessionData, StartSessionErrors, StartSessionResponses, UndoChangeData, UndoChangeErrors, UndoChangeResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateEncounterPoolData, UpdateEncounterPoolErrors, UpdateEncounterPoolResponses, UpdateEncounterTableData, UpdateEncounterTableErrors, UpdateEncounterTableResponses, UpdateLootTableData, UpdateLootTableErrors, UpdateLootTableResponses, UpdateMapData, UpdateMapErrors, UpdateMapResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses, UpdateSettlementData, UpdateSettlementErrors, UpdateSettlementResponses, UpdateShopData, UpdateShopErrors, UpdateShopResponses, UploadMapData, UploadMapErrors, UploadMapResponses } from './types.gen';
-import { zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateEncounterPoolBody, zCreateEncounterPoolPath, zCreateEncounterPoolResponse, zCreateEncounterTableBody, zCreateEncounterTablePath, zCreateEncounterTableResponse, zCreateInvitePath, zCreateInviteResponse, zCreateLootTableBody, zCreateLootTablePath, zCreateLootTableResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreatePushSubscriptionBody, zCreatePushSubscriptionResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zCreateSettlementBody, zCreateSettlementPath, zCreateSettlementResponse, zCreateShopBody, zCreateShopPath, zCreateShopResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteEncounterPoolPath, zDeleteEncounterPoolResponse, zDeleteEncounterTablePath, zDeleteEncounterTableResponse, zDeleteLootTablePath, zDeleteLootTableResponse, zDeleteNpcPath, zDeleteNpcResponse, zDeletePushSubscriptionPath, zDeletePushSubscriptionResponse, zDeleteSettlementPath, zDeleteSettlementResponse, zDeleteShopPath, zDeleteShopResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zEndSessionPath, zEndSessionResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMapImagePath, zGetMapImageQuery, zGetMapImageResponse, zGetMapPath, zGetMapResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetPushKeyResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSessionLogPath, zGetSessionLogQuery, zGetSessionLogResponse, zGetSessionPath, zGetSessionResponse, zGetSessionViewPath, zGetSessionViewResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListActivityPath, zListActivityResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEncounterChecksPath, zListEncounterChecksResponse, zListEncounterPoolRevisionsPath, zListEncounterPoolRevisionsResponse, zListEncounterPoolsPath, zListEncounterPoolsResponse, zListEncounterTableRevisionsPath, zListEncounterTableRevisionsResponse, zListEncounterTablesPath, zListEncounterTablesResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListLocationsPath, zListLocationsResponse, zListLootTableRevisionsPath, zListLootTableRevisionsResponse, zListLootTablesPath, zListLootTablesResponse, zListMapsPath, zListMapsResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSessionsPath, zListSessionsResponse, zListSettlementRevisionsPath, zListSettlementRevisionsResponse, zListSettlementsPath, zListSettlementsResponse, zListShopRevisionsPath, zListShopRevisionsResponse, zListShopsPath, zListShopsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zPreviewReachBody, zPreviewReachResponse, zPreviewSightBody, zPreviewSightResponse, zRemoveMemberPath, zRemoveMemberResponse, zRerollStockPath, zRerollStockResponse, zRestoreEncounterPoolRevisionPath, zRestoreEncounterPoolRevisionResponse, zRestoreEncounterTableRevisionPath, zRestoreEncounterTableRevisionResponse, zRestoreLootTableRevisionPath, zRestoreLootTableRevisionResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRestoreSettlementRevisionPath, zRestoreSettlementRevisionResponse, zRestoreShopRevisionPath, zRestoreShopRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSendLiveCommandBody, zSendLiveCommandPath, zSendLiveCommandResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zStartSessionPath, zStartSessionResponse, zUndoChangePath, zUndoChangeResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateEncounterPoolBody, zUpdateEncounterPoolPath, zUpdateEncounterPoolResponse, zUpdateEncounterTableBody, zUpdateEncounterTablePath, zUpdateEncounterTableResponse, zUpdateLootTableBody, zUpdateLootTablePath, zUpdateLootTableResponse, zUpdateMapBody, zUpdateMapPath, zUpdateMapResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse, zUpdateSettlementBody, zUpdateSettlementPath, zUpdateSettlementResponse, zUpdateShopBody, zUpdateShopPath, zUpdateShopResponse, zUploadMapBody, zUploadMapPath, zUploadMapQuery, zUploadMapResponse } from './zod.gen';
+import type { AcceptAccountInviteData, AcceptAccountInviteErrors, AcceptAccountInviteResponses, AcceptFriendRequestData, AcceptFriendRequestErrors, AcceptFriendRequestResponses, AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, BeginTwoStepData, BeginTwoStepErrors, BeginTwoStepResponses, CancelFriendRequestData, CancelFriendRequestErrors, CancelFriendRequestResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, ConfirmTwoStepData, ConfirmTwoStepErrors, ConfirmTwoStepResponses, CreateAccessTokenData, CreateAccessTokenErrors, CreateAccessTokenResponses, CreateAccountInviteData, CreateAccountInviteErrors, CreateAccountInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateEncounterPoolData, CreateEncounterPoolErrors, CreateEncounterPoolResponses, CreateEncounterTableData, CreateEncounterTableErrors, CreateEncounterTableResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateLootTableData, CreateLootTableErrors, CreateLootTableResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreateOidcAccountData, CreateOidcAccountErrors, CreateOidcAccountResponses, CreatePushSubscriptionData, CreatePushSubscriptionErrors, CreatePushSubscriptionResponses, CreateRollData, CreateRollErrors, CreateRollResponses, CreateSettlementData, CreateSettlementErrors, CreateSettlementResponses, CreateShopData, CreateShopErrors, CreateShopResponses, DeclineFriendRequestData, DeclineFriendRequestErrors, DeclineFriendRequestResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteEncounterPoolData, DeleteEncounterPoolErrors, DeleteEncounterPoolResponses, DeleteEncounterTableData, DeleteEncounterTableErrors, DeleteEncounterTableResponses, DeleteLootTableData, DeleteLootTableErrors, DeleteLootTableResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DeletePushSubscriptionData, DeletePushSubscriptionErrors, DeletePushSubscriptionResponses, DeleteSettlementData, DeleteSettlementErrors, DeleteSettlementResponses, DeleteShopData, DeleteShopErrors, DeleteShopResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, DisableTwoStepData, DisableTwoStepErrors, DisableTwoStepResponses, DraftReleaseNoteData, DraftReleaseNoteErrors, DraftReleaseNoteResponses, EditReleaseNoteData, EditReleaseNoteErrors, EditReleaseNoteResponses, EndSessionData, EndSessionErrors, EndSessionResponses, FinishOidcData, FinishOidcErrors, FinishOidcResponses, GetAccountData, GetAccountErrors, GetAccountHistoryData, GetAccountHistoryErrors, GetAccountHistoryResponses, GetAccountResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAdminAccountData, GetAdminAccountErrors, GetAdminAccountResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMapData, GetMapErrors, GetMapImageData, GetMapImageErrors, GetMapImageResponses, GetMapResponses, GetMeData, GetMeErrors, GetMeResponses, GetMyCharacterData, GetMyCharacterErrors, GetMyCharacterResponses, GetNotificationPreferencesData, GetNotificationPreferencesErrors, GetNotificationPreferencesResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetPushKeyData, GetPushKeyErrors, GetPushKeyResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSessionData, GetSessionErrors, GetSessionLogData, GetSessionLogErrors, GetSessionLogResponses, GetSessionResponses, GetSessionViewData, GetSessionViewErrors, GetSessionViewResponses, GetSignInMethodsData, GetSignInMethodsErrors, GetSignInMethodsResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, GetUnseenReleaseNoteData, GetUnseenReleaseNoteErrors, GetUnseenReleaseNoteResponses, JoinCampaignData, JoinCampaignErrors, JoinCampaignResponses, LinkOidcAccountData, LinkOidcAccountErrors, LinkOidcAccountResponses, ListAccessTokensData, ListAccessTokensErrors, ListAccessTokensResponses, ListActivityData, ListActivityErrors, ListActivityResponses, ListAdminAccountsData, ListAdminAccountsErrors, ListAdminAccountsResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListConversationsData, ListConversationsErrors, ListConversationsResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEncounterChecksData, ListEncounterChecksErrors, ListEncounterChecksResponses, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsErrors, ListEncounterPoolRevisionsResponses, ListEncounterPoolsData, ListEncounterPoolsErrors, ListEncounterPoolsResponses, ListEncounterTableRevisionsData, ListEncounterTableRevisionsErrors, ListEncounterTableRevisionsResponses, ListEncounterTablesData, ListEncounterTablesErrors, ListEncounterTablesResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListFriendsData, ListFriendsErrors, ListFriendsResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListLocationsData, ListLocationsErrors, ListLocationsResponses, ListLootTableRevisionsData, ListLootTableRevisionsErrors, ListLootTableRevisionsResponses, ListLootTablesData, ListLootTablesErrors, ListLootTablesResponses, ListMapsData, ListMapsErrors, ListMapsResponses, ListMentionablesData, ListMentionablesErrors, ListMentionablesResponses, ListMessagesData, ListMessagesErrors, ListMessagesResponses, ListMyCharactersData, ListMyCharactersErrors, ListMyCharactersResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListReleaseNotesData, ListReleaseNotesErrors, ListReleaseNotesResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListSettlementRevisionsData, ListSettlementRevisionsErrors, ListSettlementRevisionsResponses, ListSettlementsData, ListSettlementsErrors, ListSettlementsResponses, ListShopRevisionsData, ListShopRevisionsErrors, ListShopRevisionsResponses, ListShopsData, ListShopsErrors, ListShopsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PassTwoStepData, PassTwoStepErrors, PassTwoStepResponses, PreviewAccountInviteData, PreviewAccountInviteErrors, PreviewAccountInviteResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, PreviewReachData, PreviewReachErrors, PreviewReachResponses, PreviewSightData, PreviewSightErrors, PreviewSightResponses, PublishReleaseNoteData, PublishReleaseNoteErrors, PublishReleaseNoteResponses, ReadAllNotificationsData, ReadAllNotificationsErrors, ReadAllNotificationsResponses, ReadNotificationData, ReadNotificationErrors, ReadNotificationResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RequestSignInLinkData, RequestSignInLinkErrors, RequestSignInLinkResponses, RerollStockData, RerollStockErrors, RerollStockResponses, ResetAccountTwoStepData, ResetAccountTwoStepErrors, ResetAccountTwoStepResponses, ResetRecoveryCodesData, ResetRecoveryCodesErrors, ResetRecoveryCodesResponses, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionErrors, RestoreEncounterPoolRevisionResponses, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionErrors, RestoreEncounterTableRevisionResponses, RestoreLootTableRevisionData, RestoreLootTableRevisionErrors, RestoreLootTableRevisionResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RestoreSettlementRevisionData, RestoreSettlementRevisionErrors, RestoreSettlementRevisionResponses, RestoreShopRevisionData, RestoreShopRevisionErrors, RestoreShopRevisionResponses, RevokeAccessTokenData, RevokeAccessTokenErrors, RevokeAccessTokenResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SeeReleaseNoteData, SeeReleaseNoteErrors, SeeReleaseNoteResponses, SendAdminSignInLinkData, SendAdminSignInLinkErrors, SendAdminSignInLinkResponses, SendFriendRequestData, SendFriendRequestErrors, SendFriendRequestResponses, SendLiveCommandData, SendLiveCommandErrors, SendLiveCommandResponses, SendMessageData, SendMessageErrors, SendMessageResponses, SetAccountDisabledData, SetAccountDisabledErrors, SetAccountDisabledResponses, SetAccountPasswordData, SetAccountPasswordErrors, SetAccountPasswordResponses, SetAdminRoleData, SetAdminRoleErrors, SetAdminRoleResponses, SetDieData, SetDieErrors, SetDieResponses, SetNotificationPreferencesData, SetNotificationPreferencesErrors, SetNotificationPreferencesResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, SignInData, SignInErrors, SignInResponses, SignOutData, SignOutErrors, SignOutResponses, StartConversationData, StartConversationErrors, StartConversationResponses, StartOidcLinkData, StartOidcLinkErrors, StartOidcLinkResponses, StartOidcSignInData, StartOidcSignInErrors, StartOidcSignInResponses, StartSessionData, StartSessionErrors, StartSessionResponses, UnblockData, UnblockErrors, UnblockResponses, UndoChangeData, UndoChangeErrors, UndoChangeResponses, UnfriendData, UnfriendErrors, UnfriendResponses, UnlinkOidcData, UnlinkOidcErrors, UnlinkOidcResponses, UpdateAccountData, UpdateAccountErrors, UpdateAccountResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateEncounterPoolData, UpdateEncounterPoolErrors, UpdateEncounterPoolResponses, UpdateEncounterTableData, UpdateEncounterTableErrors, UpdateEncounterTableResponses, UpdateLootTableData, UpdateLootTableErrors, UpdateLootTableResponses, UpdateMapData, UpdateMapErrors, UpdateMapResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateMyCharacterData, UpdateMyCharacterErrors, UpdateMyCharacterResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses, UpdateSettlementData, UpdateSettlementErrors, UpdateSettlementResponses, UpdateShopData, UpdateShopErrors, UpdateShopResponses, UploadMapData, UploadMapErrors, UploadMapResponses, UseSignInLinkData, UseSignInLinkErrors, UseSignInLinkResponses } from './types.gen';
+import { zAcceptAccountInviteBody, zAcceptAccountInviteResponse, zAcceptFriendRequestPath, zAcceptFriendRequestResponse, zAcceptInviteBody, zAcceptInviteResponse, zBeginTwoStepResponse, zCancelFriendRequestPath, zCancelFriendRequestResponse, zClearTokenIconPath, zClearTokenIconResponse, zConfirmTwoStepBody, zConfirmTwoStepResponse, zCreateAccessTokenBody, zCreateAccessTokenResponse, zCreateAccountInviteBody, zCreateAccountInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateEncounterPoolBody, zCreateEncounterPoolPath, zCreateEncounterPoolResponse, zCreateEncounterTableBody, zCreateEncounterTablePath, zCreateEncounterTableResponse, zCreateInvitePath, zCreateInviteResponse, zCreateLootTableBody, zCreateLootTablePath, zCreateLootTableResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreateOidcAccountBody, zCreateOidcAccountResponse, zCreatePushSubscriptionBody, zCreatePushSubscriptionResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zCreateSettlementBody, zCreateSettlementPath, zCreateSettlementResponse, zCreateShopBody, zCreateShopPath, zCreateShopResponse, zDeclineFriendRequestBody, zDeclineFriendRequestPath, zDeclineFriendRequestResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteEncounterPoolPath, zDeleteEncounterPoolResponse, zDeleteEncounterTablePath, zDeleteEncounterTableResponse, zDeleteLootTablePath, zDeleteLootTableResponse, zDeleteNpcPath, zDeleteNpcResponse, zDeletePushSubscriptionPath, zDeletePushSubscriptionResponse, zDeleteSettlementPath, zDeleteSettlementResponse, zDeleteShopPath, zDeleteShopResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zDisableTwoStepBody, zDisableTwoStepResponse, zDraftReleaseNoteBody, zDraftReleaseNoteResponse, zEditReleaseNoteBody, zEditReleaseNotePath, zEditReleaseNoteResponse, zEndSessionPath, zEndSessionResponse, zFinishOidcBody, zFinishOidcResponse, zGetAccountHistoryResponse, zGetAccountResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAdminAccountPath, zGetAdminAccountResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMapImagePath, zGetMapImageQuery, zGetMapImageResponse, zGetMapPath, zGetMapResponse, zGetMeResponse, zGetMyCharacterPath, zGetMyCharacterResponse, zGetNotificationPreferencesResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetPushKeyResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSessionLogPath, zGetSessionLogQuery, zGetSessionLogResponse, zGetSessionPath, zGetSessionResponse, zGetSessionViewPath, zGetSessionViewResponse, zGetSignInMethodsResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zGetUnseenReleaseNoteResponse, zJoinCampaignBody, zJoinCampaignPath, zJoinCampaignResponse, zLinkOidcAccountBody, zLinkOidcAccountResponse, zListAccessTokensResponse, zListActivityPath, zListActivityResponse, zListAdminAccountsResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListConversationsResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEncounterChecksPath, zListEncounterChecksResponse, zListEncounterPoolRevisionsPath, zListEncounterPoolRevisionsResponse, zListEncounterPoolsPath, zListEncounterPoolsResponse, zListEncounterTableRevisionsPath, zListEncounterTableRevisionsResponse, zListEncounterTablesPath, zListEncounterTablesResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListFriendsResponse, zListInvitesPath, zListInvitesResponse, zListLocationsPath, zListLocationsResponse, zListLootTableRevisionsPath, zListLootTableRevisionsResponse, zListLootTablesPath, zListLootTablesResponse, zListMapsPath, zListMapsResponse, zListMentionablesQuery, zListMentionablesResponse, zListMessagesPath, zListMessagesQuery, zListMessagesResponse, zListMyCharactersResponse, zListNotificationsResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListReleaseNotesResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSessionsPath, zListSessionsResponse, zListSettlementRevisionsPath, zListSettlementRevisionsResponse, zListSettlementsPath, zListSettlementsResponse, zListShopRevisionsPath, zListShopRevisionsResponse, zListShopsPath, zListShopsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPassTwoStepBody, zPassTwoStepResponse, zPreviewAccountInviteBody, zPreviewAccountInviteResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zPreviewReachBody, zPreviewReachResponse, zPreviewSightBody, zPreviewSightResponse, zPublishReleaseNoteBody, zPublishReleaseNotePath, zPublishReleaseNoteResponse, zReadAllNotificationsResponse, zReadNotificationPath, zReadNotificationResponse, zRemoveMemberPath, zRemoveMemberResponse, zRequestSignInLinkBody, zRerollStockPath, zRerollStockResponse, zResetAccountTwoStepPath, zResetAccountTwoStepResponse, zResetRecoveryCodesBody, zResetRecoveryCodesResponse, zRestoreEncounterPoolRevisionPath, zRestoreEncounterPoolRevisionResponse, zRestoreEncounterTableRevisionPath, zRestoreEncounterTableRevisionResponse, zRestoreLootTableRevisionPath, zRestoreLootTableRevisionResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRestoreSettlementRevisionPath, zRestoreSettlementRevisionResponse, zRestoreShopRevisionPath, zRestoreShopRevisionResponse, zRevokeAccessTokenPath, zRevokeAccessTokenResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSeeReleaseNotePath, zSeeReleaseNoteResponse, zSendAdminSignInLinkPath, zSendFriendRequestBody, zSendLiveCommandBody, zSendLiveCommandPath, zSendLiveCommandResponse, zSendMessageBody, zSendMessagePath, zSendMessageResponse, zSetAccountDisabledBody, zSetAccountDisabledPath, zSetAccountDisabledResponse, zSetAccountPasswordBody, zSetAccountPasswordResponse, zSetAdminRoleBody, zSetAdminRolePath, zSetAdminRoleResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetNotificationPreferencesBody, zSetNotificationPreferencesResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zSignInBody, zSignInResponse, zSignOutResponse, zStartConversationBody, zStartConversationResponse, zStartOidcLinkResponse, zStartOidcSignInResponse, zStartSessionPath, zStartSessionResponse, zUnblockPath, zUnblockResponse, zUndoChangePath, zUndoChangeResponse, zUnfriendPath, zUnfriendResponse, zUnlinkOidcResponse, zUpdateAccountBody, zUpdateAccountResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateEncounterPoolBody, zUpdateEncounterPoolPath, zUpdateEncounterPoolResponse, zUpdateEncounterTableBody, zUpdateEncounterTablePath, zUpdateEncounterTableResponse, zUpdateLootTableBody, zUpdateLootTablePath, zUpdateLootTableResponse, zUpdateMapBody, zUpdateMapPath, zUpdateMapResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateMyCharacterBody, zUpdateMyCharacterPath, zUpdateMyCharacterResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse, zUpdateSettlementBody, zUpdateSettlementPath, zUpdateSettlementResponse, zUpdateShopBody, zUpdateShopPath, zUpdateShopResponse, zUploadMapBody, zUploadMapPath, zUploadMapQuery, zUploadMapResponse, zUseSignInLinkBody, zUseSignInLinkResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -1813,6 +1813,1106 @@ export const getStatus = <ThrowOnError extends boolean = false>(options?: Option
     responseValidator: async (data) => await zGetStatusResponse.parseAsync(data),
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/status',
+    ...options
+});
+
+/**
+ * Invite someone to set up an Account
+ *
+ * An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
+ */
+export const createAccountInvite = <ThrowOnError extends boolean = false>(options: Options<CreateAccountInviteData, ThrowOnError>): RequestResult<CreateAccountInviteResponses, CreateAccountInviteErrors, ThrowOnError> => (options.client ?? client).post<CreateAccountInviteResponses, CreateAccountInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateAccountInviteBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateAccountInviteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/account-invites',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Check an Account Invite
+ *
+ * Whether an invite link can still set up an Account; gone once used or expired.
+ */
+export const previewAccountInvite = <ThrowOnError extends boolean = false>(options: Options<PreviewAccountInviteData, ThrowOnError>): RequestResult<PreviewAccountInviteResponses, PreviewAccountInviteErrors, ThrowOnError> => (options.client ?? client).post<PreviewAccountInviteResponses, PreviewAccountInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zPreviewAccountInviteBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zPreviewAccountInviteResponse.parseAsync(data),
+    url: '/api/v1/account-invites/preview',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set up an Account from an invite
+ *
+ * Creates the Account the invite was for and signs it in on this device.
+ */
+export const acceptAccountInvite = <ThrowOnError extends boolean = false>(options: Options<AcceptAccountInviteData, ThrowOnError>): RequestResult<AcceptAccountInviteResponses, AcceptAccountInviteErrors, ThrowOnError> => (options.client ?? client).post<AcceptAccountInviteResponses, AcceptAccountInviteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zAcceptAccountInviteBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zAcceptAccountInviteResponse.parseAsync(data),
+    url: '/api/v1/account-invites/accept',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sign in with a Username and password
+ *
+ * Signs the Account in on this device. Every failure answers the same.
+ */
+export const signIn = <ThrowOnError extends boolean = false>(options: Options<SignInData, ThrowOnError>): RequestResult<SignInResponses, SignInErrors, ThrowOnError> => (options.client ?? client).post<SignInResponses, SignInErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSignInBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSignInResponse.parseAsync(data),
+    url: '/api/v1/sign-in',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Answer the second step
+ *
+ * Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes and five wrong codes.
+ */
+export const passTwoStep = <ThrowOnError extends boolean = false>(options: Options<PassTwoStepData, ThrowOnError>): RequestResult<PassTwoStepResponses, PassTwoStepErrors, ThrowOnError> => (options.client ?? client).post<PassTwoStepResponses, PassTwoStepErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zPassTwoStepBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zPassTwoStepResponse.parseAsync(data),
+    url: '/api/v1/sign-in/two-step',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sign out
+ *
+ * Ends this device's session and clears its cookie.
+ */
+export const signOut = <ThrowOnError extends boolean = false>(options?: Options<SignOutData, ThrowOnError>): RequestResult<SignOutResponses, SignOutErrors, ThrowOnError> => (options?.client ?? client).post<SignOutResponses, SignOutErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSignOutResponse.parseAsync(data),
+    url: '/api/v1/sign-out',
+    ...options
+});
+
+/**
+ * Email a sign-in link
+ *
+ * For a forgotten password. Answers the same whether or not an Account has the email.
+ */
+export const requestSignInLink = <ThrowOnError extends boolean = false>(options: Options<RequestSignInLinkData, ThrowOnError>): RequestResult<RequestSignInLinkResponses, RequestSignInLinkErrors, ThrowOnError> => (options.client ?? client).post<RequestSignInLinkResponses, RequestSignInLinkErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zRequestSignInLinkBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    url: '/api/v1/sign-in-links',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Sign in with an emailed link
+ *
+ * Signs the Account in on this device; a link works once, within 30 minutes.
+ */
+export const useSignInLink = <ThrowOnError extends boolean = false>(options: Options<UseSignInLinkData, ThrowOnError>): RequestResult<UseSignInLinkResponses, UseSignInLinkErrors, ThrowOnError> => (options.client ?? client).post<UseSignInLinkResponses, UseSignInLinkErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUseSignInLinkBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUseSignInLinkResponse.parseAsync(data),
+    url: '/api/v1/sign-in-links/use',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List the sign-in methods
+ *
+ * Which external sign-in, if any, the sign-in page offers beside a password.
+ */
+export const getSignInMethods = <ThrowOnError extends boolean = false>(options?: Options<GetSignInMethodsData, ThrowOnError>): RequestResult<GetSignInMethodsResponses, GetSignInMethodsErrors, ThrowOnError> => (options?.client ?? client).get<GetSignInMethodsResponses, GetSignInMethodsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetSignInMethodsResponse.parseAsync(data),
+    url: '/api/v1/sign-in-methods',
+    ...options
+});
+
+/**
+ * Start signing in with the external login
+ *
+ * Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+ */
+export const startOidcSignIn = <ThrowOnError extends boolean = false>(options?: Options<StartOidcSignInData, ThrowOnError>): RequestResult<StartOidcSignInResponses, StartOidcSignInErrors, ThrowOnError> => (options?.client ?? client).post<StartOidcSignInResponses, StartOidcSignInErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zStartOidcSignInResponse.parseAsync(data),
+    url: '/api/v1/oidc/sign-ins',
+    ...options
+});
+
+/**
+ * Finish an external sign-in
+ *
+ * Takes the code and state the provider sent back. Signs in a linked login, links the login when the Account page started it, or leaves it waiting for an Account.
+ */
+export const finishOidc = <ThrowOnError extends boolean = false>(options: Options<FinishOidcData, ThrowOnError>): RequestResult<FinishOidcResponses, FinishOidcErrors, ThrowOnError> => (options.client ?? client).post<FinishOidcResponses, FinishOidcErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zFinishOidcBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zFinishOidcResponse.parseAsync(data),
+    url: '/api/v1/oidc/callback',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create an Account for an external login
+ *
+ * Sets up an Account for a login no Account has yet, and signs it in.
+ */
+export const createOidcAccount = <ThrowOnError extends boolean = false>(options: Options<CreateOidcAccountData, ThrowOnError>): RequestResult<CreateOidcAccountResponses, CreateOidcAccountErrors, ThrowOnError> => (options.client ?? client).post<CreateOidcAccountResponses, CreateOidcAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateOidcAccountBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateOidcAccountResponse.parseAsync(data),
+    url: '/api/v1/oidc/accounts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Link an external login to an existing Account
+ *
+ * Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+ */
+export const linkOidcAccount = <ThrowOnError extends boolean = false>(options: Options<LinkOidcAccountData, ThrowOnError>): RequestResult<LinkOidcAccountResponses, LinkOidcAccountErrors, ThrowOnError> => (options.client ?? client).post<LinkOidcAccountResponses, LinkOidcAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zLinkOidcAccountBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zLinkOidcAccountResponse.parseAsync(data),
+    url: '/api/v1/oidc/links',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get my Account
+ *
+ * The Account the caller is signed in as.
+ */
+export const getAccount = <ThrowOnError extends boolean = false>(options?: Options<GetAccountData, ThrowOnError>): RequestResult<GetAccountResponses, GetAccountErrors, ThrowOnError> => (options?.client ?? client).get<GetAccountResponses, GetAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetAccountResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account',
+    ...options
+});
+
+/**
+ * Change my profile
+ *
+ * Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays read-only.
+ */
+export const updateAccount = <ThrowOnError extends boolean = false>(options: Options<UpdateAccountData, ThrowOnError>): RequestResult<UpdateAccountResponses, UpdateAccountErrors, ThrowOnError> => (options.client ?? client).put<UpdateAccountResponses, UpdateAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUpdateAccountBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUpdateAccountResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set my password
+ *
+ * Replaces the signed-in Account's password, for example after signing in with an emailed link.
+ */
+export const setAccountPassword = <ThrowOnError extends boolean = false>(options: Options<SetAccountPasswordData, ThrowOnError>): RequestResult<SetAccountPasswordResponses, SetAccountPasswordErrors, ThrowOnError> => (options.client ?? client).put<SetAccountPasswordResponses, SetAccountPasswordErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSetAccountPasswordBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetAccountPasswordResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/password',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Unlink the external login
+ *
+ * Removes the linked login; the Account stays. An Account without a password keeps its login.
+ */
+export const unlinkOidc = <ThrowOnError extends boolean = false>(options?: Options<UnlinkOidcData, ThrowOnError>): RequestResult<UnlinkOidcResponses, UnlinkOidcErrors, ThrowOnError> => (options?.client ?? client).delete<UnlinkOidcResponses, UnlinkOidcErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUnlinkOidcResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/oidc-link',
+    ...options
+});
+
+/**
+ * Start linking the external login
+ *
+ * Returns where to send the browser to link a login to the signed-in Account.
+ */
+export const startOidcLink = <ThrowOnError extends boolean = false>(options?: Options<StartOidcLinkData, ThrowOnError>): RequestResult<StartOidcLinkResponses, StartOidcLinkErrors, ThrowOnError> => (options?.client ?? client).post<StartOidcLinkResponses, StartOidcLinkErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zStartOidcLinkResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/oidc-link',
+    ...options
+});
+
+/**
+ * Start two-step sign-in
+ *
+ * Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step on.
+ */
+export const beginTwoStep = <ThrowOnError extends boolean = false>(options?: Options<BeginTwoStepData, ThrowOnError>): RequestResult<BeginTwoStepResponses, BeginTwoStepErrors, ThrowOnError> => (options?.client ?? client).post<BeginTwoStepResponses, BeginTwoStepErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zBeginTwoStepResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/two-step',
+    ...options
+});
+
+/**
+ * Turn two-step on
+ *
+ * Checks a first code from the app and returns the recovery codes, shown only now.
+ */
+export const confirmTwoStep = <ThrowOnError extends boolean = false>(options: Options<ConfirmTwoStepData, ThrowOnError>): RequestResult<ConfirmTwoStepResponses, ConfirmTwoStepErrors, ThrowOnError> => (options.client ?? client).post<ConfirmTwoStepResponses, ConfirmTwoStepErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zConfirmTwoStepBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zConfirmTwoStepResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/two-step/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Turn two-step off
+ *
+ * Needs a current code or a recovery code; the recovery codes go too.
+ */
+export const disableTwoStep = <ThrowOnError extends boolean = false>(options: Options<DisableTwoStepData, ThrowOnError>): RequestResult<DisableTwoStepResponses, DisableTwoStepErrors, ThrowOnError> => (options.client ?? client).post<DisableTwoStepResponses, DisableTwoStepErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zDisableTwoStepBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zDisableTwoStepResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/two-step/disable',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Replace the recovery codes
+ *
+ * Needs a current code; the old recovery codes stop working.
+ */
+export const resetRecoveryCodes = <ThrowOnError extends boolean = false>(options: Options<ResetRecoveryCodesData, ThrowOnError>): RequestResult<ResetRecoveryCodesResponses, ResetRecoveryCodesErrors, ThrowOnError> => (options.client ?? client).post<ResetRecoveryCodesResponses, ResetRecoveryCodesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zResetRecoveryCodesBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zResetRecoveryCodesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/two-step/recovery-codes',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List my Access Tokens
+ *
+ * The signed-in Account's live Access Tokens, newest first, with when each was last used.
+ */
+export const listAccessTokens = <ThrowOnError extends boolean = false>(options?: Options<ListAccessTokensData, ThrowOnError>): RequestResult<ListAccessTokensResponses, ListAccessTokensErrors, ThrowOnError> => (options?.client ?? client).get<ListAccessTokensResponses, ListAccessTokensErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListAccessTokensResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/access-tokens',
+    ...options
+});
+
+/**
+ * Mint an Access Token
+ *
+ * A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only now.
+ */
+export const createAccessToken = <ThrowOnError extends boolean = false>(options: Options<CreateAccessTokenData, ThrowOnError>): RequestResult<CreateAccessTokenResponses, CreateAccessTokenErrors, ThrowOnError> => (options.client ?? client).post<CreateAccessTokenResponses, CreateAccessTokenErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateAccessTokenBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateAccessTokenResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/access-tokens',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Revoke an Access Token
+ *
+ * The token stops working at once.
+ */
+export const revokeAccessToken = <ThrowOnError extends boolean = false>(options: Options<RevokeAccessTokenData, ThrowOnError>): RequestResult<RevokeAccessTokenResponses, RevokeAccessTokenErrors, ThrowOnError> => (options.client ?? client).delete<RevokeAccessTokenResponses, RevokeAccessTokenErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zRevokeAccessTokenPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zRevokeAccessTokenResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/access-tokens/{accessId}',
+    ...options
+});
+
+/**
+ * List every Account
+ *
+ * Every Account with its status, and every Invite nobody has used yet. For Admins.
+ */
+export const listAdminAccounts = <ThrowOnError extends boolean = false>(options?: Options<ListAdminAccountsData, ThrowOnError>): RequestResult<ListAdminAccountsResponses, ListAdminAccountsErrors, ThrowOnError> => (options?.client ?? client).get<ListAdminAccountsResponses, ListAdminAccountsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListAdminAccountsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/accounts',
+    ...options
+});
+
+/**
+ * Read an Account for an Admin
+ *
+ * How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+ */
+export const getAdminAccount = <ThrowOnError extends boolean = false>(options: Options<GetAdminAccountData, ThrowOnError>): RequestResult<GetAdminAccountResponses, GetAdminAccountErrors, ThrowOnError> => (options.client ?? client).get<GetAdminAccountResponses, GetAdminAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetAdminAccountPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetAdminAccountResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/accounts/{accountId}',
+    ...options
+});
+
+/**
+ * Email an Account a sign-in link
+ *
+ * Sends the holder a link that signs them in once, within 30 minutes.
+ */
+export const sendAdminSignInLink = <ThrowOnError extends boolean = false>(options: Options<SendAdminSignInLinkData, ThrowOnError>): RequestResult<SendAdminSignInLinkResponses, SendAdminSignInLinkErrors, ThrowOnError> => (options.client ?? client).post<SendAdminSignInLinkResponses, SendAdminSignInLinkErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zSendAdminSignInLinkPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/accounts/{accountId}/sign-in-link',
+    ...options
+});
+
+/**
+ * Make an Account an Admin or not
+ *
+ * Nobody removes their own Admin role.
+ */
+export const setAdminRole = <ThrowOnError extends boolean = false>(options: Options<SetAdminRoleData, ThrowOnError>): RequestResult<SetAdminRoleResponses, SetAdminRoleErrors, ThrowOnError> => (options.client ?? client).put<SetAdminRoleResponses, SetAdminRoleErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSetAdminRoleBody,
+        path: zSetAdminRolePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetAdminRoleResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/accounts/{accountId}/admin',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Disable an Account or enable it
+ *
+ * Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+ */
+export const setAccountDisabled = <ThrowOnError extends boolean = false>(options: Options<SetAccountDisabledData, ThrowOnError>): RequestResult<SetAccountDisabledResponses, SetAccountDisabledErrors, ThrowOnError> => (options.client ?? client).put<SetAccountDisabledResponses, SetAccountDisabledErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSetAccountDisabledBody,
+        path: zSetAccountDisabledPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetAccountDisabledResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/accounts/{accountId}/disabled',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Reset an Account's two-step
+ *
+ * Turns two-step off for a holder who lost their phone and recovery codes.
+ */
+export const resetAccountTwoStep = <ThrowOnError extends boolean = false>(options: Options<ResetAccountTwoStepData, ThrowOnError>): RequestResult<ResetAccountTwoStepResponses, ResetAccountTwoStepErrors, ThrowOnError> => (options.client ?? client).post<ResetAccountTwoStepResponses, ResetAccountTwoStepErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zResetAccountTwoStepPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zResetAccountTwoStepResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/accounts/{accountId}/two-step/reset',
+    ...options
+});
+
+/**
+ * Read my Account history
+ *
+ * What happened to the signed-in Account and who did it, newest first.
+ */
+export const getAccountHistory = <ThrowOnError extends boolean = false>(options?: Options<GetAccountHistoryData, ThrowOnError>): RequestResult<GetAccountHistoryResponses, GetAccountHistoryErrors, ThrowOnError> => (options?.client ?? client).get<GetAccountHistoryResponses, GetAccountHistoryErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetAccountHistoryResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/history',
+    ...options
+});
+
+/**
+ * List my Characters
+ *
+ * The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.
+ */
+export const listMyCharacters = <ThrowOnError extends boolean = false>(options?: Options<ListMyCharactersData, ThrowOnError>): RequestResult<ListMyCharactersResponses, ListMyCharactersErrors, ThrowOnError> => (options?.client ?? client).get<ListMyCharactersResponses, ListMyCharactersErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListMyCharactersResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/characters',
+    ...options
+});
+
+/**
+ * Read one of my Characters
+ *
+ * A Character the signed-in Account owns; anyone else's is not found.
+ */
+export const getMyCharacter = <ThrowOnError extends boolean = false>(options: Options<GetMyCharacterData, ThrowOnError>): RequestResult<GetMyCharacterResponses, GetMyCharacterErrors, ThrowOnError> => (options.client ?? client).get<GetMyCharacterResponses, GetMyCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zGetMyCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetMyCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/characters/{characterId}',
+    ...options
+});
+
+/**
+ * Change a Character
+ *
+ * Sets a Character's name and Backstory; the name shows in every Campaign it plays in.
+ */
+export const updateMyCharacter = <ThrowOnError extends boolean = false>(options: Options<UpdateMyCharacterData, ThrowOnError>): RequestResult<UpdateMyCharacterResponses, UpdateMyCharacterErrors, ThrowOnError> => (options.client ?? client).put<UpdateMyCharacterResponses, UpdateMyCharacterErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUpdateMyCharacterBody,
+        path: zUpdateMyCharacterPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUpdateMyCharacterResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/characters/{characterId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Bring a Character into another Campaign
+ *
+ * Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against that Campaign's rules and its own progress from first level.
+ */
+export const joinCampaign = <ThrowOnError extends boolean = false>(options: Options<JoinCampaignData, ThrowOnError>): RequestResult<JoinCampaignResponses, JoinCampaignErrors, ThrowOnError> => (options.client ?? client).post<JoinCampaignResponses, JoinCampaignErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zJoinCampaignBody,
+        path: zJoinCampaignPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zJoinCampaignResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/characters/{characterId}/campaigns',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List my Friends
+ *
+ * The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+ */
+export const listFriends = <ThrowOnError extends boolean = false>(options?: Options<ListFriendsData, ThrowOnError>): RequestResult<ListFriendsResponses, ListFriendsErrors, ThrowOnError> => (options?.client ?? client).get<ListFriendsResponses, ListFriendsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListFriendsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/friends',
+    ...options
+});
+
+/**
+ * End a friendship
+ *
+ * The two are no longer Friends.
+ */
+export const unfriend = <ThrowOnError extends boolean = false>(options: Options<UnfriendData, ThrowOnError>): RequestResult<UnfriendResponses, UnfriendErrors, ThrowOnError> => (options.client ?? client).delete<UnfriendResponses, UnfriendErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zUnfriendPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUnfriendResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/friends/{accountId}',
+    ...options
+});
+
+/**
+ * Send a Friend request
+ *
+ * Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The answer is the same whether or not they blocked the sender.
+ */
+export const sendFriendRequest = <ThrowOnError extends boolean = false>(options: Options<SendFriendRequestData, ThrowOnError>): RequestResult<SendFriendRequestResponses, SendFriendRequestErrors, ThrowOnError> => (options.client ?? client).post<SendFriendRequestResponses, SendFriendRequestErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSendFriendRequestBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/friend-requests',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Withdraw a Friend request
+ *
+ * Withdraws a request the signed-in Account sent.
+ */
+export const cancelFriendRequest = <ThrowOnError extends boolean = false>(options: Options<CancelFriendRequestData, ThrowOnError>): RequestResult<CancelFriendRequestResponses, CancelFriendRequestErrors, ThrowOnError> => (options.client ?? client).delete<CancelFriendRequestResponses, CancelFriendRequestErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zCancelFriendRequestPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCancelFriendRequestResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/friend-requests/{requestId}',
+    ...options
+});
+
+/**
+ * Accept a Friend request
+ *
+ * The two are Friends from now on.
+ */
+export const acceptFriendRequest = <ThrowOnError extends boolean = false>(options: Options<AcceptFriendRequestData, ThrowOnError>): RequestResult<AcceptFriendRequestResponses, AcceptFriendRequestErrors, ThrowOnError> => (options.client ?? client).post<AcceptFriendRequestResponses, AcceptFriendRequestErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zAcceptFriendRequestPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zAcceptFriendRequestResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/friend-requests/{requestId}/accept',
+    ...options
+});
+
+/**
+ * Decline a Friend request
+ *
+ * Turns the request down; with block, the sender's later requests never show.
+ */
+export const declineFriendRequest = <ThrowOnError extends boolean = false>(options: Options<DeclineFriendRequestData, ThrowOnError>): RequestResult<DeclineFriendRequestResponses, DeclineFriendRequestErrors, ThrowOnError> => (options.client ?? client).post<DeclineFriendRequestResponses, DeclineFriendRequestErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zDeclineFriendRequestBody,
+        path: zDeclineFriendRequestPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zDeclineFriendRequestResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/friend-requests/{requestId}/decline',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Unblock an Account
+ *
+ * Lets the Account's Friend requests through again.
+ */
+export const unblock = <ThrowOnError extends boolean = false>(options: Options<UnblockData, ThrowOnError>): RequestResult<UnblockResponses, UnblockErrors, ThrowOnError> => (options.client ?? client).delete<UnblockResponses, UnblockErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zUnblockPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUnblockResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/blocks/{accountId}',
+    ...options
+});
+
+/**
+ * List my Conversations
+ *
+ * The signed-in Account's Conversations, newest first, with how many messages each has unread.
+ */
+export const listConversations = <ThrowOnError extends boolean = false>(options?: Options<ListConversationsData, ThrowOnError>): RequestResult<ListConversationsResponses, ListConversationsErrors, ThrowOnError> => (options?.client ?? client).get<ListConversationsResponses, ListConversationsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListConversationsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/conversations',
+    ...options
+});
+
+/**
+ * Start a Conversation
+ *
+ * Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to ten.
+ */
+export const startConversation = <ThrowOnError extends boolean = false>(options: Options<StartConversationData, ThrowOnError>): RequestResult<StartConversationResponses, StartConversationErrors, ThrowOnError> => (options.client ?? client).post<StartConversationResponses, StartConversationErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zStartConversationBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zStartConversationResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/conversations',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Read a Conversation
+ *
+ * A page of messages, newest first; reading the newest page marks the Conversation read. Only members read it.
+ */
+export const listMessages = <ThrowOnError extends boolean = false>(options: Options<ListMessagesData, ThrowOnError>): RequestResult<ListMessagesResponses, ListMessagesErrors, ThrowOnError> => (options.client ?? client).get<ListMessagesResponses, ListMessagesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zListMessagesPath,
+        query: zListMessagesQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListMessagesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/conversations/{conversationId}/messages',
+    ...options
+});
+
+/**
+ * Send a message
+ *
+ * Posts a message, with Mentions of game content the sender may open.
+ */
+export const sendMessage = <ThrowOnError extends boolean = false>(options: Options<SendMessageData, ThrowOnError>): RequestResult<SendMessageResponses, SendMessageErrors, ThrowOnError> => (options.client ?? client).post<SendMessageResponses, SendMessageErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSendMessageBody,
+        path: zSendMessagePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSendMessageResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/conversations/{conversationId}/messages',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Find something to mention
+ *
+ * Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+ */
+export const listMentionables = <ThrowOnError extends boolean = false>(options?: Options<ListMentionablesData, ThrowOnError>): RequestResult<ListMentionablesResponses, ListMentionablesErrors, ThrowOnError> => (options?.client ?? client).get<ListMentionablesResponses, ListMentionablesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: zListMentionablesQuery.optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListMentionablesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/mentionables',
+    ...options
+});
+
+/**
+ * Read my Notifications
+ *
+ * The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+ */
+export const listNotifications = <ThrowOnError extends boolean = false>(options?: Options<ListNotificationsData, ThrowOnError>): RequestResult<ListNotificationsResponses, ListNotificationsErrors, ThrowOnError> => (options?.client ?? client).get<ListNotificationsResponses, ListNotificationsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListNotificationsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/notifications',
+    ...options
+});
+
+/**
+ * Mark every Notification read
+ *
+ * Clears the bell.
+ */
+export const readAllNotifications = <ThrowOnError extends boolean = false>(options?: Options<ReadAllNotificationsData, ThrowOnError>): RequestResult<ReadAllNotificationsResponses, ReadAllNotificationsErrors, ThrowOnError> => (options?.client ?? client).post<ReadAllNotificationsResponses, ReadAllNotificationsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zReadAllNotificationsResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/notifications/read',
+    ...options
+});
+
+/**
+ * Mark a Notification read
+ *
+ * Marks one Notification read, as acting on it does.
+ */
+export const readNotification = <ThrowOnError extends boolean = false>(options: Options<ReadNotificationData, ThrowOnError>): RequestResult<ReadNotificationResponses, ReadNotificationErrors, ThrowOnError> => (options.client ?? client).post<ReadNotificationResponses, ReadNotificationErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zReadNotificationPath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zReadNotificationResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/notifications/{notificationId}/read',
+    ...options
+});
+
+/**
+ * Read my Notification preferences
+ *
+ * Which kinds reach the signed-in Account in app, on its devices and by email.
+ */
+export const getNotificationPreferences = <ThrowOnError extends boolean = false>(options?: Options<GetNotificationPreferencesData, ThrowOnError>): RequestResult<GetNotificationPreferencesResponses, GetNotificationPreferencesErrors, ThrowOnError> => (options?.client ?? client).get<GetNotificationPreferencesResponses, GetNotificationPreferencesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetNotificationPreferencesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/notification-preferences',
+    ...options
+});
+
+/**
+ * Change my Notification preferences
+ *
+ * Sets the channels for each kind given; security Notifications always show in app.
+ */
+export const setNotificationPreferences = <ThrowOnError extends boolean = false>(options: Options<SetNotificationPreferencesData, ThrowOnError>): RequestResult<SetNotificationPreferencesResponses, SetNotificationPreferencesErrors, ThrowOnError> => (options.client ?? client).put<SetNotificationPreferencesResponses, SetNotificationPreferencesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zSetNotificationPreferencesBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSetNotificationPreferencesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/notification-preferences',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Release Notes
+ *
+ * Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+ */
+export const listReleaseNotes = <ThrowOnError extends boolean = false>(options?: Options<ListReleaseNotesData, ThrowOnError>): RequestResult<ListReleaseNotesResponses, ListReleaseNotesErrors, ThrowOnError> => (options?.client ?? client).get<ListReleaseNotesResponses, ListReleaseNotesErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zListReleaseNotesResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/release-notes',
+    ...options
+});
+
+/**
+ * Draft a Release Note
+ *
+ * Starts the one Release Note of a full release, listing the features its changelog says it added. For Admins.
+ */
+export const draftReleaseNote = <ThrowOnError extends boolean = false>(options: Options<DraftReleaseNoteData, ThrowOnError>): RequestResult<DraftReleaseNoteResponses, DraftReleaseNoteErrors, ThrowOnError> => (options.client ?? client).post<DraftReleaseNoteResponses, DraftReleaseNoteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zDraftReleaseNoteBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zDraftReleaseNoteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/release-notes',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Edit a Release Note
+ *
+ * Changes its words until it has been announced. For Admins.
+ */
+export const editReleaseNote = <ThrowOnError extends boolean = false>(options: Options<EditReleaseNoteData, ThrowOnError>): RequestResult<EditReleaseNoteResponses, EditReleaseNoteErrors, ThrowOnError> => (options.client ?? client).put<EditReleaseNoteResponses, EditReleaseNoteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zEditReleaseNoteBody,
+        path: zEditReleaseNotePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zEditReleaseNoteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/release-notes/{noteId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Publish or schedule a Release Note
+ *
+ * Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+ */
+export const publishReleaseNote = <ThrowOnError extends boolean = false>(options: Options<PublishReleaseNoteData, ThrowOnError>): RequestResult<PublishReleaseNoteResponses, PublishReleaseNoteErrors, ThrowOnError> => (options.client ?? client).post<PublishReleaseNoteResponses, PublishReleaseNoteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zPublishReleaseNoteBody,
+        path: zPublishReleaseNotePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zPublishReleaseNoteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/admin/release-notes/{noteId}/publish',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Read the Release Note I have not seen
+ *
+ * The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+ */
+export const getUnseenReleaseNote = <ThrowOnError extends boolean = false>(options?: Options<GetUnseenReleaseNoteData, ThrowOnError>): RequestResult<GetUnseenReleaseNoteResponses, GetUnseenReleaseNoteErrors, ThrowOnError> => (options?.client ?? client).get<GetUnseenReleaseNoteResponses, GetUnseenReleaseNoteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetUnseenReleaseNoteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/release-notes/unseen',
+    ...options
+});
+
+/**
+ * Mark a Release Note seen
+ *
+ * It no longer shows on the Dashboard.
+ */
+export const seeReleaseNote = <ThrowOnError extends boolean = false>(options: Options<SeeReleaseNoteData, ThrowOnError>): RequestResult<SeeReleaseNoteResponses, SeeReleaseNoteErrors, ThrowOnError> => (options.client ?? client).post<SeeReleaseNoteResponses, SeeReleaseNoteErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: zSeeReleaseNotePath,
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zSeeReleaseNoteResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/release-notes/{noteId}/seen',
     ...options
 });
 

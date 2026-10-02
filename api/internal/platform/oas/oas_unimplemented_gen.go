@@ -13,6 +13,24 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
+// AcceptAccountInvite implements acceptAccountInvite operation.
+//
+// Creates the Account the invite was for and signs it in on this device.
+//
+// POST /api/v1/account-invites/accept
+func (UnimplementedHandler) AcceptAccountInvite(ctx context.Context, req *AccountSetup) (r AcceptAccountInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// AcceptFriendRequest implements acceptFriendRequest operation.
+//
+// The two are Friends from now on.
+//
+// POST /api/v1/friend-requests/{requestId}/accept
+func (UnimplementedHandler) AcceptFriendRequest(ctx context.Context, params AcceptFriendRequestParams) (r AcceptFriendRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // AcceptInvite implements acceptInvite operation.
 //
 // Joins the caller to the Campaign as a Player. A Member keeps their role.
@@ -22,12 +40,60 @@ func (UnimplementedHandler) AcceptInvite(ctx context.Context, req *InviteAccept)
 	return r, ht.ErrNotImplemented
 }
 
+// BeginTwoStep implements beginTwoStep operation.
+//
+// Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step
+// on.
+//
+// POST /api/v1/account/two-step
+func (UnimplementedHandler) BeginTwoStep(ctx context.Context) (r BeginTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CancelFriendRequest implements cancelFriendRequest operation.
+//
+// Withdraws a request the signed-in Account sent.
+//
+// DELETE /api/v1/friend-requests/{requestId}
+func (UnimplementedHandler) CancelFriendRequest(ctx context.Context, params CancelFriendRequestParams) (r CancelFriendRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ClearTokenIcon implements clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 //
 // DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (r ClearTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ConfirmTwoStep implements confirmTwoStep operation.
+//
+// Checks a first code from the app and returns the recovery codes, shown only now.
+//
+// POST /api/v1/account/two-step/confirm
+func (UnimplementedHandler) ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (r ConfirmTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateAccessToken implements createAccessToken operation.
+//
+// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
+// now.
+//
+// POST /api/v1/account/access-tokens
+func (UnimplementedHandler) CreateAccessToken(ctx context.Context, req *AccessTokenRequest) (r CreateAccessTokenRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateAccountInvite implements createAccountInvite operation.
+//
+// An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite
+// another Admin.
+//
+// POST /api/v1/admin/account-invites
+func (UnimplementedHandler) CreateAccountInvite(ctx context.Context, req *AccountInviteRequest) (r CreateAccountInviteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -94,6 +160,15 @@ func (UnimplementedHandler) CreateNpc(ctx context.Context, req *NpcInput, params
 	return r, ht.ErrNotImplemented
 }
 
+// CreateOidcAccount implements createOidcAccount operation.
+//
+// Sets up an Account for a login no Account has yet, and signs it in.
+//
+// POST /api/v1/oidc/accounts
+func (UnimplementedHandler) CreateOidcAccount(ctx context.Context, req *OidcAccountSetup) (r CreateOidcAccountRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreatePushSubscription implements createPushSubscription operation.
 //
 // Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
@@ -128,6 +203,15 @@ func (UnimplementedHandler) CreateSettlement(ctx context.Context, req *Settlemen
 //
 // POST /api/v1/campaigns/{campaignId}/shops
 func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, params CreateShopParams) (r CreateShopRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeclineFriendRequest implements declineFriendRequest operation.
+//
+// Turns the request down; with block, the sender's later requests never show.
+//
+// POST /api/v1/friend-requests/{requestId}/decline
+func (UnimplementedHandler) DeclineFriendRequest(ctx context.Context, req *FriendRequestDecline, params DeclineFriendRequestParams) (r DeclineFriendRequestRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -212,6 +296,34 @@ func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpc
 	return r, ht.ErrNotImplemented
 }
 
+// DisableTwoStep implements disableTwoStep operation.
+//
+// Needs a current code or a recovery code; the recovery codes go too.
+//
+// POST /api/v1/account/two-step/disable
+func (UnimplementedHandler) DisableTwoStep(ctx context.Context, req *TwoStepCode) (r DisableTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DraftReleaseNote implements draftReleaseNote operation.
+//
+// Starts the one Release Note of a full release, listing the features its changelog says it added. For
+// Admins.
+//
+// POST /api/v1/admin/release-notes
+func (UnimplementedHandler) DraftReleaseNote(ctx context.Context, req *ReleaseNoteDraft) (r DraftReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// EditReleaseNote implements editReleaseNote operation.
+//
+// Changes its words until it has been announced. For Admins.
+//
+// PUT /api/v1/admin/release-notes/{noteId}
+func (UnimplementedHandler) EditReleaseNote(ctx context.Context, req *ReleaseNoteChange, params EditReleaseNoteParams) (r EditReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // EndSession implements endSession operation.
 //
 // Ends a live Session and disconnects everyone. DM only.
@@ -221,12 +333,49 @@ func (UnimplementedHandler) EndSession(ctx context.Context, params EndSessionPar
 	return r, ht.ErrNotImplemented
 }
 
+// FinishOidc implements finishOidc operation.
+//
+// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+// Account page started it, or leaves it waiting for an Account.
+//
+// POST /api/v1/oidc/callback
+func (UnimplementedHandler) FinishOidc(ctx context.Context, req *OidcCallback, params FinishOidcParams) (r FinishOidcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAccount implements getAccount operation.
+//
+// The Account the caller is signed in as.
+//
+// GET /api/v1/account
+func (UnimplementedHandler) GetAccount(ctx context.Context) (r GetAccountRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAccountHistory implements getAccountHistory operation.
+//
+// What happened to the signed-in Account and who did it, newest first.
+//
+// GET /api/v1/account/history
+func (UnimplementedHandler) GetAccountHistory(ctx context.Context) (r GetAccountHistoryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetActionLog implements getActionLog operation.
 //
 // The Campaign's recent Actions with their seeds. DM only.
 //
 // GET /api/v1/campaigns/{campaignId}/log
 func (UnimplementedHandler) GetActionLog(ctx context.Context, params GetActionLogParams) (r GetActionLogRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetAdminAccount implements getAdminAccount operation.
+//
+// How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+//
+// GET /api/v1/admin/accounts/{accountId}
+func (UnimplementedHandler) GetAdminAccount(ctx context.Context, params GetAdminAccountParams) (r GetAdminAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -313,6 +462,24 @@ func (UnimplementedHandler) GetMe(ctx context.Context) (r GetMeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
+// GetMyCharacter implements getMyCharacter operation.
+//
+// A Character the signed-in Account owns; anyone else's is not found.
+//
+// GET /api/v1/characters/{characterId}
+func (UnimplementedHandler) GetMyCharacter(ctx context.Context, params GetMyCharacterParams) (r GetMyCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetNotificationPreferences implements getNotificationPreferences operation.
+//
+// Which kinds reach the signed-in Account in app, on its devices and by email.
+//
+// GET /api/v1/notification-preferences
+func (UnimplementedHandler) GetNotificationPreferences(ctx context.Context) (r GetNotificationPreferencesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetNpc implements getNpc operation.
 //
 // One NPC. DM only.
@@ -386,6 +553,15 @@ func (UnimplementedHandler) GetSessionView(ctx context.Context, params GetSessio
 	return r, ht.ErrNotImplemented
 }
 
+// GetSignInMethods implements getSignInMethods operation.
+//
+// Which external sign-in, if any, the sign-in page offers beside a password.
+//
+// GET /api/v1/sign-in-methods
+func (UnimplementedHandler) GetSignInMethods(ctx context.Context) (r GetSignInMethodsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -413,6 +589,43 @@ func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIco
 	return r, ht.ErrNotImplemented
 }
 
+// GetUnseenReleaseNote implements getUnseenReleaseNote operation.
+//
+// The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+//
+// GET /api/v1/release-notes/unseen
+func (UnimplementedHandler) GetUnseenReleaseNote(ctx context.Context) (r GetUnseenReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// JoinCampaign implements joinCampaign operation.
+//
+// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
+// that Campaign's rules and its own progress from first level.
+//
+// POST /api/v1/characters/{characterId}/campaigns
+func (UnimplementedHandler) JoinCampaign(ctx context.Context, req *CharacterJoin, params JoinCampaignParams) (r JoinCampaignRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// LinkOidcAccount implements linkOidcAccount operation.
+//
+// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+//
+// POST /api/v1/oidc/links
+func (UnimplementedHandler) LinkOidcAccount(ctx context.Context, req *OidcAccountLink) (r LinkOidcAccountRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListAccessTokens implements listAccessTokens operation.
+//
+// The signed-in Account's live Access Tokens, newest first, with when each was last used.
+//
+// GET /api/v1/account/access-tokens
+func (UnimplementedHandler) ListAccessTokens(ctx context.Context) (r ListAccessTokensRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListActivity implements listActivity operation.
 //
 // The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
@@ -420,6 +633,15 @@ func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIco
 //
 // GET /api/v1/campaigns/{campaignId}/activity
 func (UnimplementedHandler) ListActivity(ctx context.Context, params ListActivityParams) (r ListActivityRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListAdminAccounts implements listAdminAccounts operation.
+//
+// Every Account with its status, and every Invite nobody has used yet. For Admins.
+//
+// GET /api/v1/admin/accounts
+func (UnimplementedHandler) ListAdminAccounts(ctx context.Context) (r ListAdminAccountsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -438,6 +660,15 @@ func (UnimplementedHandler) ListCampaigns(ctx context.Context, params ListCampai
 //
 // GET /api/v1/campaigns/{campaignId}/characters
 func (UnimplementedHandler) ListCharacters(ctx context.Context, params ListCharactersParams) (r ListCharactersRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListConversations implements listConversations operation.
+//
+// The signed-in Account's Conversations, newest first, with how many messages each has unread.
+//
+// GET /api/v1/conversations
+func (UnimplementedHandler) ListConversations(ctx context.Context) (r ListConversationsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -505,6 +736,15 @@ func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesP
 	return r, ht.ErrNotImplemented
 }
 
+// ListFriends implements listFriends operation.
+//
+// The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+//
+// GET /api/v1/friends
+func (UnimplementedHandler) ListFriends(ctx context.Context) (r ListFriendsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListInvites implements listInvites operation.
 //
 // Invite links that still work. DM only.
@@ -550,6 +790,43 @@ func (UnimplementedHandler) ListMaps(ctx context.Context, params ListMapsParams)
 	return r, ht.ErrNotImplemented
 }
 
+// ListMentionables implements listMentionables operation.
+//
+// Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+//
+// GET /api/v1/mentionables
+func (UnimplementedHandler) ListMentionables(ctx context.Context, params ListMentionablesParams) (r ListMentionablesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListMessages implements listMessages operation.
+//
+// A page of messages, newest first; reading the newest page marks the Conversation read. Only members
+// read it.
+//
+// GET /api/v1/conversations/{conversationId}/messages
+func (UnimplementedHandler) ListMessages(ctx context.Context, params ListMessagesParams) (r ListMessagesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListMyCharacters implements listMyCharacters operation.
+//
+// The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.
+//
+// GET /api/v1/characters
+func (UnimplementedHandler) ListMyCharacters(ctx context.Context) (r ListMyCharactersRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListNotifications implements listNotifications operation.
+//
+// The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+//
+// GET /api/v1/notifications
+func (UnimplementedHandler) ListNotifications(ctx context.Context) (r ListNotificationsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListNpcRevisions implements listNpcRevisions operation.
 //
 // Every Revision of the NPC, newest first, with its author and origin. DM only.
@@ -565,6 +842,15 @@ func (UnimplementedHandler) ListNpcRevisions(ctx context.Context, params ListNpc
 //
 // GET /api/v1/campaigns/{campaignId}/npcs
 func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams) (r ListNpcsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListReleaseNotes implements listReleaseNotes operation.
+//
+// Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+//
+// GET /api/v1/admin/release-notes
+func (UnimplementedHandler) ListReleaseNotes(ctx context.Context) (r ListReleaseNotesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -640,6 +926,25 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// PassTwoStep implements passTwoStep operation.
+//
+// Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes
+// and five wrong codes.
+//
+// POST /api/v1/sign-in/two-step
+func (UnimplementedHandler) PassTwoStep(ctx context.Context, req *TwoStepAnswer) (r PassTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewAccountInvite implements previewAccountInvite operation.
+//
+// Whether an invite link can still set up an Account; gone once used or expired.
+//
+// POST /api/v1/account-invites/preview
+func (UnimplementedHandler) PreviewAccountInvite(ctx context.Context, req *LinkToken) (r PreviewAccountInviteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewCharacter implements previewCharacter operation.
 //
 // Validates a build and returns the sheet it would make, without saving it.
@@ -676,12 +981,48 @@ func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest)
 	return r, ht.ErrNotImplemented
 }
 
+// PublishReleaseNote implements publishReleaseNote operation.
+//
+// Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+//
+// POST /api/v1/admin/release-notes/{noteId}/publish
+func (UnimplementedHandler) PublishReleaseNote(ctx context.Context, req *ReleaseNotePublish, params PublishReleaseNoteParams) (r PublishReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReadAllNotifications implements readAllNotifications operation.
+//
+// Clears the bell.
+//
+// POST /api/v1/notifications/read
+func (UnimplementedHandler) ReadAllNotifications(ctx context.Context) (r ReadAllNotificationsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReadNotification implements readNotification operation.
+//
+// Marks one Notification read, as acting on it does.
+//
+// POST /api/v1/notifications/{notificationId}/read
+func (UnimplementedHandler) ReadNotification(ctx context.Context, params ReadNotificationParams) (r ReadNotificationRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RemoveMember implements removeMember operation.
 //
 // A DM removes a Member, or a Member leaves. The last DM cannot leave.
 //
 // DELETE /api/v1/campaigns/{campaignId}/members/{memberId}
 func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMemberParams) (r RemoveMemberRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// RequestSignInLink implements requestSignInLink operation.
+//
+// For a forgotten password. Answers the same whether or not an Account has the email.
+//
+// POST /api/v1/sign-in-links
+func (UnimplementedHandler) RequestSignInLink(ctx context.Context, req *SignInLinkRequest) (r RequestSignInLinkRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -692,6 +1033,24 @@ func (UnimplementedHandler) RemoveMember(ctx context.Context, params RemoveMembe
 //
 // POST /api/v1/campaigns/{campaignId}/shops/{shopId}/stock
 func (UnimplementedHandler) RerollStock(ctx context.Context, params RerollStockParams) (r RerollStockRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ResetAccountTwoStep implements resetAccountTwoStep operation.
+//
+// Turns two-step off for a holder who lost their phone and recovery codes.
+//
+// POST /api/v1/admin/accounts/{accountId}/two-step/reset
+func (UnimplementedHandler) ResetAccountTwoStep(ctx context.Context, params ResetAccountTwoStepParams) (r ResetAccountTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ResetRecoveryCodes implements resetRecoveryCodes operation.
+//
+// Needs a current code; the old recovery codes stop working.
+//
+// POST /api/v1/account/two-step/recovery-codes
+func (UnimplementedHandler) ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (r ResetRecoveryCodesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -755,6 +1114,15 @@ func (UnimplementedHandler) RestoreShopRevision(ctx context.Context, params Rest
 	return r, ht.ErrNotImplemented
 }
 
+// RevokeAccessToken implements revokeAccessToken operation.
+//
+// The token stops working at once.
+//
+// DELETE /api/v1/account/access-tokens/{accessId}
+func (UnimplementedHandler) RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (r RevokeAccessTokenRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // RevokeInvite implements revokeInvite operation.
 //
 // Closes an invite link. DM only.
@@ -773,6 +1141,34 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 	return r, ht.ErrNotImplemented
 }
 
+// SeeReleaseNote implements seeReleaseNote operation.
+//
+// It no longer shows on the Dashboard.
+//
+// POST /api/v1/release-notes/{noteId}/seen
+func (UnimplementedHandler) SeeReleaseNote(ctx context.Context, params SeeReleaseNoteParams) (r SeeReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SendAdminSignInLink implements sendAdminSignInLink operation.
+//
+// Sends the holder a link that signs them in once, within 30 minutes.
+//
+// POST /api/v1/admin/accounts/{accountId}/sign-in-link
+func (UnimplementedHandler) SendAdminSignInLink(ctx context.Context, params SendAdminSignInLinkParams) (r SendAdminSignInLinkRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SendFriendRequest implements sendFriendRequest operation.
+//
+// Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The
+// answer is the same whether or not they blocked the sender.
+//
+// POST /api/v1/friend-requests
+func (UnimplementedHandler) SendFriendRequest(ctx context.Context, req *FriendRequestCreate) (r SendFriendRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SendLiveCommand implements sendLiveCommand operation.
 //
 // Sends one command to a live Session as the caller, with the same authority as their live connection,
@@ -783,6 +1179,42 @@ func (UnimplementedHandler) SendLiveCommand(ctx context.Context, req *LiveComman
 	return r, ht.ErrNotImplemented
 }
 
+// SendMessage implements sendMessage operation.
+//
+// Posts a message, with Mentions of game content the sender may open.
+//
+// POST /api/v1/conversations/{conversationId}/messages
+func (UnimplementedHandler) SendMessage(ctx context.Context, req *MessageSend, params SendMessageParams) (r SendMessageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetAccountDisabled implements setAccountDisabled operation.
+//
+// Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+//
+// PUT /api/v1/admin/accounts/{accountId}/disabled
+func (UnimplementedHandler) SetAccountDisabled(ctx context.Context, req *Toggle, params SetAccountDisabledParams) (r SetAccountDisabledRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetAccountPassword implements setAccountPassword operation.
+//
+// Replaces the signed-in Account's password, for example after signing in with an emailed link.
+//
+// PUT /api/v1/account/password
+func (UnimplementedHandler) SetAccountPassword(ctx context.Context, req *PasswordChange) (r SetAccountPasswordRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetAdminRole implements setAdminRole operation.
+//
+// Nobody removes their own Admin role.
+//
+// PUT /api/v1/admin/accounts/{accountId}/admin
+func (UnimplementedHandler) SetAdminRole(ctx context.Context, req *Toggle, params SetAdminRoleParams) (r SetAdminRoleRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SetDie implements setDie operation.
 //
 // The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
@@ -790,6 +1222,15 @@ func (UnimplementedHandler) SendLiveCommand(ctx context.Context, req *LiveComman
 //
 // POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/dice/{dieNo}
 func (UnimplementedHandler) SetDie(ctx context.Context, req *DieFill, params SetDieParams) (r SetDieRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SetNotificationPreferences implements setNotificationPreferences operation.
+//
+// Sets the channels for each kind given; security Notifications always show in app.
+//
+// PUT /api/v1/notification-preferences
+func (UnimplementedHandler) SetNotificationPreferences(ctx context.Context, req *NotificationPreferences) (r SetNotificationPreferencesRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -811,6 +1252,52 @@ func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconRe
 	return r, ht.ErrNotImplemented
 }
 
+// SignIn implements signIn operation.
+//
+// Signs the Account in on this device. Every failure answers the same.
+//
+// POST /api/v1/sign-in
+func (UnimplementedHandler) SignIn(ctx context.Context, req *SignInRequest) (r SignInRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SignOut implements signOut operation.
+//
+// Ends this device's session and clears its cookie.
+//
+// POST /api/v1/sign-out
+func (UnimplementedHandler) SignOut(ctx context.Context, params SignOutParams) (r SignOutRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// StartConversation implements startConversation operation.
+//
+// Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to
+// ten.
+//
+// POST /api/v1/conversations
+func (UnimplementedHandler) StartConversation(ctx context.Context, req *ConversationStart) (r StartConversationRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// StartOidcLink implements startOidcLink operation.
+//
+// Returns where to send the browser to link a login to the signed-in Account.
+//
+// POST /api/v1/account/oidc-link
+func (UnimplementedHandler) StartOidcLink(ctx context.Context) (r StartOidcLinkRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// StartOidcSignIn implements startOidcSignIn operation.
+//
+// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+//
+// POST /api/v1/oidc/sign-ins
+func (UnimplementedHandler) StartOidcSignIn(ctx context.Context) (r StartOidcSignInRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // StartSession implements startSession operation.
 //
 // Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -822,6 +1309,15 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 	return r, ht.ErrNotImplemented
 }
 
+// Unblock implements unblock operation.
+//
+// Lets the Account's Friend requests through again.
+//
+// DELETE /api/v1/blocks/{accountId}
+func (UnimplementedHandler) Unblock(ctx context.Context, params UnblockParams) (r UnblockRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UndoChange implements undoChange operation.
 //
 // Undoes a prep change by its Revision id. A creation is deleted; anything else is restored to the
@@ -830,6 +1326,34 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 //
 // POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 func (UnimplementedHandler) UndoChange(ctx context.Context, params UndoChangeParams) (r UndoChangeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// Unfriend implements unfriend operation.
+//
+// The two are no longer Friends.
+//
+// DELETE /api/v1/friends/{accountId}
+func (UnimplementedHandler) Unfriend(ctx context.Context, params UnfriendParams) (r UnfriendRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UnlinkOidc implements unlinkOidc operation.
+//
+// Removes the linked login; the Account stays. An Account without a password keeps its login.
+//
+// DELETE /api/v1/account/oidc-link
+func (UnimplementedHandler) UnlinkOidc(ctx context.Context) (r UnlinkOidcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateAccount implements updateAccount operation.
+//
+// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+// read-only.
+//
+// PUT /api/v1/account
+func (UnimplementedHandler) UpdateAccount(ctx context.Context, req *AccountChange) (r UpdateAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -896,6 +1420,15 @@ func (UnimplementedHandler) UpdateMember(ctx context.Context, req *MemberUpdate,
 	return r, ht.ErrNotImplemented
 }
 
+// UpdateMyCharacter implements updateMyCharacter operation.
+//
+// Sets a Character's name and Backstory; the name shows in every Campaign it plays in.
+//
+// PUT /api/v1/characters/{characterId}
+func (UnimplementedHandler) UpdateMyCharacter(ctx context.Context, req *OwnedCharacterChange, params UpdateMyCharacterParams) (r UpdateMyCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UpdateNpc implements updateNpc operation.
 //
 // Replaces the NPC and records a Revision. DM only.
@@ -930,6 +1463,15 @@ func (UnimplementedHandler) UpdateShop(ctx context.Context, req *ShopInput, para
 //
 // POST /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (r UploadMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UseSignInLink implements useSignInLink operation.
+//
+// Signs the Account in on this device; a link works once, within 30 minutes.
+//
+// POST /api/v1/sign-in-links/use
+func (UnimplementedHandler) UseSignInLink(ctx context.Context, req *LinkToken) (r UseSignInLinkRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

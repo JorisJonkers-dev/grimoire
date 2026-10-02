@@ -25,8 +25,10 @@ type (
 	MemberID uuid.UUID
 	// InviteID identifies an invite.
 	InviteID uuid.UUID
-	// CharacterID identifies a Character.
+	// CharacterID identifies a Campaign Character: a Character's progress in one Campaign.
 	CharacterID uuid.UUID
+	// OwnedID identifies a Character an Account owns (ADR-0010); its Campaign Characters point to it.
+	OwnedID uuid.UUID
 )
 
 // ListCursor is where the next page of a caller's Campaigns starts.
@@ -157,6 +159,7 @@ const (
 type Character struct {
 	Build
 	ID               CharacterID
+	Owned            OwnedID
 	CampaignID       CampaignID
 	Owner            Member
 	Ruleset          string
@@ -181,4 +184,31 @@ type CharacterSummary struct {
 	HPCurrent int
 	HPMax     int
 	TokenKey  string
+}
+
+// OwnedCharacter is a Character as its Account sees it: identity, build and Backstory, and its progress
+// in each Campaign it plays in.
+type OwnedCharacter struct {
+	ID           OwnedID
+	OwnerSubject string
+	Name         string
+	Ruleset      string
+	Species      string
+	Class        string
+	Background   string
+	Backstory    string
+	HasPortrait  bool
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Campaigns    []CampaignEntry
+}
+
+// CampaignEntry is one Campaign Character of an OwnedCharacter.
+type CampaignEntry struct {
+	CampaignID   CampaignID
+	CampaignName string
+	CharacterID  CharacterID
+	Level        int
+	HPCurrent    int
+	HPMax        int
 }

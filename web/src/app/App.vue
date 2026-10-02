@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import NotificationBell from '@/features/notifications/NotificationBell.vue'
+import { getAccountOptions, signOutMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { useOnline } from '@/shared/pwa/online'
 
 const route = useRoute()
+const router = useRouter()
 const online = useOnline()
 const bare = computed(() => route.meta.bare === true)
+const account = useQuery({ ...getAccountOptions(), retry: false })
+const client = useQueryClient()
+const signOut = useMutation(signOutMutation())
+function leave() {
+  signOut.mutate({}, { onSuccess: () => { client.clear(); void router.push({ name: 'sign-in' }) } })
+}
 </script>
 
 <template>
@@ -15,8 +25,20 @@ const bare = computed(() => route.meta.bare === true)
       <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
       <nav aria-label="Main">
         <RouterLink :to="{ name: 'campaigns' }">Campaigns</RouterLink>
+        <RouterLink v-if="account.data.value" :to="{ name: 'my-characters' }" data-testid="characters-link">Characters</RouterLink>
+        <RouterLink v-if="account.data.value" :to="{ name: 'friends' }" data-testid="friends-link">Friends</RouterLink>
+        <RouterLink v-if="account.data.value" :to="{ name: 'conversations' }" data-testid="conversations-link">Talk</RouterLink>
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
+        <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
       </nav>
+      <div class="me" data-testid="account-menu">
+        <template v-if="account.data.value">
+          <NotificationBell />
+          <RouterLink :to="{ name: 'account' }" data-testid="account-link">{{ account.data.value.nickname }}</RouterLink>
+          <button type="button" class="out" data-testid="sign-out" @click="leave">Sign out</button>
+        </template>
+        <RouterLink v-else-if="route.name !== 'sign-in'" :to="{ name: 'sign-in' }" data-testid="sign-in-link">Sign in</RouterLink>
+      </div>
     </header>
     <p v-if="!online" role="status" class="offline" data-testid="offline">
       You are offline. The compendium and your Character sheets still open from this device; live play picks up again when the connection returns.
@@ -44,6 +66,18 @@ const bare = computed(() => route.meta.bare === true)
   min-height: 56px;
   border-bottom: 1px solid var(--color-line);
   background: var(--color-surface);
+}
+.me {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.out {
+  border: 0;
+  background: none;
+  color: var(--color-text-3);
+  cursor: pointer;
 }
 .offline {
   margin: 0;
@@ -74,6 +108,22 @@ nav a {
 nav a.router-link-active {
   border-bottom-color: var(--color-gold);
   color: var(--color-gold-high);
+}
+/* On a phone the links take their own row under the brand and the account, and scroll sideways. */
+@media (max-width: 640px) {
+  .bar {
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
+  nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+  nav a {
+    min-height: 44px;
+    white-space: nowrap;
+  }
 }
 /* The footer spans the whole window, whatever the page above it does. */
 .credit {

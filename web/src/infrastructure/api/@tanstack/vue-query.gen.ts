@@ -3,8 +3,8 @@
 import { type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/vue-query';
 
 import { client } from '../client.gen';
-import { acceptInvite, clearTokenIcon, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createPushSubscription, createRoll, createSettlement, createShop, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, endSession, getActionLog, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getNpc, getPortrait, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSpell, getStatus, getTokenIcon, listActivity, listCampaigns, listCharacters, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listNpcRevisions, listNpcs, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, previewCharacter, previewInvite, previewReach, previewSight, removeMember, rerollStock, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeInvite, rollRest, sendLiveCommand, setDie, setPortrait, setTokenIcon, startSession, undoChange, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateNpc, updateSettlement, updateShop, uploadMap } from '../sdk.gen';
-import type { AcceptInviteData, AcceptInviteError, AcceptInviteResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, EndSessionData, EndSessionError, EndSessionResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, ListActivityData, ListActivityError, ListActivityResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RerollStockData, RerollStockError, RerollStockResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SetDieData, SetDieError, SetDieResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, StartSessionData, StartSessionError, StartSessionResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse } from '../types.gen';
+import { acceptAccountInvite, acceptFriendRequest, acceptInvite, beginTwoStep, cancelFriendRequest, clearTokenIcon, confirmTwoStep, createAccessToken, createAccountInvite, createCampaign, createCharacter, createEncounterPool, createEncounterTable, createInvite, createLootTable, createNpc, createOidcAccount, createPushSubscription, createRoll, createSettlement, createShop, declineFriendRequest, deleteCharacter, deleteEncounterPool, deleteEncounterTable, deleteLootTable, deleteNpc, deletePushSubscription, deleteSettlement, deleteShop, diffNpcRevisions, disableTwoStep, draftReleaseNote, editReleaseNote, endSession, finishOidc, getAccount, getAccountHistory, getActionLog, getAdminAccount, getAutomationCoverage, getBuilderOptions, getCampaign, getCharacter, getEntry, getHealth, getMap, getMapImage, getMe, getMyCharacter, getNotificationPreferences, getNpc, getPortrait, getPushKey, getReadiness, getRoll, getSession, getSessionLog, getSessionView, getSignInMethods, getSpell, getStatus, getTokenIcon, getUnseenReleaseNote, joinCampaign, linkOidcAccount, listAccessTokens, listActivity, listAdminAccounts, listCampaigns, listCharacters, listConversations, listDeletedNpcs, listEncounterChecks, listEncounterPoolRevisions, listEncounterPools, listEncounterTableRevisions, listEncounterTables, listEntries, listFriends, listInvites, listLocations, listLootTableRevisions, listLootTables, listMaps, listMentionables, listMessages, listMyCharacters, listNotifications, listNpcRevisions, listNpcs, listReleaseNotes, listRolls, listSessions, listSettlementRevisions, listSettlements, listShopRevisions, listShops, listSources, listSpells, type Options, passTwoStep, previewAccountInvite, previewCharacter, previewInvite, previewReach, previewSight, publishReleaseNote, readAllNotifications, readNotification, removeMember, requestSignInLink, rerollStock, resetAccountTwoStep, resetRecoveryCodes, restoreEncounterPoolRevision, restoreEncounterTableRevision, restoreLootTableRevision, restoreNpcRevision, restoreSettlementRevision, restoreShopRevision, revokeAccessToken, revokeInvite, rollRest, seeReleaseNote, sendAdminSignInLink, sendFriendRequest, sendLiveCommand, sendMessage, setAccountDisabled, setAccountPassword, setAdminRole, setDie, setNotificationPreferences, setPortrait, setTokenIcon, signIn, signOut, startConversation, startOidcLink, startOidcSignIn, startSession, unblock, undoChange, unfriend, unlinkOidc, updateAccount, updateCampaign, updateCharacter, updateEncounterPool, updateEncounterTable, updateLootTable, updateMap, updateMember, updateMyCharacter, updateNpc, updateSettlement, updateShop, uploadMap, useSignInLink } from '../sdk.gen';
+import type { AcceptAccountInviteData, AcceptAccountInviteError, AcceptAccountInviteResponse, AcceptFriendRequestData, AcceptFriendRequestError, AcceptFriendRequestResponse, AcceptInviteData, AcceptInviteError, AcceptInviteResponse, BeginTwoStepData, BeginTwoStepError, BeginTwoStepResponse, CancelFriendRequestData, CancelFriendRequestError, CancelFriendRequestResponse, ClearTokenIconData, ClearTokenIconError, ClearTokenIconResponse, ConfirmTwoStepData, ConfirmTwoStepError, ConfirmTwoStepResponse, CreateAccessTokenData, CreateAccessTokenError, CreateAccessTokenResponse, CreateAccountInviteData, CreateAccountInviteError, CreateAccountInviteResponse, CreateCampaignData, CreateCampaignError, CreateCampaignResponse, CreateCharacterData, CreateCharacterError, CreateCharacterResponse, CreateEncounterPoolData, CreateEncounterPoolError, CreateEncounterPoolResponse, CreateEncounterTableData, CreateEncounterTableError, CreateEncounterTableResponse, CreateInviteData, CreateInviteError, CreateInviteResponse, CreateLootTableData, CreateLootTableError, CreateLootTableResponse, CreateNpcData, CreateNpcError, CreateNpcResponse, CreateOidcAccountData, CreateOidcAccountError, CreateOidcAccountResponse, CreatePushSubscriptionData, CreatePushSubscriptionError, CreatePushSubscriptionResponse, CreateRollData, CreateRollError, CreateRollResponse, CreateSettlementData, CreateSettlementError, CreateSettlementResponse, CreateShopData, CreateShopError, CreateShopResponse, DeclineFriendRequestData, DeclineFriendRequestError, DeclineFriendRequestResponse, DeleteCharacterData, DeleteCharacterError, DeleteCharacterResponse, DeleteEncounterPoolData, DeleteEncounterPoolError, DeleteEncounterPoolResponse, DeleteEncounterTableData, DeleteEncounterTableError, DeleteEncounterTableResponse, DeleteLootTableData, DeleteLootTableError, DeleteLootTableResponse, DeleteNpcData, DeleteNpcError, DeleteNpcResponse, DeletePushSubscriptionData, DeletePushSubscriptionError, DeletePushSubscriptionResponse, DeleteSettlementData, DeleteSettlementError, DeleteSettlementResponse, DeleteShopData, DeleteShopError, DeleteShopResponse, DiffNpcRevisionsData, DiffNpcRevisionsError, DiffNpcRevisionsResponse, DisableTwoStepData, DisableTwoStepError, DisableTwoStepResponse, DraftReleaseNoteData, DraftReleaseNoteError, DraftReleaseNoteResponse, EditReleaseNoteData, EditReleaseNoteError, EditReleaseNoteResponse, EndSessionData, EndSessionError, EndSessionResponse, FinishOidcData, FinishOidcError, FinishOidcResponse, GetAccountData, GetAccountError, GetAccountHistoryData, GetAccountHistoryError, GetAccountHistoryResponse, GetAccountResponse, GetActionLogData, GetActionLogError, GetActionLogResponse, GetAdminAccountData, GetAdminAccountError, GetAdminAccountResponse, GetAutomationCoverageData, GetAutomationCoverageError, GetAutomationCoverageResponse, GetBuilderOptionsData, GetBuilderOptionsError, GetBuilderOptionsResponse, GetCampaignData, GetCampaignError, GetCampaignResponse, GetCharacterData, GetCharacterError, GetCharacterResponse, GetEntryData, GetEntryError, GetEntryResponse, GetHealthData, GetHealthError, GetHealthResponse, GetMapData, GetMapError, GetMapImageData, GetMapImageError, GetMapImageResponse, GetMapResponse, GetMeData, GetMeError, GetMeResponse, GetMyCharacterData, GetMyCharacterError, GetMyCharacterResponse, GetNotificationPreferencesData, GetNotificationPreferencesError, GetNotificationPreferencesResponse, GetNpcData, GetNpcError, GetNpcResponse, GetPortraitData, GetPortraitError, GetPortraitResponse, GetPushKeyData, GetPushKeyError, GetPushKeyResponse, GetReadinessData, GetReadinessError, GetReadinessResponse, GetRollData, GetRollError, GetRollResponse, GetSessionData, GetSessionError, GetSessionLogData, GetSessionLogError, GetSessionLogResponse, GetSessionResponse, GetSessionViewData, GetSessionViewError, GetSessionViewResponse, GetSignInMethodsData, GetSignInMethodsError, GetSignInMethodsResponse, GetSpellData, GetSpellError, GetSpellResponse, GetStatusData, GetStatusError, GetStatusResponse, GetTokenIconData, GetTokenIconError, GetTokenIconResponse, GetUnseenReleaseNoteData, GetUnseenReleaseNoteError, GetUnseenReleaseNoteResponse, JoinCampaignData, JoinCampaignError, JoinCampaignResponse, LinkOidcAccountData, LinkOidcAccountError, LinkOidcAccountResponse, ListAccessTokensData, ListAccessTokensError, ListAccessTokensResponse, ListActivityData, ListActivityError, ListActivityResponse, ListAdminAccountsData, ListAdminAccountsError, ListAdminAccountsResponse, ListCampaignsData, ListCampaignsError, ListCampaignsResponse, ListCharactersData, ListCharactersError, ListCharactersResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListDeletedNpcsData, ListDeletedNpcsError, ListDeletedNpcsResponse, ListEncounterChecksData, ListEncounterChecksError, ListEncounterChecksResponse, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsError, ListEncounterPoolRevisionsResponse, ListEncounterPoolsData, ListEncounterPoolsError, ListEncounterPoolsResponse, ListEncounterTableRevisionsData, ListEncounterTableRevisionsError, ListEncounterTableRevisionsResponse, ListEncounterTablesData, ListEncounterTablesError, ListEncounterTablesResponse, ListEntriesData, ListEntriesError, ListEntriesResponse, ListFriendsData, ListFriendsError, ListFriendsResponse, ListInvitesData, ListInvitesError, ListInvitesResponse, ListLocationsData, ListLocationsError, ListLocationsResponse, ListLootTableRevisionsData, ListLootTableRevisionsError, ListLootTableRevisionsResponse, ListLootTablesData, ListLootTablesError, ListLootTablesResponse, ListMapsData, ListMapsError, ListMapsResponse, ListMentionablesData, ListMentionablesError, ListMentionablesResponse, ListMessagesData, ListMessagesError, ListMessagesResponse, ListMyCharactersData, ListMyCharactersError, ListMyCharactersResponse, ListNotificationsData, ListNotificationsError, ListNotificationsResponse, ListNpcRevisionsData, ListNpcRevisionsError, ListNpcRevisionsResponse, ListNpcsData, ListNpcsError, ListNpcsResponse, ListReleaseNotesData, ListReleaseNotesError, ListReleaseNotesResponse, ListRollsData, ListRollsError, ListRollsResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListSettlementRevisionsData, ListSettlementRevisionsError, ListSettlementRevisionsResponse, ListSettlementsData, ListSettlementsError, ListSettlementsResponse, ListShopRevisionsData, ListShopRevisionsError, ListShopRevisionsResponse, ListShopsData, ListShopsError, ListShopsResponse, ListSourcesData, ListSourcesError, ListSourcesResponse, ListSpellsData, ListSpellsError, ListSpellsResponse, PassTwoStepData, PassTwoStepError, PassTwoStepResponse, PreviewAccountInviteData, PreviewAccountInviteError, PreviewAccountInviteResponse, PreviewCharacterData, PreviewCharacterError, PreviewCharacterResponse, PreviewInviteData, PreviewInviteError, PreviewInviteResponse, PreviewReachData, PreviewReachError, PreviewReachResponse, PreviewSightData, PreviewSightError, PreviewSightResponse, PublishReleaseNoteData, PublishReleaseNoteError, PublishReleaseNoteResponse, ReadAllNotificationsData, ReadAllNotificationsError, ReadAllNotificationsResponse, ReadNotificationData, ReadNotificationError, ReadNotificationResponse, RemoveMemberData, RemoveMemberError, RemoveMemberResponse, RequestSignInLinkData, RequestSignInLinkError, RerollStockData, RerollStockError, RerollStockResponse, ResetAccountTwoStepData, ResetAccountTwoStepError, ResetAccountTwoStepResponse, ResetRecoveryCodesData, ResetRecoveryCodesError, ResetRecoveryCodesResponse, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionError, RestoreEncounterPoolRevisionResponse, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionError, RestoreEncounterTableRevisionResponse, RestoreLootTableRevisionData, RestoreLootTableRevisionError, RestoreLootTableRevisionResponse, RestoreNpcRevisionData, RestoreNpcRevisionError, RestoreNpcRevisionResponse, RestoreSettlementRevisionData, RestoreSettlementRevisionError, RestoreSettlementRevisionResponse, RestoreShopRevisionData, RestoreShopRevisionError, RestoreShopRevisionResponse, RevokeAccessTokenData, RevokeAccessTokenError, RevokeAccessTokenResponse, RevokeInviteData, RevokeInviteError, RevokeInviteResponse, RollRestData, RollRestError, RollRestResponse, SeeReleaseNoteData, SeeReleaseNoteError, SeeReleaseNoteResponse, SendAdminSignInLinkData, SendAdminSignInLinkError, SendFriendRequestData, SendFriendRequestError, SendLiveCommandData, SendLiveCommandError, SendLiveCommandResponse, SendMessageData, SendMessageError, SendMessageResponse, SetAccountDisabledData, SetAccountDisabledError, SetAccountDisabledResponse, SetAccountPasswordData, SetAccountPasswordError, SetAccountPasswordResponse, SetAdminRoleData, SetAdminRoleError, SetAdminRoleResponse, SetDieData, SetDieError, SetDieResponse, SetNotificationPreferencesData, SetNotificationPreferencesError, SetNotificationPreferencesResponse, SetPortraitData, SetPortraitError, SetPortraitResponse, SetTokenIconData, SetTokenIconError, SetTokenIconResponse, SignInData, SignInError, SignInResponse, SignOutData, SignOutError, SignOutResponse, StartConversationData, StartConversationError, StartConversationResponse, StartOidcLinkData, StartOidcLinkError, StartOidcLinkResponse, StartOidcSignInData, StartOidcSignInError, StartOidcSignInResponse, StartSessionData, StartSessionError, StartSessionResponse, UnblockData, UnblockError, UnblockResponse, UndoChangeData, UndoChangeError, UndoChangeResponse, UnfriendData, UnfriendError, UnfriendResponse, UnlinkOidcData, UnlinkOidcError, UnlinkOidcResponse, UpdateAccountData, UpdateAccountError, UpdateAccountResponse, UpdateCampaignData, UpdateCampaignError, UpdateCampaignResponse, UpdateCharacterData, UpdateCharacterError, UpdateCharacterResponse, UpdateEncounterPoolData, UpdateEncounterPoolError, UpdateEncounterPoolResponse, UpdateEncounterTableData, UpdateEncounterTableError, UpdateEncounterTableResponse, UpdateLootTableData, UpdateLootTableError, UpdateLootTableResponse, UpdateMapData, UpdateMapError, UpdateMapResponse, UpdateMemberData, UpdateMemberError, UpdateMemberResponse, UpdateMyCharacterData, UpdateMyCharacterError, UpdateMyCharacterResponse, UpdateNpcData, UpdateNpcError, UpdateNpcResponse, UpdateSettlementData, UpdateSettlementError, UpdateSettlementResponse, UpdateShopData, UpdateShopError, UpdateShopResponse, UploadMapData, UploadMapError, UploadMapResponse, UseSignInLinkData, UseSignInLinkError, UseSignInLinkResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -2070,6 +2070,1175 @@ export const getStatusOptions = (options?: Options<GetStatusData>) => queryOptio
     },
     queryKey: getStatusQueryKey(options)
 });
+
+/**
+ * Invite someone to set up an Account
+ *
+ * An Admin's one-time Account Invite, closed once used or when it expires. Only an Admin can invite another Admin.
+ */
+export const createAccountInviteMutation = (options?: Partial<Options<CreateAccountInviteData>>): UseMutationOptions<CreateAccountInviteResponse, CreateAccountInviteError, Options<CreateAccountInviteData>> => {
+    const mutationOptions: UseMutationOptions<CreateAccountInviteResponse, CreateAccountInviteError, Options<CreateAccountInviteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createAccountInvite({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Check an Account Invite
+ *
+ * Whether an invite link can still set up an Account; gone once used or expired.
+ */
+export const previewAccountInviteMutation = (options?: Partial<Options<PreviewAccountInviteData>>): UseMutationOptions<PreviewAccountInviteResponse, PreviewAccountInviteError, Options<PreviewAccountInviteData>> => {
+    const mutationOptions: UseMutationOptions<PreviewAccountInviteResponse, PreviewAccountInviteError, Options<PreviewAccountInviteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await previewAccountInvite({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Set up an Account from an invite
+ *
+ * Creates the Account the invite was for and signs it in on this device.
+ */
+export const acceptAccountInviteMutation = (options?: Partial<Options<AcceptAccountInviteData>>): UseMutationOptions<AcceptAccountInviteResponse, AcceptAccountInviteError, Options<AcceptAccountInviteData>> => {
+    const mutationOptions: UseMutationOptions<AcceptAccountInviteResponse, AcceptAccountInviteError, Options<AcceptAccountInviteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await acceptAccountInvite({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Sign in with a Username and password
+ *
+ * Signs the Account in on this device. Every failure answers the same.
+ */
+export const signInMutation = (options?: Partial<Options<SignInData>>): UseMutationOptions<SignInResponse, SignInError, Options<SignInData>> => {
+    const mutationOptions: UseMutationOptions<SignInResponse, SignInError, Options<SignInData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await signIn({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Answer the second step
+ *
+ * Signs in with a code from the authenticator app or a recovery code. A challenge lasts five minutes and five wrong codes.
+ */
+export const passTwoStepMutation = (options?: Partial<Options<PassTwoStepData>>): UseMutationOptions<PassTwoStepResponse, PassTwoStepError, Options<PassTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<PassTwoStepResponse, PassTwoStepError, Options<PassTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await passTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Sign out
+ *
+ * Ends this device's session and clears its cookie.
+ */
+export const signOutMutation = (options?: Partial<Options<SignOutData>>): UseMutationOptions<SignOutResponse, SignOutError, Options<SignOutData>> => {
+    const mutationOptions: UseMutationOptions<SignOutResponse, SignOutError, Options<SignOutData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await signOut({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Email a sign-in link
+ *
+ * For a forgotten password. Answers the same whether or not an Account has the email.
+ */
+export const requestSignInLinkMutation = (options?: Partial<Options<RequestSignInLinkData>>): UseMutationOptions<unknown, RequestSignInLinkError, Options<RequestSignInLinkData>> => {
+    const mutationOptions: UseMutationOptions<unknown, RequestSignInLinkError, Options<RequestSignInLinkData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await requestSignInLink({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Sign in with an emailed link
+ *
+ * Signs the Account in on this device; a link works once, within 30 minutes.
+ */
+export const useSignInLinkMutation = (options?: Partial<Options<UseSignInLinkData>>): UseMutationOptions<UseSignInLinkResponse, UseSignInLinkError, Options<UseSignInLinkData>> => {
+    const mutationOptions: UseMutationOptions<UseSignInLinkResponse, UseSignInLinkError, Options<UseSignInLinkData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await useSignInLink({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getSignInMethodsQueryKey = (options?: Options<GetSignInMethodsData>) => createQueryKey('getSignInMethods', options);
+
+/**
+ * List the sign-in methods
+ *
+ * Which external sign-in, if any, the sign-in page offers beside a password.
+ */
+export const getSignInMethodsOptions = (options?: Options<GetSignInMethodsData>) => queryOptions<GetSignInMethodsResponse, GetSignInMethodsError, GetSignInMethodsResponse, ReturnType<typeof getSignInMethodsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getSignInMethods({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getSignInMethodsQueryKey(options)
+});
+
+/**
+ * Start signing in with the external login
+ *
+ * Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+ */
+export const startOidcSignInMutation = (options?: Partial<Options<StartOidcSignInData>>): UseMutationOptions<StartOidcSignInResponse, StartOidcSignInError, Options<StartOidcSignInData>> => {
+    const mutationOptions: UseMutationOptions<StartOidcSignInResponse, StartOidcSignInError, Options<StartOidcSignInData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await startOidcSignIn({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Finish an external sign-in
+ *
+ * Takes the code and state the provider sent back. Signs in a linked login, links the login when the Account page started it, or leaves it waiting for an Account.
+ */
+export const finishOidcMutation = (options?: Partial<Options<FinishOidcData>>): UseMutationOptions<FinishOidcResponse, FinishOidcError, Options<FinishOidcData>> => {
+    const mutationOptions: UseMutationOptions<FinishOidcResponse, FinishOidcError, Options<FinishOidcData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await finishOidc({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Create an Account for an external login
+ *
+ * Sets up an Account for a login no Account has yet, and signs it in.
+ */
+export const createOidcAccountMutation = (options?: Partial<Options<CreateOidcAccountData>>): UseMutationOptions<CreateOidcAccountResponse, CreateOidcAccountError, Options<CreateOidcAccountData>> => {
+    const mutationOptions: UseMutationOptions<CreateOidcAccountResponse, CreateOidcAccountError, Options<CreateOidcAccountData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createOidcAccount({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Link an external login to an existing Account
+ *
+ * Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+ */
+export const linkOidcAccountMutation = (options?: Partial<Options<LinkOidcAccountData>>): UseMutationOptions<LinkOidcAccountResponse, LinkOidcAccountError, Options<LinkOidcAccountData>> => {
+    const mutationOptions: UseMutationOptions<LinkOidcAccountResponse, LinkOidcAccountError, Options<LinkOidcAccountData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await linkOidcAccount({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getAccountQueryKey = (options?: Options<GetAccountData>) => createQueryKey('getAccount', options);
+
+/**
+ * Get my Account
+ *
+ * The Account the caller is signed in as.
+ */
+export const getAccountOptions = (options?: Options<GetAccountData>) => queryOptions<GetAccountResponse, GetAccountError, GetAccountResponse, ReturnType<typeof getAccountQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAccount({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAccountQueryKey(options)
+});
+
+/**
+ * Change my profile
+ *
+ * Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays read-only.
+ */
+export const updateAccountMutation = (options?: Partial<Options<UpdateAccountData>>): UseMutationOptions<UpdateAccountResponse, UpdateAccountError, Options<UpdateAccountData>> => {
+    const mutationOptions: UseMutationOptions<UpdateAccountResponse, UpdateAccountError, Options<UpdateAccountData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateAccount({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Set my password
+ *
+ * Replaces the signed-in Account's password, for example after signing in with an emailed link.
+ */
+export const setAccountPasswordMutation = (options?: Partial<Options<SetAccountPasswordData>>): UseMutationOptions<SetAccountPasswordResponse, SetAccountPasswordError, Options<SetAccountPasswordData>> => {
+    const mutationOptions: UseMutationOptions<SetAccountPasswordResponse, SetAccountPasswordError, Options<SetAccountPasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setAccountPassword({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Unlink the external login
+ *
+ * Removes the linked login; the Account stays. An Account without a password keeps its login.
+ */
+export const unlinkOidcMutation = (options?: Partial<Options<UnlinkOidcData>>): UseMutationOptions<UnlinkOidcResponse, UnlinkOidcError, Options<UnlinkOidcData>> => {
+    const mutationOptions: UseMutationOptions<UnlinkOidcResponse, UnlinkOidcError, Options<UnlinkOidcData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await unlinkOidc({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Start linking the external login
+ *
+ * Returns where to send the browser to link a login to the signed-in Account.
+ */
+export const startOidcLinkMutation = (options?: Partial<Options<StartOidcLinkData>>): UseMutationOptions<StartOidcLinkResponse, StartOidcLinkError, Options<StartOidcLinkData>> => {
+    const mutationOptions: UseMutationOptions<StartOidcLinkResponse, StartOidcLinkError, Options<StartOidcLinkData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await startOidcLink({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Start two-step sign-in
+ *
+ * Makes a new authenticator secret for the signed-in Account; confirming it with a code turns two-step on.
+ */
+export const beginTwoStepMutation = (options?: Partial<Options<BeginTwoStepData>>): UseMutationOptions<BeginTwoStepResponse, BeginTwoStepError, Options<BeginTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<BeginTwoStepResponse, BeginTwoStepError, Options<BeginTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await beginTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Turn two-step on
+ *
+ * Checks a first code from the app and returns the recovery codes, shown only now.
+ */
+export const confirmTwoStepMutation = (options?: Partial<Options<ConfirmTwoStepData>>): UseMutationOptions<ConfirmTwoStepResponse, ConfirmTwoStepError, Options<ConfirmTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<ConfirmTwoStepResponse, ConfirmTwoStepError, Options<ConfirmTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await confirmTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Turn two-step off
+ *
+ * Needs a current code or a recovery code; the recovery codes go too.
+ */
+export const disableTwoStepMutation = (options?: Partial<Options<DisableTwoStepData>>): UseMutationOptions<DisableTwoStepResponse, DisableTwoStepError, Options<DisableTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<DisableTwoStepResponse, DisableTwoStepError, Options<DisableTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await disableTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Replace the recovery codes
+ *
+ * Needs a current code; the old recovery codes stop working.
+ */
+export const resetRecoveryCodesMutation = (options?: Partial<Options<ResetRecoveryCodesData>>): UseMutationOptions<ResetRecoveryCodesResponse, ResetRecoveryCodesError, Options<ResetRecoveryCodesData>> => {
+    const mutationOptions: UseMutationOptions<ResetRecoveryCodesResponse, ResetRecoveryCodesError, Options<ResetRecoveryCodesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resetRecoveryCodes({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listAccessTokensQueryKey = (options?: Options<ListAccessTokensData>) => createQueryKey('listAccessTokens', options);
+
+/**
+ * List my Access Tokens
+ *
+ * The signed-in Account's live Access Tokens, newest first, with when each was last used.
+ */
+export const listAccessTokensOptions = (options?: Options<ListAccessTokensData>) => queryOptions<ListAccessTokensResponse, ListAccessTokensError, ListAccessTokensResponse, ReturnType<typeof listAccessTokensQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listAccessTokens({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listAccessTokensQueryKey(options)
+});
+
+/**
+ * Mint an Access Token
+ *
+ * A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only now.
+ */
+export const createAccessTokenMutation = (options?: Partial<Options<CreateAccessTokenData>>): UseMutationOptions<CreateAccessTokenResponse, CreateAccessTokenError, Options<CreateAccessTokenData>> => {
+    const mutationOptions: UseMutationOptions<CreateAccessTokenResponse, CreateAccessTokenError, Options<CreateAccessTokenData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createAccessToken({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Revoke an Access Token
+ *
+ * The token stops working at once.
+ */
+export const revokeAccessTokenMutation = (options?: Partial<Options<RevokeAccessTokenData>>): UseMutationOptions<RevokeAccessTokenResponse, RevokeAccessTokenError, Options<RevokeAccessTokenData>> => {
+    const mutationOptions: UseMutationOptions<RevokeAccessTokenResponse, RevokeAccessTokenError, Options<RevokeAccessTokenData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await revokeAccessToken({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listAdminAccountsQueryKey = (options?: Options<ListAdminAccountsData>) => createQueryKey('listAdminAccounts', options);
+
+/**
+ * List every Account
+ *
+ * Every Account with its status, and every Invite nobody has used yet. For Admins.
+ */
+export const listAdminAccountsOptions = (options?: Options<ListAdminAccountsData>) => queryOptions<ListAdminAccountsResponse, ListAdminAccountsError, ListAdminAccountsResponse, ReturnType<typeof listAdminAccountsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listAdminAccounts({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listAdminAccountsQueryKey(options)
+});
+
+export const getAdminAccountQueryKey = (options: Options<GetAdminAccountData>) => createQueryKey('getAdminAccount', options);
+
+/**
+ * Read an Account for an Admin
+ *
+ * How the Account signs in, its live sessions and Access Tokens, its Campaigns and its history.
+ */
+export const getAdminAccountOptions = (options: Options<GetAdminAccountData>) => queryOptions<GetAdminAccountResponse, GetAdminAccountError, GetAdminAccountResponse, ReturnType<typeof getAdminAccountQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAdminAccount({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAdminAccountQueryKey(options)
+});
+
+/**
+ * Email an Account a sign-in link
+ *
+ * Sends the holder a link that signs them in once, within 30 minutes.
+ */
+export const sendAdminSignInLinkMutation = (options?: Partial<Options<SendAdminSignInLinkData>>): UseMutationOptions<unknown, SendAdminSignInLinkError, Options<SendAdminSignInLinkData>> => {
+    const mutationOptions: UseMutationOptions<unknown, SendAdminSignInLinkError, Options<SendAdminSignInLinkData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await sendAdminSignInLink({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Make an Account an Admin or not
+ *
+ * Nobody removes their own Admin role.
+ */
+export const setAdminRoleMutation = (options?: Partial<Options<SetAdminRoleData>>): UseMutationOptions<SetAdminRoleResponse, SetAdminRoleError, Options<SetAdminRoleData>> => {
+    const mutationOptions: UseMutationOptions<SetAdminRoleResponse, SetAdminRoleError, Options<SetAdminRoleData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setAdminRole({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Disable an Account or enable it
+ *
+ * Disabling ends every session and Access Token the Account has. Nobody disables themselves.
+ */
+export const setAccountDisabledMutation = (options?: Partial<Options<SetAccountDisabledData>>): UseMutationOptions<SetAccountDisabledResponse, SetAccountDisabledError, Options<SetAccountDisabledData>> => {
+    const mutationOptions: UseMutationOptions<SetAccountDisabledResponse, SetAccountDisabledError, Options<SetAccountDisabledData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setAccountDisabled({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Reset an Account's two-step
+ *
+ * Turns two-step off for a holder who lost their phone and recovery codes.
+ */
+export const resetAccountTwoStepMutation = (options?: Partial<Options<ResetAccountTwoStepData>>): UseMutationOptions<ResetAccountTwoStepResponse, ResetAccountTwoStepError, Options<ResetAccountTwoStepData>> => {
+    const mutationOptions: UseMutationOptions<ResetAccountTwoStepResponse, ResetAccountTwoStepError, Options<ResetAccountTwoStepData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await resetAccountTwoStep({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getAccountHistoryQueryKey = (options?: Options<GetAccountHistoryData>) => createQueryKey('getAccountHistory', options);
+
+/**
+ * Read my Account history
+ *
+ * What happened to the signed-in Account and who did it, newest first.
+ */
+export const getAccountHistoryOptions = (options?: Options<GetAccountHistoryData>) => queryOptions<GetAccountHistoryResponse, GetAccountHistoryError, GetAccountHistoryResponse, ReturnType<typeof getAccountHistoryQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAccountHistory({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAccountHistoryQueryKey(options)
+});
+
+export const listMyCharactersQueryKey = (options?: Options<ListMyCharactersData>) => createQueryKey('listMyCharacters', options);
+
+/**
+ * List my Characters
+ *
+ * The Characters the signed-in Account owns, each with its progress in every Campaign it plays in.
+ */
+export const listMyCharactersOptions = (options?: Options<ListMyCharactersData>) => queryOptions<ListMyCharactersResponse, ListMyCharactersError, ListMyCharactersResponse, ReturnType<typeof listMyCharactersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listMyCharacters({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listMyCharactersQueryKey(options)
+});
+
+export const getMyCharacterQueryKey = (options: Options<GetMyCharacterData>) => createQueryKey('getMyCharacter', options);
+
+/**
+ * Read one of my Characters
+ *
+ * A Character the signed-in Account owns; anyone else's is not found.
+ */
+export const getMyCharacterOptions = (options: Options<GetMyCharacterData>) => queryOptions<GetMyCharacterResponse, GetMyCharacterError, GetMyCharacterResponse, ReturnType<typeof getMyCharacterQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getMyCharacter({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getMyCharacterQueryKey(options)
+});
+
+/**
+ * Change a Character
+ *
+ * Sets a Character's name and Backstory; the name shows in every Campaign it plays in.
+ */
+export const updateMyCharacterMutation = (options?: Partial<Options<UpdateMyCharacterData>>): UseMutationOptions<UpdateMyCharacterResponse, UpdateMyCharacterError, Options<UpdateMyCharacterData>> => {
+    const mutationOptions: UseMutationOptions<UpdateMyCharacterResponse, UpdateMyCharacterError, Options<UpdateMyCharacterData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateMyCharacter({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Bring a Character into another Campaign
+ *
+ * Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against that Campaign's rules and its own progress from first level.
+ */
+export const joinCampaignMutation = (options?: Partial<Options<JoinCampaignData>>): UseMutationOptions<JoinCampaignResponse, JoinCampaignError, Options<JoinCampaignData>> => {
+    const mutationOptions: UseMutationOptions<JoinCampaignResponse, JoinCampaignError, Options<JoinCampaignData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await joinCampaign({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listFriendsQueryKey = (options?: Options<ListFriendsData>) => createQueryKey('listFriends', options);
+
+/**
+ * List my Friends
+ *
+ * The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
+ */
+export const listFriendsOptions = (options?: Options<ListFriendsData>) => queryOptions<ListFriendsResponse, ListFriendsError, ListFriendsResponse, ReturnType<typeof listFriendsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listFriends({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listFriendsQueryKey(options)
+});
+
+/**
+ * End a friendship
+ *
+ * The two are no longer Friends.
+ */
+export const unfriendMutation = (options?: Partial<Options<UnfriendData>>): UseMutationOptions<UnfriendResponse, UnfriendError, Options<UnfriendData>> => {
+    const mutationOptions: UseMutationOptions<UnfriendResponse, UnfriendError, Options<UnfriendData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await unfriend({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Send a Friend request
+ *
+ * Asks the Account with a Username to be Friends. A request they already sent is accepted at once. The answer is the same whether or not they blocked the sender.
+ */
+export const sendFriendRequestMutation = (options?: Partial<Options<SendFriendRequestData>>): UseMutationOptions<unknown, SendFriendRequestError, Options<SendFriendRequestData>> => {
+    const mutationOptions: UseMutationOptions<unknown, SendFriendRequestError, Options<SendFriendRequestData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await sendFriendRequest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Withdraw a Friend request
+ *
+ * Withdraws a request the signed-in Account sent.
+ */
+export const cancelFriendRequestMutation = (options?: Partial<Options<CancelFriendRequestData>>): UseMutationOptions<CancelFriendRequestResponse, CancelFriendRequestError, Options<CancelFriendRequestData>> => {
+    const mutationOptions: UseMutationOptions<CancelFriendRequestResponse, CancelFriendRequestError, Options<CancelFriendRequestData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await cancelFriendRequest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Accept a Friend request
+ *
+ * The two are Friends from now on.
+ */
+export const acceptFriendRequestMutation = (options?: Partial<Options<AcceptFriendRequestData>>): UseMutationOptions<AcceptFriendRequestResponse, AcceptFriendRequestError, Options<AcceptFriendRequestData>> => {
+    const mutationOptions: UseMutationOptions<AcceptFriendRequestResponse, AcceptFriendRequestError, Options<AcceptFriendRequestData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await acceptFriendRequest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Decline a Friend request
+ *
+ * Turns the request down; with block, the sender's later requests never show.
+ */
+export const declineFriendRequestMutation = (options?: Partial<Options<DeclineFriendRequestData>>): UseMutationOptions<DeclineFriendRequestResponse, DeclineFriendRequestError, Options<DeclineFriendRequestData>> => {
+    const mutationOptions: UseMutationOptions<DeclineFriendRequestResponse, DeclineFriendRequestError, Options<DeclineFriendRequestData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await declineFriendRequest({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Unblock an Account
+ *
+ * Lets the Account's Friend requests through again.
+ */
+export const unblockMutation = (options?: Partial<Options<UnblockData>>): UseMutationOptions<UnblockResponse, UnblockError, Options<UnblockData>> => {
+    const mutationOptions: UseMutationOptions<UnblockResponse, UnblockError, Options<UnblockData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await unblock({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listConversationsQueryKey = (options?: Options<ListConversationsData>) => createQueryKey('listConversations', options);
+
+/**
+ * List my Conversations
+ *
+ * The signed-in Account's Conversations, newest first, with how many messages each has unread.
+ */
+export const listConversationsOptions = (options?: Options<ListConversationsData>) => queryOptions<ListConversationsResponse, ListConversationsError, ListConversationsResponse, ReturnType<typeof listConversationsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listConversations({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listConversationsQueryKey(options)
+});
+
+/**
+ * Start a Conversation
+ *
+ * Opens a Conversation with Friends, one-to-one (found again if it exists) or a titled group of up to ten.
+ */
+export const startConversationMutation = (options?: Partial<Options<StartConversationData>>): UseMutationOptions<StartConversationResponse, StartConversationError, Options<StartConversationData>> => {
+    const mutationOptions: UseMutationOptions<StartConversationResponse, StartConversationError, Options<StartConversationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await startConversation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listMessagesQueryKey = (options: Options<ListMessagesData>) => createQueryKey('listMessages', options);
+
+/**
+ * Read a Conversation
+ *
+ * A page of messages, newest first; reading the newest page marks the Conversation read. Only members read it.
+ */
+export const listMessagesOptions = (options: Options<ListMessagesData>) => queryOptions<ListMessagesResponse, ListMessagesError, ListMessagesResponse, ReturnType<typeof listMessagesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listMessages({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listMessagesQueryKey(options)
+});
+
+export const listMessagesInfiniteQueryKey = (options: Options<ListMessagesData>): QueryKey<Options<ListMessagesData>> => createQueryKey('listMessages', options, true);
+
+/**
+ * Read a Conversation
+ *
+ * A page of messages, newest first; reading the newest page marks the Conversation read. Only members read it.
+ */
+export const listMessagesInfiniteOptions = (options: Options<ListMessagesData>) => {
+    const opts = infiniteQueryOptions<ListMessagesResponse, ListMessagesError, InfiniteData<ListMessagesResponse>, QueryKey<Options<ListMessagesData>>, string | Pick<QueryKey<Options<ListMessagesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListMessagesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    before: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listMessages({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listMessagesInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
+
+/**
+ * Send a message
+ *
+ * Posts a message, with Mentions of game content the sender may open.
+ */
+export const sendMessageMutation = (options?: Partial<Options<SendMessageData>>): UseMutationOptions<SendMessageResponse, SendMessageError, Options<SendMessageData>> => {
+    const mutationOptions: UseMutationOptions<SendMessageResponse, SendMessageError, Options<SendMessageData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await sendMessage({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listMentionablesQueryKey = (options?: Options<ListMentionablesData>) => createQueryKey('listMentionables', options);
+
+/**
+ * Find something to mention
+ *
+ * Characters in the caller's Campaigns and Locations in Campaigns they run, matching a few letters.
+ */
+export const listMentionablesOptions = (options?: Options<ListMentionablesData>) => queryOptions<ListMentionablesResponse, ListMentionablesError, ListMentionablesResponse, ReturnType<typeof listMentionablesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listMentionables({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listMentionablesQueryKey(options)
+});
+
+export const listNotificationsQueryKey = (options?: Options<ListNotificationsData>) => createQueryKey('listNotifications', options);
+
+/**
+ * Read my Notifications
+ *
+ * The latest Notifications in the signed-in Account's bell, newest first, and how many are unread.
+ */
+export const listNotificationsOptions = (options?: Options<ListNotificationsData>) => queryOptions<ListNotificationsResponse, ListNotificationsError, ListNotificationsResponse, ReturnType<typeof listNotificationsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listNotifications({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listNotificationsQueryKey(options)
+});
+
+/**
+ * Mark every Notification read
+ *
+ * Clears the bell.
+ */
+export const readAllNotificationsMutation = (options?: Partial<Options<ReadAllNotificationsData>>): UseMutationOptions<ReadAllNotificationsResponse, ReadAllNotificationsError, Options<ReadAllNotificationsData>> => {
+    const mutationOptions: UseMutationOptions<ReadAllNotificationsResponse, ReadAllNotificationsError, Options<ReadAllNotificationsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await readAllNotifications({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Mark a Notification read
+ *
+ * Marks one Notification read, as acting on it does.
+ */
+export const readNotificationMutation = (options?: Partial<Options<ReadNotificationData>>): UseMutationOptions<ReadNotificationResponse, ReadNotificationError, Options<ReadNotificationData>> => {
+    const mutationOptions: UseMutationOptions<ReadNotificationResponse, ReadNotificationError, Options<ReadNotificationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await readNotification({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getNotificationPreferencesQueryKey = (options?: Options<GetNotificationPreferencesData>) => createQueryKey('getNotificationPreferences', options);
+
+/**
+ * Read my Notification preferences
+ *
+ * Which kinds reach the signed-in Account in app, on its devices and by email.
+ */
+export const getNotificationPreferencesOptions = (options?: Options<GetNotificationPreferencesData>) => queryOptions<GetNotificationPreferencesResponse, GetNotificationPreferencesError, GetNotificationPreferencesResponse, ReturnType<typeof getNotificationPreferencesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getNotificationPreferences({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getNotificationPreferencesQueryKey(options)
+});
+
+/**
+ * Change my Notification preferences
+ *
+ * Sets the channels for each kind given; security Notifications always show in app.
+ */
+export const setNotificationPreferencesMutation = (options?: Partial<Options<SetNotificationPreferencesData>>): UseMutationOptions<SetNotificationPreferencesResponse, SetNotificationPreferencesError, Options<SetNotificationPreferencesData>> => {
+    const mutationOptions: UseMutationOptions<SetNotificationPreferencesResponse, SetNotificationPreferencesError, Options<SetNotificationPreferencesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setNotificationPreferences({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listReleaseNotesQueryKey = (options?: Options<ListReleaseNotesData>) => createQueryKey('listReleaseNotes', options);
+
+/**
+ * List Release Notes
+ *
+ * Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+ */
+export const listReleaseNotesOptions = (options?: Options<ListReleaseNotesData>) => queryOptions<ListReleaseNotesResponse, ListReleaseNotesError, ListReleaseNotesResponse, ReturnType<typeof listReleaseNotesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listReleaseNotes({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listReleaseNotesQueryKey(options)
+});
+
+/**
+ * Draft a Release Note
+ *
+ * Starts the one Release Note of a full release, listing the features its changelog says it added. For Admins.
+ */
+export const draftReleaseNoteMutation = (options?: Partial<Options<DraftReleaseNoteData>>): UseMutationOptions<DraftReleaseNoteResponse, DraftReleaseNoteError, Options<DraftReleaseNoteData>> => {
+    const mutationOptions: UseMutationOptions<DraftReleaseNoteResponse, DraftReleaseNoteError, Options<DraftReleaseNoteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await draftReleaseNote({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Edit a Release Note
+ *
+ * Changes its words until it has been announced. For Admins.
+ */
+export const editReleaseNoteMutation = (options?: Partial<Options<EditReleaseNoteData>>): UseMutationOptions<EditReleaseNoteResponse, EditReleaseNoteError, Options<EditReleaseNoteData>> => {
+    const mutationOptions: UseMutationOptions<EditReleaseNoteResponse, EditReleaseNoteError, Options<EditReleaseNoteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await editReleaseNote({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Publish or schedule a Release Note
+ *
+ * Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+ */
+export const publishReleaseNoteMutation = (options?: Partial<Options<PublishReleaseNoteData>>): UseMutationOptions<PublishReleaseNoteResponse, PublishReleaseNoteError, Options<PublishReleaseNoteData>> => {
+    const mutationOptions: UseMutationOptions<PublishReleaseNoteResponse, PublishReleaseNoteError, Options<PublishReleaseNoteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await publishReleaseNote({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getUnseenReleaseNoteQueryKey = (options?: Options<GetUnseenReleaseNoteData>) => createQueryKey('getUnseenReleaseNote', options);
+
+/**
+ * Read the Release Note I have not seen
+ *
+ * The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+ */
+export const getUnseenReleaseNoteOptions = (options?: Options<GetUnseenReleaseNoteData>) => queryOptions<GetUnseenReleaseNoteResponse, GetUnseenReleaseNoteError, GetUnseenReleaseNoteResponse, ReturnType<typeof getUnseenReleaseNoteQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getUnseenReleaseNote({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getUnseenReleaseNoteQueryKey(options)
+});
+
+/**
+ * Mark a Release Note seen
+ *
+ * It no longer shows on the Dashboard.
+ */
+export const seeReleaseNoteMutation = (options?: Partial<Options<SeeReleaseNoteData>>): UseMutationOptions<SeeReleaseNoteResponse, SeeReleaseNoteError, Options<SeeReleaseNoteData>> => {
+    const mutationOptions: UseMutationOptions<SeeReleaseNoteResponse, SeeReleaseNoteError, Options<SeeReleaseNoteData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await seeReleaseNote({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getHealthQueryKey = (options?: Options<GetHealthData>) => createQueryKey('getHealth', options);
 

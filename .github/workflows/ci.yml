@@ -208,7 +208,7 @@ jobs:
         run: task build
       - name: Start API and web preview
         run: |
-          GRIMOIRE_ADDR=:18765 GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_AUTO_IMPORT=true GRIMOIRE_DEV_SUBJECT=e2e-player GRIMOIRE_RATE_LIMIT_PER_MINUTE=100000 api/bin/grimoire serve > /tmp/api.log 2>&1 &
+          GRIMOIRE_ADDR=:18765 GRIMOIRE_AUTO_MIGRATE=true GRIMOIRE_AUTO_IMPORT=true GRIMOIRE_DEV_SUBJECT=e2e-player GRIMOIRE_RATE_LIMIT_PER_MINUTE=100000 GRIMOIRE_ADMIN_SUBJECTS=e2e-admin api/bin/grimoire serve > /tmp/api.log 2>&1 &
           GRIMOIRE_API_ORIGIN=http://localhost:18765 pnpm --filter @grimoire/web preview > /tmp/web.log 2>&1 &
           for _ in $(seq 1 60); do
             if curl -sf http://localhost:18765/readyz >/dev/null && curl -sf http://localhost:4173 >/dev/null; then exit 0; fi

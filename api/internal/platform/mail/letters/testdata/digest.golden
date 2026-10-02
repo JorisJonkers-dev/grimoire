@@ -1,0 +1,43 @@
+Subject: What happened in Grimoire
+
+Hello Aria,
+
+Since your last Digest
+
+- Bram wrote to you: See you <Friday>
+  https://grimoire.example/conversations/1
+- Kara can level up
+
+-- 
+You get this email because of your Notification preferences in Grimoire.
+
+====
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>What happened in Grimoire</title>
+</head>
+<body style="margin:0;padding:0;background:#14110d;color:#ece3d3;font-family:Georgia,'Times New Roman',serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#14110d;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#1f1a14;border:1px solid #3a3127;border-radius:12px;">
+<tr><td align="center" style="padding:28px 28px 8px;font-size:13px;letter-spacing:0.3em;color:#c9a35a;">GRIMOIRE</td></tr>
+<tr><td style="padding:8px 28px 28px;font-size:16px;line-height:1.6;color:#ece3d3;">
+<p style="margin:0 0 16px;">Hello Aria,</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:normal;color:#e8c77f;text-align:center;">Since your last Digest</h1>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+<tr><td style="padding:10px 0;border-top:1px solid #3a3127;"><a href="https://grimoire.example/conversations/1" style="color:#e8c77f;text-decoration:none;">Bram wrote to you</a><br><span style="color:#bfb199;font-size:14px;">See you &lt;Friday&gt;</span>
+</td></tr>
+<tr><td style="padding:10px 0;border-top:1px solid #3a3127;"><span style="color:#e8c77f;">Kara can level up</span>
+</td></tr>
+</table>
+</td></tr>
+<tr><td align="center" style="padding:16px 28px 24px;border-top:1px solid #3a3127;font-size:12px;line-height:1.5;color:#8f826c;">You get this email because of your Notification preferences in Grimoire.</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

@@ -27,6 +27,10 @@ type Options struct {
 	Edits mcpapi.Edits
 	// OAuthIssuer is the authorization server MCP agents sign in with; empty leaves discovery out.
 	OAuthIssuer string
+	// Sessions turns session cookies into identities; nil leaves identity to forward-auth alone.
+	// TrustForwardAuth keeps an identity header the platform set; without it only a session sets one.
+	Sessions         httpx.SessionResolver
+	TrustForwardAuth bool
 }
 
 // New builds the full HTTP handler: generated router, security, rate limiting and dev identity.
@@ -42,25 +46,17 @@ func New(o Options) (http.Handler, error) {
 		Exempt: map[string]bool{"/healthz": true, "/readyz": true},
 		Log:    o.Handler.Log,
 	}
-	api := http.Handler(limiter.Wrap(srv))
-	if o.DevSubject != "" {
-		api = httpx.DevIdentity(o.DevSubject, api)
-	}
+	guarded := scoped(srv)
+	api := o.identity(limiter.Wrap(guarded))
 	mux := http.NewServeMux()
 	if o.Handler.Hub != nil {
-		socket := http.Handler(http.HandlerFunc(o.Handler.LiveSocket))
-		if o.DevSubject != "" {
-			socket = httpx.DevIdentity(o.DevSubject, socket)
-		}
+		socket := o.identity(playing(http.HandlerFunc(o.Handler.LiveSocket)))
 		mux.Handle("GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/live", socket)
 	}
 	if o.Edits != nil {
-		tools := http.Handler(limiter.Wrap(mcpapi.Handler(mcpapi.Options{
-			API: srv, Edits: o.Edits, Version: o.Handler.Version, Log: o.Handler.Log, Issuer: o.OAuthIssuer,
+		tools := o.identity(limiter.Wrap(mcpapi.Handler(mcpapi.Options{
+			API: guarded, Edits: o.Edits, Version: o.Handler.Version, Log: o.Handler.Log, Issuer: o.OAuthIssuer,
 		})))
-		if o.DevSubject != "" {
-			tools = httpx.DevIdentity(o.DevSubject, tools)
-		}
 		mux.Handle("/mcp", tools)
 	}
 	if o.OAuthIssuer != "" {
@@ -73,6 +69,17 @@ func New(o Options) (http.Handler, error) {
 		mux.Handle("/", o.Web)
 	}
 	return httpx.SecurityHeaders(mux), nil
+}
+
+// identity puts the request's identity in place: a session cookie first, then the development subject.
+func (o Options) identity(next http.Handler) http.Handler {
+	if o.DevSubject != "" {
+		next = httpx.DevIdentity(o.DevSubject, next)
+	}
+	if o.Sessions == nil {
+		return next
+	}
+	return httpx.Sessions(SessionCookie, o.Sessions, o.TrustForwardAuth, next)
 }
 
 func errorHandler(log *slog.Logger) ogenerrors.ErrorHandler {

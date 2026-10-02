@@ -19,14 +19,22 @@ import (
 
 var regexMap = map[string]ogenregex.Regexp{
 	"^([a-z0-9]+(-[a-z0-9]+)*)?$": ogenregex.MustCompile("^([a-z0-9]+(-[a-z0-9]+)*)?$"),
+	"^/":                          ogenregex.MustCompile("^/"),
 	"^/api/v1/":                   ogenregex.MustCompile("^/api/v1/"),
+	"^[0-9A-Za-z -]{6,16}$":       ogenregex.MustCompile("^[0-9A-Za-z -]{6,16}$"),
 	"^[0-9A-Za-z.+-]+$":           ogenregex.MustCompile("^[0-9A-Za-z.+-]+$"),
 	"^[0-9]+$":                    ogenregex.MustCompile("^[0-9]+$"),
+	"^[0-9]+\\.[0-9]+\\.[0-9]+$":  ogenregex.MustCompile("^[0-9]+\\.[0-9]+\\.[0-9]+$"),
 	"^[0-9dDkKhHlL+\\- ]+$":       ogenregex.MustCompile("^[0-9dDkKhHlL+\\- ]+$"),
+	"^[A-Z2-7]{32}$":              ogenregex.MustCompile("^[A-Z2-7]{32}$"),
 	"^[A-Za-z0-9_-]+$":            ogenregex.MustCompile("^[A-Za-z0-9_-]+$"),
+	"^[A-Za-z0-9_-]{20,64}$":      ogenregex.MustCompile("^[A-Za-z0-9_-]{20,64}$"),
 	"^[^\\s]+$":                   ogenregex.MustCompile("^[^\\s]+$"),
 	"^[a-z0-9]+(-[a-z0-9]+)*$":    ogenregex.MustCompile("^[a-z0-9]+(-[a-z0-9]+)*$"),
+	"^[a-z0-9][a-z0-9_.-]{2,31}$": ogenregex.MustCompile("^[a-z0-9][a-z0-9_.-]{2,31}$"),
+	"^[a-z1-9]{5}-[a-z1-9]{5}$":   ogenregex.MustCompile("^[a-z1-9]{5}-[a-z1-9]{5}$"),
 	"^[a-z][a-z0-9-]{0,39}$":      ogenregex.MustCompile("^[a-z][a-z0-9-]{0,39}$"),
+	"^gmt_[A-Za-z0-9_-]{43}$":     ogenregex.MustCompile("^gmt_[A-Za-z0-9_-]{43}$"),
 	"^https://":                   ogenregex.MustCompile("^https://"),
 }
 var (

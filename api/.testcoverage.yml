@@ -12,3 +12,4 @@ exclude:
     - /oas/                        # ogen-generated
     - /queries/                    # sqlc-generated
     - /pgtest/                     # test helper
+    - /oidctest/                   # test helper

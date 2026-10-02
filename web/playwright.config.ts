@@ -34,6 +34,7 @@ export default defineConfig({
         GRIMOIRE_DEV_SUBJECT: devSubject,
         GRIMOIRE_ADDR: ':18765',
         GRIMOIRE_RATE_LIMIT_PER_MINUTE: rateLimit,
+        GRIMOIRE_ADMIN_SUBJECTS: 'e2e-admin',
       },
     },
     {

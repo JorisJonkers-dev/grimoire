@@ -1,0 +1,39 @@
+Subject: A Proposal for your Campaign
+
+Hello Aria,
+
+proposal_to_dm
+
+Something happened that you asked to hear about.
+
+Open: https://grimoire.example/x
+
+-- 
+You get this email because of your Notification preferences in Grimoire.
+
+====
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>A Proposal for your Campaign</title>
+</head>
+<body style="margin:0;padding:0;background:#14110d;color:#ece3d3;font-family:Georgia,'Times New Roman',serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#14110d;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#1f1a14;border:1px solid #3a3127;border-radius:12px;">
+<tr><td align="center" style="padding:28px 28px 8px;font-size:13px;letter-spacing:0.3em;color:#c9a35a;">GRIMOIRE</td></tr>
+<tr><td style="padding:8px 28px 28px;font-size:16px;line-height:1.6;color:#ece3d3;">
+<p style="margin:0 0 16px;">Hello Aria,</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:normal;color:#e8c77f;text-align:center;">proposal_to_dm</h1>
+<p style="margin:0 0 16px;">Something happened that you asked to hear about.</p>
+<p style="margin:24px 0 8px;text-align:center;"><a href="https://grimoire.example/x" style="display:inline-block;padding:12px 24px;background:#c9a35a;color:#14110d;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;">Open</a></p>
+</td></tr>
+<tr><td align="center" style="padding:16px 28px 24px;border-top:1px solid #3a3127;font-size:12px;line-height:1.5;color:#8f826c;">You get this email because of your Notification preferences in Grimoire.</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

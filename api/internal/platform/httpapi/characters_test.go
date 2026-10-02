@@ -121,6 +121,22 @@ func (b brokenCharacters) Image(context.Context, caller.Caller, domain.CampaignI
 	return domain.Image{}, nil, b.err
 }
 
+func (b brokenCharacters) Mine(context.Context, caller.Caller) ([]domain.OwnedCharacter, error) {
+	return nil, b.err
+}
+
+func (b brokenCharacters) Owned(context.Context, caller.Caller, domain.OwnedID) (domain.OwnedCharacter, error) {
+	return domain.OwnedCharacter{}, b.err
+}
+
+func (b brokenCharacters) UpdateOwned(context.Context, caller.Caller, domain.OwnedID, string, string) (domain.OwnedCharacter, error) {
+	return domain.OwnedCharacter{}, b.err
+}
+
+func (b brokenCharacters) Join(context.Context, caller.Caller, domain.OwnedID, domain.CampaignID) (app.Sheet, error) {
+	return app.Sheet{}, b.err
+}
+
 func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	base := "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/characters"
@@ -135,6 +151,10 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodGet, one + "/portrait", ""},
 		{http.MethodGet, one + "/token", ""},
 		{http.MethodDelete, one + "/token", ""},
+		{http.MethodGet, "/api/v1/characters", ""},
+		{http.MethodGet, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", ""},
+		{http.MethodPut, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", `{"name":"X","backstory":""}`},
+		{http.MethodPost, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003/campaigns", `{"campaignId":"0190c7a8-0000-7000-8000-000000000001"}`},
 	}
 	for err, code := range map[error]int{domain.ErrLocked: http.StatusConflict, errors.New("disk"): http.StatusServiceUnavailable} {
 		h := campaignServer(t, brokenCampaigns{}, httpapi.CharacterService(brokenCharacters{err: err}))
@@ -159,6 +179,10 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.ClearTokenIcon(ctx, oas.ClearTokenIconParams{}))
 	add(h.GetPortrait(ctx, oas.GetPortraitParams{}))
 	add(h.GetTokenIcon(ctx, oas.GetTokenIconParams{}))
+	add(h.ListMyCharacters(ctx))
+	add(h.GetMyCharacter(ctx, oas.GetMyCharacterParams{}))
+	add(h.UpdateMyCharacter(ctx, &oas.OwnedCharacterChange{}, oas.UpdateMyCharacterParams{}))
+	add(h.JoinCampaign(ctx, &oas.CharacterJoin{}, oas.JoinCampaignParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

@@ -3,6 +3,7 @@ package pgstore_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,11 +22,17 @@ func TestRestsAreStored(t *testing.T) {
 	tb := setup(t)
 	s, _ := sessions(tb, pgstore.New(tb.pool), &closed{}).Start(ctx, dm, tb.campaign)
 	char := uuid.New()
-	if _, err := tb.pool.Exec(ctx, `INSERT INTO campaign.characters (id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
-		ability_method, hp_max, hp_current, level) VALUES ($1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 5, 4)`, char, tb.campaign, tb.playerID); err != nil {
+	if _, err := tb.pool.Exec(ctx, `WITH hero AS (INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+			SELECT $1, m.auth_subject, 'Hero', 'srd-2024', 'human', 'fighter', 'soldier', now(), now() FROM campaign.members m WHERE m.id = $3)
+		INSERT INTO campaign.characters (character_id, id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
+		ability_method, hp_max, hp_current, level) VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 20, 5, 4)`, char, tb.campaign, tb.playerID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := tb.pool.Exec(ctx, "INSERT INTO campaign.character_resources (character_id, resource_slug, used) VALUES ($1, 'second-wind', 1)", char); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tb.pool.Exec(ctx, `INSERT INTO identity.accounts (id, subject, username, nickname, created_at)
+		SELECT gen_random_uuid(), auth_subject, 'player-one', 'Player', now() FROM campaign.members WHERE id = $1`, tb.playerID); err != nil {
 		t.Fatal(err)
 	}
 	store := pgstore.New(tb.pool)
@@ -66,6 +73,11 @@ func TestRestsAreStored(t *testing.T) {
 	var ready bool
 	if err := tb.pool.QueryRow(ctx, "SELECT hp_current, level_up_ready FROM campaign.characters WHERE id = $1", char).Scan(&hp, &ready); err != nil || hp != 20 || !ready {
 		t.Fatalf("hp %d ready %v %v", hp, ready, err)
+	}
+	var title, path string
+	if err := tb.pool.QueryRow(ctx, "SELECT title, action_path FROM social.notifications WHERE kind = 'level_up'").Scan(&title, &path); err != nil ||
+		title != "Aria can level up" || !strings.HasSuffix(path, "/characters/"+char.String()) {
+		t.Fatalf("level-up notice = %q %q %v", title, path, err)
 	}
 	ops := map[string]func(repo *pgstore.Store) error{
 		"info": func(repo *pgstore.Store) error {

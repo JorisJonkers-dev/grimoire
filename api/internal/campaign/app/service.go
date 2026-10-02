@@ -40,6 +40,9 @@ type Repository interface {
 	Characters(ctx context.Context, id domain.CampaignID) ([]domain.Character, error)
 	UpdateCharacter(ctx context.Context, c domain.Character, now time.Time) error
 	DeleteCharacter(ctx context.Context, id domain.CampaignID, ch domain.CharacterID) error
+	OwnedCharacters(ctx context.Context, subject string) ([]domain.OwnedCharacter, error)
+	OwnedCharacter(ctx context.Context, id domain.OwnedID) (domain.OwnedCharacter, error)
+	UpdateOwnedCharacter(ctx context.Context, id domain.OwnedID, name, backstory string, now time.Time) error
 	SetCharacterImage(ctx context.Context, id domain.CampaignID, ch domain.CharacterID, kind domain.ImageKind, img *domain.Image, now time.Time) error
 	InsertNPC(ctx context.Context, id domain.CampaignID, npcID *domain.NPCID, n domain.NPC, now time.Time) (domain.NPCID, error)
 	UpdateNPC(ctx context.Context, id domain.CampaignID, n domain.NPC, now time.Time) (bool, error)

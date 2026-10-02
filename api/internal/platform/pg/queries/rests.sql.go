@@ -7,6 +7,7 @@ package queries
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -169,6 +170,29 @@ func (q *Queries) ListRestResters(ctx context.Context, sessionID uuid.UUID) ([]L
 		return nil, err
 	}
 	return items, nil
+}
+
+const notifyLevelUp = `-- name: NotifyLevelUp :exec
+INSERT INTO social.notifications (id, account_id, kind, title, body, action_label, action_path, dedupe_key, created_at)
+SELECT gen_random_uuid(), a.id, 'level_up', left(c.name || ' can level up', 120), 'A long rest unlocked the next level.', 'Open',
+    '/campaigns/' || c.campaign_id || '/characters/' || c.id, 'level_up:' || c.id, $1
+FROM campaign.characters c
+JOIN campaign.account_characters o ON o.id = c.character_id
+JOIN identity.accounts a ON a.subject = o.owner_subject
+WHERE c.id = $2
+    AND coalesce((SELECT p.enabled FROM social.notification_preferences p WHERE p.account_id = a.id AND p.kind = 'level_up' AND p.channel = 'in_app'), true)
+ON CONFLICT (account_id, dedupe_key) WHERE read_at IS NULL AND dedupe_key <> '' DO UPDATE SET created_at = EXCLUDED.created_at
+`
+
+type NotifyLevelUpParams struct {
+	Now         time.Time
+	CharacterID uuid.UUID
+}
+
+// The Account playing a Campaign Character hears it may level up, unless it turned that off in app.
+func (q *Queries) NotifyLevelUp(ctx context.Context, arg NotifyLevelUpParams) error {
+	_, err := q.db.Exec(ctx, notifyLevelUp, arg.Now, arg.CharacterID)
+	return err
 }
 
 const restAbilities = `-- name: RestAbilities :many

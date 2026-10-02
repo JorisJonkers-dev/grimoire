@@ -34,6 +34,15 @@ type Handler struct {
 	LiveMembers LiveMembers
 	// Push keeps devices' notification subscriptions; nil means the server sends none.
 	Push PushService
+	// Accounts are Grimoire's own Accounts and their sign-ins.
+	Accounts AccountService
+	// OIDCName names the external sign-in on the sign-in page.
+	OIDCName string
+	// Friends are Friends between Accounts, and Conversations their talk.
+	Friends       FriendService
+	Conversations ConversationService
+	Notifications NotificationService
+	Releases      ReleaseService
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
 	LiveTimeout time.Duration
 	Log         *slog.Logger

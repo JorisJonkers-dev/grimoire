@@ -7,7 +7,7 @@ export type FieldRule = (value: string) => string | undefined
 const props = withDefaults(
   defineProps<{
     label: string
-    type?: 'text' | 'number' | 'email' | 'search' | 'url'
+    type?: 'text' | 'number' | 'email' | 'search' | 'url' | 'password'
     required?: boolean
     rules?: FieldRule[]
     hint?: string

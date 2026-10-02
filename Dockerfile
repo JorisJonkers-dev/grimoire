@@ -36,6 +36,9 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags 
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=app /out/grimoire /grimoire
+# Release Notes are drafted from the release's features.
+COPY CHANGELOG.md /CHANGELOG.md
+ENV GRIMOIRE_CHANGELOG=/CHANGELOG.md
 EXPOSE 8080
 USER nonroot:nonroot
 ENTRYPOINT ["/grimoire"]

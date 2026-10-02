@@ -28,8 +28,10 @@ func TestInventoriesAreStoredWithTheirTransfers(t *testing.T) {
 		t.Fatal(err)
 	}
 	char := uuid.New()
-	if _, err := tb.pool.Exec(ctx, `INSERT INTO campaign.characters (id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
-		ability_method, hp_max, hp_current) VALUES ($1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 10, 10)`, char, tb.campaign, tb.playerID); err != nil {
+	if _, err := tb.pool.Exec(ctx, `WITH hero AS (INSERT INTO campaign.account_characters (id, owner_subject, name, ruleset, species_slug, class_slug, background_slug, created_at, updated_at)
+			SELECT $1, m.auth_subject, 'Hero', 'srd-2024', 'human', 'fighter', 'soldier', now(), now() FROM campaign.members m WHERE m.id = $3)
+		INSERT INTO campaign.characters (character_id, id, campaign_id, owner_member_id, name, ruleset, species_slug, class_slug, background_slug,
+		ability_method, hp_max, hp_current) VALUES ($1, $1, $2, $3, 'Aria', 'srd-2024', 'human', 'fighter', 'soldier', 'standard-array', 10, 10)`, char, tb.campaign, tb.playerID); err != nil {
 		t.Fatal(err)
 	}
 	store := pgstore.New(tb.pool)

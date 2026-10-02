@@ -334,7 +334,17 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 		t.Fatal(err)
 	}
 	name := "Renamed"
+	svc, _ := service(t, pgstore.New(db.Pool()))
+	svc.Token = app.RandomToken
+	other := table(t, svc)
 	ops := map[string]func(c *app.Characters) error{
+		"mine":  func(c *app.Characters) error { _, err := c.Mine(ctx, playerCaller); return err },
+		"owned": func(c *app.Characters) error { _, err := c.Owned(ctx, playerCaller, sheet.Owned); return err },
+		"update owned": func(c *app.Characters) error {
+			_, err := c.UpdateOwned(ctx, playerCaller, sheet.Owned, "Kara Vale", "")
+			return err
+		},
+		"join":    func(c *app.Characters) error { _, err := c.Join(ctx, playerCaller, sheet.Owned, other.ID); return err },
 		"create":  func(c *app.Characters) error { _, err := c.Create(ctx, playerCaller, d.ID, fighter()); return err },
 		"preview": func(c *app.Characters) error { _, err := c.Preview(ctx, playerCaller, d.ID, fighter()); return err },
 		"list":    func(c *app.Characters) error { _, err := c.List(ctx, playerCaller, d.ID); return err },

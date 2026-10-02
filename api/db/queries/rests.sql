@@ -55,3 +55,15 @@ ON CONFLICT (character_id, resource_slug) DO UPDATE SET used = excluded.used;
 INSERT INTO campaign.character_resources (character_id, resource_slug, used)
 SELECT c.id, @resource_slug::text, LEAST(100, GREATEST(0, 0 - @delta::integer)) FROM campaign.characters c WHERE c.id = @character_id
 ON CONFLICT (character_id, resource_slug) DO UPDATE SET used = LEAST(100, GREATEST(0, campaign.character_resources.used - @delta::integer));
+
+-- name: NotifyLevelUp :exec
+-- The Account playing a Campaign Character hears it may level up, unless it turned that off in app.
+INSERT INTO social.notifications (id, account_id, kind, title, body, action_label, action_path, dedupe_key, created_at)
+SELECT gen_random_uuid(), a.id, 'level_up', left(c.name || ' can level up', 120), 'A long rest unlocked the next level.', 'Open',
+    '/campaigns/' || c.campaign_id || '/characters/' || c.id, 'level_up:' || c.id, @now
+FROM campaign.characters c
+JOIN campaign.account_characters o ON o.id = c.character_id
+JOIN identity.accounts a ON a.subject = o.owner_subject
+WHERE c.id = @character_id
+    AND coalesce((SELECT p.enabled FROM social.notification_preferences p WHERE p.account_id = a.id AND p.kind = 'level_up' AND p.channel = 'in_app'), true)
+ON CONFLICT (account_id, dedupe_key) WHERE read_at IS NULL AND dedupe_key <> '' DO UPDATE SET created_at = EXCLUDED.created_at;

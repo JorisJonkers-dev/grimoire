@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -23,8 +24,13 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/open5e"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
+	identityapp "github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/oidc"
+	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpx"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/push"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/rng"
@@ -36,6 +42,8 @@ import (
 	prepapp "github.com/JorisJonkers-dev/grimoire/api/internal/prep/app"
 	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
+	socialapp "github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
+	socialpg "github.com/JorisJonkers-dev/grimoire/api/internal/social/pgstore"
 )
 
 // version is set at build time with -ldflags "-X main.version=…".
@@ -124,6 +132,45 @@ func crossCheck(ctx context.Context, args []string) error {
 	return os.WriteFile(out, []byte(report.Markdown()), 0o600) //nolint:gosec // developer command writing where the developer points it
 }
 
+// changelogAt reads the release changelog Release Notes are drafted from, each time one is drafted;
+// a missing file drafts them empty.
+func changelogAt(path string) func() string {
+	return func() string {
+		body, err := os.ReadFile(path) //nolint:gosec // a path from the configuration
+		if err != nil {
+			return ""
+		}
+		return string(body)
+	}
+}
+
+// digests announces Release Notes that went live and sends the hourly email Digests until the server
+// stops.
+func digests(ctx context.Context, social *socialapp.Service, logger *slog.Logger) {
+	tick := time.NewTicker(5 * time.Minute)
+	defer tick.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+			if err := social.AnnounceReleases(ctx); err != nil {
+				logger.Warn("release notes", "error", err)
+			}
+			if err := social.SendDigests(ctx); err != nil {
+				logger.Warn("digest", "error", err)
+			}
+		}
+	}
+}
+
+func mailer(cfg config.Config, logger *slog.Logger) identityapp.Mailer {
+	if s := cfg.SMTP; s != nil {
+		return mail.SMTP{Addr: s.Addr, Username: s.Username, Password: s.Password, From: s.From, Now: time.Now}
+	}
+	return mail.Log{Log: logger}
+}
+
 func blobs(cfg config.Config, logger *slog.Logger) campaignapp.Blobs {
 	if cfg.S3 != nil {
 		logger.Info("assets in S3", "endpoint", cfg.S3.Endpoint, "bucket", cfg.S3.Bucket)
@@ -196,9 +243,31 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		defer sender.Wait()
 		hub.Notify, notices = sender, sender
 	}
+	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now, Mailer: mailer(cfg, logger), Devices: nil, BaseURL: cfg.BaseURL, Changelog: changelogAt(cfg.Changelog)}
+	if s, ok := notices.(*push.Sender); ok {
+		social.Devices = s
+	}
+	go digests(ctx, social, logger)
+	accounts := &identityapp.Service{
+		Repo: identitypg.New(store.Pool()), Mailer: mailer(cfg, logger), Passwords: identityapp.DefaultPasswords(), Now: time.Now,
+		Admins: map[string]bool{}, BaseURL: cfg.BaseURL, Strong: httpx.Strong, Alerts: social,
+	}
+	for _, s := range cfg.AdminSubjects {
+		accounts.Admins[s] = true
+	}
+	oidcName := ""
+	if o := cfg.OIDC; o != nil {
+		accounts.OIDC = oidc.New(oidc.Config{
+			Issuer: o.Issuer, ClientID: o.ClientID, ClientSecret: o.ClientSecret, RedirectURL: strings.TrimRight(cfg.BaseURL, "/") + "/oidc/callback",
+			RolesClaim: o.RolesClaim, HTTP: &http.Client{Timeout: 10 * time.Second},
+		})
+		accounts.Grant, accounts.AdminRole, oidcName = o.GrantRole, o.AdminRole, o.Name
+	}
 	handler, err := httpapi.New(httpapi.Options{
+		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
-			Push:    notices,
+			Push: notices, Accounts: accounts, OIDCName: oidcName,
+			Friends: social, Conversations: social, Notifications: social, Releases: social,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

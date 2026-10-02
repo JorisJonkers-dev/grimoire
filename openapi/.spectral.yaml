@@ -12,3 +12,21 @@ overrides:
     rules:
       owasp:api4:2023-rate-limit: off
       owasp:api2:2023-read-restricted: off
+  # Signing in, setting up an Account from an invite and using an emailed link happen before there is
+  # an identity, so these writes are anonymous by design; they are rate limited per client address.
+  - files:
+      - "v1/openapi.yaml#/paths/~1api~1v1~1account-invites~1accept"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-out"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in-links"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in-links~1use"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1account-invites~1preview"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in-methods"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1sign-in~1two-step"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1sign-ins"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1callback"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1accounts"
+      - "v1/openapi.yaml#/paths/~1api~1v1~1oidc~1links"
+    rules:
+      owasp:api2:2023-write-restricted: off
+      owasp:api2:2023-read-restricted: off

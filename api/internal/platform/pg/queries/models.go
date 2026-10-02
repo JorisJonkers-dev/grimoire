@@ -11,6 +11,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type CampaignAccountCharacter struct {
+	ID             uuid.UUID
+	OwnerSubject   string
+	Name           string
+	Ruleset        string
+	SpeciesSlug    string
+	ClassSlug      string
+	BackgroundSlug string
+	Backstory      string
+	PortraitKey    pgtype.Text
+	PortraitType   pgtype.Text
+	TokenKey       pgtype.Text
+	TokenType      pgtype.Text
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
 type CampaignCampaign struct {
 	ID               uuid.UUID
 	Name             string
@@ -49,6 +66,7 @@ type CampaignCharacter struct {
 	TokenType      pgtype.Text
 	HitDiceSpent   int32
 	LevelUpReady   bool
+	CharacterID    pgtype.UUID
 }
 
 type CampaignCharacterAbility struct {
@@ -862,6 +880,126 @@ type CompendiumWeaponProperty struct {
 	Detail   pgtype.Text
 }
 
+type IdentityAccessToken struct {
+	ID         uuid.UUID
+	AccountID  uuid.UUID
+	Name       string
+	Scopes     []string
+	TokenHash  []byte
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+	LastUsedAt pgtype.Timestamptz
+	RevokedAt  pgtype.Timestamptz
+}
+
+type IdentityAccount struct {
+	ID           uuid.UUID
+	Subject      string
+	Username     string
+	Nickname     string
+	Email        pgtype.Text
+	PasswordHash pgtype.Text
+	Admin        bool
+	Disabled     bool
+	CreatedAt    time.Time
+}
+
+type IdentityAccountEvent struct {
+	ID        uuid.UUID
+	AccountID uuid.UUID
+	Actor     string
+	Action    string
+	Detail    string
+	At        time.Time
+}
+
+type IdentityAccountSession struct {
+	ID         uuid.UUID
+	AccountID  uuid.UUID
+	TokenHash  []byte
+	UserAgent  string
+	CreatedAt  time.Time
+	LastSeenAt time.Time
+	ExpiresAt  time.Time
+	RevokedAt  pgtype.Timestamptz
+	Strong     bool
+}
+
+type IdentityInvite struct {
+	ID        uuid.UUID
+	TokenHash []byte
+	CreatedBy string
+	Admin     bool
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+	AccountID pgtype.UUID
+}
+
+type IdentityOidcLink struct {
+	AccountID uuid.UUID
+	Issuer    string
+	Subject   string
+	Email     string
+	Username  string
+	Name      string
+	LinkedAt  time.Time
+}
+
+type IdentityOidcPending struct {
+	TokenHash []byte
+	Issuer    string
+	Subject   string
+	Email     string
+	Username  string
+	Name      string
+	Admin     bool
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
+type IdentityOidcRequest struct {
+	StateHash []byte
+	Nonce     string
+	Verifier  string
+	AccountID pgtype.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
+type IdentityRecoveryCode struct {
+	CodeHash  []byte
+	AccountID uuid.UUID
+	UsedAt    pgtype.Timestamptz
+}
+
+type IdentitySignInLink struct {
+	TokenHash []byte
+	AccountID uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
+type IdentityTotpFactor struct {
+	AccountID   uuid.UUID
+	Secret      string
+	CreatedAt   time.Time
+	ConfirmedAt pgtype.Timestamptz
+	LastStep    int64
+}
+
+type IdentityTwoStepChallenge struct {
+	TokenHash []byte
+	AccountID uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+	Attempts  int32
+}
+
 type OpsCompendiumImport struct {
 	ID           int64
 	SnapshotHash string
@@ -1553,4 +1691,111 @@ type PrepTableRevisionMonster struct {
 	Position    int32
 	MonsterSlug string
 	Count       int32
+}
+
+type SocialBlock struct {
+	Blocker   uuid.UUID
+	Blocked   uuid.UUID
+	CreatedAt time.Time
+}
+
+type SocialConversation struct {
+	ID        uuid.UUID
+	Title     string
+	CreatedBy uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type SocialConversationMember struct {
+	ConversationID uuid.UUID
+	AccountID      uuid.UUID
+	JoinedAt       time.Time
+	LastReadAt     time.Time
+}
+
+type SocialDigest struct {
+	AccountID uuid.UUID
+	SentAt    time.Time
+}
+
+type SocialEmailQueue struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	DedupeKey   string
+	CreatedAt   time.Time
+}
+
+type SocialFriendRequest struct {
+	ID          uuid.UUID
+	FromAccount uuid.UUID
+	ToAccount   uuid.UUID
+	Status      string
+	CreatedAt   time.Time
+	DecidedAt   pgtype.Timestamptz
+}
+
+type SocialFriendship struct {
+	A     uuid.UUID
+	B     uuid.UUID
+	Since time.Time
+}
+
+type SocialMessage struct {
+	ID             uuid.UUID
+	ConversationID uuid.UUID
+	Author         uuid.UUID
+	Body           string
+	CreatedAt      time.Time
+}
+
+type SocialMessageMention struct {
+	MessageID  uuid.UUID
+	Ordinal    int32
+	Kind       string
+	CampaignID uuid.UUID
+	TargetID   uuid.UUID
+}
+
+type SocialNotification struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Kind        string
+	Title       string
+	Body        string
+	ActionLabel string
+	ActionPath  string
+	DedupeKey   string
+	CreatedAt   time.Time
+	ReadAt      pgtype.Timestamptz
+}
+
+type SocialNotificationPreference struct {
+	AccountID uuid.UUID
+	Kind      string
+	Channel   string
+	Enabled   bool
+}
+
+type SocialReleaseNote struct {
+	ID          uuid.UUID
+	Version     string
+	Title       string
+	Body        string
+	CreatedBy   string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishAt   pgtype.Timestamptz
+	AnnouncedAt pgtype.Timestamptz
+}
+
+type SocialReleaseNoteView struct {
+	NoteID    uuid.UUID
+	AccountID uuid.UUID
+	SeenAt    time.Time
 }

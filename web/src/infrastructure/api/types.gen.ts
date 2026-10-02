@@ -131,6 +131,586 @@ export type CampaignUpdate = {
 };
 
 /**
+ * A Grimoire Account.
+ */
+export type Account = {
+    id: Id;
+    username: Username;
+    nickname: string;
+    email: string;
+    admin: boolean;
+    /**
+     * Whether the Account can sign in with a password.
+     */
+    hasPassword: boolean;
+    /**
+     * Whether two-step sign-in is on.
+     */
+    twoStep: boolean;
+    recoveryCodesLeft: number;
+    /**
+     * Whether this request holds Admin powers; an Admin needs two-step or the external login.
+     */
+    adminPowers: boolean;
+    oidc?: OidcLink;
+};
+
+/**
+ * Turns a setting on or off.
+ */
+export type Toggle = {
+    value: boolean;
+};
+
+/**
+ * One thing that happened to an Account, and who did it.
+ */
+export type AccountEvent = {
+    at: string;
+    /**
+     * The Username of whoever did it, or their subject when they have no Account.
+     */
+    actor: string;
+    action: 'created' | 'password_set' | 'two_step_on' | 'two_step_off' | 'two_step_reset' | 'linked' | 'unlinked' | 'sign_in_link_sent' | 'admin_granted' | 'admin_revoked' | 'disabled' | 'enabled' | 'new_sign_in';
+    detail: string;
+};
+
+/**
+ * An Account's history, newest first.
+ */
+export type AccountEventList = {
+    items: Array<AccountEvent>;
+};
+
+/**
+ * An Account in the Admin list.
+ */
+export type AdminAccountRow = {
+    id: Id;
+    username: Username;
+    nickname: string;
+    email: string;
+    admin: boolean;
+    status: 'active' | 'disabled';
+    createdAt: string;
+    lastSeenAt?: string;
+};
+
+/**
+ * An Invite nobody has used, open until it expires.
+ */
+export type AdminInviteRow = {
+    id: Id;
+    admin: boolean;
+    status: 'invited' | 'expired';
+    createdAt: string;
+    expiresAt: string;
+};
+
+/**
+ * Every Account and every unused Invite.
+ */
+export type AdminAccountList = {
+    accounts: Array<AdminAccountRow>;
+    invites: Array<AdminInviteRow>;
+};
+
+/**
+ * A Campaign an Account belongs to, and its role there.
+ */
+export type AdminCampaign = {
+    id: Id;
+    name: string;
+    role: string;
+};
+
+/**
+ * One Account as its Admin page shows it.
+ */
+export type AdminAccountDetail = {
+    account: Account;
+    status: 'active' | 'disabled';
+    createdAt: string;
+    sessions: number;
+    tokens: number;
+    campaigns: Array<AdminCampaign>;
+    history: Array<AccountEvent>;
+};
+
+/**
+ * What a Mention points at.
+ */
+export type MentionKind = 'character' | 'location';
+
+/**
+ * Game content a message mentions.
+ */
+export type MentionRef = {
+    kind: MentionKind;
+    campaignId: Id;
+    id: Id;
+};
+
+/**
+ * A Mention as the reader sees it; label and mapId appear only when they may open it.
+ */
+export type MentionView = {
+    kind: MentionKind;
+    campaignId: Id;
+    id: Id;
+    open: boolean;
+    label?: string;
+    mapId?: Id;
+};
+
+/**
+ * One message in a Conversation.
+ */
+export type MessageEntry = {
+    id: Id;
+    author: Person;
+    body: string;
+    at: string;
+    mentions: Array<MentionView>;
+};
+
+/**
+ * A page of messages, newest first.
+ */
+export type MessagePage = {
+    items: Array<MessageEntry>;
+};
+
+/**
+ * A new message and what it mentions.
+ */
+export type MessageSend = {
+    body: string;
+    mentions?: Array<MentionRef>;
+};
+
+/**
+ * A Conversation in its members' list.
+ */
+export type ConversationEntry = {
+    id: Id;
+    title: string;
+    members: Array<Person>;
+    updatedAt: string;
+    unread: number;
+    lastBody: string;
+};
+
+/**
+ * An Account's Conversations.
+ */
+export type ConversationList = {
+    items: Array<ConversationEntry>;
+};
+
+/**
+ * The Friends to talk with, and a title for a group.
+ */
+export type ConversationStart = {
+    with: Array<Id>;
+    title?: string;
+};
+
+/**
+ * A Conversation's id.
+ */
+export type ConversationRef = {
+    id: Id;
+};
+
+/**
+ * Something the caller may mention.
+ */
+export type Mentionable = {
+    kind: MentionKind;
+    id: Id;
+    name: string;
+    campaignId: Id;
+    campaignName: string;
+};
+
+/**
+ * What the caller may mention.
+ */
+export type MentionableList = {
+    items: Array<Mentionable>;
+};
+
+/**
+ * What one full release brought; status says whether it is a draft, scheduled or live.
+ */
+export type ReleaseNote = {
+    id: Id;
+    version: string;
+    title: string;
+    body: string;
+    status: 'draft' | 'scheduled' | 'published';
+    publishAt?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/**
+ * Release Notes, newest first.
+ */
+export type ReleaseNoteList = {
+    items: Array<ReleaseNote>;
+};
+
+/**
+ * The full release to draft a Release Note for.
+ */
+export type ReleaseNoteDraft = {
+    version: string;
+};
+
+/**
+ * A Release Note's new title and body.
+ */
+export type ReleaseNoteChange = {
+    title: string;
+    body: string;
+};
+
+/**
+ * When the Release Note goes live; omitted, now.
+ */
+export type ReleaseNotePublish = {
+    at?: string;
+};
+
+/**
+ * The newest live Release Note the caller has not seen, when there is one.
+ */
+export type UnseenReleaseNote = {
+    note?: ReleaseNote;
+};
+
+/**
+ * What a Notification is about.
+ */
+export type NotificationKind = 'proposal' | 'join_request' | 'level_up' | 'friend_request' | 'conversation' | 'session_reminder' | 'release_note' | 'security';
+
+/**
+ * A Notification with the one action it offers.
+ */
+export type NotificationEntry = {
+    id: Id;
+    kind: NotificationKind;
+    title: string;
+    body: string;
+    actionLabel: string;
+    actionPath: string;
+    at: string;
+    read: boolean;
+};
+
+/**
+ * The latest Notifications and the unread count.
+ */
+export type NotificationList = {
+    items: Array<NotificationEntry>;
+    unread: number;
+};
+
+/**
+ * Which channels one kind reaches.
+ */
+export type NotificationPreference = {
+    kind: NotificationKind;
+    inApp: boolean;
+    push: boolean;
+    email: boolean;
+};
+
+/**
+ * The channels each Notification kind reaches.
+ */
+export type NotificationPreferences = {
+    items: Array<NotificationPreference>;
+};
+
+/**
+ * Another Account as social pages show it.
+ */
+export type Person = {
+    id: Id;
+    username: Username;
+    nickname: string;
+};
+
+/**
+ * A Friend, and since when.
+ */
+export type FriendEntry = {
+    person: Person;
+    since: string;
+};
+
+/**
+ * A Friend request and the Account on its other side.
+ */
+export type FriendRequestEntry = {
+    id: Id;
+    person: Person;
+    at: string;
+};
+
+/**
+ * Friends, Friend requests both ways, and blocked Accounts.
+ */
+export type FriendsPage = {
+    friends: Array<FriendEntry>;
+    incoming: Array<FriendRequestEntry>;
+    outgoing: Array<FriendRequestEntry>;
+    blocked: Array<FriendRequestEntry>;
+};
+
+/**
+ * The Username to ask.
+ */
+export type FriendRequestCreate = {
+    username: string;
+};
+
+/**
+ * Whether to block the sender too.
+ */
+export type FriendRequestDecline = {
+    block?: boolean;
+};
+
+/**
+ * What an Access Token may do. read covers every read, build changes Campaigns and their prep, play acts in Sessions.
+ */
+export type AccessTokenScope = 'read' | 'build' | 'play';
+
+/**
+ * An Access Token, without the token itself.
+ */
+export type AccessToken = {
+    id: Id;
+    name: string;
+    scopes: Array<AccessTokenScope>;
+    createdAt: string;
+    expiresAt: string;
+    lastUsedAt?: string;
+};
+
+/**
+ * An Account's live Access Tokens.
+ */
+export type AccessTokenList = {
+    items: Array<AccessToken>;
+};
+
+/**
+ * A name, the scopes and how many days a new Access Token lives.
+ */
+export type AccessTokenRequest = {
+    name: string;
+    scopes: Array<AccessTokenScope>;
+    days: number;
+};
+
+/**
+ * A new Access Token; token is shown only now.
+ */
+export type AccessTokenCreated = {
+    token: string;
+    accessToken: AccessToken;
+};
+
+/**
+ * A sign-in waiting for its second step.
+ */
+export type TwoStepChallenge = {
+    challenge: string;
+};
+
+/**
+ * A challenge and the code that answers it, from the authenticator app or a recovery code.
+ */
+export type TwoStepAnswer = {
+    challenge: string;
+    code: string;
+};
+
+/**
+ * A code from the authenticator app or a recovery code.
+ */
+export type TwoStepCode = {
+    code: string;
+};
+
+/**
+ * A new authenticator secret and the otpauth URI that adds it to an app.
+ */
+export type TwoStepSetup = {
+    secret: string;
+    uri: string;
+};
+
+/**
+ * Recovery codes, each good once; shown only when made.
+ */
+export type RecoveryCodes = {
+    codes: Array<string>;
+};
+
+/**
+ * The external login linked to an Account, as the provider last described it; read-only.
+ */
+export type OidcLink = {
+    email: string;
+    username: string;
+    name: string;
+    linkedAt: string;
+};
+
+/**
+ * A new Username, Nickname and email for the signed-in Account.
+ */
+export type AccountChange = {
+    username: string;
+    nickname: string;
+    email: string;
+};
+
+/**
+ * The sign-in methods beside a password; oidc names the external login, when one is set up.
+ */
+export type SignInMethods = {
+    oidc?: string;
+};
+
+/**
+ * Where to send the browser to sign in with the external login.
+ */
+export type OidcRedirect = {
+    url: string;
+};
+
+/**
+ * What the provider sent the browser back with.
+ */
+export type OidcCallback = {
+    code: string;
+    state: string;
+};
+
+/**
+ * How an external sign-in ended. signed_in and linked carry the Account; choose carries a login waiting for an Account.
+ */
+export type OidcOutcome = {
+    status: 'signed_in' | 'linked' | 'choose';
+    account?: Account;
+    pending?: OidcPending;
+};
+
+/**
+ * A login no Account has yet, with the token that creates or links one within 15 minutes.
+ */
+export type OidcPending = {
+    token: string;
+    email: string;
+    username: string;
+    name: string;
+};
+
+/**
+ * A Username and Nickname for a new Account for a waiting login.
+ */
+export type OidcAccountSetup = {
+    token: string;
+    username: string;
+    nickname: string;
+};
+
+/**
+ * The Username and password of the Account to link a waiting login to.
+ */
+export type OidcAccountLink = {
+    token: string;
+    username: string;
+    password: string;
+};
+
+/**
+ * Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.
+ */
+export type Username = string;
+
+/**
+ * The token an invite or sign-in link carries.
+ */
+export type LinkToken = {
+    token: string;
+};
+
+/**
+ * What an invitee chooses for their Account, with the token its invite link carries.
+ */
+export type AccountSetup = {
+    token: string;
+    username: string;
+    nickname: string;
+    email: string;
+    password: string;
+};
+
+/**
+ * A Username and password.
+ */
+export type SignInRequest = {
+    username: string;
+    password: string;
+};
+
+/**
+ * Where to email a sign-in link.
+ */
+export type SignInLinkRequest = {
+    email: string;
+};
+
+/**
+ * A new password.
+ */
+export type PasswordChange = {
+    password: string;
+};
+
+/**
+ * How long an Account Invite stays open, and whether it sets up an Admin.
+ */
+export type AccountInviteRequest = {
+    hours: number;
+    admin?: boolean;
+};
+
+/**
+ * A new Account Invite and the token its link carries; the token is shown only now.
+ */
+export type AccountInviteCreated = {
+    token: string;
+    expiresAt: string;
+};
+
+/**
+ * An open Account Invite.
+ */
+export type AccountInvite = {
+    expiresAt: string;
+    admin: boolean;
+};
+
+/**
  * How a fight rolls initiative, each Combatant for itself or one roll per side.
  */
 export type InitiativeMode = 'individual' | 'side';
@@ -327,6 +907,55 @@ export type WeaponLine = {
 export type ActiveEffect = {
     name: string;
     detail: string;
+};
+
+/**
+ * A Character's progress in one Campaign.
+ */
+export type CampaignEntry = {
+    campaignId: Id;
+    campaignName: string;
+    characterId: Id;
+    level: number;
+    hpCurrent: number;
+    hpMax: number;
+};
+
+/**
+ * A Character an Account owns (ADR-0010), with its progress in each Campaign.
+ */
+export type OwnedCharacter = {
+    id: Id;
+    name: string;
+    ruleset: string;
+    species: string;
+    class: string;
+    background: string;
+    backstory: string;
+    hasPortrait: boolean;
+    campaigns: Array<CampaignEntry>;
+};
+
+/**
+ * The Characters an Account owns.
+ */
+export type OwnedCharacterList = {
+    items: Array<OwnedCharacter>;
+};
+
+/**
+ * A Character's new name and Backstory.
+ */
+export type OwnedCharacterChange = {
+    name: string;
+    backstory: string;
+};
+
+/**
+ * The Campaign a Character joins.
+ */
+export type CharacterJoin = {
+    campaignId: Id;
 };
 
 /**
@@ -5883,6 +6512,1829 @@ export type GetStatusResponses = {
 };
 
 export type GetStatusResponse = GetStatusResponses[keyof GetStatusResponses];
+
+export type CreateAccountInviteData = {
+    body: AccountInviteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/account-invites';
+};
+
+export type CreateAccountInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateAccountInviteError = CreateAccountInviteErrors[keyof CreateAccountInviteErrors];
+
+export type CreateAccountInviteResponses = {
+    /**
+     * The invite, with the token its link carries.
+     */
+    201: AccountInviteCreated;
+};
+
+export type CreateAccountInviteResponse = CreateAccountInviteResponses[keyof CreateAccountInviteResponses];
+
+export type PreviewAccountInviteData = {
+    body: LinkToken;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account-invites/preview';
+};
+
+export type PreviewAccountInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewAccountInviteError = PreviewAccountInviteErrors[keyof PreviewAccountInviteErrors];
+
+export type PreviewAccountInviteResponses = {
+    /**
+     * The open invite.
+     */
+    200: AccountInvite;
+};
+
+export type PreviewAccountInviteResponse = PreviewAccountInviteResponses[keyof PreviewAccountInviteResponses];
+
+export type AcceptAccountInviteData = {
+    body: AccountSetup;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account-invites/accept';
+};
+
+export type AcceptAccountInviteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type AcceptAccountInviteError = AcceptAccountInviteErrors[keyof AcceptAccountInviteErrors];
+
+export type AcceptAccountInviteResponses = {
+    /**
+     * The new Account, signed in.
+     */
+    201: Account;
+};
+
+export type AcceptAccountInviteResponse = AcceptAccountInviteResponses[keyof AcceptAccountInviteResponses];
+
+export type SignInData = {
+    body: SignInRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in';
+};
+
+export type SignInErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SignInError = SignInErrors[keyof SignInErrors];
+
+export type SignInResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+    /**
+     * Two-step is on; answer the challenge with a code.
+     */
+    202: TwoStepChallenge;
+};
+
+export type SignInResponse = SignInResponses[keyof SignInResponses];
+
+export type PassTwoStepData = {
+    body: TwoStepAnswer;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in/two-step';
+};
+
+export type PassTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PassTwoStepError = PassTwoStepErrors[keyof PassTwoStepErrors];
+
+export type PassTwoStepResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+};
+
+export type PassTwoStepResponse = PassTwoStepResponses[keyof PassTwoStepResponses];
+
+export type SignOutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-out';
+};
+
+export type SignOutErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SignOutError = SignOutErrors[keyof SignOutErrors];
+
+export type SignOutResponses = {
+    /**
+     * Signed out.
+     */
+    204: void;
+};
+
+export type SignOutResponse = SignOutResponses[keyof SignOutResponses];
+
+export type RequestSignInLinkData = {
+    body: SignInLinkRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in-links';
+};
+
+export type RequestSignInLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RequestSignInLinkError = RequestSignInLinkErrors[keyof RequestSignInLinkErrors];
+
+export type RequestSignInLinkResponses = {
+    /**
+     * A link is on its way if an Account has that email.
+     */
+    202: unknown;
+};
+
+export type UseSignInLinkData = {
+    body: LinkToken;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in-links/use';
+};
+
+export type UseSignInLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UseSignInLinkError = UseSignInLinkErrors[keyof UseSignInLinkErrors];
+
+export type UseSignInLinkResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+    /**
+     * Two-step is on; answer the challenge with a code.
+     */
+    202: TwoStepChallenge;
+};
+
+export type UseSignInLinkResponse = UseSignInLinkResponses[keyof UseSignInLinkResponses];
+
+export type GetSignInMethodsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in-methods';
+};
+
+export type GetSignInMethodsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSignInMethodsError = GetSignInMethodsErrors[keyof GetSignInMethodsErrors];
+
+export type GetSignInMethodsResponses = {
+    /**
+     * The sign-in methods.
+     */
+    200: SignInMethods;
+};
+
+export type GetSignInMethodsResponse = GetSignInMethodsResponses[keyof GetSignInMethodsResponses];
+
+export type StartOidcSignInData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/sign-ins';
+};
+
+export type StartOidcSignInErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartOidcSignInError = StartOidcSignInErrors[keyof StartOidcSignInErrors];
+
+export type StartOidcSignInResponses = {
+    /**
+     * Where to send the browser.
+     */
+    201: OidcRedirect;
+};
+
+export type StartOidcSignInResponse = StartOidcSignInResponses[keyof StartOidcSignInResponses];
+
+export type FinishOidcData = {
+    body: OidcCallback;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/callback';
+};
+
+export type FinishOidcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type FinishOidcError = FinishOidcErrors[keyof FinishOidcErrors];
+
+export type FinishOidcResponses = {
+    /**
+     * How the sign-in ended.
+     */
+    200: OidcOutcome;
+};
+
+export type FinishOidcResponse = FinishOidcResponses[keyof FinishOidcResponses];
+
+export type CreateOidcAccountData = {
+    body: OidcAccountSetup;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/accounts';
+};
+
+export type CreateOidcAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateOidcAccountError = CreateOidcAccountErrors[keyof CreateOidcAccountErrors];
+
+export type CreateOidcAccountResponses = {
+    /**
+     * The Account, signed in.
+     */
+    201: Account;
+};
+
+export type CreateOidcAccountResponse = CreateOidcAccountResponses[keyof CreateOidcAccountResponses];
+
+export type LinkOidcAccountData = {
+    body: OidcAccountLink;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/links';
+};
+
+export type LinkOidcAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type LinkOidcAccountError = LinkOidcAccountErrors[keyof LinkOidcAccountErrors];
+
+export type LinkOidcAccountResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+};
+
+export type LinkOidcAccountResponse = LinkOidcAccountResponses[keyof LinkOidcAccountResponses];
+
+export type GetAccountData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account';
+};
+
+export type GetAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAccountError = GetAccountErrors[keyof GetAccountErrors];
+
+export type GetAccountResponses = {
+    /**
+     * The Account.
+     */
+    200: Account;
+};
+
+export type GetAccountResponse = GetAccountResponses[keyof GetAccountResponses];
+
+export type UpdateAccountData = {
+    body: AccountChange;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account';
+};
+
+export type UpdateAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateAccountError = UpdateAccountErrors[keyof UpdateAccountErrors];
+
+export type UpdateAccountResponses = {
+    /**
+     * The Account.
+     */
+    200: Account;
+};
+
+export type UpdateAccountResponse = UpdateAccountResponses[keyof UpdateAccountResponses];
+
+export type SetAccountPasswordData = {
+    body: PasswordChange;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/password';
+};
+
+export type SetAccountPasswordErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetAccountPasswordError = SetAccountPasswordErrors[keyof SetAccountPasswordErrors];
+
+export type SetAccountPasswordResponses = {
+    /**
+     * The password is set.
+     */
+    204: void;
+};
+
+export type SetAccountPasswordResponse = SetAccountPasswordResponses[keyof SetAccountPasswordResponses];
+
+export type UnlinkOidcData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/oidc-link';
+};
+
+export type UnlinkOidcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnlinkOidcError = UnlinkOidcErrors[keyof UnlinkOidcErrors];
+
+export type UnlinkOidcResponses = {
+    /**
+     * Unlinked.
+     */
+    204: void;
+};
+
+export type UnlinkOidcResponse = UnlinkOidcResponses[keyof UnlinkOidcResponses];
+
+export type StartOidcLinkData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/oidc-link';
+};
+
+export type StartOidcLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartOidcLinkError = StartOidcLinkErrors[keyof StartOidcLinkErrors];
+
+export type StartOidcLinkResponses = {
+    /**
+     * Where to send the browser.
+     */
+    201: OidcRedirect;
+};
+
+export type StartOidcLinkResponse = StartOidcLinkResponses[keyof StartOidcLinkResponses];
+
+export type BeginTwoStepData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step';
+};
+
+export type BeginTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type BeginTwoStepError = BeginTwoStepErrors[keyof BeginTwoStepErrors];
+
+export type BeginTwoStepResponses = {
+    /**
+     * The secret and the URI an authenticator app scans.
+     */
+    201: TwoStepSetup;
+};
+
+export type BeginTwoStepResponse = BeginTwoStepResponses[keyof BeginTwoStepResponses];
+
+export type ConfirmTwoStepData = {
+    body: TwoStepCode;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step/confirm';
+};
+
+export type ConfirmTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ConfirmTwoStepError = ConfirmTwoStepErrors[keyof ConfirmTwoStepErrors];
+
+export type ConfirmTwoStepResponses = {
+    /**
+     * The recovery codes.
+     */
+    200: RecoveryCodes;
+};
+
+export type ConfirmTwoStepResponse = ConfirmTwoStepResponses[keyof ConfirmTwoStepResponses];
+
+export type DisableTwoStepData = {
+    body: TwoStepCode;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step/disable';
+};
+
+export type DisableTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DisableTwoStepError = DisableTwoStepErrors[keyof DisableTwoStepErrors];
+
+export type DisableTwoStepResponses = {
+    /**
+     * Two-step is off.
+     */
+    204: void;
+};
+
+export type DisableTwoStepResponse = DisableTwoStepResponses[keyof DisableTwoStepResponses];
+
+export type ResetRecoveryCodesData = {
+    body: TwoStepCode;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/two-step/recovery-codes';
+};
+
+export type ResetRecoveryCodesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ResetRecoveryCodesError = ResetRecoveryCodesErrors[keyof ResetRecoveryCodesErrors];
+
+export type ResetRecoveryCodesResponses = {
+    /**
+     * The new recovery codes.
+     */
+    200: RecoveryCodes;
+};
+
+export type ResetRecoveryCodesResponse = ResetRecoveryCodesResponses[keyof ResetRecoveryCodesResponses];
+
+export type ListAccessTokensData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/access-tokens';
+};
+
+export type ListAccessTokensErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListAccessTokensError = ListAccessTokensErrors[keyof ListAccessTokensErrors];
+
+export type ListAccessTokensResponses = {
+    /**
+     * The Access Tokens.
+     */
+    200: AccessTokenList;
+};
+
+export type ListAccessTokensResponse = ListAccessTokensResponses[keyof ListAccessTokensResponses];
+
+export type CreateAccessTokenData = {
+    body: AccessTokenRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/access-tokens';
+};
+
+export type CreateAccessTokenErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateAccessTokenError = CreateAccessTokenErrors[keyof CreateAccessTokenErrors];
+
+export type CreateAccessTokenResponses = {
+    /**
+     * The token and its details.
+     */
+    201: AccessTokenCreated;
+};
+
+export type CreateAccessTokenResponse = CreateAccessTokenResponses[keyof CreateAccessTokenResponses];
+
+export type RevokeAccessTokenData = {
+    body?: never;
+    path: {
+        /**
+         * Access Token id.
+         */
+        accessId: Id;
+    };
+    query?: never;
+    url: '/api/v1/account/access-tokens/{accessId}';
+};
+
+export type RevokeAccessTokenErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type RevokeAccessTokenError = RevokeAccessTokenErrors[keyof RevokeAccessTokenErrors];
+
+export type RevokeAccessTokenResponses = {
+    /**
+     * Revoked.
+     */
+    204: void;
+};
+
+export type RevokeAccessTokenResponse = RevokeAccessTokenResponses[keyof RevokeAccessTokenResponses];
+
+export type ListAdminAccountsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/accounts';
+};
+
+export type ListAdminAccountsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListAdminAccountsError = ListAdminAccountsErrors[keyof ListAdminAccountsErrors];
+
+export type ListAdminAccountsResponses = {
+    /**
+     * The Accounts and Invites.
+     */
+    200: AdminAccountList;
+};
+
+export type ListAdminAccountsResponse = ListAdminAccountsResponses[keyof ListAdminAccountsResponses];
+
+export type GetAdminAccountData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}';
+};
+
+export type GetAdminAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAdminAccountError = GetAdminAccountErrors[keyof GetAdminAccountErrors];
+
+export type GetAdminAccountResponses = {
+    /**
+     * The Account.
+     */
+    200: AdminAccountDetail;
+};
+
+export type GetAdminAccountResponse = GetAdminAccountResponses[keyof GetAdminAccountResponses];
+
+export type SendAdminSignInLinkData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/sign-in-link';
+};
+
+export type SendAdminSignInLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendAdminSignInLinkError = SendAdminSignInLinkErrors[keyof SendAdminSignInLinkErrors];
+
+export type SendAdminSignInLinkResponses = {
+    /**
+     * The link is on its way.
+     */
+    202: unknown;
+};
+
+export type SetAdminRoleData = {
+    body: Toggle;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/admin';
+};
+
+export type SetAdminRoleErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetAdminRoleError = SetAdminRoleErrors[keyof SetAdminRoleErrors];
+
+export type SetAdminRoleResponses = {
+    /**
+     * Changed.
+     */
+    204: void;
+};
+
+export type SetAdminRoleResponse = SetAdminRoleResponses[keyof SetAdminRoleResponses];
+
+export type SetAccountDisabledData = {
+    body: Toggle;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/disabled';
+};
+
+export type SetAccountDisabledErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetAccountDisabledError = SetAccountDisabledErrors[keyof SetAccountDisabledErrors];
+
+export type SetAccountDisabledResponses = {
+    /**
+     * Changed.
+     */
+    204: void;
+};
+
+export type SetAccountDisabledResponse = SetAccountDisabledResponses[keyof SetAccountDisabledResponses];
+
+export type ResetAccountTwoStepData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/accounts/{accountId}/two-step/reset';
+};
+
+export type ResetAccountTwoStepErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ResetAccountTwoStepError = ResetAccountTwoStepErrors[keyof ResetAccountTwoStepErrors];
+
+export type ResetAccountTwoStepResponses = {
+    /**
+     * Two-step is off.
+     */
+    204: void;
+};
+
+export type ResetAccountTwoStepResponse = ResetAccountTwoStepResponses[keyof ResetAccountTwoStepResponses];
+
+export type GetAccountHistoryData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/history';
+};
+
+export type GetAccountHistoryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetAccountHistoryError = GetAccountHistoryErrors[keyof GetAccountHistoryErrors];
+
+export type GetAccountHistoryResponses = {
+    /**
+     * The history.
+     */
+    200: AccountEventList;
+};
+
+export type GetAccountHistoryResponse = GetAccountHistoryResponses[keyof GetAccountHistoryResponses];
+
+export type ListMyCharactersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/characters';
+};
+
+export type ListMyCharactersErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMyCharactersError = ListMyCharactersErrors[keyof ListMyCharactersErrors];
+
+export type ListMyCharactersResponses = {
+    /**
+     * The Characters.
+     */
+    200: OwnedCharacterList;
+};
+
+export type ListMyCharactersResponse = ListMyCharactersResponses[keyof ListMyCharactersResponses];
+
+export type GetMyCharacterData = {
+    body?: never;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}';
+};
+
+export type GetMyCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetMyCharacterError = GetMyCharacterErrors[keyof GetMyCharacterErrors];
+
+export type GetMyCharacterResponses = {
+    /**
+     * The Character.
+     */
+    200: OwnedCharacter;
+};
+
+export type GetMyCharacterResponse = GetMyCharacterResponses[keyof GetMyCharacterResponses];
+
+export type UpdateMyCharacterData = {
+    body: OwnedCharacterChange;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}';
+};
+
+export type UpdateMyCharacterErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateMyCharacterError = UpdateMyCharacterErrors[keyof UpdateMyCharacterErrors];
+
+export type UpdateMyCharacterResponses = {
+    /**
+     * The Character.
+     */
+    200: OwnedCharacter;
+};
+
+export type UpdateMyCharacterResponse = UpdateMyCharacterResponses[keyof UpdateMyCharacterResponses];
+
+export type JoinCampaignData = {
+    body: CharacterJoin;
+    path: {
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/characters/{characterId}/campaigns';
+};
+
+export type JoinCampaignErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type JoinCampaignError = JoinCampaignErrors[keyof JoinCampaignErrors];
+
+export type JoinCampaignResponses = {
+    /**
+     * The new Campaign Character.
+     */
+    201: CharacterSheet;
+};
+
+export type JoinCampaignResponse = JoinCampaignResponses[keyof JoinCampaignResponses];
+
+export type ListFriendsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/friends';
+};
+
+export type ListFriendsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListFriendsError = ListFriendsErrors[keyof ListFriendsErrors];
+
+export type ListFriendsResponses = {
+    /**
+     * The Friends page.
+     */
+    200: FriendsPage;
+};
+
+export type ListFriendsResponse = ListFriendsResponses[keyof ListFriendsResponses];
+
+export type UnfriendData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friends/{accountId}';
+};
+
+export type UnfriendErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnfriendError = UnfriendErrors[keyof UnfriendErrors];
+
+export type UnfriendResponses = {
+    /**
+     * No longer Friends.
+     */
+    204: void;
+};
+
+export type UnfriendResponse = UnfriendResponses[keyof UnfriendResponses];
+
+export type SendFriendRequestData = {
+    body: FriendRequestCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/friend-requests';
+};
+
+export type SendFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendFriendRequestError = SendFriendRequestErrors[keyof SendFriendRequestErrors];
+
+export type SendFriendRequestResponses = {
+    /**
+     * The request is sent.
+     */
+    202: unknown;
+};
+
+export type CancelFriendRequestData = {
+    body?: never;
+    path: {
+        /**
+         * Friend request id.
+         */
+        requestId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friend-requests/{requestId}';
+};
+
+export type CancelFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CancelFriendRequestError = CancelFriendRequestErrors[keyof CancelFriendRequestErrors];
+
+export type CancelFriendRequestResponses = {
+    /**
+     * Withdrawn.
+     */
+    204: void;
+};
+
+export type CancelFriendRequestResponse = CancelFriendRequestResponses[keyof CancelFriendRequestResponses];
+
+export type AcceptFriendRequestData = {
+    body?: never;
+    path: {
+        /**
+         * Friend request id.
+         */
+        requestId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friend-requests/{requestId}/accept';
+};
+
+export type AcceptFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type AcceptFriendRequestError = AcceptFriendRequestErrors[keyof AcceptFriendRequestErrors];
+
+export type AcceptFriendRequestResponses = {
+    /**
+     * Friends.
+     */
+    204: void;
+};
+
+export type AcceptFriendRequestResponse = AcceptFriendRequestResponses[keyof AcceptFriendRequestResponses];
+
+export type DeclineFriendRequestData = {
+    body: FriendRequestDecline;
+    path: {
+        /**
+         * Friend request id.
+         */
+        requestId: Id;
+    };
+    query?: never;
+    url: '/api/v1/friend-requests/{requestId}/decline';
+};
+
+export type DeclineFriendRequestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeclineFriendRequestError = DeclineFriendRequestErrors[keyof DeclineFriendRequestErrors];
+
+export type DeclineFriendRequestResponses = {
+    /**
+     * Declined.
+     */
+    204: void;
+};
+
+export type DeclineFriendRequestResponse = DeclineFriendRequestResponses[keyof DeclineFriendRequestResponses];
+
+export type UnblockData = {
+    body?: never;
+    path: {
+        /**
+         * Account id.
+         */
+        accountId: Id;
+    };
+    query?: never;
+    url: '/api/v1/blocks/{accountId}';
+};
+
+export type UnblockErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnblockError = UnblockErrors[keyof UnblockErrors];
+
+export type UnblockResponses = {
+    /**
+     * Unblocked.
+     */
+    204: void;
+};
+
+export type UnblockResponse = UnblockResponses[keyof UnblockResponses];
+
+export type ListConversationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/conversations';
+};
+
+export type ListConversationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListConversationsError = ListConversationsErrors[keyof ListConversationsErrors];
+
+export type ListConversationsResponses = {
+    /**
+     * The Conversations.
+     */
+    200: ConversationList;
+};
+
+export type ListConversationsResponse = ListConversationsResponses[keyof ListConversationsResponses];
+
+export type StartConversationData = {
+    body: ConversationStart;
+    path?: never;
+    query?: never;
+    url: '/api/v1/conversations';
+};
+
+export type StartConversationErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartConversationError = StartConversationErrors[keyof StartConversationErrors];
+
+export type StartConversationResponses = {
+    /**
+     * The Conversation.
+     */
+    201: ConversationRef;
+};
+
+export type StartConversationResponse = StartConversationResponses[keyof StartConversationResponses];
+
+export type ListMessagesData = {
+    body?: never;
+    path: {
+        /**
+         * Conversation id.
+         */
+        conversationId: Id;
+    };
+    query?: {
+        /**
+         * Only messages from before this moment, for the next page.
+         */
+        before?: string;
+    };
+    url: '/api/v1/conversations/{conversationId}/messages';
+};
+
+export type ListMessagesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMessagesError = ListMessagesErrors[keyof ListMessagesErrors];
+
+export type ListMessagesResponses = {
+    /**
+     * The messages.
+     */
+    200: MessagePage;
+};
+
+export type ListMessagesResponse = ListMessagesResponses[keyof ListMessagesResponses];
+
+export type SendMessageData = {
+    body: MessageSend;
+    path: {
+        /**
+         * Conversation id.
+         */
+        conversationId: Id;
+    };
+    query?: never;
+    url: '/api/v1/conversations/{conversationId}/messages';
+};
+
+export type SendMessageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SendMessageError = SendMessageErrors[keyof SendMessageErrors];
+
+export type SendMessageResponses = {
+    /**
+     * The message.
+     */
+    201: MessageEntry;
+};
+
+export type SendMessageResponse = SendMessageResponses[keyof SendMessageResponses];
+
+export type ListMentionablesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Letters the name contains.
+         */
+        q?: string;
+    };
+    url: '/api/v1/mentionables';
+};
+
+export type ListMentionablesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListMentionablesError = ListMentionablesErrors[keyof ListMentionablesErrors];
+
+export type ListMentionablesResponses = {
+    /**
+     * What may be mentioned.
+     */
+    200: MentionableList;
+};
+
+export type ListMentionablesResponse = ListMentionablesResponses[keyof ListMentionablesResponses];
+
+export type ListNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications';
+};
+
+export type ListNotificationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListNotificationsError = ListNotificationsErrors[keyof ListNotificationsErrors];
+
+export type ListNotificationsResponses = {
+    /**
+     * The Notifications.
+     */
+    200: NotificationList;
+};
+
+export type ListNotificationsResponse = ListNotificationsResponses[keyof ListNotificationsResponses];
+
+export type ReadAllNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notifications/read';
+};
+
+export type ReadAllNotificationsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReadAllNotificationsError = ReadAllNotificationsErrors[keyof ReadAllNotificationsErrors];
+
+export type ReadAllNotificationsResponses = {
+    /**
+     * All read.
+     */
+    204: void;
+};
+
+export type ReadAllNotificationsResponse = ReadAllNotificationsResponses[keyof ReadAllNotificationsResponses];
+
+export type ReadNotificationData = {
+    body?: never;
+    path: {
+        /**
+         * Notification id.
+         */
+        notificationId: Id;
+    };
+    query?: never;
+    url: '/api/v1/notifications/{notificationId}/read';
+};
+
+export type ReadNotificationErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReadNotificationError = ReadNotificationErrors[keyof ReadNotificationErrors];
+
+export type ReadNotificationResponses = {
+    /**
+     * Read.
+     */
+    204: void;
+};
+
+export type ReadNotificationResponse = ReadNotificationResponses[keyof ReadNotificationResponses];
+
+export type GetNotificationPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notification-preferences';
+};
+
+export type GetNotificationPreferencesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetNotificationPreferencesError = GetNotificationPreferencesErrors[keyof GetNotificationPreferencesErrors];
+
+export type GetNotificationPreferencesResponses = {
+    /**
+     * The preferences.
+     */
+    200: NotificationPreferences;
+};
+
+export type GetNotificationPreferencesResponse = GetNotificationPreferencesResponses[keyof GetNotificationPreferencesResponses];
+
+export type SetNotificationPreferencesData = {
+    body: NotificationPreferences;
+    path?: never;
+    query?: never;
+    url: '/api/v1/notification-preferences';
+};
+
+export type SetNotificationPreferencesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetNotificationPreferencesError = SetNotificationPreferencesErrors[keyof SetNotificationPreferencesErrors];
+
+export type SetNotificationPreferencesResponses = {
+    /**
+     * The preferences.
+     */
+    200: NotificationPreferences;
+};
+
+export type SetNotificationPreferencesResponse = SetNotificationPreferencesResponses[keyof SetNotificationPreferencesResponses];
+
+export type ListReleaseNotesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/release-notes';
+};
+
+export type ListReleaseNotesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListReleaseNotesError = ListReleaseNotesErrors[keyof ListReleaseNotesErrors];
+
+export type ListReleaseNotesResponses = {
+    /**
+     * The Release Notes.
+     */
+    200: ReleaseNoteList;
+};
+
+export type ListReleaseNotesResponse = ListReleaseNotesResponses[keyof ListReleaseNotesResponses];
+
+export type DraftReleaseNoteData = {
+    body: ReleaseNoteDraft;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/release-notes';
+};
+
+export type DraftReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DraftReleaseNoteError = DraftReleaseNoteErrors[keyof DraftReleaseNoteErrors];
+
+export type DraftReleaseNoteResponses = {
+    /**
+     * The draft.
+     */
+    201: ReleaseNote;
+};
+
+export type DraftReleaseNoteResponse = DraftReleaseNoteResponses[keyof DraftReleaseNoteResponses];
+
+export type EditReleaseNoteData = {
+    body: ReleaseNoteChange;
+    path: {
+        /**
+         * Release Note id.
+         */
+        noteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/release-notes/{noteId}';
+};
+
+export type EditReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type EditReleaseNoteError = EditReleaseNoteErrors[keyof EditReleaseNoteErrors];
+
+export type EditReleaseNoteResponses = {
+    /**
+     * The Release Note.
+     */
+    200: ReleaseNote;
+};
+
+export type EditReleaseNoteResponse = EditReleaseNoteResponses[keyof EditReleaseNoteResponses];
+
+export type PublishReleaseNoteData = {
+    body: ReleaseNotePublish;
+    path: {
+        /**
+         * Release Note id.
+         */
+        noteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/release-notes/{noteId}/publish';
+};
+
+export type PublishReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PublishReleaseNoteError = PublishReleaseNoteErrors[keyof PublishReleaseNoteErrors];
+
+export type PublishReleaseNoteResponses = {
+    /**
+     * The Release Note.
+     */
+    200: ReleaseNote;
+};
+
+export type PublishReleaseNoteResponse = PublishReleaseNoteResponses[keyof PublishReleaseNoteResponses];
+
+export type GetUnseenReleaseNoteData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/release-notes/unseen';
+};
+
+export type GetUnseenReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetUnseenReleaseNoteError = GetUnseenReleaseNoteErrors[keyof GetUnseenReleaseNoteErrors];
+
+export type GetUnseenReleaseNoteResponses = {
+    /**
+     * The Release Note, if there is one.
+     */
+    200: UnseenReleaseNote;
+};
+
+export type GetUnseenReleaseNoteResponse = GetUnseenReleaseNoteResponses[keyof GetUnseenReleaseNoteResponses];
+
+export type SeeReleaseNoteData = {
+    body?: never;
+    path: {
+        /**
+         * Release Note id.
+         */
+        noteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/release-notes/{noteId}/seen';
+};
+
+export type SeeReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SeeReleaseNoteError = SeeReleaseNoteErrors[keyof SeeReleaseNoteErrors];
+
+export type SeeReleaseNoteResponses = {
+    /**
+     * Seen.
+     */
+    204: void;
+};
+
+export type SeeReleaseNoteResponse = SeeReleaseNoteResponses[keyof SeeReleaseNoteResponses];
 
 export type GetHealthData = {
     body?: never;

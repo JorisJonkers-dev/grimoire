@@ -22,7 +22,8 @@ export async function mountApp(path: string, routes: Record<string, Route>) {
   const fetchImpl = vi.fn<typeof fetch>(async (input) => {
     const request = input as Request
     const url = new URL(request.url)
-    calls.push(url)
+    // The header asks who is signed in on every page; that call is not the page's own.
+    if (url.pathname !== '/api/v1/account') calls.push(url)
     const key = Object.keys(routes).find((prefix) => url.pathname.startsWith(prefix))
     if (!key) return jsonResponse({ type: 'about:blank', title: 'Not found', status: 404 }, 404)
     const body = await routes[key]?.(url, request)
