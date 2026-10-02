@@ -491,6 +491,15 @@ func (UnimplementedHandler) GetHealth(ctx context.Context) (r GetHealthRes, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// GetInventory implements getInventory operation.
+//
+// Equipment slots, the bag, weight against carrying capacity, and the Party Stash. Its player or a DM.
+//
+// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
+func (UnimplementedHandler) GetInventory(ctx context.Context, params GetInventoryParams) (r GetInventoryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetMap implements getMap operation.
 //
 // One Map with its calibration. DM only.
@@ -1038,6 +1047,16 @@ func (UnimplementedHandler) ListSpells(ctx context.Context, params ListSpellsPar
 	return r, ht.ErrNotImplemented
 }
 
+// MoveItem implements moveItem operation.
+//
+// Puts an item in a slot, back in the bag, with another Character or in the Party Stash. Not during a
+// live Session.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/move
+func (UnimplementedHandler) MoveItem(ctx context.Context, req *InventoryMove, params MoveItemParams) (r MoveItemRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PassInspiration implements passInspiration operation.
 //
 // Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The
@@ -1489,6 +1508,25 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 	return r, ht.ErrNotImplemented
 }
 
+// SwapWeaponSet implements swapWeaponSet operation.
+//
+// Changes the weapon set in hand between melee and ranged outside a fight. In a live Session the swap
+// is a command that pays the 2024 equip rules.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap
+func (UnimplementedHandler) SwapWeaponSet(ctx context.Context, params SwapWeaponSetParams) (r SwapWeaponSetRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// TakeFromStash implements takeFromStash operation.
+//
+// Moves an item from the Party Stash into the Character's bag. Not during a live Session.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/take
+func (UnimplementedHandler) TakeFromStash(ctx context.Context, req *InventoryTake, params TakeFromStashParams) (r TakeFromStashRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // Unblock implements unblock operation.
 //
 // Lets the Account's Friend requests through again.
@@ -1643,6 +1681,16 @@ func (UnimplementedHandler) UpdateShop(ctx context.Context, req *ShopInput, para
 //
 // POST /api/v1/campaigns/{campaignId}/maps
 func (UnimplementedHandler) UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (r UploadMapRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UseItem implements useItem operation.
+//
+// Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or
+// spends its charges. Not during a live Session.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use
+func (UnimplementedHandler) UseItem(ctx context.Context, req *InventoryUse, params UseItemParams) (r UseItemRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

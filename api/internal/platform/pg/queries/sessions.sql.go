@@ -386,7 +386,7 @@ func (q *Queries) CombatAttack(ctx context.Context, combatID uuid.UUID) (PlayAtt
 const combatCombatants = `-- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
        shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack, attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved,
-       owner_combatant_id, commanded
+       owner_combatant_id, commanded, equips
 FROM play.combatants WHERE combat_id = $1 ORDER BY id
 `
 
@@ -426,6 +426,7 @@ func (q *Queries) CombatCombatants(ctx context.Context, combatID uuid.UUID) ([]P
 			&i.Cleaved,
 			&i.OwnerCombatantID,
 			&i.Commanded,
+			&i.Equips,
 		); err != nil {
 			return nil, err
 		}
@@ -509,6 +510,15 @@ type DeleteTokenParams struct {
 
 func (q *Queries) DeleteToken(ctx context.Context, arg DeleteTokenParams) error {
 	_, err := q.db.Exec(ctx, deleteToken, arg.SessionID, arg.ID)
+	return err
+}
+
+const deleteTokenAttacks = `-- name: DeleteTokenAttacks :exec
+DELETE FROM play.token_attacks WHERE token_id = $1
+`
+
+func (q *Queries) DeleteTokenAttacks(ctx context.Context, tokenID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTokenAttacks, tokenID)
 	return err
 }
 
@@ -1526,16 +1536,16 @@ func (q *Queries) SaveCombat(ctx context.Context, arg SaveCombatParams) error {
 const saveCombatant = `-- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
     has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack,
-    attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved, owner_combatant_id, commanded)
+    attacks_left, light_attack, off_hand, interaction, equips, cleave_from, cleaved, owner_combatant_id, commanded)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
     $10, $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22, $23, $24,
-    $25, $26)
+    $18, $19, $20, $21, $22, $23, $24, $25,
+    $26, $27)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
     shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
     readied_who = excluded.readied_who, readied_attack = excluded.readied_attack, attacks_left = excluded.attacks_left,
-    light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction,
+    light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction, equips = excluded.equips,
     cleave_from = excluded.cleave_from, cleaved = excluded.cleaved, commanded = excluded.commanded
 `
 
@@ -1562,6 +1572,7 @@ type SaveCombatantParams struct {
 	LightAttack      bool
 	OffHand          bool
 	Interaction      bool
+	Equips           int32
 	CleaveFrom       pgtype.UUID
 	Cleaved          bool
 	OwnerCombatantID pgtype.UUID
@@ -1592,6 +1603,7 @@ func (q *Queries) SaveCombatant(ctx context.Context, arg SaveCombatantParams) er
 		arg.LightAttack,
 		arg.OffHand,
 		arg.Interaction,
+		arg.Equips,
 		arg.CleaveFrom,
 		arg.Cleaved,
 		arg.OwnerCombatantID,
@@ -2657,6 +2669,21 @@ type SetSessionSneakingParams struct {
 
 func (q *Queries) SetSessionSneaking(ctx context.Context, arg SetSessionSneakingParams) error {
 	_, err := q.db.Exec(ctx, setSessionSneaking, arg.Sneaking, arg.ID)
+	return err
+}
+
+const setTokenArmorClass = `-- name: SetTokenArmorClass :exec
+UPDATE play.tokens SET armor_class = $1 WHERE session_id = $2 AND id = $3
+`
+
+type SetTokenArmorClassParams struct {
+	ArmorClass pgtype.Int4
+	SessionID  uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) SetTokenArmorClass(ctx context.Context, arg SetTokenArmorClassParams) error {
+	_, err := q.db.Exec(ctx, setTokenArmorClass, arg.ArmorClass, arg.SessionID, arg.ID)
 	return err
 }
 

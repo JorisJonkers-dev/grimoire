@@ -46,10 +46,13 @@ type Trade struct {
 	StockPrice int
 	PriceCP    int
 	Shop       string
+	// Sold marks a sale to the Shop rather than a purchase.
+	Sold bool
 }
 
 // Shop action kinds in the Action Log.
 const (
+	ActionTradeMade     = "trade_made"
 	ActionShopOpened    = "shop_opened"
 	ActionShopClosed    = "shop_closed"
 	ActionItemBought    = "item_bought"

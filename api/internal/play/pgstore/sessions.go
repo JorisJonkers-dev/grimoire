@@ -205,6 +205,7 @@ func (s *Store) Commit(ctx context.Context, sess domain.Session, board *domain.M
 			func() error { return tx.saveZone(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveCheck(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveInventory(ctx, sess, w, now) },
+			func() error { return tx.saveSwap(ctx, sid, w) },
 			func() error { return tx.saveShop(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveRest(ctx, sess, w, actor, c, now) },
 			func() error { return tx.saveActions(ctx, sess, w, actor, c, now) },
@@ -269,7 +270,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionManualResolved, domain.ActionAreaCast, domain.ActionAreaResolved, domain.ActionSurfacesSet, domain.ActionElevationSet, domain.ActionTableSet,
 		domain.ActionZoneAdded, domain.ActionZoneRemoved, domain.ActionZoneHeld, domain.ActionZoneSprung, domain.ActionPerceptionRolled,
 		domain.ActionRestTaken, domain.ActionCheckScheduled, domain.ActionEncounterChecked, domain.ActionEncounterResolved,
-		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionShopOpened, domain.ActionShopClosed,
+		domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved, domain.ActionLootClaimed, domain.ActionLootSettled, domain.ActionTradeMade, domain.ActionShopOpened, domain.ActionShopClosed,
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
@@ -360,11 +361,11 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	return s.saveVisibility(ctx, sid, t)
 }
 
-// insertStatRows writes a token's attacks, saves and Senses.
+// insertAttacks writes a token's attacks in order.
 //
 //nolint:gosec // statblock numbers are bounded by the rules
-func (s *Store) insertStatRows(ctx context.Context, id domain.TokenID, st *domain.Stats) error {
-	for i, a := range st.Attacks {
+func (s *Store) insertAttacks(ctx context.Context, id domain.TokenID, attacks []domain.Attack) error {
+	for i, a := range attacks {
 		if err := s.q.InsertTokenAttack(ctx, queries.InsertTokenAttackParams{
 			TokenID: uuid.UUID(id), Ordering: int32(i), Name: a.Name, ToHit: int32(a.ToHit), ReachFt: int32(a.ReachFt), RangeFt: int32(a.RangeFt),
 			LongRangeFt: int32(a.LongRangeFt), DamageDice: a.Damage, DamageBonus: int32(a.DamageBonus), DamageType: a.DamageType,
@@ -372,6 +373,39 @@ func (s *Store) insertStatRows(ctx context.Context, id domain.TokenID, st *domai
 		}); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// saveSwap gives a token the attacks and Armor Class of the weapon set its Character took up, and keeps
+// the set and what it holds on the Character.
+func (s *Store) saveSwap(ctx context.Context, sid uuid.UUID, w live.Write) error {
+	sw := w.Swap
+	if sw == nil {
+		return nil
+	}
+	t := w.Token
+	if err := s.q.DeleteTokenAttacks(ctx, uuid.UUID(t.ID)); err != nil {
+		return err
+	}
+	if err := s.insertAttacks(ctx, t.ID, t.Stats.Attacks); err != nil {
+		return err
+	}
+	if err := s.q.SetTokenArmorClass(ctx, queries.SetTokenArmorClassParams{SessionID: sid, ID: uuid.UUID(t.ID), ArmorClass: pgInt(t.Stats.AC)}); err != nil {
+		return err
+	}
+	if err := s.SetWeaponSet(ctx, sw.Character, sw.Set); err != nil {
+		return err
+	}
+	return s.SyncEquipment(ctx, sw.Character, sw.Armor, sw.Shield, sw.Weapons)
+}
+
+// insertStatRows writes a token's attacks, saves and Senses.
+//
+//nolint:gosec // statblock numbers are bounded by the rules
+func (s *Store) insertStatRows(ctx context.Context, id domain.TokenID, st *domain.Stats) error {
+	if err := s.insertAttacks(ctx, id, st.Attacks); err != nil {
+		return err
 	}
 	for ability, bonus := range st.Saves {
 		if err := s.q.InsertTokenSave(ctx, queries.InsertTokenSaveParams{TokenID: uuid.UUID(id), Ability: ability, Bonus: int32(bonus)}); err != nil {
@@ -668,7 +702,7 @@ func (s *Store) saveCombatants(ctx context.Context, f *domain.Combat) error {
 			ID: uuid.UUID(x.ID), CombatID: uuid.UUID(f.ID), TokenID: uuid.UUID(x.TokenID), RollID: uuid.UUID(x.RollID),
 			InitiativeBonus: int32(x.InitiativeBonus), SpeedFt: int32(x.SpeedFt), Done: x.Done, HasAction: x.Economy.Action,
 			HasBonusAction: x.Economy.BonusAction, HasReaction: x.Economy.Reaction, MovementFt: int32(x.Economy.MovementFt), Shielded: x.Shielded,
-			AttacksLeft: int32(x.Economy.AttacksLeft), LightAttack: x.Economy.LightAttack, OffHand: x.Economy.OffHand, Interaction: x.Economy.Interaction,
+			AttacksLeft: int32(x.Economy.AttacksLeft), LightAttack: x.Economy.LightAttack, OffHand: x.Economy.OffHand, Interaction: x.Economy.Interaction, Equips: int32(x.Economy.Equips),
 			Cleaved:   x.Cleaved,
 			Surprised: x.Surprised, Disengaged: x.Disengaged,
 		}
@@ -1088,7 +1122,7 @@ func combatantFrom(x queries.PlayCombatant) domain.Combatant {
 		SpeedFt: int(x.SpeedFt), Done: x.Done, Shielded: x.Shielded, Surprised: x.Surprised, Disengaged: x.Disengaged,
 		Economy: combat.Economy{
 			Action: x.HasAction, BonusAction: x.HasBonusAction, Reaction: x.HasReaction, MovementFt: int(x.MovementFt),
-			AttacksLeft: int(x.AttacksLeft), LightAttack: x.LightAttack, OffHand: x.OffHand, Interaction: x.Interaction,
+			AttacksLeft: int(x.AttacksLeft), LightAttack: x.LightAttack, OffHand: x.OffHand, Interaction: x.Interaction, Equips: int(x.Equips),
 		},
 	}
 	if x.Initiative.Valid {

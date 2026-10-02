@@ -83,6 +83,7 @@ var operationRolesForwardAuth = map[string][]string{
 	GetCharacterOperation:                  []string{},
 	GetCharacterDraftOperation:             []string{},
 	GetEntryOperation:                      []string{},
+	GetInventoryOperation:                  []string{},
 	GetMapOperation:                        []string{},
 	GetMapImageOperation:                   []string{},
 	GetMeOperation:                         []string{},
@@ -140,6 +141,7 @@ var operationRolesForwardAuth = map[string][]string{
 	ListShopsOperation:                     []string{},
 	ListSourcesOperation:                   []string{},
 	ListSpellsOperation:                    []string{},
+	MoveItemOperation:                      []string{},
 	PassInspirationOperation:               []string{},
 	PlanLevelUpOperation:                   []string{},
 	PrepareSpellsOperation:                 []string{},
@@ -182,6 +184,8 @@ var operationRolesForwardAuth = map[string][]string{
 	StartConversationOperation:             []string{},
 	StartOidcLinkOperation:                 []string{},
 	StartSessionOperation:                  []string{},
+	SwapWeaponSetOperation:                 []string{},
+	TakeFromStashOperation:                 []string{},
 	UnblockOperation:                       []string{},
 	UndoChangeOperation:                    []string{},
 	UnfriendOperation:                      []string{},
@@ -199,6 +203,7 @@ var operationRolesForwardAuth = map[string][]string{
 	UpdateSettlementOperation:              []string{},
 	UpdateShopOperation:                    []string{},
 	UploadMapOperation:                     []string{},
+	UseItemOperation:                       []string{},
 }
 
 // GetRolesForForwardAuth returns the required roles for the given operation.

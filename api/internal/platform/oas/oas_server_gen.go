@@ -673,6 +673,13 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/keep
 	KeepRoll(ctx context.Context, params KeepRollParams) (KeepRollRes, error)
+	// MoveItem implements moveItem operation.
+	//
+	// Puts an item in a slot, back in the bag, with another Character or in the Party Stash. Not during a
+	// live Session.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/move
+	MoveItem(ctx context.Context, req *InventoryMove, params MoveItemParams) (MoveItemRes, error)
 	// PassInspiration implements passInspiration operation.
 	//
 	// Gives the Character's Heroic Inspiration to another Character in the Campaign that lacks it. The
@@ -715,6 +722,26 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions
 	StartSession(ctx context.Context, params StartSessionParams) (StartSessionRes, error)
+	// SwapWeaponSet implements swapWeaponSet operation.
+	//
+	// Changes the weapon set in hand between melee and ranged outside a fight. In a live Session the swap
+	// is a command that pays the 2024 equip rules.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap
+	SwapWeaponSet(ctx context.Context, params SwapWeaponSetParams) (SwapWeaponSetRes, error)
+	// TakeFromStash implements takeFromStash operation.
+	//
+	// Moves an item from the Party Stash into the Character's bag. Not during a live Session.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/take
+	TakeFromStash(ctx context.Context, req *InventoryTake, params TakeFromStashParams) (TakeFromStashRes, error)
+	// UseItem implements useItem operation.
+	//
+	// Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or
+	// spends its charges. Not during a live Session.
+	//
+	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use
+	UseItem(ctx context.Context, req *InventoryUse, params UseItemParams) (UseItemRes, error)
 }
 
 // ReadHandler handles operations described by OpenAPI v3 specification.
@@ -795,6 +822,12 @@ type ReadHandler interface {
 	//
 	// GET /healthz
 	GetHealth(ctx context.Context) (GetHealthRes, error)
+	// GetInventory implements getInventory operation.
+	//
+	// Equipment slots, the bag, weight against carrying capacity, and the Party Stash. Its player or a DM.
+	//
+	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory
+	GetInventory(ctx context.Context, params GetInventoryParams) (GetInventoryRes, error)
 	// GetMap implements getMap operation.
 	//
 	// One Map with its calibration. DM only.

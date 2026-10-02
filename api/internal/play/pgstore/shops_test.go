@@ -95,7 +95,11 @@ func TestShopsAreStoredWithTheirTradesHagglesAndRestocks(t *testing.T) {
 	writes := []live.Write{
 		{Kind: domain.ActionShopOpened, Shop: open},
 		{Kind: domain.ActionItemBought, Trade: &domain.Trade{Container: pack.ID, Label: "Aria", Item: "rope", Count: 1, Purse: map[string]int{"gp": 1, "sp": 2}, Carried: 1, StockLeft: 1, StockPrice: 100, PriceCP: 100, Shop: "Store"}},
-		{Kind: domain.ActionItemSold, Trade: &domain.Trade{Container: pack.ID, Label: "Aria", Item: "rope", Count: 1, Purse: map[string]int{"gp": 1, "sp": 7}, Carried: 0, StockLeft: 2, StockPrice: 100, PriceCP: 50, Shop: "Store"}},
+		{Kind: domain.ActionItemSold, Trade: &domain.Trade{Container: pack.ID, Label: "Aria", Item: "rope", Count: 1, Purse: map[string]int{"gp": 1, "sp": 7}, Carried: 0, StockLeft: 2, StockPrice: 100, PriceCP: 50, Shop: "Store", Sold: true}},
+		{Kind: domain.ActionTradeMade, Trades: []domain.Trade{
+			{Container: pack.ID, Label: "Aria", Item: "rope", Count: 1, Purse: map[string]int{"sp": 7}, Carried: 1, StockLeft: 1, StockPrice: 100, PriceCP: 100, Shop: "Store"},
+			{Container: pack.ID, Label: "Aria", Item: "rope", Count: 1, Purse: map[string]int{"gp": 1, "sp": 2}, Carried: 0, StockLeft: 2, StockPrice: 100, PriceCP: 50, Shop: "Store", Sold: true},
+		}},
 		live.WithHaggle(live.Write{Kind: domain.ActionHaggleStarted, Rolls: []domain.Roll{roll}}, char, roll.ID, nil),
 		live.WithHaggle(live.Write{Kind: domain.ActionHaggled}, char, roll.ID, &minus),
 		{Kind: domain.ActionStockRolled, Restock: &restocked, Day: &day},
@@ -113,7 +117,7 @@ func TestShopsAreStoredWithTheirTradesHagglesAndRestocks(t *testing.T) {
 		t.Fatalf("game day = %d", d)
 	}
 	inv, _ = store.LoadInventory(ctx, tb.campaign)
-	if p := inv.Containers[slicesIndex(inv.Containers, domain.ContainerCharacter)]; len(p.Items) != 0 || p.Coins["sp"] != 7 {
+	if p := inv.Containers[slicesIndex(inv.Containers, domain.ContainerCharacter)]; len(p.Items) != 0 || p.Coins["sp"] != 2 || p.Coins["gp"] != 1 {
 		t.Fatalf("pack after = %+v", p)
 	}
 	if _, err := store.Commit(ctx, s, nil, live.Write{Kind: domain.ActionShopClosed}, me, dm, time.Now()); err != nil {

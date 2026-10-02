@@ -209,6 +209,10 @@ type GetHealthRes interface {
 	getHealthRes()
 }
 
+type GetInventoryRes interface {
+	getInventoryRes()
+}
+
 type GetMapImageRes interface {
 	getMapImageRes()
 }
@@ -449,6 +453,10 @@ type ListSpellsRes interface {
 	listSpellsRes()
 }
 
+type MoveItemRes interface {
+	moveItemRes()
+}
+
 type PassInspirationRes interface {
 	passInspirationRes()
 }
@@ -641,6 +649,14 @@ type StartSessionRes interface {
 	startSessionRes()
 }
 
+type SwapWeaponSetRes interface {
+	swapWeaponSetRes()
+}
+
+type TakeFromStashRes interface {
+	takeFromStashRes()
+}
+
 type UnblockRes interface {
 	unblockRes()
 }
@@ -707,6 +723,10 @@ type UpdateShopRes interface {
 
 type UploadMapRes interface {
 	uploadMapRes()
+}
+
+type UseItemRes interface {
+	useItemRes()
 }
 
 type UseSignInLinkRes interface {

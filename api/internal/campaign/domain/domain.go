@@ -194,6 +194,8 @@ type Character struct {
 	CanPrepare bool
 	// HeroicInspiration is held or not; it is spent on a reroll or passed to an ally.
 	HeroicInspiration bool
+	// CarriedLb is what its Inventory weighs, coins included.
+	CarriedLb float64
 }
 
 // ClassLevel is the levels a Character has in one class, and the subclass it chose there.

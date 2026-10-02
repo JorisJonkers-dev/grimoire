@@ -2,6 +2,7 @@ package live_test
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func look(t *testing.T, w world, sub *live.Subscriber) *live.View {
 }
 
 // Item Instances show beside plain stacks: each with its own name, Charges and state, a bag nested in
-// its bearer's Inventory, and an unidentified item kept a mystery from the party.
+// its bearer's Inventory, and an unidentified item kept a mystery from the party: they see only its kind.
 func TestItemInstancesShowBesideStacks(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -87,8 +88,11 @@ func TestItemInstancesShowBesideStacks(t *testing.T) {
 	if ariaDM.WeightLb != 5+100+15 {
 		t.Fatalf("Aria carries her backpack too = %v", ariaDM.WeightLb)
 	}
-	if mystery := instanceNamed(t, containerNamed(t, p, "Aria"), "Anvil"); mystery.Identified || mystery.Charges != nil {
-		t.Fatalf("the party sees only an anvil = %+v", mystery)
+	if mystery := instanceNamed(t, containerNamed(t, p, "Aria"), "Unknown gear"); mystery.Identified || mystery.Charges != nil || mystery.Slug != "unknown" {
+		t.Fatalf("the party sees only an unknown item = %+v", mystery)
+	}
+	if seen := fmt.Sprintf("%+v", containerNamed(t, p, "Aria")); strings.Contains(seen, "Anvil") || strings.Contains(seen, "anvil") {
+		t.Fatalf("the party learns what the unidentified item is: %s", seen)
 	}
 	if pack := containerNamed(t, p, "Backpack"); pack.OwnerID != w.player.ID.String() || pack.CharacterID != "" {
 		t.Fatalf("a bag names its bearer's owner = %+v", pack)

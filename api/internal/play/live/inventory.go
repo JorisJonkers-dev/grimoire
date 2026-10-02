@@ -10,6 +10,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/loot"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
@@ -49,6 +50,13 @@ func (s *state) mine(m domain.Member, c domain.Container, taking bool) bool {
 	return ok && b.Owner == m.ID
 }
 
+// gives reports whether a Player hands something from their own Character's Inventory to another
+// Character: into its pack, never into its bags.
+func (s *state) gives(m domain.Member, from, to domain.Container) bool {
+	b, ok := s.bearer(s.root(from))
+	return ok && b.Owner == m.ID && to.Kind == domain.ContainerCharacter
+}
+
 // planMove checks a transfer of items or coins between two Containers.
 func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 	from, ok := r.st.container(cmd.FromID)
@@ -58,7 +66,7 @@ func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "Move it between two different places."
 	case r.st.root(to).Kind == domain.ContainerDrop:
 		return Write{}, "Loot is only taken from a drop, never put back."
-	case !r.st.mine(m, from, true) || !r.st.mine(m, to, false):
+	case !r.st.mine(m, from, true) || !r.st.mine(m, to, false) && !r.st.gives(m, from, to):
 		return Write{}, "That is not yours to move."
 	}
 	mv := domain.Move{From: from.ID, To: to.ID, Count: cmd.Count, FromLabel: from.Label, ToLabel: to.Label}
@@ -142,6 +150,16 @@ func applyInventory(s *state, w *Write) {
 	}
 	mv := w.Move
 	from := slices.IndexFunc(inv.Containers, func(c domain.Container) bool { return c.ID == mv.From })
+	moveOne(inv, mv)
+	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Instances)+len(c.Coins) == 0 {
+		w.Gone = &c.ID
+		inv.Containers = slices.Delete(inv.Containers, from, from+1)
+	}
+}
+
+// moveOne makes one transfer between two Containers and notes what each then holds of it.
+func moveOne(inv *domain.Inventory, mv *domain.Move) {
+	from := slices.IndexFunc(inv.Containers, func(c domain.Container) bool { return c.ID == mv.From })
 	to := slices.IndexFunc(inv.Containers, func(c domain.Container) bool { return c.ID == mv.To })
 	shift := func(src, dst map[string]int, key string) {
 		src[key] -= mv.Count
@@ -164,14 +182,10 @@ func applyInventory(s *state, w *Write) {
 	default:
 		shift(inv.Containers[from].Items, inv.Containers[to].Items, mv.Item)
 	}
-	if c := inv.Containers[from]; c.Kind == domain.ContainerDrop && len(c.Items)+len(c.Instances)+len(c.Coins) == 0 {
-		w.Gone = &c.ID
-		inv.Containers = slices.Delete(inv.Containers, from, from+1)
-	}
 }
 
 func cloneInventory(inv domain.Inventory) domain.Inventory {
-	out := domain.Inventory{Bearers: inv.Bearers, Items: maps.Clone(inv.Items)}
+	out := domain.Inventory{Bearers: inv.Bearers, Items: maps.Clone(inv.Items), Claims: inv.Claims}
 	for _, c := range inv.Containers {
 		out.Containers = append(out.Containers, c.Clone())
 	}
@@ -259,6 +273,12 @@ func (s *state) containerView(c domain.Container, a Audience) ContainerView {
 		v.Instances = append(v.Instances, s.instanceView(in, a))
 	}
 	v.WeightLb = s.weight(c, 0)
+	for _, cl := range s.inventory.Claims {
+		if cl.Container == c.ID {
+			b, _ := s.bearer(domain.Container{CharacterID: &cl.Character})
+			v.Claims = append(v.Claims, ClaimView{CharacterID: cl.Character.String(), Name: b.Name, Item: cl.Item, Choice: cl.Choice, Roll: cl.Roll})
+		}
+	}
 	if b, ok := s.bearer(c); ok {
 		v.CharacterID, v.OwnerID = b.CharacterID.String(), b.Owner.String()
 		v.CapacityLb = loot.Capacity(b.Strength, "medium")
@@ -307,11 +327,13 @@ func (s *state) instanceView(in domain.Instance, a Audience) InstanceView {
 		ID: uuid.UUID(in.ID).String(), Slug: in.Slug, Name: info.Name, Count: in.Quantity, Identified: in.Identified, Attuned: in.Attuned, Slot: in.Slot,
 		WeightLb: info.WeightLb * float64(in.Quantity),
 	}
-	if in.Identified || a == AudienceDM {
-		v.Charges = in.Charges
-		if in.CustomName != "" {
-			v.Name = in.CustomName
-		}
+	if !in.Identified && a != AudienceDM {
+		v.Slug, v.Name = "unknown", inventory.UnknownName(info.Category)
+		return v
+	}
+	v.Charges = in.Charges
+	if in.CustomName != "" {
+		v.Name = in.CustomName
 	}
 	return v
 }

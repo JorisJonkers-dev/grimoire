@@ -122,3 +122,37 @@ func TestTheAttackActionsAttacks(t *testing.T) {
 		t.Fatal("one free interaction a turn")
 	}
 }
+
+func TestSwappingWeaponsFollowsTheEquipRules(t *testing.T) {
+	t.Parallel()
+	fresh := combat.Fresh(30)
+	if e, ok := fresh.Swap(1, false); !ok || e.Interaction || !e.Action {
+		t.Fatalf("one weapon before attacking takes the free interaction = %+v %v", e, ok)
+	}
+	if e, ok := fresh.Swap(2, false); !ok || e.Action || !e.Interaction {
+		t.Fatalf("two weapons before attacking take the Utilize action = %+v %v", e, ok)
+	}
+	attacked, _ := fresh.Attack(2, false)
+	if attacked.Equips != 1 {
+		t.Fatalf("an attack brings one equip = %+v", attacked)
+	}
+	if e, ok := attacked.Swap(2, false); !ok || e.Equips != 0 || e.Interaction {
+		t.Fatalf("an attack's equip and the free interaction cover two = %+v %v", e, ok)
+	}
+	if e, ok := attacked.Swap(1, false); !ok || e.Equips != 0 || !e.Interaction {
+		t.Fatalf("an attack's equip covers one = %+v %v", e, ok)
+	}
+	if _, ok := attacked.Swap(3, false); ok {
+		t.Fatal("three changes with the action spent")
+	}
+	if e, ok := fresh.Swap(1, true); !ok || e.Action {
+		t.Fatalf("a shield takes the Utilize action = %+v %v", e, ok)
+	}
+	if _, ok := attacked.Swap(1, true); ok {
+		t.Fatal("a shield without the action")
+	}
+	twice, _ := attacked.Attack(2, false)
+	if twice.Equips != 2 {
+		t.Fatalf("each attack brings an equip = %+v", twice)
+	}
+}

@@ -489,6 +489,45 @@
       "count": 2
     },
     {
+      "nonce": "n54b",
+      "kind": "claim_loot",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "characterId": "0190c7a8-0000-7000-8000-000000000012",
+      "fromId": "0190c7a8-0000-7000-8000-000000000031",
+      "itemSlug": "rope",
+      "option": "need"
+    },
+    {
+      "nonce": "n54d",
+      "kind": "trade",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000030",
+      "buys": [
+        {
+          "itemSlug": "rope",
+          "count": 1
+        }
+      ],
+      "sells": [
+        {
+          "itemSlug": "silver-ingot",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "nonce": "n54c",
+      "kind": "settle_loot",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "fromId": "0190c7a8-0000-7000-8000-000000000031"
+    },
+    {
       "nonce": "n54",
       "kind": "move_coins",
       "q": 0,
@@ -666,6 +705,14 @@
       "r": 0,
       "hidden": false,
       "detail": "draws a dagger"
+    },
+    {
+      "nonce": "n73b",
+      "kind": "swap_weapons",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
     },
     {
       "nonce": "n74",
@@ -1060,7 +1107,16 @@
             "items": [],
             "instances": [],
             "coins": [],
-            "weightLb": 0
+            "weightLb": 0,
+            "claims": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "name": "Aria",
+                "item": "rope",
+                "choice": "need",
+                "roll": 14
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000035",
@@ -1096,6 +1152,14 @@
             {
               "characterId": "0190c7a8-0000-7000-8000-000000000034",
               "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ],
+          "offers": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "slug": "silver-ingot",
+              "priceCp": 275,
+              "junk": true
             }
           ]
         },
@@ -1524,7 +1588,16 @@
             "items": [],
             "instances": [],
             "coins": [],
-            "weightLb": 0
+            "weightLb": 0,
+            "claims": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "name": "Aria",
+                "item": "rope",
+                "choice": "need",
+                "roll": 14
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000035",
@@ -1560,6 +1633,14 @@
             {
               "characterId": "0190c7a8-0000-7000-8000-000000000034",
               "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ],
+          "offers": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "slug": "silver-ingot",
+              "priceCp": 275,
+              "junk": true
             }
           ]
         },
@@ -1972,7 +2053,16 @@
             "items": [],
             "instances": [],
             "coins": [],
-            "weightLb": 0
+            "weightLb": 0,
+            "claims": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "name": "Aria",
+                "item": "rope",
+                "choice": "need",
+                "roll": 14
+              }
+            ]
           },
           {
             "id": "0190c7a8-0000-7000-8000-000000000035",
@@ -2008,6 +2098,14 @@
             {
               "characterId": "0190c7a8-0000-7000-8000-000000000034",
               "rollId": "0190c7a8-0000-7000-8000-000000000035"
+            }
+          ],
+          "offers": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000012",
+              "slug": "silver-ingot",
+              "priceCp": 275,
+              "junk": true
             }
           ]
         },
@@ -2376,7 +2474,16 @@
               "items": [],
               "instances": [],
               "coins": [],
-              "weightLb": 0
+              "weightLb": 0,
+              "claims": [
+                {
+                  "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                  "name": "Aria",
+                  "item": "rope",
+                  "choice": "need",
+                  "roll": 14
+                }
+              ]
             },
             {
               "id": "0190c7a8-0000-7000-8000-000000000035",
@@ -2412,6 +2519,14 @@
               {
                 "characterId": "0190c7a8-0000-7000-8000-000000000034",
                 "rollId": "0190c7a8-0000-7000-8000-000000000035"
+              }
+            ],
+            "offers": [
+              {
+                "characterId": "0190c7a8-0000-7000-8000-000000000012",
+                "slug": "silver-ingot",
+                "priceCp": 275,
+                "junk": true
               }
             ]
           },

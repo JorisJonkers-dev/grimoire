@@ -46,7 +46,7 @@ func giveGold(t *testing.T, pool *pgxpool.Pool, campaign, character string, gp i
 	t.Helper()
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
-		VALUES (gen_random_uuid(), $1, 'character', $2, 'Pack', now())`, campaign, character); err != nil {
+		VALUES (gen_random_uuid(), $1, 'character', $2, 'Pack', now()) ON CONFLICT DO NOTHING`, campaign, character); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx, `INSERT INTO campaign.container_coins (container_id, coin, amount)

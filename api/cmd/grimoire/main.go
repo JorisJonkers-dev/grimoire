@@ -285,6 +285,10 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
 				Blobs: blobs(cfg, logger), Now: time.Now,
 			},
+			Inventory: &playapp.Inventories{
+				Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
+				Roll: rollDice,
+			},
 			Rolls: &playapp.Rolls{
 				Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())},
 				Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: hub.RollResolved,
@@ -318,4 +322,13 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		defer cancel()
 		return srv.Shutdown(shutdownCtx)
 	}
+}
+
+// rollDice sums a number of dice rolled with fresh randomness.
+func rollDice(count, faces int) int {
+	src, total := rng.New(rng.Seed()), 0
+	for range count {
+		total += dice.Face(src, faces)
+	}
+	return total
 }

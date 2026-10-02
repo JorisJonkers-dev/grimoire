@@ -18,7 +18,11 @@ import (
 func (r *runtime) planShop(m domain.Member, cmd Command) (Write, string) {
 	switch cmd.Kind {
 	case CmdOpenShop:
-		open, err := r.store.LoadShop(context.Background(), r.campaign, prep.ShopID(parseID(cmd.ShopID)))
+		ctx := context.Background()
+		open, err := r.store.LoadShop(ctx, r.campaign, prep.ShopID(parseID(cmd.ShopID)))
+		if err == nil {
+			err = priceCarried(ctx, r.store, r.campaign, r.st.inventory, open)
+		}
 		if err != nil {
 			return Write{}, "No such shop."
 		}
@@ -41,6 +45,8 @@ func (r *runtime) planShop(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "That is not yours to trade."
 	case cmd.Kind == CmdHaggle:
 		return r.haggle(m, o, c)
+	case cmd.Kind == CmdTrade:
+		return r.planTrade(cmd)
 	case cmd.Count < 1:
 		return Write{}, "Trade at least one."
 	case cmd.Kind == CmdBuy:
@@ -86,14 +92,14 @@ func (r *runtime) sell(o *domain.OpenShop, c domain.Container, cmd Command) (Wri
 	if err != nil || !ok {
 		return Write{}, "The shopkeeper does not know what that is worth."
 	}
-	pay := shops.SellPrice(p.BaseCP()) * cmd.Count
+	pay := shops.Offer(p.BaseCP(), adjustFor(o, c)) * cmd.Count
 	left, ask := cmd.Count, shops.Price(p.BaseCP(), o.Shop.MarkupPct, 0)
 	if i := slices.IndexFunc(o.Shop.Stock, func(k prep.StockItem) bool { return k.Slug == cmd.ItemSlug }); i >= 0 {
 		left, ask = left+o.Shop.Stock[i].Quantity, o.Shop.Stock[i].PriceCP
 	}
 	t := domain.Trade{
 		Container: c.ID, Label: c.Label, Item: cmd.ItemSlug, Count: cmd.Count, Purse: shops.Coins(shops.Worth(c.Coins) + pay), Carried: c.Items[cmd.ItemSlug] - cmd.Count,
-		StockLeft: left, StockPrice: ask, PriceCP: pay, Shop: o.Shop.Name,
+		StockLeft: left, StockPrice: ask, PriceCP: pay, Shop: o.Shop.Name, Sold: true,
 	}
 	return Write{Kind: domain.ActionItemSold, Trade: &t, price: &p}, ""
 }
@@ -180,6 +186,10 @@ func applyShop(s *state, w *Write) {
 		if s.shop != nil && s.shop.Shop.ID == w.Restock.ID {
 			s.shop.Shop.Stock = append([]prep.StockItem(nil), w.Restock.Stock...)
 		}
+	case domain.ActionTradeMade:
+		for i := range w.Trades {
+			trade(s, &Write{Trade: &w.Trades[i], price: w.prices[w.Trades[i].Item]})
+		}
 	default:
 		trade(s, w)
 	}
@@ -209,8 +219,10 @@ func trade(s *state, w *Write) {
 	if w.price != nil {
 		s.shop.Items[t.Item] = *w.price
 	}
-	info := s.shop.Items[t.Item]
-	s.inventory.Items[t.Item] = domain.ItemInfo{Name: info.Name, WeightLb: info.WeightLb}
+	if _, known := s.inventory.Items[t.Item]; !known {
+		info := s.shop.Items[t.Item]
+		s.inventory.Items[t.Item] = domain.ItemInfo{Name: info.Name, WeightLb: info.WeightLb}
+	}
 }
 
 // shopView shows the open Shop to every audience: its Stock and prices, and each Character's haggling.
@@ -236,7 +248,78 @@ func (s *state) shopView() *ShopView {
 		v.Haggles = append(v.Haggles, hv)
 	}
 	sort.Slice(v.Haggles, func(i, j int) bool { return v.Haggles[i].CharacterID < v.Haggles[j].CharacterID })
+	v.Offers = s.shopOffers()
 	return v
+}
+
+// shopOffers are what the open Shop pays each Character for the items in its pack it knows the worth of.
+func (s *state) shopOffers() []OfferView {
+	out := []OfferView{}
+	for _, c := range s.inventory.Containers {
+		if c.Kind != domain.ContainerCharacter || c.CharacterID == nil {
+			continue
+		}
+		for _, slug := range slices.Sorted(maps.Keys(c.Items)) {
+			if p, ok := s.shop.Items[slug]; ok {
+				out = append(out, OfferView{CharacterID: c.CharacterID.String(), Slug: slug, PriceCP: shops.Offer(p.BaseCP(), adjustFor(s.shop, c)), Junk: shops.Junk(s.inventory.Items[slug].Category)})
+			}
+		}
+	}
+	return out
+}
+
+// priceCarried learns what the items the Characters carry are worth, so the Shop can offer for them.
+func priceCarried(ctx context.Context, store Store, campaign uuid.UUID, inv domain.Inventory, open *domain.OpenShop) error {
+	if open == nil {
+		return nil
+	}
+	var slugs []string
+	for _, c := range inv.Containers {
+		for slug := range c.Items {
+			if _, ok := open.Items[slug]; !ok && c.Kind == domain.ContainerCharacter {
+				slugs = append(slugs, slug)
+			}
+		}
+	}
+	prices, err := store.ItemPrices(ctx, campaign, slugs)
+	maps.Copy(open.Items, prices)
+	return err
+}
+
+// planTrade makes a trade's sales and then its purchases together, at the prices each would fetch on
+// its own; one that cannot be made stops the whole trade.
+func (r *runtime) planTrade(cmd Command) (Write, string) {
+	if len(cmd.Buys)+len(cmd.Sells) == 0 {
+		return Write{}, "Choose something to buy or sell."
+	}
+	scratch := r.st.clone()
+	w := Write{Kind: domain.ActionTradeMade, prices: map[string]*prep.ItemPrice{}}
+	lines := append(slices.Clone(cmd.Sells), cmd.Buys...)
+	for i, l := range lines {
+		one := Command{Kind: CmdSell, FromID: cmd.FromID, ItemSlug: l.ItemSlug, Count: l.Count}
+		if i >= len(cmd.Sells) {
+			one.Kind = CmdBuy
+		}
+		c, _ := scratch.container(cmd.FromID)
+		var done Write
+		reason := "Trade at least one."
+		switch {
+		case l.Count < 1:
+		case one.Kind == CmdBuy:
+			done, reason = buy(scratch.shop, c, one)
+		default:
+			done, reason = r.sell(scratch.shop, c, one)
+		}
+		if reason != "" {
+			return Write{}, l.ItemSlug + ": " + reason
+		}
+		trade(scratch, &done)
+		w.Trades = append(w.Trades, *done.Trade)
+		if done.price != nil {
+			w.prices[l.ItemSlug] = done.price
+		}
+	}
+	return w, ""
 }
 
 // HaggleChange is what a write does to a Character's haggle, for the store.

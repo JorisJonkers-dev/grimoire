@@ -149,6 +149,11 @@ func (s *Store) saveRestOutcome(ctx context.Context, sid uuid.UUID, w live.Write
 			return err
 		}
 	}
+	for _, rc := range w.Recharged {
+		if err := s.SetCharges(ctx, rc.Instance, rc.Charges); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

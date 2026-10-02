@@ -374,6 +374,20 @@ func encodeLinkOidcAccountRequest(
 	return nil
 }
 
+func encodeMoveItemRequest(
+	req *InventoryMove,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePassInspirationRequest(
 	req *InspirationPass,
 	r *http.Request,
@@ -730,6 +744,20 @@ func encodeStartConversationRequest(
 	return nil
 }
 
+func encodeTakeFromStashRequest(
+	req *InventoryTake,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeUpdateAccountRequest(
 	req *AccountChange,
 	r *http.Request,
@@ -905,6 +933,20 @@ func encodeUploadMapRequest(
 	const contentType = "application/octet-stream"
 	body := req
 	ht.SetBody(r, body, contentType)
+	return nil
+}
+
+func encodeUseItemRequest(
+	req *InventoryUse,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
 	return nil
 }
 

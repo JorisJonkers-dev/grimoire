@@ -16,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/attack"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/mastery"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -179,6 +180,7 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 	if len(c.Classes) > 1 {
 		derived.Resources = rules.MulticlassResources(classLevels(o, c.Classes))
 	}
+	derived = burdened(derived, scores, c.CarriedLb)
 	c.BackgroundSkills = background.Skills
 	if c.HPMax == 0 {
 		c.HPMax = rules.HitPointsAt(class.HitDie, rules.Modifier(scores[rules.Constitution]), max(c.Level, 1))
@@ -192,6 +194,17 @@ func derive(o compendium.BuilderOptions, c domain.Character) (Sheet, error) {
 		ClassNames: names, Character: c, ClassName: class.Name, SpeciesName: species.Name, BackgroundName: background.Name, Scores: scores,
 		Derived: derived, Armor: armor, Weapons: weapons,
 	}, nil
+}
+
+// burdened slows a sheet by what the Character carries: past its carrying capacity it moves 5 feet,
+// past twice that not at all.
+func burdened(d rules.Sheet, scores map[rules.Ability]int, carried float64) rules.Sheet {
+	load := inventory.LoadOf(carried, inventory.Capacity(scores[rules.Strength]))
+	if load != inventory.Unburdened {
+		d.SpeedFeet = inventory.Speed(d.SpeedFeet, load)
+		d.Warnings = append(d.Warnings, "You carry too much: speed drops to "+strconv.Itoa(d.SpeedFeet)+" feet.")
+	}
+	return d
 }
 
 // picked are the values chosen for one choice as a Character levelled.
@@ -370,6 +383,18 @@ func (s *Characters) List(ctx context.Context, c caller.Caller, id domain.Campai
 
 // Get returns a Character's sheet to any Member of its Campaign.
 func (s *Characters) Get(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (Sheet, error) {
+	return s.get(ctx, c, id, ch, nil)
+}
+
+// GetHolding is a Character's sheet as if it held other weapons, and a shield or not: what a swap of
+// weapon sets would leave it with.
+func (s *Characters) GetHolding(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, weapons []string, shield bool) (Sheet, error) {
+	return s.get(ctx, c, id, ch, func(stored *domain.Character) {
+		stored.Weapons, stored.Shield = weapons, shield
+	})
+}
+
+func (s *Characters) get(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, holding func(*domain.Character)) (Sheet, error) {
 	me, err := member(ctx, s.Repo, c, id)
 	if err != nil {
 		return Sheet{}, err
@@ -377,6 +402,9 @@ func (s *Characters) Get(ctx context.Context, c caller.Caller, id domain.Campaig
 	stored, err := s.Repo.Character(ctx, id, ch)
 	if err != nil {
 		return Sheet{}, err
+	}
+	if holding != nil {
+		holding(&stored)
 	}
 	o, err := s.Compendium.BuilderOptions(ctx, stored.Ruleset)
 	if err != nil {

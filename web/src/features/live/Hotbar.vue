@@ -30,6 +30,7 @@ const emit = defineEmits<{
   offHand: [attackNo: number]
   cleave: [attackNo: number]
   interact: [what: string]
+  swap: []
   teleport: []
   summon: [effect: string]
   jump: []
@@ -157,6 +158,16 @@ const reach = (a: NonNullable<LiveToken['attacks']>[number]) =>
       </GButton>
       <GButton v-for="u in unarmed" :key="u.key" class="action" :disabled="blocked !== ''" :data-testid="`unarmed-${u.key}`" @click="emit('unarmed', u.key)">
         {{ u.name }}
+      </GButton>
+      <GButton
+        v-if="token.kind === 'party'"
+        class="action"
+        :disabled="blocked !== ''"
+        title="Put your weapons away and draw your other set: each costs the equip of an attack or your free interaction; a shield takes your action."
+        data-testid="swap-weapons"
+        @click="emit('swap')"
+      >
+        Swap weapons
       </GButton>
     </div>
     <form v-if="interaction" class="interact" @submit.prevent="what.trim() && (emit('interact', what.trim()), (what = ''))">

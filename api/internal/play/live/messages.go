@@ -77,6 +77,9 @@ const (
 	CmdRollLoot       = "roll_loot"
 	CmdMoveItem       = "move_item"
 	CmdMoveCoins      = "move_coins"
+	CmdClaimLoot      = "claim_loot"
+	CmdSettleLoot     = "settle_loot"
+	CmdTrade          = "trade"
 	CmdOpenShop       = "open_shop"
 	CmdCloseShop      = "close_shop"
 	CmdBuy            = "buy"
@@ -90,6 +93,7 @@ const (
 	CmdTakeAction     = "take_action"
 	CmdUnarmed        = "unarmed"
 	CmdInteract       = "interact"
+	CmdSwapWeapons    = "swap_weapons"
 	CmdTeleport       = "teleport"
 	CmdSummon         = "summon"
 	CmdCommand        = "command"
@@ -223,9 +227,12 @@ type Command struct {
 	Due         string `json:"due,omitempty"`
 	LootTableID string `json:"lootTableId,omitempty"`
 	FromID      string `json:"fromId,omitempty"`
-	ToID        string `json:"toId,omitempty"`
-	ItemSlug    string `json:"itemSlug,omitempty"`
-	InstanceID  string `json:"instanceId,omitempty"`
+	// Buys and Sells are a trade's lines at the open Shop, made together or not at all.
+	Buys       []TradeLine `json:"buys,omitempty"`
+	Sells      []TradeLine `json:"sells,omitempty"`
+	ToID       string      `json:"toId,omitempty"`
+	ItemSlug   string      `json:"itemSlug,omitempty"`
+	InstanceID string      `json:"instanceId,omitempty"`
 	// Action is the 2024 action take_action takes, with Detail for what Help, Magic or Utilize does;
 	// Trigger sets off a readied attack; Option is a Grapple or Shove.
 	Action  string `json:"action,omitempty"`
@@ -477,6 +484,18 @@ type ContainerView struct {
 	WeightLb    float64        `json:"weightLb"`
 	CapacityLb  float64        `json:"capacityLb,omitempty"`
 	Encumbered  bool           `json:"encumbered,omitempty"`
+	// Claims are the calls on a loot pile's items, earliest first.
+	Claims []ClaimView `json:"claims,omitempty"`
+}
+
+// ClaimView is a Character's need or greed call on a loot pile's item: a stack's slug or an Item
+// Instance's id, with the d20 it rolled.
+type ClaimView struct {
+	CharacterID string `json:"characterId"`
+	Name        string `json:"name"`
+	Item        string `json:"item"`
+	Choice      string `json:"choice"`
+	Roll        int    `json:"roll"`
 }
 
 // ItemView is a stack of one item in a Container.
@@ -819,6 +838,21 @@ func hexes(set map[hex.Coord]bool) []Hex {
 	return out
 }
 
+// TradeLine is how many of an item a trade buys or sells.
+type TradeLine struct {
+	ItemSlug string `json:"itemSlug"`
+	Count    int    `json:"count"`
+}
+
+// OfferView is what the open Shop pays a Character for one of an item it carries, after its haggle;
+// Junk marks wares sold off in one go.
+type OfferView struct {
+	CharacterID string `json:"characterId"`
+	Slug        string `json:"slug"`
+	PriceCP     int    `json:"priceCp"`
+	Junk        bool   `json:"junk,omitempty"`
+}
+
 // ShopView is the Shop open in the Session: its Stock with asking prices in copper, and each
 // Character's haggling there, settled or waiting on its roll.
 type ShopView struct {
@@ -829,6 +863,7 @@ type ShopView struct {
 	Owner      string       `json:"owner,omitempty"`
 	Stock      []StockView  `json:"stock"`
 	Haggles    []HaggleView `json:"haggles"`
+	Offers     []OfferView  `json:"offers"`
 }
 
 // StockView is one item the open Shop sells.

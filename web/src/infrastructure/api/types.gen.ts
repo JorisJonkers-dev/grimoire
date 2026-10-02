@@ -1316,6 +1316,114 @@ export type CharacterRevisionLine = {
 };
 
 /**
+ * An equipment slot around a Character's figure.
+ */
+export type EquipmentSlot = 'head' | 'cloak' | 'neck' | 'armor' | 'hands' | 'ring_1' | 'ring_2' | 'feet' | 'main_hand' | 'off_hand' | 'ranged_main' | 'ranged_off' | 'ammunition' | 'instrument';
+
+/**
+ * An item in an Inventory, with the slots it fits.
+ */
+export type ItemCard = {
+    instanceId?: Id;
+    slug: Slug;
+    name: string;
+    customName?: string;
+    category: string;
+    quantity: number;
+    weightLb: number;
+    slot?: EquipmentSlot;
+    charges?: number;
+    identified: boolean;
+    attuned: boolean;
+    requiresAttunement?: boolean;
+    attunementDetail?: string;
+    maxCharges?: number;
+    fits: Array<EquipmentSlot>;
+};
+
+/**
+ * An equipment slot and what is in it.
+ */
+export type SlotLine = {
+    slot: EquipmentSlot;
+    item?: ItemCard;
+};
+
+/**
+ * Another Character in the Campaign, to give items to.
+ */
+export type PartyBearer = {
+    characterId: Id;
+    name: string;
+};
+
+/**
+ * A Character's equipment slots, bag and weight, and the Party Stash.
+ */
+export type InventoryView = {
+    characterId: Id;
+    name: string;
+    slots: Array<SlotLine>;
+    bag: Array<ItemCard>;
+    coins: Array<LiveCoins>;
+    weightLb: number;
+    capacityLb: number;
+    /**
+     * Past capacity a Character moves 5 feet; past twice it, not at all.
+     */
+    load: 'none' | 'encumbered' | 'immobile';
+    stash: Array<ItemCard>;
+    stashCoins: Array<LiveCoins>;
+    party: Array<PartyBearer>;
+    /**
+     * The weapon set in hand: main and off hand, or the ranged slots.
+     */
+    weaponSet: 'melee' | 'ranged';
+};
+
+/**
+ * An item to move: an Item Instance by id, or some of a plain stack by slug.
+ */
+export type InventoryMove = {
+    instanceId?: Id;
+    slug?: Slug;
+    to: 'bag' | 'slot' | 'character' | 'stash';
+    slot?: EquipmentSlot;
+    characterId?: Id;
+    count?: number;
+};
+
+/**
+ * An item to take from the Party Stash.
+ */
+export type InventoryTake = {
+    instanceId?: Id;
+    slug?: Slug;
+    count?: number;
+};
+
+/**
+ * An item to drink or throw.
+ */
+export type InventoryUse = {
+    instanceId?: Id;
+    slug?: Slug;
+    use: 'drink' | 'throw' | 'attune' | 'unattune' | 'identify' | 'charge';
+    /**
+     * Charges to spend.
+     */
+    count?: number;
+};
+
+/**
+ * The Inventory after using an item, and the hit points it restored.
+ */
+export type InventoryUseResult = {
+    inventory: InventoryView;
+    healed: number;
+};
+
+/**
  * What the next level offers in one class.
  */
 export type LevelUpPlan = {
@@ -2221,7 +2329,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -2324,11 +2432,19 @@ export type LiveCommand = {
     due?: 'next_rest' | 'next_travel';
     lootTableId?: Id;
     fromId?: Id;
+    /**
+     * What a trade buys from the open Shop, made with its sales or not at all.
+     */
+    buys?: Array<LiveTradeLine>;
+    /**
+     * What a trade sells to the open Shop, before it buys.
+     */
+    sells?: Array<LiveTradeLine>;
     instanceId?: Id;
     action?: 'dash' | 'disengage' | 'dodge' | 'help' | 'hide' | 'influence' | 'magic' | 'ready' | 'search' | 'study' | 'utilize';
     detail?: string;
     trigger?: 'enters_reach';
-    option?: 'grapple' | 'shove_push' | 'shove_prone' | 'medicine' | 'spell' | 'revivify' | 'raise_dead' | 'resurrection';
+    option?: 'grapple' | 'shove_push' | 'shove_prone' | 'medicine' | 'spell' | 'revivify' | 'raise_dead' | 'resurrection' | 'need' | 'greed' | 'pass';
     /**
      * Makes the attack the off-hand attack of a Light weapon.
      */
@@ -2405,6 +2521,24 @@ export type LiveContainer = {
     weightLb: number;
     capacityLb?: number;
     encumbered?: boolean;
+    /**
+     * The calls on a loot pile's items, earliest first.
+     */
+    claims?: Array<LiveClaim>;
+};
+
+/**
+ * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
+ */
+export type LiveClaim = {
+    characterId: Id;
+    name: string;
+    /**
+     * A plain stack's slug or an Item Instance's id.
+     */
+    item: string;
+    choice: 'need' | 'greed';
+    roll: number;
 };
 
 /**
@@ -2476,6 +2610,28 @@ export type LiveShop = {
     owner?: string;
     stock: Array<LiveStock>;
     haggles: Array<LiveHaggle>;
+    /**
+     * What the Shop pays each Character for the items in its pack, after its haggle.
+     */
+    offers: Array<LiveOffer>;
+};
+
+/**
+ * What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+ */
+export type LiveOffer = {
+    characterId: Id;
+    slug: Slug;
+    priceCp: number;
+    junk?: boolean;
+};
+
+/**
+ * How many of an item a trade buys or sells.
+ */
+export type LiveTradeLine = {
+    itemSlug: Slug;
+    count: number;
 };
 
 /**
@@ -4653,6 +4809,196 @@ export type DeclineRetrainResponses = {
 };
 
 export type DeclineRetrainResponse = DeclineRetrainResponses[keyof DeclineRetrainResponses];
+
+export type GetInventoryData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory';
+};
+
+export type GetInventoryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetInventoryError = GetInventoryErrors[keyof GetInventoryErrors];
+
+export type GetInventoryResponses = {
+    /**
+     * The Inventory.
+     */
+    200: InventoryView;
+};
+
+export type GetInventoryResponse = GetInventoryResponses[keyof GetInventoryResponses];
+
+export type MoveItemData = {
+    body: InventoryMove;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/move';
+};
+
+export type MoveItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type MoveItemError = MoveItemErrors[keyof MoveItemErrors];
+
+export type MoveItemResponses = {
+    /**
+     * The Inventory after the move.
+     */
+    200: InventoryView;
+};
+
+export type MoveItemResponse = MoveItemResponses[keyof MoveItemResponses];
+
+export type SwapWeaponSetData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap';
+};
+
+export type SwapWeaponSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SwapWeaponSetError = SwapWeaponSetErrors[keyof SwapWeaponSetErrors];
+
+export type SwapWeaponSetResponses = {
+    /**
+     * The Inventory with the other set in hand.
+     */
+    200: InventoryView;
+};
+
+export type SwapWeaponSetResponse = SwapWeaponSetResponses[keyof SwapWeaponSetResponses];
+
+export type TakeFromStashData = {
+    body: InventoryTake;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/take';
+};
+
+export type TakeFromStashErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type TakeFromStashError = TakeFromStashErrors[keyof TakeFromStashErrors];
+
+export type TakeFromStashResponses = {
+    /**
+     * The Inventory after taking it.
+     */
+    200: InventoryView;
+};
+
+export type TakeFromStashResponse = TakeFromStashResponses[keyof TakeFromStashResponses];
+
+export type UseItemData = {
+    body: InventoryUse;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Character id.
+         */
+        characterId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use';
+};
+
+export type UseItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UseItemError = UseItemErrors[keyof UseItemErrors];
+
+export type UseItemResponses = {
+    /**
+     * The Inventory, and the hit points restored.
+     */
+    200: InventoryUseResult;
+};
+
+export type UseItemResponse = UseItemResponses[keyof UseItemResponses];
 
 export type GetPortraitData = {
     body?: never;

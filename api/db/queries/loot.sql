@@ -1,6 +1,11 @@
 -- name: ItemsBySlug :many
-SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb
+SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb, i.category, i.requires_attunement,
+    coalesce(i.attunement_detail, '')::text AS attunement_detail,
+    coalesce(ch.max_charges, 0)::int AS max_charges, coalesce(ch.regain_dice, 0)::int AS regain_dice,
+    coalesce(ch.regain_faces, 0)::int AS regain_faces, coalesce(ch.regain_bonus, 0)::int AS regain_bonus,
+    coalesce(ch.recharge_on, '')::text AS recharge_on
 FROM compendium.items i
+LEFT JOIN compendium.item_charges ch ON ch.item_slug = i.slug
 JOIN compendium.documents d ON d.id = i.document_id
 WHERE i.slug = ANY(@slugs::text[])
 ORDER BY i.slug, (d.key = (SELECT c.ruleset_pref FROM campaign.campaigns c WHERE c.id = @campaign_id)) DESC, d.precedence DESC;
@@ -46,7 +51,9 @@ WHERE r.campaign_id = @campaign_id AND r.entity_type = 'loot_table' AND r.entity
 SELECT ordering, weight, kind, item_slug, coin, amount, nested_table_id FROM prep.loot_revision_entries WHERE revision_id = $1 ORDER BY ordering;
 
 -- name: InventoryCharacters :many
-SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength
+SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength,
+    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes,
+    c.weapon_set
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id;
 
 -- name: CampaignContainers :many
@@ -94,3 +101,46 @@ WHERE container_id = @container_id AND item_slug = @item_slug
 
 -- name: MoveInstance :exec
 UPDATE campaign.item_instances SET container_id = @container_id, equipped_slot = NULL WHERE id = @id;
+
+-- name: CampaignHasLiveSession :one
+SELECT EXISTS (SELECT 1 FROM play.sessions WHERE campaign_id = $1 AND status = 'live')::boolean;
+
+-- name: InsertInstance :exec
+INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, equipped_slot, created_at)
+VALUES (@id, @container_id, @item_slug, 1, true, @attuned, sqlc.narg(equipped_slot), @now);
+
+-- name: DeleteInstance :exec
+DELETE FROM campaign.item_instances WHERE id = $1;
+
+-- name: SetInstanceSlot :exec
+UPDATE campaign.item_instances SET equipped_slot = sqlc.narg(equipped_slot) WHERE id = @id;
+
+-- name: HealCharacter :exec
+UPDATE campaign.characters SET hp_current = LEAST(hp_max, hp_current + @amount) WHERE id = @id;
+
+-- name: SetCharacterArmor :exec
+UPDATE campaign.characters SET armor_slug = sqlc.narg(armor_slug), shield = @shield WHERE id = @id;
+
+-- name: SetInstanceAttuned :exec
+UPDATE campaign.item_instances SET attuned = @attuned WHERE id = @id;
+
+-- name: IdentifyInstance :exec
+UPDATE campaign.item_instances SET identified = true WHERE id = $1;
+
+-- name: SetInstanceCharges :exec
+UPDATE campaign.item_instances SET charges = @charges WHERE id = @id;
+
+-- name: SetWeaponSet :exec
+UPDATE campaign.characters SET weapon_set = @weapon_set WHERE id = @id;
+
+-- name: CampaignLootClaims :many
+SELECT l.container_id, l.character_id, l.item, l.choice, l.roll, l.created_at FROM campaign.loot_claims l
+JOIN campaign.containers k ON k.id = l.container_id WHERE k.campaign_id = @campaign_id ORDER BY l.created_at, l.character_id, l.item;
+
+-- name: UpsertLootClaim :exec
+INSERT INTO campaign.loot_claims (container_id, character_id, item, choice, roll, created_at)
+VALUES (@container_id, @character_id, @item, @choice, @roll, @created_at)
+ON CONFLICT (container_id, character_id, item) DO UPDATE SET choice = excluded.choice;
+
+-- name: DeleteLootClaim :exec
+DELETE FROM campaign.loot_claims WHERE container_id = @container_id AND character_id = @character_id AND item = @item;

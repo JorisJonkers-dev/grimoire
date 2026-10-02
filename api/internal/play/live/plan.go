@@ -37,18 +37,24 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planTerrain(cmd)
 	case CmdTableCamera, CmdTableScene, CmdTableBlackout:
 		return r.planTable(cmd)
-	case CmdOpenShop, CmdCloseShop, CmdBuy, CmdSell, CmdHaggle:
+	case CmdOpenShop, CmdCloseShop, CmdBuy, CmdSell, CmdHaggle, CmdTrade:
 		return r.planShop(m, cmd)
 	case CmdRollLoot:
 		return r.planLoot(cmd.LootTableID)
 	case CmdMoveItem, CmdMoveCoins:
 		return r.planMove(m, cmd)
+	case CmdClaimLoot:
+		return r.planClaim(m, cmd)
+	case CmdSettleLoot:
+		return r.planSettle(cmd)
 	case CmdTakeAction:
 		return r.planAction(m, cmd)
 	case CmdUnarmed:
 		return r.planUnarmed(m, cmd)
 	case CmdInteract:
 		return r.planInteract(m, cmd)
+	case CmdSwapWeapons:
+		return r.planSwapWeapons(m, req.from.Caller, cmd)
 	case CmdTeleport:
 		return r.planTeleport(m, cmd)
 	case CmdSummon:

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 )
 
 // ContainerID identifies a Container.
@@ -67,12 +69,28 @@ type Bearer struct {
 	Name        string
 	Owner       uuid.UUID
 	Strength    int
+	// Classes decide which items it may attune to.
+	Classes []string
+	// WeaponSet is the set of weapons in hand: melee or ranged.
+	WeaponSet string
 }
 
 // ItemInfo is what an item is called and weighs.
 type ItemInfo struct {
 	Name     string
 	WeightLb float64
+	// Category is the compendium's kind of item: weapon, armor, potion, ring, wondrous-item and so on.
+	Category string
+	// RequiresAttunement and AttunementDetail ("Requires Attunement by a Druid") say who may attune it.
+	RequiresAttunement bool
+	AttunementDetail   string
+	// MaxCharges is how many charges it holds, 0 for none; it regains RegainDice d RegainFaces plus
+	// RegainBonus on RechargeOn: dawn, long_rest or short_rest.
+	MaxCharges  int
+	RegainDice  int
+	RegainFaces int
+	RegainBonus int
+	RechargeOn  string
 }
 
 // Inventory is every Container of a Campaign, who carries them, and what their items are.
@@ -80,6 +98,19 @@ type Inventory struct {
 	Containers []Container
 	Bearers    []Bearer
 	Items      map[string]ItemInfo
+	// Claims are the Characters' calls on items in loot piles, earliest first.
+	Claims []Claim
+}
+
+// Claim is a Character's need or greed call on an item in a loot pile: a plain stack's slug or an Item
+// Instance's id, with the d20 rolled when it was first made.
+type Claim struct {
+	Container ContainerID
+	Character uuid.UUID
+	Item      string
+	Choice    string
+	Roll      int
+	At        time.Time
 }
 
 // Move is a number of one item, or of one kind of coin, going from one Container to another.
@@ -103,4 +134,36 @@ const (
 	ActionLootDropped = "loot_dropped"
 	ActionItemMoved   = "item_moved"
 	ActionCoinsMoved  = "coins_moved"
+	ActionLootClaimed = "loot_claimed"
+	ActionLootSettled = "loot_settled"
 )
+
+// Held is what a Character wears and holds in a weapon set: its armor, whether a shield is in the set's
+// off hand, and the set's weapons.
+func (inv Inventory) Held(mine Container, set string) (string, bool, []string) {
+	hands := inventory.SetSlots(set)
+	armor, shield, weapons := "", false, []string{}
+	for _, in := range mine.Instances {
+		switch {
+		case in.Slot == inventory.Body:
+			armor = in.Slug
+		case in.Slot == hands[1] && in.Slug == "shield":
+			shield = true
+		case slices.Contains(hands[:], in.Slot) && inv.Items[in.Slug].Category == "weapon":
+			weapons = append(weapons, in.Slug)
+		}
+	}
+	return armor, shield, weapons
+}
+
+// Carrier is the Character's own Container and its Bearer, if it carries one.
+func (inv Inventory) Carrier(character uuid.UUID) (Container, Bearer, bool) {
+	b := slices.IndexFunc(inv.Bearers, func(x Bearer) bool { return x.CharacterID == character })
+	c := slices.IndexFunc(inv.Containers, func(x Container) bool {
+		return x.Kind == ContainerCharacter && x.CharacterID != nil && *x.CharacterID == character
+	})
+	if b < 0 || c < 0 {
+		return Container{}, Bearer{}, false
+	}
+	return inv.Containers[c], inv.Bearers[b], true
+}

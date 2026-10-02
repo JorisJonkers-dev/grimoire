@@ -46,6 +46,17 @@ func SellPrice(baseCP int) int {
 	return baseCP / 2
 }
 
+// Offer is what a Shop pays for one item after haggling: half its base price, more for a haggle that
+// took a discount (a negative adjustment), less for one that added to the price.
+func Offer(baseCP, adjustPct int) int {
+	return SellPrice(baseCP) * (100 - adjustPct) / 100
+}
+
+// Junk reports whether an item of this category is wares to sell off in one go: trade goods.
+func Junk(category string) bool {
+	return category == "trade-good"
+}
+
 // Coin values in copper, dearest first.
 func coinValues() []struct {
 	coin  string

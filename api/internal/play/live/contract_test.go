@@ -76,7 +76,10 @@ func samples() contract {
 			Items: []live.ItemView{{Slug: "rope", Name: "Rope", Count: 2, WeightLb: 10}}, Coins: []live.CoinView{{Coin: "gp", Count: 50}}, WeightLb: 11, CapacityLb: 120,
 			Instances: []live.InstanceView{{ID: "0190c7a8-0000-7000-8000-000000000034", Slug: "rope", Name: "Climbing Line", Count: 1, Charges: &three, Identified: true, Attuned: true, Slot: "neck", WeightLb: 5}},
 		},
-		{ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false},
+		{
+			ID: "0190c7a8-0000-7000-8000-000000000031", Kind: "loot_drop", Label: "Loot: Hoard", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}, Encumbered: false,
+			Claims: []live.ClaimView{{CharacterID: "0190c7a8-0000-7000-8000-000000000012", Name: "Aria", Item: "rope", Choice: "need", Roll: 14}},
+		},
 		{ID: "0190c7a8-0000-7000-8000-000000000035", Kind: "bag", Label: "Backpack", ParentID: "0190c7a8-0000-7000-8000-000000000030", Items: []live.ItemView{}, Instances: []live.InstanceView{}, Coins: []live.CoinView{}},
 	}
 	view.Rest = &live.RestView{
@@ -90,7 +93,8 @@ func samples() contract {
 	off := -10
 	view.Shop = &live.ShopView{
 		ID: "0190c7a8-0000-7000-8000-000000000033", Name: "Store", Kind: "general", Settlement: "Oakford", Owner: "Tamsin",
-		Stock: []live.StockView{{Slug: "rope", Name: "Rope", Count: 3, PriceCP: 150, WeightLb: 5}},
+		Stock:  []live.StockView{{Slug: "rope", Name: "Rope", Count: 3, PriceCP: 150, WeightLb: 5}},
+		Offers: []live.OfferView{{CharacterID: "0190c7a8-0000-7000-8000-000000000012", Slug: "silver-ingot", PriceCP: 275, Junk: true}},
 		Haggles: []live.HaggleView{
 			{CharacterID: "0190c7a8-0000-7000-8000-000000000012", AdjustPct: &off},
 			{CharacterID: "0190c7a8-0000-7000-8000-000000000034", RollID: "0190c7a8-0000-7000-8000-000000000035"},
@@ -166,6 +170,12 @@ func samples() contract {
 			{Nonce: "n51", Kind: live.CmdScheduleCheck, TableID: "0190c7a8-0000-7000-8000-000000000029", Due: "next_travel"},
 			{Nonce: "n52", Kind: live.CmdRollLoot, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
 			{Nonce: "n53", Kind: live.CmdMoveItem, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", ItemSlug: "rope", Count: 2},
+			{Nonce: "n54b", Kind: live.CmdClaimLoot, FromID: "0190c7a8-0000-7000-8000-000000000031", CharacterID: "0190c7a8-0000-7000-8000-000000000012", ItemSlug: "rope", Option: "need"},
+			{
+				Nonce: "n54d", Kind: live.CmdTrade, FromID: "0190c7a8-0000-7000-8000-000000000030",
+				Sells: []live.TradeLine{{ItemSlug: "silver-ingot", Count: 2}}, Buys: []live.TradeLine{{ItemSlug: "rope", Count: 1}},
+			},
+			{Nonce: "n54c", Kind: live.CmdSettleLoot, FromID: "0190c7a8-0000-7000-8000-000000000031"},
 			{Nonce: "n54", Kind: live.CmdMoveCoins, FromID: "0190c7a8-0000-7000-8000-000000000031", ToID: "0190c7a8-0000-7000-8000-000000000030", Coin: "gp", Count: 50},
 			{Nonce: "n55", Kind: live.CmdEndCombat, LootTableID: "0190c7a8-0000-7000-8000-000000000032"},
 			{Nonce: "n56", Kind: live.CmdOpenShop, ShopID: "0190c7a8-0000-7000-8000-000000000033"},
@@ -186,6 +196,7 @@ func samples() contract {
 			{Nonce: "n71", Kind: live.CmdUnarmed, TokenID: token.ID, TargetID: token.ID, Option: "shove_push"},
 			{Nonce: "n72", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 1, TargetID: token.ID, OffHand: true},
 			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
+			{Nonce: "n73b", Kind: live.CmdSwapWeapons, TokenID: token.ID},
 			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
 			{Nonce: "n76", Kind: live.CmdStabilise, TokenID: token.ID, TargetID: token.ID, Option: "medicine"},
 			{Nonce: "n77", Kind: live.CmdRevive, TargetID: token.ID, Option: "revivify"},

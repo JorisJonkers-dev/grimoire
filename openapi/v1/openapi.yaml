@@ -1161,6 +1161,164 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory:
+    get:
+      operationId: getInventory
+      x-ogen-operation-group: Read
+      summary: Read a Character's Inventory
+      description: "Equipment slots, the bag, weight against carrying capacity, and the Party Stash. Its player or a DM."
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The Inventory.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryView"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/move:
+    post:
+      operationId: moveItem
+      x-ogen-operation-group: Play
+      summary: Move an item
+      description: "Puts an item in a slot, back in the bag, with another Character or in the Party Stash. Not during a live Session."
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryMove"
+      responses:
+        "200":
+          description: The Inventory after the move.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryView"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap:
+    post:
+      operationId: swapWeaponSet
+      x-ogen-operation-group: Play
+      summary: Swap weapon sets
+      description: "Changes the weapon set in hand between melee and ranged outside a fight. In a live Session the swap is a command that pays the 2024 equip rules."
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The Inventory with the other set in hand.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryView"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/take:
+    post:
+      operationId: takeFromStash
+      x-ogen-operation-group: Play
+      summary: Take from the Party Stash
+      description: "Moves an item from the Party Stash into the Character's bag. Not during a live Session."
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryTake"
+      responses:
+        "200":
+          description: The Inventory after taking it.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryView"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/use:
+    post:
+      operationId: useItem
+      x-ogen-operation-group: Play
+      summary: Drink or throw an item
+      description: "Drinks a potion, throws an item away, attunes or unattunes it (three at most), identifies it, or spends its charges. Not during a live Session."
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryUse"
+      responses:
+        "200":
+          description: The Inventory, and the hit points restored.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryUseResult"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait:
     get:
       operationId: getPortrait
@@ -7135,6 +7293,124 @@ components:
         createdAt: { type: string, format: date-time, maxLength: 40 }
         build: { $ref: "#/components/schemas/BuildSnapshot" }
         retrainId: { $ref: "#/components/schemas/Id" }
+    EquipmentSlot:
+      type: string
+      description: An equipment slot around a Character's figure.
+      enum: [head, cloak, neck, armor, hands, ring_1, ring_2, feet, main_hand, off_hand, ranged_main, ranged_off, ammunition, instrument]
+    ItemCard:
+      type: object
+      description: An item in an Inventory, with the slots it fits.
+      additionalProperties: false
+      required: [slug, name, category, quantity, weightLb, identified, attuned, fits]
+      properties:
+        instanceId: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        customName: { type: string, maxLength: 80 }
+        category: { type: string, maxLength: 40 }
+        quantity: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        weightLb: { type: number, format: double, minimum: 0, maximum: 1000000 }
+        slot: { $ref: "#/components/schemas/EquipmentSlot" }
+        charges: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        identified: { type: boolean }
+        attuned: { type: boolean }
+        requiresAttunement: { type: boolean }
+        attunementDetail: { type: string, maxLength: 200 }
+        maxCharges: { type: integer, format: int32, minimum: 0, maximum: 100 }
+        fits:
+          type: array
+          maxItems: 14
+          items: { $ref: "#/components/schemas/EquipmentSlot" }
+    SlotLine:
+      type: object
+      description: An equipment slot and what is in it.
+      additionalProperties: false
+      required: [slot]
+      properties:
+        slot: { $ref: "#/components/schemas/EquipmentSlot" }
+        item: { $ref: "#/components/schemas/ItemCard" }
+    PartyBearer:
+      type: object
+      description: Another Character in the Campaign, to give items to.
+      additionalProperties: false
+      required: [characterId, name]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 120 }
+    InventoryView:
+      type: object
+      description: A Character's equipment slots, bag and weight, and the Party Stash.
+      additionalProperties: false
+      required: [characterId, name, slots, bag, coins, weightLb, capacityLb, load, stash, stashCoins, party, weaponSet]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 120 }
+        slots:
+          type: array
+          maxItems: 14
+          items: { $ref: "#/components/schemas/SlotLine" }
+        bag:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ItemCard" }
+        coins:
+          type: array
+          maxItems: 5
+          items: { $ref: "#/components/schemas/LiveCoins" }
+        weightLb: { type: number, format: double, minimum: 0, maximum: 1000000 }
+        capacityLb: { type: number, format: double, minimum: 0, maximum: 100000 }
+        load: { type: string, enum: [none, encumbered, immobile], description: "Past capacity a Character moves 5 feet; past twice it, not at all." }
+        stash:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ItemCard" }
+        stashCoins:
+          type: array
+          maxItems: 5
+          items: { $ref: "#/components/schemas/LiveCoins" }
+        party:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/PartyBearer" }
+        weaponSet: { type: string, enum: [melee, ranged], description: "The weapon set in hand: main and off hand, or the ranged slots." }
+    InventoryMove:
+      type: object
+      description: "An item to move: an Item Instance by id, or some of a plain stack by slug."
+      additionalProperties: false
+      required: [to]
+      properties:
+        instanceId: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        to: { type: string, enum: [bag, slot, character, stash] }
+        slot: { $ref: "#/components/schemas/EquipmentSlot" }
+        characterId: { $ref: "#/components/schemas/Id" }
+        count: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+    InventoryTake:
+      type: object
+      description: An item to take from the Party Stash.
+      additionalProperties: false
+      properties:
+        instanceId: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        count: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+    InventoryUse:
+      type: object
+      description: An item to drink or throw.
+      additionalProperties: false
+      required: [use]
+      properties:
+        instanceId: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        use: { type: string, enum: [drink, throw, attune, unattune, identify, charge] }
+        count: { type: integer, format: int32, minimum: 1, maximum: 100, description: "Charges to spend." }
+    InventoryUseResult:
+      type: object
+      description: The Inventory after using an item, and the hit points it restored.
+      additionalProperties: false
+      required: [inventory, healed]
+      properties:
+        inventory: { $ref: "#/components/schemas/InventoryView" }
+        healed: { type: integer, format: int32, minimum: 0, maximum: 1000 }
     LevelUpPlan:
       type: object
       description: What the next level offers in one class.
@@ -8126,7 +8402,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -8208,11 +8484,21 @@ components:
         due: { type: string, enum: [next_rest, next_travel] }
         lootTableId: { $ref: "#/components/schemas/Id" }
         fromId: { $ref: "#/components/schemas/Id" }
+        buys:
+          type: array
+          description: What a trade buys from the open Shop, made with its sales or not at all.
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LiveTradeLine" }
+        sells:
+          type: array
+          description: What a trade sells to the open Shop, before it buys.
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LiveTradeLine" }
         instanceId: { $ref: "#/components/schemas/Id" }
         action: { type: string, enum: [dash, disengage, dodge, help, hide, influence, magic, ready, search, study, utilize] }
         detail: { type: string, maxLength: 200 }
         trigger: { type: string, enum: [enters_reach] }
-        option: { type: string, enum: [grapple, shove_push, shove_prone, medicine, spell, revivify, raise_dead, resurrection] }
+        option: { type: string, enum: [grapple, shove_push, shove_prone, medicine, spell, revivify, raise_dead, resurrection, need, greed, pass] }
         offHand: { type: boolean, description: "Makes the attack the off-hand attack of a Light weapon." }
         cleave: { type: boolean, description: "Makes the attack the second attack a Cleave hit allows." }
         reactionKind: { type: string, enum: [opportunity_attack, shield, readied, effect] }
@@ -8289,6 +8575,22 @@ components:
         weightLb: { type: number, format: double, minimum: 0, maximum: 100000000 }
         capacityLb: { type: number, format: double, minimum: 0, maximum: 100000 }
         encumbered: { type: boolean }
+        claims:
+          type: array
+          description: The calls on a loot pile's items, earliest first.
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LiveClaim" }
+    LiveClaim:
+      type: object
+      description: A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
+      additionalProperties: false
+      required: [characterId, name, item, choice, roll]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        item: { type: string, maxLength: 80, description: "A plain stack's slug or an Item Instance's id." }
+        choice: { type: string, enum: [need, greed] }
+        roll: { type: integer, format: int32, minimum: 1, maximum: 20 }
     LiveItem:
       type: object
       description: A stack of one item and what it weighs in all.
@@ -8360,7 +8662,7 @@ components:
       type: object
       description: The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
       additionalProperties: false
-      required: [id, name, kind, settlement, stock, haggles]
+      required: [id, name, kind, settlement, stock, haggles, offers]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
@@ -8375,6 +8677,29 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveHaggle" }
+        offers:
+          type: array
+          description: What the Shop pays each Character for the items in its pack, after its haggle.
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/LiveOffer" }
+    LiveOffer:
+      type: object
+      description: What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+      additionalProperties: false
+      required: [characterId, slug, priceCp]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        priceCp: { type: integer, format: int32, minimum: 0, maximum: 100000000 }
+        junk: { type: boolean }
+    LiveTradeLine:
+      type: object
+      description: How many of an item a trade buys or sells.
+      additionalProperties: false
+      required: [itemSlug, count]
+      properties:
+        itemSlug: { $ref: "#/components/schemas/Slug" }
+        count: { type: integer, format: int32, minimum: 0, maximum: 100000 }
     LiveStock:
       type: object
       description: One item the open Shop sells, and its asking price in copper before haggling.

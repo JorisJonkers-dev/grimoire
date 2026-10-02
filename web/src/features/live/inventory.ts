@@ -15,6 +15,11 @@ export function canPut(c: LiveContainer, dm: boolean, me: string): boolean {
   return c.kind !== 'loot_drop' && (dm || shared(c, me))
 }
 
+/** Whether a Player hands something from their own Character's Inventory into another Character's pack. */
+export function canGive(from: LiveContainer | undefined, to: LiveContainer, me: string): boolean {
+  return from?.ownerId === me && to.kind === 'character'
+}
+
 /** "Climbing Line ×1 · 3 charges · neck · attuned", or "Anvil · unidentified" for what the party cannot read. */
 export function instanceLabel(i: LiveContainer['instances'][number]): string {
   const parts = [i.count > 1 ? `${i.name} ×${String(i.count)}` : i.name]

@@ -153,6 +153,13 @@ func TestStatblocksComeFromTheCompendiumAndCharacterSheets(t *testing.T) {
 	if mira.SpellDC != 0 || mira.Shield || mira.Saves["strength"] != 2 || mira.AttacksPerAction != 1 || mira.UnarmedDC != 10 {
 		t.Fatalf("a level 1 fighter casts nothing and attacks once = %+v", mira)
 	}
+	held, err := s.Holding(ctx, dm, tb.campaign, uuid.UUID(sheet.ID), []string{"shortbow"}, false)
+	if err != nil || held.AC != 13 || len(held.Attacks) != 2 || held.Attacks[1] != wantMira[2] || held.HP != mira.HP {
+		t.Fatalf("mira with only her shortbow = %+v %v", held, err)
+	}
+	if _, err := s.Holding(ctx, dm, tb.campaign, uuid.New(), nil, false); !errors.Is(err, apperr.ErrNotFound) {
+		t.Fatalf("holding for an unknown character = %v", err)
+	}
 	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.characters SET level = 5 WHERE id = $1", uuid.UUID(sheet.ID)); err != nil {
 		t.Fatal(err)
 	}

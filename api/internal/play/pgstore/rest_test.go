@@ -59,9 +59,19 @@ func TestRestsAreStored(t *testing.T) {
 	if err != nil || loaded == nil || !loaded.DMAgreed || len(loaded.Agreed) != 1 || loaded.Resters[0].TokenID != token || *loaded.Resters[0].RollID != roll.ID || loaded.Resters[0].HitDiceLeft != 3 {
 		t.Fatalf("loaded = %+v %v", loaded, err)
 	}
+	wand := uuid.New()
+	if _, err := tb.pool.Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
+		VALUES (gen_random_uuid(), $1, 'character', $2, 'Aria', now()) ON CONFLICT DO NOTHING`, tb.campaign, char); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tb.pool.Exec(ctx, `INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, charges, identified, attuned, created_at)
+		SELECT $1, id, 'wand-of-web', 1, 0, true, false, now() FROM campaign.containers WHERE character_id = $2`, wand, char); err != nil {
+		t.Fatal(err)
+	}
 	finish := live.Write{
 		Kind: domain.ActionRestTaken, Rest: live.RestLong, RestOver: true,
-		Results: []domain.RestResult{{CharacterID: char, HPCurrent: 99, HitDiceSpent: 0, Used: map[string]int{"second-wind": 0}, LevelUpReady: true}},
+		Results:   []domain.RestResult{{CharacterID: char, HPCurrent: 99, HitDiceSpent: 0, Used: map[string]int{"second-wind": 0}, LevelUpReady: true}},
+		Recharged: []domain.Recharge{{Instance: domain.InstanceID(wand), Charges: 4}},
 	}
 	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.characters SET can_prepare = false, heroic_inspiration = false WHERE id = $1", char); err != nil {
 		t.Fatal(err)
@@ -74,6 +84,10 @@ func TestRestsAreStored(t *testing.T) {
 	}
 	var hp int
 	var ready bool
+	var wandCharges int
+	if err := tb.pool.QueryRow(ctx, "SELECT charges FROM campaign.item_instances WHERE id = $1", wand).Scan(&wandCharges); err != nil || wandCharges != 4 {
+		t.Fatalf("recharged wand = %d %v", wandCharges, err)
+	}
 	var prepare, inspired bool
 	if err := tb.pool.QueryRow(ctx, "SELECT hp_current, level_up_ready, can_prepare, heroic_inspiration FROM campaign.characters WHERE id = $1", char).Scan(&hp, &ready, &prepare, &inspired); err != nil || hp != 20 || !ready || !prepare || !inspired {
 		t.Fatalf("hp %d ready %v prepare %v inspired %v %v", hp, ready, prepare, inspired, err)

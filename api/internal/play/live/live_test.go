@@ -105,7 +105,7 @@ func next(t *testing.T, sub *live.Subscriber) live.Update {
 			t.Fatal("subscriber was closed")
 		}
 		return u
-	case <-time.After(5 * time.Second):
+	case <-time.After(15 * time.Second): // generous: the whole suite shares one machine's CPU under -race
 		t.Fatal("no update")
 	}
 	return live.Update{}

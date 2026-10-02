@@ -79,6 +79,17 @@ func (q *Queries) CampaignContainers(ctx context.Context, campaignID uuid.UUID) 
 	return items, nil
 }
 
+const campaignHasLiveSession = `-- name: CampaignHasLiveSession :one
+SELECT EXISTS (SELECT 1 FROM play.sessions WHERE campaign_id = $1 AND status = 'live')::boolean
+`
+
+func (q *Queries) CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, campaignHasLiveSession, campaignID)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const campaignItemInstances = `-- name: CampaignItemInstances :many
 SELECT i.id, i.container_id, i.item_slug, i.custom_name, i.quantity, i.charges, i.identified, i.attuned, i.equipped_slot
 FROM campaign.item_instances i JOIN campaign.containers c ON c.id = i.container_id
@@ -116,6 +127,38 @@ func (q *Queries) CampaignItemInstances(ctx context.Context, campaignID uuid.UUI
 			&i.Identified,
 			&i.Attuned,
 			&i.EquippedSlot,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const campaignLootClaims = `-- name: CampaignLootClaims :many
+SELECT l.container_id, l.character_id, l.item, l.choice, l.roll, l.created_at FROM campaign.loot_claims l
+JOIN campaign.containers k ON k.id = l.container_id WHERE k.campaign_id = $1 ORDER BY l.created_at, l.character_id, l.item
+`
+
+func (q *Queries) CampaignLootClaims(ctx context.Context, campaignID uuid.UUID) ([]CampaignLootClaim, error) {
+	rows, err := q.db.Query(ctx, campaignLootClaims, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignLootClaim{}
+	for rows.Next() {
+		var i CampaignLootClaim
+		if err := rows.Scan(
+			&i.ContainerID,
+			&i.CharacterID,
+			&i.Item,
+			&i.Choice,
+			&i.Roll,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -194,6 +237,30 @@ func (q *Queries) DeleteContainerCoins(ctx context.Context, arg DeleteContainerC
 	return err
 }
 
+const deleteInstance = `-- name: DeleteInstance :exec
+DELETE FROM campaign.item_instances WHERE id = $1
+`
+
+func (q *Queries) DeleteInstance(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteInstance, id)
+	return err
+}
+
+const deleteLootClaim = `-- name: DeleteLootClaim :exec
+DELETE FROM campaign.loot_claims WHERE container_id = $1 AND character_id = $2 AND item = $3
+`
+
+type DeleteLootClaimParams struct {
+	ContainerID uuid.UUID
+	CharacterID uuid.UUID
+	Item        string
+}
+
+func (q *Queries) DeleteLootClaim(ctx context.Context, arg DeleteLootClaimParams) error {
+	_, err := q.db.Exec(ctx, deleteLootClaim, arg.ContainerID, arg.CharacterID, arg.Item)
+	return err
+}
+
 const deleteLootTable = `-- name: DeleteLootTable :execrows
 DELETE FROM prep.loot_tables WHERE campaign_id = $1 AND id = $2
 `
@@ -252,6 +319,29 @@ func (q *Queries) GetLootTableRevision(ctx context.Context, arg GetLootTableRevi
 	return i, err
 }
 
+const healCharacter = `-- name: HealCharacter :exec
+UPDATE campaign.characters SET hp_current = LEAST(hp_max, hp_current + $1) WHERE id = $2
+`
+
+type HealCharacterParams struct {
+	Amount int32
+	ID     uuid.UUID
+}
+
+func (q *Queries) HealCharacter(ctx context.Context, arg HealCharacterParams) error {
+	_, err := q.db.Exec(ctx, healCharacter, arg.Amount, arg.ID)
+	return err
+}
+
+const identifyInstance = `-- name: IdentifyInstance :exec
+UPDATE campaign.item_instances SET identified = true WHERE id = $1
+`
+
+func (q *Queries) IdentifyInstance(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, identifyInstance, id)
+	return err
+}
+
 const insertContainer = `-- name: InsertContainer :exec
 INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
 VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING
@@ -273,6 +363,32 @@ func (q *Queries) InsertContainer(ctx context.Context, arg InsertContainerParams
 		arg.Kind,
 		arg.CharacterID,
 		arg.Label,
+		arg.Now,
+	)
+	return err
+}
+
+const insertInstance = `-- name: InsertInstance :exec
+INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, equipped_slot, created_at)
+VALUES ($1, $2, $3, 1, true, $4, $5, $6)
+`
+
+type InsertInstanceParams struct {
+	ID           uuid.UUID
+	ContainerID  uuid.UUID
+	ItemSlug     string
+	Attuned      bool
+	EquippedSlot pgtype.Text
+	Now          time.Time
+}
+
+func (q *Queries) InsertInstance(ctx context.Context, arg InsertInstanceParams) error {
+	_, err := q.db.Exec(ctx, insertInstance,
+		arg.ID,
+		arg.ContainerID,
+		arg.ItemSlug,
+		arg.Attuned,
+		arg.EquippedSlot,
 		arg.Now,
 	)
 	return err
@@ -382,7 +498,9 @@ func (q *Queries) InsertLootTableRevision(ctx context.Context, arg InsertLootTab
 }
 
 const inventoryCharacters = `-- name: InventoryCharacters :many
-SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength
+SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength,
+    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes,
+    c.weapon_set
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id
 `
 
@@ -391,6 +509,8 @@ type InventoryCharactersRow struct {
 	Name          string
 	OwnerMemberID uuid.UUID
 	Strength      int32
+	Classes       []string
+	WeaponSet     string
 }
 
 func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error) {
@@ -407,6 +527,8 @@ func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID)
 			&i.Name,
 			&i.OwnerMemberID,
 			&i.Strength,
+			&i.Classes,
+			&i.WeaponSet,
 		); err != nil {
 			return nil, err
 		}
@@ -419,8 +541,13 @@ func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID)
 }
 
 const itemsBySlug = `-- name: ItemsBySlug :many
-SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb
+SELECT DISTINCT ON (i.slug) i.slug, i.name, i.weight_lb::float8 AS weight_lb, i.category, i.requires_attunement,
+    coalesce(i.attunement_detail, '')::text AS attunement_detail,
+    coalesce(ch.max_charges, 0)::int AS max_charges, coalesce(ch.regain_dice, 0)::int AS regain_dice,
+    coalesce(ch.regain_faces, 0)::int AS regain_faces, coalesce(ch.regain_bonus, 0)::int AS regain_bonus,
+    coalesce(ch.recharge_on, '')::text AS recharge_on
 FROM compendium.items i
+LEFT JOIN compendium.item_charges ch ON ch.item_slug = i.slug
 JOIN compendium.documents d ON d.id = i.document_id
 WHERE i.slug = ANY($1::text[])
 ORDER BY i.slug, (d.key = (SELECT c.ruleset_pref FROM campaign.campaigns c WHERE c.id = $2)) DESC, d.precedence DESC
@@ -432,9 +559,17 @@ type ItemsBySlugParams struct {
 }
 
 type ItemsBySlugRow struct {
-	Slug     string
-	Name     string
-	WeightLb float64
+	Slug               string
+	Name               string
+	WeightLb           float64
+	Category           string
+	RequiresAttunement bool
+	AttunementDetail   string
+	MaxCharges         int32
+	RegainDice         int32
+	RegainFaces        int32
+	RegainBonus        int32
+	RechargeOn         string
 }
 
 func (q *Queries) ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]ItemsBySlugRow, error) {
@@ -446,7 +581,19 @@ func (q *Queries) ItemsBySlug(ctx context.Context, arg ItemsBySlugParams) ([]Ite
 	items := []ItemsBySlugRow{}
 	for rows.Next() {
 		var i ItemsBySlugRow
-		if err := rows.Scan(&i.Slug, &i.Name, &i.WeightLb); err != nil {
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Name,
+			&i.WeightLb,
+			&i.Category,
+			&i.RequiresAttunement,
+			&i.AttunementDetail,
+			&i.MaxCharges,
+			&i.RegainDice,
+			&i.RegainFaces,
+			&i.RegainBonus,
+			&i.RechargeOn,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -584,6 +731,21 @@ func (q *Queries) SaveLootTable(ctx context.Context, arg SaveLootTableParams) er
 	return err
 }
 
+const setCharacterArmor = `-- name: SetCharacterArmor :exec
+UPDATE campaign.characters SET armor_slug = $1, shield = $2 WHERE id = $3
+`
+
+type SetCharacterArmorParams struct {
+	ArmorSlug pgtype.Text
+	Shield    bool
+	ID        uuid.UUID
+}
+
+func (q *Queries) SetCharacterArmor(ctx context.Context, arg SetCharacterArmorParams) error {
+	_, err := q.db.Exec(ctx, setCharacterArmor, arg.ArmorSlug, arg.Shield, arg.ID)
+	return err
+}
+
 const setContainerCoins = `-- name: SetContainerCoins :exec
 INSERT INTO campaign.container_coins (container_id, coin, amount) VALUES ($1, $2, $3)
 ON CONFLICT (container_id, coin) DO UPDATE SET amount = excluded.amount
@@ -597,6 +759,48 @@ type SetContainerCoinsParams struct {
 
 func (q *Queries) SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error {
 	_, err := q.db.Exec(ctx, setContainerCoins, arg.ContainerID, arg.Coin, arg.Amount)
+	return err
+}
+
+const setInstanceAttuned = `-- name: SetInstanceAttuned :exec
+UPDATE campaign.item_instances SET attuned = $1 WHERE id = $2
+`
+
+type SetInstanceAttunedParams struct {
+	Attuned bool
+	ID      uuid.UUID
+}
+
+func (q *Queries) SetInstanceAttuned(ctx context.Context, arg SetInstanceAttunedParams) error {
+	_, err := q.db.Exec(ctx, setInstanceAttuned, arg.Attuned, arg.ID)
+	return err
+}
+
+const setInstanceCharges = `-- name: SetInstanceCharges :exec
+UPDATE campaign.item_instances SET charges = $1 WHERE id = $2
+`
+
+type SetInstanceChargesParams struct {
+	Charges pgtype.Int4
+	ID      uuid.UUID
+}
+
+func (q *Queries) SetInstanceCharges(ctx context.Context, arg SetInstanceChargesParams) error {
+	_, err := q.db.Exec(ctx, setInstanceCharges, arg.Charges, arg.ID)
+	return err
+}
+
+const setInstanceSlot = `-- name: SetInstanceSlot :exec
+UPDATE campaign.item_instances SET equipped_slot = $1 WHERE id = $2
+`
+
+type SetInstanceSlotParams struct {
+	EquippedSlot pgtype.Text
+	ID           uuid.UUID
+}
+
+func (q *Queries) SetInstanceSlot(ctx context.Context, arg SetInstanceSlotParams) error {
+	_, err := q.db.Exec(ctx, setInstanceSlot, arg.EquippedSlot, arg.ID)
 	return err
 }
 
@@ -622,6 +826,47 @@ func (q *Queries) SetStack(ctx context.Context, arg SetStackParams) error {
 		arg.ItemSlug,
 		arg.Quantity,
 		arg.Now,
+	)
+	return err
+}
+
+const setWeaponSet = `-- name: SetWeaponSet :exec
+UPDATE campaign.characters SET weapon_set = $1 WHERE id = $2
+`
+
+type SetWeaponSetParams struct {
+	WeaponSet string
+	ID        uuid.UUID
+}
+
+func (q *Queries) SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error {
+	_, err := q.db.Exec(ctx, setWeaponSet, arg.WeaponSet, arg.ID)
+	return err
+}
+
+const upsertLootClaim = `-- name: UpsertLootClaim :exec
+INSERT INTO campaign.loot_claims (container_id, character_id, item, choice, roll, created_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (container_id, character_id, item) DO UPDATE SET choice = excluded.choice
+`
+
+type UpsertLootClaimParams struct {
+	ContainerID uuid.UUID
+	CharacterID uuid.UUID
+	Item        string
+	Choice      string
+	Roll        int32
+	CreatedAt   time.Time
+}
+
+func (q *Queries) UpsertLootClaim(ctx context.Context, arg UpsertLootClaimParams) error {
+	_, err := q.db.Exec(ctx, upsertLootClaim,
+		arg.ContainerID,
+		arg.CharacterID,
+		arg.Item,
+		arg.Choice,
+		arg.Roll,
+		arg.CreatedAt,
 	)
 	return err
 }

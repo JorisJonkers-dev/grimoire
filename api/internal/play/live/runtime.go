@@ -103,8 +103,15 @@ type Write struct {
 	Schedule   *prep.Scheduled
 	Unschedule uuid.UUID
 	// Drop is a new drop of loot; Move a transfer between Containers; Gone the drop it emptied.
-	Drop      *domain.Container
-	Move      *domain.Move
+	Drop *domain.Container
+	Move *domain.Move
+	// Moves are the transfers a settled loot pile makes, in order; Claim a call on one of its items,
+	// taken back when Unclaim.
+	Moves   []domain.Move
+	Claim   *domain.Claim
+	Unclaim bool
+	// Swap is a Character changing weapon sets.
+	Swap      *WeaponSwap
 	Gone      *domain.ContainerID
 	items     map[string]domain.ItemInfo
 	lootTable string
@@ -119,8 +126,10 @@ type Write struct {
 	Resting  *domain.Rest
 	RestOver bool
 	Supplies []domain.Supply
-	Results  []domain.RestResult
-	Healed   []HPChange
+	// Recharged are the charges a rest gave back to magic items.
+	Recharged []domain.Recharge
+	Results   []domain.RestResult
+	Healed    []HPChange
 	// Pending is a Hide, Grapple or Shove waiting on its roll; Settled the roll of one that resolved.
 	// Pushed is a shoved creature where it lands; Dragged a grappled creature pulled along a walk.
 	Pending *domain.PendingAction
@@ -136,6 +145,9 @@ type Write struct {
 	Spawned []domain.Token
 	Undoes  uuid.UUID
 	price   *prep.ItemPrice
+	// Trades are the sales and purchases of a trade, in order; prices what the Shop learnt sold items are worth.
+	Trades []domain.Trade
+	prices map[string]*prep.ItemPrice
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -262,6 +274,8 @@ type Committed struct {
 type Statblocks interface {
 	Monster(ctx context.Context, campaign uuid.UUID, slug string) (string, domain.Stats, error)
 	Character(ctx context.Context, c caller.Caller, campaign, id uuid.UUID) (string, uuid.UUID, domain.Stats, error)
+	// Holding is a Character's stats with these weapons and shield in hand.
+	Holding(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, weapons []string, shield bool) (domain.Stats, error)
 }
 
 // Members finds a Campaign's members.
@@ -468,6 +482,9 @@ func (h *Hub) loadTrade(ctx context.Context, s domain.Session) (trading, error) 
 	if out.shop, err = h.Store.LoadOpenShop(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
+	if err = priceCarried(ctx, h.Store, s.CampaignID, out.inventory, out.shop); err != nil {
+		return out, err
+	}
 	out.day, err = h.Store.GameDay(ctx, s.CampaignID)
 	return out, err
 }
@@ -654,8 +671,8 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle, CmdTrade,
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
 		return true
 	}
 	return false
@@ -861,8 +878,11 @@ func change(s *state, w *Write) {
 	case domain.ActionLootDropped, domain.ActionItemMoved, domain.ActionCoinsMoved:
 		applyInventory(s, w)
 		return
+	case domain.ActionLootClaimed, domain.ActionLootSettled:
+		applyClaims(s, w)
+		return
 	case domain.ActionShopOpened, domain.ActionShopClosed, domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted,
-		domain.ActionHaggled, domain.ActionStockRolled:
+		domain.ActionHaggled, domain.ActionStockRolled, domain.ActionTradeMade:
 		applyShop(s, w)
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,

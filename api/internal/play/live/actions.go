@@ -334,6 +334,10 @@ func (r *runtime) planInteract(m domain.Member, cmd Command) (Write, string) {
 
 // applyInteraction uses up the free object interaction of a Combatant's turn.
 func applyInteraction(s *state, w *Write) {
+	if w.Swap != nil {
+		applySwap(s, w)
+		return
+	}
 	if s.combat == nil {
 		return
 	}

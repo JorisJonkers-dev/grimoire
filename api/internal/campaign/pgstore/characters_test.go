@@ -491,7 +491,7 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := db.Pool().Exec(ctx, `INSERT INTO campaign.containers (id, campaign_id, kind, character_id, label, created_at)
-		VALUES (gen_random_uuid(), $1, 'character', $2, 'Pack', now())`, uuid.UUID(d.ID), uuid.UUID(wiz.ID)); err != nil {
+		VALUES (gen_random_uuid(), $1, 'character', $2, 'Pack', now()) ON CONFLICT DO NOTHING`, uuid.UUID(d.ID), uuid.UUID(wiz.ID)); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := db.Pool().Exec(ctx, `INSERT INTO campaign.container_coins (container_id, coin, amount)

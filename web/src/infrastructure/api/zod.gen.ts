@@ -889,6 +889,34 @@ export const zAbilityIncrease = z.object({
 });
 
 /**
+ * An equipment slot around a Character's figure.
+ */
+export const zEquipmentSlot = z.enum([
+    'head',
+    'cloak',
+    'neck',
+    'armor',
+    'hands',
+    'ring_1',
+    'ring_2',
+    'feet',
+    'main_hand',
+    'off_hand',
+    'ranged_main',
+    'ranged_off',
+    'ammunition',
+    'instrument'
+]);
+
+/**
+ * Another Character in the Campaign, to give items to.
+ */
+export const zPartyBearer = z.object({
+    characterId: zId,
+    name: z.string().max(120)
+});
+
+/**
  * Same-origin path of a stored picture; it changes when the picture does.
  */
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
@@ -1513,6 +1541,17 @@ export const zSessionAction = z.object({
     label: z.string().max(2000),
     undoable: z.boolean(),
     createdAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
+ */
+export const zLiveClaim = z.object({
+    characterId: zId,
+    name: z.string().max(80),
+    item: z.string().max(80),
+    choice: z.enum(['need', 'greed']),
+    roll: z.int().gte(1).lte(20)
 });
 
 /**
@@ -2268,6 +2307,108 @@ export const zCharacterRevisionLine = z.object({
 });
 
 /**
+ * An item in an Inventory, with the slots it fits.
+ */
+export const zItemCard = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug,
+    name: z.string().max(120),
+    customName: z.string().max(80).optional(),
+    category: z.string().max(40),
+    quantity: z.int().gte(1).lte(100000),
+    weightLb: z.number().gte(0).lte(1000000),
+    slot: zEquipmentSlot.optional(),
+    charges: z.int().gte(0).lte(100).optional(),
+    identified: z.boolean(),
+    attuned: z.boolean(),
+    requiresAttunement: z.boolean().optional(),
+    attunementDetail: z.string().max(200).optional(),
+    maxCharges: z.int().gte(0).lte(100).optional(),
+    fits: z.array(zEquipmentSlot).max(14)
+});
+
+/**
+ * An equipment slot and what is in it.
+ */
+export const zSlotLine = z.object({
+    slot: zEquipmentSlot,
+    item: zItemCard.optional()
+});
+
+/**
+ * A Character's equipment slots, bag and weight, and the Party Stash.
+ */
+export const zInventoryView = z.object({
+    characterId: zId,
+    name: z.string().max(120),
+    slots: z.array(zSlotLine).max(14),
+    bag: z.array(zItemCard).max(1000),
+    coins: z.array(zLiveCoins).max(5),
+    weightLb: z.number().gte(0).lte(1000000),
+    capacityLb: z.number().gte(0).lte(100000),
+    load: z.enum([
+        'none',
+        'encumbered',
+        'immobile'
+    ]),
+    stash: z.array(zItemCard).max(1000),
+    stashCoins: z.array(zLiveCoins).max(5),
+    party: z.array(zPartyBearer).max(50),
+    weaponSet: z.enum(['melee', 'ranged'])
+});
+
+/**
+ * An item to move: an Item Instance by id, or some of a plain stack by slug.
+ */
+export const zInventoryMove = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug.optional(),
+    to: z.enum([
+        'bag',
+        'slot',
+        'character',
+        'stash'
+    ]),
+    slot: zEquipmentSlot.optional(),
+    characterId: zId.optional(),
+    count: z.int().gte(1).lte(100000).optional()
+});
+
+/**
+ * An item to take from the Party Stash.
+ */
+export const zInventoryTake = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug.optional(),
+    count: z.int().gte(1).lte(100000).optional()
+});
+
+/**
+ * An item to drink or throw.
+ */
+export const zInventoryUse = z.object({
+    instanceId: zId.optional(),
+    slug: zSlug.optional(),
+    use: z.enum([
+        'drink',
+        'throw',
+        'attune',
+        'unattune',
+        'identify',
+        'charge'
+    ]),
+    count: z.int().gte(1).lte(100).optional()
+});
+
+/**
+ * The Inventory after using an item, and the hit points it restored.
+ */
+export const zInventoryUseResult = z.object({
+    inventory: zInventoryView,
+    healed: z.int().gte(0).lte(1000)
+});
+
+/**
  * A class the next level can go to, with what multiclassing into it still needs.
  */
 export const zLevelUpClass = z.object({
@@ -2677,6 +2818,86 @@ export const zSpawnMonster = z.object({
 });
 
 /**
+ * A stack of one item and what it weighs in all.
+ */
+export const zLiveItem = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
+ */
+export const zLiveItemInstance = z.object({
+    id: zId,
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    charges: z.int().gte(0).lte(100).optional(),
+    identified: z.boolean(),
+    attuned: z.boolean().optional(),
+    slot: z.enum([
+        'main_hand',
+        'off_hand',
+        'ranged_main',
+        'ranged_off',
+        'armor',
+        'head',
+        'cloak',
+        'hands',
+        'feet',
+        'neck',
+        'ring_1',
+        'ring_2'
+    ]).optional(),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
+ */
+export const zLiveContainer = z.object({
+    id: zId,
+    kind: z.enum([
+        'character',
+        'party_stash',
+        'loot_drop',
+        'bag'
+    ]),
+    label: z.string().max(80),
+    characterId: zId.optional(),
+    ownerId: zId.optional(),
+    parentId: zId.optional(),
+    items: z.array(zLiveItem).max(1000),
+    instances: z.array(zLiveItemInstance).max(1000),
+    coins: z.array(zLiveCoins).max(5),
+    weightLb: z.number().gte(0).lte(100000000),
+    capacityLb: z.number().gte(0).lte(100000).optional(),
+    encumbered: z.boolean().optional(),
+    claims: z.array(zLiveClaim).max(1000).optional()
+});
+
+/**
+ * What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+ */
+export const zLiveOffer = z.object({
+    characterId: zId,
+    slug: zSlug,
+    priceCp: z.int().gte(0).lte(100000000),
+    junk: z.boolean().optional()
+});
+
+/**
+ * How many of an item a trade buys or sells.
+ */
+export const zLiveTradeLine = z.object({
+    itemSlug: zSlug,
+    count: z.int().gte(0).lte(100000)
+});
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -2732,6 +2953,9 @@ export const zLiveCommand = z.object({
         'roll_loot',
         'move_item',
         'move_coins',
+        'claim_loot',
+        'settle_loot',
+        'trade',
         'open_shop',
         'close_shop',
         'buy',
@@ -2748,6 +2972,7 @@ export const zLiveCommand = z.object({
         'take_action',
         'unarmed',
         'interact',
+        'swap_weapons',
         'set_reaction',
         'stabilise',
         'revive',
@@ -2852,6 +3077,8 @@ export const zLiveCommand = z.object({
     due: z.enum(['next_rest', 'next_travel']).optional(),
     lootTableId: zId.optional(),
     fromId: zId.optional(),
+    buys: z.array(zLiveTradeLine).max(100).optional(),
+    sells: z.array(zLiveTradeLine).max(100).optional(),
     instanceId: zId.optional(),
     action: z.enum([
         'dash',
@@ -2876,7 +3103,10 @@ export const zLiveCommand = z.object({
         'spell',
         'revivify',
         'raise_dead',
-        'resurrection'
+        'resurrection',
+        'need',
+        'greed',
+        'pass'
     ]).optional(),
     offHand: z.boolean().optional(),
     cleave: z.boolean().optional(),
@@ -2903,67 +3133,6 @@ export const zLiveCommand = z.object({
 });
 
 /**
- * A stack of one item and what it weighs in all.
- */
-export const zLiveItem = z.object({
-    slug: zSlug,
-    name: z.string().max(120),
-    count: z.int().gte(1).lte(100000),
-    weightLb: z.number().gte(0).lte(100000000)
-});
-
-/**
- * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
- */
-export const zLiveItemInstance = z.object({
-    id: zId,
-    slug: zSlug,
-    name: z.string().max(120),
-    count: z.int().gte(1).lte(100000),
-    charges: z.int().gte(0).lte(100).optional(),
-    identified: z.boolean(),
-    attuned: z.boolean().optional(),
-    slot: z.enum([
-        'main_hand',
-        'off_hand',
-        'ranged_main',
-        'ranged_off',
-        'armor',
-        'head',
-        'cloak',
-        'hands',
-        'feet',
-        'neck',
-        'ring_1',
-        'ring_2'
-    ]).optional(),
-    weightLb: z.number().gte(0).lte(100000000)
-});
-
-/**
- * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
- */
-export const zLiveContainer = z.object({
-    id: zId,
-    kind: z.enum([
-        'character',
-        'party_stash',
-        'loot_drop',
-        'bag'
-    ]),
-    label: z.string().max(80),
-    characterId: zId.optional(),
-    ownerId: zId.optional(),
-    parentId: zId.optional(),
-    items: z.array(zLiveItem).max(1000),
-    instances: z.array(zLiveItemInstance).max(1000),
-    coins: z.array(zLiveCoins).max(5),
-    weightLb: z.number().gte(0).lte(100000000),
-    capacityLb: z.number().gte(0).lte(100000).optional(),
-    encumbered: z.boolean().optional()
-});
-
-/**
  * One item the open Shop sells, and its asking price in copper before haggling.
  */
 export const zLiveStock = z.object({
@@ -2984,7 +3153,8 @@ export const zLiveShop = z.object({
     settlement: z.string().max(80),
     owner: z.string().max(80).optional(),
     stock: z.array(zLiveStock).max(200),
-    haggles: z.array(zLiveHaggle).max(50)
+    haggles: z.array(zLiveHaggle).max(50),
+    offers: z.array(zLiveOffer).max(2000)
 });
 
 /**
@@ -3908,6 +4078,62 @@ export const zDeclineRetrainPath = z.object({
  * The declined retrain.
  */
 export const zDeclineRetrainResponse = zRetrain;
+
+export const zGetInventoryPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory.
+ */
+export const zGetInventoryResponse = zInventoryView;
+
+export const zMoveItemBody = zInventoryMove;
+
+export const zMoveItemPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory after the move.
+ */
+export const zMoveItemResponse = zInventoryView;
+
+export const zSwapWeaponSetPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory with the other set in hand.
+ */
+export const zSwapWeaponSetResponse = zInventoryView;
+
+export const zTakeFromStashBody = zInventoryTake;
+
+export const zTakeFromStashPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory after taking it.
+ */
+export const zTakeFromStashResponse = zInventoryView;
+
+export const zUseItemBody = zInventoryUse;
+
+export const zUseItemPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory, and the hit points restored.
+ */
+export const zUseItemResponse = zInventoryUseResult;
 
 export const zGetPortraitPath = z.object({
     campaignId: zId,

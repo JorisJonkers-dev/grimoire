@@ -75,6 +75,7 @@ type CampaignCharacter struct {
 	TempHp            int32
 	CanPrepare        bool
 	HeroicInspiration bool
+	WeaponSet         string
 }
 
 type CampaignCharacterAbility struct {
@@ -208,6 +209,15 @@ type CampaignItemInstance struct {
 	Attuned      bool
 	EquippedSlot pgtype.Text
 	CreatedAt    time.Time
+}
+
+type CampaignLootClaim struct {
+	ContainerID uuid.UUID
+	CharacterID uuid.UUID
+	Item        string
+	Choice      string
+	Roll        int32
+	CreatedAt   time.Time
 }
 
 type CampaignMap struct {
@@ -758,6 +768,15 @@ type CompendiumItem struct {
 	AttunementDetail   pgtype.Text
 }
 
+type CompendiumItemCharge struct {
+	ItemSlug    string
+	MaxCharges  int32
+	RegainDice  int32
+	RegainFaces int32
+	RegainBonus int32
+	RechargeOn  string
+}
+
 type CompendiumMagicSchool struct {
 	ID   int64
 	Slug string
@@ -1284,6 +1303,7 @@ type PlayCombatant struct {
 	Cleaved          bool
 	OwnerCombatantID pgtype.UUID
 	Commanded        bool
+	Equips           int32
 }
 
 type PlayDying struct {

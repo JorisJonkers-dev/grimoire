@@ -57,6 +57,11 @@ func (b bestiary) Character(_ context.Context, _ caller.Caller, _, id uuid.UUID)
 	}}, nil
 }
 
+// Holding fails: these fakes have no weapon sets to read.
+func (b bestiary) Holding(context.Context, caller.Caller, uuid.UUID, uuid.UUID, []string, bool) (domain.Stats, error) {
+	return domain.Stats{}, errors.New("no weapons")
+}
+
 func TestAttacksFromPreviewToDamageAndUndo(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

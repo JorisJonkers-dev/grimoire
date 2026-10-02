@@ -73,3 +73,18 @@ func TestHagglingAdjustsWithinTheBound(t *testing.T) {
 		}
 	}
 }
+
+func TestOffersFollowTheHaggle(t *testing.T) {
+	for _, c := range []struct{ base, adjust, want int }{
+		{1000, 0, 500}, {1000, -10, 550}, {1000, -20, 600}, {1000, 10, 450}, {1, -20, 0}, {3, 0, 1},
+	} {
+		if got := shops.Offer(c.base, c.adjust); got != c.want {
+			t.Errorf("offer for %d at %d%% = %d, want %d", c.base, c.adjust, got, c.want)
+		}
+	}
+	for category, want := range map[string]bool{"trade-good": true, "weapon": false, "potion": false} {
+		if shops.Junk(category) != want {
+			t.Errorf("junk %s = %v", category, !want)
+		}
+	}
+}
