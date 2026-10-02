@@ -159,6 +159,60 @@ export const zMentionableList = z.object({
 });
 
 /**
+ * What one full release brought; status says whether it is a draft, scheduled or live.
+ */
+export const zReleaseNote = z.object({
+    id: zId,
+    version: z.string().max(20).regex(/^[0-9]+\.[0-9]+\.[0-9]+$/),
+    title: z.string().min(1).max(120),
+    body: z.string().max(8000),
+    status: z.enum([
+        'draft',
+        'scheduled',
+        'published'
+    ]),
+    publishAt: z.iso.datetime().max(40).optional(),
+    createdAt: z.iso.datetime().max(40),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * Release Notes, newest first.
+ */
+export const zReleaseNoteList = z.object({
+    items: z.array(zReleaseNote).max(100)
+});
+
+/**
+ * The full release to draft a Release Note for.
+ */
+export const zReleaseNoteDraft = z.object({
+    version: z.string().min(5).max(21)
+});
+
+/**
+ * A Release Note's new title and body.
+ */
+export const zReleaseNoteChange = z.object({
+    title: z.string().min(1).max(120),
+    body: z.string().max(8000)
+});
+
+/**
+ * When the Release Note goes live; omitted, now.
+ */
+export const zReleaseNotePublish = z.object({
+    at: z.iso.datetime().max(40).optional()
+});
+
+/**
+ * The newest live Release Note the caller has not seen, when there is one.
+ */
+export const zUnseenReleaseNote = z.object({
+    note: zReleaseNote.optional()
+});
+
+/**
  * What a Notification is about.
  */
 export const zNotificationKind = z.enum([
@@ -4467,6 +4521,54 @@ export const zSetNotificationPreferencesBody = zNotificationPreferences;
  * The preferences.
  */
 export const zSetNotificationPreferencesResponse = zNotificationPreferences;
+
+/**
+ * The Release Notes.
+ */
+export const zListReleaseNotesResponse = zReleaseNoteList;
+
+export const zDraftReleaseNoteBody = zReleaseNoteDraft;
+
+/**
+ * The draft.
+ */
+export const zDraftReleaseNoteResponse = zReleaseNote;
+
+export const zEditReleaseNoteBody = zReleaseNoteChange;
+
+export const zEditReleaseNotePath = z.object({
+    noteId: zId
+});
+
+/**
+ * The Release Note.
+ */
+export const zEditReleaseNoteResponse = zReleaseNote;
+
+export const zPublishReleaseNoteBody = zReleaseNotePublish;
+
+export const zPublishReleaseNotePath = z.object({
+    noteId: zId
+});
+
+/**
+ * The Release Note.
+ */
+export const zPublishReleaseNoteResponse = zReleaseNote;
+
+/**
+ * The Release Note, if there is one.
+ */
+export const zGetUnseenReleaseNoteResponse = zUnseenReleaseNote;
+
+export const zSeeReleaseNotePath = z.object({
+    noteId: zId
+});
+
+/**
+ * Seen.
+ */
+export const zSeeReleaseNoteResponse = z.void();
 
 /**
  * The process is alive.

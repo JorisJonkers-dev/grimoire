@@ -22929,6 +22929,52 @@ func (o OptReactionTimeout) Or(d ReactionTimeout) ReactionTimeout {
 	return d
 }
 
+// NewOptReleaseNote returns new OptReleaseNote with value set to v.
+func NewOptReleaseNote(v ReleaseNote) OptReleaseNote {
+	return OptReleaseNote{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptReleaseNote is optional ReleaseNote.
+type OptReleaseNote struct {
+	Value ReleaseNote
+	Set   bool
+}
+
+// IsSet returns true if OptReleaseNote was set.
+func (o OptReleaseNote) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptReleaseNote) Reset() {
+	var v ReleaseNote
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptReleaseNote) SetTo(v ReleaseNote) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptReleaseNote) Get() (v ReleaseNote, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptReleaseNote) Or(d ReleaseNote) ReleaseNote {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptRollDieMode returns new OptRollDieMode with value set to v.
 func NewOptRollDieMode(v RollDieMode) OptRollDieMode {
 	return OptRollDieMode{
@@ -23971,6 +24017,8 @@ func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) draftReleaseNoteRes()              {}
+func (*ProblemStatusCodeWithHeaders) editReleaseNoteRes()               {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getAccountHistoryRes()             {}
@@ -24000,6 +24048,7 @@ func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
 func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listAccessTokensRes()              {}
@@ -24027,6 +24076,7 @@ func (*ProblemStatusCodeWithHeaders) listMyCharactersRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNotificationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listNpcsRes()                      {}
+func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
@@ -24041,6 +24091,7 @@ func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
+func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
 func (*ProblemStatusCodeWithHeaders) removeMemberRes()                  {}
@@ -24057,6 +24108,7 @@ func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
 func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
@@ -24642,6 +24694,324 @@ func (s *RecoveryCodesHeaders) SetResponse(val RecoveryCodes) {
 
 func (*RecoveryCodesHeaders) confirmTwoStepRes()     {}
 func (*RecoveryCodesHeaders) resetRecoveryCodesRes() {}
+
+// What one full release brought; status says whether it is a draft, scheduled or live.
+// Ref: #/components/schemas/ReleaseNote
+type ReleaseNote struct {
+	ID        ID                `json:"id"`
+	Version   string            `json:"version"`
+	Title     string            `json:"title"`
+	Body      string            `json:"body"`
+	Status    ReleaseNoteStatus `json:"status"`
+	PublishAt OptDateTime       `json:"publishAt"`
+	CreatedAt time.Time         `json:"createdAt"`
+	UpdatedAt time.Time         `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *ReleaseNote) GetID() ID {
+	return s.ID
+}
+
+// GetVersion returns the value of Version.
+func (s *ReleaseNote) GetVersion() string {
+	return s.Version
+}
+
+// GetTitle returns the value of Title.
+func (s *ReleaseNote) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *ReleaseNote) GetBody() string {
+	return s.Body
+}
+
+// GetStatus returns the value of Status.
+func (s *ReleaseNote) GetStatus() ReleaseNoteStatus {
+	return s.Status
+}
+
+// GetPublishAt returns the value of PublishAt.
+func (s *ReleaseNote) GetPublishAt() OptDateTime {
+	return s.PublishAt
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ReleaseNote) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *ReleaseNote) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *ReleaseNote) SetID(val ID) {
+	s.ID = val
+}
+
+// SetVersion sets the value of Version.
+func (s *ReleaseNote) SetVersion(val string) {
+	s.Version = val
+}
+
+// SetTitle sets the value of Title.
+func (s *ReleaseNote) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *ReleaseNote) SetBody(val string) {
+	s.Body = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ReleaseNote) SetStatus(val ReleaseNoteStatus) {
+	s.Status = val
+}
+
+// SetPublishAt sets the value of PublishAt.
+func (s *ReleaseNote) SetPublishAt(val OptDateTime) {
+	s.PublishAt = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ReleaseNote) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *ReleaseNote) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// A Release Note's new title and body.
+// Ref: #/components/schemas/ReleaseNoteChange
+type ReleaseNoteChange struct {
+	Title string `json:"title"`
+	Body  string `json:"body"`
+}
+
+// GetTitle returns the value of Title.
+func (s *ReleaseNoteChange) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *ReleaseNoteChange) GetBody() string {
+	return s.Body
+}
+
+// SetTitle sets the value of Title.
+func (s *ReleaseNoteChange) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *ReleaseNoteChange) SetBody(val string) {
+	s.Body = val
+}
+
+// The full release to draft a Release Note for.
+// Ref: #/components/schemas/ReleaseNoteDraft
+type ReleaseNoteDraft struct {
+	Version string `json:"version"`
+}
+
+// GetVersion returns the value of Version.
+func (s *ReleaseNoteDraft) GetVersion() string {
+	return s.Version
+}
+
+// SetVersion sets the value of Version.
+func (s *ReleaseNoteDraft) SetVersion(val string) {
+	s.Version = val
+}
+
+// ReleaseNoteHeaders wraps ReleaseNote with response headers.
+type ReleaseNoteHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ReleaseNote
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ReleaseNoteHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ReleaseNoteHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ReleaseNoteHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ReleaseNoteHeaders) GetResponse() ReleaseNote {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ReleaseNoteHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ReleaseNoteHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ReleaseNoteHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ReleaseNoteHeaders) SetResponse(val ReleaseNote) {
+	s.Response = val
+}
+
+func (*ReleaseNoteHeaders) draftReleaseNoteRes()   {}
+func (*ReleaseNoteHeaders) editReleaseNoteRes()    {}
+func (*ReleaseNoteHeaders) publishReleaseNoteRes() {}
+
+// Release Notes, newest first.
+// Ref: #/components/schemas/ReleaseNoteList
+type ReleaseNoteList struct {
+	Items []ReleaseNote `json:"items"`
+}
+
+// GetItems returns the value of Items.
+func (s *ReleaseNoteList) GetItems() []ReleaseNote {
+	return s.Items
+}
+
+// SetItems sets the value of Items.
+func (s *ReleaseNoteList) SetItems(val []ReleaseNote) {
+	s.Items = val
+}
+
+// ReleaseNoteListHeaders wraps ReleaseNoteList with response headers.
+type ReleaseNoteListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ReleaseNoteList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ReleaseNoteListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ReleaseNoteListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ReleaseNoteListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ReleaseNoteListHeaders) GetResponse() ReleaseNoteList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ReleaseNoteListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ReleaseNoteListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ReleaseNoteListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ReleaseNoteListHeaders) SetResponse(val ReleaseNoteList) {
+	s.Response = val
+}
+
+func (*ReleaseNoteListHeaders) listReleaseNotesRes() {}
+
+// When the Release Note goes live; omitted, now.
+// Ref: #/components/schemas/ReleaseNotePublish
+type ReleaseNotePublish struct {
+	At OptDateTime `json:"at"`
+}
+
+// GetAt returns the value of At.
+func (s *ReleaseNotePublish) GetAt() OptDateTime {
+	return s.At
+}
+
+// SetAt sets the value of At.
+func (s *ReleaseNotePublish) SetAt(val OptDateTime) {
+	s.At = val
+}
+
+type ReleaseNoteStatus string
+
+const (
+	ReleaseNoteStatusDraft     ReleaseNoteStatus = "draft"
+	ReleaseNoteStatusScheduled ReleaseNoteStatus = "scheduled"
+	ReleaseNoteStatusPublished ReleaseNoteStatus = "published"
+)
+
+// AllValues returns all ReleaseNoteStatus values.
+func (ReleaseNoteStatus) AllValues() []ReleaseNoteStatus {
+	return []ReleaseNoteStatus{
+		ReleaseNoteStatusDraft,
+		ReleaseNoteStatusScheduled,
+		ReleaseNoteStatusPublished,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ReleaseNoteStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ReleaseNoteStatusDraft:
+		return []byte(s), nil
+	case ReleaseNoteStatusScheduled:
+		return []byte(s), nil
+	case ReleaseNoteStatusPublished:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ReleaseNoteStatus) UnmarshalText(data []byte) error {
+	switch ReleaseNoteStatus(data) {
+	case ReleaseNoteStatusDraft:
+		*s = ReleaseNoteStatusDraft
+		return nil
+	case ReleaseNoteStatusScheduled:
+		*s = ReleaseNoteStatusScheduled
+		return nil
+	case ReleaseNoteStatusPublished:
+		*s = ReleaseNoteStatusPublished
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // RemoveMemberNoContent is response for RemoveMember operation.
 type RemoveMemberNoContent struct {
@@ -25616,6 +25986,45 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// SeeReleaseNoteNoContent is response for SeeReleaseNote operation.
+type SeeReleaseNoteNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SeeReleaseNoteNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SeeReleaseNoteNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SeeReleaseNoteNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SeeReleaseNoteNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SeeReleaseNoteNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SeeReleaseNoteNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SeeReleaseNoteNoContent) seeReleaseNoteRes() {}
 
 // SendAdminSignInLinkAccepted is response for SendAdminSignInLink operation.
 type SendAdminSignInLinkAccepted struct {
@@ -28688,6 +29097,72 @@ func (s *UnlinkOidcNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*UnlinkOidcNoContent) unlinkOidcRes() {}
+
+// The newest live Release Note the caller has not seen, when there is one.
+// Ref: #/components/schemas/UnseenReleaseNote
+type UnseenReleaseNote struct {
+	Note OptReleaseNote `json:"note"`
+}
+
+// GetNote returns the value of Note.
+func (s *UnseenReleaseNote) GetNote() OptReleaseNote {
+	return s.Note
+}
+
+// SetNote sets the value of Note.
+func (s *UnseenReleaseNote) SetNote(val OptReleaseNote) {
+	s.Note = val
+}
+
+// UnseenReleaseNoteHeaders wraps UnseenReleaseNote with response headers.
+type UnseenReleaseNoteHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           UnseenReleaseNote
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UnseenReleaseNoteHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UnseenReleaseNoteHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UnseenReleaseNoteHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *UnseenReleaseNoteHeaders) GetResponse() UnseenReleaseNote {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UnseenReleaseNoteHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UnseenReleaseNoteHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UnseenReleaseNoteHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *UnseenReleaseNoteHeaders) SetResponse(val UnseenReleaseNote) {
+	s.Response = val
+}
+
+func (*UnseenReleaseNoteHeaders) getUnseenReleaseNoteRes() {}
 
 type UploadMapReq struct {
 	Data io.Reader

@@ -181,3 +181,38 @@ RETURNING kind, title, body, action_label, action_path, created_at;
 
 -- name: MarkDigest :exec
 INSERT INTO social.digests (account_id, sent_at) VALUES (@account_id, @now) ON CONFLICT (account_id) DO UPDATE SET sent_at = EXCLUDED.sent_at;
+
+-- name: InsertReleaseNote :exec
+INSERT INTO social.release_notes (id, version, title, body, created_by, created_at, updated_at) VALUES (@id, @version, @title, @body, @created_by, @now, @now);
+
+-- name: ListReleaseNotes :many
+SELECT id, version, title, body, created_at, updated_at, publish_at, announced_at FROM social.release_notes ORDER BY created_at DESC LIMIT 100;
+
+-- name: GetReleaseNote :one
+SELECT id, version, title, body, created_at, updated_at, publish_at, announced_at FROM social.release_notes WHERE id = @id;
+
+-- name: UpdateReleaseNote :execrows
+UPDATE social.release_notes SET title = @title, body = @body, updated_at = @now WHERE id = @id AND announced_at IS NULL;
+
+-- name: ScheduleReleaseNote :execrows
+UPDATE social.release_notes SET publish_at = sqlc.narg(publish_at), updated_at = @now WHERE id = @id AND announced_at IS NULL;
+
+-- name: DueReleaseNotes :many
+SELECT id, version, title FROM social.release_notes WHERE publish_at <= @now AND announced_at IS NULL ORDER BY publish_at;
+
+-- name: AnnounceReleaseNote :exec
+UPDATE social.release_notes SET announced_at = @now WHERE id = @id;
+
+-- name: ActiveAccounts :many
+SELECT id FROM identity.accounts WHERE NOT disabled ORDER BY id;
+
+-- name: UnseenReleaseNote :one
+-- The newest live Release Note an Account has not seen.
+SELECT r.id, r.version, r.title, r.body, r.created_at, r.updated_at, r.publish_at, r.announced_at FROM social.release_notes r
+WHERE r.publish_at <= @now AND NOT EXISTS (SELECT 1 FROM social.release_note_views v WHERE v.note_id = r.id AND v.account_id = @account_id)
+ORDER BY r.publish_at DESC LIMIT 1;
+
+-- name: SeeReleaseNote :execrows
+INSERT INTO social.release_note_views (note_id, account_id, seen_at)
+SELECT r.id, @account_id, @now FROM social.release_notes r WHERE r.id = @id AND r.publish_at <= @now
+ON CONFLICT DO NOTHING;

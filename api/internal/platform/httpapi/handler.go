@@ -42,6 +42,7 @@ type Handler struct {
 	Friends       FriendService
 	Conversations ConversationService
 	Notifications NotificationService
+	Releases      ReleaseService
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
 	LiveTimeout time.Duration
 	Log         *slog.Logger

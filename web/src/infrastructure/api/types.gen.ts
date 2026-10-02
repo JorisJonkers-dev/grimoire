@@ -342,6 +342,56 @@ export type MentionableList = {
 };
 
 /**
+ * What one full release brought; status says whether it is a draft, scheduled or live.
+ */
+export type ReleaseNote = {
+    id: Id;
+    version: string;
+    title: string;
+    body: string;
+    status: 'draft' | 'scheduled' | 'published';
+    publishAt?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+/**
+ * Release Notes, newest first.
+ */
+export type ReleaseNoteList = {
+    items: Array<ReleaseNote>;
+};
+
+/**
+ * The full release to draft a Release Note for.
+ */
+export type ReleaseNoteDraft = {
+    version: string;
+};
+
+/**
+ * A Release Note's new title and body.
+ */
+export type ReleaseNoteChange = {
+    title: string;
+    body: string;
+};
+
+/**
+ * When the Release Note goes live; omitted, now.
+ */
+export type ReleaseNotePublish = {
+    at?: string;
+};
+
+/**
+ * The newest live Release Note the caller has not seen, when there is one.
+ */
+export type UnseenReleaseNote = {
+    note?: ReleaseNote;
+};
+
+/**
  * What a Notification is about.
  */
 export type NotificationKind = 'proposal' | 'join_request' | 'level_up' | 'friend_request' | 'conversation' | 'session_reminder' | 'release_note' | 'security';
@@ -8096,6 +8146,195 @@ export type SetNotificationPreferencesResponses = {
 };
 
 export type SetNotificationPreferencesResponse = SetNotificationPreferencesResponses[keyof SetNotificationPreferencesResponses];
+
+export type ListReleaseNotesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/release-notes';
+};
+
+export type ListReleaseNotesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListReleaseNotesError = ListReleaseNotesErrors[keyof ListReleaseNotesErrors];
+
+export type ListReleaseNotesResponses = {
+    /**
+     * The Release Notes.
+     */
+    200: ReleaseNoteList;
+};
+
+export type ListReleaseNotesResponse = ListReleaseNotesResponses[keyof ListReleaseNotesResponses];
+
+export type DraftReleaseNoteData = {
+    body: ReleaseNoteDraft;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/release-notes';
+};
+
+export type DraftReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DraftReleaseNoteError = DraftReleaseNoteErrors[keyof DraftReleaseNoteErrors];
+
+export type DraftReleaseNoteResponses = {
+    /**
+     * The draft.
+     */
+    201: ReleaseNote;
+};
+
+export type DraftReleaseNoteResponse = DraftReleaseNoteResponses[keyof DraftReleaseNoteResponses];
+
+export type EditReleaseNoteData = {
+    body: ReleaseNoteChange;
+    path: {
+        /**
+         * Release Note id.
+         */
+        noteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/release-notes/{noteId}';
+};
+
+export type EditReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type EditReleaseNoteError = EditReleaseNoteErrors[keyof EditReleaseNoteErrors];
+
+export type EditReleaseNoteResponses = {
+    /**
+     * The Release Note.
+     */
+    200: ReleaseNote;
+};
+
+export type EditReleaseNoteResponse = EditReleaseNoteResponses[keyof EditReleaseNoteResponses];
+
+export type PublishReleaseNoteData = {
+    body: ReleaseNotePublish;
+    path: {
+        /**
+         * Release Note id.
+         */
+        noteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/release-notes/{noteId}/publish';
+};
+
+export type PublishReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PublishReleaseNoteError = PublishReleaseNoteErrors[keyof PublishReleaseNoteErrors];
+
+export type PublishReleaseNoteResponses = {
+    /**
+     * The Release Note.
+     */
+    200: ReleaseNote;
+};
+
+export type PublishReleaseNoteResponse = PublishReleaseNoteResponses[keyof PublishReleaseNoteResponses];
+
+export type GetUnseenReleaseNoteData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/release-notes/unseen';
+};
+
+export type GetUnseenReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetUnseenReleaseNoteError = GetUnseenReleaseNoteErrors[keyof GetUnseenReleaseNoteErrors];
+
+export type GetUnseenReleaseNoteResponses = {
+    /**
+     * The Release Note, if there is one.
+     */
+    200: UnseenReleaseNote;
+};
+
+export type GetUnseenReleaseNoteResponse = GetUnseenReleaseNoteResponses[keyof GetUnseenReleaseNoteResponses];
+
+export type SeeReleaseNoteData = {
+    body?: never;
+    path: {
+        /**
+         * Release Note id.
+         */
+        noteId: Id;
+    };
+    query?: never;
+    url: '/api/v1/release-notes/{noteId}/seen';
+};
+
+export type SeeReleaseNoteErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SeeReleaseNoteError = SeeReleaseNoteErrors[keyof SeeReleaseNoteErrors];
+
+export type SeeReleaseNoteResponses = {
+    /**
+     * Seen.
+     */
+    204: void;
+};
+
+export type SeeReleaseNoteResponse = SeeReleaseNoteResponses[keyof SeeReleaseNoteResponses];
 
 export type GetHealthData = {
     body?: never;

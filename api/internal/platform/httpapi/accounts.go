@@ -48,6 +48,7 @@ type AccountService interface {
 	SetDisabled(ctx context.Context, actor string, id domain.AccountID, disabled bool) error
 	ResetTwoStep(ctx context.Context, actor string, id domain.AccountID) error
 	History(ctx context.Context, subject string) ([]domain.Event, error)
+	IsAdmin(ctx context.Context, subject string) bool
 }
 
 var _ AccountService = (*app.Service)(nil)

@@ -30,6 +30,8 @@ type Config struct {
 	BaseURL string
 	SMTP    *SMTP
 	OIDC    *OIDC
+	// Changelog is the release-please changelog Release Notes are drafted from.
+	Changelog string
 }
 
 // OIDC is the external login an Account can sign in with; nil offers none. A login needs GrantRole
@@ -97,6 +99,7 @@ func Load(getenv func(string) string) (Config, error) {
 		OAuthIssuer:      getenv("GRIMOIRE_OAUTH_ISSUER"),
 		TrustForwardAuth: getenv("GRIMOIRE_TRUST_FORWARD_AUTH") != "false",
 		BaseURL:          getenv("GRIMOIRE_BASE_URL"),
+		Changelog:        or(getenv("GRIMOIRE_CHANGELOG"), "CHANGELOG.md"),
 	}
 	for _, s := range strings.Split(getenv("GRIMOIRE_ADMIN_SUBJECTS"), ",") {
 		if s = strings.TrimSpace(s); s != "" {

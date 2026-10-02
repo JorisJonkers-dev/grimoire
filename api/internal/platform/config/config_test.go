@@ -17,7 +17,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Addr != ":8080" || c.RateLimit != 600 || c.AutoMigrate || c.DevSubject != "" || !c.TrustForwardAuth || c.SMTP != nil || c.AdminSubjects != nil || c.OIDC != nil {
+	if c.Addr != ":8080" || c.RateLimit != 600 || c.AutoMigrate || c.DevSubject != "" || !c.TrustForwardAuth || c.SMTP != nil || c.AdminSubjects != nil || c.OIDC != nil || c.Changelog != "CHANGELOG.md" {
 		t.Fatalf("unexpected defaults: %+v", c)
 	}
 }
@@ -40,6 +40,7 @@ func TestLoadOverrides(t *testing.T) {
 		"GRIMOIRE_BASE_URL":              "https://grimoire.example",
 		"GRIMOIRE_SMTP_ADDR":             "smtp.example:587",
 		"GRIMOIRE_SMTP_FROM":             "grimoire@example.com",
+		"GRIMOIRE_CHANGELOG":             "/CHANGELOG.md",
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +48,7 @@ func TestLoadOverrides(t *testing.T) {
 	if c.Addr != ":9000" || c.RateLimit != 42 || !c.AutoMigrate || !c.AutoImport || c.DevSubject != "dev" || c.OAuthIssuer != "https://auth.example" || *c.Push != (config.Push{PublicKey: "pub", PrivateKey: "priv", Contact: "mailto:dm@example.com"}) {
 		t.Fatalf("overrides not applied: %+v", c)
 	}
-	if c.TrustForwardAuth || len(c.AdminSubjects) != 2 || c.AdminSubjects[1] != "root" || c.BaseURL != "https://grimoire.example" || c.SMTP.Addr != "smtp.example:587" {
+	if c.TrustForwardAuth || len(c.AdminSubjects) != 2 || c.AdminSubjects[1] != "root" || c.BaseURL != "https://grimoire.example" || c.SMTP.Addr != "smtp.example:587" || c.Changelog != "/CHANGELOG.md" {
 		t.Fatalf("identity settings = %+v", c)
 	}
 }

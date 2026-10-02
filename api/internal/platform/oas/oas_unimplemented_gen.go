@@ -305,6 +305,25 @@ func (UnimplementedHandler) DisableTwoStep(ctx context.Context, req *TwoStepCode
 	return r, ht.ErrNotImplemented
 }
 
+// DraftReleaseNote implements draftReleaseNote operation.
+//
+// Starts the one Release Note of a full release, listing the features its changelog says it added. For
+// Admins.
+//
+// POST /api/v1/admin/release-notes
+func (UnimplementedHandler) DraftReleaseNote(ctx context.Context, req *ReleaseNoteDraft) (r DraftReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// EditReleaseNote implements editReleaseNote operation.
+//
+// Changes its words until it has been announced. For Admins.
+//
+// PUT /api/v1/admin/release-notes/{noteId}
+func (UnimplementedHandler) EditReleaseNote(ctx context.Context, req *ReleaseNoteChange, params EditReleaseNoteParams) (r EditReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // EndSession implements endSession operation.
 //
 // Ends a live Session and disconnects everyone. DM only.
@@ -570,6 +589,15 @@ func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIco
 	return r, ht.ErrNotImplemented
 }
 
+// GetUnseenReleaseNote implements getUnseenReleaseNote operation.
+//
+// The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+//
+// GET /api/v1/release-notes/unseen
+func (UnimplementedHandler) GetUnseenReleaseNote(ctx context.Context) (r GetUnseenReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // JoinCampaign implements joinCampaign operation.
 //
 // Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -817,6 +845,15 @@ func (UnimplementedHandler) ListNpcs(ctx context.Context, params ListNpcsParams)
 	return r, ht.ErrNotImplemented
 }
 
+// ListReleaseNotes implements listReleaseNotes operation.
+//
+// Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+//
+// GET /api/v1/admin/release-notes
+func (UnimplementedHandler) ListReleaseNotes(ctx context.Context) (r ListReleaseNotesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListRolls implements listRolls operation.
 //
 // Recent Roll Requests in the Campaign. Members only.
@@ -941,6 +978,15 @@ func (UnimplementedHandler) PreviewReach(ctx context.Context, req *ReachRequest)
 //
 // POST /api/v1/rules/hex/sight
 func (UnimplementedHandler) PreviewSight(ctx context.Context, req *SightRequest) (r PreviewSightRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PublishReleaseNote implements publishReleaseNote operation.
+//
+// Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+//
+// POST /api/v1/admin/release-notes/{noteId}/publish
+func (UnimplementedHandler) PublishReleaseNote(ctx context.Context, req *ReleaseNotePublish, params PublishReleaseNoteParams) (r PublishReleaseNoteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1092,6 +1138,15 @@ func (UnimplementedHandler) RevokeInvite(ctx context.Context, params RevokeInvit
 //
 // POST /api/v1/campaigns/{campaignId}/rolls/{rollId}/rest
 func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams) (r RollRestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SeeReleaseNote implements seeReleaseNote operation.
+//
+// It no longer shows on the Dashboard.
+//
+// POST /api/v1/release-notes/{noteId}/seen
+func (UnimplementedHandler) SeeReleaseNote(ctx context.Context, params SeeReleaseNoteParams) (r SeeReleaseNoteRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

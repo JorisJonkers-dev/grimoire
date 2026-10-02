@@ -278,3 +278,48 @@ func TestEveryDeliveryDatabaseFaultSurfaces(t *testing.T) {
 		t.Fatalf("no mailer, no Digest: %v", err)
 	}
 }
+
+// Every Release Note operation reports a database fault at any of its calls.
+func TestEveryReleaseDatabaseFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	pool := db.Pool()
+	account(t, pool, "aria")
+	base := &app.Service{Repo: pgstore.New(pool), Now: time.Now}
+	scheduled, err := base.DraftRelease(ctx, "root", "1.0.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := base.PublishRelease(ctx, scheduled.ID, nil); err != nil {
+		t.Fatal(err)
+	}
+	draft, _ := base.DraftRelease(ctx, "root", "1.1.0")
+	ops := map[string]func(s *app.Service) error{
+		"draft":   func(s *app.Service) error { _, err := s.DraftRelease(ctx, "root", "2.0.0"); return err },
+		"list":    func(s *app.Service) error { _, err := s.Releases(ctx); return err },
+		"edit":    func(s *app.Service) error { _, err := s.EditRelease(ctx, draft.ID, "Title", "Body"); return err },
+		"unseen":  func(s *app.Service) error { _, err := s.UnseenRelease(ctx, "aria"); return err },
+		"see":     func(s *app.Service) error { return s.SeeRelease(ctx, "aria", scheduled.ID) },
+		"publish": func(s *app.Service) error { _, err := s.PublishRelease(ctx, draft.ID, nil); return err },
+	}
+	for _, name := range []string{"draft", "list", "edit", "unseen", "see", "publish"} {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := ops[name](&app.Service{Repo: pgstore.NewFaulty(pool, f), Now: time.Now})
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+	if _, err := base.EditRelease(ctx, draft.ID, " ", ""); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a blank title = %v", err)
+	}
+	if n, err := base.UnseenRelease(ctx, "aria"); err != nil || n == nil {
+		t.Fatalf("unseen = %v %v", n, err)
+	}
+}

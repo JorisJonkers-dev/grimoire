@@ -1781,3 +1781,21 @@ type SocialNotificationPreference struct {
 	Channel   string
 	Enabled   bool
 }
+
+type SocialReleaseNote struct {
+	ID          uuid.UUID
+	Version     string
+	Title       string
+	Body        string
+	CreatedBy   string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishAt   pgtype.Timestamptz
+	AnnouncedAt pgtype.Timestamptz
+}
+
+type SocialReleaseNoteView struct {
+	NoteID    uuid.UUID
+	AccountID uuid.UUID
+	SeenAt    time.Time
+}

@@ -129,6 +129,14 @@ type DisableTwoStepRes interface {
 	disableTwoStepRes()
 }
 
+type DraftReleaseNoteRes interface {
+	draftReleaseNoteRes()
+}
+
+type EditReleaseNoteRes interface {
+	editReleaseNoteRes()
+}
+
 type EndSessionRes interface {
 	endSessionRes()
 }
@@ -245,6 +253,10 @@ type GetTokenIconRes interface {
 	getTokenIconRes()
 }
 
+type GetUnseenReleaseNoteRes interface {
+	getUnseenReleaseNoteRes()
+}
+
 type JoinCampaignRes interface {
 	joinCampaignRes()
 }
@@ -353,6 +365,10 @@ type ListNpcsRes interface {
 	listNpcsRes()
 }
 
+type ListReleaseNotesRes interface {
+	listReleaseNotesRes()
+}
+
 type ListRollsRes interface {
 	listRollsRes()
 }
@@ -407,6 +423,10 @@ type PreviewReachRes interface {
 
 type PreviewSightRes interface {
 	previewSightRes()
+}
+
+type PublishReleaseNoteRes interface {
+	publishReleaseNoteRes()
 }
 
 type ReadAllNotificationsRes interface {
@@ -471,6 +491,10 @@ type RevokeInviteRes interface {
 
 type RollRestRes interface {
 	rollRestRes()
+}
+
+type SeeReleaseNoteRes interface {
+	seeReleaseNoteRes()
 }
 
 type SendAdminSignInLinkRes interface {

@@ -13,6 +13,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const activeAccounts = `-- name: ActiveAccounts :many
+SELECT id FROM identity.accounts WHERE NOT disabled ORDER BY id
+`
+
+func (q *Queries) ActiveAccounts(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, activeAccounts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const addConversationMember = `-- name: AddConversationMember :exec
 INSERT INTO social.conversation_members (conversation_id, account_id, joined_at, last_read_at) VALUES ($1, $2, $3, $3)
 `
@@ -25,6 +49,20 @@ type AddConversationMemberParams struct {
 
 func (q *Queries) AddConversationMember(ctx context.Context, arg AddConversationMemberParams) error {
 	_, err := q.db.Exec(ctx, addConversationMember, arg.ConversationID, arg.AccountID, arg.Now)
+	return err
+}
+
+const announceReleaseNote = `-- name: AnnounceReleaseNote :exec
+UPDATE social.release_notes SET announced_at = $1 WHERE id = $2
+`
+
+type AnnounceReleaseNoteParams struct {
+	Now pgtype.Timestamptz
+	ID  uuid.UUID
+}
+
+func (q *Queries) AnnounceReleaseNote(ctx context.Context, arg AnnounceReleaseNoteParams) error {
+	_, err := q.db.Exec(ctx, announceReleaseNote, arg.Now, arg.ID)
 	return err
 }
 
@@ -196,6 +234,67 @@ func (q *Queries) DueDigests(ctx context.Context, cutoff time.Time) ([]uuid.UUID
 	return items, nil
 }
 
+const dueReleaseNotes = `-- name: DueReleaseNotes :many
+SELECT id, version, title FROM social.release_notes WHERE publish_at <= $1 AND announced_at IS NULL ORDER BY publish_at
+`
+
+type DueReleaseNotesRow struct {
+	ID      uuid.UUID
+	Version string
+	Title   string
+}
+
+func (q *Queries) DueReleaseNotes(ctx context.Context, now pgtype.Timestamptz) ([]DueReleaseNotesRow, error) {
+	rows, err := q.db.Query(ctx, dueReleaseNotes, now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DueReleaseNotesRow{}
+	for rows.Next() {
+		var i DueReleaseNotesRow
+		if err := rows.Scan(&i.ID, &i.Version, &i.Title); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getReleaseNote = `-- name: GetReleaseNote :one
+SELECT id, version, title, body, created_at, updated_at, publish_at, announced_at FROM social.release_notes WHERE id = $1
+`
+
+type GetReleaseNoteRow struct {
+	ID          uuid.UUID
+	Version     string
+	Title       string
+	Body        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishAt   pgtype.Timestamptz
+	AnnouncedAt pgtype.Timestamptz
+}
+
+func (q *Queries) GetReleaseNote(ctx context.Context, id uuid.UUID) (GetReleaseNoteRow, error) {
+	row := q.db.QueryRow(ctx, getReleaseNote, id)
+	var i GetReleaseNoteRow
+	err := row.Scan(
+		&i.ID,
+		&i.Version,
+		&i.Title,
+		&i.Body,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PublishAt,
+		&i.AnnouncedAt,
+	)
+	return i, err
+}
+
 const insertBlock = `-- name: InsertBlock :exec
 INSERT INTO social.blocks (blocker, blocked, created_at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING
 `
@@ -313,6 +412,31 @@ func (q *Queries) InsertMessage(ctx context.Context, arg InsertMessageParams) er
 		arg.ConversationID,
 		arg.Author,
 		arg.Body,
+		arg.Now,
+	)
+	return err
+}
+
+const insertReleaseNote = `-- name: InsertReleaseNote :exec
+INSERT INTO social.release_notes (id, version, title, body, created_by, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6)
+`
+
+type InsertReleaseNoteParams struct {
+	ID        uuid.UUID
+	Version   string
+	Title     string
+	Body      string
+	CreatedBy string
+	Now       time.Time
+}
+
+func (q *Queries) InsertReleaseNote(ctx context.Context, arg InsertReleaseNoteParams) error {
+	_, err := q.db.Exec(ctx, insertReleaseNote,
+		arg.ID,
+		arg.Version,
+		arg.Title,
+		arg.Body,
+		arg.CreatedBy,
 		arg.Now,
 	)
 	return err
@@ -630,6 +754,50 @@ func (q *Queries) ListOutgoingRequests(ctx context.Context, me uuid.UUID) ([]Lis
 			&i.Username,
 			&i.Nickname,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReleaseNotes = `-- name: ListReleaseNotes :many
+SELECT id, version, title, body, created_at, updated_at, publish_at, announced_at FROM social.release_notes ORDER BY created_at DESC LIMIT 100
+`
+
+type ListReleaseNotesRow struct {
+	ID          uuid.UUID
+	Version     string
+	Title       string
+	Body        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishAt   pgtype.Timestamptz
+	AnnouncedAt pgtype.Timestamptz
+}
+
+func (q *Queries) ListReleaseNotes(ctx context.Context) ([]ListReleaseNotesRow, error) {
+	rows, err := q.db.Query(ctx, listReleaseNotes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReleaseNotesRow{}
+	for rows.Next() {
+		var i ListReleaseNotesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Version,
+			&i.Title,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PublishAt,
+			&i.AnnouncedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -963,6 +1131,44 @@ func (q *Queries) ReadNotification(ctx context.Context, arg ReadNotificationPara
 	return result.RowsAffected(), nil
 }
 
+const scheduleReleaseNote = `-- name: ScheduleReleaseNote :execrows
+UPDATE social.release_notes SET publish_at = $1, updated_at = $2 WHERE id = $3 AND announced_at IS NULL
+`
+
+type ScheduleReleaseNoteParams struct {
+	PublishAt pgtype.Timestamptz
+	Now       time.Time
+	ID        uuid.UUID
+}
+
+func (q *Queries) ScheduleReleaseNote(ctx context.Context, arg ScheduleReleaseNoteParams) (int64, error) {
+	result, err := q.db.Exec(ctx, scheduleReleaseNote, arg.PublishAt, arg.Now, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const seeReleaseNote = `-- name: SeeReleaseNote :execrows
+INSERT INTO social.release_note_views (note_id, account_id, seen_at)
+SELECT r.id, $1, $2 FROM social.release_notes r WHERE r.id = $3 AND r.publish_at <= $2
+ON CONFLICT DO NOTHING
+`
+
+type SeeReleaseNoteParams struct {
+	AccountID uuid.UUID
+	Now       time.Time
+	ID        uuid.UUID
+}
+
+func (q *Queries) SeeReleaseNote(ctx context.Context, arg SeeReleaseNoteParams) (int64, error) {
+	result, err := q.db.Exec(ctx, seeReleaseNote, arg.AccountID, arg.Now, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const setNotificationPreference = `-- name: SetNotificationPreference :exec
 INSERT INTO social.notification_preferences (account_id, kind, channel, enabled) VALUES ($1, $2, $3, $4)
 ON CONFLICT (account_id, kind, channel) DO UPDATE SET enabled = EXCLUDED.enabled
@@ -1100,6 +1306,69 @@ func (q *Queries) UnreadNotifications(ctx context.Context, accountID uuid.UUID) 
 	var unread int32
 	err := row.Scan(&unread)
 	return unread, err
+}
+
+const unseenReleaseNote = `-- name: UnseenReleaseNote :one
+SELECT r.id, r.version, r.title, r.body, r.created_at, r.updated_at, r.publish_at, r.announced_at FROM social.release_notes r
+WHERE r.publish_at <= $1 AND NOT EXISTS (SELECT 1 FROM social.release_note_views v WHERE v.note_id = r.id AND v.account_id = $2)
+ORDER BY r.publish_at DESC LIMIT 1
+`
+
+type UnseenReleaseNoteParams struct {
+	Now       pgtype.Timestamptz
+	AccountID uuid.UUID
+}
+
+type UnseenReleaseNoteRow struct {
+	ID          uuid.UUID
+	Version     string
+	Title       string
+	Body        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishAt   pgtype.Timestamptz
+	AnnouncedAt pgtype.Timestamptz
+}
+
+// The newest live Release Note an Account has not seen.
+func (q *Queries) UnseenReleaseNote(ctx context.Context, arg UnseenReleaseNoteParams) (UnseenReleaseNoteRow, error) {
+	row := q.db.QueryRow(ctx, unseenReleaseNote, arg.Now, arg.AccountID)
+	var i UnseenReleaseNoteRow
+	err := row.Scan(
+		&i.ID,
+		&i.Version,
+		&i.Title,
+		&i.Body,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PublishAt,
+		&i.AnnouncedAt,
+	)
+	return i, err
+}
+
+const updateReleaseNote = `-- name: UpdateReleaseNote :execrows
+UPDATE social.release_notes SET title = $1, body = $2, updated_at = $3 WHERE id = $4 AND announced_at IS NULL
+`
+
+type UpdateReleaseNoteParams struct {
+	Title string
+	Body  string
+	Now   time.Time
+	ID    uuid.UUID
+}
+
+func (q *Queries) UpdateReleaseNote(ctx context.Context, arg UpdateReleaseNoteParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateReleaseNote,
+		arg.Title,
+		arg.Body,
+		arg.Now,
+		arg.ID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const upsertNotification = `-- name: UpsertNotification :exec

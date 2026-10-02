@@ -94,6 +94,19 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account/two-step/disable
 	DisableTwoStep(ctx context.Context, req *TwoStepCode) (DisableTwoStepRes, error)
+	// DraftReleaseNote implements draftReleaseNote operation.
+	//
+	// Starts the one Release Note of a full release, listing the features its changelog says it added. For
+	// Admins.
+	//
+	// POST /api/v1/admin/release-notes
+	DraftReleaseNote(ctx context.Context, req *ReleaseNoteDraft) (DraftReleaseNoteRes, error)
+	// EditReleaseNote implements editReleaseNote operation.
+	//
+	// Changes its words until it has been announced. For Admins.
+	//
+	// PUT /api/v1/admin/release-notes/{noteId}
+	EditReleaseNote(ctx context.Context, req *ReleaseNoteChange, params EditReleaseNoteParams) (EditReleaseNoteRes, error)
 	// FinishOidc implements finishOidc operation.
 	//
 	// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
@@ -120,6 +133,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account-invites/preview
 	PreviewAccountInvite(ctx context.Context, req *LinkToken) (PreviewAccountInviteRes, error)
+	// PublishReleaseNote implements publishReleaseNote operation.
+	//
+	// Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+	//
+	// POST /api/v1/admin/release-notes/{noteId}/publish
+	PublishReleaseNote(ctx context.Context, req *ReleaseNotePublish, params PublishReleaseNoteParams) (PublishReleaseNoteRes, error)
 	// ReadAllNotifications implements readAllNotifications operation.
 	//
 	// Clears the bell.
@@ -156,6 +175,12 @@ type AccountHandler interface {
 	//
 	// DELETE /api/v1/account/access-tokens/{accessId}
 	RevokeAccessToken(ctx context.Context, params RevokeAccessTokenParams) (RevokeAccessTokenRes, error)
+	// SeeReleaseNote implements seeReleaseNote operation.
+	//
+	// It no longer shows on the Dashboard.
+	//
+	// POST /api/v1/release-notes/{noteId}/seen
+	SeeReleaseNote(ctx context.Context, params SeeReleaseNoteParams) (SeeReleaseNoteRes, error)
 	// SendAdminSignInLink implements sendAdminSignInLink operation.
 	//
 	// Sends the holder a link that signs them in once, within 30 minutes.
@@ -783,6 +808,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
+	// GetUnseenReleaseNote implements getUnseenReleaseNote operation.
+	//
+	// The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+	//
+	// GET /api/v1/release-notes/unseen
+	GetUnseenReleaseNote(ctx context.Context) (GetUnseenReleaseNoteRes, error)
 	// ListAccessTokens implements listAccessTokens operation.
 	//
 	// The signed-in Account's live Access Tokens, newest first, with when each was last used.
@@ -936,6 +967,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs
 	ListNpcs(ctx context.Context, params ListNpcsParams) (ListNpcsRes, error)
+	// ListReleaseNotes implements listReleaseNotes operation.
+	//
+	// Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+	//
+	// GET /api/v1/admin/release-notes
+	ListReleaseNotes(ctx context.Context) (ListReleaseNotesRes, error)
 	// ListRolls implements listRolls operation.
 	//
 	// Recent Roll Requests in the Campaign. Members only.

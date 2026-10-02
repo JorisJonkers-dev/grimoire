@@ -51,6 +51,9 @@ func TestAccountHandlersNeedAnIdentity(t *testing.T) {
 		"prefs":         func() (any, error) { return h.GetNotificationPreferences(ctx) },
 		"set prefs":     func() (any, error) { return h.SetNotificationPreferences(ctx, &oas.NotificationPreferences{}) },
 		"read all":      func() (any, error) { return h.ReadAllNotifications(ctx) },
+		"release notes": func() (any, error) { return h.ListReleaseNotes(ctx) },
+		"unseen":        func() (any, error) { return h.GetUnseenReleaseNote(ctx) },
+		"seen":          func() (any, error) { return h.SeeReleaseNote(ctx, oas.SeeReleaseNoteParams{}) },
 	}
 	for name, call := range calls {
 		res, err := call()
@@ -147,5 +150,57 @@ func TestFriendsWhenTheStoreFails(t *testing.T) {
 		if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
 			t.Errorf("%s = %#v, %v", name, res, err)
 		}
+	}
+}
+
+type admitAll struct{ AccountService }
+
+func (admitAll) IsAdmin(context.Context, string) bool { return true }
+
+func (brokenFriends) DraftRelease(context.Context, string, string) (domain.ReleaseNote, error) {
+	return domain.ReleaseNote{}, errFriends
+}
+
+func (brokenFriends) Releases(context.Context) ([]domain.ReleaseNote, error) { return nil, errFriends }
+
+func (brokenFriends) EditRelease(context.Context, uuid.UUID, string, string) (domain.ReleaseNote, error) {
+	return domain.ReleaseNote{}, errFriends
+}
+
+func (brokenFriends) PublishRelease(context.Context, uuid.UUID, *time.Time) (domain.ReleaseNote, error) {
+	return domain.ReleaseNote{}, errFriends
+}
+
+func (brokenFriends) UnseenRelease(context.Context, string) (*domain.ReleaseNote, error) {
+	return nil, errFriends
+}
+func (brokenFriends) SeeRelease(context.Context, string, uuid.UUID) error { return errFriends }
+
+// When the Release Note store fails, every call answers 503 without saying why.
+func TestReleasesWhenTheStoreFails(t *testing.T) {
+	t.Parallel()
+	ctx := auth.WithIdentity(context.Background(), auth.Identity{Subject: "root"})
+	h := &Handler{Releases: brokenFriends{}, Accounts: admitAll{}, Log: slog.New(slog.NewTextHandler(io.Discard, nil))}
+	calls := map[string]func() (any, error){
+		"list":  func() (any, error) { return h.ListReleaseNotes(ctx) },
+		"draft": func() (any, error) { return h.DraftReleaseNote(ctx, &oas.ReleaseNoteDraft{}) },
+		"edit": func() (any, error) {
+			return h.EditReleaseNote(ctx, &oas.ReleaseNoteChange{}, oas.EditReleaseNoteParams{})
+		},
+		"publish": func() (any, error) {
+			return h.PublishReleaseNote(ctx, &oas.ReleaseNotePublish{At: oas.NewOptDateTime(time.Now())}, oas.PublishReleaseNoteParams{})
+		},
+		"unseen": func() (any, error) { return h.GetUnseenReleaseNote(ctx) },
+		"seen":   func() (any, error) { return h.SeeReleaseNote(ctx, oas.SeeReleaseNoteParams{}) },
+	}
+	for name, call := range calls {
+		res, err := call()
+		p, ok := res.(*oas.ProblemStatusCodeWithHeaders)
+		if err != nil || !ok || p.StatusCode != http.StatusServiceUnavailable {
+			t.Errorf("%s = %#v, %v", name, res, err)
+		}
+	}
+	if res, _ := (&Handler{}).DraftReleaseNote(context.Background(), &oas.ReleaseNoteDraft{}); res.(*oas.ProblemStatusCodeWithHeaders).StatusCode != http.StatusUnauthorized {
+		t.Error("drafting without an identity")
 	}
 }

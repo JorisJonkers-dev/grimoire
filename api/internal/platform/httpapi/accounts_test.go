@@ -121,14 +121,19 @@ func newStack(t *testing.T, configure func(*identityapp.Service)) stack {
 		Admins: map[string]bool{"root": true}, BaseURL: "https://grimoire.example/", Strong: httpx.Strong,
 	}
 	devices := &pushes{mu: sync.Mutex{}, sent: map[string][]string{}}
-	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: now.Now, Mailer: mail, Devices: devices, BaseURL: "https://grimoire.example/"}
+	social := &socialapp.Service{
+		Repo: socialpg.New(store.Pool()), Now: now.Now, Mailer: mail, Devices: devices, BaseURL: "https://grimoire.example/",
+		Changelog: func() string {
+			return "## [1.1.0](https://x) (2026-10-05)\n\n### Features\n\n* **social:** Friends with requests ([#110](https://x))\n* Release Notes ([#114](https://x))\n"
+		},
+	}
 	accounts.Alerts = social
 	configure(accounts)
 	build := func(trust bool) http.Handler {
 		h, err := httpapi.New(httpapi.Options{
 			Handler: &httpapi.Handler{
 				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
-				Friends: social, Conversations: social, Notifications: social,
+				Friends: social, Conversations: social, Notifications: social, Releases: social,
 				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())), NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 				Characters: &campaignapp.Characters{
 					Repo: campaignpg.New(store.Pool()), Compendium: &fakeCompendium{}, Combat: campaignapp.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,
@@ -444,6 +449,7 @@ func (brokenAccounts) ResetTwoStep(context.Context, string, domain.AccountID) er
 func (brokenAccounts) History(context.Context, string) ([]domain.Event, error) {
 	return nil, errAccounts
 }
+func (brokenAccounts) IsAdmin(context.Context, string) bool { return true }
 
 // When the Account store fails, every call answers 503 without saying why.
 func TestAccountsWhenTheStoreFails(t *testing.T) {

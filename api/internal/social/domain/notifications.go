@@ -84,3 +84,16 @@ type Preference struct {
 	Push  bool
 	Email bool
 }
+
+// ReleaseNote is what one full release brought, as an Admin writes it; it goes live at PublishAt and
+// is announced once.
+type ReleaseNote struct {
+	ID          uuid.UUID
+	Version     string
+	Title       string
+	Body        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	PublishAt   *time.Time
+	AnnouncedAt *time.Time
+}

@@ -4775,6 +4775,187 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/admin/release-notes:
+    get:
+      operationId: listReleaseNotes
+      x-ogen-operation-group: Read
+      summary: List Release Notes
+      description: Every Release Note, drafts and scheduled ones too, newest first. For Admins.
+      tags: [Social]
+      responses:
+        "200":
+          description: The Release Notes.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseNoteList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: draftReleaseNote
+      x-ogen-operation-group: Account
+      summary: Draft a Release Note
+      description: Starts the one Release Note of a full release, listing the features its changelog says it added. For Admins.
+      tags: [Social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseNoteDraft"
+      responses:
+        "201":
+          description: The draft.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseNote"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/release-notes/{noteId}:
+    put:
+      operationId: editReleaseNote
+      x-ogen-operation-group: Account
+      summary: Edit a Release Note
+      description: Changes its words until it has been announced. For Admins.
+      tags: [Social]
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Release Note id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseNoteChange"
+      responses:
+        "200":
+          description: The Release Note.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseNote"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/release-notes/{noteId}/publish:
+    post:
+      operationId: publishReleaseNote
+      x-ogen-operation-group: Account
+      summary: Publish or schedule a Release Note
+      description: Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
+      tags: [Social]
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Release Note id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReleaseNotePublish"
+      responses:
+        "200":
+          description: The Release Note.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseNote"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/release-notes/unseen:
+    get:
+      operationId: getUnseenReleaseNote
+      x-ogen-operation-group: Read
+      summary: Read the Release Note I have not seen
+      description: The newest live Release Note the signed-in Account has not seen yet, for its Dashboard.
+      tags: [Social]
+      responses:
+        "200":
+          description: The Release Note, if there is one.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnseenReleaseNote"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/release-notes/{noteId}/seen:
+    post:
+      operationId: seeReleaseNote
+      x-ogen-operation-group: Account
+      summary: Mark a Release Note seen
+      description: It no longer shows on the Dashboard.
+      tags: [Social]
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          description: Release Note id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Seen.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /healthz:
     get:
       operationId: getHealth
@@ -5333,6 +5514,57 @@ components:
           type: array
           maxItems: 40
           items: { $ref: "#/components/schemas/Mentionable" }
+    ReleaseNote:
+      type: object
+      description: What one full release brought; status says whether it is a draft, scheduled or live.
+      additionalProperties: false
+      required: [id, version, title, body, status, createdAt, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        version: { type: string, pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$", maxLength: 20 }
+        title: { type: string, minLength: 1, maxLength: 120 }
+        body: { type: string, maxLength: 8000 }
+        status: { type: string, enum: [draft, scheduled, published] }
+        publishAt: { type: string, format: date-time, maxLength: 40 }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    ReleaseNoteList:
+      type: object
+      description: Release Notes, newest first.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ReleaseNote" }
+    ReleaseNoteDraft:
+      type: object
+      description: The full release to draft a Release Note for.
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: { type: string, minLength: 5, maxLength: 21 }
+    ReleaseNoteChange:
+      type: object
+      description: A Release Note's new title and body.
+      additionalProperties: false
+      required: [title, body]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 120 }
+        body: { type: string, maxLength: 8000 }
+    ReleaseNotePublish:
+      type: object
+      description: When the Release Note goes live; omitted, now.
+      additionalProperties: false
+      properties:
+        at: { type: string, format: date-time, maxLength: 40 }
+    UnseenReleaseNote:
+      type: object
+      description: The newest live Release Note the caller has not seen, when there is one.
+      additionalProperties: false
+      properties:
+        note: { $ref: "#/components/schemas/ReleaseNote" }
     NotificationKind:
       type: string
       description: What a Notification is about.

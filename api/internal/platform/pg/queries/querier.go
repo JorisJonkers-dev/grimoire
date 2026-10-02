@@ -27,6 +27,7 @@ type Querier interface {
 	ActionLog(ctx context.Context, arg ActionLogParams) ([]ActionLogRow, error)
 	ActionSpawnEvents(ctx context.Context, actionID uuid.UUID) ([]ActionSpawnEventsRow, error)
 	ActionTokenEvent(ctx context.Context, actionID uuid.UUID) (ActionTokenEventRow, error)
+	ActiveAccounts(ctx context.Context) ([]uuid.UUID, error)
 	AddBackgroundBenefit(ctx context.Context, arg AddBackgroundBenefitParams) error
 	AddCharacterSkill(ctx context.Context, arg AddCharacterSkillParams) error
 	AddCharacterWeapon(ctx context.Context, arg AddCharacterWeaponParams) error
@@ -58,6 +59,7 @@ type Querier interface {
 	AddZoneCreature(ctx context.Context, arg AddZoneCreatureParams) error
 	// A new Campaign Character takes its Character's name, Portrait and token.
 	AdoptCharacterIdentity(ctx context.Context, id uuid.UUID) error
+	AnnounceReleaseNote(ctx context.Context, arg AnnounceReleaseNoteParams) error
 	AreFriends(ctx context.Context, arg AreFriendsParams) (bool, error)
 	BackgroundBenefits(ctx context.Context, backgroundID int64) ([]BackgroundBenefitsRow, error)
 	BuilderArmor(ctx context.Context, key string) ([]BuilderArmorRow, error)
@@ -175,6 +177,7 @@ type Querier interface {
 	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
 	DropPushEndpoint(ctx context.Context, endpoint string) error
 	DueDigests(ctx context.Context, cutoff time.Time) ([]uuid.UUID, error)
+	DueReleaseNotes(ctx context.Context, now pgtype.Timestamptz) ([]DueReleaseNotesRow, error)
 	Edits(ctx context.Context, arg EditsParams) ([]EditsRow, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
@@ -201,6 +204,7 @@ type Querier interface {
 	GetNPC(ctx context.Context, arg GetNPCParams) (GetNPCRow, error)
 	GetNPCRevision(ctx context.Context, arg GetNPCRevisionParams) (GetNPCRevisionRow, error)
 	GetPoolRevision(ctx context.Context, arg GetPoolRevisionParams) (GetPoolRevisionRow, error)
+	GetReleaseNote(ctx context.Context, id uuid.UUID) (GetReleaseNoteRow, error)
 	GetRest(ctx context.Context, sessionID uuid.UUID) (GetRestRow, error)
 	GetRoll(ctx context.Context, arg GetRollParams) (PlayRollRequest, error)
 	GetSession(ctx context.Context, arg GetSessionParams) (PlaySession, error)
@@ -282,6 +286,7 @@ type Querier interface {
 	InsertPoolRevision(ctx context.Context, arg InsertPoolRevisionParams) error
 	InsertPoolRevisionMember(ctx context.Context, arg InsertPoolRevisionMemberParams) error
 	InsertRecoveryCode(ctx context.Context, arg InsertRecoveryCodeParams) error
+	InsertReleaseNote(ctx context.Context, arg InsertReleaseNoteParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
 	InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error)
 	InsertRollDie(ctx context.Context, arg InsertRollDieParams) error
@@ -368,6 +373,7 @@ type Querier interface {
 	ListOutgoingRequests(ctx context.Context, me uuid.UUID) ([]ListOutgoingRequestsRow, error)
 	ListPools(ctx context.Context, campaignID uuid.UUID) ([]ListPoolsRow, error)
 	ListPrerequisites(ctx context.Context) ([]CompendiumPrerequisite, error)
+	ListReleaseNotes(ctx context.Context) ([]ListReleaseNotesRow, error)
 	ListResourceDice(ctx context.Context) ([]CompendiumResourceDice, error)
 	ListResourceMaxima(ctx context.Context) ([]CompendiumResourceMaxima, error)
 	ListResourceRecharges(ctx context.Context) ([]CompendiumResourceRecharge, error)
@@ -480,7 +486,9 @@ type Querier interface {
 	SaveTokenForm(ctx context.Context, arg SaveTokenFormParams) error
 	SaveZone(ctx context.Context, arg SaveZoneParams) error
 	SaveZoneCheck(ctx context.Context, arg SaveZoneCheckParams) error
+	ScheduleReleaseNote(ctx context.Context, arg ScheduleReleaseNoteParams) (int64, error)
 	ScheduledChecks(ctx context.Context, campaignID uuid.UUID) ([]ScheduledChecksRow, error)
+	SeeReleaseNote(ctx context.Context, arg SeeReleaseNoteParams) (int64, error)
 	SeenUserAgent(ctx context.Context, arg SeenUserAgentParams) (SeenUserAgentRow, error)
 	SessionAccount(ctx context.Context, arg SessionAccountParams) (SessionAccountRow, error)
 	SessionActionBySeq(ctx context.Context, arg SessionActionBySeqParams) (SessionActionBySeqRow, error)
@@ -560,6 +568,8 @@ type Querier interface {
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UnreadNotifications(ctx context.Context, accountID uuid.UUID) (int32, error)
+	// The newest live Release Note an Account has not seen.
+	UnseenReleaseNote(ctx context.Context, arg UnseenReleaseNoteParams) (UnseenReleaseNoteRow, error)
 	UpdateAccountCharacter(ctx context.Context, arg UpdateAccountCharacterParams) error
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
@@ -567,6 +577,7 @@ type Querier interface {
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)
 	UpdateNPC(ctx context.Context, arg UpdateNPCParams) (int64, error)
 	UpdateOIDCLink(ctx context.Context, arg UpdateOIDCLinkParams) error
+	UpdateReleaseNote(ctx context.Context, arg UpdateReleaseNoteParams) (int64, error)
 	UpdateToken(ctx context.Context, arg UpdateTokenParams) error
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error
 	UpsertBackground(ctx context.Context, arg UpsertBackgroundParams) (int64, error)

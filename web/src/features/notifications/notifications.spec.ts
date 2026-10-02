@@ -78,11 +78,13 @@ describe('Notification preferences', () => {
     expect((wrapper.get('[data-testid="pref-release_note-push"]').element as HTMLInputElement).checked).toBe(false)
     await wrapper.get('[data-testid="pref-conversation-email"]').setValue(true)
     await wrapper.get('[data-testid="pref-friend_request-in-app"]').setValue(false)
+    await wrapper.get('[data-testid="pref-level_up-push"]').setValue(false)
     await wrapper.get('[data-testid="notification-preferences"]').trigger('submit')
     await flushPromises()
     const items = (sent[0] as typeof prefs).items
     expect(items.find((p) => p.kind === 'conversation')).toEqual({ kind: 'conversation', inApp: true, push: true, email: true })
     expect(items.find((p) => p.kind === 'friend_request')?.inApp).toBe(false)
+    expect(items.find((p) => p.kind === 'level_up')?.push).toBe(false)
     expect(wrapper.get('[data-testid="preferences-saved"]').text()).toBe('Saved.')
   })
 })

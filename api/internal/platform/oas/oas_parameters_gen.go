@@ -2388,6 +2388,79 @@ func decodeDiffNpcRevisionsParams(args [2]string, argsEscaped bool, r *http.Requ
 	return params, nil
 }
 
+// EditReleaseNoteParams is parameters of editReleaseNote operation.
+type EditReleaseNoteParams struct {
+	// Release Note id.
+	NoteId ID
+}
+
+func unpackEditReleaseNoteParams(packed middleware.Parameters) (params EditReleaseNoteParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "noteId",
+			In:   "path",
+		}
+		params.NoteId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeEditReleaseNoteParams(args [1]string, argsEscaped bool, r *http.Request) (params EditReleaseNoteParams, _ error) {
+	// Decode path: noteId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "noteId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotNoteIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNoteIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.NoteId = ID(paramsDotNoteIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "noteId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // EndSessionParams is parameters of endSession operation.
 type EndSessionParams struct {
 	// Campaign id.
@@ -8832,6 +8905,79 @@ func decodePreviewCharacterParams(args [1]string, argsEscaped bool, r *http.Requ
 	return params, nil
 }
 
+// PublishReleaseNoteParams is parameters of publishReleaseNote operation.
+type PublishReleaseNoteParams struct {
+	// Release Note id.
+	NoteId ID
+}
+
+func unpackPublishReleaseNoteParams(packed middleware.Parameters) (params PublishReleaseNoteParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "noteId",
+			In:   "path",
+		}
+		params.NoteId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodePublishReleaseNoteParams(args [1]string, argsEscaped bool, r *http.Request) (params PublishReleaseNoteParams, _ error) {
+	// Decode path: noteId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "noteId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotNoteIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNoteIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.NoteId = ID(paramsDotNoteIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "noteId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ReadNotificationParams is parameters of readNotification operation.
 type ReadNotificationParams struct {
 	// Notification id.
@@ -10816,6 +10962,79 @@ func decodeRollRestParams(args [2]string, argsEscaped bool, r *http.Request) (pa
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "rollId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SeeReleaseNoteParams is parameters of seeReleaseNote operation.
+type SeeReleaseNoteParams struct {
+	// Release Note id.
+	NoteId ID
+}
+
+func unpackSeeReleaseNoteParams(packed middleware.Parameters) (params SeeReleaseNoteParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "noteId",
+			In:   "path",
+		}
+		params.NoteId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSeeReleaseNoteParams(args [1]string, argsEscaped bool, r *http.Request) (params SeeReleaseNoteParams, _ error) {
+	// Decode path: noteId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "noteId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotNoteIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNoteIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.NoteId = ID(paramsDotNoteIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "noteId",
 			In:   "path",
 			Err:  err,
 		}

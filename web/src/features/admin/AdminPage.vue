@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { createAccountInviteMutation, listAdminAccountsOptions, listAdminAccountsQueryKey } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton } from '@/shared/ui'
 import { when } from './labels'
+import ReleaseNotesSection from './ReleaseNotesSection.vue'
 
 const client = useQueryClient()
 const list = useQuery(listAdminAccountsOptions())
@@ -76,6 +77,7 @@ function send() {
           <p v-if="invite.data.value" role="status" data-testid="invite-link">Send this link, which works once: <code>{{ inviteLink(invite.data.value.token) }}</code></p>
         </form>
       </section>
+      <ReleaseNotesSection />
     </template>
   </main>
 </template>

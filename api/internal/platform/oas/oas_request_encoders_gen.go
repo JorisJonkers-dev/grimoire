@@ -262,6 +262,34 @@ func encodeDisableTwoStepRequest(
 	return nil
 }
 
+func encodeDraftReleaseNoteRequest(
+	req *ReleaseNoteDraft,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeEditReleaseNoteRequest(
+	req *ReleaseNoteChange,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeFinishOidcRequest(
 	req *OidcCallback,
 	r *http.Request,
@@ -376,6 +404,20 @@ func encodePreviewReachRequest(
 
 func encodePreviewSightRequest(
 	req *SightRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePublishReleaseNoteRequest(
+	req *ReleaseNotePublish,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

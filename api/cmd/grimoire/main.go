@@ -132,7 +132,20 @@ func crossCheck(ctx context.Context, args []string) error {
 	return os.WriteFile(out, []byte(report.Markdown()), 0o600) //nolint:gosec // developer command writing where the developer points it
 }
 
-// digests sends the hourly email Digests until the server stops.
+// changelogAt reads the release changelog Release Notes are drafted from, each time one is drafted;
+// a missing file drafts them empty.
+func changelogAt(path string) func() string {
+	return func() string {
+		body, err := os.ReadFile(path) //nolint:gosec // a path from the configuration
+		if err != nil {
+			return ""
+		}
+		return string(body)
+	}
+}
+
+// digests announces Release Notes that went live and sends the hourly email Digests until the server
+// stops.
 func digests(ctx context.Context, social *socialapp.Service, logger *slog.Logger) {
 	tick := time.NewTicker(5 * time.Minute)
 	defer tick.Stop()
@@ -141,6 +154,9 @@ func digests(ctx context.Context, social *socialapp.Service, logger *slog.Logger
 		case <-ctx.Done():
 			return
 		case <-tick.C:
+			if err := social.AnnounceReleases(ctx); err != nil {
+				logger.Warn("release notes", "error", err)
+			}
 			if err := social.SendDigests(ctx); err != nil {
 				logger.Warn("digest", "error", err)
 			}
@@ -227,7 +243,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		defer sender.Wait()
 		hub.Notify, notices = sender, sender
 	}
-	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now, Mailer: mailer(cfg, logger), Devices: nil, BaseURL: cfg.BaseURL}
+	social := &socialapp.Service{Repo: socialpg.New(store.Pool()), Now: time.Now, Mailer: mailer(cfg, logger), Devices: nil, BaseURL: cfg.BaseURL, Changelog: changelogAt(cfg.Changelog)}
 	if s, ok := notices.(*push.Sender); ok {
 		social.Devices = s
 	}
@@ -251,7 +267,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
 			Push: notices, Accounts: accounts, OIDCName: oidcName,
-			Friends: social, Conversations: social, Notifications: social,
+			Friends: social, Conversations: social, Notifications: social, Releases: social,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

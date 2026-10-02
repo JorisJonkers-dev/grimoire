@@ -28,6 +28,7 @@ var (
 	_ FriendService       = (*app.Service)(nil)
 	_ ConversationService = (*app.Service)(nil)
 	_ NotificationService = (*app.Service)(nil)
+	_ ReleaseService      = (*app.Service)(nil)
 )
 
 func (h *Handler) friendError(ctx context.Context, op string, err error) *oas.ProblemStatusCodeWithHeaders {
