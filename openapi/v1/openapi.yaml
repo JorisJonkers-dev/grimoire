@@ -8402,7 +8402,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -8484,6 +8484,16 @@ components:
         due: { type: string, enum: [next_rest, next_travel] }
         lootTableId: { $ref: "#/components/schemas/Id" }
         fromId: { $ref: "#/components/schemas/Id" }
+        buys:
+          type: array
+          description: What a trade buys from the open Shop, made with its sales or not at all.
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LiveTradeLine" }
+        sells:
+          type: array
+          description: What a trade sells to the open Shop, before it buys.
+          maxItems: 100
+          items: { $ref: "#/components/schemas/LiveTradeLine" }
         instanceId: { $ref: "#/components/schemas/Id" }
         action: { type: string, enum: [dash, disengage, dodge, help, hide, influence, magic, ready, search, study, utilize] }
         detail: { type: string, maxLength: 200 }
@@ -8652,7 +8662,7 @@ components:
       type: object
       description: The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
       additionalProperties: false
-      required: [id, name, kind, settlement, stock, haggles]
+      required: [id, name, kind, settlement, stock, haggles, offers]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
@@ -8667,6 +8677,29 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/LiveHaggle" }
+        offers:
+          type: array
+          description: What the Shop pays each Character for the items in its pack, after its haggle.
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/LiveOffer" }
+    LiveOffer:
+      type: object
+      description: What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+      additionalProperties: false
+      required: [characterId, slug, priceCp]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        priceCp: { type: integer, format: int32, minimum: 0, maximum: 100000000 }
+        junk: { type: boolean }
+    LiveTradeLine:
+      type: object
+      description: How many of an item a trade buys or sells.
+      additionalProperties: false
+      required: [itemSlug, count]
+      properties:
+        itemSlug: { $ref: "#/components/schemas/Slug" }
+        count: { type: integer, format: int32, minimum: 0, maximum: 100000 }
     LiveStock:
       type: object
       description: One item the open Shop sells, and its asking price in copper before haggling.

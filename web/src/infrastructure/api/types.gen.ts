@@ -2329,7 +2329,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn';
     tokenId?: Id;
     label?: string;
     tokenKind?: TokenKind;
@@ -2432,6 +2432,14 @@ export type LiveCommand = {
     due?: 'next_rest' | 'next_travel';
     lootTableId?: Id;
     fromId?: Id;
+    /**
+     * What a trade buys from the open Shop, made with its sales or not at all.
+     */
+    buys?: Array<LiveTradeLine>;
+    /**
+     * What a trade sells to the open Shop, before it buys.
+     */
+    sells?: Array<LiveTradeLine>;
     instanceId?: Id;
     action?: 'dash' | 'disengage' | 'dodge' | 'help' | 'hide' | 'influence' | 'magic' | 'ready' | 'search' | 'study' | 'utilize';
     detail?: string;
@@ -2602,6 +2610,28 @@ export type LiveShop = {
     owner?: string;
     stock: Array<LiveStock>;
     haggles: Array<LiveHaggle>;
+    /**
+     * What the Shop pays each Character for the items in its pack, after its haggle.
+     */
+    offers: Array<LiveOffer>;
+};
+
+/**
+ * What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+ */
+export type LiveOffer = {
+    characterId: Id;
+    slug: Slug;
+    priceCp: number;
+    junk?: boolean;
+};
+
+/**
+ * How many of an item a trade buys or sells.
+ */
+export type LiveTradeLine = {
+    itemSlug: Slug;
+    count: number;
 };
 
 /**

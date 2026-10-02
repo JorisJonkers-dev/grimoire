@@ -2818,6 +2818,86 @@ export const zSpawnMonster = z.object({
 });
 
 /**
+ * A stack of one item and what it weighs in all.
+ */
+export const zLiveItem = z.object({
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
+ */
+export const zLiveItemInstance = z.object({
+    id: zId,
+    slug: zSlug,
+    name: z.string().max(120),
+    count: z.int().gte(1).lte(100000),
+    charges: z.int().gte(0).lte(100).optional(),
+    identified: z.boolean(),
+    attuned: z.boolean().optional(),
+    slot: z.enum([
+        'main_hand',
+        'off_hand',
+        'ranged_main',
+        'ranged_off',
+        'armor',
+        'head',
+        'cloak',
+        'hands',
+        'feet',
+        'neck',
+        'ring_1',
+        'ring_2'
+    ]).optional(),
+    weightLb: z.number().gte(0).lte(100000000)
+});
+
+/**
+ * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
+ */
+export const zLiveContainer = z.object({
+    id: zId,
+    kind: z.enum([
+        'character',
+        'party_stash',
+        'loot_drop',
+        'bag'
+    ]),
+    label: z.string().max(80),
+    characterId: zId.optional(),
+    ownerId: zId.optional(),
+    parentId: zId.optional(),
+    items: z.array(zLiveItem).max(1000),
+    instances: z.array(zLiveItemInstance).max(1000),
+    coins: z.array(zLiveCoins).max(5),
+    weightLb: z.number().gte(0).lte(100000000),
+    capacityLb: z.number().gte(0).lte(100000).optional(),
+    encumbered: z.boolean().optional(),
+    claims: z.array(zLiveClaim).max(1000).optional()
+});
+
+/**
+ * What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+ */
+export const zLiveOffer = z.object({
+    characterId: zId,
+    slug: zSlug,
+    priceCp: z.int().gte(0).lte(100000000),
+    junk: z.boolean().optional()
+});
+
+/**
+ * How many of an item a trade buys or sells.
+ */
+export const zLiveTradeLine = z.object({
+    itemSlug: zSlug,
+    count: z.int().gte(0).lte(100000)
+});
+
+/**
  * A WebSocket frame from a client to a live Session.
  */
 export const zLiveCommand = z.object({
@@ -2875,6 +2955,7 @@ export const zLiveCommand = z.object({
         'move_coins',
         'claim_loot',
         'settle_loot',
+        'trade',
         'open_shop',
         'close_shop',
         'buy',
@@ -2996,6 +3077,8 @@ export const zLiveCommand = z.object({
     due: z.enum(['next_rest', 'next_travel']).optional(),
     lootTableId: zId.optional(),
     fromId: zId.optional(),
+    buys: z.array(zLiveTradeLine).max(100).optional(),
+    sells: z.array(zLiveTradeLine).max(100).optional(),
     instanceId: zId.optional(),
     action: z.enum([
         'dash',
@@ -3050,68 +3133,6 @@ export const zLiveCommand = z.object({
 });
 
 /**
- * A stack of one item and what it weighs in all.
- */
-export const zLiveItem = z.object({
-    slug: zSlug,
-    name: z.string().max(120),
-    count: z.int().gte(1).lte(100000),
-    weightLb: z.number().gte(0).lte(100000000)
-});
-
-/**
- * One Item Instance. Only the DM sees an unidentified item's own name and Charges; the party sees the base item.
- */
-export const zLiveItemInstance = z.object({
-    id: zId,
-    slug: zSlug,
-    name: z.string().max(120),
-    count: z.int().gte(1).lte(100000),
-    charges: z.int().gte(0).lte(100).optional(),
-    identified: z.boolean(),
-    attuned: z.boolean().optional(),
-    slot: z.enum([
-        'main_hand',
-        'off_hand',
-        'ranged_main',
-        'ranged_off',
-        'armor',
-        'head',
-        'cloak',
-        'hands',
-        'feet',
-        'neck',
-        'ring_1',
-        'ring_2'
-    ]).optional(),
-    weightLb: z.number().gte(0).lte(100000000)
-});
-
-/**
- * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
- */
-export const zLiveContainer = z.object({
-    id: zId,
-    kind: z.enum([
-        'character',
-        'party_stash',
-        'loot_drop',
-        'bag'
-    ]),
-    label: z.string().max(80),
-    characterId: zId.optional(),
-    ownerId: zId.optional(),
-    parentId: zId.optional(),
-    items: z.array(zLiveItem).max(1000),
-    instances: z.array(zLiveItemInstance).max(1000),
-    coins: z.array(zLiveCoins).max(5),
-    weightLb: z.number().gte(0).lte(100000000),
-    capacityLb: z.number().gte(0).lte(100000).optional(),
-    encumbered: z.boolean().optional(),
-    claims: z.array(zLiveClaim).max(1000).optional()
-});
-
-/**
  * One item the open Shop sells, and its asking price in copper before haggling.
  */
 export const zLiveStock = z.object({
@@ -3132,7 +3153,8 @@ export const zLiveShop = z.object({
     settlement: z.string().max(80),
     owner: z.string().max(80).optional(),
     stock: z.array(zLiveStock).max(200),
-    haggles: z.array(zLiveHaggle).max(50)
+    haggles: z.array(zLiveHaggle).max(50),
+    offers: z.array(zLiveOffer).max(2000)
 });
 
 /**

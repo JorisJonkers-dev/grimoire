@@ -3,7 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import type { LiveContainer, LootTable } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import { GButton } from '@/shared/ui'
-import { canPut, canTake, instanceLabel, type Dragged, load } from './inventory'
+import { canGive, canPut, canTake, instanceLabel, type Dragged, load } from './inventory'
 
 const props = defineProps<{ containers: LiveContainer[]; dm: boolean; me: string; lootTables: LootTable[] }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
@@ -14,7 +14,7 @@ const count = reactive<Record<string, number>>({})
 const over = ref('')
 const order = ['party_stash', 'character', 'bag', 'loot_drop']
 const sorted = computed(() => [...props.containers].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind)))
-const destinations = (from: LiveContainer) => sorted.value.filter((c) => c.id !== from.id && canPut(c, props.dm, props.me))
+const destinations = (from: LiveContainer) => sorted.value.filter((c) => c.id !== from.id && (canPut(c, props.dm, props.me) || canGive(from, c, props.me)))
 
 function move(d: Dragged, to: string) {
   if (d.coin) emit('send', { kind: 'move_coins', fromId: d.from, toId: to, coin: d.coin, count: d.count })
@@ -42,9 +42,10 @@ function drag(ev: DragEvent, d: Dragged) {
 function drop(ev: DragEvent, c: LiveContainer) {
   over.value = ''
   const raw = ev.dataTransfer?.getData('application/json')
-  if (!raw || !canPut(c, props.dm, props.me)) return
+  if (!raw) return
   const d = JSON.parse(raw) as Dragged
-  if (d.from !== c.id) move(d, c.id)
+  const from = props.containers.find((x) => x.id === d.from)
+  if (d.from !== c.id && (canPut(c, props.dm, props.me) || canGive(from, c, props.me))) move(d, c.id)
 }
 </script>
 

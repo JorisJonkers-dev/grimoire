@@ -14686,15 +14686,19 @@ type LiveCommand struct {
 	TableId OptID              `json:"tableId"`
 	Mode    OptEncounterMode   `json:"mode"`
 	// With a pick check, the index of the table entry.
-	Entry       OptInt32              `json:"entry"`
-	Due         OptLiveCommandDue     `json:"due"`
-	LootTableId OptID                 `json:"lootTableId"`
-	FromId      OptID                 `json:"fromId"`
-	InstanceId  OptID                 `json:"instanceId"`
-	Action      OptLiveCommandAction  `json:"action"`
-	Detail      OptString             `json:"detail"`
-	Trigger     OptLiveCommandTrigger `json:"trigger"`
-	Option      OptLiveCommandOption  `json:"option"`
+	Entry       OptInt32          `json:"entry"`
+	Due         OptLiveCommandDue `json:"due"`
+	LootTableId OptID             `json:"lootTableId"`
+	FromId      OptID             `json:"fromId"`
+	// What a trade buys from the open Shop, made with its sales or not at all.
+	Buys []LiveTradeLine `json:"buys"`
+	// What a trade sells to the open Shop, before it buys.
+	Sells      []LiveTradeLine       `json:"sells"`
+	InstanceId OptID                 `json:"instanceId"`
+	Action     OptLiveCommandAction  `json:"action"`
+	Detail     OptString             `json:"detail"`
+	Trigger    OptLiveCommandTrigger `json:"trigger"`
+	Option     OptLiveCommandOption  `json:"option"`
 	// Makes the attack the off-hand attack of a Light weapon.
 	OffHand OptBool `json:"offHand"`
 	// Makes the attack the second attack a Cleave hit allows.
@@ -15097,6 +15101,16 @@ func (s *LiveCommand) GetLootTableId() OptID {
 // GetFromId returns the value of FromId.
 func (s *LiveCommand) GetFromId() OptID {
 	return s.FromId
+}
+
+// GetBuys returns the value of Buys.
+func (s *LiveCommand) GetBuys() []LiveTradeLine {
+	return s.Buys
+}
+
+// GetSells returns the value of Sells.
+func (s *LiveCommand) GetSells() []LiveTradeLine {
+	return s.Sells
 }
 
 // GetInstanceId returns the value of InstanceId.
@@ -15574,6 +15588,16 @@ func (s *LiveCommand) SetFromId(val OptID) {
 	s.FromId = val
 }
 
+// SetBuys sets the value of Buys.
+func (s *LiveCommand) SetBuys(val []LiveTradeLine) {
+	s.Buys = val
+}
+
+// SetSells sets the value of Sells.
+func (s *LiveCommand) SetSells(val []LiveTradeLine) {
+	s.Sells = val
+}
+
 // SetInstanceId sets the value of InstanceId.
 func (s *LiveCommand) SetInstanceId(val OptID) {
 	s.InstanceId = val
@@ -15905,6 +15929,7 @@ const (
 	LiveCommandKindMoveCoins      LiveCommandKind = "move_coins"
 	LiveCommandKindClaimLoot      LiveCommandKind = "claim_loot"
 	LiveCommandKindSettleLoot     LiveCommandKind = "settle_loot"
+	LiveCommandKindTrade          LiveCommandKind = "trade"
 	LiveCommandKindOpenShop       LiveCommandKind = "open_shop"
 	LiveCommandKindCloseShop      LiveCommandKind = "close_shop"
 	LiveCommandKindBuy            LiveCommandKind = "buy"
@@ -15998,6 +16023,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindMoveCoins,
 		LiveCommandKindClaimLoot,
 		LiveCommandKindSettleLoot,
+		LiveCommandKindTrade,
 		LiveCommandKindOpenShop,
 		LiveCommandKindCloseShop,
 		LiveCommandKindBuy,
@@ -16143,6 +16169,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindClaimLoot:
 		return []byte(s), nil
 	case LiveCommandKindSettleLoot:
+		return []byte(s), nil
+	case LiveCommandKindTrade:
 		return []byte(s), nil
 	case LiveCommandKindOpenShop:
 		return []byte(s), nil
@@ -16379,6 +16407,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindSettleLoot:
 		*s = LiveCommandKindSettleLoot
+		return nil
+	case LiveCommandKindTrade:
+		*s = LiveCommandKindTrade
 		return nil
 	case LiveCommandKindOpenShop:
 		*s = LiveCommandKindOpenShop
@@ -18124,6 +18155,55 @@ func (s *LiveObject) SetKey(val OptString) {
 	s.Key = val
 }
 
+// What the open Shop pays a Character for one of an item; junk marks wares sold off in one go.
+// Ref: #/components/schemas/LiveOffer
+type LiveOffer struct {
+	CharacterId ID      `json:"characterId"`
+	Slug        Slug    `json:"slug"`
+	PriceCp     int32   `json:"priceCp"`
+	Junk        OptBool `json:"junk"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveOffer) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveOffer) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetPriceCp returns the value of PriceCp.
+func (s *LiveOffer) GetPriceCp() int32 {
+	return s.PriceCp
+}
+
+// GetJunk returns the value of Junk.
+func (s *LiveOffer) GetJunk() OptBool {
+	return s.Junk
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveOffer) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveOffer) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetPriceCp sets the value of PriceCp.
+func (s *LiveOffer) SetPriceCp(val int32) {
+	s.PriceCp = val
+}
+
+// SetJunk sets the value of Junk.
+func (s *LiveOffer) SetJunk(val OptBool) {
+	s.Junk = val
+}
+
 // The route a walk would take, start first, and the movement it costs.
 // Ref: #/components/schemas/LivePath
 type LivePath struct {
@@ -19085,6 +19165,8 @@ type LiveShop struct {
 	Owner      OptString    `json:"owner"`
 	Stock      []LiveStock  `json:"stock"`
 	Haggles    []LiveHaggle `json:"haggles"`
+	// What the Shop pays each Character for the items in its pack, after its haggle.
+	Offers []LiveOffer `json:"offers"`
 }
 
 // GetID returns the value of ID.
@@ -19122,6 +19204,11 @@ func (s *LiveShop) GetHaggles() []LiveHaggle {
 	return s.Haggles
 }
 
+// GetOffers returns the value of Offers.
+func (s *LiveShop) GetOffers() []LiveOffer {
+	return s.Offers
+}
+
 // SetID sets the value of ID.
 func (s *LiveShop) SetID(val ID) {
 	s.ID = val
@@ -19155,6 +19242,11 @@ func (s *LiveShop) SetStock(val []LiveStock) {
 // SetHaggles sets the value of Haggles.
 func (s *LiveShop) SetHaggles(val []LiveHaggle) {
 	s.Haggles = val
+}
+
+// SetOffers sets the value of Offers.
+func (s *LiveShop) SetOffers(val []LiveOffer) {
+	s.Offers = val
 }
 
 // One item the open Shop sells, and its asking price in copper before haggling.
@@ -19706,6 +19798,33 @@ func (s *LiveTokenHealth) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// How many of an item a trade buys or sells.
+// Ref: #/components/schemas/LiveTradeLine
+type LiveTradeLine struct {
+	ItemSlug Slug  `json:"itemSlug"`
+	Count    int32 `json:"count"`
+}
+
+// GetItemSlug returns the value of ItemSlug.
+func (s *LiveTradeLine) GetItemSlug() Slug {
+	return s.ItemSlug
+}
+
+// GetCount returns the value of Count.
+func (s *LiveTradeLine) GetCount() int32 {
+	return s.Count
+}
+
+// SetItemSlug sets the value of ItemSlug.
+func (s *LiveTradeLine) SetItemSlug(val Slug) {
+	s.ItemSlug = val
+}
+
+// SetCount sets the value of Count.
+func (s *LiveTradeLine) SetCount(val int32) {
+	s.Count = val
 }
 
 // One Travel Leg the party made this Session.

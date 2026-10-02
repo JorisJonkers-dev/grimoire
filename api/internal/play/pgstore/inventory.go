@@ -222,20 +222,24 @@ type line struct {
 	n                    int
 }
 
-// tradeLines are what a purchase or sale moves: the goods one way, the coins the other.
+// tradeLines are what purchases and sales move: the goods one way, the coins the other.
 func tradeLines(w live.Write) []line {
-	t := w.Trade
-	switch {
-	case t == nil:
-		return nil
-	case w.Kind == domain.ActionItemBought:
-		return []line{{from: t.Shop, to: t.Label, item: t.Item, n: t.Count}, {from: t.Label, to: t.Shop, coin: "cp", n: t.PriceCP}}
-	case w.Kind != domain.ActionItemSold:
-		return nil
-	case t.PriceCP > 0:
-		return []line{{from: t.Label, to: t.Shop, item: t.Item, n: t.Count}, {from: t.Shop, to: t.Label, coin: "cp", n: t.PriceCP}}
+	trades := w.Trades
+	if w.Trade != nil {
+		trades = append(trades, *w.Trade)
 	}
-	return []line{{from: t.Label, to: t.Shop, item: t.Item, n: t.Count}}
+	var out []line
+	for _, t := range trades {
+		switch {
+		case !t.Sold:
+			out = append(out, line{from: t.Shop, to: t.Label, item: t.Item, n: t.Count}, line{from: t.Label, to: t.Shop, coin: "cp", n: t.PriceCP})
+		case t.PriceCP > 0:
+			out = append(out, line{from: t.Label, to: t.Shop, item: t.Item, n: t.Count}, line{from: t.Shop, to: t.Label, coin: "cp", n: t.PriceCP})
+		default:
+			out = append(out, line{from: t.Label, to: t.Shop, item: t.Item, n: t.Count})
+		}
+	}
+	return out
 }
 
 // logItems records what a drop or transfer moved against its Action.

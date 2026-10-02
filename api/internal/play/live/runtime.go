@@ -145,6 +145,9 @@ type Write struct {
 	Spawned []domain.Token
 	Undoes  uuid.UUID
 	price   *prep.ItemPrice
+	// Trades are the sales and purchases of a trade, in order; prices what the Shop learnt sold items are worth.
+	Trades []domain.Trade
+	prices map[string]*prep.ItemPrice
 	// ElevationFt is the height set on Hexes by an elevation_set.
 	ElevationFt int
 	cast        *domain.AreaCast
@@ -479,6 +482,9 @@ func (h *Hub) loadTrade(ctx context.Context, s domain.Session) (trading, error) 
 	if out.shop, err = h.Store.LoadOpenShop(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
+	if err = priceCarried(ctx, h.Store, s.CampaignID, out.inventory, out.shop); err != nil {
+		return out, err
+	}
 	out.day, err = h.Store.GameDay(ctx, s.CampaignID)
 	return out, err
 }
@@ -665,7 +671,7 @@ func (r *runtime) handle(req request) {
 // playerMay lists the changes a Player may ask for; each is checked against what they control.
 func playerMay(kind string) bool {
 	switch kind {
-	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle,
+	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle, CmdTrade,
 		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
 		return true
 	}
@@ -876,7 +882,7 @@ func change(s *state, w *Write) {
 		applyClaims(s, w)
 		return
 	case domain.ActionShopOpened, domain.ActionShopClosed, domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted,
-		domain.ActionHaggled, domain.ActionStockRolled:
+		domain.ActionHaggled, domain.ActionStockRolled, domain.ActionTradeMade:
 		applyShop(s, w)
 		return
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,

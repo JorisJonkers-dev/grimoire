@@ -1583,6 +1583,19 @@ describe('inventory', () => {
     await expectAccessible(wrapper.element as Element)
   })
 
+  it('lets a player give from their own pack to another Character', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot([], 'party', { inventory: containers }))
+    await flushPromises()
+    const pack = wrapper.get('[data-testid="container-Aria"]')
+    expect(pack.get('[aria-label="Where Rope goes"]').findAll('option').map((o) => o.text())).toEqual(['Party Stash', 'Brom'])
+    const dragged: Record<string, string> = {}
+    await pack.get('li').trigger('dragstart', { dataTransfer: { setData: (k: string, v: string) => (dragged[k] = v), getData: () => '' } })
+    await wrapper.get('[data-testid="container-Brom"]').trigger('drop', { dataTransfer: transfer(dragged['application/json'] ?? '') })
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'move_item', fromId: ARIA, toId: BROM, itemSlug: 'rope', count: 2 })
+  })
+
   it('lets players claim loot with need or greed and the DM share it out', async () => {
     const claimed: LiveContainer = {
       ...drop,
@@ -1672,6 +1685,7 @@ describe('shopping', () => {
     id: STORE, name: 'Store', kind: 'general', settlement: 'Oakford', owner: 'Tamsin',
     stock: [{ slug: 'rope', name: 'Rope', count: 3, priceCp: 150, weightLb: 5 }, { slug: 'torch', name: 'Torch', count: 10, priceCp: 1, weightLb: 1 }],
     haggles: [],
+    offers: [{ characterId: ARIA, slug: 'rope', priceCp: 55 }],
   }
   const roll = (id: string) => ({
     id, purpose: 'Haggle at Store', notation: '1d20', requestedBy: 'Joris', roller: { id: player.id, name: 'Aria' }, mine: true, canRoll: true,
@@ -1704,7 +1718,7 @@ describe('shopping', () => {
     expect(s.sent.at(-1)).toMatchObject({ kind: 'buy', fromId: BROM_PACK, itemSlug: 'torch', count: 4 })
     await wrapper.get('[data-testid="buy-rope"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'buy', fromId: BROM_PACK, itemSlug: 'rope', count: 1 })
-    expect(wrapper.find('[data-testid="sell-item"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="trade-window"]').text()).toContain('Nothing to sell.')
     await wrapper.get('[data-testid="haggle"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'haggle', fromId: BROM_PACK })
     s.receive({ ...view({ shop: { ...open, stock: [] } }), seq: 3 })
@@ -1743,11 +1757,19 @@ describe('shopping', () => {
     expect(wrapper.findAll('[data-testid="shop-panel"] [data-testid="roll-card"]')).toHaveLength(0)
     await wrapper.get('[data-testid="buy-rope"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'buy', fromId: ARIA_PACK, itemSlug: 'rope', count: 1 })
-    expect(wrapper.get('[data-testid="sell"]').attributes('disabled')).toBeDefined()
-    await wrapper.get('[data-testid="sell-item"]').setValue('rope')
-    await wrapper.get('[data-testid="sell-count"]').setValue(2)
-    await wrapper.get('[data-testid="sell"]').trigger('click')
-    expect(s.sent.at(-1)).toMatchObject({ kind: 'sell', fromId: ARIA_PACK, itemSlug: 'rope', count: 2 })
+    expect(wrapper.get('[data-testid="make-trade"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="offer-rope"]').text()).toBe('5 sp 5 cp')
+    expect(wrapper.find('[data-testid="sell-junk"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="give-rope"]').setValue(5)
+    await wrapper.get('[data-testid="want-torch"]').setValue(3)
+    expect(wrapper.get('[data-testid="trade-balance"]').text()).toBe('You pay 3 cp and get 1 gp 1 sp: 1 gp 7 cp to you')
+    await wrapper.get('[data-testid="want-rope"]').setValue(1)
+    expect(wrapper.get('[data-testid="trade-balance"]').text()).toBe('You pay 1 gp 3 sp 8 cp and get 1 gp 1 sp: 2 sp 8 cp from your purse')
+    await wrapper.get('[data-testid="make-trade"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({
+      kind: 'trade', fromId: ARIA_PACK, sells: [{ itemSlug: 'rope', count: 2 }], buys: [{ itemSlug: 'rope', count: 1 }, { itemSlug: 'torch', count: 3 }],
+    })
+    expect(wrapper.get('[data-testid="make-trade"]').attributes('disabled')).toBeDefined()
     s.receive({ ...view({ shop: { ...open, haggles: [{ characterId: ARIA, adjustPct: 20 }] } }), seq: 5 })
     await flushPromises()
     expect(wrapper.get('[data-testid="haggle-result"]').text()).toBe('Haggled: 20% dearer')
@@ -1755,6 +1777,25 @@ describe('shopping', () => {
     await flushPromises()
     expect(wrapper.get('[data-testid="haggle-result"]').text()).toBe('Haggled: no change')
     await expectAccessible(wrapper.element as Element)
+  })
+})
+
+describe('trading', () => {
+  it('sells the junk in one go and prices what the shop has not seen at the counter', async () => {
+    const ARIA = '0190c7a8-0000-7000-8000-000000000062'
+    const PACK = '0190c7a8-0000-7000-8000-000000000072'
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    const pack: LiveContainer = {
+      id: PACK, kind: 'character', label: 'Aria', characterId: ARIA, ownerId: player.id, instances: [], coins: [], weightLb: 4,
+      items: [{ slug: 'silver-ingot', name: 'Silver Ingot', count: 2, weightLb: 2 }, { slug: 'odd-stone', name: 'Odd Stone', count: 1, weightLb: 1 }],
+    }
+    const shop: LiveShop = { id: '0190c7a8-0000-7000-8000-000000000081', name: 'Store', kind: 'general', settlement: 'Oakford', stock: [], haggles: [], offers: [{ characterId: ARIA, slug: 'silver-ingot', priceCp: 250, junk: true }] }
+    s.receive(snapshot([], 'party', { inventory: [pack], shop }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="offer-odd-stone"]').text()).toBe('priced at the counter')
+    await wrapper.get('[data-testid="sell-junk"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'trade', fromId: PACK, sells: [{ itemSlug: 'silver-ingot', count: 2 }], buys: [] })
   })
 })
 

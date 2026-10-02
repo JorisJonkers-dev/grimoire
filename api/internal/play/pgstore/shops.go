@@ -153,8 +153,8 @@ func (s *Store) saveShop(ctx context.Context, sess domain.Session, w live.Write,
 			return err
 		}
 		return s.q.ClearSessionShop(ctx, sid)
-	case domain.ActionItemBought, domain.ActionItemSold:
-		return s.saveTrade(ctx, sess, *w.Trade)
+	case domain.ActionItemBought, domain.ActionItemSold, domain.ActionTradeMade:
+		return s.saveTrades(ctx, sess, w)
 	case domain.ActionHaggleStarted, domain.ActionHaggled:
 		if err := s.openRolls(ctx, sess, w.Rolls, actor, c, now); err != nil {
 			return err
@@ -184,6 +184,20 @@ func (s *Store) saveHaggle(ctx context.Context, sess domain.Session, w live.Writ
 		p.AdjustPct = pgtype.Int4{Int32: int32(*h.Adjust), Valid: true} //nolint:gosec // bounded by the shop
 	}
 	return s.q.SaveHaggle(ctx, p)
+}
+
+// saveTrades writes a purchase, a sale, or every line of a trade in order.
+func (s *Store) saveTrades(ctx context.Context, sess domain.Session, w live.Write) error {
+	trades := w.Trades
+	if w.Trade != nil {
+		trades = append(trades, *w.Trade)
+	}
+	for _, t := range trades {
+		if err := s.saveTrade(ctx, sess, t); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // saveTrade writes a Character's purse and pack after a trade, and what the Shop has left.

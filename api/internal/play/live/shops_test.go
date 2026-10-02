@@ -2,6 +2,7 @@ package live_test
 
 import (
 	"context"
+	"maps"
 	"strings"
 	"testing"
 	"time"
@@ -170,5 +171,78 @@ func TestShoppingBuysSellsHagglesAndRestocks(t *testing.T) {
 	}
 	if day, _ := pgstore.New(w.pool).GameDay(ctx, w.session.CampaignID); day != 3 {
 		t.Fatalf("the game day is kept = %d", day)
+	}
+}
+
+// A trade sells and buys a whole basket at once at the haggled prices, or nothing at all; junk sells off
+// in the same way, and a player hands gear to another Character.
+func TestTradingABasketAtAShop(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w, tb := ambushTable(t)
+	loot := stocked(t, w)
+	shops := market(t, w)
+	ingot := priced("silver-ingot", "Silver Ingot", 5, 1)
+	ingot.Category = "trade-good"
+	if _, err := comppg.New(w.pool).Import(ctx, snapshot.Snapshot{
+		Documents: []snapshot.Document{{Key: "srd-2024", Title: "SRD 5.2", RulesetYear: 2024, Precedence: 20, License: "CC-BY-4.0", Attribution: "a", URL: "https://a"}},
+		Items:     []snapshot.Item{ingot},
+	}, "ingots"); err != nil {
+		t.Fatal(err)
+	}
+	pack := containerNamed(t, look(t, w, join(t, w, w.dm, dmCaller, live.AudienceDM)), "Aria")
+	w.hub.Close(w.session.ID)
+	if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.item_instances (id, container_id, item_slug, quantity, identified, attuned, created_at)
+		VALUES (gen_random_uuid(), $1, 'silver-ingot', 2, true, false, now())`, pack.ID); err != nil {
+		t.Fatal(err)
+	}
+	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
+	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
+	refuse := func(want string, cmd live.Command) {
+		t.Helper()
+		w.hub.Submit(tb.player, cmd)
+		if u := next(t, tb.player); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, want) {
+			t.Fatalf("%s = %+v", want, u)
+		}
+	}
+	d, _ := tb.dmSays(live.Command{Kind: live.CmdRollLoot, LootTableID: loot["Purse"]})
+	aria, brom := containerNamed(t, d.View, "Aria"), containerNamed(t, d.View, "Brom")
+	tb.dmSays(live.Command{Kind: live.CmdMoveCoins, FromID: containerNamed(t, d.View, "Loot: Purse").ID, ToID: aria.ID, Coin: "gp", Count: 7})
+	_, p := tb.dmSays(live.Command{Kind: live.CmdOpenShop, ShopID: shops["General Store"]})
+	offer := live.OfferView{CharacterID: aria.CharacterID, Slug: "silver-ingot", PriceCP: 250, Junk: true}
+	if o := p.View.Shop.Offers; len(o) != 1 || o[0] != offer {
+		t.Fatalf("the store offers half price for the ingots, wares to sell off = %+v", o)
+	}
+	p = tb.playerSays(live.Command{Kind: live.CmdHaggle, FromID: aria.ID})
+	tb.fill(p.View.Shop.Haggles[0].RollID, w.player, 18)
+	next(t, tb.dm)
+	if o := next(t, tb.player).View.Shop.Offers; o[0].PriceCP != 275 {
+		t.Fatalf("a good haggle pays 10%% more = %+v", o)
+	}
+	trade := func(sells, buys []live.TradeLine) live.Command {
+		return live.Command{Kind: live.CmdTrade, FromID: aria.ID, Sells: sells, Buys: buys}
+	}
+	ingots, ropes := []live.TradeLine{{ItemSlug: "silver-ingot", Count: 2}}, []live.TradeLine{{ItemSlug: "hempen-rope", Count: 6}}
+	refuse("Choose something", trade(nil, nil))
+	refuse("at least one", trade(nil, []live.TradeLine{{ItemSlug: "hempen-rope"}}))
+	refuse("not that many", trade(ingots, []live.TradeLine{{ItemSlug: "hempen-rope", Count: 7}}))
+	refuse("more than the purse", trade(nil, ropes))
+	refuse("not yours", live.Command{Kind: live.CmdTrade, FromID: brom.ID, Sells: ingots})
+	p = tb.playerSays(trade(ingots, ropes))
+	a := containerNamed(t, p.View, "Aria")
+	if countOf(a, "silver-ingot") != 0 || countOf(a, "hempen-rope") != 6 || !maps.Equal(coinsOf(a), map[string]int{"gp": 4, "sp": 4}) {
+		t.Fatalf("two ingots for 550 cp and six ropes for 810 cp out of 700 cp = %+v", a)
+	}
+	if s := p.View.Shop.Stock; len(s) != 1 || s[0] != (live.StockView{Slug: "silver-ingot", Name: "Silver Ingot", Count: 2, PriceCP: 750, WeightLb: 1}) {
+		t.Fatalf("the ropes sell out and the ingots go on sale at the markup = %+v", s)
+	}
+	gift := tb.playerSays(live.Command{Kind: live.CmdMoveItem, FromID: aria.ID, ToID: brom.ID, ItemSlug: "hempen-rope", Count: 1})
+	if gift.View == nil || countOf(containerNamed(t, look(t, w, tb.dm), "Brom"), "hempen-rope") != 1 {
+		t.Fatalf("Aria gives Brom a rope = %+v", gift)
+	}
+	w.hub.Close(w.session.ID)
+	again := look(t, w, join(t, w, w.dm, dmCaller, live.AudienceDM))
+	if a := containerNamed(t, again, "Aria"); countOf(a, "hempen-rope") != 5 || !maps.Equal(coinsOf(a), map[string]int{"gp": 4, "sp": 4}) || len(again.Shop.Stock) != 1 {
+		t.Fatalf("the trade is stored whole = %+v %+v", a, again.Shop)
 	}
 }

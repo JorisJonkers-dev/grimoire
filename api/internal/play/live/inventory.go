@@ -50,6 +50,13 @@ func (s *state) mine(m domain.Member, c domain.Container, taking bool) bool {
 	return ok && b.Owner == m.ID
 }
 
+// gives reports whether a Player hands something from their own Character's Inventory to another
+// Character: into its pack, never into its bags.
+func (s *state) gives(m domain.Member, from, to domain.Container) bool {
+	b, ok := s.bearer(s.root(from))
+	return ok && b.Owner == m.ID && to.Kind == domain.ContainerCharacter
+}
+
 // planMove checks a transfer of items or coins between two Containers.
 func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 	from, ok := r.st.container(cmd.FromID)
@@ -59,7 +66,7 @@ func (r *runtime) planMove(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "Move it between two different places."
 	case r.st.root(to).Kind == domain.ContainerDrop:
 		return Write{}, "Loot is only taken from a drop, never put back."
-	case !r.st.mine(m, from, true) || !r.st.mine(m, to, false):
+	case !r.st.mine(m, from, true) || !r.st.mine(m, to, false) && !r.st.gives(m, from, to):
 		return Write{}, "That is not yours to move."
 	}
 	mv := domain.Move{From: from.ID, To: to.ID, Count: cmd.Count, FromLabel: from.Label, ToLabel: to.Label}
