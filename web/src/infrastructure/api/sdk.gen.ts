@@ -4,8 +4,8 @@ import * as z from 'zod';
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptAccountInviteData, AcceptAccountInviteErrors, AcceptAccountInviteResponses, AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateAccountInviteData, CreateAccountInviteErrors, CreateAccountInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateEncounterPoolData, CreateEncounterPoolErrors, CreateEncounterPoolResponses, CreateEncounterTableData, CreateEncounterTableErrors, CreateEncounterTableResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateLootTableData, CreateLootTableErrors, CreateLootTableResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreatePushSubscriptionData, CreatePushSubscriptionErrors, CreatePushSubscriptionResponses, CreateRollData, CreateRollErrors, CreateRollResponses, CreateSettlementData, CreateSettlementErrors, CreateSettlementResponses, CreateShopData, CreateShopErrors, CreateShopResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteEncounterPoolData, DeleteEncounterPoolErrors, DeleteEncounterPoolResponses, DeleteEncounterTableData, DeleteEncounterTableErrors, DeleteEncounterTableResponses, DeleteLootTableData, DeleteLootTableErrors, DeleteLootTableResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DeletePushSubscriptionData, DeletePushSubscriptionErrors, DeletePushSubscriptionResponses, DeleteSettlementData, DeleteSettlementErrors, DeleteSettlementResponses, DeleteShopData, DeleteShopErrors, DeleteShopResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, EndSessionData, EndSessionErrors, EndSessionResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMapData, GetMapErrors, GetMapImageData, GetMapImageErrors, GetMapImageResponses, GetMapResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetPushKeyData, GetPushKeyErrors, GetPushKeyResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSessionData, GetSessionErrors, GetSessionLogData, GetSessionLogErrors, GetSessionLogResponses, GetSessionResponses, GetSessionViewData, GetSessionViewErrors, GetSessionViewResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, ListActivityData, ListActivityErrors, ListActivityResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEncounterChecksData, ListEncounterChecksErrors, ListEncounterChecksResponses, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsErrors, ListEncounterPoolRevisionsResponses, ListEncounterPoolsData, ListEncounterPoolsErrors, ListEncounterPoolsResponses, ListEncounterTableRevisionsData, ListEncounterTableRevisionsErrors, ListEncounterTableRevisionsResponses, ListEncounterTablesData, ListEncounterTablesErrors, ListEncounterTablesResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListLocationsData, ListLocationsErrors, ListLocationsResponses, ListLootTableRevisionsData, ListLootTableRevisionsErrors, ListLootTableRevisionsResponses, ListLootTablesData, ListLootTablesErrors, ListLootTablesResponses, ListMapsData, ListMapsErrors, ListMapsResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListSettlementRevisionsData, ListSettlementRevisionsErrors, ListSettlementRevisionsResponses, ListSettlementsData, ListSettlementsErrors, ListSettlementsResponses, ListShopRevisionsData, ListShopRevisionsErrors, ListShopRevisionsResponses, ListShopsData, ListShopsErrors, ListShopsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewAccountInviteData, PreviewAccountInviteErrors, PreviewAccountInviteResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, PreviewReachData, PreviewReachErrors, PreviewReachResponses, PreviewSightData, PreviewSightErrors, PreviewSightResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RequestSignInLinkData, RequestSignInLinkErrors, RequestSignInLinkResponses, RerollStockData, RerollStockErrors, RerollStockResponses, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionErrors, RestoreEncounterPoolRevisionResponses, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionErrors, RestoreEncounterTableRevisionResponses, RestoreLootTableRevisionData, RestoreLootTableRevisionErrors, RestoreLootTableRevisionResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RestoreSettlementRevisionData, RestoreSettlementRevisionErrors, RestoreSettlementRevisionResponses, RestoreShopRevisionData, RestoreShopRevisionErrors, RestoreShopRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SendLiveCommandData, SendLiveCommandErrors, SendLiveCommandResponses, SetAccountPasswordData, SetAccountPasswordErrors, SetAccountPasswordResponses, SetDieData, SetDieErrors, SetDieResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, SignInData, SignInErrors, SignInResponses, SignOutData, SignOutErrors, SignOutResponses, StartSessionData, StartSessionErrors, StartSessionResponses, UndoChangeData, UndoChangeErrors, UndoChangeResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateEncounterPoolData, UpdateEncounterPoolErrors, UpdateEncounterPoolResponses, UpdateEncounterTableData, UpdateEncounterTableErrors, UpdateEncounterTableResponses, UpdateLootTableData, UpdateLootTableErrors, UpdateLootTableResponses, UpdateMapData, UpdateMapErrors, UpdateMapResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses, UpdateSettlementData, UpdateSettlementErrors, UpdateSettlementResponses, UpdateShopData, UpdateShopErrors, UpdateShopResponses, UploadMapData, UploadMapErrors, UploadMapResponses, UseSignInLinkData, UseSignInLinkErrors, UseSignInLinkResponses } from './types.gen';
-import { zAcceptAccountInviteBody, zAcceptAccountInviteResponse, zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateAccountInviteBody, zCreateAccountInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateEncounterPoolBody, zCreateEncounterPoolPath, zCreateEncounterPoolResponse, zCreateEncounterTableBody, zCreateEncounterTablePath, zCreateEncounterTableResponse, zCreateInvitePath, zCreateInviteResponse, zCreateLootTableBody, zCreateLootTablePath, zCreateLootTableResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreatePushSubscriptionBody, zCreatePushSubscriptionResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zCreateSettlementBody, zCreateSettlementPath, zCreateSettlementResponse, zCreateShopBody, zCreateShopPath, zCreateShopResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteEncounterPoolPath, zDeleteEncounterPoolResponse, zDeleteEncounterTablePath, zDeleteEncounterTableResponse, zDeleteLootTablePath, zDeleteLootTableResponse, zDeleteNpcPath, zDeleteNpcResponse, zDeletePushSubscriptionPath, zDeletePushSubscriptionResponse, zDeleteSettlementPath, zDeleteSettlementResponse, zDeleteShopPath, zDeleteShopResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zEndSessionPath, zEndSessionResponse, zGetAccountResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMapImagePath, zGetMapImageQuery, zGetMapImageResponse, zGetMapPath, zGetMapResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetPushKeyResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSessionLogPath, zGetSessionLogQuery, zGetSessionLogResponse, zGetSessionPath, zGetSessionResponse, zGetSessionViewPath, zGetSessionViewResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zListActivityPath, zListActivityResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEncounterChecksPath, zListEncounterChecksResponse, zListEncounterPoolRevisionsPath, zListEncounterPoolRevisionsResponse, zListEncounterPoolsPath, zListEncounterPoolsResponse, zListEncounterTableRevisionsPath, zListEncounterTableRevisionsResponse, zListEncounterTablesPath, zListEncounterTablesResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListLocationsPath, zListLocationsResponse, zListLootTableRevisionsPath, zListLootTableRevisionsResponse, zListLootTablesPath, zListLootTablesResponse, zListMapsPath, zListMapsResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSessionsPath, zListSessionsResponse, zListSettlementRevisionsPath, zListSettlementRevisionsResponse, zListSettlementsPath, zListSettlementsResponse, zListShopRevisionsPath, zListShopRevisionsResponse, zListShopsPath, zListShopsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewAccountInviteBody, zPreviewAccountInviteResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zPreviewReachBody, zPreviewReachResponse, zPreviewSightBody, zPreviewSightResponse, zRemoveMemberPath, zRemoveMemberResponse, zRequestSignInLinkBody, zRerollStockPath, zRerollStockResponse, zRestoreEncounterPoolRevisionPath, zRestoreEncounterPoolRevisionResponse, zRestoreEncounterTableRevisionPath, zRestoreEncounterTableRevisionResponse, zRestoreLootTableRevisionPath, zRestoreLootTableRevisionResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRestoreSettlementRevisionPath, zRestoreSettlementRevisionResponse, zRestoreShopRevisionPath, zRestoreShopRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSendLiveCommandBody, zSendLiveCommandPath, zSendLiveCommandResponse, zSetAccountPasswordBody, zSetAccountPasswordResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zSignInBody, zSignInResponse, zSignOutResponse, zStartSessionPath, zStartSessionResponse, zUndoChangePath, zUndoChangeResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateEncounterPoolBody, zUpdateEncounterPoolPath, zUpdateEncounterPoolResponse, zUpdateEncounterTableBody, zUpdateEncounterTablePath, zUpdateEncounterTableResponse, zUpdateLootTableBody, zUpdateLootTablePath, zUpdateLootTableResponse, zUpdateMapBody, zUpdateMapPath, zUpdateMapResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse, zUpdateSettlementBody, zUpdateSettlementPath, zUpdateSettlementResponse, zUpdateShopBody, zUpdateShopPath, zUpdateShopResponse, zUploadMapBody, zUploadMapPath, zUploadMapQuery, zUploadMapResponse, zUseSignInLinkBody, zUseSignInLinkResponse } from './zod.gen';
+import type { AcceptAccountInviteData, AcceptAccountInviteErrors, AcceptAccountInviteResponses, AcceptInviteData, AcceptInviteErrors, AcceptInviteResponses, ClearTokenIconData, ClearTokenIconErrors, ClearTokenIconResponses, CreateAccountInviteData, CreateAccountInviteErrors, CreateAccountInviteResponses, CreateCampaignData, CreateCampaignErrors, CreateCampaignResponses, CreateCharacterData, CreateCharacterErrors, CreateCharacterResponses, CreateEncounterPoolData, CreateEncounterPoolErrors, CreateEncounterPoolResponses, CreateEncounterTableData, CreateEncounterTableErrors, CreateEncounterTableResponses, CreateInviteData, CreateInviteErrors, CreateInviteResponses, CreateLootTableData, CreateLootTableErrors, CreateLootTableResponses, CreateNpcData, CreateNpcErrors, CreateNpcResponses, CreateOidcAccountData, CreateOidcAccountErrors, CreateOidcAccountResponses, CreatePushSubscriptionData, CreatePushSubscriptionErrors, CreatePushSubscriptionResponses, CreateRollData, CreateRollErrors, CreateRollResponses, CreateSettlementData, CreateSettlementErrors, CreateSettlementResponses, CreateShopData, CreateShopErrors, CreateShopResponses, DeleteCharacterData, DeleteCharacterErrors, DeleteCharacterResponses, DeleteEncounterPoolData, DeleteEncounterPoolErrors, DeleteEncounterPoolResponses, DeleteEncounterTableData, DeleteEncounterTableErrors, DeleteEncounterTableResponses, DeleteLootTableData, DeleteLootTableErrors, DeleteLootTableResponses, DeleteNpcData, DeleteNpcErrors, DeleteNpcResponses, DeletePushSubscriptionData, DeletePushSubscriptionErrors, DeletePushSubscriptionResponses, DeleteSettlementData, DeleteSettlementErrors, DeleteSettlementResponses, DeleteShopData, DeleteShopErrors, DeleteShopResponses, DiffNpcRevisionsData, DiffNpcRevisionsErrors, DiffNpcRevisionsResponses, EndSessionData, EndSessionErrors, EndSessionResponses, FinishOidcData, FinishOidcErrors, FinishOidcResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetActionLogData, GetActionLogErrors, GetActionLogResponses, GetAutomationCoverageData, GetAutomationCoverageErrors, GetAutomationCoverageResponses, GetBuilderOptionsData, GetBuilderOptionsErrors, GetBuilderOptionsResponses, GetCampaignData, GetCampaignErrors, GetCampaignResponses, GetCharacterData, GetCharacterErrors, GetCharacterResponses, GetEntryData, GetEntryErrors, GetEntryResponses, GetHealthData, GetHealthErrors, GetHealthResponses, GetMapData, GetMapErrors, GetMapImageData, GetMapImageErrors, GetMapImageResponses, GetMapResponses, GetMeData, GetMeErrors, GetMeResponses, GetNpcData, GetNpcErrors, GetNpcResponses, GetPortraitData, GetPortraitErrors, GetPortraitResponses, GetPushKeyData, GetPushKeyErrors, GetPushKeyResponses, GetReadinessData, GetReadinessErrors, GetReadinessResponses, GetRollData, GetRollErrors, GetRollResponses, GetSessionData, GetSessionErrors, GetSessionLogData, GetSessionLogErrors, GetSessionLogResponses, GetSessionResponses, GetSessionViewData, GetSessionViewErrors, GetSessionViewResponses, GetSignInMethodsData, GetSignInMethodsErrors, GetSignInMethodsResponses, GetSpellData, GetSpellErrors, GetSpellResponses, GetStatusData, GetStatusErrors, GetStatusResponses, GetTokenIconData, GetTokenIconErrors, GetTokenIconResponses, LinkOidcAccountData, LinkOidcAccountErrors, LinkOidcAccountResponses, ListActivityData, ListActivityErrors, ListActivityResponses, ListCampaignsData, ListCampaignsErrors, ListCampaignsResponses, ListCharactersData, ListCharactersErrors, ListCharactersResponses, ListDeletedNpcsData, ListDeletedNpcsErrors, ListDeletedNpcsResponses, ListEncounterChecksData, ListEncounterChecksErrors, ListEncounterChecksResponses, ListEncounterPoolRevisionsData, ListEncounterPoolRevisionsErrors, ListEncounterPoolRevisionsResponses, ListEncounterPoolsData, ListEncounterPoolsErrors, ListEncounterPoolsResponses, ListEncounterTableRevisionsData, ListEncounterTableRevisionsErrors, ListEncounterTableRevisionsResponses, ListEncounterTablesData, ListEncounterTablesErrors, ListEncounterTablesResponses, ListEntriesData, ListEntriesErrors, ListEntriesResponses, ListInvitesData, ListInvitesErrors, ListInvitesResponses, ListLocationsData, ListLocationsErrors, ListLocationsResponses, ListLootTableRevisionsData, ListLootTableRevisionsErrors, ListLootTableRevisionsResponses, ListLootTablesData, ListLootTablesErrors, ListLootTablesResponses, ListMapsData, ListMapsErrors, ListMapsResponses, ListNpcRevisionsData, ListNpcRevisionsErrors, ListNpcRevisionsResponses, ListNpcsData, ListNpcsErrors, ListNpcsResponses, ListRollsData, ListRollsErrors, ListRollsResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListSettlementRevisionsData, ListSettlementRevisionsErrors, ListSettlementRevisionsResponses, ListSettlementsData, ListSettlementsErrors, ListSettlementsResponses, ListShopRevisionsData, ListShopRevisionsErrors, ListShopRevisionsResponses, ListShopsData, ListShopsErrors, ListShopsResponses, ListSourcesData, ListSourcesErrors, ListSourcesResponses, ListSpellsData, ListSpellsErrors, ListSpellsResponses, PreviewAccountInviteData, PreviewAccountInviteErrors, PreviewAccountInviteResponses, PreviewCharacterData, PreviewCharacterErrors, PreviewCharacterResponses, PreviewInviteData, PreviewInviteErrors, PreviewInviteResponses, PreviewReachData, PreviewReachErrors, PreviewReachResponses, PreviewSightData, PreviewSightErrors, PreviewSightResponses, RemoveMemberData, RemoveMemberErrors, RemoveMemberResponses, RequestSignInLinkData, RequestSignInLinkErrors, RequestSignInLinkResponses, RerollStockData, RerollStockErrors, RerollStockResponses, RestoreEncounterPoolRevisionData, RestoreEncounterPoolRevisionErrors, RestoreEncounterPoolRevisionResponses, RestoreEncounterTableRevisionData, RestoreEncounterTableRevisionErrors, RestoreEncounterTableRevisionResponses, RestoreLootTableRevisionData, RestoreLootTableRevisionErrors, RestoreLootTableRevisionResponses, RestoreNpcRevisionData, RestoreNpcRevisionErrors, RestoreNpcRevisionResponses, RestoreSettlementRevisionData, RestoreSettlementRevisionErrors, RestoreSettlementRevisionResponses, RestoreShopRevisionData, RestoreShopRevisionErrors, RestoreShopRevisionResponses, RevokeInviteData, RevokeInviteErrors, RevokeInviteResponses, RollRestData, RollRestErrors, RollRestResponses, SendLiveCommandData, SendLiveCommandErrors, SendLiveCommandResponses, SetAccountPasswordData, SetAccountPasswordErrors, SetAccountPasswordResponses, SetDieData, SetDieErrors, SetDieResponses, SetPortraitData, SetPortraitErrors, SetPortraitResponses, SetTokenIconData, SetTokenIconErrors, SetTokenIconResponses, SignInData, SignInErrors, SignInResponses, SignOutData, SignOutErrors, SignOutResponses, StartOidcLinkData, StartOidcLinkErrors, StartOidcLinkResponses, StartOidcSignInData, StartOidcSignInErrors, StartOidcSignInResponses, StartSessionData, StartSessionErrors, StartSessionResponses, UndoChangeData, UndoChangeErrors, UndoChangeResponses, UnlinkOidcData, UnlinkOidcErrors, UnlinkOidcResponses, UpdateAccountData, UpdateAccountErrors, UpdateAccountResponses, UpdateCampaignData, UpdateCampaignErrors, UpdateCampaignResponses, UpdateCharacterData, UpdateCharacterErrors, UpdateCharacterResponses, UpdateEncounterPoolData, UpdateEncounterPoolErrors, UpdateEncounterPoolResponses, UpdateEncounterTableData, UpdateEncounterTableErrors, UpdateEncounterTableResponses, UpdateLootTableData, UpdateLootTableErrors, UpdateLootTableResponses, UpdateMapData, UpdateMapErrors, UpdateMapResponses, UpdateMemberData, UpdateMemberErrors, UpdateMemberResponses, UpdateNpcData, UpdateNpcErrors, UpdateNpcResponses, UpdateSettlementData, UpdateSettlementErrors, UpdateSettlementResponses, UpdateShopData, UpdateShopErrors, UpdateShopResponses, UploadMapData, UploadMapErrors, UploadMapResponses, UseSignInLinkData, UseSignInLinkErrors, UseSignInLinkResponses } from './types.gen';
+import { zAcceptAccountInviteBody, zAcceptAccountInviteResponse, zAcceptInviteBody, zAcceptInviteResponse, zClearTokenIconPath, zClearTokenIconResponse, zCreateAccountInviteBody, zCreateAccountInviteResponse, zCreateCampaignBody, zCreateCampaignResponse, zCreateCharacterBody, zCreateCharacterPath, zCreateCharacterResponse, zCreateEncounterPoolBody, zCreateEncounterPoolPath, zCreateEncounterPoolResponse, zCreateEncounterTableBody, zCreateEncounterTablePath, zCreateEncounterTableResponse, zCreateInvitePath, zCreateInviteResponse, zCreateLootTableBody, zCreateLootTablePath, zCreateLootTableResponse, zCreateNpcBody, zCreateNpcPath, zCreateNpcResponse, zCreateOidcAccountBody, zCreateOidcAccountResponse, zCreatePushSubscriptionBody, zCreatePushSubscriptionResponse, zCreateRollBody, zCreateRollPath, zCreateRollResponse, zCreateSettlementBody, zCreateSettlementPath, zCreateSettlementResponse, zCreateShopBody, zCreateShopPath, zCreateShopResponse, zDeleteCharacterPath, zDeleteCharacterResponse, zDeleteEncounterPoolPath, zDeleteEncounterPoolResponse, zDeleteEncounterTablePath, zDeleteEncounterTableResponse, zDeleteLootTablePath, zDeleteLootTableResponse, zDeleteNpcPath, zDeleteNpcResponse, zDeletePushSubscriptionPath, zDeletePushSubscriptionResponse, zDeleteSettlementPath, zDeleteSettlementResponse, zDeleteShopPath, zDeleteShopResponse, zDiffNpcRevisionsPath, zDiffNpcRevisionsQuery, zDiffNpcRevisionsResponse, zEndSessionPath, zEndSessionResponse, zFinishOidcBody, zFinishOidcResponse, zGetAccountResponse, zGetActionLogPath, zGetActionLogQuery, zGetActionLogResponse, zGetAutomationCoverageHeaders, zGetAutomationCoverageResponse, zGetBuilderOptionsHeaders, zGetBuilderOptionsQuery, zGetBuilderOptionsResponse, zGetCampaignPath, zGetCampaignResponse, zGetCharacterPath, zGetCharacterResponse, zGetEntryHeaders, zGetEntryPath, zGetEntryQuery, zGetEntryResponse, zGetHealthResponse, zGetMapImagePath, zGetMapImageQuery, zGetMapImageResponse, zGetMapPath, zGetMapResponse, zGetMeResponse, zGetNpcPath, zGetNpcResponse, zGetPortraitPath, zGetPortraitResponse, zGetPushKeyResponse, zGetReadinessResponse, zGetRollPath, zGetRollResponse, zGetSessionLogPath, zGetSessionLogQuery, zGetSessionLogResponse, zGetSessionPath, zGetSessionResponse, zGetSessionViewPath, zGetSessionViewResponse, zGetSignInMethodsResponse, zGetSpellHeaders, zGetSpellPath, zGetSpellQuery, zGetSpellResponse, zGetStatusResponse, zGetTokenIconPath, zGetTokenIconResponse, zLinkOidcAccountBody, zLinkOidcAccountResponse, zListActivityPath, zListActivityResponse, zListCampaignsQuery, zListCampaignsResponse, zListCharactersPath, zListCharactersResponse, zListDeletedNpcsPath, zListDeletedNpcsResponse, zListEncounterChecksPath, zListEncounterChecksResponse, zListEncounterPoolRevisionsPath, zListEncounterPoolRevisionsResponse, zListEncounterPoolsPath, zListEncounterPoolsResponse, zListEncounterTableRevisionsPath, zListEncounterTableRevisionsResponse, zListEncounterTablesPath, zListEncounterTablesResponse, zListEntriesHeaders, zListEntriesQuery, zListEntriesResponse, zListInvitesPath, zListInvitesResponse, zListLocationsPath, zListLocationsResponse, zListLootTableRevisionsPath, zListLootTableRevisionsResponse, zListLootTablesPath, zListLootTablesResponse, zListMapsPath, zListMapsResponse, zListNpcRevisionsPath, zListNpcRevisionsResponse, zListNpcsPath, zListNpcsResponse, zListRollsPath, zListRollsQuery, zListRollsResponse, zListSessionsPath, zListSessionsResponse, zListSettlementRevisionsPath, zListSettlementRevisionsResponse, zListSettlementsPath, zListSettlementsResponse, zListShopRevisionsPath, zListShopRevisionsResponse, zListShopsPath, zListShopsResponse, zListSourcesResponse, zListSpellsHeaders, zListSpellsQuery, zListSpellsResponse, zPreviewAccountInviteBody, zPreviewAccountInviteResponse, zPreviewCharacterBody, zPreviewCharacterPath, zPreviewCharacterResponse, zPreviewInviteBody, zPreviewInviteResponse, zPreviewReachBody, zPreviewReachResponse, zPreviewSightBody, zPreviewSightResponse, zRemoveMemberPath, zRemoveMemberResponse, zRequestSignInLinkBody, zRerollStockPath, zRerollStockResponse, zRestoreEncounterPoolRevisionPath, zRestoreEncounterPoolRevisionResponse, zRestoreEncounterTableRevisionPath, zRestoreEncounterTableRevisionResponse, zRestoreLootTableRevisionPath, zRestoreLootTableRevisionResponse, zRestoreNpcRevisionPath, zRestoreNpcRevisionResponse, zRestoreSettlementRevisionPath, zRestoreSettlementRevisionResponse, zRestoreShopRevisionPath, zRestoreShopRevisionResponse, zRevokeInvitePath, zRevokeInviteResponse, zRollRestPath, zRollRestResponse, zSendLiveCommandBody, zSendLiveCommandPath, zSendLiveCommandResponse, zSetAccountPasswordBody, zSetAccountPasswordResponse, zSetDieBody, zSetDiePath, zSetDieResponse, zSetPortraitBody, zSetPortraitPath, zSetPortraitResponse, zSetTokenIconBody, zSetTokenIconPath, zSetTokenIconResponse, zSignInBody, zSignInResponse, zSignOutResponse, zStartOidcLinkResponse, zStartOidcSignInResponse, zStartSessionPath, zStartSessionResponse, zUndoChangePath, zUndoChangeResponse, zUnlinkOidcResponse, zUpdateAccountBody, zUpdateAccountResponse, zUpdateCampaignBody, zUpdateCampaignPath, zUpdateCampaignResponse, zUpdateCharacterBody, zUpdateCharacterPath, zUpdateCharacterResponse, zUpdateEncounterPoolBody, zUpdateEncounterPoolPath, zUpdateEncounterPoolResponse, zUpdateEncounterTableBody, zUpdateEncounterTablePath, zUpdateEncounterTableResponse, zUpdateLootTableBody, zUpdateLootTablePath, zUpdateLootTableResponse, zUpdateMapBody, zUpdateMapPath, zUpdateMapResponse, zUpdateMemberBody, zUpdateMemberPath, zUpdateMemberResponse, zUpdateNpcBody, zUpdateNpcPath, zUpdateNpcResponse, zUpdateSettlementBody, zUpdateSettlementPath, zUpdateSettlementResponse, zUpdateShopBody, zUpdateShopPath, zUpdateShopResponse, zUploadMapBody, zUploadMapPath, zUploadMapQuery, zUploadMapResponse, zUseSignInLinkBody, zUseSignInLinkResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -1953,6 +1953,98 @@ export const useSignInLink = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 /**
+ * List the sign-in methods
+ *
+ * Which external sign-in, if any, the sign-in page offers beside a password.
+ */
+export const getSignInMethods = <ThrowOnError extends boolean = false>(options?: Options<GetSignInMethodsData, ThrowOnError>): RequestResult<GetSignInMethodsResponses, GetSignInMethodsErrors, ThrowOnError> => (options?.client ?? client).get<GetSignInMethodsResponses, GetSignInMethodsErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zGetSignInMethodsResponse.parseAsync(data),
+    url: '/api/v1/sign-in-methods',
+    ...options
+});
+
+/**
+ * Start signing in with the external login
+ *
+ * Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+ */
+export const startOidcSignIn = <ThrowOnError extends boolean = false>(options?: Options<StartOidcSignInData, ThrowOnError>): RequestResult<StartOidcSignInResponses, StartOidcSignInErrors, ThrowOnError> => (options?.client ?? client).post<StartOidcSignInResponses, StartOidcSignInErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zStartOidcSignInResponse.parseAsync(data),
+    url: '/api/v1/oidc/sign-ins',
+    ...options
+});
+
+/**
+ * Finish an external sign-in
+ *
+ * Takes the code and state the provider sent back. Signs in a linked login, links the login when the Account page started it, or leaves it waiting for an Account.
+ */
+export const finishOidc = <ThrowOnError extends boolean = false>(options: Options<FinishOidcData, ThrowOnError>): RequestResult<FinishOidcResponses, FinishOidcErrors, ThrowOnError> => (options.client ?? client).post<FinishOidcResponses, FinishOidcErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zFinishOidcBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zFinishOidcResponse.parseAsync(data),
+    url: '/api/v1/oidc/callback',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create an Account for an external login
+ *
+ * Sets up an Account for a login no Account has yet, and signs it in.
+ */
+export const createOidcAccount = <ThrowOnError extends boolean = false>(options: Options<CreateOidcAccountData, ThrowOnError>): RequestResult<CreateOidcAccountResponses, CreateOidcAccountErrors, ThrowOnError> => (options.client ?? client).post<CreateOidcAccountResponses, CreateOidcAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zCreateOidcAccountBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zCreateOidcAccountResponse.parseAsync(data),
+    url: '/api/v1/oidc/accounts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Link an external login to an existing Account
+ *
+ * Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+ */
+export const linkOidcAccount = <ThrowOnError extends boolean = false>(options: Options<LinkOidcAccountData, ThrowOnError>): RequestResult<LinkOidcAccountResponses, LinkOidcAccountErrors, ThrowOnError> => (options.client ?? client).post<LinkOidcAccountResponses, LinkOidcAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zLinkOidcAccountBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zLinkOidcAccountResponse.parseAsync(data),
+    url: '/api/v1/oidc/links',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Get my Account
  *
  * The Account the caller is signed in as.
@@ -1967,6 +2059,27 @@ export const getAccount = <ThrowOnError extends boolean = false>(options?: Optio
     security: [{ name: 'X-User-Id', type: 'apiKey' }],
     url: '/api/v1/account',
     ...options
+});
+
+/**
+ * Change my profile
+ *
+ * Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays read-only.
+ */
+export const updateAccount = <ThrowOnError extends boolean = false>(options: Options<UpdateAccountData, ThrowOnError>): RequestResult<UpdateAccountResponses, UpdateAccountErrors, ThrowOnError> => (options.client ?? client).put<UpdateAccountResponses, UpdateAccountErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: zUpdateAccountBody,
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUpdateAccountResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
@@ -1988,6 +2101,40 @@ export const setAccountPassword = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Unlink the external login
+ *
+ * Removes the linked login; the Account stays. An Account without a password keeps its login.
+ */
+export const unlinkOidc = <ThrowOnError extends boolean = false>(options?: Options<UnlinkOidcData, ThrowOnError>): RequestResult<UnlinkOidcResponses, UnlinkOidcErrors, ThrowOnError> => (options?.client ?? client).delete<UnlinkOidcResponses, UnlinkOidcErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zUnlinkOidcResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/oidc-link',
+    ...options
+});
+
+/**
+ * Start linking the external login
+ *
+ * Returns where to send the browser to link a login to the signed-in Account.
+ */
+export const startOidcLink = <ThrowOnError extends boolean = false>(options?: Options<StartOidcLinkData, ThrowOnError>): RequestResult<StartOidcLinkResponses, StartOidcLinkErrors, ThrowOnError> => (options?.client ?? client).post<StartOidcLinkResponses, StartOidcLinkErrors, ThrowOnError>({
+    requestValidator: async (data) => await z.object({
+        body: z.never().optional(),
+        path: z.never().optional(),
+        query: z.never().optional()
+    }).parseAsync(data),
+    responseValidator: async (data) => await zStartOidcLinkResponse.parseAsync(data),
+    security: [{ name: 'X-User-Id', type: 'apiKey' }],
+    url: '/api/v1/account/oidc-link',
+    ...options
 });
 
 /**

@@ -29,7 +29,24 @@ type Config struct {
 	// BaseURL is where links in emails point.
 	BaseURL string
 	SMTP    *SMTP
+	OIDC    *OIDC
 }
+
+// OIDC is the external login an Account can sign in with; nil offers none. A login needs GrantRole
+// among the roles in RolesClaim, and AdminRole makes its Account an Admin.
+type OIDC struct {
+	Issuer       string
+	ClientID     string
+	ClientSecret string
+	Name         string
+	GrantRole    string
+	AdminRole    string
+	RolesClaim   string
+}
+
+// ErrIncompleteOIDC is returned when an OIDC issuer is set without its client or the base URL its
+// callback lives under.
+var ErrIncompleteOIDC = errors.New("config: GRIMOIRE_OIDC_ISSUER needs GRIMOIRE_OIDC_CLIENT_ID and GRIMOIRE_BASE_URL")
 
 // SMTP is the server Grimoire sends email through; nil logs emails instead.
 type SMTP struct {
@@ -89,6 +106,9 @@ func Load(getenv func(string) string) (Config, error) {
 	if err := c.loadSMTP(getenv); err != nil {
 		return Config{}, err
 	}
+	if err := c.loadOIDC(getenv); err != nil {
+		return Config{}, err
+	}
 	if c.AssetDir == "" {
 		c.AssetDir = "/tmp/grimoire-assets"
 	}
@@ -143,6 +163,37 @@ func (c *Config) loadSMTP(getenv func(string) string) error {
 	}
 	c.SMTP = &s
 	return nil
+}
+
+func (c *Config) loadOIDC(getenv func(string) string) error {
+	issuer := getenv("GRIMOIRE_OIDC_ISSUER")
+	if issuer == "" {
+		return nil
+	}
+	o := OIDC{
+		Issuer: issuer, ClientID: getenv("GRIMOIRE_OIDC_CLIENT_ID"), ClientSecret: getenv("GRIMOIRE_OIDC_CLIENT_SECRET"),
+		Name: or(getenv("GRIMOIRE_OIDC_NAME"), hostOf(issuer)), GrantRole: or(getenv("GRIMOIRE_OIDC_GRANT_ROLE"), "SERVICE_GRIMOIRE"),
+		AdminRole: or(getenv("GRIMOIRE_OIDC_ADMIN_ROLE"), "ROLE_ADMIN"), RolesClaim: or(getenv("GRIMOIRE_OIDC_ROLES_CLAIM"), "roles"),
+	}
+	if o.ClientID == "" || c.BaseURL == "" {
+		return ErrIncompleteOIDC
+	}
+	c.OIDC = &o
+	return nil
+}
+
+func or(v, fallback string) string {
+	if v == "" {
+		return fallback
+	}
+	return v
+}
+
+// hostOf is an issuer URL without its scheme and path.
+func hostOf(issuer string) string {
+	host := strings.TrimPrefix(strings.TrimPrefix(issuer, "https://"), "http://")
+	host, _, _ = strings.Cut(host, "/")
+	return host
 }
 
 func (c *Config) loadPush(getenv func(string) string) error {

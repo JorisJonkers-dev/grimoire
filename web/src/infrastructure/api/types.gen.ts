@@ -139,6 +139,89 @@ export type Account = {
     nickname: string;
     email: string;
     admin: boolean;
+    /**
+     * Whether the Account can sign in with a password.
+     */
+    hasPassword: boolean;
+    oidc?: OidcLink;
+};
+
+/**
+ * The external login linked to an Account, as the provider last described it; read-only.
+ */
+export type OidcLink = {
+    email: string;
+    username: string;
+    name: string;
+    linkedAt: string;
+};
+
+/**
+ * A new Username, Nickname and email for the signed-in Account.
+ */
+export type AccountChange = {
+    username: string;
+    nickname: string;
+    email: string;
+};
+
+/**
+ * The sign-in methods beside a password; oidc names the external login, when one is set up.
+ */
+export type SignInMethods = {
+    oidc?: string;
+};
+
+/**
+ * Where to send the browser to sign in with the external login.
+ */
+export type OidcRedirect = {
+    url: string;
+};
+
+/**
+ * What the provider sent the browser back with.
+ */
+export type OidcCallback = {
+    code: string;
+    state: string;
+};
+
+/**
+ * How an external sign-in ended. signed_in and linked carry the Account; choose carries a login waiting for an Account.
+ */
+export type OidcOutcome = {
+    status: 'signed_in' | 'linked' | 'choose';
+    account?: Account;
+    pending?: OidcPending;
+};
+
+/**
+ * A login no Account has yet, with the token that creates or links one within 15 minutes.
+ */
+export type OidcPending = {
+    token: string;
+    email: string;
+    username: string;
+    name: string;
+};
+
+/**
+ * A Username and Nickname for a new Account for a waiting login.
+ */
+export type OidcAccountSetup = {
+    token: string;
+    username: string;
+    nickname: string;
+};
+
+/**
+ * The Username and password of the Account to link a waiting login to.
+ */
+export type OidcAccountLink = {
+    token: string;
+    username: string;
+    password: string;
 };
 
 /**
@@ -6165,6 +6248,151 @@ export type UseSignInLinkResponses = {
 
 export type UseSignInLinkResponse = UseSignInLinkResponses[keyof UseSignInLinkResponses];
 
+export type GetSignInMethodsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/sign-in-methods';
+};
+
+export type GetSignInMethodsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSignInMethodsError = GetSignInMethodsErrors[keyof GetSignInMethodsErrors];
+
+export type GetSignInMethodsResponses = {
+    /**
+     * The sign-in methods.
+     */
+    200: SignInMethods;
+};
+
+export type GetSignInMethodsResponse = GetSignInMethodsResponses[keyof GetSignInMethodsResponses];
+
+export type StartOidcSignInData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/sign-ins';
+};
+
+export type StartOidcSignInErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartOidcSignInError = StartOidcSignInErrors[keyof StartOidcSignInErrors];
+
+export type StartOidcSignInResponses = {
+    /**
+     * Where to send the browser.
+     */
+    201: OidcRedirect;
+};
+
+export type StartOidcSignInResponse = StartOidcSignInResponses[keyof StartOidcSignInResponses];
+
+export type FinishOidcData = {
+    body: OidcCallback;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/callback';
+};
+
+export type FinishOidcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type FinishOidcError = FinishOidcErrors[keyof FinishOidcErrors];
+
+export type FinishOidcResponses = {
+    /**
+     * How the sign-in ended.
+     */
+    200: OidcOutcome;
+};
+
+export type FinishOidcResponse = FinishOidcResponses[keyof FinishOidcResponses];
+
+export type CreateOidcAccountData = {
+    body: OidcAccountSetup;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/accounts';
+};
+
+export type CreateOidcAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateOidcAccountError = CreateOidcAccountErrors[keyof CreateOidcAccountErrors];
+
+export type CreateOidcAccountResponses = {
+    /**
+     * The Account, signed in.
+     */
+    201: Account;
+};
+
+export type CreateOidcAccountResponse = CreateOidcAccountResponses[keyof CreateOidcAccountResponses];
+
+export type LinkOidcAccountData = {
+    body: OidcAccountLink;
+    path?: never;
+    query?: never;
+    url: '/api/v1/oidc/links';
+};
+
+export type LinkOidcAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type LinkOidcAccountError = LinkOidcAccountErrors[keyof LinkOidcAccountErrors];
+
+export type LinkOidcAccountResponses = {
+    /**
+     * The Account, signed in.
+     */
+    200: Account;
+};
+
+export type LinkOidcAccountResponse = LinkOidcAccountResponses[keyof LinkOidcAccountResponses];
+
 export type GetAccountData = {
     body?: never;
     path?: never;
@@ -6194,6 +6422,35 @@ export type GetAccountResponses = {
 
 export type GetAccountResponse = GetAccountResponses[keyof GetAccountResponses];
 
+export type UpdateAccountData = {
+    body: AccountChange;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account';
+};
+
+export type UpdateAccountErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateAccountError = UpdateAccountErrors[keyof UpdateAccountErrors];
+
+export type UpdateAccountResponses = {
+    /**
+     * The Account.
+     */
+    200: Account;
+};
+
+export type UpdateAccountResponse = UpdateAccountResponses[keyof UpdateAccountResponses];
+
 export type SetAccountPasswordData = {
     body: PasswordChange;
     path?: never;
@@ -6222,6 +6479,64 @@ export type SetAccountPasswordResponses = {
 };
 
 export type SetAccountPasswordResponse = SetAccountPasswordResponses[keyof SetAccountPasswordResponses];
+
+export type UnlinkOidcData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/oidc-link';
+};
+
+export type UnlinkOidcErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UnlinkOidcError = UnlinkOidcErrors[keyof UnlinkOidcErrors];
+
+export type UnlinkOidcResponses = {
+    /**
+     * Unlinked.
+     */
+    204: void;
+};
+
+export type UnlinkOidcResponse = UnlinkOidcResponses[keyof UnlinkOidcResponses];
+
+export type StartOidcLinkData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/oidc-link';
+};
+
+export type StartOidcLinkErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type StartOidcLinkError = StartOidcLinkErrors[keyof StartOidcLinkErrors];
+
+export type StartOidcLinkResponses = {
+    /**
+     * Where to send the browser.
+     */
+    201: OidcRedirect;
+};
+
+export type StartOidcLinkResponse = StartOidcLinkResponses[keyof StartOidcLinkResponses];
 
 export type GetHealthData = {
     body?: never;

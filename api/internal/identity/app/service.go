@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"strings"
 	"time"
@@ -31,6 +32,10 @@ type Repository interface {
 	RevokeSession(ctx context.Context, tokenHash []byte, now time.Time) error
 	InsertSignInLink(ctx context.Context, tokenHash []byte, account domain.AccountID, now, expires time.Time) error
 	UseSignInLink(ctx context.Context, tokenHash []byte, now time.Time) (domain.AccountID, error)
+	HasPassword(ctx context.Context, id domain.AccountID) (bool, error)
+	UpdateProfile(ctx context.Context, id domain.AccountID, p domain.ProfileChange) error
+	SetAdmin(ctx context.Context, id domain.AccountID, admin bool) error
+	OIDCRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
 
@@ -54,8 +59,13 @@ type Service struct {
 	Now       func() time.Time
 	// Admins are subjects that act as Admins without an Account flag, to bootstrap the first invite.
 	Admins map[string]bool
-	// BaseURL is where links in emails point, such as https://grimoire.jorisjonkers.dev.
+	// BaseURL is where links in emails point, such as https://grimoire.example.
 	BaseURL string
+	// OIDC is the external sign-in, if one is set up: Grant is the role a login needs to sign in at
+	// all, AdminRole the role that makes its Account an Admin.
+	OIDC      Provider
+	Grant     string
+	AdminRole string
 }
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]{2,31}$`)
@@ -141,21 +151,31 @@ func firstErr(err, otherwise error) error {
 	return otherwise
 }
 
-// clean checks and tidies what an invitee chose: a lowercase Username of 3 to 32 letters, digits, dots,
-// dashes or underscores; a Nickname of up to 40 characters; an email; a password of 10 to 200.
+// clean checks and tidies what an invitee chose: a profile and a password of 10 to 200 characters.
 func clean(in domain.Setup) (domain.Setup, error) {
+	p, err := cleanProfile(domain.ProfileChange{Username: in.Username, Nickname: in.Nickname, Email: in.Email})
+	in.Username, in.Nickname, in.Email = p.Username, p.Nickname, p.Email
+	if err != nil {
+		return in, err
+	}
+	if n := utf8.RuneCountInString(in.Password); n < 10 || n > 200 {
+		return in, domain.ErrInvalid
+	}
+	return in, nil
+}
+
+// cleanProfile checks and tidies a profile: a lowercase Username of 3 to 32 letters, digits, dots,
+// dashes or underscores; a Nickname of up to 40 characters; an email.
+func cleanProfile(in domain.ProfileChange) (domain.ProfileChange, error) {
 	in.Username = strings.ToLower(strings.TrimSpace(in.Username))
 	in.Nickname = strings.TrimSpace(in.Nickname)
 	in.Email = strings.TrimSpace(in.Email)
-	n := utf8.RuneCountInString(in.Password)
 	switch {
 	case !usernamePattern.MatchString(in.Username):
 		return in, domain.ErrInvalid
 	case in.Nickname == "" || utf8.RuneCountInString(in.Nickname) > 40:
 		return in, domain.ErrInvalid
 	case len(in.Email) > 254 || !strings.Contains(in.Email, "@") || strings.HasPrefix(in.Email, "@") || strings.HasSuffix(in.Email, "@"):
-		return in, domain.ErrInvalid
-	case n < 10 || n > 200:
 		return in, domain.ErrInvalid
 	}
 	return in, nil
@@ -243,9 +263,47 @@ func (s *Service) UseLink(ctx context.Context, token, userAgent string) (domain.
 	return a, session, err
 }
 
-// Me reads the Account a subject signs in as.
-func (s *Service) Me(ctx context.Context, subject string) (domain.Account, error) {
-	return s.Repo.AccountBySubject(ctx, subject)
+// Me reads the Account a subject signs in as, with how it signs in.
+func (s *Service) Me(ctx context.Context, subject string) (domain.Profile, error) {
+	a, err := s.Repo.AccountBySubject(ctx, subject)
+	if err != nil {
+		return domain.Profile{}, err
+	}
+	return s.profile(ctx, a)
+}
+
+func (s *Service) profile(ctx context.Context, a domain.Account) (domain.Profile, error) {
+	p := domain.Profile{Account: a, HasPassword: false, Link: nil}
+	var err error
+	if p.HasPassword, err = s.Repo.HasPassword(ctx, a.ID); err != nil {
+		return p, err
+	}
+	link, err := s.Repo.LinkOf(ctx, a.ID)
+	switch {
+	case err == nil:
+		p.Link = &link
+	case !errors.Is(err, domain.ErrNotFound):
+		return p, err
+	}
+	return p, nil
+}
+
+// UpdateProfile changes the signed-in Account's Username, Nickname and email. A linked login's own
+// claims stay as the provider sent them.
+func (s *Service) UpdateProfile(ctx context.Context, subject string, in domain.ProfileChange) (domain.Profile, error) {
+	in, err := cleanProfile(in)
+	if err != nil {
+		return domain.Profile{}, err
+	}
+	a, err := s.Repo.AccountBySubject(ctx, subject)
+	if err != nil {
+		return domain.Profile{}, err
+	}
+	if err := s.Repo.UpdateProfile(ctx, a.ID, in); err != nil {
+		return domain.Profile{}, err
+	}
+	a.Username, a.Nickname, a.Email = in.Username, in.Nickname, in.Email
+	return s.profile(ctx, a)
 }
 
 // SetPassword sets a new password for the signed-in Account.

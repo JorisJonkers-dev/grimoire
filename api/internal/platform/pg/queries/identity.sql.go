@@ -127,6 +127,29 @@ func (q *Queries) AccountByUsername(ctx context.Context, username string) (Ident
 	return i, err
 }
 
+const accountHasPassword = `-- name: AccountHasPassword :one
+SELECT (password_hash IS NOT NULL)::boolean AS has_password FROM identity.accounts WHERE id = $1
+`
+
+func (q *Queries) AccountHasPassword(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, accountHasPassword, id)
+	var has_password bool
+	err := row.Scan(&has_password)
+	return has_password, err
+}
+
+const deleteOIDCLink = `-- name: DeleteOIDCLink :execrows
+DELETE FROM identity.oidc_links WHERE account_id = $1
+`
+
+func (q *Queries) DeleteOIDCLink(ctx context.Context, accountID uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteOIDCLink, accountID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const insertAccount = `-- name: InsertAccount :one
 INSERT INTO identity.accounts (id, subject, username, nickname, email, password_hash, admin, created_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -231,6 +254,92 @@ func (q *Queries) InsertInvite(ctx context.Context, arg InsertInviteParams) erro
 	return err
 }
 
+const insertOIDCLink = `-- name: InsertOIDCLink :exec
+INSERT INTO identity.oidc_links (account_id, issuer, subject, email, username, name, linked_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+`
+
+type InsertOIDCLinkParams struct {
+	AccountID uuid.UUID
+	Issuer    string
+	Subject   string
+	Email     string
+	Username  string
+	Name      string
+	Now       time.Time
+}
+
+func (q *Queries) InsertOIDCLink(ctx context.Context, arg InsertOIDCLinkParams) error {
+	_, err := q.db.Exec(ctx, insertOIDCLink,
+		arg.AccountID,
+		arg.Issuer,
+		arg.Subject,
+		arg.Email,
+		arg.Username,
+		arg.Name,
+		arg.Now,
+	)
+	return err
+}
+
+const insertOIDCPending = `-- name: InsertOIDCPending :exec
+INSERT INTO identity.oidc_pending (token_hash, issuer, subject, email, username, name, admin, created_at, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+`
+
+type InsertOIDCPendingParams struct {
+	TokenHash []byte
+	Issuer    string
+	Subject   string
+	Email     string
+	Username  string
+	Name      string
+	Admin     bool
+	Now       time.Time
+	ExpiresAt time.Time
+}
+
+func (q *Queries) InsertOIDCPending(ctx context.Context, arg InsertOIDCPendingParams) error {
+	_, err := q.db.Exec(ctx, insertOIDCPending,
+		arg.TokenHash,
+		arg.Issuer,
+		arg.Subject,
+		arg.Email,
+		arg.Username,
+		arg.Name,
+		arg.Admin,
+		arg.Now,
+		arg.ExpiresAt,
+	)
+	return err
+}
+
+const insertOIDCRequest = `-- name: InsertOIDCRequest :exec
+INSERT INTO identity.oidc_requests (state_hash, nonce, verifier, account_id, created_at, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type InsertOIDCRequestParams struct {
+	StateHash []byte
+	Nonce     string
+	Verifier  string
+	AccountID pgtype.UUID
+	Now       time.Time
+	ExpiresAt time.Time
+}
+
+func (q *Queries) InsertOIDCRequest(ctx context.Context, arg InsertOIDCRequestParams) error {
+	_, err := q.db.Exec(ctx, insertOIDCRequest,
+		arg.StateHash,
+		arg.Nonce,
+		arg.Verifier,
+		arg.AccountID,
+		arg.Now,
+		arg.ExpiresAt,
+	)
+	return err
+}
+
 const insertSignInLink = `-- name: InsertSignInLink :exec
 INSERT INTO identity.sign_in_links (token_hash, account_id, created_at, expires_at) VALUES ($1, $2, $3, $4)
 `
@@ -279,6 +388,49 @@ func (q *Queries) InviteByToken(ctx context.Context, tokenHash []byte) (InviteBy
 	return i, err
 }
 
+const oIDCLinkByAccount = `-- name: OIDCLinkByAccount :one
+SELECT account_id, issuer, subject, email, username, name, linked_at FROM identity.oidc_links WHERE account_id = $1
+`
+
+func (q *Queries) OIDCLinkByAccount(ctx context.Context, accountID uuid.UUID) (IdentityOidcLink, error) {
+	row := q.db.QueryRow(ctx, oIDCLinkByAccount, accountID)
+	var i IdentityOidcLink
+	err := row.Scan(
+		&i.AccountID,
+		&i.Issuer,
+		&i.Subject,
+		&i.Email,
+		&i.Username,
+		&i.Name,
+		&i.LinkedAt,
+	)
+	return i, err
+}
+
+const oIDCLinkBySubject = `-- name: OIDCLinkBySubject :one
+SELECT account_id, issuer, subject, email, username, name, linked_at FROM identity.oidc_links WHERE issuer = $1 AND subject = $2
+`
+
+type OIDCLinkBySubjectParams struct {
+	Issuer  string
+	Subject string
+}
+
+func (q *Queries) OIDCLinkBySubject(ctx context.Context, arg OIDCLinkBySubjectParams) (IdentityOidcLink, error) {
+	row := q.db.QueryRow(ctx, oIDCLinkBySubject, arg.Issuer, arg.Subject)
+	var i IdentityOidcLink
+	err := row.Scan(
+		&i.AccountID,
+		&i.Issuer,
+		&i.Subject,
+		&i.Email,
+		&i.Username,
+		&i.Name,
+		&i.LinkedAt,
+	)
+	return i, err
+}
+
 const revokeAccountSession = `-- name: RevokeAccountSession :exec
 UPDATE identity.account_sessions SET revoked_at = $1 WHERE token_hash = $2 AND revoked_at IS NULL
 `
@@ -316,6 +468,20 @@ func (q *Queries) SessionAccount(ctx context.Context, arg SessionAccountParams) 
 	return i, err
 }
 
+const setAccountAdmin = `-- name: SetAccountAdmin :exec
+UPDATE identity.accounts SET admin = $1 WHERE id = $2
+`
+
+type SetAccountAdminParams struct {
+	Admin bool
+	ID    uuid.UUID
+}
+
+func (q *Queries) SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error {
+	_, err := q.db.Exec(ctx, setAccountAdmin, arg.Admin, arg.ID)
+	return err
+}
+
 const setAccountPassword = `-- name: SetAccountPassword :exec
 UPDATE identity.accounts SET password_hash = $1 WHERE id = $2
 `
@@ -345,6 +511,48 @@ func (q *Queries) TouchAccountSession(ctx context.Context, arg TouchAccountSessi
 	return err
 }
 
+const updateAccountProfile = `-- name: UpdateAccountProfile :exec
+UPDATE identity.accounts SET username = $1, nickname = $2, email = $3 WHERE id = $4
+`
+
+type UpdateAccountProfileParams struct {
+	Username string
+	Nickname string
+	Email    string
+	ID       uuid.UUID
+}
+
+func (q *Queries) UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error {
+	_, err := q.db.Exec(ctx, updateAccountProfile,
+		arg.Username,
+		arg.Nickname,
+		arg.Email,
+		arg.ID,
+	)
+	return err
+}
+
+const updateOIDCLink = `-- name: UpdateOIDCLink :exec
+UPDATE identity.oidc_links SET email = $1, username = $2, name = $3 WHERE account_id = $4
+`
+
+type UpdateOIDCLinkParams struct {
+	Email     string
+	Username  string
+	Name      string
+	AccountID uuid.UUID
+}
+
+func (q *Queries) UpdateOIDCLink(ctx context.Context, arg UpdateOIDCLinkParams) error {
+	_, err := q.db.Exec(ctx, updateOIDCLink,
+		arg.Email,
+		arg.Username,
+		arg.Name,
+		arg.AccountID,
+	)
+	return err
+}
+
 const useInvite = `-- name: UseInvite :execrows
 UPDATE identity.invites SET used_at = $1, account_id = $2 WHERE id = $3 AND used_at IS NULL AND expires_at > $1
 `
@@ -361,6 +569,62 @@ func (q *Queries) UseInvite(ctx context.Context, arg UseInviteParams) (int64, er
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const useOIDCPending = `-- name: UseOIDCPending :one
+UPDATE identity.oidc_pending SET used_at = $1 WHERE token_hash = $2 AND used_at IS NULL AND expires_at > $1
+RETURNING issuer, subject, email, username, name, admin
+`
+
+type UseOIDCPendingParams struct {
+	Now       pgtype.Timestamptz
+	TokenHash []byte
+}
+
+type UseOIDCPendingRow struct {
+	Issuer   string
+	Subject  string
+	Email    string
+	Username string
+	Name     string
+	Admin    bool
+}
+
+func (q *Queries) UseOIDCPending(ctx context.Context, arg UseOIDCPendingParams) (UseOIDCPendingRow, error) {
+	row := q.db.QueryRow(ctx, useOIDCPending, arg.Now, arg.TokenHash)
+	var i UseOIDCPendingRow
+	err := row.Scan(
+		&i.Issuer,
+		&i.Subject,
+		&i.Email,
+		&i.Username,
+		&i.Name,
+		&i.Admin,
+	)
+	return i, err
+}
+
+const useOIDCRequest = `-- name: UseOIDCRequest :one
+UPDATE identity.oidc_requests SET used_at = $1 WHERE state_hash = $2 AND used_at IS NULL AND expires_at > $1
+RETURNING nonce, verifier, account_id
+`
+
+type UseOIDCRequestParams struct {
+	Now       pgtype.Timestamptz
+	StateHash []byte
+}
+
+type UseOIDCRequestRow struct {
+	Nonce     string
+	Verifier  string
+	AccountID pgtype.UUID
+}
+
+func (q *Queries) UseOIDCRequest(ctx context.Context, arg UseOIDCRequestParams) (UseOIDCRequestRow, error) {
+	row := q.db.QueryRow(ctx, useOIDCRequest, arg.Now, arg.StateHash)
+	var i UseOIDCRequestRow
+	err := row.Scan(&i.Nonce, &i.Verifier, &i.AccountID)
+	return i, err
 }
 
 const useSignInLink = `-- name: UseSignInLink :one

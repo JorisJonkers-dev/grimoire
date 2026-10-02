@@ -4,7 +4,7 @@ import { signInOnUnauthorized } from '@/infrastructure/http'
 import { mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 
-const account = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false }
+const account = { id: '0190c7a8-0000-7000-8000-0000000000c1', username: 'aria', nickname: 'Aria', email: 'aria@example.com', admin: false, hasPassword: true }
 const token = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG'
 
 afterEach(() => { unmountAll(); })
@@ -160,7 +160,7 @@ describe('the Account page', () => {
         return jsonResponse({ token, expiresAt: '2026-10-05T12:00:00Z' }, 201)
       },
     })
-    expect(wrapper.get('[data-testid="account-details"]').text()).toContain('You are an Admin.')
+    expect(wrapper.get('[data-testid="profile-form"]').text()).toContain('You are an Admin.')
     await wrapper.get('[data-testid="account-password"]').setValue('a new long password')
     await wrapper.get('[data-testid="password-form"]').trigger('submit')
     await flushPromises()

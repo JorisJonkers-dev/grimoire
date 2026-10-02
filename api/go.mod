@@ -13,8 +13,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.4
 	github.com/coder/websocket v1.8.15
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/go-faster/errors v0.8.0
 	github.com/go-faster/jx v1.2.0
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/johannesboyne/gofakes3 v1.2.0
@@ -29,6 +31,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/crypto v0.55.0
 	golang.org/x/image v0.46.0
+	golang.org/x/oauth2 v0.36.0
 )
 
 require (
@@ -123,7 +126,6 @@ require (
 	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa // indirect
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect

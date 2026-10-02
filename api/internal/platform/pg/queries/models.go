@@ -896,6 +896,39 @@ type IdentityInvite struct {
 	AccountID pgtype.UUID
 }
 
+type IdentityOidcLink struct {
+	AccountID uuid.UUID
+	Issuer    string
+	Subject   string
+	Email     string
+	Username  string
+	Name      string
+	LinkedAt  time.Time
+}
+
+type IdentityOidcPending struct {
+	TokenHash []byte
+	Issuer    string
+	Subject   string
+	Email     string
+	Username  string
+	Name      string
+	Admin     bool
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
+type IdentityOidcRequest struct {
+	StateHash []byte
+	Nonce     string
+	Verifier  string
+	AccountID pgtype.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
 type IdentitySignInLink struct {
 	TokenHash []byte
 	AccountID uuid.UUID

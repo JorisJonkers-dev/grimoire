@@ -21,6 +21,9 @@ type fakeRepo struct {
 	invite   domain.Invite
 	reused   bool
 	linkedTo domain.AccountID
+	nonce    string
+	linkFor  *domain.AccountID
+	unlinked bool
 }
 
 func (f *fakeRepo) err(call string) error {
@@ -84,6 +87,55 @@ func (f *fakeRepo) InsertSignInLink(context.Context, []byte, domain.AccountID, t
 
 func (f *fakeRepo) UseSignInLink(context.Context, []byte, time.Time) (domain.AccountID, error) {
 	return f.linkedTo, f.err("use link")
+}
+
+func (f *fakeRepo) HasPassword(context.Context, domain.AccountID) (bool, error) {
+	return f.hash != "", f.err("has password")
+}
+
+func (f *fakeRepo) UpdateProfile(context.Context, domain.AccountID, domain.ProfileChange) error {
+	return f.err("update profile")
+}
+
+func (f *fakeRepo) SetAdmin(context.Context, domain.AccountID, bool) error { return f.err("set admin") }
+
+func (f *fakeRepo) InsertOIDCRequest(context.Context, []byte, string, string, *domain.AccountID, time.Time, time.Time) error {
+	return f.err("insert request")
+}
+
+func (f *fakeRepo) UseOIDCRequest(context.Context, []byte, time.Time) (string, string, *domain.AccountID, error) {
+	return f.nonce, "verifier", f.linkFor, f.err("use request")
+}
+
+func (f *fakeRepo) LinkOf(context.Context, domain.AccountID) (domain.Link, error) {
+	return domain.Link{}, f.err("link of")
+}
+
+func (f *fakeRepo) LinkedAccount(context.Context, string, string) (domain.AccountID, error) {
+	if f.unlinked {
+		return uuid.Nil, domain.ErrNotFound
+	}
+	return f.account.ID, f.err("linked account")
+}
+
+func (f *fakeRepo) InsertLink(context.Context, domain.AccountID, domain.Link) error {
+	return f.err("insert oidc link")
+}
+
+func (f *fakeRepo) UpdateLink(context.Context, domain.AccountID, domain.Link) error {
+	return f.err("update link")
+}
+
+func (f *fakeRepo) DeleteLink(context.Context, domain.AccountID) (bool, error) {
+	return true, f.err("delete link")
+}
+
+func (f *fakeRepo) InsertPending(context.Context, []byte, domain.Claims, bool, time.Time, time.Time) error {
+	return f.err("insert pending")
+}
+
+func (f *fakeRepo) UsePending(context.Context, []byte, time.Time) (domain.Claims, bool, error) {
+	return domain.Claims{Subject: "estate", Email: "a@b.c"}, true, f.err("use pending")
 }
 
 func (f *fakeRepo) InTx(_ context.Context, fn func(Repository) error) error { return fn(f) }

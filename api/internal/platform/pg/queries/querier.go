@@ -18,6 +18,7 @@ type Querier interface {
 	AccountByID(ctx context.Context, id uuid.UUID) (AccountByIDRow, error)
 	AccountBySubject(ctx context.Context, subject string) (AccountBySubjectRow, error)
 	AccountByUsername(ctx context.Context, username string) (IdentityAccount, error)
+	AccountHasPassword(ctx context.Context, id uuid.UUID) (bool, error)
 	ActionEffectEvent(ctx context.Context, actionID uuid.UUID) (uuid.UUID, error)
 	ActionHPEvent(ctx context.Context, actionID uuid.UUID) (ActionHPEventRow, error)
 	ActionHexEvents(ctx context.Context, actionID uuid.UUID) ([]ActionHexEventsRow, error)
@@ -140,6 +141,7 @@ type Querier interface {
 	DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
+	DeleteOIDCLink(ctx context.Context, accountID uuid.UUID) (int64, error)
 	DeletePendingAction(ctx context.Context, rollID uuid.UUID) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
@@ -239,6 +241,9 @@ type Querier interface {
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
 	InsertNPCRevision(ctx context.Context, arg InsertNPCRevisionParams) error
 	InsertNode(ctx context.Context, arg InsertNodeParams) error
+	InsertOIDCLink(ctx context.Context, arg InsertOIDCLinkParams) error
+	InsertOIDCPending(ctx context.Context, arg InsertOIDCPendingParams) error
+	InsertOIDCRequest(ctx context.Context, arg InsertOIDCRequestParams) error
 	InsertPendingAction(ctx context.Context, arg InsertPendingActionParams) error
 	InsertPendingSave(ctx context.Context, arg InsertPendingSaveParams) error
 	InsertPoolMember(ctx context.Context, arg InsertPoolMemberParams) error
@@ -362,6 +367,8 @@ type Querier interface {
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
+	OIDCLinkByAccount(ctx context.Context, accountID uuid.UUID) (IdentityOidcLink, error)
+	OIDCLinkBySubject(ctx context.Context, arg OIDCLinkBySubjectParams) (IdentityOidcLink, error)
 	ObserveDamage(ctx context.Context, arg ObserveDamageParams) error
 	PartyLevels(ctx context.Context, campaignID uuid.UUID) ([]int32, error)
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
@@ -434,6 +441,7 @@ type Querier interface {
 	SessionZoneChecks(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCheck, error)
 	SessionZoneCreatures(ctx context.Context, sessionID uuid.UUID) ([]PlayZoneCreature, error)
 	SessionZones(ctx context.Context, sessionID uuid.UUID) ([]SessionZonesRow, error)
+	SetAccountAdmin(ctx context.Context, arg SetAccountAdminParams) error
 	SetAccountPassword(ctx context.Context, arg SetAccountPasswordParams) error
 	SetCharacterAbility(ctx context.Context, arg SetCharacterAbilityParams) error
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
@@ -468,10 +476,12 @@ type Querier interface {
 	TableRevisionMonsters(ctx context.Context, revisionID uuid.UUID) ([]TableRevisionMonstersRow, error)
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
+	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)
 	UpdateNPC(ctx context.Context, arg UpdateNPCParams) (int64, error)
+	UpdateOIDCLink(ctx context.Context, arg UpdateOIDCLinkParams) error
 	UpdateToken(ctx context.Context, arg UpdateTokenParams) error
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error
 	UpsertBackground(ctx context.Context, arg UpsertBackgroundParams) (int64, error)
@@ -490,6 +500,8 @@ type Querier interface {
 	UpsertSurfaceDefinition(ctx context.Context, arg UpsertSurfaceDefinitionParams) error
 	UpsertWeapon(ctx context.Context, arg UpsertWeaponParams) (int64, error)
 	UseInvite(ctx context.Context, arg UseInviteParams) (int64, error)
+	UseOIDCPending(ctx context.Context, arg UseOIDCPendingParams) (UseOIDCPendingRow, error)
+	UseOIDCRequest(ctx context.Context, arg UseOIDCRequestParams) (UseOIDCRequestRow, error)
 	UseSignInLink(ctx context.Context, arg UseSignInLinkParams) (uuid.UUID, error)
 	WeaponProperties(ctx context.Context, weaponID int64) ([]WeaponPropertiesRow, error)
 }

@@ -113,6 +113,15 @@ func (UnimplementedHandler) CreateNpc(ctx context.Context, req *NpcInput, params
 	return r, ht.ErrNotImplemented
 }
 
+// CreateOidcAccount implements createOidcAccount operation.
+//
+// Sets up an Account for a login no Account has yet, and signs it in.
+//
+// POST /api/v1/oidc/accounts
+func (UnimplementedHandler) CreateOidcAccount(ctx context.Context, req *OidcAccountSetup) (r CreateOidcAccountRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreatePushSubscription implements createPushSubscription operation.
 //
 // Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
@@ -237,6 +246,16 @@ func (UnimplementedHandler) DiffNpcRevisions(ctx context.Context, params DiffNpc
 //
 // POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 func (UnimplementedHandler) EndSession(ctx context.Context, params EndSessionParams) (r EndSessionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// FinishOidc implements finishOidc operation.
+//
+// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+// Account page started it, or leaves it waiting for an Account.
+//
+// POST /api/v1/oidc/callback
+func (UnimplementedHandler) FinishOidc(ctx context.Context, req *OidcCallback, params FinishOidcParams) (r FinishOidcRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -414,6 +433,15 @@ func (UnimplementedHandler) GetSessionView(ctx context.Context, params GetSessio
 	return r, ht.ErrNotImplemented
 }
 
+// GetSignInMethods implements getSignInMethods operation.
+//
+// Which external sign-in, if any, the sign-in page offers beside a password.
+//
+// GET /api/v1/sign-in-methods
+func (UnimplementedHandler) GetSignInMethods(ctx context.Context) (r GetSignInMethodsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetSpell implements getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -438,6 +466,15 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ er
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIconParams) (r GetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// LinkOidcAccount implements linkOidcAccount operation.
+//
+// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+//
+// POST /api/v1/oidc/links
+func (UnimplementedHandler) LinkOidcAccount(ctx context.Context, req *OidcAccountLink) (r LinkOidcAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -884,6 +921,24 @@ func (UnimplementedHandler) SignOut(ctx context.Context, params SignOutParams) (
 	return r, ht.ErrNotImplemented
 }
 
+// StartOidcLink implements startOidcLink operation.
+//
+// Returns where to send the browser to link a login to the signed-in Account.
+//
+// POST /api/v1/account/oidc-link
+func (UnimplementedHandler) StartOidcLink(ctx context.Context) (r StartOidcLinkRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// StartOidcSignIn implements startOidcSignIn operation.
+//
+// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+//
+// POST /api/v1/oidc/sign-ins
+func (UnimplementedHandler) StartOidcSignIn(ctx context.Context) (r StartOidcSignInRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // StartSession implements startSession operation.
 //
 // Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -903,6 +958,25 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 //
 // POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 func (UnimplementedHandler) UndoChange(ctx context.Context, params UndoChangeParams) (r UndoChangeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UnlinkOidc implements unlinkOidc operation.
+//
+// Removes the linked login; the Account stays. An Account without a password keeps its login.
+//
+// DELETE /api/v1/account/oidc-link
+func (UnimplementedHandler) UnlinkOidc(ctx context.Context) (r UnlinkOidcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateAccount implements updateAccount operation.
+//
+// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+// read-only.
+//
+// PUT /api/v1/account
+func (UnimplementedHandler) UpdateAccount(ctx context.Context, req *AccountChange) (r UpdateAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

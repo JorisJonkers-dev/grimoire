@@ -36,6 +36,8 @@ type Handler struct {
 	Push PushService
 	// Accounts are Grimoire's own Accounts and their sign-ins.
 	Accounts AccountService
+	// OIDCName names the external sign-in on the sign-in page.
+	OIDCName string
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.
 	LiveTimeout time.Duration
 	Log         *slog.Logger

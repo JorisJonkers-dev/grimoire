@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -54,12 +53,8 @@ func (s *Store) InsertAccount(ctx context.Context, a domain.Account, passwordHas
 		ID: a.ID, Subject: a.Subject, Username: a.Username, Nickname: a.Nickname, Email: a.Email,
 		PasswordHash: pgtype.Text{String: passwordHash, Valid: passwordHash != ""}, Admin: a.Admin, Now: a.CreatedAt,
 	})
-	var pg *pgconn.PgError
-	if errors.As(err, &pg) && pg.Code == "23505" {
-		return domain.Account{}, domain.ErrConflict
-	}
 	if err != nil {
-		return domain.Account{}, err
+		return domain.Account{}, conflict(err)
 	}
 	return account(r.ID, r.Subject, r.Username, r.Nickname, r.Email, r.Admin, r.Disabled, r.CreatedAt), nil
 }

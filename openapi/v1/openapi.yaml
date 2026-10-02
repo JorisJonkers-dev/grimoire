@@ -3306,12 +3306,198 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/sign-in-methods:
+    get:
+      operationId: getSignInMethods
+      summary: List the sign-in methods
+      description: Which external sign-in, if any, the sign-in page offers beside a password.
+      tags: [Identity]
+      security: []
+      responses:
+        "200":
+          description: The sign-in methods.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignInMethods"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/oidc/sign-ins:
+    post:
+      operationId: startOidcSignIn
+      summary: Start signing in with the external login
+      description: Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+      tags: [Identity]
+      security: []
+      responses:
+        "201":
+          description: Where to send the browser.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/OidcCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OidcRedirect"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/oidc/callback:
+    post:
+      operationId: finishOidc
+      summary: Finish an external sign-in
+      description: Takes the code and state the provider sent back. Signs in a linked login, links the login when the Account page started it, or leaves it waiting for an Account.
+      tags: [Identity]
+      security: []
+      parameters:
+        - name: grimoire_oidc
+          in: cookie
+          required: false
+          description: The state this browser started the sign-in with.
+          schema: { type: string, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OidcCallback"
+      responses:
+        "200":
+          description: How the sign-in ended.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OidcOutcome"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/oidc/accounts:
+    post:
+      operationId: createOidcAccount
+      summary: Create an Account for an external login
+      description: Sets up an Account for a login no Account has yet, and signs it in.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OidcAccountSetup"
+      responses:
+        "201":
+          description: The Account, signed in.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/oidc/links:
+    post:
+      operationId: linkOidcAccount
+      summary: Link an external login to an existing Account
+      description: Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+      tags: [Identity]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OidcAccountLink"
+      responses:
+        "200":
+          description: The Account, signed in.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/SessionCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/account:
     get:
       operationId: getAccount
       summary: Get my Account
       description: The Account the caller is signed in as.
       tags: [Identity]
+      responses:
+        "200":
+          description: The Account.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: updateAccount
+      summary: Change my profile
+      description: Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays read-only.
+      tags: [Identity]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountChange"
       responses:
         "200":
           description: The Account.
@@ -3345,6 +3531,51 @@ paths:
       responses:
         "204":
           description: The password is set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/account/oidc-link:
+    post:
+      operationId: startOidcLink
+      summary: Start linking the external login
+      description: Returns where to send the browser to link a login to the signed-in Account.
+      tags: [Identity]
+      responses:
+        "201":
+          description: Where to send the browser.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+            Set-Cookie:
+              $ref: "#/components/headers/OidcCookie"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OidcRedirect"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: unlinkOidc
+      summary: Unlink the external login
+      description: Removes the linked login; the Account stays. An Account without a password keeps its login.
+      tags: [Identity]
+      responses:
+        "204":
+          description: Unlinked.
           headers:
             RateLimit-Limit:
               $ref: "#/components/headers/RateLimit-Limit"
@@ -3529,6 +3760,9 @@ components:
     SessionCookie:
       description: The session cookie, HttpOnly and Secure; cleared on sign-out.
       schema: { type: string, maxLength: 300 }
+    OidcCookie:
+      description: Binds an external sign-in to the browser that started it, for ten minutes.
+      schema: { type: string, maxLength: 300 }
     ETag:
       description: Version of the compendium this response came from.
       schema: { type: string, maxLength: 100 }
@@ -3676,13 +3910,92 @@ components:
       type: object
       description: A Grimoire Account.
       additionalProperties: false
-      required: [id, username, nickname, email, admin]
+      required: [id, username, nickname, email, admin, hasPassword]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         username: { $ref: "#/components/schemas/Username" }
         nickname: { type: string, minLength: 1, maxLength: 40 }
         email: { type: string, format: email, maxLength: 254 }
         admin: { type: boolean }
+        hasPassword: { type: boolean, description: "Whether the Account can sign in with a password." }
+        oidc: { $ref: "#/components/schemas/OidcLink" }
+    OidcLink:
+      type: object
+      description: The external login linked to an Account, as the provider last described it; read-only.
+      additionalProperties: false
+      required: [email, username, name, linkedAt]
+      properties:
+        email: { type: string, maxLength: 254 }
+        username: { type: string, maxLength: 200 }
+        name: { type: string, maxLength: 200 }
+        linkedAt: { type: string, format: date-time, maxLength: 40 }
+    AccountChange:
+      type: object
+      description: A new Username, Nickname and email for the signed-in Account.
+      additionalProperties: false
+      required: [username, nickname, email]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 32 }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 254 }
+    SignInMethods:
+      type: object
+      description: The sign-in methods beside a password; oidc names the external login, when one is set up.
+      additionalProperties: false
+      properties:
+        oidc: { type: string, minLength: 1, maxLength: 60 }
+    OidcRedirect:
+      type: object
+      description: Where to send the browser to sign in with the external login.
+      additionalProperties: false
+      required: [url]
+      properties:
+        url: { type: string, format: uri, maxLength: 2000 }
+    OidcCallback:
+      type: object
+      description: What the provider sent the browser back with.
+      additionalProperties: false
+      required: [code, state]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 2000 }
+        state: { type: string, pattern: "^[A-Za-z0-9_-]{20,64}$", minLength: 20, maxLength: 64 }
+    OidcOutcome:
+      type: object
+      description: How an external sign-in ended. signed_in and linked carry the Account; choose carries a login waiting for an Account.
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, enum: [signed_in, linked, choose] }
+        account: { $ref: "#/components/schemas/Account" }
+        pending: { $ref: "#/components/schemas/OidcPending" }
+    OidcPending:
+      type: object
+      description: A login no Account has yet, with the token that creates or links one within 15 minutes.
+      additionalProperties: false
+      required: [token, email, username, name]
+      properties:
+        token: { type: string, minLength: 20, maxLength: 64 }
+        email: { type: string, maxLength: 254 }
+        username: { type: string, maxLength: 200 }
+        name: { type: string, maxLength: 200 }
+    OidcAccountSetup:
+      type: object
+      description: A Username and Nickname for a new Account for a waiting login.
+      additionalProperties: false
+      required: [token, username, nickname]
+      properties:
+        token: { type: string, pattern: "^[A-Za-z0-9_-]{20,64}$", minLength: 20, maxLength: 64 }
+        username: { type: string, minLength: 3, maxLength: 32 }
+        nickname: { type: string, minLength: 1, maxLength: 40 }
+    OidcAccountLink:
+      type: object
+      description: The Username and password of the Account to link a waiting login to.
+      additionalProperties: false
+      required: [token, username, password]
+      properties:
+        token: { type: string, pattern: "^[A-Za-z0-9_-]{20,64}$", minLength: 20, maxLength: 64 }
+        username: { type: string, minLength: 1, maxLength: 32 }
+        password: { type: string, format: password, minLength: 1, maxLength: 200 }
     Username:
       type: string
       description: Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.

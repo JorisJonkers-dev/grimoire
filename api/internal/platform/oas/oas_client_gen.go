@@ -97,6 +97,12 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, request *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
+	// CreateOidcAccount invokes createOidcAccount operation.
+	//
+	// Sets up an Account for a login no Account has yet, and signs it in.
+	//
+	// POST /api/v1/oidc/accounts
+	CreateOidcAccount(ctx context.Context, request *OidcAccountSetup) (CreateOidcAccountRes, error)
 	// CreatePushSubscription invokes createPushSubscription operation.
 	//
 	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
@@ -182,6 +188,13 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// FinishOidc invokes finishOidc operation.
+	//
+	// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+	// Account page started it, or leaves it waiting for an Account.
+	//
+	// POST /api/v1/oidc/callback
+	FinishOidc(ctx context.Context, request *OidcCallback, params FinishOidcParams) (FinishOidcRes, error)
 	// GetAccount invokes getAccount operation.
 	//
 	// The Account the caller is signed in as.
@@ -299,6 +312,12 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view
 	GetSessionView(ctx context.Context, params GetSessionViewParams) (GetSessionViewRes, error)
+	// GetSignInMethods invokes getSignInMethods operation.
+	//
+	// Which external sign-in, if any, the sign-in page offers beside a password.
+	//
+	// GET /api/v1/sign-in-methods
+	GetSignInMethods(ctx context.Context) (GetSignInMethodsRes, error)
 	// GetSpell invokes getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
@@ -317,6 +336,12 @@ type Invoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
+	// LinkOidcAccount invokes linkOidcAccount operation.
+	//
+	// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+	//
+	// POST /api/v1/oidc/links
+	LinkOidcAccount(ctx context.Context, request *OidcAccountLink) (LinkOidcAccountRes, error)
 	// ListActivity invokes listActivity operation.
 	//
 	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
@@ -616,6 +641,18 @@ type Invoker interface {
 	//
 	// POST /api/v1/sign-out
 	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
+	// StartOidcLink invokes startOidcLink operation.
+	//
+	// Returns where to send the browser to link a login to the signed-in Account.
+	//
+	// POST /api/v1/account/oidc-link
+	StartOidcLink(ctx context.Context) (StartOidcLinkRes, error)
+	// StartOidcSignIn invokes startOidcSignIn operation.
+	//
+	// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+	//
+	// POST /api/v1/oidc/sign-ins
+	StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error)
 	// StartSession invokes startSession operation.
 	//
 	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -632,6 +669,19 @@ type Invoker interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
+	// UnlinkOidc invokes unlinkOidc operation.
+	//
+	// Removes the linked login; the Account stays. An Account without a password keeps its login.
+	//
+	// DELETE /api/v1/account/oidc-link
+	UnlinkOidc(ctx context.Context) (UnlinkOidcRes, error)
+	// UpdateAccount invokes updateAccount operation.
+	//
+	// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+	// read-only.
+	//
+	// PUT /api/v1/account
+	UpdateAccount(ctx context.Context, request *AccountChange) (UpdateAccountRes, error)
 	// UpdateCampaign invokes updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
@@ -2155,6 +2205,89 @@ func (c *Client) sendCreateNpc(ctx context.Context, request *NpcInput, params Cr
 
 	stage = "DecodeResponse"
 	result, err := decodeCreateNpcResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// CreateOidcAccount invokes createOidcAccount operation.
+//
+// Sets up an Account for a login no Account has yet, and signs it in.
+//
+// POST /api/v1/oidc/accounts
+func (c *Client) CreateOidcAccount(ctx context.Context, request *OidcAccountSetup) (CreateOidcAccountRes, error) {
+	res, err := c.sendCreateOidcAccount(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendCreateOidcAccount(ctx context.Context, request *OidcAccountSetup) (res CreateOidcAccountRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("createOidcAccount"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/oidc/accounts"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, CreateOidcAccountOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/oidc/accounts"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeCreateOidcAccountRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeCreateOidcAccountResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -4258,6 +4391,109 @@ func (c *Client) sendEndSession(ctx context.Context, params EndSessionParams) (r
 
 	stage = "DecodeResponse"
 	result, err := decodeEndSessionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// FinishOidc invokes finishOidc operation.
+//
+// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+// Account page started it, or leaves it waiting for an Account.
+//
+// POST /api/v1/oidc/callback
+func (c *Client) FinishOidc(ctx context.Context, request *OidcCallback, params FinishOidcParams) (FinishOidcRes, error) {
+	res, err := c.sendFinishOidc(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendFinishOidc(ctx context.Context, request *OidcCallback, params FinishOidcParams) (res FinishOidcRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("finishOidc"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/oidc/callback"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, FinishOidcOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/oidc/callback"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeFinishOidcRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "EncodeCookieParams"
+	cookie := uri.NewCookieEncoder(r)
+	{
+		// Encode "grimoire_oidc" parameter.
+		cfg := uri.CookieParameterEncodingConfig{
+			Name:    "grimoire_oidc",
+			Explode: true,
+		}
+
+		if err := cookie.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.GrimoireOidc.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode cookie")
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeFinishOidcResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -6976,6 +7212,86 @@ func (c *Client) sendGetSessionView(ctx context.Context, params GetSessionViewPa
 	return result, nil
 }
 
+// GetSignInMethods invokes getSignInMethods operation.
+//
+// Which external sign-in, if any, the sign-in page offers beside a password.
+//
+// GET /api/v1/sign-in-methods
+func (c *Client) GetSignInMethods(ctx context.Context) (GetSignInMethodsRes, error) {
+	res, err := c.sendGetSignInMethods(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetSignInMethods(ctx context.Context) (res GetSignInMethodsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getSignInMethods"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/sign-in-methods"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetSignInMethodsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/sign-in-methods"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetSignInMethodsResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetSpell invokes getSpell operation.
 //
 // One spell with its rules text and the conditions it mentions.
@@ -7411,6 +7727,89 @@ func (c *Client) sendGetTokenIcon(ctx context.Context, params GetTokenIconParams
 
 	stage = "DecodeResponse"
 	result, err := decodeGetTokenIconResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// LinkOidcAccount invokes linkOidcAccount operation.
+//
+// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+//
+// POST /api/v1/oidc/links
+func (c *Client) LinkOidcAccount(ctx context.Context, request *OidcAccountLink) (LinkOidcAccountRes, error) {
+	res, err := c.sendLinkOidcAccount(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendLinkOidcAccount(ctx context.Context, request *OidcAccountLink) (res LinkOidcAccountRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("linkOidcAccount"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/oidc/links"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, LinkOidcAccountOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/oidc/links"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeLinkOidcAccountRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeLinkOidcAccountResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -14446,6 +14845,199 @@ func (c *Client) sendSignOut(ctx context.Context, params SignOutParams) (res Sig
 	return result, nil
 }
 
+// StartOidcLink invokes startOidcLink operation.
+//
+// Returns where to send the browser to link a login to the signed-in Account.
+//
+// POST /api/v1/account/oidc-link
+func (c *Client) StartOidcLink(ctx context.Context) (StartOidcLinkRes, error) {
+	res, err := c.sendStartOidcLink(ctx)
+	return res, err
+}
+
+func (c *Client) sendStartOidcLink(ctx context.Context) (res StartOidcLinkRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("startOidcLink"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/account/oidc-link"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, StartOidcLinkOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/oidc-link"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, StartOidcLinkOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeStartOidcLinkResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// StartOidcSignIn invokes startOidcSignIn operation.
+//
+// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+//
+// POST /api/v1/oidc/sign-ins
+func (c *Client) StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error) {
+	res, err := c.sendStartOidcSignIn(ctx)
+	return res, err
+}
+
+func (c *Client) sendStartOidcSignIn(ctx context.Context) (res StartOidcSignInRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("startOidcSignIn"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/oidc/sign-ins"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, StartOidcSignInOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/oidc/sign-ins"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeStartOidcSignInResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // StartSession invokes startSession operation.
 //
 // Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -14735,6 +15327,236 @@ func (c *Client) sendUndoChange(ctx context.Context, params UndoChangeParams) (r
 
 	stage = "DecodeResponse"
 	result, err := decodeUndoChangeResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// UnlinkOidc invokes unlinkOidc operation.
+//
+// Removes the linked login; the Account stays. An Account without a password keeps its login.
+//
+// DELETE /api/v1/account/oidc-link
+func (c *Client) UnlinkOidc(ctx context.Context) (UnlinkOidcRes, error) {
+	res, err := c.sendUnlinkOidc(ctx)
+	return res, err
+}
+
+func (c *Client) sendUnlinkOidc(ctx context.Context) (res UnlinkOidcRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("unlinkOidc"),
+		semconv.HTTPRequestMethodKey.String("DELETE"),
+		semconv.URLTemplateKey.String("/api/v1/account/oidc-link"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UnlinkOidcOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account/oidc-link"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "DELETE", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, UnlinkOidcOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeUnlinkOidcResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// UpdateAccount invokes updateAccount operation.
+//
+// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+// read-only.
+//
+// PUT /api/v1/account
+func (c *Client) UpdateAccount(ctx context.Context, request *AccountChange) (UpdateAccountRes, error) {
+	res, err := c.sendUpdateAccount(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendUpdateAccount(ctx context.Context, request *AccountChange) (res UpdateAccountRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("updateAccount"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/account"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, UpdateAccountOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/account"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeUpdateAccountRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, UpdateAccountOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeUpdateAccountResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

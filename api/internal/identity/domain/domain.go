@@ -17,6 +17,11 @@ var (
 	ErrUnauthenticated = errors.New("identity: not signed in")
 	ErrForbidden       = errors.New("identity: not allowed")
 	ErrExpired         = errors.New("identity: expired or used")
+	// ErrManaged is a change to what a linked OIDC login provides, or an unlink that would leave no
+	// password.
+	ErrManaged = errors.New("identity: set by the linked login")
+	// ErrDisabled is an OIDC sign-in when none is set up.
+	ErrDisabled = errors.New("identity: sign-in method not set up")
 )
 
 // AccountID identifies an Account.
@@ -69,4 +74,47 @@ type Session struct {
 	Account   AccountID
 	UserAgent string
 	ExpiresAt time.Time
+}
+
+// Claims are what an OIDC provider vouches for about a login.
+type Claims struct {
+	Issuer   string
+	Subject  string
+	Email    string
+	Username string
+	Name     string
+	Roles    []string
+	Nonce    string
+}
+
+// Link is an OIDC login linked to an Account, with the claims the provider last sent.
+type Link struct {
+	Issuer   string
+	Subject  string
+	Email    string
+	Username string
+	Name     string
+	LinkedAt time.Time
+}
+
+// Profile is an Account with how it signs in.
+type Profile struct {
+	Account     Account
+	HasPassword bool
+	Link        *Link
+}
+
+// Pending is an OIDC login no Account has yet; its holder creates an Account or links one.
+type Pending struct {
+	Token    string
+	Email    string
+	Username string
+	Name     string
+}
+
+// ProfileChange is what an Account holder changes about themselves.
+type ProfileChange struct {
+	Username string
+	Nickname string
+	Email    string
 }

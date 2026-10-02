@@ -46,3 +46,44 @@ INSERT INTO identity.sign_in_links (token_hash, account_id, created_at, expires_
 
 -- name: UseSignInLink :one
 UPDATE identity.sign_in_links SET used_at = @now WHERE token_hash = @token_hash AND used_at IS NULL AND expires_at > @now RETURNING account_id;
+
+-- name: AccountHasPassword :one
+SELECT (password_hash IS NOT NULL)::boolean AS has_password FROM identity.accounts WHERE id = @id;
+
+-- name: UpdateAccountProfile :exec
+UPDATE identity.accounts SET username = @username, nickname = @nickname, email = @email WHERE id = @id;
+
+-- name: SetAccountAdmin :exec
+UPDATE identity.accounts SET admin = @admin WHERE id = @id;
+
+-- name: InsertOIDCRequest :exec
+INSERT INTO identity.oidc_requests (state_hash, nonce, verifier, account_id, created_at, expires_at)
+VALUES (@state_hash, @nonce, @verifier, sqlc.narg(account_id), @now, @expires_at);
+
+-- name: UseOIDCRequest :one
+UPDATE identity.oidc_requests SET used_at = @now WHERE state_hash = @state_hash AND used_at IS NULL AND expires_at > @now
+RETURNING nonce, verifier, account_id;
+
+-- name: OIDCLinkByAccount :one
+SELECT account_id, issuer, subject, email, username, name, linked_at FROM identity.oidc_links WHERE account_id = @account_id;
+
+-- name: OIDCLinkBySubject :one
+SELECT account_id, issuer, subject, email, username, name, linked_at FROM identity.oidc_links WHERE issuer = @issuer AND subject = @subject;
+
+-- name: InsertOIDCLink :exec
+INSERT INTO identity.oidc_links (account_id, issuer, subject, email, username, name, linked_at)
+VALUES (@account_id, @issuer, @subject, @email, @username, @name, @now);
+
+-- name: UpdateOIDCLink :exec
+UPDATE identity.oidc_links SET email = @email, username = @username, name = @name WHERE account_id = @account_id;
+
+-- name: DeleteOIDCLink :execrows
+DELETE FROM identity.oidc_links WHERE account_id = @account_id;
+
+-- name: InsertOIDCPending :exec
+INSERT INTO identity.oidc_pending (token_hash, issuer, subject, email, username, name, admin, created_at, expires_at)
+VALUES (@token_hash, @issuer, @subject, @email, @username, @name, @admin, @now, @expires_at);
+
+-- name: UseOIDCPending :one
+UPDATE identity.oidc_pending SET used_at = @now WHERE token_hash = @token_hash AND used_at IS NULL AND expires_at > @now
+RETURNING issuer, subject, email, username, name, admin;

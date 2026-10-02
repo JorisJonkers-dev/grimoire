@@ -34,6 +34,75 @@ export const zMember = z.object({
 });
 
 /**
+ * The external login linked to an Account, as the provider last described it; read-only.
+ */
+export const zOidcLink = z.object({
+    email: z.string().max(254),
+    username: z.string().max(200),
+    name: z.string().max(200),
+    linkedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * A new Username, Nickname and email for the signed-in Account.
+ */
+export const zAccountChange = z.object({
+    username: z.string().min(3).max(32),
+    nickname: z.string().min(1).max(40),
+    email: z.email().max(254)
+});
+
+/**
+ * The sign-in methods beside a password; oidc names the external login, when one is set up.
+ */
+export const zSignInMethods = z.object({
+    oidc: z.string().min(1).max(60).optional()
+});
+
+/**
+ * Where to send the browser to sign in with the external login.
+ */
+export const zOidcRedirect = z.object({
+    url: z.url().max(2000)
+});
+
+/**
+ * What the provider sent the browser back with.
+ */
+export const zOidcCallback = z.object({
+    code: z.string().min(1).max(2000),
+    state: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/)
+});
+
+/**
+ * A login no Account has yet, with the token that creates or links one within 15 minutes.
+ */
+export const zOidcPending = z.object({
+    token: z.string().min(20).max(64),
+    email: z.string().max(254),
+    username: z.string().max(200),
+    name: z.string().max(200)
+});
+
+/**
+ * A Username and Nickname for a new Account for a waiting login.
+ */
+export const zOidcAccountSetup = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    username: z.string().min(3).max(32),
+    nickname: z.string().min(1).max(40)
+});
+
+/**
+ * The Username and password of the Account to link a waiting login to.
+ */
+export const zOidcAccountLink = z.object({
+    token: z.string().min(20).max(64).regex(/^[A-Za-z0-9_-]{20,64}$/),
+    username: z.string().min(1).max(32),
+    password: z.string().min(1).max(200)
+});
+
+/**
  * Lowercase letters, digits, dots, dashes and underscores, 3 to 32 long.
  */
 export const zUsername = z.string().min(3).max(32).regex(/^[a-z0-9][a-z0-9_.-]{2,31}$/);
@@ -46,7 +115,22 @@ export const zAccount = z.object({
     username: zUsername,
     nickname: z.string().min(1).max(40),
     email: z.email().max(254),
-    admin: z.boolean()
+    admin: z.boolean(),
+    hasPassword: z.boolean(),
+    oidc: zOidcLink.optional()
+});
+
+/**
+ * How an external sign-in ended. signed_in and linked carry the Account; choose carries a login waiting for an Account.
+ */
+export const zOidcOutcome = z.object({
+    status: z.enum([
+        'signed_in',
+        'linked',
+        'choose'
+    ]),
+    account: zAccount.optional(),
+    pending: zOidcPending.optional()
 });
 
 /**
@@ -3617,9 +3701,47 @@ export const zUseSignInLinkBody = zLinkToken;
 export const zUseSignInLinkResponse = zAccount;
 
 /**
+ * The sign-in methods.
+ */
+export const zGetSignInMethodsResponse = zSignInMethods;
+
+/**
+ * Where to send the browser.
+ */
+export const zStartOidcSignInResponse = zOidcRedirect;
+
+export const zFinishOidcBody = zOidcCallback;
+
+/**
+ * How the sign-in ended.
+ */
+export const zFinishOidcResponse = zOidcOutcome;
+
+export const zCreateOidcAccountBody = zOidcAccountSetup;
+
+/**
+ * The Account, signed in.
+ */
+export const zCreateOidcAccountResponse = zAccount;
+
+export const zLinkOidcAccountBody = zOidcAccountLink;
+
+/**
+ * The Account, signed in.
+ */
+export const zLinkOidcAccountResponse = zAccount;
+
+/**
  * The Account.
  */
 export const zGetAccountResponse = zAccount;
+
+export const zUpdateAccountBody = zAccountChange;
+
+/**
+ * The Account.
+ */
+export const zUpdateAccountResponse = zAccount;
 
 export const zSetAccountPasswordBody = zPasswordChange;
 
@@ -3627,6 +3749,16 @@ export const zSetAccountPasswordBody = zPasswordChange;
  * The password is set.
  */
 export const zSetAccountPasswordResponse = z.void();
+
+/**
+ * Unlinked.
+ */
+export const zUnlinkOidcResponse = z.void();
+
+/**
+ * Where to send the browser.
+ */
+export const zStartOidcLinkResponse = zOidcRedirect;
 
 /**
  * The process is alive.

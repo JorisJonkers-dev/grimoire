@@ -22,8 +22,15 @@ type AccountService interface {
 	SignOut(ctx context.Context, token string) error
 	RequestLink(ctx context.Context, email string) error
 	UseLink(ctx context.Context, token, userAgent string) (domain.Account, string, error)
-	Me(ctx context.Context, subject string) (domain.Account, error)
+	Me(ctx context.Context, subject string) (domain.Profile, error)
 	SetPassword(ctx context.Context, subject, password string) error
+	UpdateProfile(ctx context.Context, subject string, in domain.ProfileChange) (domain.Profile, error)
+	OIDCEnabled() bool
+	StartOIDC(ctx context.Context, linkFor string) (string, string, error)
+	FinishOIDC(ctx context.Context, code, state, userAgent string) (app.OIDCOutcome, error)
+	CreateFromOIDC(ctx context.Context, token, username, nickname, userAgent string) (domain.Account, string, error)
+	LinkFromOIDC(ctx context.Context, token, username, password, userAgent string) (domain.Account, string, error)
+	Unlink(ctx context.Context, subject string) error
 }
 
 var _ AccountService = (*app.Service)(nil)
@@ -89,7 +96,7 @@ func (h *Handler) AcceptAccountInvite(ctx context.Context, req *oas.AccountSetup
 	if err != nil {
 		return h.identityError(ctx, "accept account invite", err), nil
 	}
-	return signedIn(a, token), nil
+	return h.signedInProfile(ctx, a, token), nil
 }
 
 // SignIn signs in with a Username and password.
@@ -98,7 +105,7 @@ func (h *Handler) SignIn(ctx context.Context, req *oas.SignInRequest) (oas.SignI
 	if err != nil {
 		return h.identityError(ctx, "sign in", err), nil
 	}
-	return signedIn(a, token), nil
+	return h.signedInProfile(ctx, a, token), nil
 }
 
 // SignOut ends this device's session.
@@ -126,7 +133,7 @@ func (h *Handler) UseSignInLink(ctx context.Context, req *oas.LinkToken) (oas.Us
 	if err != nil {
 		return h.identityError(ctx, "use sign-in link", err), nil
 	}
-	return signedIn(a, token), nil
+	return h.signedInProfile(ctx, a, token), nil
 }
 
 // GetAccount reads the signed-in Account.
@@ -135,14 +142,14 @@ func (h *Handler) GetAccount(ctx context.Context) (oas.GetAccountRes, error) {
 	if !ok {
 		return unauthorized(), nil
 	}
-	a, err := h.Accounts.Me(ctx, id.Subject)
+	p, err := h.Accounts.Me(ctx, id.Subject)
 	if errors.Is(err, domain.ErrNotFound) {
 		return problem(http.StatusNotFound, "Not found", "You are signed in without a Grimoire Account."), nil
 	}
 	if err != nil {
 		return h.identityError(ctx, "get account", err), nil
 	}
-	return &oas.AccountHeaders{Response: accountOut(a)}, nil
+	return &oas.AccountHeaders{Response: profileOut(p)}, nil
 }
 
 // SetAccountPassword sets the signed-in Account's password.

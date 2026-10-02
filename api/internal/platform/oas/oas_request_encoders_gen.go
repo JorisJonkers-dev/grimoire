@@ -136,6 +136,20 @@ func encodeCreateNpcRequest(
 	return nil
 }
 
+func encodeCreateOidcAccountRequest(
+	req *OidcAccountSetup,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreatePushSubscriptionRequest(
 	req *PushSubscriptionInput,
 	r *http.Request,
@@ -180,6 +194,34 @@ func encodeCreateSettlementRequest(
 
 func encodeCreateShopRequest(
 	req *ShopInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeFinishOidcRequest(
+	req *OidcCallback,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeLinkOidcAccountRequest(
+	req *OidcAccountLink,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -340,6 +382,20 @@ func encodeSetTokenIconRequest(
 
 func encodeSignInRequest(
 	req *SignInRequest,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateAccountRequest(
+	req *AccountChange,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

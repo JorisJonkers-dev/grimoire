@@ -28,9 +28,10 @@ const SignInPage = () => import('@/features/account/SignInPage.vue')
 const AccountInvitePage = () => import('@/features/account/AccountInvitePage.vue')
 const SignInLinkPage = () => import('@/features/account/SignInLinkPage.vue')
 const AccountPage = () => import('@/features/account/AccountPage.vue')
+const OidcCallbackPage = () => import('@/features/account/OidcCallbackPage.vue')
 
 /** Pages anyone may open without signing in. */
-export const publicPages = ['sign-in', 'account-invite', 'sign-in-link', 'spells', 'spell', 'entries', 'entry', 'attribution', 'automation', 'gallery']
+export const publicPages = ['sign-in', 'account-invite', 'sign-in-link', 'oidc-callback', 'spells', 'spell', 'entries', 'entry', 'attribution', 'automation', 'gallery']
 
 export function createAppRouter(history: RouterHistory = createWebHistory()) {
   return createRouter({
@@ -65,6 +66,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/account-invite', name: 'account-invite', component: AccountInvitePage },
       { path: '/sign-in-link', name: 'sign-in-link', component: SignInLinkPage },
       { path: '/account', name: 'account', component: AccountPage },
+      { path: '/oidc/callback', name: 'oidc-callback', component: OidcCallbackPage },
     ],
   })
 }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { requestSignInLinkMutation, signInMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { getSignInMethodsOptions, requestSignInLinkMutation, signInMutation, startOidcSignInMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { GButton, GField } from '@/shared/ui'
+import { leaveFor } from './leave'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,6 +15,8 @@ const email = ref('')
 const forgot = ref(false)
 const signIn = useMutation(signInMutation())
 const link = useMutation(requestSignInLinkMutation())
+const methods = useQuery(getSignInMethodsOptions())
+const external = useMutation(startOidcSignInMutation())
 // next only ever leads back inside Grimoire.
 const next = () => {
   const n = typeof route.query.next === 'string' ? route.query.next : '/'
@@ -24,6 +27,9 @@ function submit() {
         void client.invalidateQueries()
         void router.push(next())
       } })
+}
+function signInExternally() {
+  external.mutate({}, { onSuccess: (out) => { leaveFor(out.url, next()) } })
 }
 function sendLink() {
   link.mutate({ body: { email: email.value.trim() } })
@@ -39,6 +45,11 @@ function sendLink() {
       <p v-if="signIn.isError.value" role="alert" class="g-alert" data-testid="sign-in-failed">That Username and password do not match.</p>
       <GButton type="submit" variant="primary" :disabled="!username.trim() || !password || signIn.isPending.value">Sign in</GButton>
       <button type="button" class="link" data-testid="forgot" @click="forgot = true">Forgot your password?</button>
+      <template v-if="methods.data.value?.oidc">
+        <p class="or" aria-hidden="true">or</p>
+        <GButton type="button" :disabled="external.isPending.value" data-testid="sign-in-oidc" @click="signInExternally">Sign in with {{ methods.data.value.oidc }}</GButton>
+        <p v-if="external.isError.value" role="alert" class="g-alert">{{ methods.data.value.oidc }} could not be reached. Try again shortly.</p>
+      </template>
     </form>
     <form v-else class="g-card stack" data-testid="link-form" @submit.prevent="sendLink">
       <p>We email a link that signs you in once, within 30 minutes.</p>
@@ -59,6 +70,11 @@ function sendLink() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.or {
+  margin: 0;
+  color: var(--color-text-3);
+  text-align: center;
 }
 .link {
   align-self: flex-start;

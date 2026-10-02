@@ -2212,6 +2212,96 @@ func decodeEndSessionParams(args [2]string, argsEscaped bool, r *http.Request) (
 	return params, nil
 }
 
+// FinishOidcParams is parameters of finishOidc operation.
+type FinishOidcParams struct {
+	// The state this browser started the sign-in with.
+	GrimoireOidc OptString `json:",omitempty,omitzero"`
+}
+
+func unpackFinishOidcParams(packed middleware.Parameters) (params FinishOidcParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "grimoire_oidc",
+			In:   "cookie",
+		}
+		if v, ok := packed[key]; ok {
+			params.GrimoireOidc = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeFinishOidcParams(args [0]string, argsEscaped bool, r *http.Request) (params FinishOidcParams, _ error) {
+	c := uri.NewCookieDecoder(r)
+	// Decode cookie: grimoire_oidc.
+	if err := func() error {
+		cfg := uri.CookieParameterDecodingConfig{
+			Name:    "grimoire_oidc",
+			Explode: true,
+		}
+		if err := c.HasParam(cfg); err == nil {
+			if err := c.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotGrimoireOidcVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotGrimoireOidcVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.GrimoireOidc.SetTo(paramsDotGrimoireOidcVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.GrimoireOidc.Get(); ok {
+					if err := func() error {
+						if err := (validate.String{
+							MinLength:     0,
+							MinLengthSet:  false,
+							MaxLength:     64,
+							MaxLengthSet:  true,
+							Email:         false,
+							Hostname:      false,
+							Regex:         nil,
+							MinNumeric:    0,
+							MinNumericSet: false,
+							MaxNumeric:    0,
+							MaxNumericSet: false,
+						}).Validate(string(value)); err != nil {
+							return errors.Wrap(err, "string")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "grimoire_oidc",
+			In:   "cookie",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetActionLogParams is parameters of getActionLog operation.
 type GetActionLogParams struct {
 	// Campaign id.

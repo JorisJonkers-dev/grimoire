@@ -63,6 +63,11 @@ func (c *clock) pass(d time.Duration) {
 // sessions alone, as the public route does.
 func accountServers(t *testing.T) (http.Handler, http.Handler, *outbox, *clock) {
 	t.Helper()
+	return accountServersWith(t, func(*identityapp.Service) {})
+}
+
+func accountServersWith(t *testing.T, configure func(*identityapp.Service)) (http.Handler, http.Handler, *outbox, *clock) {
+	t.Helper()
 	store, err := pg.Open(context.Background(), pgtest.URL(t))
 	if err != nil {
 		t.Fatal(err)
@@ -73,10 +78,11 @@ func accountServers(t *testing.T) (http.Handler, http.Handler, *outbox, *clock) 
 		Repo: identitypg.New(store.Pool()), Mailer: mail, Passwords: identityapp.Passwords{MemoryKiB: 64, Time: 1, Threads: 1}, Now: now.Now,
 		Admins: map[string]bool{"root": true}, BaseURL: "https://grimoire.example/",
 	}
+	configure(accounts)
 	build := func(trust bool) http.Handler {
 		h, err := httpapi.New(httpapi.Options{
 			Handler: &httpapi.Handler{
-				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet,
+				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
 				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())),
 			},
 			RateLimit: 1000, Now: time.Now, Sessions: accounts, TrustForwardAuth: trust,
@@ -309,10 +315,30 @@ func (brokenAccounts) UseLink(context.Context, string, string) (domain.Account, 
 	return domain.Account{}, "", errAccounts
 }
 
-func (brokenAccounts) Me(context.Context, string) (domain.Account, error) {
-	return domain.Account{}, errAccounts
+func (brokenAccounts) Me(context.Context, string) (domain.Profile, error) {
+	return domain.Profile{}, errAccounts
 }
 func (brokenAccounts) SetPassword(context.Context, string, string) error { return errAccounts }
+func (brokenAccounts) UpdateProfile(context.Context, string, domain.ProfileChange) (domain.Profile, error) {
+	return domain.Profile{}, errAccounts
+}
+func (brokenAccounts) OIDCEnabled() bool { return true }
+func (brokenAccounts) StartOIDC(context.Context, string) (string, string, error) {
+	return "", "", errAccounts
+}
+
+func (brokenAccounts) FinishOIDC(context.Context, string, string, string) (identityapp.OIDCOutcome, error) {
+	return identityapp.OIDCOutcome{}, errAccounts
+}
+
+func (brokenAccounts) CreateFromOIDC(context.Context, string, string, string, string) (domain.Account, string, error) {
+	return domain.Account{}, "", errAccounts
+}
+
+func (brokenAccounts) LinkFromOIDC(context.Context, string, string, string, string) (domain.Account, string, error) {
+	return domain.Account{}, "", errAccounts
+}
+func (brokenAccounts) Unlink(context.Context, string) error { return errAccounts }
 
 // When the Account store fails, every call answers 503 without saying why.
 func TestAccountsWhenTheStoreFails(t *testing.T) {
@@ -335,6 +361,12 @@ func TestAccountsWhenTheStoreFails(t *testing.T) {
 		{http.MethodPost, "/api/v1/sign-in-links/use", "", "", link},
 		{http.MethodGet, "/api/v1/account", "", "someone", ""},
 		{http.MethodPut, "/api/v1/account/password", "", "someone", `{"password":"0123456789"}`},
+		{http.MethodPut, "/api/v1/account", "", "someone", `{"username":"aria","nickname":"A","email":"a@b.c"}`},
+		{http.MethodPost, "/api/v1/oidc/sign-ins", "", "", ""},
+		{http.MethodPost, "/api/v1/account/oidc-link", "", "someone", ""},
+		{http.MethodDelete, "/api/v1/account/oidc-link", "", "someone", ""},
+		{http.MethodPost, "/api/v1/oidc/accounts", "", "", `{"token":"abcdefghijklmnopqrstuvwxyz","username":"aria","nickname":"A"}`},
+		{http.MethodPost, "/api/v1/oidc/links", "", "", `{"token":"abcdefghijklmnopqrstuvwxyz","username":"aria","password":"x"}`},
 	} {
 		if rec := send(h, c.method, c.path, c.cookie, c.subject, c.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s = %d %s", c.method, c.path, rec.Code, rec.Body.String())

@@ -45,6 +45,10 @@ type CreateNpcRes interface {
 	createNpcRes()
 }
 
+type CreateOidcAccountRes interface {
+	createOidcAccountRes()
+}
+
 type CreatePushSubscriptionRes interface {
 	createPushSubscriptionRes()
 }
@@ -99,6 +103,10 @@ type DiffNpcRevisionsRes interface {
 
 type EndSessionRes interface {
 	endSessionRes()
+}
+
+type FinishOidcRes interface {
+	finishOidcRes()
 }
 
 type GetAccountRes interface {
@@ -177,6 +185,10 @@ type GetSessionViewRes interface {
 	getSessionViewRes()
 }
 
+type GetSignInMethodsRes interface {
+	getSignInMethodsRes()
+}
+
 type GetSpellRes interface {
 	getSpellRes()
 }
@@ -187,6 +199,10 @@ type GetStatusRes interface {
 
 type GetTokenIconRes interface {
 	getTokenIconRes()
+}
+
+type LinkOidcAccountRes interface {
+	linkOidcAccountRes()
 }
 
 type ListActivityRes interface {
@@ -381,12 +397,28 @@ type SignOutRes interface {
 	signOutRes()
 }
 
+type StartOidcLinkRes interface {
+	startOidcLinkRes()
+}
+
+type StartOidcSignInRes interface {
+	startOidcSignInRes()
+}
+
 type StartSessionRes interface {
 	startSessionRes()
 }
 
 type UndoChangeRes interface {
 	undoChangeRes()
+}
+
+type UnlinkOidcRes interface {
+	unlinkOidcRes()
+}
+
+type UpdateAccountRes interface {
+	updateAccountRes()
 }
 
 type UpdateCampaignRes interface {

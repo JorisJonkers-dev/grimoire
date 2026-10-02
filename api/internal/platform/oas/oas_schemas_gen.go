@@ -344,6 +344,8 @@ func (s *AcceptAccountInviteCreatedHeaders) SetResponse(val Account) {
 }
 
 func (*AcceptAccountInviteCreatedHeaders) acceptAccountInviteRes() {}
+func (*AcceptAccountInviteCreatedHeaders) createOidcAccountRes()   {}
+func (*AcceptAccountInviteCreatedHeaders) linkOidcAccountRes()     {}
 func (*AcceptAccountInviteCreatedHeaders) signInRes()              {}
 func (*AcceptAccountInviteCreatedHeaders) useSignInLinkRes()       {}
 
@@ -355,6 +357,9 @@ type Account struct {
 	Nickname string   `json:"nickname"`
 	Email    string   `json:"email"`
 	Admin    bool     `json:"admin"`
+	// Whether the Account can sign in with a password.
+	HasPassword bool        `json:"hasPassword"`
+	Oidc        OptOidcLink `json:"oidc"`
 }
 
 // GetID returns the value of ID.
@@ -382,6 +387,16 @@ func (s *Account) GetAdmin() bool {
 	return s.Admin
 }
 
+// GetHasPassword returns the value of HasPassword.
+func (s *Account) GetHasPassword() bool {
+	return s.HasPassword
+}
+
+// GetOidc returns the value of Oidc.
+func (s *Account) GetOidc() OptOidcLink {
+	return s.Oidc
+}
+
 // SetID sets the value of ID.
 func (s *Account) SetID(val ID) {
 	s.ID = val
@@ -405,6 +420,54 @@ func (s *Account) SetEmail(val string) {
 // SetAdmin sets the value of Admin.
 func (s *Account) SetAdmin(val bool) {
 	s.Admin = val
+}
+
+// SetHasPassword sets the value of HasPassword.
+func (s *Account) SetHasPassword(val bool) {
+	s.HasPassword = val
+}
+
+// SetOidc sets the value of Oidc.
+func (s *Account) SetOidc(val OptOidcLink) {
+	s.Oidc = val
+}
+
+// A new Username, Nickname and email for the signed-in Account.
+// Ref: #/components/schemas/AccountChange
+type AccountChange struct {
+	Username string `json:"username"`
+	Nickname string `json:"nickname"`
+	Email    string `json:"email"`
+}
+
+// GetUsername returns the value of Username.
+func (s *AccountChange) GetUsername() string {
+	return s.Username
+}
+
+// GetNickname returns the value of Nickname.
+func (s *AccountChange) GetNickname() string {
+	return s.Nickname
+}
+
+// GetEmail returns the value of Email.
+func (s *AccountChange) GetEmail() string {
+	return s.Email
+}
+
+// SetUsername sets the value of Username.
+func (s *AccountChange) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetNickname sets the value of Nickname.
+func (s *AccountChange) SetNickname(val string) {
+	s.Nickname = val
+}
+
+// SetEmail sets the value of Email.
+func (s *AccountChange) SetEmail(val string) {
+	s.Email = val
 }
 
 // AccountHeaders wraps Account with response headers.
@@ -455,7 +518,8 @@ func (s *AccountHeaders) SetResponse(val Account) {
 	s.Response = val
 }
 
-func (*AccountHeaders) getAccountRes() {}
+func (*AccountHeaders) getAccountRes()    {}
+func (*AccountHeaders) updateAccountRes() {}
 
 // An open Account Invite.
 // Ref: #/components/schemas/AccountInvite
@@ -17060,6 +17124,433 @@ func (s *NpcInput) SetDisposition(val Disposition) {
 	s.Disposition = val
 }
 
+// The Username and password of the Account to link a waiting login to.
+// Ref: #/components/schemas/OidcAccountLink
+type OidcAccountLink struct {
+	Token    string `json:"token"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// GetToken returns the value of Token.
+func (s *OidcAccountLink) GetToken() string {
+	return s.Token
+}
+
+// GetUsername returns the value of Username.
+func (s *OidcAccountLink) GetUsername() string {
+	return s.Username
+}
+
+// GetPassword returns the value of Password.
+func (s *OidcAccountLink) GetPassword() string {
+	return s.Password
+}
+
+// SetToken sets the value of Token.
+func (s *OidcAccountLink) SetToken(val string) {
+	s.Token = val
+}
+
+// SetUsername sets the value of Username.
+func (s *OidcAccountLink) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetPassword sets the value of Password.
+func (s *OidcAccountLink) SetPassword(val string) {
+	s.Password = val
+}
+
+// A Username and Nickname for a new Account for a waiting login.
+// Ref: #/components/schemas/OidcAccountSetup
+type OidcAccountSetup struct {
+	Token    string `json:"token"`
+	Username string `json:"username"`
+	Nickname string `json:"nickname"`
+}
+
+// GetToken returns the value of Token.
+func (s *OidcAccountSetup) GetToken() string {
+	return s.Token
+}
+
+// GetUsername returns the value of Username.
+func (s *OidcAccountSetup) GetUsername() string {
+	return s.Username
+}
+
+// GetNickname returns the value of Nickname.
+func (s *OidcAccountSetup) GetNickname() string {
+	return s.Nickname
+}
+
+// SetToken sets the value of Token.
+func (s *OidcAccountSetup) SetToken(val string) {
+	s.Token = val
+}
+
+// SetUsername sets the value of Username.
+func (s *OidcAccountSetup) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetNickname sets the value of Nickname.
+func (s *OidcAccountSetup) SetNickname(val string) {
+	s.Nickname = val
+}
+
+// What the provider sent the browser back with.
+// Ref: #/components/schemas/OidcCallback
+type OidcCallback struct {
+	Code  string `json:"code"`
+	State string `json:"state"`
+}
+
+// GetCode returns the value of Code.
+func (s *OidcCallback) GetCode() string {
+	return s.Code
+}
+
+// GetState returns the value of State.
+func (s *OidcCallback) GetState() string {
+	return s.State
+}
+
+// SetCode sets the value of Code.
+func (s *OidcCallback) SetCode(val string) {
+	s.Code = val
+}
+
+// SetState sets the value of State.
+func (s *OidcCallback) SetState(val string) {
+	s.State = val
+}
+
+// The external login linked to an Account, as the provider last described it; read-only.
+// Ref: #/components/schemas/OidcLink
+type OidcLink struct {
+	Email    string    `json:"email"`
+	Username string    `json:"username"`
+	Name     string    `json:"name"`
+	LinkedAt time.Time `json:"linkedAt"`
+}
+
+// GetEmail returns the value of Email.
+func (s *OidcLink) GetEmail() string {
+	return s.Email
+}
+
+// GetUsername returns the value of Username.
+func (s *OidcLink) GetUsername() string {
+	return s.Username
+}
+
+// GetName returns the value of Name.
+func (s *OidcLink) GetName() string {
+	return s.Name
+}
+
+// GetLinkedAt returns the value of LinkedAt.
+func (s *OidcLink) GetLinkedAt() time.Time {
+	return s.LinkedAt
+}
+
+// SetEmail sets the value of Email.
+func (s *OidcLink) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetUsername sets the value of Username.
+func (s *OidcLink) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetName sets the value of Name.
+func (s *OidcLink) SetName(val string) {
+	s.Name = val
+}
+
+// SetLinkedAt sets the value of LinkedAt.
+func (s *OidcLink) SetLinkedAt(val time.Time) {
+	s.LinkedAt = val
+}
+
+// How an external sign-in ended. signed_in and linked carry the Account; choose carries a login
+// waiting for an Account.
+// Ref: #/components/schemas/OidcOutcome
+type OidcOutcome struct {
+	Status  OidcOutcomeStatus `json:"status"`
+	Account OptAccount        `json:"account"`
+	Pending OptOidcPending    `json:"pending"`
+}
+
+// GetStatus returns the value of Status.
+func (s *OidcOutcome) GetStatus() OidcOutcomeStatus {
+	return s.Status
+}
+
+// GetAccount returns the value of Account.
+func (s *OidcOutcome) GetAccount() OptAccount {
+	return s.Account
+}
+
+// GetPending returns the value of Pending.
+func (s *OidcOutcome) GetPending() OptOidcPending {
+	return s.Pending
+}
+
+// SetStatus sets the value of Status.
+func (s *OidcOutcome) SetStatus(val OidcOutcomeStatus) {
+	s.Status = val
+}
+
+// SetAccount sets the value of Account.
+func (s *OidcOutcome) SetAccount(val OptAccount) {
+	s.Account = val
+}
+
+// SetPending sets the value of Pending.
+func (s *OidcOutcome) SetPending(val OptOidcPending) {
+	s.Pending = val
+}
+
+// OidcOutcomeHeaders wraps OidcOutcome with response headers.
+type OidcOutcomeHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	SetCookie          OptString
+	Response           OidcOutcome
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *OidcOutcomeHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *OidcOutcomeHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *OidcOutcomeHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetSetCookie returns the value of SetCookie.
+func (s *OidcOutcomeHeaders) GetSetCookie() OptString {
+	return s.SetCookie
+}
+
+// GetResponse returns the value of Response.
+func (s *OidcOutcomeHeaders) GetResponse() OidcOutcome {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *OidcOutcomeHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *OidcOutcomeHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *OidcOutcomeHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetSetCookie sets the value of SetCookie.
+func (s *OidcOutcomeHeaders) SetSetCookie(val OptString) {
+	s.SetCookie = val
+}
+
+// SetResponse sets the value of Response.
+func (s *OidcOutcomeHeaders) SetResponse(val OidcOutcome) {
+	s.Response = val
+}
+
+func (*OidcOutcomeHeaders) finishOidcRes() {}
+
+type OidcOutcomeStatus string
+
+const (
+	OidcOutcomeStatusSignedIn OidcOutcomeStatus = "signed_in"
+	OidcOutcomeStatusLinked   OidcOutcomeStatus = "linked"
+	OidcOutcomeStatusChoose   OidcOutcomeStatus = "choose"
+)
+
+// AllValues returns all OidcOutcomeStatus values.
+func (OidcOutcomeStatus) AllValues() []OidcOutcomeStatus {
+	return []OidcOutcomeStatus{
+		OidcOutcomeStatusSignedIn,
+		OidcOutcomeStatusLinked,
+		OidcOutcomeStatusChoose,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s OidcOutcomeStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case OidcOutcomeStatusSignedIn:
+		return []byte(s), nil
+	case OidcOutcomeStatusLinked:
+		return []byte(s), nil
+	case OidcOutcomeStatusChoose:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *OidcOutcomeStatus) UnmarshalText(data []byte) error {
+	switch OidcOutcomeStatus(data) {
+	case OidcOutcomeStatusSignedIn:
+		*s = OidcOutcomeStatusSignedIn
+		return nil
+	case OidcOutcomeStatusLinked:
+		*s = OidcOutcomeStatusLinked
+		return nil
+	case OidcOutcomeStatusChoose:
+		*s = OidcOutcomeStatusChoose
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A login no Account has yet, with the token that creates or links one within 15 minutes.
+// Ref: #/components/schemas/OidcPending
+type OidcPending struct {
+	Token    string `json:"token"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+}
+
+// GetToken returns the value of Token.
+func (s *OidcPending) GetToken() string {
+	return s.Token
+}
+
+// GetEmail returns the value of Email.
+func (s *OidcPending) GetEmail() string {
+	return s.Email
+}
+
+// GetUsername returns the value of Username.
+func (s *OidcPending) GetUsername() string {
+	return s.Username
+}
+
+// GetName returns the value of Name.
+func (s *OidcPending) GetName() string {
+	return s.Name
+}
+
+// SetToken sets the value of Token.
+func (s *OidcPending) SetToken(val string) {
+	s.Token = val
+}
+
+// SetEmail sets the value of Email.
+func (s *OidcPending) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetUsername sets the value of Username.
+func (s *OidcPending) SetUsername(val string) {
+	s.Username = val
+}
+
+// SetName sets the value of Name.
+func (s *OidcPending) SetName(val string) {
+	s.Name = val
+}
+
+// Where to send the browser to sign in with the external login.
+// Ref: #/components/schemas/OidcRedirect
+type OidcRedirect struct {
+	URL url.URL `json:"url"`
+}
+
+// GetURL returns the value of URL.
+func (s *OidcRedirect) GetURL() url.URL {
+	return s.URL
+}
+
+// SetURL sets the value of URL.
+func (s *OidcRedirect) SetURL(val url.URL) {
+	s.URL = val
+}
+
+// OidcRedirectHeaders wraps OidcRedirect with response headers.
+type OidcRedirectHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	SetCookie          OptString
+	Response           OidcRedirect
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *OidcRedirectHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *OidcRedirectHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *OidcRedirectHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetSetCookie returns the value of SetCookie.
+func (s *OidcRedirectHeaders) GetSetCookie() OptString {
+	return s.SetCookie
+}
+
+// GetResponse returns the value of Response.
+func (s *OidcRedirectHeaders) GetResponse() OidcRedirect {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *OidcRedirectHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *OidcRedirectHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *OidcRedirectHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetSetCookie sets the value of SetCookie.
+func (s *OidcRedirectHeaders) SetSetCookie(val OptString) {
+	s.SetCookie = val
+}
+
+// SetResponse sets the value of Response.
+func (s *OidcRedirectHeaders) SetResponse(val OidcRedirect) {
+	s.Response = val
+}
+
+func (*OidcRedirectHeaders) startOidcLinkRes()   {}
+func (*OidcRedirectHeaders) startOidcSignInRes() {}
+
 // NewOptAbility returns new OptAbility with value set to v.
 func NewOptAbility(v Ability) OptAbility {
 	return OptAbility{
@@ -17100,6 +17591,52 @@ func (o OptAbility) Get() (v Ability, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptAbility) Or(d Ability) Ability {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAccount returns new OptAccount with value set to v.
+func NewOptAccount(v Account) OptAccount {
+	return OptAccount{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAccount is optional Account.
+type OptAccount struct {
+	Value Account
+	Set   bool
+}
+
+// IsSet returns true if OptAccount was set.
+func (o OptAccount) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAccount) Reset() {
+	var v Account
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAccount) SetTo(v Account) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAccount) Get() (v Account, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAccount) Or(d Account) Account {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -19636,6 +20173,98 @@ func (o OptNamedRef) Or(d NamedRef) NamedRef {
 	return d
 }
 
+// NewOptOidcLink returns new OptOidcLink with value set to v.
+func NewOptOidcLink(v OidcLink) OptOidcLink {
+	return OptOidcLink{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOidcLink is optional OidcLink.
+type OptOidcLink struct {
+	Value OidcLink
+	Set   bool
+}
+
+// IsSet returns true if OptOidcLink was set.
+func (o OptOidcLink) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOidcLink) Reset() {
+	var v OidcLink
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOidcLink) SetTo(v OidcLink) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOidcLink) Get() (v OidcLink, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOidcLink) Or(d OidcLink) OidcLink {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptOidcPending returns new OptOidcPending with value set to v.
+func NewOptOidcPending(v OidcPending) OptOidcPending {
+	return OptOidcPending{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptOidcPending is optional OidcPending.
+type OptOidcPending struct {
+	Value OidcPending
+	Set   bool
+}
+
+// IsSet returns true if OptOidcPending was set.
+func (o OptOidcPending) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptOidcPending) Reset() {
+	var v OidcPending
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptOidcPending) SetTo(v OidcPending) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptOidcPending) Get() (v OidcPending, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptOidcPending) Or(d OidcPending) OidcPending {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptReactionTimeout returns new OptReactionTimeout with value set to v.
 func NewOptReactionTimeout(v ReactionTimeout) OptReactionTimeout {
 	return OptReactionTimeout{
@@ -20417,6 +21046,7 @@ func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) createLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) createNpcRes()                     {}
+func (*ProblemStatusCodeWithHeaders) createOidcAccountRes()             {}
 func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
@@ -20431,6 +21061,7 @@ func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
@@ -20450,9 +21081,11 @@ func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
 func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
+func (*ProblemStatusCodeWithHeaders) getSignInMethodsRes()              {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) linkOidcAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) listActivityRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listCampaignsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
@@ -20501,8 +21134,12 @@ func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
 func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
+func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
+func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}
+func (*ProblemStatusCodeWithHeaders) unlinkOidcRes()                    {}
+func (*ProblemStatusCodeWithHeaders) updateAccountRes()                 {}
 func (*ProblemStatusCodeWithHeaders) updateCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
@@ -23032,6 +23669,72 @@ func (s *SignInLinkRequest) SetEmail(val string) {
 	s.Email = val
 }
 
+// The sign-in methods beside a password; oidc names the external login, when one is set up.
+// Ref: #/components/schemas/SignInMethods
+type SignInMethods struct {
+	Oidc OptString `json:"oidc"`
+}
+
+// GetOidc returns the value of Oidc.
+func (s *SignInMethods) GetOidc() OptString {
+	return s.Oidc
+}
+
+// SetOidc sets the value of Oidc.
+func (s *SignInMethods) SetOidc(val OptString) {
+	s.Oidc = val
+}
+
+// SignInMethodsHeaders wraps SignInMethods with response headers.
+type SignInMethodsHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SignInMethods
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SignInMethodsHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SignInMethodsHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SignInMethodsHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SignInMethodsHeaders) GetResponse() SignInMethods {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SignInMethodsHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SignInMethodsHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SignInMethodsHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SignInMethodsHeaders) SetResponse(val SignInMethods) {
+	s.Response = val
+}
+
+func (*SignInMethodsHeaders) getSignInMethodsRes() {}
+
 // A Username and password.
 // Ref: #/components/schemas/SignInRequest
 type SignInRequest struct {
@@ -24346,6 +25049,45 @@ func (s *TravelPace) UnmarshalText(data []byte) error {
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
+
+// UnlinkOidcNoContent is response for UnlinkOidc operation.
+type UnlinkOidcNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UnlinkOidcNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UnlinkOidcNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UnlinkOidcNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UnlinkOidcNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UnlinkOidcNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UnlinkOidcNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UnlinkOidcNoContent) unlinkOidcRes() {}
 
 type UploadMapReq struct {
 	Data io.Reader

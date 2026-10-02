@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium/snapshot"
 	identityapp "github.com/JorisJonkers-dev/grimoire/api/internal/identity/app"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/identity/oidc"
 	identitypg "github.com/JorisJonkers-dev/grimoire/api/internal/identity/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/config"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/httpapi"
@@ -213,10 +215,18 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	for _, s := range cfg.AdminSubjects {
 		accounts.Admins[s] = true
 	}
+	oidcName := ""
+	if o := cfg.OIDC; o != nil {
+		accounts.OIDC = oidc.New(oidc.Config{
+			Issuer: o.Issuer, ClientID: o.ClientID, ClientSecret: o.ClientSecret, RedirectURL: strings.TrimRight(cfg.BaseURL, "/") + "/oidc/callback",
+			RolesClaim: o.RolesClaim, HTTP: &http.Client{Timeout: 10 * time.Second},
+		})
+		accounts.Grant, accounts.AdminRole, oidcName = o.GrantRole, o.AdminRole, o.Name
+	}
 	handler, err := httpapi.New(httpapi.Options{
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
-			Push: notices, Accounts: accounts,
+			Push: notices, Accounts: accounts, OIDCName: oidcName,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,

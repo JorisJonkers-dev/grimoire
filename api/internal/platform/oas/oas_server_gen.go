@@ -75,6 +75,12 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/npcs
 	CreateNpc(ctx context.Context, req *NpcInput, params CreateNpcParams) (CreateNpcRes, error)
+	// CreateOidcAccount implements createOidcAccount operation.
+	//
+	// Sets up an Account for a login no Account has yet, and signs it in.
+	//
+	// POST /api/v1/oidc/accounts
+	CreateOidcAccount(ctx context.Context, req *OidcAccountSetup) (CreateOidcAccountRes, error)
 	// CreatePushSubscription implements createPushSubscription operation.
 	//
 	// Asks for this device to be told about the caller's turns and Reaction Prompts while the app is
@@ -160,6 +166,13 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/sessions/{sessionId}/end
 	EndSession(ctx context.Context, params EndSessionParams) (EndSessionRes, error)
+	// FinishOidc implements finishOidc operation.
+	//
+	// Takes the code and state the provider sent back. Signs in a linked login, links the login when the
+	// Account page started it, or leaves it waiting for an Account.
+	//
+	// POST /api/v1/oidc/callback
+	FinishOidc(ctx context.Context, req *OidcCallback, params FinishOidcParams) (FinishOidcRes, error)
 	// GetAccount implements getAccount operation.
 	//
 	// The Account the caller is signed in as.
@@ -277,6 +290,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/sessions/{sessionId}/view
 	GetSessionView(ctx context.Context, params GetSessionViewParams) (GetSessionViewRes, error)
+	// GetSignInMethods implements getSignInMethods operation.
+	//
+	// Which external sign-in, if any, the sign-in page offers beside a password.
+	//
+	// GET /api/v1/sign-in-methods
+	GetSignInMethods(ctx context.Context) (GetSignInMethodsRes, error)
 	// GetSpell implements getSpell operation.
 	//
 	// One spell with its rules text and the conditions it mentions.
@@ -295,6 +314,12 @@ type Handler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	GetTokenIcon(ctx context.Context, params GetTokenIconParams) (GetTokenIconRes, error)
+	// LinkOidcAccount implements linkOidcAccount operation.
+	//
+	// Links a login no Account has yet to the Account a Username and password sign in, and signs it in.
+	//
+	// POST /api/v1/oidc/links
+	LinkOidcAccount(ctx context.Context, req *OidcAccountLink) (LinkOidcAccountRes, error)
 	// ListActivity implements listActivity operation.
 	//
 	// The latest prep changes made through MCP, newest first, and whether each can still be undone. DM
@@ -594,6 +619,18 @@ type Handler interface {
 	//
 	// POST /api/v1/sign-out
 	SignOut(ctx context.Context, params SignOutParams) (SignOutRes, error)
+	// StartOidcLink implements startOidcLink operation.
+	//
+	// Returns where to send the browser to link a login to the signed-in Account.
+	//
+	// POST /api/v1/account/oidc-link
+	StartOidcLink(ctx context.Context) (StartOidcLinkRes, error)
+	// StartOidcSignIn implements startOidcSignIn operation.
+	//
+	// Returns where to send the browser, and binds the sign-in to this browser with a short-lived cookie.
+	//
+	// POST /api/v1/oidc/sign-ins
+	StartOidcSignIn(ctx context.Context) (StartOidcSignInRes, error)
 	// StartSession implements startSession operation.
 	//
 	// Opens the next live Session. DM only. Live play then runs over the WebSocket at
@@ -610,6 +647,19 @@ type Handler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/activity/{revisionId}/undo
 	UndoChange(ctx context.Context, params UndoChangeParams) (UndoChangeRes, error)
+	// UnlinkOidc implements unlinkOidc operation.
+	//
+	// Removes the linked login; the Account stays. An Account without a password keeps its login.
+	//
+	// DELETE /api/v1/account/oidc-link
+	UnlinkOidc(ctx context.Context) (UnlinkOidcRes, error)
+	// UpdateAccount implements updateAccount operation.
+	//
+	// Sets the signed-in Account's Username, Nickname and email. What a linked login provides stays
+	// read-only.
+	//
+	// PUT /api/v1/account
+	UpdateAccount(ctx context.Context, req *AccountChange) (UpdateAccountRes, error)
 	// UpdateCampaign implements updateCampaign operation.
 	//
 	// Changes a Campaign's settings. DM only.
