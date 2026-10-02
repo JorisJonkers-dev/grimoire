@@ -82,6 +82,10 @@ func TestInventoriesAreStoredWithTheirTransfers(t *testing.T) {
 		c.ID = domain.ContainerID(uuid.New())
 		return &c
 	}
+	hero := domain.Token{ID: domain.TokenID(uuid.New()), Label: "Aria", Kind: domain.TokenParty, Stats: &domain.Stats{Source: "character:" + char.String(), AC: 16, HP: 10, HPMax: 10}}
+	if _, err := store.Commit(ctx, s, nil, live.Write{Kind: domain.ActionTokenPlaced, Token: hero}, me, dm, time.Now()); err != nil {
+		t.Fatal(err)
+	}
 	ops := map[string]func(repo *pgstore.Store) error{
 		"load":  func(repo *pgstore.Store) error { _, err := repo.LoadInventory(ctx, tb.campaign); return err },
 		"items": func(repo *pgstore.Store) error { _, err := repo.Items(ctx, tb.campaign, []string{"rope"}); return err },
@@ -93,6 +97,12 @@ func TestInventoriesAreStoredWithTheirTransfers(t *testing.T) {
 		"move": func(repo *pgstore.Store) error {
 			mv := &domain.Move{From: stash.ID, To: pack.ID, Item: "rope", Count: 1, Left: 1, Now: 2}
 			_, err := repo.Commit(ctx, s, nil, live.Write{Kind: domain.ActionItemMoved, Move: mv}, me, dm, time.Now())
+			return err
+		},
+		"swap": func(repo *pgstore.Store) error {
+			hero.Stats.Attacks = []domain.Attack{{Name: "Longbow", ToHit: 4, RangeFt: 150, LongRangeFt: 600, Damage: "1d8", DamageType: "piercing"}}
+			sw := &live.WeaponSwap{Character: char, Set: "ranged", Armor: "chain-mail", Weapons: []string{"longbow"}}
+			_, err := repo.Commit(ctx, s, nil, live.Write{Kind: domain.ActionObjectUsed, Token: hero, Swap: sw}, me, dm, time.Now())
 			return err
 		},
 		"empty": func(repo *pgstore.Store) error {

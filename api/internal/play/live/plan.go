@@ -49,6 +49,8 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planUnarmed(m, cmd)
 	case CmdInteract:
 		return r.planInteract(m, cmd)
+	case CmdSwapWeapons:
+		return r.planSwapWeapons(m, req.from.Caller, cmd)
 	case CmdTeleport:
 		return r.planTeleport(m, cmd)
 	case CmdSummon:

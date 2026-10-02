@@ -103,8 +103,10 @@ type Write struct {
 	Schedule   *prep.Scheduled
 	Unschedule uuid.UUID
 	// Drop is a new drop of loot; Move a transfer between Containers; Gone the drop it emptied.
-	Drop      *domain.Container
-	Move      *domain.Move
+	Drop *domain.Container
+	Move *domain.Move
+	// Swap is a Character changing weapon sets.
+	Swap      *WeaponSwap
 	Gone      *domain.ContainerID
 	items     map[string]domain.ItemInfo
 	lootTable string
@@ -264,6 +266,8 @@ type Committed struct {
 type Statblocks interface {
 	Monster(ctx context.Context, campaign uuid.UUID, slug string) (string, domain.Stats, error)
 	Character(ctx context.Context, c caller.Caller, campaign, id uuid.UUID) (string, uuid.UUID, domain.Stats, error)
+	// Holding is a Character's stats with these weapons and shield in hand.
+	Holding(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, weapons []string, shield bool) (domain.Stats, error)
 }
 
 // Members finds a Campaign's members.
@@ -657,7 +661,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdBuy, CmdSell, CmdHaggle,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
 		return true
 	}
 	return false

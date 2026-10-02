@@ -184,6 +184,7 @@ var operationRolesForwardAuth = map[string][]string{
 	StartConversationOperation:             []string{},
 	StartOidcLinkOperation:                 []string{},
 	StartSessionOperation:                  []string{},
+	SwapWeaponSetOperation:                 []string{},
 	TakeFromStashOperation:                 []string{},
 	UnblockOperation:                       []string{},
 	UndoChangeOperation:                    []string{},

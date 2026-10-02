@@ -442,6 +442,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @off-hand="(n) => armOffHand(b.token, n)"
         @cleave="(n) => armCleave(b.token, n)"
         @interact="(d) => live?.send({ kind: 'interact', tokenId: b.token.id, detail: d })"
+        @swap="live?.send({ kind: 'swap_weapons', tokenId: b.token.id })"
         @teleport="teleporting = b.token.id"
         @jump="jumping = b.token.id"
         @throw="throwing = { tokenId: b.token.id }"

@@ -52,7 +52,7 @@ func (s *Store) LoadInventory(ctx context.Context, campaign uuid.UUID) (domain.I
 		return inv, err
 	}
 	for _, c := range chars {
-		inv.Bearers = append(inv.Bearers, domain.Bearer{CharacterID: c.ID, Name: c.Name, Owner: c.OwnerMemberID, Strength: int(c.Strength), Classes: c.Classes})
+		inv.Bearers = append(inv.Bearers, domain.Bearer{CharacterID: c.ID, Name: c.Name, Owner: c.OwnerMemberID, Strength: int(c.Strength), Classes: c.Classes, WeaponSet: c.WeaponSet})
 		p := queries.InsertContainerParams{ID: uuid.New(), CampaignID: campaign, Kind: domain.ContainerCharacter, CharacterID: pgtype.UUID{Bytes: c.ID, Valid: true}, Label: c.Name, Now: now}
 		if err := s.q.InsertContainer(ctx, p); err != nil {
 			return inv, err
@@ -258,6 +258,11 @@ func (s *Store) Identify(ctx context.Context, id domain.InstanceID) error {
 // SetCharges sets the charges an Item Instance holds.
 func (s *Store) SetCharges(ctx context.Context, id domain.InstanceID, n int) error {
 	return s.q.SetInstanceCharges(ctx, queries.SetInstanceChargesParams{ID: uuid.UUID(id), Charges: pgtype.Int4{Int32: int32(n), Valid: true}}) //nolint:gosec // 0 to 100
+}
+
+// SetWeaponSet changes which weapon set a Character holds.
+func (s *Store) SetWeaponSet(ctx context.Context, character uuid.UUID, set string) error {
+	return s.q.SetWeaponSet(ctx, queries.SetWeaponSetParams{ID: character, WeaponSet: set})
 }
 
 // RemoveInstance takes an Item Instance out of the Campaign: drunk, thrown or merged into a stack.

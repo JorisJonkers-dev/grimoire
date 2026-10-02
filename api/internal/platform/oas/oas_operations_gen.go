@@ -168,6 +168,7 @@ const (
 	StartOidcLinkOperation                 OperationName = "StartOidcLink"
 	StartOidcSignInOperation               OperationName = "StartOidcSignIn"
 	StartSessionOperation                  OperationName = "StartSession"
+	SwapWeaponSetOperation                 OperationName = "SwapWeaponSet"
 	TakeFromStashOperation                 OperationName = "TakeFromStash"
 	UnblockOperation                       OperationName = "Unblock"
 	UndoChangeOperation                    OperationName = "UndoChange"

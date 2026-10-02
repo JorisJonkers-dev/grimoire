@@ -452,7 +452,8 @@ func (q *Queries) InsertLootTableRevision(ctx context.Context, arg InsertLootTab
 
 const inventoryCharacters = `-- name: InventoryCharacters :many
 SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength,
-    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes
+    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes,
+    c.weapon_set
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id
 `
 
@@ -462,6 +463,7 @@ type InventoryCharactersRow struct {
 	OwnerMemberID uuid.UUID
 	Strength      int32
 	Classes       []string
+	WeaponSet     string
 }
 
 func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error) {
@@ -479,6 +481,7 @@ func (q *Queries) InventoryCharacters(ctx context.Context, campaignID uuid.UUID)
 			&i.OwnerMemberID,
 			&i.Strength,
 			&i.Classes,
+			&i.WeaponSet,
 		); err != nil {
 			return nil, err
 		}
@@ -777,5 +780,19 @@ func (q *Queries) SetStack(ctx context.Context, arg SetStackParams) error {
 		arg.Quantity,
 		arg.Now,
 	)
+	return err
+}
+
+const setWeaponSet = `-- name: SetWeaponSet :exec
+UPDATE campaign.characters SET weapon_set = $1 WHERE id = $2
+`
+
+type SetWeaponSetParams struct {
+	WeaponSet string
+	ID        uuid.UUID
+}
+
+func (q *Queries) SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error {
+	_, err := q.db.Exec(ctx, setWeaponSet, arg.WeaponSet, arg.ID)
 	return err
 }

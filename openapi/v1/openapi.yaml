@@ -1223,6 +1223,34 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap:
+    post:
+      operationId: swapWeaponSet
+      x-ogen-operation-group: Play
+      summary: Swap weapon sets
+      description: "Changes the weapon set in hand between melee and ranged outside a fight. In a live Session the swap is a command that pays the 2024 equip rules."
+      tags: [Play]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/CharacterId"
+      responses:
+        "200":
+          description: The Inventory with the other set in hand.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryView"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/take:
     post:
       operationId: takeFromStash
@@ -7268,7 +7296,7 @@ components:
     EquipmentSlot:
       type: string
       description: An equipment slot around a Character's figure.
-      enum: [head, cloak, neck, armor, hands, ring_1, ring_2, feet, main_hand, off_hand, ranged_main, ammunition, instrument]
+      enum: [head, cloak, neck, armor, hands, ring_1, ring_2, feet, main_hand, off_hand, ranged_main, ranged_off, ammunition, instrument]
     ItemCard:
       type: object
       description: An item in an Inventory, with the slots it fits.
@@ -7291,7 +7319,7 @@ components:
         maxCharges: { type: integer, format: int32, minimum: 0, maximum: 100 }
         fits:
           type: array
-          maxItems: 13
+          maxItems: 14
           items: { $ref: "#/components/schemas/EquipmentSlot" }
     SlotLine:
       type: object
@@ -7313,13 +7341,13 @@ components:
       type: object
       description: A Character's equipment slots, bag and weight, and the Party Stash.
       additionalProperties: false
-      required: [characterId, name, slots, bag, coins, weightLb, capacityLb, load, stash, stashCoins, party]
+      required: [characterId, name, slots, bag, coins, weightLb, capacityLb, load, stash, stashCoins, party, weaponSet]
       properties:
         characterId: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 120 }
         slots:
           type: array
-          maxItems: 13
+          maxItems: 14
           items: { $ref: "#/components/schemas/SlotLine" }
         bag:
           type: array
@@ -7344,6 +7372,7 @@ components:
           type: array
           maxItems: 50
           items: { $ref: "#/components/schemas/PartyBearer" }
+        weaponSet: { type: string, enum: [melee, ranged], description: "The weapon set in hand: main and off hand, or the ranged slots." }
     InventoryMove:
       type: object
       description: "An item to move: an Item Instance by id, or some of a plain stack by slug."
@@ -8373,7 +8402,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn] }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }

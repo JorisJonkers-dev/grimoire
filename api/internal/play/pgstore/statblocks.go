@@ -95,6 +95,20 @@ func (s Statblocks) Character(ctx context.Context, c caller.Caller, campaign, id
 	if err != nil {
 		return "", uuid.UUID{}, domain.Stats{}, err
 	}
+	return s.fromSheet(ctx, id, sheet)
+}
+
+// Holding is a Character's fighting stats as if it held other weapons, and a shield or not.
+func (s Statblocks) Holding(ctx context.Context, c caller.Caller, campaign, id uuid.UUID, weapons []string, shield bool) (domain.Stats, error) {
+	sheet, err := s.Characters.GetHolding(ctx, c, campaigndomain.CampaignID(campaign), campaigndomain.CharacterID(id), weapons, shield)
+	if err != nil {
+		return domain.Stats{}, err
+	}
+	_, _, stats, err := s.fromSheet(ctx, id, sheet)
+	return stats, err
+}
+
+func (s Statblocks) fromSheet(ctx context.Context, id uuid.UUID, sheet campaignapp.Sheet) (string, uuid.UUID, domain.Stats, error) {
 	str, dex := rules.Modifier(sheet.Scores[rules.Strength]), rules.Modifier(sheet.Scores[rules.Dexterity])
 	pb := sheet.Derived.ProficiencyBonus
 	stats := domain.Stats{

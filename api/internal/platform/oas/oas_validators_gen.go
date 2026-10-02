@@ -12816,6 +12816,8 @@ func (s EquipmentSlot) Validate() error {
 		return nil
 	case "ranged_main":
 		return nil
+	case "ranged_off":
+		return nil
 	case "ammunition":
 		return nil
 	case "instrument":
@@ -15764,7 +15766,7 @@ func (s *InventoryView) Validate() error {
 		if err := (validate.Array{
 			MinLength:    0,
 			MinLengthSet: false,
-			MaxLength:    13,
+			MaxLength:    14,
 			MaxLengthSet: true,
 		}).ValidateLength(len(s.Slots)); err != nil {
 			return errors.Wrap(err, "array")
@@ -16026,6 +16028,17 @@ func (s *InventoryView) Validate() error {
 			Error: err,
 		})
 	}
+	if err := func() error {
+		if err := s.WeaponSet.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "weaponSet",
+			Error: err,
+		})
+	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
@@ -16146,6 +16159,17 @@ func (s InventoryViewLoad) Validate() error {
 	case "encumbered":
 		return nil
 	case "immobile":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s InventoryViewWeaponSet) Validate() error {
+	switch s {
+	case "melee":
+		return nil
+	case "ranged":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
@@ -16619,7 +16643,7 @@ func (s *ItemCard) Validate() error {
 		if err := (validate.Array{
 			MinLength:    0,
 			MinLengthSet: false,
-			MaxLength:    13,
+			MaxLength:    14,
 			MaxLengthSet: true,
 		}).ValidateLength(len(s.Fits)); err != nil {
 			return errors.Wrap(err, "array")
@@ -24431,6 +24455,8 @@ func (s LiveCommandKind) Validate() error {
 	case "unarmed":
 		return nil
 	case "interact":
+		return nil
+	case "swap_weapons":
 		return nil
 	case "set_reaction":
 		return nil

@@ -8,7 +8,7 @@ import (
 
 func TestSlotsTakeTheRightGear(t *testing.T) {
 	t.Parallel()
-	if got := len(inventory.Slots()); got != 13 {
+	if got := len(inventory.Slots()); got != 14 {
 		t.Fatalf("slots = %d", got)
 	}
 	fits := []struct {
@@ -21,6 +21,8 @@ func TestSlotsTakeTheRightGear(t *testing.T) {
 		{inventory.OffHand, "armor", "shield", true},
 		{inventory.OffHand, "armor", "chain-mail", false},
 		{inventory.Ranged, "weapon", "longbow", true},
+		{inventory.RangedOff, "weapon", "dagger", true},
+		{inventory.RangedOff, "armor", "shield", true},
 		{inventory.Ranged, "ammunition", "arrows-20", false},
 		{inventory.Body, "armor", "chain-mail", true},
 		{inventory.Body, "armor", "shield", false},
@@ -140,5 +142,15 @@ func TestChargesComeBackOnTheirSchedule(t *testing.T) {
 	nightly := inventory.Charges{Max: 3, Dice: 0, Faces: 0, Bonus: 3, On: inventory.LongRestRecharge}
 	if nightly.Regain(inventory.ShortRest, 0, 0) != 0 || nightly.Regain(inventory.LongRest, 0, 0) != 3 {
 		t.Fatal("a long-rest item regains only on a long rest")
+	}
+}
+
+func TestWeaponSets(t *testing.T) {
+	t.Parallel()
+	if inventory.SetSlots(inventory.Melee) != [2]string{inventory.MainHand, inventory.OffHand} || inventory.SetSlots(inventory.RangedSet) != [2]string{inventory.Ranged, inventory.RangedOff} {
+		t.Fatal("set slots")
+	}
+	if inventory.OtherSet(inventory.Melee) != inventory.RangedSet || inventory.OtherSet(inventory.RangedSet) != inventory.Melee {
+		t.Fatal("other set")
 	}
 }

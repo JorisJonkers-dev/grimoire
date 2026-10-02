@@ -8,14 +8,14 @@ const ID = '0190c7a8-0000-7000-8000-000000000001'
 const CH = '0190c7a8-0000-7000-8000-000000000009'
 const INES = '0190c7a8-0000-7000-8000-0000000000a1'
 const base = `/api/v1/campaigns/${ID}/characters/${CH}/inventory`
-const slots = ['head', 'cloak', 'neck', 'armor', 'hands', 'ring_1', 'ring_2', 'feet', 'main_hand', 'off_hand', 'ranged_main', 'ammunition', 'instrument']
+const slots = ['head', 'cloak', 'neck', 'armor', 'hands', 'ring_1', 'ring_2', 'feet', 'main_hand', 'off_hand', 'ranged_main', 'ranged_off', 'ammunition', 'instrument']
 const card = (slug: string, name: string, category: string, extra = {}) => ({
   slug, name, category, quantity: 1, weightLb: 1, identified: true, attuned: false, fits: [] as string[], ...extra,
 })
 const MAIL = '0190c7a8-0000-7000-8000-0000000000b1'
 const mail = card('chain-mail', 'Chain Mail', 'armor', { instanceId: MAIL, slot: 'armor', weightLb: 55, fits: ['armor'] })
 const view = (extra = {}) => ({
-  characterId: CH, name: 'Kara',
+  characterId: CH, name: 'Kara', weaponSet: 'melee',
   slots: slots.map((slot) => (slot === 'armor' ? { slot, item: mail } : { slot })),
   bag: [
     card('potion-of-healing', 'Potion of Healing', 'potion', { quantity: 2, weightLb: 0.5 }),
@@ -107,6 +107,25 @@ describe('inventory screen', () => {
       { path: 'move', body: { instanceId: MAIL, to: 'bag', count: 1 } },
       { path: 'take', body: { slug: 'shield', count: 1 } },
     ])
+  })
+
+  it('swaps between the melee and the ranged weapon set', async () => {
+    let set = 'melee'
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}/inventory`, {
+      [`${base}/swap`]: () => {
+        set = set === 'melee' ? 'ranged' : 'melee'
+        return view({ weaponSet: set })
+      },
+      [base]: () => view({ weaponSet: set }),
+    })
+    expect(wrapper.get('[data-testid="weapon-set"]').text()).toBe('Holding melee weapons')
+    expect(wrapper.get('[data-testid="slot-main_hand"]').classes()).toContain('held')
+    await wrapper.get('[data-testid="swap-set"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="inventory-status"]').text()).toBe('Holding ranged weapons.')
+    expect(wrapper.get('[data-testid="swap-set"]').text()).toBe('Swap to melee')
+    expect(wrapper.get('[data-testid="slot-ranged_off"]').classes()).toContain('held')
+    expect(wrapper.get('[data-testid="slot-ranged_off"]').text()).toContain('Ranged off hand')
   })
 
   it('warns when overloaded, reports refusals, drinks without healing and handles a missing Inventory', async () => {

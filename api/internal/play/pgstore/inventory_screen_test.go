@@ -69,6 +69,16 @@ func TestEveryInventoryScreenFaultSurfaces(t *testing.T) {
 			_, err := r.Take(ctx, player, tb.campaign, char, app.ItemRef{Slug: "healing-draught"}, 1)
 			return err
 		},
+		"swap": func(r *app.Inventories) error {
+			restock()
+			for _, slot := range []string{"main_hand", "ranged_main"} {
+				if _, err := base.Move(ctx, player, tb.campaign, char, app.ItemMove{Item: app.ItemRef{Slug: "test-blade"}, To: app.ToSlot, Slot: slot, Count: 1}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, err := r.Swap(ctx, player, tb.campaign, char)
+			return err
+		},
 		"drink": func(r *app.Inventories) error {
 			restock()
 			if _, err := base.Take(ctx, player, tb.campaign, char, app.ItemRef{Slug: "healing-draught"}, 2); err != nil {

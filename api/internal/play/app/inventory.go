@@ -32,6 +32,7 @@ type InventoryWriter interface {
 	SetStack(ctx context.Context, in domain.ContainerID, slug string, n int) error
 	Heal(ctx context.Context, character uuid.UUID, hp int) error
 	SyncEquipment(ctx context.Context, character uuid.UUID, armor string, shield bool, weapons []string) error
+	SetWeaponSet(ctx context.Context, character uuid.UUID, set string) error
 }
 
 // Inventories runs the Inventory screen: a Character's equipment slots and bag, the Party Stash, and
@@ -514,21 +515,39 @@ func unequip(ctx context.Context, w InventoryWriter, mine domain.Container, h he
 	return w.SetSlot(ctx, in.ID, "")
 }
 
-// sync keeps the Character's armor, shield and weapons on its sheet in step with its slots.
+// sync keeps the Character's armor, shield and weapons on its sheet in step with its slots and the
+// weapon set it holds.
 func sync(ctx context.Context, w InventoryWriter, inv domain.Inventory, mine domain.Container) error {
 	if mine.CharacterID == nil {
 		return nil
 	}
-	armor, shield, weapons := "", false, []string{}
-	for _, in := range mine.Instances {
-		switch {
-		case in.Slot == inventory.Body:
-			armor = in.Slug
-		case in.Slot == inventory.OffHand && in.Slug == "shield":
-			shield = true
-		case slices.Contains([]string{inventory.MainHand, inventory.OffHand, inventory.Ranged}, in.Slot) && inv.Items[in.Slug].Category == "weapon":
-			weapons = append(weapons, in.Slug)
+	b, _ := bearerOf(inv, *mine.CharacterID)
+	armor, shield, weapons := inv.Held(mine, b.WeaponSet)
+	return w.SyncEquipment(ctx, *mine.CharacterID, armor, shield, weapons)
+}
+
+// Swap changes which weapon set a Character holds outside a fight; in a live Session the swap is a
+// command and pays the equip rules.
+func (s *Inventories) Swap(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (InventoryView, error) {
+	inv, dm, err := s.ready(ctx, c, campaign, character)
+	if err != nil {
+		return InventoryView{}, err
+	}
+	b, _ := bearerOf(inv, character)
+	next := inventory.OtherSet(b.WeaponSet)
+	for i := range inv.Bearers {
+		if inv.Bearers[i].CharacterID == character {
+			inv.Bearers[i].WeaponSet = next
 		}
 	}
-	return w.SyncEquipment(ctx, *mine.CharacterID, armor, shield, weapons)
+	err = s.Store.WriteInventory(ctx, func(w InventoryWriter) error {
+		if err := w.SetWeaponSet(ctx, character, next); err != nil {
+			return err
+		}
+		return sync(ctx, w, inv, characterContainer(inv, character))
+	})
+	if err != nil {
+		return InventoryView{}, err
+	}
+	return s.after(ctx, campaign, character, dm)
 }

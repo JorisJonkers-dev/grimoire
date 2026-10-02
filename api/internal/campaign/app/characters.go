@@ -383,6 +383,18 @@ func (s *Characters) List(ctx context.Context, c caller.Caller, id domain.Campai
 
 // Get returns a Character's sheet to any Member of its Campaign.
 func (s *Characters) Get(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (Sheet, error) {
+	return s.get(ctx, c, id, ch, nil)
+}
+
+// GetHolding is a Character's sheet as if it held other weapons, and a shield or not: what a swap of
+// weapon sets would leave it with.
+func (s *Characters) GetHolding(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, weapons []string, shield bool) (Sheet, error) {
+	return s.get(ctx, c, id, ch, func(stored *domain.Character) {
+		stored.Weapons, stored.Shield = weapons, shield
+	})
+}
+
+func (s *Characters) get(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, holding func(*domain.Character)) (Sheet, error) {
 	me, err := member(ctx, s.Repo, c, id)
 	if err != nil {
 		return Sheet{}, err
@@ -390,6 +402,9 @@ func (s *Characters) Get(ctx context.Context, c caller.Caller, id domain.Campaig
 	stored, err := s.Repo.Character(ctx, id, ch)
 	if err != nil {
 		return Sheet{}, err
+	}
+	if holding != nil {
+		holding(&stored)
 	}
 	o, err := s.Compendium.BuilderOptions(ctx, stored.Ruleset)
 	if err != nil {

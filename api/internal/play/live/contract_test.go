@@ -186,6 +186,7 @@ func samples() contract {
 			{Nonce: "n71", Kind: live.CmdUnarmed, TokenID: token.ID, TargetID: token.ID, Option: "shove_push"},
 			{Nonce: "n72", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 1, TargetID: token.ID, OffHand: true},
 			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
+			{Nonce: "n73b", Kind: live.CmdSwapWeapons, TokenID: token.ID},
 			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
 			{Nonce: "n76", Kind: live.CmdStabilise, TokenID: token.ID, TargetID: token.ID, Option: "medicine"},
 			{Nonce: "n77", Kind: live.CmdRevive, TargetID: token.ID, Option: "revivify"},

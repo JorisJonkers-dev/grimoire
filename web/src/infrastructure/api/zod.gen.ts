@@ -903,6 +903,7 @@ export const zEquipmentSlot = z.enum([
     'main_hand',
     'off_hand',
     'ranged_main',
+    'ranged_off',
     'ammunition',
     'instrument'
 ]);
@@ -2312,7 +2313,7 @@ export const zItemCard = z.object({
     requiresAttunement: z.boolean().optional(),
     attunementDetail: z.string().max(200).optional(),
     maxCharges: z.int().gte(0).lte(100).optional(),
-    fits: z.array(zEquipmentSlot).max(13)
+    fits: z.array(zEquipmentSlot).max(14)
 });
 
 /**
@@ -2329,7 +2330,7 @@ export const zSlotLine = z.object({
 export const zInventoryView = z.object({
     characterId: zId,
     name: z.string().max(120),
-    slots: z.array(zSlotLine).max(13),
+    slots: z.array(zSlotLine).max(14),
     bag: z.array(zItemCard).max(1000),
     coins: z.array(zLiveCoins).max(5),
     weightLb: z.number().gte(0).lte(1000000),
@@ -2341,7 +2342,8 @@ export const zInventoryView = z.object({
     ]),
     stash: z.array(zItemCard).max(1000),
     stashCoins: z.array(zLiveCoins).max(5),
-    party: z.array(zPartyBearer).max(50)
+    party: z.array(zPartyBearer).max(50),
+    weaponSet: z.enum(['melee', 'ranged'])
 });
 
 /**
@@ -2876,6 +2878,7 @@ export const zLiveCommand = z.object({
         'take_action',
         'unarmed',
         'interact',
+        'swap_weapons',
         'set_reaction',
         'stabilise',
         'revive',
@@ -4058,6 +4061,16 @@ export const zMoveItemPath = z.object({
  * The Inventory after the move.
  */
 export const zMoveItemResponse = zInventoryView;
+
+export const zSwapWeaponSetPath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Inventory with the other set in hand.
+ */
+export const zSwapWeaponSetResponse = zInventoryView;
 
 export const zTakeFromStashBody = zInventoryTake;
 

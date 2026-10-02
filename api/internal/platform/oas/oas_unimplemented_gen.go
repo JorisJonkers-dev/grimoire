@@ -1508,6 +1508,16 @@ func (UnimplementedHandler) StartSession(ctx context.Context, params StartSessio
 	return r, ht.ErrNotImplemented
 }
 
+// SwapWeaponSet implements swapWeaponSet operation.
+//
+// Changes the weapon set in hand between melee and ranged outside a fight. In a live Session the swap
+// is a command that pays the 2024 equip rules.
+//
+// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap
+func (UnimplementedHandler) SwapWeaponSet(ctx context.Context, params SwapWeaponSetParams) (r SwapWeaponSetRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // TakeFromStash implements takeFromStash operation.
 //
 // Moves an item from the Party Stash into the Character's bag. Not during a live Session.

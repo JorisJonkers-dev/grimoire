@@ -52,7 +52,8 @@ SELECT ordering, weight, kind, item_slug, coin, amount, nested_table_id FROM pre
 
 -- name: InventoryCharacters :many
 SELECT c.id, c.name, c.owner_member_id, coalesce((SELECT a.base + a.bonus + a.increase FROM campaign.character_abilities a WHERE a.character_id = c.id AND a.ability = 'strength'), 10)::int AS strength,
-    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes
+    coalesce(nullif(ARRAY(SELECT x.class_slug FROM campaign.character_classes x WHERE x.character_id = c.id ORDER BY x.position), '{}'), ARRAY[c.class_slug])::text[] AS classes,
+    c.weapon_set
 FROM campaign.characters c WHERE c.campaign_id = $1 ORDER BY c.name, c.id;
 
 -- name: CampaignContainers :many
@@ -128,3 +129,6 @@ UPDATE campaign.item_instances SET identified = true WHERE id = $1;
 
 -- name: SetInstanceCharges :exec
 UPDATE campaign.item_instances SET charges = @charges WHERE id = @id;
+
+-- name: SetWeaponSet :exec
+UPDATE campaign.characters SET weapon_set = @weapon_set WHERE id = @id;

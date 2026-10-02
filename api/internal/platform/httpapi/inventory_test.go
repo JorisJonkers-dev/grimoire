@@ -227,6 +227,10 @@ func (b brokenInventory) Use(context.Context, caller.Caller, uuid.UUID, uuid.UUI
 	return playapp.InventoryView{}, 0, b.err
 }
 
+func (b brokenInventory) Swap(context.Context, caller.Caller, uuid.UUID, uuid.UUID) (playapp.InventoryView, error) {
+	return playapp.InventoryView{}, b.err
+}
+
 func TestInventoryErrorsBecomeProblems(t *testing.T) {
 	t.Parallel()
 	h := campaignServer(t, brokenCampaigns{}, httpapi.InventoryService(brokenInventory{err: errors.New("disk")}))
@@ -236,6 +240,7 @@ func TestInventoryErrorsBecomeProblems(t *testing.T) {
 		{http.MethodPost, one + "/move", `{"slug":"rope","to":"stash"}`},
 		{http.MethodPost, one + "/take", `{"instanceId":"0190c7a8-0000-7000-8000-000000000003"}`},
 		{http.MethodPost, one + "/use", `{"slug":"rope","use":"throw"}`},
+		{http.MethodPost, one + "/swap", ""},
 	} {
 		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s: %d", o.method, o.path, rec.Code)
@@ -249,6 +254,7 @@ func TestInventoryErrorsBecomeProblems(t *testing.T) {
 	add(hh.MoveItem(ctx, &oas.InventoryMove{}, oas.MoveItemParams{}))
 	add(hh.TakeFromStash(ctx, &oas.InventoryTake{}, oas.TakeFromStashParams{}))
 	add(hh.UseItem(ctx, &oas.InventoryUse{}, oas.UseItemParams{}))
+	add(hh.SwapWeaponSet(ctx, oas.SwapWeaponSetParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)
@@ -393,5 +399,50 @@ func TestAttunementIdentificationAndCharges(t *testing.T) {
 	inv = use(`{"instanceId":"`+unknownPotion+`","use":"identify"}`, http.StatusOK)
 	if potions := cardOf(inv["bag"], "potion-of-healing"); potions["quantity"] != float64(3) || potions["instanceId"] != nil {
 		t.Fatalf("an identified potion joins its stack = %v", potions)
+	}
+}
+
+// A Character keeps a melee and a ranged weapon set; swapping between them changes the weapons and
+// shield the sheet fights with.
+func TestWeaponSets(t *testing.T) {
+	t.Parallel()
+	h, pool := srdStack(t)
+	id, _ := campaignWithPlayer(t, h)
+	base := "/api/v1/campaigns/" + id + "/characters"
+	kara := base + "/" + decode(t, call(h, http.MethodPost, base, "player", srdFighter))["id"].(string)
+	ines := base + "/" + decode(t, call(h, http.MethodPost, base, "dm", srdScholar))["id"].(string)
+	stashItems(t, pool, id, map[string]int{"shield": 1, "longbow": 1})
+	for _, step := range []struct{ path, body string }{
+		{"/take", `{"slug":"longbow"}`},
+		{"/take", `{"slug":"shield"}`},
+		{"/move", `{"slug":"longbow","to":"slot","slot":"ranged_main"}`},
+		{"/move", `{"slug":"shield","to":"slot","slot":"ranged_off"}`},
+	} {
+		if rec := call(h, http.MethodPost, kara+"/inventory"+step.path, "player", step.body); rec.Code != http.StatusOK {
+			t.Fatalf("%s %s: %d %s", step.path, step.body, rec.Code, rec.Body.String())
+		}
+	}
+	fights := func(weapon string, ac float64) {
+		t.Helper()
+		sheet := decode(t, call(h, http.MethodGet, kara, "player", ""))
+		attacks := sheet["attacks"].([]any)
+		if len(attacks) != 1 || attacks[0].(map[string]any)["name"] != weapon || sheet["armorClass"] != ac {
+			t.Fatalf("fights with %s at AC %v = %v %v", weapon, ac, sheet["attacks"], sheet["armorClass"])
+		}
+	}
+	fights("Longsword", 16)
+	swap := func(want string) {
+		t.Helper()
+		rec := call(h, http.MethodPost, kara+"/inventory/swap", "player", "")
+		if inv := decode(t, rec); rec.Code != http.StatusOK || inv["weaponSet"] != want {
+			t.Fatalf("swap to %s: %d %v", want, rec.Code, inv["weaponSet"])
+		}
+	}
+	swap("ranged")
+	fights("Longbow", 18)
+	swap("melee")
+	fights("Longsword", 16)
+	if rec := call(h, http.MethodPost, ines+"/inventory/swap", "player", ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("swapping another player's weapons: %d", rec.Code)
 	}
 }

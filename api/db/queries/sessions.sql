@@ -59,7 +59,7 @@ SELECT id, session_id, status, round, turn_count, started_at, ended_at, resume_t
 -- name: CombatCombatants :many
 SELECT id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action, has_bonus_action, has_reaction, movement_ft,
        shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack, attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved,
-       owner_combatant_id, commanded
+       owner_combatant_id, commanded, equips
 FROM play.combatants WHERE combat_id = $1 ORDER BY id;
 
 -- name: SaveCombat :exec
@@ -72,16 +72,16 @@ ON CONFLICT (id) DO UPDATE SET status = excluded.status, round = excluded.round,
 -- name: SaveCombatant :exec
 INSERT INTO play.combatants (id, combat_id, token_id, roll_id, initiative_bonus, speed_ft, initiative, done, has_action,
     has_bonus_action, has_reaction, movement_ft, shielded, surprised, disengaged, readied_trigger, readied_who, readied_attack,
-    attacks_left, light_attack, off_hand, interaction, cleave_from, cleaved, owner_combatant_id, commanded)
+    attacks_left, light_attack, off_hand, interaction, equips, cleave_from, cleaved, owner_combatant_id, commanded)
 VALUES (@id, @combat_id, @token_id, @roll_id, @initiative_bonus, @speed_ft, sqlc.narg(initiative), @done, @has_action,
     @has_bonus_action, @has_reaction, @movement_ft, @shielded, @surprised, @disengaged, sqlc.narg(readied_trigger), sqlc.narg(readied_who),
-    sqlc.narg(readied_attack), @attacks_left, @light_attack, @off_hand, @interaction, sqlc.narg(cleave_from), @cleaved,
+    sqlc.narg(readied_attack), @attacks_left, @light_attack, @off_hand, @interaction, @equips, sqlc.narg(cleave_from), @cleaved,
     sqlc.narg(owner_combatant_id), @commanded)
 ON CONFLICT (id) DO UPDATE SET initiative = excluded.initiative, done = excluded.done, has_action = excluded.has_action,
     has_bonus_action = excluded.has_bonus_action, has_reaction = excluded.has_reaction, movement_ft = excluded.movement_ft,
     shielded = excluded.shielded, disengaged = excluded.disengaged, readied_trigger = excluded.readied_trigger,
     readied_who = excluded.readied_who, readied_attack = excluded.readied_attack, attacks_left = excluded.attacks_left,
-    light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction,
+    light_attack = excluded.light_attack, off_hand = excluded.off_hand, interaction = excluded.interaction, equips = excluded.equips,
     cleave_from = excluded.cleave_from, cleaved = excluded.cleaved, commanded = excluded.commanded;
 
 -- name: SetTokenHP :exec
@@ -418,3 +418,9 @@ ON CONFLICT (session_id) DO UPDATE SET turn_order = excluded.turn_order, turn = 
 
 -- name: ClearExploration :exec
 DELETE FROM play.exploration_turns WHERE session_id = @session_id;
+
+-- name: DeleteTokenAttacks :exec
+DELETE FROM play.token_attacks WHERE token_id = @token_id;
+
+-- name: SetTokenArmorClass :exec
+UPDATE play.tokens SET armor_class = @armor_class WHERE session_id = @session_id AND id = @id;

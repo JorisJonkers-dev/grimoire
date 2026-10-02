@@ -1861,6 +1861,16 @@ describe('hotbar', () => {
     expect(w.find('[data-testid="off-hand-1"]').exists()).toBe(false)
     expect(w.find('form.interact').exists()).toBe(false)
   })
+
+  it('swaps weapon sets for a Character only', async () => {
+    const { mount } = await import('@vue/test-utils')
+    const Hotbar = (await import('./Hotbar.vue')).default
+    const w = mount(Hotbar, { props: { token: goblin, armed: null, blocked: '' } })
+    expect(w.find('[data-testid="swap-weapons"]').exists()).toBe(false)
+    await w.setProps({ token: { ...goblin, kind: 'party' } })
+    await w.get('[data-testid="swap-weapons"]').trigger('click')
+    expect(w.emitted('swap')).toHaveLength(1)
+  })
 })
 
 describe('reaction settings', () => {

@@ -25,11 +25,13 @@ type Economy struct {
 	LightAttack bool
 	OffHand     bool
 	Interaction bool
+	// Equips are the weapons still to equip or unequip with the attacks made this turn: one per attack.
+	Equips int
 }
 
 // Fresh is the economy at the start of a turn.
 func Fresh(speedFt int) Economy {
-	return Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: speedFt, AttacksLeft: 0, LightAttack: false, OffHand: false, Interaction: true}
+	return Economy{Action: true, BonusAction: true, Reaction: true, MovementFt: speedFt, AttacksLeft: 0, LightAttack: false, OffHand: false, Interaction: true, Equips: 0}
 }
 
 // CanAttack reports whether an attack of the Attack action can still be made: one already begun, or the
@@ -50,7 +52,34 @@ func (e Economy) Attack(perAction int, light bool) (Economy, bool) {
 		return e, false
 	}
 	e.LightAttack = e.LightAttack || light
+	e.Equips++
 	return e, true
+}
+
+// Swap pays for changing weapons in a fight (2024): each weapon put away or drawn takes the equip that
+// comes with an attack, then the free object interaction for one more; whatever is left, or a shield,
+// takes the Utilize action. ok is false when the turn cannot pay.
+func (e Economy) Swap(changes int, shield bool) (Economy, bool) {
+	if shield {
+		if !e.Action {
+			return e, false
+		}
+		e.Action = false
+		return e, true
+	}
+	paid := min(changes, e.Equips)
+	e.Equips -= paid
+	switch left := changes - paid; {
+	case left == 0:
+		return e, true
+	case left == 1 && e.Interaction:
+		e.Interaction = false
+		return e, true
+	case e.Action:
+		e.Action = false
+		return e, true
+	}
+	return e, false
 }
 
 // CanOffHand reports whether the off-hand attack is open: after a Light weapon attack, once a turn, for

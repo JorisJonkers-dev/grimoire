@@ -17,13 +17,36 @@ const (
 	MainHand   = "main_hand"
 	OffHand    = "off_hand"
 	Ranged     = "ranged_main"
+	RangedOff  = "ranged_off"
 	Ammunition = "ammunition"
 	Instrument = "instrument"
 )
 
 // Slots lists the equipment slots around a Character's figure, head to toe, then hands and gear.
 func Slots() []string {
-	return []string{Head, Cloak, Amulet, Body, Hands, Ring1, Ring2, Feet, MainHand, OffHand, Ranged, Ammunition, Instrument}
+	return []string{Head, Cloak, Amulet, Body, Hands, Ring1, Ring2, Feet, MainHand, OffHand, Ranged, RangedOff, Ammunition, Instrument}
+}
+
+// Weapon sets.
+const (
+	Melee     = "melee"
+	RangedSet = "ranged"
+)
+
+// SetSlots are the two hands of a weapon set: the melee set's main and off hand, or the ranged set's.
+func SetSlots(set string) [2]string {
+	if set == RangedSet {
+		return [2]string{Ranged, RangedOff}
+	}
+	return [2]string{MainHand, OffHand}
+}
+
+// OtherSet is the set a swap changes to.
+func OtherSet(set string) string {
+	if set == RangedSet {
+		return Melee
+	}
+	return RangedSet
 }
 
 // Fits reports whether an item of a category goes in a slot. Worn magic items go where they are worn;
@@ -32,7 +55,7 @@ func Fits(slot, category, slug string) bool {
 	switch slot {
 	case MainHand, Ranged:
 		return category == "weapon"
-	case OffHand:
+	case OffHand, RangedOff:
 		return category == "weapon" || slug == "shield"
 	case Body:
 		return category == "armor" && slug != "shield"

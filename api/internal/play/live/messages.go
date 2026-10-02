@@ -90,6 +90,7 @@ const (
 	CmdTakeAction     = "take_action"
 	CmdUnarmed        = "unarmed"
 	CmdInteract       = "interact"
+	CmdSwapWeapons    = "swap_weapons"
 	CmdTeleport       = "teleport"
 	CmdSummon         = "summon"
 	CmdCommand        = "command"

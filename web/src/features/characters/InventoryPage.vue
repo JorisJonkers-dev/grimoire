@@ -6,6 +6,7 @@ import {
   getInventoryOptions,
   getInventoryQueryKey,
   moveItemMutation,
+  swapWeaponSetMutation,
   takeFromStashMutation,
   useItemMutation,
 } from '@/infrastructure/api/@tanstack/vue-query.gen'
@@ -20,12 +21,13 @@ const inv = computed(() => inventory.data.value)
 const move = useMutation(moveItemMutation())
 const take = useMutation(takeFromStashMutation())
 const use = useMutation(useItemMutation())
-const problem = computed(() => move.error.value ?? take.error.value ?? use.error.value)
+const swap = useMutation(swapWeaponSetMutation())
+const problem = computed(() => move.error.value ?? take.error.value ?? use.error.value ?? swap.error.value)
 const status = ref('')
 
 const slotNames: Record<EquipmentSlot, string> = {
   head: 'Head', cloak: 'Cloak', neck: 'Amulet', armor: 'Body', hands: 'Hands', ring_1: 'Ring', ring_2: 'Ring', feet: 'Feet',
-  main_hand: 'Main hand', off_hand: 'Off hand', ranged_main: 'Ranged', ammunition: 'Ammunition', instrument: 'Instrument',
+  main_hand: 'Main hand', off_hand: 'Off hand', ranged_main: 'Ranged', ranged_off: 'Ranged off hand', ammunition: 'Ammunition', instrument: 'Instrument',
 }
 const filter = ref('')
 const sortBy = ref<'name' | 'weight' | 'category'>('name')
@@ -52,6 +54,12 @@ function done(view: InventoryView, message = '') {
 function send(c: ItemCard, to: 'bag' | 'slot' | 'character' | 'stash', extra: { slot?: EquipmentSlot; characterId?: string } = {}) {
   status.value = ''
   move.mutate({ path: ids.value, body: { ...ref_(c), to, count: to === 'slot' || to === 'bag' ? 1 : c.quantity, ...extra } }, { onSuccess: (v) => { done(v) } })
+}
+const setSlots: Record<InventoryView['weaponSet'], EquipmentSlot[]> = { melee: ['main_hand', 'off_hand'], ranged: ['ranged_main', 'ranged_off'] }
+const otherSet = computed(() => (inv.value?.weaponSet === 'ranged' ? 'melee' : 'ranged'))
+function swapSets() {
+  status.value = ''
+  swap.mutate({ path: ids.value }, { onSuccess: (v) => { done(v, `Holding ${v.weaponSet} weapons.`) } })
 }
 function takeOut(c: ItemCard) {
   status.value = ''
@@ -113,6 +121,10 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
         <span>{{ inv.weightLb.toFixed(1) }} / {{ inv.capacityLb }} lb · {{ loadText[inv.load] }}</span>
         <span class="bar" role="img" :aria-label="`${String(pct)} percent of carrying capacity`"><span :class="inv.load" :style="{ width: `${String(pct)}%` }" /></span>
         <span class="hint">{{ coins(inv.coins) }} · Attuned to {{ attunedCount }} of 3</span>
+        <span class="sets">
+          <span data-testid="weapon-set">Holding {{ inv.weaponSet }} weapons</span>
+          <GButton :disabled="swap.isPending.value" data-testid="swap-set" @click="swapSets">Swap to {{ otherSet }}</GButton>
+        </span>
       </section>
       <p v-if="status" role="status" class="g-tag" data-testid="inventory-status">{{ status }}</p>
       <p v-if="problem" role="alert" class="g-alert" data-testid="inventory-problem">{{ problem.detail ?? 'That did not work.' }}</p>
@@ -123,7 +135,7 @@ const key = (c: ItemCard) => c.instanceId ?? c.slug
           <div
             v-for="s in inv.slots"
             :key="s.slot"
-            :class="['slot', `at-${s.slot}`, { filled: s.item }]"
+            :class="['slot', `at-${s.slot}`, { filled: s.item, held: setSlots[inv.weaponSet].includes(s.slot) }]"
             :data-testid="`slot-${s.slot}`"
             @dragover.prevent
             @drop.prevent="dropOn({ slot: s.slot })"
@@ -267,10 +279,8 @@ h2 {
 }
 @media (min-width: 960px) {
   .layout {
-    grid-template-columns: 360px 1fr;
-  }
-  .stash {
-    grid-column: 1 / -1;
+    grid-template-columns: 320px 1fr 1fr;
+    align-items: start;
   }
 }
 .figure {
@@ -278,10 +288,10 @@ h2 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-areas:
     'main head ranged'
-    'off cloak neck'
-    'hands armor ring1'
-    'ammo feet ring2'
-    'instrument instrument instrument';
+    'off cloak rangedoff'
+    'neck armor hands'
+    'ring1 feet ring2'
+    'ammo instrument instrument';
   gap: 6px;
 }
 .slot {
@@ -310,6 +320,18 @@ h2 {
 .at-main_hand { grid-area: main; }
 .at-off_hand { grid-area: off; }
 .at-ranged_main { grid-area: ranged; }
+.at-ranged_off { grid-area: rangedoff; }
+.sets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+.slot.held {
+  box-shadow: inset 0 0 0 1px var(--color-gold-high);
+}
 .at-ammunition { grid-area: ammo; }
 .at-instrument { grid-area: instrument; }
 .worn {

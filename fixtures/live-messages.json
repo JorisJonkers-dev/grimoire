@@ -668,6 +668,14 @@
       "detail": "draws a dagger"
     },
     {
+      "nonce": "n73b",
+      "kind": "swap_weapons",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false
+    },
+    {
       "nonce": "n74",
       "kind": "attack",
       "tokenId": "0190c7a8-0000-7000-8000-00000000000a",

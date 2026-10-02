@@ -19,6 +19,7 @@ type InventoryService interface {
 	Move(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, mv playapp.ItemMove) (playapp.InventoryView, error)
 	Take(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref playapp.ItemRef, count int) (playapp.InventoryView, error)
 	Use(ctx context.Context, c caller.Caller, campaign, character uuid.UUID, ref playapp.ItemRef, use string, count int) (playapp.InventoryView, int, error)
+	Swap(ctx context.Context, c caller.Caller, campaign, character uuid.UUID) (playapp.InventoryView, error)
 }
 
 func itemRef(instance oas.OptID, slug oas.OptSlug) playapp.ItemRef {
@@ -72,6 +73,19 @@ func (h *Handler) TakeFromStash(ctx context.Context, req *oas.InventoryTake, p o
 	return &oas.InventoryViewHeaders{Response: inventoryOut(v)}, nil
 }
 
+// SwapWeaponSet changes the weapon set in hand.
+func (h *Handler) SwapWeaponSet(ctx context.Context, p oas.SwapWeaponSetParams) (oas.SwapWeaponSetRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	v, err := h.Inventory.Swap(ctx, c, uuid.UUID(p.CampaignId), uuid.UUID(p.CharacterId))
+	if err != nil {
+		return h.campaignProblem(ctx, "swap weapons", err), nil
+	}
+	return &oas.InventoryViewHeaders{Response: inventoryOut(v)}, nil
+}
+
 // UseItem drinks or throws an item.
 func (h *Handler) UseItem(ctx context.Context, req *oas.InventoryUse, p oas.UseItemParams) (oas.UseItemRes, error) {
 	c, ok := uiCaller(ctx)
@@ -90,7 +104,7 @@ func inventoryOut(v playapp.InventoryView) oas.InventoryView {
 		CharacterId: oas.ID(v.Bearer.CharacterID), Name: v.Bearer.Name, Slots: make([]oas.SlotLine, 0, len(inventory.Slots())),
 		Bag: cardsOf(v.Mine, v.Items, false, v.DM), Coins: coinsOut(v.Mine.Coins), WeightLb: v.WeightLb, CapacityLb: v.Capacity,
 		Load: oas.InventoryViewLoad(v.Load), Stash: cardsOf(v.Stash, v.Items, false, v.DM), StashCoins: coinsOut(v.Stash.Coins),
-		Party: make([]oas.PartyBearer, 0, len(v.Party)),
+		Party: make([]oas.PartyBearer, 0, len(v.Party)), WeaponSet: oas.InventoryViewWeaponSet(v.Bearer.WeaponSet),
 	}
 	worn := cardsOf(v.Mine, v.Items, true, v.DM)
 	for _, slot := range inventory.Slots() {

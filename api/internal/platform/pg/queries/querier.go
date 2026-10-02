@@ -190,6 +190,7 @@ type Querier interface {
 	DeleteStack(ctx context.Context, arg DeleteStackParams) error
 	DeleteTOTP(ctx context.Context, accountID uuid.UUID) error
 	DeleteToken(ctx context.Context, arg DeleteTokenParams) error
+	DeleteTokenAttacks(ctx context.Context, tokenID uuid.UUID) error
 	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
@@ -602,11 +603,13 @@ type Querier interface {
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
 	SetStack(ctx context.Context, arg SetStackParams) error
+	SetTokenArmorClass(ctx context.Context, arg SetTokenArmorClassParams) error
 	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
+	SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error
 	// A class's features up to a level, each at the first level it is gained.
 	SheetClassFeatures(ctx context.Context, arg SheetClassFeaturesParams) ([]SheetClassFeaturesRow, error)
 	SheetSpeciesTraits(ctx context.Context, arg SheetSpeciesTraitsParams) ([]SheetSpeciesTraitsRow, error)

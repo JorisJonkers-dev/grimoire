@@ -8736,6 +8736,7 @@ const (
 	EquipmentSlotMainHand   EquipmentSlot = "main_hand"
 	EquipmentSlotOffHand    EquipmentSlot = "off_hand"
 	EquipmentSlotRangedMain EquipmentSlot = "ranged_main"
+	EquipmentSlotRangedOff  EquipmentSlot = "ranged_off"
 	EquipmentSlotAmmunition EquipmentSlot = "ammunition"
 	EquipmentSlotInstrument EquipmentSlot = "instrument"
 )
@@ -8754,6 +8755,7 @@ func (EquipmentSlot) AllValues() []EquipmentSlot {
 		EquipmentSlotMainHand,
 		EquipmentSlotOffHand,
 		EquipmentSlotRangedMain,
+		EquipmentSlotRangedOff,
 		EquipmentSlotAmmunition,
 		EquipmentSlotInstrument,
 	}
@@ -8783,6 +8785,8 @@ func (s EquipmentSlot) MarshalText() ([]byte, error) {
 	case EquipmentSlotOffHand:
 		return []byte(s), nil
 	case EquipmentSlotRangedMain:
+		return []byte(s), nil
+	case EquipmentSlotRangedOff:
 		return []byte(s), nil
 	case EquipmentSlotAmmunition:
 		return []byte(s), nil
@@ -8828,6 +8832,9 @@ func (s *EquipmentSlot) UnmarshalText(data []byte) error {
 		return nil
 	case EquipmentSlotRangedMain:
 		*s = EquipmentSlotRangedMain
+		return nil
+	case EquipmentSlotRangedOff:
+		*s = EquipmentSlotRangedOff
 		return nil
 	case EquipmentSlotAmmunition:
 		*s = EquipmentSlotAmmunition
@@ -10701,6 +10708,8 @@ type InventoryView struct {
 	Stash      []ItemCard        `json:"stash"`
 	StashCoins []LiveCoins       `json:"stashCoins"`
 	Party      []PartyBearer     `json:"party"`
+	// The weapon set in hand: main and off hand, or the ranged slots.
+	WeaponSet InventoryViewWeaponSet `json:"weaponSet"`
 }
 
 // GetCharacterId returns the value of CharacterId.
@@ -10758,6 +10767,11 @@ func (s *InventoryView) GetParty() []PartyBearer {
 	return s.Party
 }
 
+// GetWeaponSet returns the value of WeaponSet.
+func (s *InventoryView) GetWeaponSet() InventoryViewWeaponSet {
+	return s.WeaponSet
+}
+
 // SetCharacterId sets the value of CharacterId.
 func (s *InventoryView) SetCharacterId(val ID) {
 	s.CharacterId = val
@@ -10813,6 +10827,11 @@ func (s *InventoryView) SetParty(val []PartyBearer) {
 	s.Party = val
 }
 
+// SetWeaponSet sets the value of WeaponSet.
+func (s *InventoryView) SetWeaponSet(val InventoryViewWeaponSet) {
+	s.WeaponSet = val
+}
+
 // InventoryViewHeaders wraps InventoryView with response headers.
 type InventoryViewHeaders struct {
 	RateLimitLimit     OptInt32
@@ -10863,6 +10882,7 @@ func (s *InventoryViewHeaders) SetResponse(val InventoryView) {
 
 func (*InventoryViewHeaders) getInventoryRes()  {}
 func (*InventoryViewHeaders) moveItemRes()      {}
+func (*InventoryViewHeaders) swapWeaponSetRes() {}
 func (*InventoryViewHeaders) takeFromStashRes() {}
 
 // Past capacity a Character moves 5 feet; past twice it, not at all.
@@ -10908,6 +10928,48 @@ func (s *InventoryViewLoad) UnmarshalText(data []byte) error {
 		return nil
 	case InventoryViewLoadImmobile:
 		*s = InventoryViewLoadImmobile
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The weapon set in hand: main and off hand, or the ranged slots.
+type InventoryViewWeaponSet string
+
+const (
+	InventoryViewWeaponSetMelee  InventoryViewWeaponSet = "melee"
+	InventoryViewWeaponSetRanged InventoryViewWeaponSet = "ranged"
+)
+
+// AllValues returns all InventoryViewWeaponSet values.
+func (InventoryViewWeaponSet) AllValues() []InventoryViewWeaponSet {
+	return []InventoryViewWeaponSet{
+		InventoryViewWeaponSetMelee,
+		InventoryViewWeaponSetRanged,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s InventoryViewWeaponSet) MarshalText() ([]byte, error) {
+	switch s {
+	case InventoryViewWeaponSetMelee:
+		return []byte(s), nil
+	case InventoryViewWeaponSetRanged:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *InventoryViewWeaponSet) UnmarshalText(data []byte) error {
+	switch InventoryViewWeaponSet(data) {
+	case InventoryViewWeaponSetMelee:
+		*s = InventoryViewWeaponSetMelee
+		return nil
+	case InventoryViewWeaponSetRanged:
+		*s = InventoryViewWeaponSetRanged
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -15754,6 +15816,7 @@ const (
 	LiveCommandKindTakeAction     LiveCommandKind = "take_action"
 	LiveCommandKindUnarmed        LiveCommandKind = "unarmed"
 	LiveCommandKindInteract       LiveCommandKind = "interact"
+	LiveCommandKindSwapWeapons    LiveCommandKind = "swap_weapons"
 	LiveCommandKindSetReaction    LiveCommandKind = "set_reaction"
 	LiveCommandKindStabilise      LiveCommandKind = "stabilise"
 	LiveCommandKindRevive         LiveCommandKind = "revive"
@@ -15844,6 +15907,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindTakeAction,
 		LiveCommandKindUnarmed,
 		LiveCommandKindInteract,
+		LiveCommandKindSwapWeapons,
 		LiveCommandKindSetReaction,
 		LiveCommandKindStabilise,
 		LiveCommandKindRevive,
@@ -16000,6 +16064,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindUnarmed:
 		return []byte(s), nil
 	case LiveCommandKindInteract:
+		return []byte(s), nil
+	case LiveCommandKindSwapWeapons:
 		return []byte(s), nil
 	case LiveCommandKindSetReaction:
 		return []byte(s), nil
@@ -16244,6 +16310,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindInteract:
 		*s = LiveCommandKindInteract
+		return nil
+	case LiveCommandKindSwapWeapons:
+		*s = LiveCommandKindSwapWeapons
 		return nil
 	case LiveCommandKindSetReaction:
 		*s = LiveCommandKindSetReaction
@@ -27688,6 +27757,7 @@ func (*ProblemStatusCodeWithHeaders) startConversationRes()             {}
 func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
 func (*ProblemStatusCodeWithHeaders) startSessionRes()                  {}
+func (*ProblemStatusCodeWithHeaders) swapWeaponSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) takeFromStashRes()                 {}
 func (*ProblemStatusCodeWithHeaders) unblockRes()                       {}
 func (*ProblemStatusCodeWithHeaders) undoChangeRes()                    {}

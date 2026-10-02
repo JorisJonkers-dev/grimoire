@@ -81,7 +81,7 @@ var (
 	rn167AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn227AllowedHeaders = map[string]string{
+	rn228AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
 	}
 	rn27AllowedHeaders = map[string]string{
@@ -95,7 +95,7 @@ var (
 	rn119AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn230AllowedHeaders = map[string]string{
+	rn231AllowedHeaders = map[string]string{
 		"POST": "X-User-Id",
 	}
 	rn64AllowedHeaders = map[string]string{
@@ -128,9 +128,12 @@ var (
 		"POST": "Content-Type,X-User-Id",
 	}
 	rn225AllowedHeaders = map[string]string{
+		"POST": "X-User-Id",
+	}
+	rn226AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
-	rn233AllowedHeaders = map[string]string{
+	rn234AllowedHeaders = map[string]string{
 		"POST": "Content-Type,X-User-Id",
 	}
 	rn117AllowedHeaders = map[string]string{
@@ -391,7 +394,7 @@ var (
 	rn130AllowedHeaders = map[string]string{
 		"GET": "X-User-Id",
 	}
-	rn232AllowedHeaders = map[string]string{
+	rn233AllowedHeaders = map[string]string{
 		"DELETE": "X-User-Id",
 	}
 	rn6AllowedHeaders = map[string]string{
@@ -455,7 +458,7 @@ var (
 	rn176AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
-	rn234AllowedHeaders = map[string]string{
+	rn235AllowedHeaders = map[string]string{
 		"POST": "Content-Type",
 	}
 	rn155AllowedHeaders = map[string]string{
@@ -1262,7 +1265,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						default:
 							s.notAllowed(w, r, notAllowedParams{
 								allowedMethods: "DELETE",
-								allowedHeaders: rn227AllowedHeaders,
+								allowedHeaders: rn228AllowedHeaders,
 								acceptPost:     "",
 								acceptPatch:    "",
 							})
@@ -1426,7 +1429,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 												default:
 													s.notAllowed(w, r, notAllowedParams{
 														allowedMethods: "POST",
-														allowedHeaders: rn230AllowedHeaders,
+														allowedHeaders: rn231AllowedHeaders,
 														acceptPost:     "",
 														acceptPatch:    "",
 													})
@@ -1742,6 +1745,34 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 																	return
 																}
 
+															case 's': // Prefix: "swap"
+
+																if l := len("swap"); len(elem) >= l && elem[0:l] == "swap" {
+																	elem = elem[l:]
+																} else {
+																	break
+																}
+
+																if len(elem) == 0 {
+																	// Leaf node.
+																	switch r.Method {
+																	case "POST":
+																		s.handleSwapWeaponSetRequest([2]string{
+																			args[0],
+																			args[1],
+																		}, elemIsEscaped, w, r)
+																	default:
+																		s.notAllowed(w, r, notAllowedParams{
+																			allowedMethods: "POST",
+																			allowedHeaders: rn225AllowedHeaders,
+																			acceptPost:     "",
+																			acceptPatch:    "",
+																		})
+																	}
+
+																	return
+																}
+
 															case 't': // Prefix: "take"
 
 																if l := len("take"); len(elem) >= l && elem[0:l] == "take" {
@@ -1761,7 +1792,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 																	default:
 																		s.notAllowed(w, r, notAllowedParams{
 																			allowedMethods: "POST",
-																			allowedHeaders: rn225AllowedHeaders,
+																			allowedHeaders: rn226AllowedHeaders,
 																			acceptPost:     "application/json",
 																			acceptPatch:    "",
 																		})
@@ -1789,7 +1820,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 																	default:
 																		s.notAllowed(w, r, notAllowedParams{
 																			allowedMethods: "POST",
-																			allowedHeaders: rn233AllowedHeaders,
+																			allowedHeaders: rn234AllowedHeaders,
 																			acceptPost:     "application/json",
 																			acceptPatch:    "",
 																		})
@@ -4742,7 +4773,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								default:
 									s.notAllowed(w, r, notAllowedParams{
 										allowedMethods: "DELETE",
-										allowedHeaders: rn232AllowedHeaders,
+										allowedHeaders: rn233AllowedHeaders,
 										acceptPost:     "",
 										acceptPatch:    "",
 									})
@@ -5492,7 +5523,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 											default:
 												s.notAllowed(w, r, notAllowedParams{
 													allowedMethods: "POST",
-													allowedHeaders: rn234AllowedHeaders,
+													allowedHeaders: rn235AllowedHeaders,
 													acceptPost:     "application/json",
 													acceptPatch:    "",
 												})
@@ -6998,6 +7029,31 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 																		r.operationID = "moveItem"
 																		r.operationGroup = "Play"
 																		r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/move"
+																		r.args = args
+																		r.count = 2
+																		return r, true
+																	default:
+																		return
+																	}
+																}
+
+															case 's': // Prefix: "swap"
+
+																if l := len("swap"); len(elem) >= l && elem[0:l] == "swap" {
+																	elem = elem[l:]
+																} else {
+																	break
+																}
+
+																if len(elem) == 0 {
+																	// Leaf node.
+																	switch method {
+																	case "POST":
+																		r.name = SwapWeaponSetOperation
+																		r.summary = "Swap weapon sets"
+																		r.operationID = "swapWeaponSet"
+																		r.operationGroup = "Play"
+																		r.pathPattern = "/api/v1/campaigns/{campaignId}/characters/{characterId}/inventory/swap"
 																		r.args = args
 																		r.count = 2
 																		return r, true

@@ -75,6 +75,7 @@ type CampaignCharacter struct {
 	TempHp            int32
 	CanPrepare        bool
 	HeroicInspiration bool
+	WeaponSet         string
 }
 
 type CampaignCharacterAbility struct {
@@ -1293,6 +1294,7 @@ type PlayCombatant struct {
 	Cleaved          bool
 	OwnerCombatantID pgtype.UUID
 	Commanded        bool
+	Equips           int32
 }
 
 type PlayDying struct {

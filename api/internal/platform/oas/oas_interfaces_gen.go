@@ -649,6 +649,10 @@ type StartSessionRes interface {
 	startSessionRes()
 }
 
+type SwapWeaponSetRes interface {
+	swapWeaponSetRes()
+}
+
 type TakeFromStashRes interface {
 	takeFromStashRes()
 }

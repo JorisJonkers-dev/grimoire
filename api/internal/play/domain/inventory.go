@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
 )
 
 // ContainerID identifies a Container.
@@ -69,6 +71,8 @@ type Bearer struct {
 	Strength    int
 	// Classes decide which items it may attune to.
 	Classes []string
+	// WeaponSet is the set of weapons in hand: melee or ranged.
+	WeaponSet string
 }
 
 // ItemInfo is what an item is called and weighs.
@@ -118,3 +122,33 @@ const (
 	ActionItemMoved   = "item_moved"
 	ActionCoinsMoved  = "coins_moved"
 )
+
+// Held is what a Character wears and holds in a weapon set: its armor, whether a shield is in the set's
+// off hand, and the set's weapons.
+func (inv Inventory) Held(mine Container, set string) (string, bool, []string) {
+	hands := inventory.SetSlots(set)
+	armor, shield, weapons := "", false, []string{}
+	for _, in := range mine.Instances {
+		switch {
+		case in.Slot == inventory.Body:
+			armor = in.Slug
+		case in.Slot == hands[1] && in.Slug == "shield":
+			shield = true
+		case slices.Contains(hands[:], in.Slot) && inv.Items[in.Slug].Category == "weapon":
+			weapons = append(weapons, in.Slug)
+		}
+	}
+	return armor, shield, weapons
+}
+
+// Carrier is the Character's own Container and its Bearer, if it carries one.
+func (inv Inventory) Carrier(character uuid.UUID) (Container, Bearer, bool) {
+	b := slices.IndexFunc(inv.Bearers, func(x Bearer) bool { return x.CharacterID == character })
+	c := slices.IndexFunc(inv.Containers, func(x Container) bool {
+		return x.Kind == ContainerCharacter && x.CharacterID != nil && *x.CharacterID == character
+	})
+	if b < 0 || c < 0 {
+		return Container{}, Bearer{}, false
+	}
+	return inv.Containers[c], inv.Bearers[b], true
+}

@@ -14654,6 +14654,8 @@ func (s *EquipmentSlot) Decode(d *jx.Decoder) error {
 		*s = EquipmentSlotOffHand
 	case EquipmentSlotRangedMain:
 		*s = EquipmentSlotRangedMain
+	case EquipmentSlotRangedOff:
+		*s = EquipmentSlotRangedOff
 	case EquipmentSlotAmmunition:
 		*s = EquipmentSlotAmmunition
 	case EquipmentSlotInstrument:
@@ -17067,9 +17069,13 @@ func (s *InventoryView) encodeFields(e *jx.Encoder) {
 		}
 		e.ArrEnd()
 	}
+	{
+		e.FieldStart("weaponSet")
+		s.WeaponSet.Encode(e)
+	}
 }
 
-var jsonFieldsNameOfInventoryView = [11]string{
+var jsonFieldsNameOfInventoryView = [12]string{
 	0:  "characterId",
 	1:  "name",
 	2:  "slots",
@@ -17081,6 +17087,7 @@ var jsonFieldsNameOfInventoryView = [11]string{
 	8:  "stash",
 	9:  "stashCoins",
 	10: "party",
+	11: "weaponSet",
 }
 
 // Decode decodes InventoryView from json.
@@ -17256,6 +17263,16 @@ func (s *InventoryView) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"party\"")
 			}
+		case "weaponSet":
+			requiredBitSet[1] |= 1 << 3
+			if err := func() error {
+				if err := s.WeaponSet.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"weaponSet\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -17267,7 +17284,7 @@ func (s *InventoryView) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b11111111,
-		0b00000111,
+		0b00001111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -17351,6 +17368,46 @@ func (s InventoryViewLoad) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *InventoryViewLoad) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes InventoryViewWeaponSet as json.
+func (s InventoryViewWeaponSet) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes InventoryViewWeaponSet from json.
+func (s *InventoryViewWeaponSet) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode InventoryViewWeaponSet to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch InventoryViewWeaponSet(v) {
+	case InventoryViewWeaponSetMelee:
+		*s = InventoryViewWeaponSetMelee
+	case InventoryViewWeaponSetRanged:
+		*s = InventoryViewWeaponSetRanged
+	default:
+		*s = InventoryViewWeaponSet(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s InventoryViewWeaponSet) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *InventoryViewWeaponSet) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -24331,6 +24388,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindUnarmed
 	case LiveCommandKindInteract:
 		*s = LiveCommandKindInteract
+	case LiveCommandKindSwapWeapons:
+		*s = LiveCommandKindSwapWeapons
 	case LiveCommandKindSetReaction:
 		*s = LiveCommandKindSetReaction
 	case LiveCommandKindStabilise:
