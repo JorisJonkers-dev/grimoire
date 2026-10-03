@@ -8123,6 +8123,45 @@ func (s *CreationMethod) UnmarshalText(data []byte) error {
 	}
 }
 
+// DecideStandingChangeNoContent is response for DecideStandingChange operation.
+type DecideStandingChangeNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DecideStandingChangeNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DecideStandingChangeNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DecideStandingChangeNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DecideStandingChangeNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DecideStandingChangeNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DecideStandingChangeNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DecideStandingChangeNoContent) decideStandingChangeRes() {}
+
 // DeclineFriendRequestNoContent is response for DeclineFriendRequest operation.
 type DeclineFriendRequestNoContent struct {
 	RateLimitLimit     OptInt32
@@ -8356,6 +8395,45 @@ func (s *DeleteEncounterTableNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*DeleteEncounterTableNoContent) deleteEncounterTableRes() {}
+
+// DeleteFactionNoContent is response for DeleteFaction operation.
+type DeleteFactionNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteFactionNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteFactionNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteFactionNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteFactionNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteFactionNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteFactionNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteFactionNoContent) deleteFactionRes() {}
 
 // DeleteLootTableNoContent is response for DeleteLootTable operation.
 type DeleteLootTableNoContent struct {
@@ -11448,6 +11526,301 @@ func (s *ExportedEntryPartsItem) init() ExportedEntryPartsItem {
 		*s = m
 	}
 	return m
+}
+
+// A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier
+// of its Standing. The dm part is there for the DM alone.
+// Ref: #/components/schemas/Faction
+type Faction struct {
+	ID   ID     `json:"id"`
+	Name string `json:"name"`
+	// The slug of the archetype it was copied from, or empty.
+	Archetype string            `json:"archetype"`
+	Tier      StandingTier      `json:"tier"`
+	Dm        OptFactionSecrets `json:"dm"`
+	// Personal Standings with this Faction; a Player gets those of their own Characters.
+	Personal []PersonalStanding `json:"personal"`
+	// Standing Changes, newest first. A Player gets the confirmed ones for the party and for their own
+	// Characters.
+	Changes []StandingChange `json:"changes"`
+}
+
+// GetID returns the value of ID.
+func (s *Faction) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Faction) GetName() string {
+	return s.Name
+}
+
+// GetArchetype returns the value of Archetype.
+func (s *Faction) GetArchetype() string {
+	return s.Archetype
+}
+
+// GetTier returns the value of Tier.
+func (s *Faction) GetTier() StandingTier {
+	return s.Tier
+}
+
+// GetDm returns the value of Dm.
+func (s *Faction) GetDm() OptFactionSecrets {
+	return s.Dm
+}
+
+// GetPersonal returns the value of Personal.
+func (s *Faction) GetPersonal() []PersonalStanding {
+	return s.Personal
+}
+
+// GetChanges returns the value of Changes.
+func (s *Faction) GetChanges() []StandingChange {
+	return s.Changes
+}
+
+// SetID sets the value of ID.
+func (s *Faction) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Faction) SetName(val string) {
+	s.Name = val
+}
+
+// SetArchetype sets the value of Archetype.
+func (s *Faction) SetArchetype(val string) {
+	s.Archetype = val
+}
+
+// SetTier sets the value of Tier.
+func (s *Faction) SetTier(val StandingTier) {
+	s.Tier = val
+}
+
+// SetDm sets the value of Dm.
+func (s *Faction) SetDm(val OptFactionSecrets) {
+	s.Dm = val
+}
+
+// SetPersonal sets the value of Personal.
+func (s *Faction) SetPersonal(val []PersonalStanding) {
+	s.Personal = val
+}
+
+// SetChanges sets the value of Changes.
+func (s *Faction) SetChanges(val []StandingChange) {
+	s.Changes = val
+}
+
+// A generic Faction a DM copies and names.
+// Ref: #/components/schemas/FactionArchetype
+type FactionArchetype struct {
+	Slug        Slug   `json:"slug"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Goals       string `json:"goals"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *FactionArchetype) GetSlug() Slug {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *FactionArchetype) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *FactionArchetype) GetDescription() string {
+	return s.Description
+}
+
+// GetGoals returns the value of Goals.
+func (s *FactionArchetype) GetGoals() string {
+	return s.Goals
+}
+
+// SetSlug sets the value of Slug.
+func (s *FactionArchetype) SetSlug(val Slug) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *FactionArchetype) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *FactionArchetype) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetGoals sets the value of Goals.
+func (s *FactionArchetype) SetGoals(val string) {
+	s.Goals = val
+}
+
+// FactionHeaders wraps Faction with response headers.
+type FactionHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Faction
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *FactionHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *FactionHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *FactionHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *FactionHeaders) GetResponse() Faction {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *FactionHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *FactionHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *FactionHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *FactionHeaders) SetResponse(val Faction) {
+	s.Response = val
+}
+
+func (*FactionHeaders) createFactionRes() {}
+
+// The editable part of a Faction.
+// Ref: #/components/schemas/FactionInput
+type FactionInput struct {
+	Name      string    `json:"name"`
+	Archetype OptString `json:"archetype"`
+	Goals     OptString `json:"goals"`
+	Territory OptString `json:"territory"`
+	Notes     OptString `json:"notes"`
+}
+
+// GetName returns the value of Name.
+func (s *FactionInput) GetName() string {
+	return s.Name
+}
+
+// GetArchetype returns the value of Archetype.
+func (s *FactionInput) GetArchetype() OptString {
+	return s.Archetype
+}
+
+// GetGoals returns the value of Goals.
+func (s *FactionInput) GetGoals() OptString {
+	return s.Goals
+}
+
+// GetTerritory returns the value of Territory.
+func (s *FactionInput) GetTerritory() OptString {
+	return s.Territory
+}
+
+// GetNotes returns the value of Notes.
+func (s *FactionInput) GetNotes() OptString {
+	return s.Notes
+}
+
+// SetName sets the value of Name.
+func (s *FactionInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetArchetype sets the value of Archetype.
+func (s *FactionInput) SetArchetype(val OptString) {
+	s.Archetype = val
+}
+
+// SetGoals sets the value of Goals.
+func (s *FactionInput) SetGoals(val OptString) {
+	s.Goals = val
+}
+
+// SetTerritory sets the value of Territory.
+func (s *FactionInput) SetTerritory(val OptString) {
+	s.Territory = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *FactionInput) SetNotes(val OptString) {
+	s.Notes = val
+}
+
+// What only the DM knows of a Faction.
+// Ref: #/components/schemas/FactionSecrets
+type FactionSecrets struct {
+	Goals     string `json:"goals"`
+	Territory string `json:"territory"`
+	Notes     string `json:"notes"`
+	Score     int32  `json:"score"`
+}
+
+// GetGoals returns the value of Goals.
+func (s *FactionSecrets) GetGoals() string {
+	return s.Goals
+}
+
+// GetTerritory returns the value of Territory.
+func (s *FactionSecrets) GetTerritory() string {
+	return s.Territory
+}
+
+// GetNotes returns the value of Notes.
+func (s *FactionSecrets) GetNotes() string {
+	return s.Notes
+}
+
+// GetScore returns the value of Score.
+func (s *FactionSecrets) GetScore() int32 {
+	return s.Score
+}
+
+// SetGoals sets the value of Goals.
+func (s *FactionSecrets) SetGoals(val string) {
+	s.Goals = val
+}
+
+// SetTerritory sets the value of Territory.
+func (s *FactionSecrets) SetTerritory(val string) {
+	s.Territory = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *FactionSecrets) SetNotes(val string) {
+	s.Notes = val
+}
+
+// SetScore sets the value of Score.
+func (s *FactionSecrets) SetScore(val int32) {
+	s.Score = val
 }
 
 // A homebrew feat in its builder, the slug it is known by, and how it reads back.
@@ -17809,6 +18182,106 @@ func (s *ListEntriesNotModified) SetETag(val OptString) {
 }
 
 func (*ListEntriesNotModified) listEntriesRes() {}
+
+// ListFactionArchetypesOKHeaders wraps []FactionArchetype with response headers.
+type ListFactionArchetypesOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []FactionArchetype
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListFactionArchetypesOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListFactionArchetypesOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListFactionArchetypesOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListFactionArchetypesOKHeaders) GetResponse() []FactionArchetype {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListFactionArchetypesOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListFactionArchetypesOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListFactionArchetypesOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListFactionArchetypesOKHeaders) SetResponse(val []FactionArchetype) {
+	s.Response = val
+}
+
+func (*ListFactionArchetypesOKHeaders) listFactionArchetypesRes() {}
+
+// ListFactionsOKHeaders wraps []Faction with response headers.
+type ListFactionsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []Faction
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListFactionsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListFactionsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListFactionsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListFactionsOKHeaders) GetResponse() []Faction {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListFactionsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListFactionsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListFactionsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListFactionsOKHeaders) SetResponse(val []Faction) {
+	s.Response = val
+}
+
+func (*ListFactionsOKHeaders) listFactionsRes() {}
 
 // ListInvitesOKHeaders wraps []Invite with response headers.
 type ListInvitesOKHeaders struct {
@@ -32962,6 +33435,52 @@ func (o OptEquipmentSlot) Or(d EquipmentSlot) EquipmentSlot {
 	return d
 }
 
+// NewOptFactionSecrets returns new OptFactionSecrets with value set to v.
+func NewOptFactionSecrets(v FactionSecrets) OptFactionSecrets {
+	return OptFactionSecrets{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptFactionSecrets is optional FactionSecrets.
+type OptFactionSecrets struct {
+	Value FactionSecrets
+	Set   bool
+}
+
+// IsSet returns true if OptFactionSecrets was set.
+func (o OptFactionSecrets) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptFactionSecrets) Reset() {
+	var v FactionSecrets
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptFactionSecrets) SetTo(v FactionSecrets) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptFactionSecrets) Get() (v FactionSecrets, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptFactionSecrets) Or(d FactionSecrets) FactionSecrets {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptFloat64 returns new OptFloat64 with value set to v.
 func NewOptFloat64(v float64) OptFloat64 {
 	return OptFloat64{
@@ -36504,6 +37023,52 @@ func (o OptSpellPartWhen) Or(d SpellPartWhen) SpellPartWhen {
 	return d
 }
 
+// NewOptStandingChangeSecrets returns new OptStandingChangeSecrets with value set to v.
+func NewOptStandingChangeSecrets(v StandingChangeSecrets) OptStandingChangeSecrets {
+	return OptStandingChangeSecrets{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptStandingChangeSecrets is optional StandingChangeSecrets.
+type OptStandingChangeSecrets struct {
+	Value StandingChangeSecrets
+	Set   bool
+}
+
+// IsSet returns true if OptStandingChangeSecrets was set.
+func (o OptStandingChangeSecrets) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptStandingChangeSecrets) Reset() {
+	var v StandingChangeSecrets
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptStandingChangeSecrets) SetTo(v StandingChangeSecrets) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptStandingChangeSecrets) Get() (v StandingChangeSecrets, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptStandingChangeSecrets) Or(d StandingChangeSecrets) StandingChangeSecrets {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -37109,6 +37674,56 @@ func (s *Person) SetNickname(val string) {
 	s.Nickname = val
 }
 
+// One Character's own Standing with a Faction, used instead of the party's. The score is there for the
+// DM alone.
+// Ref: #/components/schemas/PersonalStanding
+type PersonalStanding struct {
+	CharacterId ID           `json:"characterId"`
+	Character   string       `json:"character"`
+	Tier        StandingTier `json:"tier"`
+	Score       OptInt32     `json:"score"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *PersonalStanding) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetCharacter returns the value of Character.
+func (s *PersonalStanding) GetCharacter() string {
+	return s.Character
+}
+
+// GetTier returns the value of Tier.
+func (s *PersonalStanding) GetTier() StandingTier {
+	return s.Tier
+}
+
+// GetScore returns the value of Score.
+func (s *PersonalStanding) GetScore() OptInt32 {
+	return s.Score
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *PersonalStanding) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetCharacter sets the value of Character.
+func (s *PersonalStanding) SetCharacter(val string) {
+	s.Character = val
+}
+
+// SetTier sets the value of Tier.
+func (s *PersonalStanding) SetTier(val StandingTier) {
+	s.Tier = val
+}
+
+// SetScore sets the value of Score.
+func (s *PersonalStanding) SetScore(val OptInt32) {
+	s.Score = val
+}
+
 // One value chosen for a choice on reaching a level.
 // Ref: #/components/schemas/PickLine
 type PickLine struct {
@@ -37463,6 +38078,7 @@ func (*ProblemStatusCodeWithHeaders) createCompanionRes()               {}
 func (*ProblemStatusCodeWithHeaders) createDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) createFactionRes()                 {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) createLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) createLibraryEntryRes()            {}
@@ -37474,6 +38090,7 @@ func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
+func (*ProblemStatusCodeWithHeaders) decideStandingChangeRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
@@ -37481,6 +38098,7 @@ func (*ProblemStatusCodeWithHeaders) deleteCompanionRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) deleteFactionRes()                 {}
 func (*ProblemStatusCodeWithHeaders) deleteLootTableRes()               {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) deletePushSubscriptionRes()        {}
@@ -37563,6 +38181,8 @@ func (*ProblemStatusCodeWithHeaders) listEncounterPoolsRes()            {}
 func (*ProblemStatusCodeWithHeaders) listEncounterTableRevisionsRes()   {}
 func (*ProblemStatusCodeWithHeaders) listEncounterTablesRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEntriesRes()                   {}
+func (*ProblemStatusCodeWithHeaders) listFactionArchetypesRes()         {}
+func (*ProblemStatusCodeWithHeaders) listFactionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listFriendsRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listInvitesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listLibraryCollectionsRes()        {}
@@ -37614,6 +38234,7 @@ func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSpeciesRes()                {}
 func (*ProblemStatusCodeWithHeaders) previewSpellRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSubclassRes()               {}
+func (*ProblemStatusCodeWithHeaders) proposeStandingChangeRes()         {}
 func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
@@ -37686,6 +38307,7 @@ func (*ProblemStatusCodeWithHeaders) updateCharacterRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateCompanionRes()               {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) updateEncounterTableRes()          {}
+func (*ProblemStatusCodeWithHeaders) updateFactionRes()                 {}
 func (*ProblemStatusCodeWithHeaders) updateLibraryCollectionRes()       {}
 func (*ProblemStatusCodeWithHeaders) updateLibraryEntryRes()            {}
 func (*ProblemStatusCodeWithHeaders) updateLootTableRes()               {}
@@ -45006,6 +45628,457 @@ func (*SpellcastingHeaders) copySpellRes()       {}
 func (*SpellcastingHeaders) getSpellcastingRes() {}
 func (*SpellcastingHeaders) prepareSpellsRes()   {}
 
+// A move in Standing. A Player sees which way a confirmed change went, and its reason when the DM
+// shared it. The dm part is there for the DM alone.
+// Ref: #/components/schemas/StandingChange
+type StandingChange struct {
+	ID          ID    `json:"id"`
+	CharacterId OptID `json:"characterId"`
+	// Whether the Standing went up.
+	Rose bool `json:"rose"`
+	// Empty for a Player when the DM did not share it.
+	Reason    string                   `json:"reason"`
+	Status    StandingChangeStatus     `json:"status"`
+	CreatedAt time.Time                `json:"createdAt"`
+	Dm        OptStandingChangeSecrets `json:"dm"`
+}
+
+// GetID returns the value of ID.
+func (s *StandingChange) GetID() ID {
+	return s.ID
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *StandingChange) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetRose returns the value of Rose.
+func (s *StandingChange) GetRose() bool {
+	return s.Rose
+}
+
+// GetReason returns the value of Reason.
+func (s *StandingChange) GetReason() string {
+	return s.Reason
+}
+
+// GetStatus returns the value of Status.
+func (s *StandingChange) GetStatus() StandingChangeStatus {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *StandingChange) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetDm returns the value of Dm.
+func (s *StandingChange) GetDm() OptStandingChangeSecrets {
+	return s.Dm
+}
+
+// SetID sets the value of ID.
+func (s *StandingChange) SetID(val ID) {
+	s.ID = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *StandingChange) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetRose sets the value of Rose.
+func (s *StandingChange) SetRose(val bool) {
+	s.Rose = val
+}
+
+// SetReason sets the value of Reason.
+func (s *StandingChange) SetReason(val string) {
+	s.Reason = val
+}
+
+// SetStatus sets the value of Status.
+func (s *StandingChange) SetStatus(val StandingChangeStatus) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *StandingChange) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetDm sets the value of Dm.
+func (s *StandingChange) SetDm(val OptStandingChangeSecrets) {
+	s.Dm = val
+}
+
+// StandingChangeHeaders wraps StandingChange with response headers.
+type StandingChangeHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           StandingChange
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *StandingChangeHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *StandingChangeHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *StandingChangeHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *StandingChangeHeaders) GetResponse() StandingChange {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *StandingChangeHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *StandingChangeHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *StandingChangeHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *StandingChangeHeaders) SetResponse(val StandingChange) {
+	s.Response = val
+}
+
+func (*StandingChangeHeaders) proposeStandingChangeRes() {}
+
+// A suggested Standing Change. Without a Character it is for the party.
+// Ref: #/components/schemas/StandingChangeInput
+type StandingChangeInput struct {
+	CharacterId OptID   `json:"characterId"`
+	Delta       int32   `json:"delta"`
+	Reason      string  `json:"reason"`
+	ShareReason OptBool `json:"shareReason"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *StandingChangeInput) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// GetDelta returns the value of Delta.
+func (s *StandingChangeInput) GetDelta() int32 {
+	return s.Delta
+}
+
+// GetReason returns the value of Reason.
+func (s *StandingChangeInput) GetReason() string {
+	return s.Reason
+}
+
+// GetShareReason returns the value of ShareReason.
+func (s *StandingChangeInput) GetShareReason() OptBool {
+	return s.ShareReason
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *StandingChangeInput) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// SetDelta sets the value of Delta.
+func (s *StandingChangeInput) SetDelta(val int32) {
+	s.Delta = val
+}
+
+// SetReason sets the value of Reason.
+func (s *StandingChangeInput) SetReason(val string) {
+	s.Reason = val
+}
+
+// SetShareReason sets the value of ShareReason.
+func (s *StandingChangeInput) SetShareReason(val OptBool) {
+	s.ShareReason = val
+}
+
+// What only the DM sees of a Standing Change.
+// Ref: #/components/schemas/StandingChangeSecrets
+type StandingChangeSecrets struct {
+	Delta       int32                       `json:"delta"`
+	ShareReason bool                        `json:"shareReason"`
+	Origin      StandingChangeSecretsOrigin `json:"origin"`
+	Client      string                      `json:"client"`
+}
+
+// GetDelta returns the value of Delta.
+func (s *StandingChangeSecrets) GetDelta() int32 {
+	return s.Delta
+}
+
+// GetShareReason returns the value of ShareReason.
+func (s *StandingChangeSecrets) GetShareReason() bool {
+	return s.ShareReason
+}
+
+// GetOrigin returns the value of Origin.
+func (s *StandingChangeSecrets) GetOrigin() StandingChangeSecretsOrigin {
+	return s.Origin
+}
+
+// GetClient returns the value of Client.
+func (s *StandingChangeSecrets) GetClient() string {
+	return s.Client
+}
+
+// SetDelta sets the value of Delta.
+func (s *StandingChangeSecrets) SetDelta(val int32) {
+	s.Delta = val
+}
+
+// SetShareReason sets the value of ShareReason.
+func (s *StandingChangeSecrets) SetShareReason(val bool) {
+	s.ShareReason = val
+}
+
+// SetOrigin sets the value of Origin.
+func (s *StandingChangeSecrets) SetOrigin(val StandingChangeSecretsOrigin) {
+	s.Origin = val
+}
+
+// SetClient sets the value of Client.
+func (s *StandingChangeSecrets) SetClient(val string) {
+	s.Client = val
+}
+
+type StandingChangeSecretsOrigin string
+
+const (
+	StandingChangeSecretsOriginUI        StandingChangeSecretsOrigin = "ui"
+	StandingChangeSecretsOriginMcp       StandingChangeSecretsOrigin = "mcp"
+	StandingChangeSecretsOriginGenerator StandingChangeSecretsOrigin = "generator"
+	StandingChangeSecretsOriginSystem    StandingChangeSecretsOrigin = "system"
+)
+
+// AllValues returns all StandingChangeSecretsOrigin values.
+func (StandingChangeSecretsOrigin) AllValues() []StandingChangeSecretsOrigin {
+	return []StandingChangeSecretsOrigin{
+		StandingChangeSecretsOriginUI,
+		StandingChangeSecretsOriginMcp,
+		StandingChangeSecretsOriginGenerator,
+		StandingChangeSecretsOriginSystem,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s StandingChangeSecretsOrigin) MarshalText() ([]byte, error) {
+	switch s {
+	case StandingChangeSecretsOriginUI:
+		return []byte(s), nil
+	case StandingChangeSecretsOriginMcp:
+		return []byte(s), nil
+	case StandingChangeSecretsOriginGenerator:
+		return []byte(s), nil
+	case StandingChangeSecretsOriginSystem:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *StandingChangeSecretsOrigin) UnmarshalText(data []byte) error {
+	switch StandingChangeSecretsOrigin(data) {
+	case StandingChangeSecretsOriginUI:
+		*s = StandingChangeSecretsOriginUI
+		return nil
+	case StandingChangeSecretsOriginMcp:
+		*s = StandingChangeSecretsOriginMcp
+		return nil
+	case StandingChangeSecretsOriginGenerator:
+		*s = StandingChangeSecretsOriginGenerator
+		return nil
+	case StandingChangeSecretsOriginSystem:
+		*s = StandingChangeSecretsOriginSystem
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type StandingChangeStatus string
+
+const (
+	StandingChangeStatusPending   StandingChangeStatus = "pending"
+	StandingChangeStatusConfirmed StandingChangeStatus = "confirmed"
+	StandingChangeStatusDismissed StandingChangeStatus = "dismissed"
+)
+
+// AllValues returns all StandingChangeStatus values.
+func (StandingChangeStatus) AllValues() []StandingChangeStatus {
+	return []StandingChangeStatus{
+		StandingChangeStatusPending,
+		StandingChangeStatusConfirmed,
+		StandingChangeStatusDismissed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s StandingChangeStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case StandingChangeStatusPending:
+		return []byte(s), nil
+	case StandingChangeStatusConfirmed:
+		return []byte(s), nil
+	case StandingChangeStatusDismissed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *StandingChangeStatus) UnmarshalText(data []byte) error {
+	switch StandingChangeStatus(data) {
+	case StandingChangeStatusPending:
+		*s = StandingChangeStatusPending
+		return nil
+	case StandingChangeStatusConfirmed:
+		*s = StandingChangeStatusConfirmed
+		return nil
+	case StandingChangeStatusDismissed:
+		*s = StandingChangeStatusDismissed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The DM's word on a pending Standing Change. What is left out of a confirmation stays as it was
+// suggested.
+// Ref: #/components/schemas/StandingDecision
+type StandingDecision struct {
+	Confirm     bool      `json:"confirm"`
+	Delta       OptInt32  `json:"delta"`
+	Reason      OptString `json:"reason"`
+	ShareReason OptBool   `json:"shareReason"`
+}
+
+// GetConfirm returns the value of Confirm.
+func (s *StandingDecision) GetConfirm() bool {
+	return s.Confirm
+}
+
+// GetDelta returns the value of Delta.
+func (s *StandingDecision) GetDelta() OptInt32 {
+	return s.Delta
+}
+
+// GetReason returns the value of Reason.
+func (s *StandingDecision) GetReason() OptString {
+	return s.Reason
+}
+
+// GetShareReason returns the value of ShareReason.
+func (s *StandingDecision) GetShareReason() OptBool {
+	return s.ShareReason
+}
+
+// SetConfirm sets the value of Confirm.
+func (s *StandingDecision) SetConfirm(val bool) {
+	s.Confirm = val
+}
+
+// SetDelta sets the value of Delta.
+func (s *StandingDecision) SetDelta(val OptInt32) {
+	s.Delta = val
+}
+
+// SetReason sets the value of Reason.
+func (s *StandingDecision) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetShareReason sets the value of ShareReason.
+func (s *StandingDecision) SetShareReason(val OptBool) {
+	s.ShareReason = val
+}
+
+// How a Faction regards the party or a Character, from worst to best. The score behind it is never
+// shown to Players.
+// Ref: #/components/schemas/StandingTier
+type StandingTier string
+
+const (
+	StandingTierHostile    StandingTier = "hostile"
+	StandingTierUnfriendly StandingTier = "unfriendly"
+	StandingTierNeutral    StandingTier = "neutral"
+	StandingTierFriendly   StandingTier = "friendly"
+	StandingTierAllied     StandingTier = "allied"
+)
+
+// AllValues returns all StandingTier values.
+func (StandingTier) AllValues() []StandingTier {
+	return []StandingTier{
+		StandingTierHostile,
+		StandingTierUnfriendly,
+		StandingTierNeutral,
+		StandingTierFriendly,
+		StandingTierAllied,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s StandingTier) MarshalText() ([]byte, error) {
+	switch s {
+	case StandingTierHostile:
+		return []byte(s), nil
+	case StandingTierUnfriendly:
+		return []byte(s), nil
+	case StandingTierNeutral:
+		return []byte(s), nil
+	case StandingTierFriendly:
+		return []byte(s), nil
+	case StandingTierAllied:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *StandingTier) UnmarshalText(data []byte) error {
+	switch StandingTier(data) {
+	case StandingTierHostile:
+		*s = StandingTierHostile
+		return nil
+	case StandingTierUnfriendly:
+		*s = StandingTierUnfriendly
+		return nil
+	case StandingTierNeutral:
+		*s = StandingTierNeutral
+		return nil
+	case StandingTierFriendly:
+		*s = StandingTierFriendly
+		return nil
+	case StandingTierAllied:
+		*s = StandingTierAllied
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Service status.
 // Ref: #/components/schemas/Status
 type Status struct {
@@ -46416,6 +47489,45 @@ func (s *UnseenReleaseNoteHeaders) SetResponse(val UnseenReleaseNote) {
 }
 
 func (*UnseenReleaseNoteHeaders) getUnseenReleaseNoteRes() {}
+
+// UpdateFactionNoContent is response for UpdateFaction operation.
+type UpdateFactionNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *UpdateFactionNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *UpdateFactionNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *UpdateFactionNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *UpdateFactionNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *UpdateFactionNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *UpdateFactionNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*UpdateFactionNoContent) updateFactionRes() {}
 
 type UploadMapReq struct {
 	Data io.Reader

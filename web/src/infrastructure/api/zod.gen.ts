@@ -3185,6 +3185,113 @@ export const zLiveCombat = z.object({
 });
 
 /**
+ * How a Faction regards the party or a Character, from worst to best. The score behind it is never shown to Players.
+ */
+export const zStandingTier = z.enum([
+    'hostile',
+    'unfriendly',
+    'neutral',
+    'friendly',
+    'allied'
+]);
+
+/**
+ * What only the DM knows of a Faction.
+ */
+export const zFactionSecrets = z.object({
+    goals: z.string().max(2000),
+    territory: z.string().max(2000),
+    notes: z.string().max(2000),
+    score: z.int().gte(-100).lte(100)
+});
+
+/**
+ * The editable part of a Faction.
+ */
+export const zFactionInput = z.object({
+    name: z.string().min(1).max(80),
+    archetype: z.string().max(60).optional(),
+    goals: z.string().max(2000).optional(),
+    territory: z.string().max(2000).optional(),
+    notes: z.string().max(2000).optional()
+});
+
+/**
+ * One Character's own Standing with a Faction, used instead of the party's. The score is there for the DM alone.
+ */
+export const zPersonalStanding = z.object({
+    characterId: zId,
+    character: z.string().max(200),
+    tier: zStandingTier,
+    score: z.int().gte(-100).lte(100).optional()
+});
+
+/**
+ * What only the DM sees of a Standing Change.
+ */
+export const zStandingChangeSecrets = z.object({
+    delta: z.int().gte(-100).lte(100),
+    shareReason: z.boolean(),
+    origin: z.enum([
+        'ui',
+        'mcp',
+        'generator',
+        'system'
+    ]),
+    client: z.string().max(120)
+});
+
+/**
+ * A move in Standing. A Player sees which way a confirmed change went, and its reason when the DM shared it. The dm part is there for the DM alone.
+ */
+export const zStandingChange = z.object({
+    id: zId,
+    characterId: zId.optional(),
+    rose: z.boolean(),
+    reason: z.string().max(500),
+    status: z.enum([
+        'pending',
+        'confirmed',
+        'dismissed'
+    ]),
+    createdAt: z.iso.datetime().max(40),
+    dm: zStandingChangeSecrets.optional()
+});
+
+/**
+ * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
+ */
+export const zFaction = z.object({
+    id: zId,
+    name: z.string().max(80),
+    archetype: z.string().max(60),
+    tier: zStandingTier,
+    dm: zFactionSecrets.optional(),
+    personal: z.array(zPersonalStanding).max(1000),
+    changes: z.array(zStandingChange).max(5000)
+});
+
+/**
+ * A suggested Standing Change. Without a Character it is for the party.
+ */
+export const zStandingChangeInput = z.object({
+    characterId: zId.optional(),
+    delta: z.int().gte(-100).lte(100),
+    reason: z.string().min(1).max(500),
+    shareReason: z.boolean().optional()
+});
+
+/**
+ * The DM's word on a pending Standing Change. What is left out of a confirmation stays as it was suggested.
+ */
+export const zStandingDecision = z.object({
+    confirm: z.boolean(),
+    delta: z.int().gte(-100).lte(100).optional(),
+    reason: z.string().min(1).max(500).optional(),
+    shareReason: z.boolean().optional()
+});
+
+/**
  * An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
  */
 export const zCompanion = z.object({
@@ -4598,6 +4705,16 @@ export const zLiveCheck = z.object({
 });
 
 /**
+ * A generic Faction a DM copies and names.
+ */
+export const zFactionArchetype = z.object({
+    slug: zSlug,
+    name: z.string().max(80),
+    description: z.string().max(500),
+    goals: z.string().max(500)
+});
+
+/**
  * What one audience may see now. With fog, a hex is visible now, remembered, or in neither list because the party never saw it; nothing in it is sent. Walls, lights and ambient go to the DM only.
  */
 export const zLiveView = z.object({
@@ -5993,6 +6110,77 @@ export const zListEncounterChecksPath = z.object({
  * The checks.
  */
 export const zListEncounterChecksResponse = z.array(zEncounterCheck).max(1000);
+
+/**
+ * The archetypes, by slug.
+ */
+export const zListFactionArchetypesResponse = z.array(zFactionArchetype).max(100);
+
+export const zListFactionsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Factions, by name.
+ */
+export const zListFactionsResponse = z.array(zFaction).max(500);
+
+export const zCreateFactionBody = zFactionInput;
+
+export const zCreateFactionPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Faction.
+ */
+export const zCreateFactionResponse = zFaction;
+
+export const zDeleteFactionPath = z.object({
+    campaignId: zId,
+    factionId: zId
+});
+
+/**
+ * The Faction is gone.
+ */
+export const zDeleteFactionResponse = z.void();
+
+export const zUpdateFactionBody = zFactionInput;
+
+export const zUpdateFactionPath = z.object({
+    campaignId: zId,
+    factionId: zId
+});
+
+/**
+ * The Faction is changed.
+ */
+export const zUpdateFactionResponse = z.void();
+
+export const zProposeStandingChangeBody = zStandingChangeInput;
+
+export const zProposeStandingChangePath = z.object({
+    campaignId: zId,
+    factionId: zId
+});
+
+/**
+ * The suggestion, pending.
+ */
+export const zProposeStandingChangeResponse = zStandingChange;
+
+export const zDecideStandingChangeBody = zStandingDecision;
+
+export const zDecideStandingChangePath = z.object({
+    campaignId: zId,
+    changeId: zId
+});
+
+/**
+ * The change is decided.
+ */
+export const zDecideStandingChangeResponse = z.void();
 
 export const zListCompanionsPath = z.object({
     campaignId: zId

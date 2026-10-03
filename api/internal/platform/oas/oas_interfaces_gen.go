@@ -89,6 +89,10 @@ type CreateEncounterTableRes interface {
 	createEncounterTableRes()
 }
 
+type CreateFactionRes interface {
+	createFactionRes()
+}
+
 type CreateInviteRes interface {
 	createInviteRes()
 }
@@ -133,6 +137,10 @@ type CreateShopRes interface {
 	createShopRes()
 }
 
+type DecideStandingChangeRes interface {
+	decideStandingChangeRes()
+}
+
 type DeclineFriendRequestRes interface {
 	declineFriendRequestRes()
 }
@@ -159,6 +167,10 @@ type DeleteEncounterPoolRes interface {
 
 type DeleteEncounterTableRes interface {
 	deleteEncounterTableRes()
+}
+
+type DeleteFactionRes interface {
+	deleteFactionRes()
 }
 
 type DeleteLootTableRes interface {
@@ -489,6 +501,14 @@ type ListEntriesRes interface {
 	listEntriesRes()
 }
 
+type ListFactionArchetypesRes interface {
+	listFactionArchetypesRes()
+}
+
+type ListFactionsRes interface {
+	listFactionsRes()
+}
+
 type ListFriendsRes interface {
 	listFriendsRes()
 }
@@ -691,6 +711,10 @@ type PreviewSpellRes interface {
 
 type PreviewSubclassRes interface {
 	previewSubclassRes()
+}
+
+type ProposeStandingChangeRes interface {
+	proposeStandingChangeRes()
 }
 
 type PublishReleaseNoteRes interface {
@@ -979,6 +1003,10 @@ type UpdateEncounterPoolRes interface {
 
 type UpdateEncounterTableRes interface {
 	updateEncounterTableRes()
+}
+
+type UpdateFactionRes interface {
+	updateFactionRes()
 }
 
 type UpdateLibraryCollectionRes interface {

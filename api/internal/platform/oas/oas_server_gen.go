@@ -101,6 +101,14 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/push/subscriptions
 	CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (CreatePushSubscriptionRes, error)
+	// DecideStandingChange implements decideStandingChange operation.
+	//
+	// The DM's word on a pending Standing Change, confirmed as suggested or edited, or dismissed.
+	// Confirmed, it moves the party's Standing or the Character's Personal Standing, which starts from the
+	// party's. Only the DM decides, signed in: an Access Token may suggest a change and never confirm one.
+	//
+	// POST /api/v1/campaigns/{campaignId}/standing-changes/{changeId}/decision
+	DecideStandingChange(ctx context.Context, req *StandingDecision, params DecideStandingChangeParams) (DecideStandingChangeRes, error)
 	// DeclineFriendRequest implements declineFriendRequest operation.
 	//
 	// Turns the request down; with block, the sender's later requests never show.
@@ -421,6 +429,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/encounter-tables
 	CreateEncounterTable(ctx context.Context, req *EncounterTableInput, params CreateEncounterTableParams) (CreateEncounterTableRes, error)
+	// CreateFaction implements createFaction operation.
+	//
+	// Adds a Faction, Neutral towards the party, from an archetype of the catalogue or from nothing. DM
+	// only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/factions
+	CreateFaction(ctx context.Context, req *FactionInput, params CreateFactionParams) (CreateFactionRes, error)
 	// CreateInvite implements createInvite operation.
 	//
 	// Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
@@ -500,6 +515,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	DeleteEncounterTable(ctx context.Context, params DeleteEncounterTableParams) (DeleteEncounterTableRes, error)
+	// DeleteFaction implements deleteFaction operation.
+	//
+	// Removes a Faction with its Standing and its changes. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/factions/{factionId}
+	DeleteFaction(ctx context.Context, params DeleteFactionParams) (DeleteFactionRes, error)
 	// DeleteLootTable implements deleteLootTable operation.
 	//
 	// Removes the Loot Table; its Revisions keep it restorable. DM only.
@@ -595,6 +616,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/rules/hex/sight
 	PreviewSight(ctx context.Context, req *SightRequest) (PreviewSightRes, error)
+	// ProposeStandingChange implements proposeStandingChange operation.
+	//
+	// Suggests a move in a Faction's Standing, for the party or for one Character, with a reason. It moves
+	// nothing and waits for the DM to confirm it in person, whoever or whatever suggested it. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/factions/{factionId}/standing-changes
+	ProposeStandingChange(ctx context.Context, req *StandingChangeInput, params ProposeStandingChangeParams) (ProposeStandingChangeRes, error)
 	// RemoveMember implements removeMember operation.
 	//
 	// A DM removes a Member, or a Member leaves. The last DM cannot leave.
@@ -843,6 +871,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 	UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (UpdateEncounterTableRes, error)
+	// UpdateFaction implements updateFaction operation.
+	//
+	// Changes a Faction's name and what the DM knows of it. Its Standing moves only by a Standing Change.
+	// DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/factions/{factionId}
+	UpdateFaction(ctx context.Context, req *FactionInput, params UpdateFactionParams) (UpdateFactionRes, error)
 	// UpdateLibraryCollection implements updateLibraryCollection operation.
 	//
 	// Renames one of the caller's Collections and sets which of their entries it holds; every Campaign it
@@ -1420,6 +1455,22 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/entries
 	ListEntries(ctx context.Context, params ListEntriesParams) (ListEntriesRes, error)
+	// ListFactionArchetypes implements listFactionArchetypes operation.
+	//
+	// The catalogue of generic Factions a DM copies and names. None is a named faction of a published
+	// setting.
+	//
+	// GET /api/v1/faction-archetypes
+	ListFactionArchetypes(ctx context.Context) (ListFactionArchetypesRes, error)
+	// ListFactions implements listFactions operation.
+	//
+	// The Campaign's Factions with how each regards the party. Every Member sees names and the tier of
+	// each Standing, their own Characters' Personal Standing, and the confirmed changes with the reasons
+	// the DM shared. Goals, territory, notes, scores, amounts, unshared reasons and changes not yet
+	// decided are the DM's alone.
+	//
+	// GET /api/v1/campaigns/{campaignId}/factions
+	ListFactions(ctx context.Context, params ListFactionsParams) (ListFactionsRes, error)
 	// ListFriends implements listFriends operation.
 	//
 	// The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.

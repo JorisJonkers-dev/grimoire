@@ -206,6 +206,19 @@ type CampaignContainerCoin struct {
 	Amount      int32
 }
 
+type CampaignFaction struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Archetype  string
+	Goals      string
+	Territory  string
+	Notes      string
+	Score      int32
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
 type CampaignInvite struct {
 	ID         uuid.UUID
 	CampaignID uuid.UUID
@@ -374,6 +387,12 @@ type CampaignNpcRevision struct {
 	Disposition string
 }
 
+type CampaignPersonalStanding struct {
+	FactionID   uuid.UUID
+	CharacterID uuid.UUID
+	Score       int32
+}
+
 type CampaignPushSubscription struct {
 	ID        uuid.UUID
 	Subject   string
@@ -409,6 +428,21 @@ type CampaignRevision struct {
 	Client        string
 	RestoredFrom  pgtype.Int4
 	CreatedAt     time.Time
+}
+
+type CampaignStandingChange struct {
+	ID          uuid.UUID
+	FactionID   uuid.UUID
+	CharacterID pgtype.UUID
+	Delta       int32
+	Reason      string
+	ShareReason bool
+	Status      string
+	Origin      string
+	Client      string
+	ProposedBy  string
+	CreatedAt   time.Time
+	DecidedAt   pgtype.Timestamptz
 }
 
 type CompendiumAbilityScore struct {

@@ -73,6 +73,7 @@ type Querier interface {
 	BuilderSpecies(ctx context.Context, key string) ([]BuilderSpeciesRow, error)
 	BuilderWeapons(ctx context.Context, key string) ([]BuilderWeaponsRow, error)
 	BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, error)
+	CampaignCharacterOwner(ctx context.Context, arg CampaignCharacterOwnerParams) (uuid.UUID, error)
 	CampaignChecks(ctx context.Context, campaignID uuid.UUID) ([]CampaignChecksRow, error)
 	CampaignClock(ctx context.Context, id uuid.UUID) (CampaignClockRow, error)
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
@@ -181,6 +182,7 @@ type Querier interface {
 	CreateInvite(ctx context.Context, arg CreateInviteParams) (CreateInviteRow, error)
 	DecideRetrain(ctx context.Context, arg DecideRetrainParams) (int64, error)
 	DecideSharedSubmission(ctx context.Context, arg DecideSharedSubmissionParams) error
+	DecideStandingChange(ctx context.Context, arg DecideStandingChangeParams) error
 	DeclineFriendRequest(ctx context.Context, arg DeclineFriendRequestParams) error
 	DeleteBlock(ctx context.Context, arg DeleteBlockParams) (int64, error)
 	DeleteCharacter(ctx context.Context, arg DeleteCharacterParams) error
@@ -192,6 +194,7 @@ type Querier interface {
 	DeleteDying(ctx context.Context, tokenID uuid.UUID) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
+	DeleteFaction(ctx context.Context, arg DeleteFactionParams) (int64, error)
 	DeleteFriendRequest(ctx context.Context, id uuid.UUID) error
 	DeleteFriendship(ctx context.Context, arg DeleteFriendshipParams) (int64, error)
 	DeleteInstance(ctx context.Context, id uuid.UUID) error
@@ -253,6 +256,7 @@ type Querier interface {
 	GetClassDetail(ctx context.Context, id int64) (GetClassDetailRow, error)
 	GetCompanion(ctx context.Context, arg GetCompanionParams) (CampaignCompanion, error)
 	GetConditionDetail(ctx context.Context, id int64) (string, error)
+	GetFaction(ctx context.Context, arg GetFactionParams) (CampaignFaction, error)
 	GetFeatDetail(ctx context.Context, id int64) (GetFeatDetailRow, error)
 	GetInstanceCreatedAt(ctx context.Context) (time.Time, error)
 	GetItemDetail(ctx context.Context, id int64) (GetItemDetailRow, error)
@@ -332,6 +336,7 @@ type Querier interface {
 	InsertEffectTeleport(ctx context.Context, arg InsertEffectTeleportParams) error
 	InsertEffectTempHP(ctx context.Context, arg InsertEffectTempHPParams) error
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
+	InsertFaction(ctx context.Context, arg InsertFactionParams) error
 	InsertFriendRequest(ctx context.Context, arg InsertFriendRequestParams) (int64, error)
 	InsertFriendship(ctx context.Context, arg InsertFriendshipParams) error
 	// A group that leaves the party plays in a Session of its own, on its own map.
@@ -390,6 +395,7 @@ type Querier interface {
 	InsertSnapshotPick(ctx context.Context, arg InsertSnapshotPickParams) error
 	InsertSnapshotSkill(ctx context.Context, arg InsertSnapshotSkillParams) error
 	InsertSpawnEvent(ctx context.Context, arg InsertSpawnEventParams) error
+	InsertStandingChange(ctx context.Context, arg InsertStandingChangeParams) error
 	InsertSurface(ctx context.Context, arg InsertSurfaceParams) error
 	InsertSurfaceReaction(ctx context.Context, arg InsertSurfaceReactionParams) error
 	InsertTableEntry(ctx context.Context, arg InsertTableEntryParams) error
@@ -471,6 +477,7 @@ type Querier interface {
 	ListEffectTeleports(ctx context.Context) ([]ListEffectTeleportsRow, error)
 	ListEffectTempHPs(ctx context.Context) ([]ListEffectTempHPsRow, error)
 	ListEntries(ctx context.Context, arg ListEntriesParams) ([]ListEntriesRow, error)
+	ListFactions(ctx context.Context, campaignID uuid.UUID) ([]CampaignFaction, error)
 	ListFriends(ctx context.Context, me uuid.UUID) ([]ListFriendsRow, error)
 	ListIncomingRequests(ctx context.Context, me uuid.UUID) ([]ListIncomingRequestsRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
@@ -481,6 +488,8 @@ type Querier interface {
 	ListNPCs(ctx context.Context, campaignID uuid.UUID) ([]ListNPCsRow, error)
 	ListNotifications(ctx context.Context, accountID uuid.UUID) ([]ListNotificationsRow, error)
 	ListOutgoingRequests(ctx context.Context, me uuid.UUID) ([]ListOutgoingRequestsRow, error)
+	// Every Personal Standing with a Faction of the Campaign, with whose it is.
+	ListPersonalStandings(ctx context.Context, campaignID uuid.UUID) ([]ListPersonalStandingsRow, error)
 	ListPools(ctx context.Context, campaignID uuid.UUID) ([]ListPoolsRow, error)
 	ListPrerequisites(ctx context.Context) ([]CompendiumPrerequisite, error)
 	ListReleaseNotes(ctx context.Context) ([]ListReleaseNotesRow, error)
@@ -499,6 +508,7 @@ type Querier interface {
 	ListSettlements(ctx context.Context, campaignID uuid.UUID) ([]ListSettlementsRow, error)
 	ListSources(ctx context.Context) ([]ListSourcesRow, error)
 	ListSpells(ctx context.Context, arg ListSpellsParams) ([]ListSpellsRow, error)
+	ListStandingChanges(ctx context.Context, campaignID uuid.UUID) ([]CampaignStandingChange, error)
 	ListSurfaceDefinitions(ctx context.Context) ([]CompendiumSurfaceDefinition, error)
 	ListSurfaceReactions(ctx context.Context) ([]CompendiumSurfaceReaction, error)
 	ListTables(ctx context.Context, campaignID uuid.UUID) ([]ListTablesRow, error)
@@ -508,6 +518,8 @@ type Querier interface {
 	LockEntity(ctx context.Context, lockKey string) error
 	LockRoll(ctx context.Context, arg LockRollParams) (string, error)
 	LockSessionOwner(ctx context.Context, lockKey string) (bool, error)
+	// The change and its Faction, held for the DM's decision; only a change of this Campaign.
+	LockStandingChange(ctx context.Context, arg LockStandingChangeParams) (CampaignStandingChange, error)
 	LootRevisionEntries(ctx context.Context, revisionID uuid.UUID) ([]LootRevisionEntriesRow, error)
 	LootTableInUse(ctx context.Context, nestedTableID pgtype.UUID) (int32, error)
 	MapEdges(ctx context.Context, mapID uuid.UUID) ([]MapEdgesRow, error)
@@ -564,6 +576,7 @@ type Querier interface {
 	PendingBetween(ctx context.Context, arg PendingBetweenParams) (uuid.UUID, error)
 	PendingRequest(ctx context.Context, id uuid.UUID) (PendingRequestRow, error)
 	PendingSharedSubmission(ctx context.Context, entryID uuid.UUID) (bool, error)
+	PersonalStanding(ctx context.Context, arg PersonalStandingParams) ([]int32, error)
 	PinLibraryRevision(ctx context.Context, arg PinLibraryRevisionParams) error
 	PoolInUse(ctx context.Context, poolID pgtype.UUID) (int32, error)
 	PoolRevisionMembers(ctx context.Context, revisionID uuid.UUID) ([]PoolRevisionMembersRow, error)
@@ -677,6 +690,7 @@ type Querier interface {
 	// The review follows from the row as it is now, so a picture uploaded meanwhile is never missed.
 	SetDiceSetSharing(ctx context.Context, arg SetDiceSetSharingParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
+	SetFactionScore(ctx context.Context, arg SetFactionScoreParams) error
 	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
 	SetInstanceAttuned(ctx context.Context, arg SetInstanceAttunedParams) error
 	SetInstanceCharges(ctx context.Context, arg SetInstanceChargesParams) error
@@ -689,6 +703,8 @@ type Querier interface {
 	SetMapParty(ctx context.Context, arg SetMapPartyParams) error
 	SetMemberRole(ctx context.Context, arg SetMemberRoleParams) error
 	SetNotificationPreference(ctx context.Context, arg SetNotificationPreferenceParams) error
+	// Only a Character of the Faction's own Campaign carries a Personal Standing with it.
+	SetPersonalStanding(ctx context.Context, arg SetPersonalStandingParams) error
 	SetResourceUsed(ctx context.Context, arg SetResourceUsedParams) error
 	SetRollChoice(ctx context.Context, arg SetRollChoiceParams) error
 	SetRollDie(ctx context.Context, arg SetRollDieParams) (int64, error)
@@ -757,6 +773,7 @@ type Querier interface {
 	// A Companion whose creature changes starts again at that creature's full hit points.
 	UpdateCompanion(ctx context.Context, arg UpdateCompanionParams) (int64, error)
 	UpdateDiceSet(ctx context.Context, arg UpdateDiceSetParams) error
+	UpdateFaction(ctx context.Context, arg UpdateFactionParams) (int64, error)
 	UpdateLibraryCollection(ctx context.Context, arg UpdateLibraryCollectionParams) error
 	UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntryParams) (int32, error)
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)

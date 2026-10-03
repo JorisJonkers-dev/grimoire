@@ -220,6 +220,20 @@ func encodeCreateEncounterTableRequest(
 	return nil
 }
 
+func encodeCreateFactionRequest(
+	req *FactionInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateLibraryCollectionRequest(
 	req *LibraryCollectionInput,
 	r *http.Request,
@@ -348,6 +362,20 @@ func encodeCreateSettlementRequest(
 
 func encodeCreateShopRequest(
 	req *ShopInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeDecideStandingChangeRequest(
+	req *StandingDecision,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -768,6 +796,20 @@ func encodePreviewSpellRequest(
 
 func encodePreviewSubclassRequest(
 	req *SubclassPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeProposeStandingChangeRequest(
+	req *StandingChangeInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -1372,6 +1414,20 @@ func encodeUpdateEncounterPoolRequest(
 
 func encodeUpdateEncounterTableRequest(
 	req *EncounterTableInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateFactionRequest(
+	req *FactionInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

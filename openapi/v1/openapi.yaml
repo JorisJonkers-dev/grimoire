@@ -2500,6 +2500,229 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/faction-archetypes:
+    get:
+      operationId: listFactionArchetypes
+      x-ogen-operation-group: Read
+      summary: List Faction Archetypes
+      description: The catalogue of generic Factions a DM copies and names. None is a named faction of a published setting.
+      tags: [Campaign]
+      responses:
+        "200":
+          description: The archetypes, by slug.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/FactionArchetype"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/factions:
+    get:
+      operationId: listFactions
+      x-ogen-operation-group: Read
+      summary: List Factions
+      description: The Campaign's Factions with how each regards the party. Every Member sees names and the tier of each Standing, their own Characters' Personal Standing, and the confirmed changes with the reasons the DM shared. Goals, territory, notes, scores, amounts, unshared reasons and changes not yet decided are the DM's alone.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Factions, by name.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 500
+                items:
+                  $ref: "#/components/schemas/Faction"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createFaction
+      x-ogen-operation-group: Build
+      summary: Add a Faction
+      description: Adds a Faction, Neutral towards the party, from an archetype of the catalogue or from nothing. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FactionInput"
+      responses:
+        "201":
+          description: The new Faction.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faction"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/factions/{factionId}:
+    put:
+      operationId: updateFaction
+      x-ogen-operation-group: Build
+      summary: Change a Faction
+      description: Changes a Faction's name and what the DM knows of it. Its Standing moves only by a Standing Change. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: factionId
+          in: path
+          required: true
+          description: Faction id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FactionInput"
+      responses:
+        "204":
+          description: The Faction is changed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteFaction
+      x-ogen-operation-group: Build
+      summary: Remove a Faction
+      description: Removes a Faction with its Standing and its changes. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: factionId
+          in: path
+          required: true
+          description: Faction id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: The Faction is gone.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/factions/{factionId}/standing-changes:
+    post:
+      operationId: proposeStandingChange
+      x-ogen-operation-group: Build
+      summary: Suggest a Standing Change
+      description: Suggests a move in a Faction's Standing, for the party or for one Character, with a reason. It moves nothing and waits for the DM to confirm it in person, whoever or whatever suggested it. DM only.
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: factionId
+          in: path
+          required: true
+          description: Faction id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StandingChangeInput"
+      responses:
+        "201":
+          description: The suggestion, pending.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StandingChange"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/standing-changes/{changeId}/decision:
+    post:
+      operationId: decideStandingChange
+      x-ogen-operation-group: Account
+      summary: Confirm or dismiss a Standing Change
+      description: "The DM's word on a pending Standing Change, confirmed as suggested or edited, or dismissed. Confirmed, it moves the party's Standing or the Character's Personal Standing, which starts from the party's. Only the DM decides, signed in: an Access Token may suggest a change and never confirm one."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: changeId
+          in: path
+          required: true
+          description: Standing Change id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StandingDecision"
+      responses:
+        "204":
+          description: The change is decided.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/companions:
     get:
       operationId: listCompanions
@@ -12970,6 +13193,115 @@ components:
         modifier: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         total: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         look: { $ref: "#/components/schemas/LiveDiceLook" }
+    StandingTier:
+      type: string
+      description: How a Faction regards the party or a Character, from worst to best. The score behind it is never shown to Players.
+      enum: [hostile, unfriendly, neutral, friendly, allied]
+    FactionArchetype:
+      type: object
+      description: A generic Faction a DM copies and names.
+      additionalProperties: false
+      required: [slug, name, description, goals]
+      properties:
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 500 }
+        goals: { type: string, maxLength: 500 }
+    Faction:
+      type: object
+      description: A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
+      additionalProperties: false
+      required: [id, name, archetype, tier, personal, changes]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 80 }
+        archetype: { type: string, maxLength: 60, description: "The slug of the archetype it was copied from, or empty." }
+        tier: { $ref: "#/components/schemas/StandingTier" }
+        dm: { $ref: "#/components/schemas/FactionSecrets" }
+        personal:
+          type: array
+          maxItems: 1000
+          description: Personal Standings with this Faction; a Player gets those of their own Characters.
+          items: { $ref: "#/components/schemas/PersonalStanding" }
+        changes:
+          type: array
+          maxItems: 5000
+          description: Standing Changes, newest first. A Player gets the confirmed ones for the party and for their own Characters.
+          items: { $ref: "#/components/schemas/StandingChange" }
+    FactionSecrets:
+      type: object
+      description: What only the DM knows of a Faction.
+      additionalProperties: false
+      required: [goals, territory, notes, score]
+      properties:
+        goals: { type: string, maxLength: 2000 }
+        territory: { type: string, maxLength: 2000 }
+        notes: { type: string, maxLength: 2000 }
+        score: { type: integer, format: int32, minimum: -100, maximum: 100 }
+    FactionInput:
+      type: object
+      description: The editable part of a Faction.
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        archetype: { type: string, maxLength: 60 }
+        goals: { type: string, maxLength: 2000 }
+        territory: { type: string, maxLength: 2000 }
+        notes: { type: string, maxLength: 2000 }
+    PersonalStanding:
+      type: object
+      description: One Character's own Standing with a Faction, used instead of the party's. The score is there for the DM alone.
+      additionalProperties: false
+      required: [characterId, character, tier]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        character: { type: string, maxLength: 200 }
+        tier: { $ref: "#/components/schemas/StandingTier" }
+        score: { type: integer, format: int32, minimum: -100, maximum: 100 }
+    StandingChange:
+      type: object
+      description: A move in Standing. A Player sees which way a confirmed change went, and its reason when the DM shared it. The dm part is there for the DM alone.
+      additionalProperties: false
+      required: [id, rose, reason, status, createdAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        characterId: { $ref: "#/components/schemas/Id" }
+        rose: { type: boolean, description: Whether the Standing went up. }
+        reason: { type: string, maxLength: 500, description: Empty for a Player when the DM did not share it. }
+        status: { type: string, enum: [pending, confirmed, dismissed] }
+        createdAt: { type: string, format: date-time, maxLength: 40 }
+        dm: { $ref: "#/components/schemas/StandingChangeSecrets" }
+    StandingChangeSecrets:
+      type: object
+      description: What only the DM sees of a Standing Change.
+      additionalProperties: false
+      required: [delta, shareReason, origin, client]
+      properties:
+        delta: { type: integer, format: int32, minimum: -100, maximum: 100 }
+        shareReason: { type: boolean }
+        origin: { type: string, enum: [ui, mcp, generator, system] }
+        client: { type: string, maxLength: 120 }
+    StandingChangeInput:
+      type: object
+      description: A suggested Standing Change. Without a Character it is for the party.
+      additionalProperties: false
+      required: [delta, reason]
+      properties:
+        characterId: { $ref: "#/components/schemas/Id" }
+        delta: { type: integer, format: int32, minimum: -100, maximum: 100 }
+        reason: { type: string, minLength: 1, maxLength: 500 }
+        shareReason: { type: boolean }
+    StandingDecision:
+      type: object
+      description: The DM's word on a pending Standing Change. What is left out of a confirmation stays as it was suggested.
+      additionalProperties: false
+      required: [confirm]
+      properties:
+        confirm: { type: boolean }
+        delta: { type: integer, format: int32, minimum: -100, maximum: 100 }
+        reason: { type: string, minLength: 1, maxLength: 500 }
+        shareReason: { type: boolean }
     Companion:
       type: object
       description: An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
