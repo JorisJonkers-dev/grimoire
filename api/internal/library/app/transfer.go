@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
@@ -145,6 +146,11 @@ func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 		var d subclassbuild.Design
 		if err = json.Unmarshal(x.Design, &d); err == nil {
 			err = checkSubclass(d)
+		}
+	case "class":
+		var d classbuild.Design
+		if err = json.Unmarshal(x.Design, &d); err == nil {
+			err = checkClass(d)
 		}
 	default:
 		var d spellbuild.Design

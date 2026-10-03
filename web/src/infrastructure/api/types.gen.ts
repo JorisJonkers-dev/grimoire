@@ -2526,7 +2526,7 @@ export type SessionAction = {
 /**
  * What a Library entry is.
  */
-export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass';
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class';
 
 /**
  * One named value of a Library entry.
@@ -2954,6 +2954,76 @@ export type SpellBuild = {
     effect: string;
     text: Array<string>;
     hexes: Array<BuilderHex>;
+};
+
+/**
+ * A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
+ */
+export type ClassDesign = {
+    hitDie: number;
+    primary: Array<string>;
+    anyPrimary?: boolean;
+    saves: Array<string>;
+    armor: Array<string>;
+    weapons: Array<string>;
+    skills: number;
+    subclassLevel: number;
+    featLevels: Array<number>;
+    columns: Array<ClassColumn>;
+    features: Array<ClassFeature>;
+    casting: ClassCasting;
+};
+
+/**
+ * A custom column of the level table, one value for each of the 20 levels.
+ */
+export type ClassColumn = {
+    name: string;
+    values: Array<string>;
+};
+
+/**
+ * A feature gained at a class level.
+ */
+export type ClassFeature = {
+    level: number;
+    name: string;
+    text: string;
+};
+
+/**
+ * How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels.
+ */
+export type ClassCasting = {
+    kind: string;
+    ability?: string;
+    spellList?: string;
+    cantrips?: Array<number>;
+    prepared?: Array<number>;
+    slots?: Array<Array<number>>;
+    points?: Array<number>;
+    costs?: Array<number>;
+    maxSpell?: Array<number>;
+    spellbook?: boolean;
+    afterRest?: boolean;
+};
+
+/**
+ * A design to preview, with the class's name.
+ */
+export type ClassPreviewInput = {
+    name: string;
+    design: ClassDesign;
+};
+
+/**
+ * A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back with its level table.
+ */
+export type ClassBuild = {
+    entry?: LibraryEntry;
+    design: ClassDesign;
+    slug?: string;
+    lines: Array<string>;
 };
 
 /**
@@ -4389,6 +4459,10 @@ export type GetBuilderOptionsData = {
          * The ruleset to build in.
          */
         ruleset: Ruleset;
+        /**
+         * A Campaign the caller belongs to, whose Library adds homebrew classes; its options carry no ETag.
+         */
+        campaignId?: Id;
     };
     url: '/api/v1/compendium/builder';
 };
@@ -9591,6 +9665,103 @@ export type SaveSubclassBuildResponses = {
 };
 
 export type SaveSubclassBuildResponse = SaveSubclassBuildResponses[keyof SaveSubclassBuildResponses];
+
+export type PreviewClassData = {
+    body: ClassPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/classes/preview';
+};
+
+export type PreviewClassErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewClassError = PreviewClassErrors[keyof PreviewClassErrors];
+
+export type PreviewClassResponses = {
+    /**
+     * The preview.
+     */
+    200: ClassBuild;
+};
+
+export type PreviewClassResponse = PreviewClassResponses[keyof PreviewClassResponses];
+
+export type GetClassBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/classes/{entryId}';
+};
+
+export type GetClassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetClassBuildError = GetClassBuildErrors[keyof GetClassBuildErrors];
+
+export type GetClassBuildResponses = {
+    /**
+     * The class.
+     */
+    200: ClassBuild;
+};
+
+export type GetClassBuildResponse = GetClassBuildResponses[keyof GetClassBuildResponses];
+
+export type SaveClassBuildData = {
+    body: ClassDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/classes/{entryId}';
+};
+
+export type SaveClassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveClassBuildError = SaveClassBuildErrors[keyof SaveClassBuildErrors];
+
+export type SaveClassBuildResponses = {
+    /**
+     * The class.
+     */
+    200: ClassBuild;
+};
+
+export type SaveClassBuildResponse = SaveClassBuildResponses[keyof SaveClassBuildResponses];
 
 export type GetMeData = {
     body?: never;

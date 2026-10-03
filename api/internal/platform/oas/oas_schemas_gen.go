@@ -5714,6 +5714,236 @@ func (s *CharacterSummary) SetHeroicInspiration(val OptBool) {
 	s.HeroicInspiration = val
 }
 
+// A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back
+// with its level table.
+// Ref: #/components/schemas/ClassBuild
+type ClassBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design ClassDesign     `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *ClassBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *ClassBuild) GetDesign() ClassDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *ClassBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *ClassBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *ClassBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ClassBuild) SetDesign(val ClassDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *ClassBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *ClassBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// ClassBuildHeaders wraps ClassBuild with response headers.
+type ClassBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ClassBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ClassBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ClassBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ClassBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ClassBuildHeaders) GetResponse() ClassBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ClassBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ClassBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ClassBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ClassBuildHeaders) SetResponse(val ClassBuild) {
+	s.Response = val
+}
+
+func (*ClassBuildHeaders) getClassBuildRes()  {}
+func (*ClassBuildHeaders) previewClassRes()   {}
+func (*ClassBuildHeaders) saveClassBuildRes() {}
+
+// How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from
+// an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell
+// levels.
+// Ref: #/components/schemas/ClassCasting
+type ClassCasting struct {
+	Kind      string    `json:"kind"`
+	Ability   OptString `json:"ability"`
+	SpellList OptString `json:"spellList"`
+	Cantrips  []int32   `json:"cantrips"`
+	Prepared  []int32   `json:"prepared"`
+	Slots     [][]int32 `json:"slots"`
+	Points    []int32   `json:"points"`
+	Costs     []int32   `json:"costs"`
+	MaxSpell  []int32   `json:"maxSpell"`
+	Spellbook OptBool   `json:"spellbook"`
+	AfterRest OptBool   `json:"afterRest"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ClassCasting) GetKind() string {
+	return s.Kind
+}
+
+// GetAbility returns the value of Ability.
+func (s *ClassCasting) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetSpellList returns the value of SpellList.
+func (s *ClassCasting) GetSpellList() OptString {
+	return s.SpellList
+}
+
+// GetCantrips returns the value of Cantrips.
+func (s *ClassCasting) GetCantrips() []int32 {
+	return s.Cantrips
+}
+
+// GetPrepared returns the value of Prepared.
+func (s *ClassCasting) GetPrepared() []int32 {
+	return s.Prepared
+}
+
+// GetSlots returns the value of Slots.
+func (s *ClassCasting) GetSlots() [][]int32 {
+	return s.Slots
+}
+
+// GetPoints returns the value of Points.
+func (s *ClassCasting) GetPoints() []int32 {
+	return s.Points
+}
+
+// GetCosts returns the value of Costs.
+func (s *ClassCasting) GetCosts() []int32 {
+	return s.Costs
+}
+
+// GetMaxSpell returns the value of MaxSpell.
+func (s *ClassCasting) GetMaxSpell() []int32 {
+	return s.MaxSpell
+}
+
+// GetSpellbook returns the value of Spellbook.
+func (s *ClassCasting) GetSpellbook() OptBool {
+	return s.Spellbook
+}
+
+// GetAfterRest returns the value of AfterRest.
+func (s *ClassCasting) GetAfterRest() OptBool {
+	return s.AfterRest
+}
+
+// SetKind sets the value of Kind.
+func (s *ClassCasting) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *ClassCasting) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetSpellList sets the value of SpellList.
+func (s *ClassCasting) SetSpellList(val OptString) {
+	s.SpellList = val
+}
+
+// SetCantrips sets the value of Cantrips.
+func (s *ClassCasting) SetCantrips(val []int32) {
+	s.Cantrips = val
+}
+
+// SetPrepared sets the value of Prepared.
+func (s *ClassCasting) SetPrepared(val []int32) {
+	s.Prepared = val
+}
+
+// SetSlots sets the value of Slots.
+func (s *ClassCasting) SetSlots(val [][]int32) {
+	s.Slots = val
+}
+
+// SetPoints sets the value of Points.
+func (s *ClassCasting) SetPoints(val []int32) {
+	s.Points = val
+}
+
+// SetCosts sets the value of Costs.
+func (s *ClassCasting) SetCosts(val []int32) {
+	s.Costs = val
+}
+
+// SetMaxSpell sets the value of MaxSpell.
+func (s *ClassCasting) SetMaxSpell(val []int32) {
+	s.MaxSpell = val
+}
+
+// SetSpellbook sets the value of Spellbook.
+func (s *ClassCasting) SetSpellbook(val OptBool) {
+	s.Spellbook = val
+}
+
+// SetAfterRest sets the value of AfterRest.
+func (s *ClassCasting) SetAfterRest(val OptBool) {
+	s.AfterRest = val
+}
+
 // A class and what it gives at level 1.
 // Ref: #/components/schemas/ClassChoice
 type ClassChoice struct {
@@ -5868,6 +6098,209 @@ func (s *ClassChoiceCaster) UnmarshalText(data []byte) error {
 	}
 }
 
+// A custom column of the level table, one value for each of the 20 levels.
+// Ref: #/components/schemas/ClassColumn
+type ClassColumn struct {
+	Name   string   `json:"name"`
+	Values []string `json:"values"`
+}
+
+// GetName returns the value of Name.
+func (s *ClassColumn) GetName() string {
+	return s.Name
+}
+
+// GetValues returns the value of Values.
+func (s *ClassColumn) GetValues() []string {
+	return s.Values
+}
+
+// SetName sets the value of Name.
+func (s *ClassColumn) SetName(val string) {
+	s.Name = val
+}
+
+// SetValues sets the value of Values.
+func (s *ClassColumn) SetValues(val []string) {
+	s.Values = val
+}
+
+// A homebrew class as the class builder makes it, from its Hit Die, training, level table, features,
+// subclass and feat levels, and spellcasting.
+// Ref: #/components/schemas/ClassDesign
+type ClassDesign struct {
+	HitDie        int32          `json:"hitDie"`
+	Primary       []string       `json:"primary"`
+	AnyPrimary    OptBool        `json:"anyPrimary"`
+	Saves         []string       `json:"saves"`
+	Armor         []string       `json:"armor"`
+	Weapons       []string       `json:"weapons"`
+	Skills        int32          `json:"skills"`
+	SubclassLevel int32          `json:"subclassLevel"`
+	FeatLevels    []int32        `json:"featLevels"`
+	Columns       []ClassColumn  `json:"columns"`
+	Features      []ClassFeature `json:"features"`
+	Casting       ClassCasting   `json:"casting"`
+}
+
+// GetHitDie returns the value of HitDie.
+func (s *ClassDesign) GetHitDie() int32 {
+	return s.HitDie
+}
+
+// GetPrimary returns the value of Primary.
+func (s *ClassDesign) GetPrimary() []string {
+	return s.Primary
+}
+
+// GetAnyPrimary returns the value of AnyPrimary.
+func (s *ClassDesign) GetAnyPrimary() OptBool {
+	return s.AnyPrimary
+}
+
+// GetSaves returns the value of Saves.
+func (s *ClassDesign) GetSaves() []string {
+	return s.Saves
+}
+
+// GetArmor returns the value of Armor.
+func (s *ClassDesign) GetArmor() []string {
+	return s.Armor
+}
+
+// GetWeapons returns the value of Weapons.
+func (s *ClassDesign) GetWeapons() []string {
+	return s.Weapons
+}
+
+// GetSkills returns the value of Skills.
+func (s *ClassDesign) GetSkills() int32 {
+	return s.Skills
+}
+
+// GetSubclassLevel returns the value of SubclassLevel.
+func (s *ClassDesign) GetSubclassLevel() int32 {
+	return s.SubclassLevel
+}
+
+// GetFeatLevels returns the value of FeatLevels.
+func (s *ClassDesign) GetFeatLevels() []int32 {
+	return s.FeatLevels
+}
+
+// GetColumns returns the value of Columns.
+func (s *ClassDesign) GetColumns() []ClassColumn {
+	return s.Columns
+}
+
+// GetFeatures returns the value of Features.
+func (s *ClassDesign) GetFeatures() []ClassFeature {
+	return s.Features
+}
+
+// GetCasting returns the value of Casting.
+func (s *ClassDesign) GetCasting() ClassCasting {
+	return s.Casting
+}
+
+// SetHitDie sets the value of HitDie.
+func (s *ClassDesign) SetHitDie(val int32) {
+	s.HitDie = val
+}
+
+// SetPrimary sets the value of Primary.
+func (s *ClassDesign) SetPrimary(val []string) {
+	s.Primary = val
+}
+
+// SetAnyPrimary sets the value of AnyPrimary.
+func (s *ClassDesign) SetAnyPrimary(val OptBool) {
+	s.AnyPrimary = val
+}
+
+// SetSaves sets the value of Saves.
+func (s *ClassDesign) SetSaves(val []string) {
+	s.Saves = val
+}
+
+// SetArmor sets the value of Armor.
+func (s *ClassDesign) SetArmor(val []string) {
+	s.Armor = val
+}
+
+// SetWeapons sets the value of Weapons.
+func (s *ClassDesign) SetWeapons(val []string) {
+	s.Weapons = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *ClassDesign) SetSkills(val int32) {
+	s.Skills = val
+}
+
+// SetSubclassLevel sets the value of SubclassLevel.
+func (s *ClassDesign) SetSubclassLevel(val int32) {
+	s.SubclassLevel = val
+}
+
+// SetFeatLevels sets the value of FeatLevels.
+func (s *ClassDesign) SetFeatLevels(val []int32) {
+	s.FeatLevels = val
+}
+
+// SetColumns sets the value of Columns.
+func (s *ClassDesign) SetColumns(val []ClassColumn) {
+	s.Columns = val
+}
+
+// SetFeatures sets the value of Features.
+func (s *ClassDesign) SetFeatures(val []ClassFeature) {
+	s.Features = val
+}
+
+// SetCasting sets the value of Casting.
+func (s *ClassDesign) SetCasting(val ClassCasting) {
+	s.Casting = val
+}
+
+// A feature gained at a class level.
+// Ref: #/components/schemas/ClassFeature
+type ClassFeature struct {
+	Level int32  `json:"level"`
+	Name  string `json:"name"`
+	Text  string `json:"text"`
+}
+
+// GetLevel returns the value of Level.
+func (s *ClassFeature) GetLevel() int32 {
+	return s.Level
+}
+
+// GetName returns the value of Name.
+func (s *ClassFeature) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *ClassFeature) GetText() string {
+	return s.Text
+}
+
+// SetLevel sets the value of Level.
+func (s *ClassFeature) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetName sets the value of Name.
+func (s *ClassFeature) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *ClassFeature) SetText(val string) {
+	s.Text = val
+}
+
 // The levels a Character has in one class, and its subclass there.
 // Ref: #/components/schemas/ClassLine
 type ClassLine struct {
@@ -5915,6 +6348,33 @@ func (s *ClassLine) SetSubclass(val OptSlug) {
 // SetLevel sets the value of Level.
 func (s *ClassLine) SetLevel(val int32) {
 	s.Level = val
+}
+
+// A design to preview, with the class's name.
+// Ref: #/components/schemas/ClassPreviewInput
+type ClassPreviewInput struct {
+	Name   string      `json:"name"`
+	Design ClassDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *ClassPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *ClassPreviewInput) GetDesign() ClassDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *ClassPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ClassPreviewInput) SetDesign(val ClassDesign) {
+	s.Design = val
 }
 
 // What a Character casts through one class.
@@ -13896,6 +14356,7 @@ const (
 	LibraryKindSpell    LibraryKind = "spell"
 	LibraryKindTable    LibraryKind = "table"
 	LibraryKindSubclass LibraryKind = "subclass"
+	LibraryKindClass    LibraryKind = "class"
 )
 
 // AllValues returns all LibraryKind values.
@@ -13909,6 +14370,7 @@ func (LibraryKind) AllValues() []LibraryKind {
 		LibraryKindSpell,
 		LibraryKindTable,
 		LibraryKindSubclass,
+		LibraryKindClass,
 	}
 }
 
@@ -13930,6 +14392,8 @@ func (s LibraryKind) MarshalText() ([]byte, error) {
 	case LibraryKindTable:
 		return []byte(s), nil
 	case LibraryKindSubclass:
+		return []byte(s), nil
+	case LibraryKindClass:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -13962,6 +14426,9 @@ func (s *LibraryKind) UnmarshalText(data []byte) error {
 		return nil
 	case LibraryKindSubclass:
 		*s = LibraryKindSubclass
+		return nil
+	case LibraryKindClass:
+		*s = LibraryKindClass
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -31213,6 +31680,7 @@ func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
+func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getInventoryRes()                  {}
@@ -31299,6 +31767,7 @@ func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
 func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
+func (*ProblemStatusCodeWithHeaders) previewClassRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
@@ -31329,6 +31798,7 @@ func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
+func (*ProblemStatusCodeWithHeaders) saveClassBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}

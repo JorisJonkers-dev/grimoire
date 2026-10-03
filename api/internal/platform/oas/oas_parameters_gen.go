@@ -3823,6 +3823,8 @@ type GetBuilderOptionsParams struct {
 	IfNoneMatch OptString `json:",omitempty,omitzero"`
 	// The ruleset to build in.
 	Ruleset Ruleset
+	// A Campaign the caller belongs to, whose Library adds homebrew classes; its options carry no ETag.
+	CampaignId OptID `json:",omitempty,omitzero"`
 }
 
 func unpackGetBuilderOptionsParams(packed middleware.Parameters) (params GetBuilderOptionsParams) {
@@ -3841,6 +3843,15 @@ func unpackGetBuilderOptionsParams(packed middleware.Parameters) (params GetBuil
 			In:   "query",
 		}
 		params.Ruleset = packed[key].(Ruleset)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.CampaignId = v.(OptID)
+		}
 	}
 	return params
 }
@@ -3954,6 +3965,54 @@ func decodeGetBuilderOptionsParams(args [0]string, argsEscaped bool, r *http.Req
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "ruleset",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: campaignId.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "campaignId",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotCampaignIdVal ID
+				if err := func() error {
+					var paramsDotCampaignIdValVal uuid.UUID
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToUUID(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotCampaignIdValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotCampaignIdVal = ID(paramsDotCampaignIdValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId.SetTo(paramsDotCampaignIdVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
 			In:   "query",
 			Err:  err,
 		}
@@ -4234,6 +4293,79 @@ func decodeGetCharacterDraftParams(args [1]string, argsEscaped bool, r *http.Req
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetClassBuildParams is parameters of getClassBuild operation.
+type GetClassBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackGetClassBuildParams(packed middleware.Parameters) (params GetClassBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetClassBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params GetClassBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
 			In:   "path",
 			Err:  err,
 		}
@@ -15238,6 +15370,79 @@ func decodeSaveCharacterDraftParams(args [1]string, argsEscaped bool, r *http.Re
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SaveClassBuildParams is parameters of saveClassBuild operation.
+type SaveClassBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackSaveClassBuildParams(packed middleware.Parameters) (params SaveClassBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSaveClassBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveClassBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
 			In:   "path",
 			Err:  err,
 		}

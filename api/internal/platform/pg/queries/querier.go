@@ -79,11 +79,11 @@ type Querier interface {
 	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignHome(ctx context.Context, campaignID uuid.UUID) (uuid.UUID, error)
+	// The homebrew designs of one kind a Campaign sees: linked directly or through a Collection switched
+	// on, at the Revision a link pins.
+	CampaignHomebrewDesigns(ctx context.Context, arg CampaignHomebrewDesignsParams) ([]CampaignHomebrewDesignsRow, error)
 	CampaignHomebrewItems(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewItemsRow, error)
 	CampaignHomebrewSpells(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSpellsRow, error)
-	// The homebrew subclasses a Campaign sees: linked directly or through a Collection switched on, at the
-	// Revision a link pins.
-	CampaignHomebrewSubclasses(ctx context.Context, campaignID uuid.UUID) ([]CampaignHomebrewSubclassesRow, error)
 	CampaignInitiative(ctx context.Context, id uuid.UUID) (CampaignInitiativeRow, error)
 	CampaignItemInstances(ctx context.Context, campaignID uuid.UUID) ([]CampaignItemInstancesRow, error)
 	CampaignLibraryCollections(ctx context.Context, arg CampaignLibraryCollectionsParams) ([]CampaignLibraryCollectionsRow, error)

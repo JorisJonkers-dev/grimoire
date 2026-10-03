@@ -1554,7 +1554,8 @@ export const zLibraryKind = z.enum([
     'item',
     'spell',
     'table',
-    'subclass'
+    'subclass',
+    'class'
 ]);
 
 /**
@@ -2016,6 +2017,76 @@ export const zSpellBuild = z.object({
     effect: z.string().max(40),
     text: z.array(z.string().max(1000)).max(200),
     hexes: z.array(zBuilderHex).max(20000)
+});
+
+/**
+ * A custom column of the level table, one value for each of the 20 levels.
+ */
+export const zClassColumn = z.object({
+    name: z.string().max(200),
+    values: z.array(z.string().max(200)).max(40)
+});
+
+/**
+ * A feature gained at a class level.
+ */
+export const zClassFeature = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    name: z.string().max(200),
+    text: z.string().max(8000)
+});
+
+/**
+ * How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels.
+ */
+export const zClassCasting = z.object({
+    kind: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    spellList: z.string().max(40).optional(),
+    cantrips: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    prepared: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    slots: z.array(z.array(z.int().gte(-100000).lte(100000)).max(20)).max(40).optional(),
+    points: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    costs: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    maxSpell: z.array(z.int().gte(-100000).lte(100000)).max(40).optional(),
+    spellbook: z.boolean().optional(),
+    afterRest: z.boolean().optional()
+});
+
+/**
+ * A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
+ */
+export const zClassDesign = z.object({
+    hitDie: z.int().gte(-100000).lte(100000),
+    primary: z.array(z.string().max(40)).max(10),
+    anyPrimary: z.boolean().optional(),
+    saves: z.array(z.string().max(40)).max(10),
+    armor: z.array(z.string().max(40)).max(10),
+    weapons: z.array(z.string().max(40)).max(10),
+    skills: z.int().gte(-100000).lte(100000),
+    subclassLevel: z.int().gte(-100000).lte(100000),
+    featLevels: z.array(z.int().gte(-100000).lte(100000)).max(40),
+    columns: z.array(zClassColumn).max(20),
+    features: z.array(zClassFeature).max(100),
+    casting: zClassCasting
+});
+
+/**
+ * A design to preview, with the class's name.
+ */
+export const zClassPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zClassDesign
+});
+
+/**
+ * A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back with its level table.
+ */
+export const zClassBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zClassDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(1200)).max(200)
 });
 
 /**
@@ -4452,7 +4523,8 @@ export const zGetBuilderOptionsHeaders = z.object({
 });
 
 export const zGetBuilderOptionsQuery = z.object({
-    ruleset: zRuleset
+    ruleset: zRuleset,
+    campaignId: zId.optional()
 });
 
 /**
@@ -5918,6 +5990,33 @@ export const zSaveSubclassBuildPath = z.object({
  * The subclass.
  */
 export const zSaveSubclassBuildResponse = zSubclassBuild;
+
+export const zPreviewClassBody = zClassPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewClassResponse = zClassBuild;
+
+export const zGetClassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The class.
+ */
+export const zGetClassBuildResponse = zClassBuild;
+
+export const zSaveClassBuildBody = zClassDesign;
+
+export const zSaveClassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The class.
+ */
+export const zSaveClassBuildResponse = zClassBuild;
 
 /**
  * The signed-in account.

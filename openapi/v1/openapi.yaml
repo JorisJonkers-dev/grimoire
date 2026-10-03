@@ -290,6 +290,11 @@ paths:
           required: true
           description: The ruleset to build in.
           schema: { $ref: "#/components/schemas/Ruleset" }
+        - name: campaignId
+          in: query
+          required: false
+          description: A Campaign the caller belongs to, whose Library adds homebrew classes; its options carry no ETag.
+          schema: { $ref: "#/components/schemas/Id" }
       responses:
         "200":
           description: The options.
@@ -4797,6 +4802,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SubclassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/classes/preview:
+    post:
+      operationId: previewClass
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew class
+      description: "Checks a design without saving it and reads it back with its level table. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/classes/{entryId}:
+    get:
+      operationId: getClassBuild
+      x-ogen-operation-group: Read
+      summary: Open a class in the class builder
+      description: "A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The class.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveClassBuild
+      x-ogen-operation-group: Build
+      summary: Save a class design
+      description: "Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it in character creation and multiclassing."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassDesign"
+      responses:
+        "200":
+          description: The class.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassBuild"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -9707,7 +9802,7 @@ components:
     LibraryKind:
       type: string
       description: What a Library entry is.
-      enum: [creature, npc, location, shop, item, spell, table, subclass]
+      enum: [creature, npc, location, shop, item, spell, table, subclass, class]
     LibraryField:
       type: object
       description: One named value of a Library entry.
@@ -10196,6 +10291,124 @@ components:
           type: array
           maxItems: 20000
           items: { $ref: "#/components/schemas/BuilderHex" }
+    ClassDesign:
+      type: object
+      description: A homebrew class as the class builder makes it, from its Hit Die, training, level table, features, subclass and feat levels, and spellcasting.
+      additionalProperties: false
+      required: [hitDie, primary, saves, armor, weapons, skills, subclassLevel, featLevels, columns, features, casting]
+      properties:
+        hitDie: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        primary:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        anyPrimary: { type: boolean }
+        saves:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        armor:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        weapons:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        skills: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        subclassLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        featLevels:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        columns:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/ClassColumn" }
+        features:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/ClassFeature" }
+        casting: { $ref: "#/components/schemas/ClassCasting" }
+    ClassColumn:
+      type: object
+      description: A custom column of the level table, one value for each of the 20 levels.
+      additionalProperties: false
+      required: [name, values]
+      properties:
+        name: { type: string, maxLength: 200 }
+        values:
+          type: array
+          maxItems: 40
+          items: { type: string, maxLength: 200 }
+    ClassFeature:
+      type: object
+      description: A feature gained at a class level.
+      additionalProperties: false
+      required: [level, name, text]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 8000 }
+    ClassCasting:
+      type: object
+      description: "How the class casts: none, an SRD kind (full, half, pact), its own slot table or spell points, from an SRD class's spell list. Tables run over the 20 levels; slots and costs over the nine spell levels."
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        ability: { type: string, maxLength: 40 }
+        spellList: { type: string, maxLength: 40 }
+        cantrips:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        prepared:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        slots:
+          type: array
+          maxItems: 40
+          items:
+            type: array
+            maxItems: 20
+            items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        points:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        costs:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        maxSpell:
+          type: array
+          maxItems: 40
+          items: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        spellbook: { type: boolean }
+        afterRest: { type: boolean }
+    ClassPreviewInput:
+      type: object
+      description: A design to preview, with the class's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/ClassDesign" }
+    ClassBuild:
+      type: object
+      description: A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back with its level table.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/ClassDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1200 }
     SubclassDesign:
       type: object
       description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.

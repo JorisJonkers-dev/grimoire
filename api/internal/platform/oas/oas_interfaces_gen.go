@@ -217,6 +217,10 @@ type GetCharacterRes interface {
 	getCharacterRes()
 }
 
+type GetClassBuildRes interface {
+	getClassBuildRes()
+}
+
 type GetEntryRes interface {
 	getEntryRes()
 }
@@ -561,6 +565,10 @@ type PreviewCharacterRes interface {
 	previewCharacterRes()
 }
 
+type PreviewClassRes interface {
+	previewClassRes()
+}
+
 type PreviewInviteRes interface {
 	previewInviteRes()
 }
@@ -679,6 +687,10 @@ type RollRestRes interface {
 
 type SaveCharacterDraftRes interface {
 	saveCharacterDraftRes()
+}
+
+type SaveClassBuildRes interface {
+	saveClassBuildRes()
 }
 
 type SaveItemBuildRes interface {

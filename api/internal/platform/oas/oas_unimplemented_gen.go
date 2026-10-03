@@ -510,6 +510,16 @@ func (UnimplementedHandler) GetCharacterDraft(ctx context.Context, params GetCha
 	return r, ht.ErrNotImplemented
 }
 
+// GetClassBuild implements getClassBuild operation.
+//
+// A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared
+// Library copy.
+//
+// GET /api/v1/builders/classes/{entryId}
+func (UnimplementedHandler) GetClassBuild(ctx context.Context, params GetClassBuildParams) (r GetClassBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetEntry implements getEntry operation.
 //
 // One entry rendered for reading, with the conditions its text mentions.
@@ -1304,6 +1314,16 @@ func (UnimplementedHandler) PreviewCharacter(ctx context.Context, req *Character
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewClass implements previewClass operation.
+//
+// Checks a design without saving it and reads it back with its level table. A design the rules refuse
+// comes back with the reason.
+//
+// POST /api/v1/builders/classes/preview
+func (UnimplementedHandler) PreviewClass(ctx context.Context, req *ClassPreviewInput) (r PreviewClassRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewInvite implements previewInvite operation.
 //
 // Which Campaign an invite link leads to, before joining.
@@ -1588,6 +1608,16 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 //
 // PUT /api/v1/campaigns/{campaignId}/character-draft
 func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (r SaveCharacterDraftRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveClassBuild implements saveClassBuild operation.
+//
+// Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it
+// in character creation and multiclassing.
+//
+// PUT /api/v1/builders/classes/{entryId}
+func (UnimplementedHandler) SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (r SaveClassBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

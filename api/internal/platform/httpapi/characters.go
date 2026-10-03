@@ -44,6 +44,7 @@ type CharacterService interface {
 	RetrainChoices(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]app.RetrainChoice, error)
 	CharacterRevisions(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) ([]domain.CharacterRevision, error)
 	DecideRetrain(ctx context.Context, c caller.Caller, id domain.CampaignID, retrain uuid.UUID, approve bool) (domain.Retrain, error)
+	Options(ctx context.Context, c caller.Caller, id domain.CampaignID) (compendium.BuilderOptions, error)
 }
 
 func baseMap(b oas.AbilityBase) map[string]int {
@@ -220,6 +221,9 @@ func slugsOf(in []string) []oas.Slug {
 
 // GetBuilderOptions lists what a first-level character can choose.
 func (h *Handler) GetBuilderOptions(ctx context.Context, p oas.GetBuilderOptionsParams) (oas.GetBuilderOptionsRes, error) {
+	if id, ok := p.CampaignId.Get(); ok {
+		return h.campaignBuilderOptions(ctx, domain.CampaignID(id))
+	}
 	tag, err := h.etag(ctx)
 	if err != nil {
 		h.Log.ErrorContext(ctx, "compendium version", "error", err)
@@ -234,6 +238,20 @@ func (h *Handler) GetBuilderOptions(ctx context.Context, p oas.GetBuilderOptions
 		return unavailable(), nil
 	}
 	return &oas.BuilderOptionsHeaders{ETag: oas.NewOptString(tag), Response: builderOut(o)}, nil
+}
+
+// campaignBuilderOptions are a Campaign's builder options with its homebrew classes; they change with its
+// Library, so they carry no ETag.
+func (h *Handler) campaignBuilderOptions(ctx context.Context, id domain.CampaignID) (oas.GetBuilderOptionsRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	o, err := h.Characters.Options(ctx, c, id)
+	if err != nil {
+		return h.campaignProblem(ctx, "builder options", err), nil
+	}
+	return &oas.BuilderOptionsHeaders{Response: builderOut(o)}, nil
 }
 
 //nolint:gosec // every narrowing conversion here is of small, bounded game values

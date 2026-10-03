@@ -37,7 +37,7 @@ const campaign = useQuery(computed(() => ({ ...getCampaignOptions({ path: { camp
 const ruleset = computed(() => campaign.data.value?.ruleset)
 const options = useQuery(
   computed(() => ({
-    ...getBuilderOptionsOptions({ query: { ruleset: ruleset.value ?? 'srd-2024' } }),
+    ...getBuilderOptionsOptions({ query: { ruleset: ruleset.value ?? 'srd-2024', campaignId: id.value } }),
     enabled: ruleset.value !== undefined,
   })),
 )

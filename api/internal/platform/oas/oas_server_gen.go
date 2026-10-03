@@ -611,6 +611,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/character-draft
 	SaveCharacterDraft(ctx context.Context, req *CharacterDraftSave, params SaveCharacterDraftParams) (SaveCharacterDraftRes, error)
+	// SaveClassBuild implements saveClassBuild operation.
+	//
+	// Saves the design of one of the caller's classes as its next Revision; Campaigns that see it offer it
+	// in character creation and multiclassing.
+	//
+	// PUT /api/v1/builders/classes/{entryId}
+	SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (SaveClassBuildRes, error)
 	// SaveItemBuild implements saveItemBuild operation.
 	//
 	// Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it
@@ -946,6 +953,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/character-draft
 	GetCharacterDraft(ctx context.Context, params GetCharacterDraftParams) (GetCharacterDraftRes, error)
+	// GetClassBuild implements getClassBuild operation.
+	//
+	// A homebrew class's design, read back with its level table: one of the caller's classes, or a Shared
+	// Library copy.
+	//
+	// GET /api/v1/builders/classes/{entryId}
+	GetClassBuild(ctx context.Context, params GetClassBuildParams) (GetClassBuildRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -1396,6 +1410,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
+	// PreviewClass implements previewClass operation.
+	//
+	// Checks a design without saving it and reads it back with its level table. A design the rules refuse
+	// comes back with the reason.
+	//
+	// POST /api/v1/builders/classes/preview
+	PreviewClass(ctx context.Context, req *ClassPreviewInput) (PreviewClassRes, error)
 	// PreviewItem implements previewItem operation.
 	//
 	// Checks a design without saving it: its item card and its Price Check. A design the rules refuse

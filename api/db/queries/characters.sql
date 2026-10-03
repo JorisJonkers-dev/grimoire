@@ -188,9 +188,9 @@ SELECT (coalesce((SELECT sum(i.quantity * coalesce((SELECT w.weight_lb FROM comp
         LEFT JOIN campaign.containers kp ON kp.id = kc.parent_id
         WHERE kc.character_id = @owner OR kp.character_id = @owner), 0) / 50.0)::float8 AS weight_lb;
 
--- name: CampaignHomebrewSubclasses :many
--- The homebrew subclasses a Campaign sees: linked directly or through a Collection switched on, at the
--- Revision a link pins.
+-- name: CampaignHomebrewDesigns :many
+-- The homebrew designs of one kind a Campaign sees: linked directly or through a Collection switched
+-- on, at the Revision a link pins.
 WITH visible AS (
     SELECT l.entry_id FROM library.campaign_links l WHERE l.campaign_id = @campaign_id AND l.direct
     UNION
@@ -199,7 +199,7 @@ WITH visible AS (
 )
 SELECT e.id, coalesce(r.name, e.name)::text AS name, coalesce(r.design, e.design)::jsonb AS design
 FROM visible v
-JOIN library.entries e ON e.id = v.entry_id AND e.kind = 'subclass'
+JOIN library.entries e ON e.id = v.entry_id AND e.kind = @kind
 LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = @campaign_id
 LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
 WHERE coalesce(r.design, e.design) IS NOT NULL

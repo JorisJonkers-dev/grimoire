@@ -542,6 +542,20 @@ func encodePreviewCharacterRequest(
 	return nil
 }
 
+func encodePreviewClassRequest(
+	req *ClassPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewInviteRequest(
 	req *InviteToken,
 	r *http.Request,
@@ -740,6 +754,20 @@ func encodeReviewSharedSubmissionRequest(
 
 func encodeSaveCharacterDraftRequest(
 	req *CharacterDraftSave,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveClassBuildRequest(
+	req *ClassDesign,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
