@@ -93,7 +93,7 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planEncounter(m, cmd)
 	case CmdAddZone, CmdRemoveZone, CmdHoldZone, CmdSpringZone:
 		return r.planZone(m, cmd)
-	case CmdSetWorld, CmdAddNode, CmdAddRoute, CmdRemoveNode, CmdRemoveRoute, CmdPlaceParty, CmdTravel:
+	case CmdSetWorld, CmdAddNode, CmdAddRoute, CmdRemoveNode, CmdRemoveRoute, CmdPlaceParty, CmdTravel, CmdFindMap:
 		return r.planWorld(cmd)
 	case CmdReact:
 		return r.planReact(m, cmd)

@@ -36302,6 +36302,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindAssignControl
 	case LiveCommandKindMeasureRoute:
 		*s = LiveCommandKindMeasureRoute
+	case LiveCommandKindFindMap:
+		*s = LiveCommandKindFindMap
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -47510,6 +47512,10 @@ func (s *LiveWorld) encodeFields(e *jx.Encoder) {
 		s.Map.Encode(e)
 	}
 	{
+		e.FieldStart("found")
+		e.Bool(s.Found)
+	}
+	{
 		e.FieldStart("revealed")
 		e.ArrStart()
 		for _, elem := range s.Revealed {
@@ -47549,13 +47555,14 @@ func (s *LiveWorld) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveWorld = [6]string{
+var jsonFieldsNameOfLiveWorld = [7]string{
 	0: "map",
-	1: "revealed",
-	2: "nodes",
-	3: "routes",
-	4: "partyNodeId",
-	5: "legs",
+	1: "found",
+	2: "revealed",
+	3: "nodes",
+	4: "routes",
+	5: "partyNodeId",
+	6: "legs",
 }
 
 // Decode decodes LiveWorld from json.
@@ -47577,8 +47584,20 @@ func (s *LiveWorld) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"map\"")
 			}
-		case "revealed":
+		case "found":
 			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Bool()
+				s.Found = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"found\"")
+			}
+		case "revealed":
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				s.Revealed = make([]HexCoord, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -47596,7 +47615,7 @@ func (s *LiveWorld) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"revealed\"")
 			}
 		case "nodes":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				s.Nodes = make([]LiveWorldNode, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -47614,7 +47633,7 @@ func (s *LiveWorld) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"nodes\"")
 			}
 		case "routes":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.Routes = make([]LiveWorldRoute, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -47642,7 +47661,7 @@ func (s *LiveWorld) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"partyNodeId\"")
 			}
 		case "legs":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				s.Legs = make([]LiveTravelLeg, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -47669,7 +47688,7 @@ func (s *LiveWorld) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00101111,
+		0b01011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -47740,13 +47759,34 @@ func (s *LiveWorldNode) encodeFields(e *jx.Encoder) {
 		e.FieldStart("r")
 		e.Int32(s.R)
 	}
+	{
+		if s.Secret.Set {
+			e.FieldStart("secret")
+			s.Secret.Encode(e)
+		}
+	}
+	{
+		if s.MapId.Set {
+			e.FieldStart("mapId")
+			s.MapId.Encode(e)
+		}
+	}
+	{
+		if s.Found.Set {
+			e.FieldStart("found")
+			s.Found.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveWorldNode = [4]string{
+var jsonFieldsNameOfLiveWorldNode = [7]string{
 	0: "id",
 	1: "name",
 	2: "q",
 	3: "r",
+	4: "secret",
+	5: "mapId",
+	6: "found",
 }
 
 // Decode decodes LiveWorldNode from json.
@@ -47803,6 +47843,36 @@ func (s *LiveWorldNode) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"r\"")
+			}
+		case "secret":
+			if err := func() error {
+				s.Secret.Reset()
+				if err := s.Secret.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"secret\"")
+			}
+		case "mapId":
+			if err := func() error {
+				s.MapId.Reset()
+				if err := s.MapId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"mapId\"")
+			}
+		case "found":
+			if err := func() error {
+				s.Found.Reset()
+				if err := s.Found.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"found\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -48515,9 +48585,13 @@ func (s *LocalMap) encodeFields(e *jx.Encoder) {
 		e.FieldStart("scaleMiles")
 		s.ScaleMiles.Encode(e)
 	}
+	{
+		e.FieldStart("found")
+		e.Bool(s.Found)
+	}
 }
 
-var jsonFieldsNameOfLocalMap = [13]string{
+var jsonFieldsNameOfLocalMap = [14]string{
 	0:  "id",
 	1:  "name",
 	2:  "kind",
@@ -48531,6 +48605,7 @@ var jsonFieldsNameOfLocalMap = [13]string{
 	10: "gridKind",
 	11: "gridStrength",
 	12: "scaleMiles",
+	13: "found",
 }
 
 // Decode decodes LocalMap from json.
@@ -48684,6 +48759,18 @@ func (s *LocalMap) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"scaleMiles\"")
 			}
+		case "found":
+			requiredBitSet[1] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Found = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"found\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -48695,7 +48782,7 @@ func (s *LocalMap) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
 		0b11111111,
-		0b00011111,
+		0b00111111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.

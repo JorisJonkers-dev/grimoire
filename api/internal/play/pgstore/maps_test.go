@@ -238,6 +238,49 @@ func TestMapsScaleAndCalibrate(t *testing.T) {
 	}
 }
 
+// A player is sent a world Map whole once the party has found it, and never a battle map.
+func TestAFoundWorldMapIsSentWhole(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	tb := setup(t)
+	s := maps(tb, pgstore.New(tb.pool), storage.Dir{Path: t.TempDir()})
+	world, _ := s.Upload(ctx, dm, tb.campaign, "Realm", "world", mapPicture(t))
+	local, _ := s.Upload(ctx, dm, tb.campaign, "Crypt", "local", mapPicture(t))
+	dark := func(id domain.MapID) bool {
+		t.Helper()
+		_, data, err := s.Image(ctx, player, tb.campaign, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		img, err := png.Decode(bytes.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, g, b, _ := img.At(300, 200).RGBA()
+		return r == 0 && g == 0 && b == 0
+	}
+	if world.Found || !dark(world.ID) || !dark(local.ID) {
+		t.Fatalf("before anything is found: %+v", world)
+	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.maps SET found = true WHERE campaign_id = $1", tb.campaign); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := s.Get(ctx, dm, tb.campaign, world.ID); err != nil || !got.Found {
+		t.Fatalf("the found world map = %+v %v", got, err)
+	}
+	if contentType, data, err := s.Image(ctx, player, tb.campaign, world.ID); err != nil || contentType != "image/png" || !bytes.Equal(data, mapPicture(t)) {
+		t.Fatalf("a found world map's picture = %s %v", contentType, err)
+	}
+	// A found battle map keeps its Fog: what the party has not seen there stays black.
+	if !dark(local.ID) {
+		t.Fatal("a found battle map was sent whole")
+	}
+	// An edit leaves a Map found.
+	if got, err := s.Update(ctx, dm, tb.campaign, world.ID, app.MapEdit{Name: "Realm", HexSize: 40, Ambient: domain.AmbientBright}); err != nil || !got.Found {
+		t.Fatalf("an edited found map = %+v %v", got, err)
+	}
+}
+
 // The Default World comes painted: a DM takes it as a world Map without uploading anything.
 func TestTheDefaultWorldIsAWorldMap(t *testing.T) {
 	t.Parallel()

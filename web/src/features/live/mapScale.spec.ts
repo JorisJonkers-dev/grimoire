@@ -9,7 +9,7 @@ const ID = '0190c7a8-0000-7000-8000-000000000001'
 const MID = '0190c7a8-0000-7000-8000-000000000021'
 const realm = {
   id: MID, name: 'Realm', kind: 'world' as const, imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 400, height: 300,
-  hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6,
+  hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'bright', gridKind: 'hexes', gridStrength: 20, scaleMiles: 6, found: false,
 }
 const crypt = { ...realm, name: 'Crypt', kind: 'local' as const }
 const problem = () => jsonResponse({ type: 'about:blank', title: 'x', status: 422 }, 422)

@@ -4,13 +4,14 @@ import type { LiveMeasure, LiveWorld, LocalMap, TravelPace } from '@/infrastruct
 import type { Outgoing } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import { GButton } from '@/shared/ui'
+import { cellsFor, key, layoutOf } from './geometry'
 import MapBoard from './MapBoard.vue'
 import { duration, journey, MAX_WAYPOINTS, measured } from './travel'
 import WorldOverlay from './WorldOverlay.vue'
 
 type Tool = 'node' | 'route' | 'party' | 'remove'
 
-const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; measure: LiveMeasure | null }>()
+const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; localMaps: LocalMap[]; measure: LiveMeasure | null }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
 const choice = ref('')
 const tool = ref<Tool>('node')
@@ -30,7 +31,24 @@ const roads = computed(() =>
       return { route: r, to: nameOf(r.fromNodeId === here.value?.id ? r.toNodeId : r.fromNodeId), time: plan ? duration(plan.minutes, plan.days) : '' }
     }),
 )
-const board = computed(() => ({ tokens: [], fog: true, visible: props.world?.revealed ?? [], remembered: [] }))
+// Fog follows what the party has found: with the world map, land it has not been to is dimmed; without
+// it, dark. The DM's own map is neither.
+const board = computed(() => {
+  const w = props.world
+  const visible = w?.revealed ?? []
+  if (!w?.found || props.dm) return { tokens: [], fog: true, visible, remembered: [] }
+  const been = new Set(visible.map(key))
+  return { tokens: [], fog: true, visible, remembered: cellsFor(layoutOf(w.map), w.map.width, w.map.height).filter((c) => !been.has(key(c))) }
+})
+// What the DM says the party has found: the world map itself, and the local Maps at its locations.
+const secret = ref(false)
+const localMap = ref('')
+const placed = computed(() => new Set((props.world?.nodes ?? []).flatMap((n) => (n.mapId ? [n.mapId] : []))))
+const free = computed(() => props.localMaps.filter((m) => !placed.value.has(m.id)))
+function findable(w: LiveWorld) {
+  const locals = w.nodes.flatMap((n) => (n.mapId ? [{ id: n.mapId, label: `${props.localMaps.find((m) => m.id === n.mapId)?.name ?? 'A local map'}, at ${n.name}`, found: n.found === true }] : []))
+  return [{ id: w.map.id, label: `${w.map.name}, the world map`, found: w.found }, ...locals]
+}
 const tools: { value: Tool; label: string }[] = [
   { value: 'node', label: 'Add a location' },
   { value: 'route', label: 'Join two locations' },
@@ -65,7 +83,7 @@ function tap(c: Coord) {
   if (!props.dm) return
   const n = props.world?.nodes.find((x) => x.q === c.q && x.r === c.r)
   if (tool.value === 'node') {
-    if (!n && name.value.trim()) emit('send', { kind: 'add_node', label: name.value.trim(), q: c.q, r: c.r })
+    if (!n && name.value.trim()) emit('send', { kind: 'add_node', label: name.value.trim(), q: c.q, r: c.r, ...(secret.value ? { secret: true } : {}), ...(localMap.value ? { mapId: localMap.value } : {}) })
     return
   }
   if (!n) return
@@ -98,6 +116,9 @@ function tap(c: Coord) {
           <WorldOverlay :world="world" :layout="layout" :from="from" :measured="waypoints" />
         </template>
       </MapBoard>
+      <p v-if="!dm" class="hint" data-testid="world-fog">
+        {{ world.found ? 'The party has this map: it is dimmed where the party has not been.' : 'The party has no map of these lands: only where it has been shows.' }}
+      </p>
       <p role="status" data-testid="party-at">{{ here ? `The party is at ${here.name}.` : 'The party is not on this map yet.' }}</p>
       <div class="row">
         <GButton :aria-pressed="measuring" data-testid="measure-toggle" @click="toggleMeasure()">Measure a route</GButton>
@@ -142,6 +163,16 @@ function tap(c: Coord) {
         </ol>
         <p data-testid="journey">In all: {{ journey(world.legs) }}</p>
       </section>
+      <section v-if="dm" class="g-card" aria-label="Maps the party has found" data-testid="found-maps">
+        <h2>Found maps</h2>
+        <p class="hint">Without the world map the party sees only where it has been; a local map it finds shows at its place.</p>
+        <ul class="g-list">
+          <li v-for="m in findable(world)" :key="m.id" class="row">
+            <span>{{ m.label }}: {{ m.found ? 'found' : 'not found' }}</span>
+            <GButton :data-testid="`find-${m.id}`" @click="emit('send', { kind: 'find_map', mapId: m.id, on: !m.found })">{{ m.found ? 'The party lost it' : 'The party found it' }}</GButton>
+          </li>
+        </ul>
+      </section>
       <section v-if="dm" class="g-card" aria-label="World map tools">
         <fieldset class="row tools">
           <legend>Tap the world map to</legend>
@@ -150,7 +181,17 @@ function tap(c: Coord) {
             <span>{{ t.label }}</span>
           </label>
         </fieldset>
-        <label v-if="tool === 'node'" class="g-field"><span>Location name</span><input v-model="name" maxlength="40" data-testid="world-node-name" /></label>
+        <template v-if="tool === 'node'">
+          <label class="g-field"><span>Location name</span><input v-model="name" maxlength="40" data-testid="world-node-name" /></label>
+          <label class="check"><input v-model="secret" type="checkbox" data-testid="world-node-secret" /><span>A secret place: only you see it</span></label>
+          <label class="g-field">
+            <span>Local map that lies there</span>
+            <select v-model="localMap" data-testid="world-node-map">
+              <option value="">No local map</option>
+              <option v-for="m in free" :key="m.id" :value="m.id">{{ m.name }}</option>
+            </select>
+          </label>
+        </template>
         <template v-if="tool === 'route'">
           <label class="g-field"><span>Distance (miles)</span><input v-model.number="distance" type="number" min="1" max="2000" data-testid="world-distance" /></label>
           <p class="hint" role="status">{{ from ? `From ${nameOf(from)}: now tap where the route goes.` : 'Tap the location the route starts from.' }}</p>

@@ -21,11 +21,21 @@ type NodeID uuid.UUID
 // RouteID identifies a route between two locations.
 type RouteID uuid.UUID
 
-// WorldNode is a named location on a world Map.
+// WorldNode is a named location on a world Map. A Secret one is the DM's alone; LocalMap is the local
+// Map that lies there, and LocalFound whether the party has found it.
 type WorldNode struct {
-	ID   NodeID
-	Name string
-	At   hex.Coord
+	ID         NodeID
+	Name       string
+	At         hex.Coord
+	Secret     bool
+	LocalMap   *MapID
+	LocalFound bool
+}
+
+// FoundMap is a Map the party finds or loses in play.
+type FoundMap struct {
+	Map MapID
+	On  bool
 }
 
 // WorldRoute joins two locations; the party can travel it either way.
@@ -76,7 +86,8 @@ func (w *World) Clone() *World {
 	return &c
 }
 
-// TravelLeg is one journey of the party along a route.
+// TravelLeg is one journey of the party along a route. FromSecret and ToSecret say an end of it was a
+// secret place when the party walked it: only the DM is told that end's name.
 type TravelLeg struct {
 	From       string
 	To         string
@@ -84,6 +95,8 @@ type TravelLeg struct {
 	DistanceMi int
 	Minutes    int
 	Days       int
+	FromSecret bool
+	ToSecret   bool
 }
 
 // World action kinds in the Action Log.
@@ -94,6 +107,8 @@ const (
 	ActionRouteAdded   = "route_added"
 	ActionRouteRemoved = "route_removed"
 	ActionPartyPlaced  = "party_placed"
+	ActionMapFound     = "map_found"
+	ActionMapLost      = "map_lost"
 	ActionTravelLeg    = "travel_leg"
 )
 

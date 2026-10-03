@@ -6160,7 +6160,8 @@ type GetMapImageParams struct {
 	CampaignId ID
 	// Map id.
 	MapId ID
-	// Cache-busting version; the picture changes as the party explores.
+	// Cache-busting version; the picture changes as the party explores, and when it finds or loses the
+	// world map.
 	V OptInt32 `json:",omitempty,omitzero"`
 }
 
@@ -6336,7 +6337,7 @@ func decodeGetMapImageParams(args [2]string, argsEscaped bool, r *http.Request) 
 							MinSet:        true,
 							Min:           0,
 							MaxSet:        true,
-							Max:           1000000,
+							Max:           2147483647,
 							MinExclusive:  false,
 							MaxExclusive:  false,
 							MultipleOfSet: false,

@@ -256,6 +256,7 @@ type CampaignMap struct {
 	GridKind     string
 	GridStrength int32
 	ScaleMiles   float64
+	Found        bool
 }
 
 type CampaignMapEdge struct {
@@ -283,11 +284,13 @@ type CampaignMapLight struct {
 }
 
 type CampaignMapNode struct {
-	ID    uuid.UUID
-	MapID uuid.UUID
-	Name  string
-	Q     int32
-	R     int32
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	Name       string
+	Q          int32
+	R          int32
+	Secret     bool
+	LocalMapID pgtype.UUID
 }
 
 type CampaignMapObject struct {
@@ -1732,6 +1735,8 @@ type PlayTravelLeg struct {
 	DistanceMi int32
 	Minutes    int32
 	Days       int32
+	FromSecret bool
+	ToSecret   bool
 }
 
 type PlayXpAward struct {

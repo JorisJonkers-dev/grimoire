@@ -29,7 +29,7 @@ const snapshot = (tokens: unknown[], audience = 'dm', extra: object = {}) => ({
 })
 const MID = '0190c7a8-0000-7000-8000-00000000000d'
 const liveMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image?v=0`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, imageVersion: 0, gridKind: 'hexes' as const, gridStrength: 20 }
-const localMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'dark', kind: 'local' as const, gridKind: 'hexes' as const, gridStrength: 20, scaleMiles: 6 }
+const localMap = { id: MID, name: 'Crypt', imageUrl: `/api/v1/campaigns/${ID}/maps/${MID}/image`, width: 200, height: 160, hexSizePx: 40, originX: 34.64, originY: 40, ambient: 'dark', kind: 'local' as const, gridKind: 'hexes' as const, gridStrength: 20, scaleMiles: 6, found: false }
 const WID = '0190c7a8-0000-7000-8000-000000000020'
 const realmMap = { ...localMap, id: WID, name: 'Realm', kind: 'world' as const }
 const OAK = '0190c7a8-0000-7000-8000-000000000022'
@@ -37,6 +37,7 @@ const MILL = '0190c7a8-0000-7000-8000-000000000023'
 const ROAD = '0190c7a8-0000-7000-8000-000000000024'
 const realm = (extra: Partial<LiveWorld> = {}): LiveWorld => ({
   map: { ...liveMap, id: WID, name: 'Realm' },
+  found: false,
   revealed: [{ q: 0, r: 0 }, { q: 1, r: 0 }],
   nodes: [{ id: OAK, name: 'Oakford', q: 0, r: 0 }, { id: MILL, name: 'Mill', q: 2, r: 0 }],
   routes: [{

@@ -2770,13 +2770,16 @@ export const zTravelPace = z.enum([
 ]);
 
 /**
- * A named location on the world map.
+ * A named location on the world map. A secret one is sent to the DM only. The local Map that lies there is named to the DM, and to others once the party has found it.
  */
 export const zLiveWorldNode = z.object({
     id: zId,
     name: z.string().max(40),
     q: z.int().gte(-500).lte(500),
-    r: z.int().gte(-500).lte(500)
+    r: z.int().gte(-500).lte(500),
+    secret: z.boolean().optional(),
+    mapId: zId.optional(),
+    found: z.boolean().optional()
 });
 
 /**
@@ -3372,16 +3375,17 @@ export const zLiveMap = z.object({
     hexSizePx: z.number().gte(8).lte(400),
     originX: z.number().gte(-100000).lte(100000),
     originY: z.number().gte(-100000).lte(100000),
-    imageVersion: z.int().gte(0).lte(1000000),
+    imageVersion: z.int().gte(0).lte(2147483647),
     gridKind: zGridKind,
     gridStrength: zGridStrength
 });
 
 /**
- * The world map the party travels. The DM gets every location and route; players and the Table get the locations the party has seen or can reach from where it stands, and the routes between them.
+ * The world map the party travels. The DM gets every location and route. Players and the Table get the locations the party has seen or can reach from where it stands, or every location when the party has found the world map, and the routes between them; a secret location is never among them. Revealed hexes are where the party has been, the roads it walked and the places of local Maps it found.
  */
 export const zLiveWorld = z.object({
     map: zLiveMap,
+    found: z.boolean(),
     revealed: z.array(zHexCoord).max(100000),
     nodes: z.array(zLiveWorldNode).max(1000),
     routes: z.array(zLiveWorldRoute).max(5000),
@@ -3426,7 +3430,8 @@ export const zLocalMap = z.object({
     imageUrl: zAssetUrl,
     gridKind: zGridKind,
     gridStrength: zGridStrength,
-    scaleMiles: zScaleMiles
+    scaleMiles: zScaleMiles,
+    found: z.boolean()
 });
 
 /**
@@ -4377,7 +4382,8 @@ export const zLiveCommand = z.object({
         'rejoin_party',
         'table_follow',
         'assign_control',
-        'measure_route'
+        'measure_route',
+        'find_map'
     ]),
     caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
@@ -6382,7 +6388,7 @@ export const zGetMapImagePath = z.object({
 });
 
 export const zGetMapImageQuery = z.object({
-    v: z.int().gte(0).lte(1000000).optional()
+    v: z.int().gte(0).lte(2147483647).optional()
 });
 
 /**

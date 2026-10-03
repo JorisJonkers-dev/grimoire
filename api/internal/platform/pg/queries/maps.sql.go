@@ -86,7 +86,7 @@ func (q *Queries) DeleteNode(ctx context.Context, arg DeleteNodeParams) error {
 }
 
 const getMap = `-- name: GetMap :one
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles, found
 FROM campaign.maps WHERE campaign_id = $1 AND id = $2
 `
 
@@ -116,6 +116,7 @@ func (q *Queries) GetMap(ctx context.Context, arg GetMapParams) (CampaignMap, er
 		&i.GridKind,
 		&i.GridStrength,
 		&i.ScaleMiles,
+		&i.Found,
 	)
 	return i, err
 }
@@ -188,7 +189,7 @@ INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width
     grid_strength, scale_miles, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
     $12, $13, $14, $14)
-RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
+RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles, found
 `
 
 type InsertMapParams struct {
@@ -244,20 +245,24 @@ func (q *Queries) InsertMap(ctx context.Context, arg InsertMapParams) (CampaignM
 		&i.GridKind,
 		&i.GridStrength,
 		&i.ScaleMiles,
+		&i.Found,
 	)
 	return i, err
 }
 
 const insertNode = `-- name: InsertNode :exec
-INSERT INTO campaign.map_nodes (id, map_id, name, q, r) VALUES ($1, $2, $3, $4, $5)
+INSERT INTO campaign.map_nodes (id, map_id, name, q, r, secret, local_map_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type InsertNodeParams struct {
-	ID    uuid.UUID
-	MapID uuid.UUID
-	Name  string
-	Q     int32
-	R     int32
+	ID         uuid.UUID
+	MapID      uuid.UUID
+	Name       string
+	Q          int32
+	R          int32
+	Secret     bool
+	LocalMapID pgtype.UUID
 }
 
 func (q *Queries) InsertNode(ctx context.Context, arg InsertNodeParams) error {
@@ -267,13 +272,15 @@ func (q *Queries) InsertNode(ctx context.Context, arg InsertNodeParams) error {
 		arg.Name,
 		arg.Q,
 		arg.R,
+		arg.Secret,
+		arg.LocalMapID,
 	)
 	return err
 }
 
 const insertTravelLeg = `-- name: InsertTravelLeg :exec
-INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days, from_secret, to_secret)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 `
 
 type InsertTravelLegParams struct {
@@ -286,6 +293,8 @@ type InsertTravelLegParams struct {
 	DistanceMi int32
 	Minutes    int32
 	Days       int32
+	FromSecret bool
+	ToSecret   bool
 }
 
 func (q *Queries) InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error {
@@ -299,12 +308,14 @@ func (q *Queries) InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams
 		arg.DistanceMi,
 		arg.Minutes,
 		arg.Days,
+		arg.FromSecret,
+		arg.ToSecret,
 	)
 	return err
 }
 
 const listMaps = `-- name: ListMaps :many
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles, found
 FROM campaign.maps WHERE campaign_id = $1 ORDER BY name, id
 `
 
@@ -335,6 +346,7 @@ func (q *Queries) ListMaps(ctx context.Context, campaignID uuid.UUID) ([]Campaig
 			&i.GridKind,
 			&i.GridStrength,
 			&i.ScaleMiles,
+			&i.Found,
 		); err != nil {
 			return nil, err
 		}
@@ -421,16 +433,22 @@ func (q *Queries) MapLights(ctx context.Context, mapID uuid.UUID) ([]MapLightsRo
 }
 
 const mapNodes = `-- name: MapNodes :many
-SELECT id, name, q, r FROM campaign.map_nodes WHERE map_id = $1 ORDER BY name, id
+SELECT n.id, n.name, n.q, n.r, n.secret, n.local_map_id, coalesce(m.found, false)::boolean AS local_found
+FROM campaign.map_nodes n LEFT JOIN campaign.maps m ON m.id = n.local_map_id
+WHERE n.map_id = $1 ORDER BY n.name, n.id
 `
 
 type MapNodesRow struct {
-	ID   uuid.UUID
-	Name string
-	Q    int32
-	R    int32
+	ID         uuid.UUID
+	Name       string
+	Q          int32
+	R          int32
+	Secret     bool
+	LocalMapID pgtype.UUID
+	LocalFound bool
 }
 
+// A world Map's locations, each with the local Map that lies there and whether the party has found it.
 func (q *Queries) MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow, error) {
 	rows, err := q.db.Query(ctx, mapNodes, mapID)
 	if err != nil {
@@ -445,6 +463,9 @@ func (q *Queries) MapNodes(ctx context.Context, mapID uuid.UUID) ([]MapNodesRow,
 			&i.Name,
 			&i.Q,
 			&i.R,
+			&i.Secret,
+			&i.LocalMapID,
+			&i.LocalFound,
 		); err != nil {
 			return nil, err
 		}
@@ -569,7 +590,7 @@ func (q *Queries) RemoveWall(ctx context.Context, arg RemoveWallParams) error {
 }
 
 const sessionTravelLegs = `-- name: SessionTravelLegs :many
-SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days
+SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days, l.from_secret, l.to_secret
 FROM play.travel_legs l JOIN play.actions a ON a.id = l.action_id
 WHERE l.session_id = $1 AND l.map_id = $2 ORDER BY a.seq
 `
@@ -586,6 +607,8 @@ type SessionTravelLegsRow struct {
 	DistanceMi int32
 	Minutes    int32
 	Days       int32
+	FromSecret bool
+	ToSecret   bool
 }
 
 func (q *Queries) SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error) {
@@ -604,6 +627,8 @@ func (q *Queries) SessionTravelLegs(ctx context.Context, arg SessionTravelLegsPa
 			&i.DistanceMi,
 			&i.Minutes,
 			&i.Days,
+			&i.FromSecret,
+			&i.ToSecret,
 		); err != nil {
 			return nil, err
 		}
@@ -627,6 +652,29 @@ type SetMapAmbientParams struct {
 
 func (q *Queries) SetMapAmbient(ctx context.Context, arg SetMapAmbientParams) error {
 	_, err := q.db.Exec(ctx, setMapAmbient, arg.Ambient, arg.Now, arg.ID)
+	return err
+}
+
+const setMapFound = `-- name: SetMapFound :exec
+UPDATE campaign.maps m SET found = $1, updated_at = $2
+FROM play.sessions s WHERE m.id = $3 AND s.id = $4 AND m.campaign_id = s.campaign_id
+`
+
+type SetMapFoundParams struct {
+	Found     bool
+	Now       time.Time
+	ID        uuid.UUID
+	SessionID uuid.UUID
+}
+
+// Only a Map of the Campaign the Session is played in is found or lost there.
+func (q *Queries) SetMapFound(ctx context.Context, arg SetMapFoundParams) error {
+	_, err := q.db.Exec(ctx, setMapFound,
+		arg.Found,
+		arg.Now,
+		arg.ID,
+		arg.SessionID,
+	)
 	return err
 }
 

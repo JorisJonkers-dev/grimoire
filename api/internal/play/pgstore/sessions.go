@@ -347,7 +347,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	case domain.ActionDamageDealt, domain.ActionDamageUndone, domain.ActionHPAdjusted, domain.ActionHitDieHealed:
 		return s.writeHP(ctx, sid, w)
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
-		domain.ActionPartyPlaced, domain.ActionTravelLeg:
+		domain.ActionPartyPlaced, domain.ActionTravelLeg, domain.ActionMapFound, domain.ActionMapLost:
 		return s.writeWorld(ctx, sid, w)
 	case domain.ActionTacticsSet:
 		return s.q.SetTokenTactics(ctx, queries.SetTokenTacticsParams{SessionID: sid, ID: uuid.UUID(w.Token.ID), Tactics: w.Token.Tactics})
@@ -1113,7 +1113,7 @@ func mapRow(m queries.CampaignMap) domain.Map {
 	return domain.Map{
 		ID: domain.MapID(m.ID), CampaignID: m.CampaignID, Name: m.Name, Kind: m.Kind, ImageKey: m.ImageKey, ImageType: m.ImageType,
 		Width: int(m.WidthPx), Height: int(m.HeightPx), HexSize: m.HexSizePx, OriginX: m.OriginX, OriginY: m.OriginY,
-		Ambient: m.Ambient, Grid: m.GridKind, GridStrength: int(m.GridStrength), ScaleMiles: m.ScaleMiles, UpdatedAt: m.UpdatedAt,
+		Ambient: m.Ambient, Grid: m.GridKind, GridStrength: int(m.GridStrength), ScaleMiles: m.ScaleMiles, Found: m.Found, UpdatedAt: m.UpdatedAt,
 	}
 }
 

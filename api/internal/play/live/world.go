@@ -33,6 +33,8 @@ func (r *runtime) planWorld(cmd Command) (Write, string) {
 	switch cmd.Kind {
 	case CmdAddNode:
 		return r.planNode(cmd)
+	case CmdFindMap:
+		return planFind(w, cmd)
 	case CmdAddRoute:
 		return planRoute(w, cmd)
 	case CmdRemoveRoute:
@@ -82,7 +84,44 @@ func (r *runtime) planNode(cmd Command) (Write, string) {
 	case slices.ContainsFunc(r.st.world.Nodes, func(n domain.WorldNode) bool { return n.At == at }):
 		return Write{}, "A location already stands there."
 	}
-	return Write{Kind: domain.ActionNodeAdded, Node: domain.WorldNode{ID: domain.NodeID(uuid.New()), Name: name, At: at}}, ""
+	n := domain.WorldNode{ID: domain.NodeID(uuid.New()), Name: name, At: at, Secret: cmd.Secret}
+	if cmd.MapID == "" {
+		return Write{Kind: domain.ActionNodeAdded, Node: n}, ""
+	}
+	// The local Map that lies there: one of this Campaign, at one place only.
+	local := domain.MapID(parseID(cmd.MapID))
+	board, err := r.store.LoadMap(context.Background(), r.st.session.CampaignID, local)
+	switch {
+	case err != nil || board.Map.Kind != domain.MapLocal:
+		return Write{}, "Choose a local map of this Campaign."
+	case slices.ContainsFunc(r.st.world.Nodes, func(o domain.WorldNode) bool { return o.LocalMap != nil && *o.LocalMap == local }):
+		return Write{}, "Another location already has that map."
+	}
+	n.LocalMap, n.LocalFound = &local, board.Map.Found
+	return Write{Kind: domain.ActionNodeAdded, Node: n}, ""
+}
+
+// planFind is the party finding a Map in play, or losing it: the world map itself, or a local Map that
+// lies at one of its locations.
+func planFind(w *domain.World, cmd Command) (Write, string) {
+	id := domain.MapID(parseID(cmd.MapID))
+	has := w.Map.Found
+	if id != w.Map.ID {
+		i := slices.IndexFunc(w.Nodes, func(n domain.WorldNode) bool { return n.LocalMap != nil && *n.LocalMap == id })
+		if i < 0 {
+			return Write{}, "That map is not on this world map."
+		}
+		has = w.Nodes[i].LocalFound
+	}
+	switch {
+	case has && cmd.On:
+		return Write{}, "The party already has that map."
+	case !has && !cmd.On:
+		return Write{}, "The party does not have that map."
+	case cmd.On:
+		return Write{Kind: domain.ActionMapFound, Found: &domain.FoundMap{Map: id, On: true}}, ""
+	}
+	return Write{Kind: domain.ActionMapLost, Found: &domain.FoundMap{Map: id}}, ""
 }
 
 func joins(route domain.WorldRoute, a, b domain.NodeID) bool {
@@ -124,7 +163,10 @@ func planTravel(w *domain.World, cmd Command) (Write, string) {
 	}
 	there, _ := w.Node(dest)
 	p := travel.Plan(route.DistanceMi, pace)
-	leg := domain.TravelLeg{From: here.Name, To: there.Name, Pace: pace.String(), DistanceMi: route.DistanceMi, Minutes: p.Minutes, Days: p.Days}
+	leg := domain.TravelLeg{
+		From: here.Name, To: there.Name, Pace: pace.String(), DistanceMi: route.DistanceMi, Minutes: p.Minutes, Days: p.Days,
+		FromSecret: here.Secret, ToSecret: there.Secret,
+	}
 	return Write{Kind: domain.ActionTravelLeg, Node: there, Leg: &leg}, ""
 }
 
@@ -152,6 +194,11 @@ func applyWorld(s *state, w *Write) {
 	switch w.Kind {
 	case domain.ActionNodeAdded:
 		world.Nodes = append(world.Nodes, w.Node)
+		if w.Node.LocalFound && !w.Node.Secret {
+			s.light(w, hex.Disk(w.Node.At, 1))
+		}
+	case domain.ActionMapFound, domain.ActionMapLost:
+		found(s, w)
 	case domain.ActionNodeRemoved:
 		world.Nodes = slices.DeleteFunc(world.Nodes, func(n domain.WorldNode) bool { return n.ID == w.Node.ID })
 		world.Routes = slices.DeleteFunc(world.Routes, func(x domain.WorldRoute) bool { return x.From == w.Node.ID || x.To == w.Node.ID })
@@ -167,18 +214,44 @@ func applyWorld(s *state, w *Write) {
 	}
 }
 
-func arrive(s *state, w *Write) {
-	world := s.world
-	id := w.Node.ID
-	world.Party = &id
-	for _, c := range hex.Disk(w.Node.At, travel.SightHexes) {
-		if s.worldCells[c] && !world.Reveals[c] {
-			world.Reveals[c] = true
+// light shows the party hexes of the world map for good.
+func (s *state) light(w *Write, cells []hex.Coord) {
+	for _, c := range cells {
+		if s.worldCells[c] && !s.world.Reveals[c] {
+			s.world.Reveals[c] = true
 			w.WorldReveal = append(w.WorldReveal, c)
 		}
 	}
+}
+
+// arrive puts the party at a location: it sees the land around it, and the road it walked to get there.
+func arrive(s *state, w *Write) {
+	world := s.world
 	if w.Leg != nil {
+		from, _ := world.Node(*world.Party)
+		s.light(w, hex.Line(from.At, w.Node.At))
 		world.Legs = append(world.Legs, *w.Leg)
+	}
+	id := w.Node.ID
+	world.Party = &id
+	s.light(w, hex.Disk(w.Node.At, travel.SightHexes))
+}
+
+// found is the party finding or losing a Map. A local Map found lights its place on the world map,
+// unless that place is secret, and what the party has seen stays seen when a Map is lost.
+func found(s *state, w *Write) {
+	world := s.world
+	if w.Found.Map == world.Map.ID {
+		world.Map.Found = w.Found.On
+		return
+	}
+	for i, n := range world.Nodes {
+		if n.LocalMap != nil && *n.LocalMap == w.Found.Map {
+			world.Nodes[i].LocalFound = w.Found.On
+			if w.Found.On && !n.Secret {
+				s.light(w, hex.Disk(n.At, 1))
+			}
+		}
 	}
 }
 
@@ -189,11 +262,11 @@ func (s *state) worldView(a Audience) *WorldView {
 	if w == nil {
 		return nil
 	}
-	v := &WorldView{Map: mapView(w.Map, len(w.Reveals)), Revealed: hexes(w.Reveals), Nodes: []NodeView{}, Routes: []RouteView{}, Legs: []LegView{}}
+	v := &WorldView{Map: mapView(w.Map, pictureVersion(w)), Found: w.Map.Found, Revealed: hexes(w.Reveals), Nodes: []NodeView{}, Routes: []RouteView{}, Legs: []LegView{}}
 	known := knownNodes(w, a)
 	for _, n := range w.Nodes {
 		if known[n.ID] {
-			v.Nodes = append(v.Nodes, NodeView{ID: uuid.UUID(n.ID).String(), Name: n.Name, Q: n.At.Q, R: n.At.R})
+			v.Nodes = append(v.Nodes, nodeView(n, a))
 		}
 	}
 	for _, x := range w.Routes {
@@ -201,26 +274,69 @@ func (s *state) worldView(a Audience) *WorldView {
 			v.Routes = append(v.Routes, routeView(x))
 		}
 	}
-	if w.Party != nil {
+	if w.Party != nil && known[*w.Party] {
 		v.PartyNodeID = uuid.UUID(*w.Party).String()
 	}
 	for _, l := range w.Legs {
-		v.Legs = append(v.Legs, LegView{From: l.From, To: l.To, Pace: l.Pace, DistanceMi: l.DistanceMi, Minutes: l.Minutes, Days: l.Days})
+		v.Legs = append(v.Legs, legView(l, a))
 	}
 	return v
 }
 
+// legView is a Travel Leg as one audience may read it: a secret place at either end is named to the DM only.
+func legView(l domain.TravelLeg, a Audience) LegView {
+	v := LegView{From: l.From, To: l.To, Pace: l.Pace, DistanceMi: l.DistanceMi, Minutes: l.Minutes, Days: l.Days}
+	if a == AudienceDM {
+		return v
+	}
+	if l.FromSecret {
+		v.From = SecretPlace
+	}
+	if l.ToSecret {
+		v.To = SecretPlace
+	}
+	return v
+}
+
+// foundPicture is added to the picture's version while the party has the world map: the picture a
+// player is sent is then the whole of it, and its address must change with it.
+const foundPicture = 1_000_000_000
+
+func pictureVersion(w *domain.World) int {
+	if w.Map.Found {
+		return foundPicture + len(w.Reveals)
+	}
+	return len(w.Reveals)
+}
+
+// nodeView is a location as one audience may see it. A secret place only ever reaches the DM, and only
+// the DM is told that a local Map the party has not found lies somewhere.
+func nodeView(n domain.WorldNode, a Audience) NodeView {
+	v := NodeView{ID: uuid.UUID(n.ID).String(), Name: n.Name, Q: n.At.Q, R: n.At.R, Secret: n.Secret, Found: n.LocalFound}
+	if n.LocalMap != nil && (a == AudienceDM || n.LocalFound) {
+		v.MapID = uuid.UUID(*n.LocalMap).String()
+	}
+	return v
+}
+
+// knownNodes are the locations an audience is shown. The DM sees them all. Anyone else sees those the
+// party has seen or can reach from where it stands, or every one when the party has the world map, and
+// never a secret one.
 func knownNodes(w *domain.World, a Audience) map[domain.NodeID]bool {
 	known := map[domain.NodeID]bool{}
 	for _, n := range w.Nodes {
-		known[n.ID] = a == AudienceDM || w.Reveals[n.At]
+		known[n.ID] = a == AudienceDM || w.Map.Found || w.Reveals[n.At]
 	}
-	if w.Party == nil {
-		return known
+	if w.Party != nil {
+		for _, x := range w.Routes {
+			if x.From == *w.Party || x.To == *w.Party {
+				known[x.From], known[x.To] = true, true
+			}
+		}
 	}
-	for _, x := range w.Routes {
-		if x.From == *w.Party || x.To == *w.Party {
-			known[x.From], known[x.To] = true, true
+	if a != AudienceDM {
+		for _, n := range w.Nodes {
+			known[n.ID] = known[n.ID] && !n.Secret
 		}
 	}
 	return known

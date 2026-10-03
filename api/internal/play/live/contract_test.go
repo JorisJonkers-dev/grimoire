@@ -71,7 +71,11 @@ func samples() contract {
 	view.Table = &live.TableView{Camera: "free", Q: 2, R: -1, ZoomPct: 150, Scene: "world", WorldMap: view.Map, Caption: "The gate creaks open."}
 	view.World = &live.WorldView{
 		Map: *view.Map, Revealed: []live.Hex{{Q: 0, R: 0}},
-		Nodes: []live.NodeView{{ID: "0190c7a8-0000-7000-8000-000000000022", Name: "Oakford", Q: 0, R: 0}, {ID: "0190c7a8-0000-7000-8000-000000000023", Name: "Mill", Q: 5, R: 0}},
+		Found: true,
+		Nodes: []live.NodeView{
+			{ID: "0190c7a8-0000-7000-8000-000000000022", Name: "Oakford", Q: 0, R: 0, MapID: "0190c7a8-0000-7000-8000-00000000000d", Found: true},
+			{ID: "0190c7a8-0000-7000-8000-000000000023", Name: "Mill", Q: 5, R: 0, Secret: true},
+		},
 		Routes: []live.RouteView{{
 			ID: "0190c7a8-0000-7000-8000-000000000024", FromNodeID: "0190c7a8-0000-7000-8000-000000000022", ToNodeID: "0190c7a8-0000-7000-8000-000000000023", DistanceMi: 12,
 			Plans: []live.PlanView{{Pace: "slow", Minutes: 360, Days: 1}, {Pace: "normal", Minutes: 240, Days: 1}, {Pace: "fast", Minutes: 180, Days: 1}},
@@ -173,6 +177,8 @@ func samples() contract {
 			{Nonce: "n41", Kind: live.CmdRemoveNode, NodeID: "0190c7a8-0000-7000-8000-000000000023"},
 			{Nonce: "n42", Kind: live.CmdRemoveRoute, RouteID: "0190c7a8-0000-7000-8000-000000000024"},
 			{Nonce: "n43", Kind: live.CmdPlaceParty, NodeID: "0190c7a8-0000-7000-8000-000000000022"},
+			{Nonce: "n44a", Kind: live.CmdAddNode, Label: "Lair", Q: 1, R: 1, Secret: true, MapID: "0190c7a8-0000-7000-8000-00000000000d"},
+			{Nonce: "n44b", Kind: live.CmdFindMap, MapID: "0190c7a8-0000-7000-8000-00000000000d", On: true},
 			{Nonce: "n44", Kind: live.CmdTravel, RouteID: "0190c7a8-0000-7000-8000-000000000024", Pace: "fast"},
 			{Nonce: "n45", Kind: live.CmdAddZone, Label: "Ambush", Q: 3, R: 0, RadiusHexes: 2, DMOnly: true},
 			{Nonce: "n46", Kind: live.CmdHoldZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025", On: true},
