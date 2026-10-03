@@ -161,8 +161,8 @@ func damageTypes() []string {
 
 func challenges() []float64 {
 	out := []float64{0, 0.125, 0.25, 0.5}
-	for cr := 1; cr <= 30; cr++ {
-		out = append(out, float64(cr))
+	for cr := range 30 {
+		out = append(out, float64(cr+1))
 	}
 	return out
 }

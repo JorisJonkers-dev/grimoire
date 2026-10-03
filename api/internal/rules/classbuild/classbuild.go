@@ -318,8 +318,8 @@ func Lines(c Class) []string {
 	head := "Hit Die d" + strconv.Itoa(c.HitDie) + " · Saving throws: " + strings.Join(saves, ", ") + " · Armor: " + listOr(p.Proficiencies.Armor) +
 		" · Weapons: " + listOr(p.Proficiencies.Weapons) + " · " + strconv.Itoa(p.Skills) + " skills"
 	out := []string{head, castingLine(c)}
-	for l := 1; l <= 20; l++ {
-		out = append(out, row(c, l))
+	for l := range 20 {
+		out = append(out, row(c, l+1))
 	}
 	return out
 }
