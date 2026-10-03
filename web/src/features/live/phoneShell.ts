@@ -12,6 +12,8 @@ export type PageKey = (typeof PAGES)[number]['key']
 
 /** How far a finger travels sideways before a swipe turns the page. */
 export const SWIPE_PX = 60
+/** How little a finger may move for a touch to count as a tap. */
+export const TAP_PX = 10
 export const ZOOM_MIN = 0.5
 export const ZOOM_MAX = 3
 export const ZOOM_STEP = 0.5
@@ -48,8 +50,15 @@ export function usePhoneShell() {
   function swipeStart(e: PointerEvent) {
     if (e.pointerType === 'touch') swipe = { id: e.pointerId, from: point(e) }
   }
+  // A still touch on a page's button turns to it at once: right after a swipe the browser can swallow
+  // the click that would.
   function swipeEnd(e: PointerEvent) {
-    if (swipe?.id === e.pointerId) page.value = pageAfterSwipe(page.value, e.clientX - swipe.from.x, e.clientY - swipe.from.y)
+    if (swipe?.id === e.pointerId) {
+      const [dx, dy] = [e.clientX - swipe.from.x, e.clientY - swipe.from.y]
+      const still = Math.abs(dx) < TAP_PX && Math.abs(dy) < TAP_PX
+      const tapped = still && e.target instanceof Element ? e.target.closest('[data-page-key]')?.getAttribute('data-page-key') : undefined
+      page.value = PAGES.find((p) => p.key === tapped)?.key ?? pageAfterSwipe(page.value, dx, dy)
+    }
     swipe = undefined
   }
   function pinchStart(e: PointerEvent) {

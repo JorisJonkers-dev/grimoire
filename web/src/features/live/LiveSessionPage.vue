@@ -872,6 +872,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             :class="['page', { 'page--on': shell.page.value === p.key }]"
             :aria-current="shell.page.value === p.key ? 'page' : undefined"
             :data-testid="`page-${p.key}`"
+            :data-page-key="p.key"
             @click="shell.page.value = p.key"
           >
             {{ p.label }}
