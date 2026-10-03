@@ -371,7 +371,8 @@ section {
 }
 .prep {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 0 16px;
 }
 .prep a {
   display: inline-flex;
