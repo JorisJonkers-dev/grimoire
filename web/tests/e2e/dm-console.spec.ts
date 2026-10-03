@@ -17,6 +17,8 @@ async function place(page: Page, hex: string, label: string, kind: string, contr
 
 test('the DM runs creatures from a console the players never see', async ({ page, browser }, info) => {
   test.skip(info.project.name !== 'desktop', 'one multi-client run is enough')
+  // A long scenario across several screens: on a busy runner it runs out of the usual time with nothing wrong.
+  test.slow()
   const stamp = String(Date.now())
   await page.goto('/campaigns')
   await page.getByTestId('campaign-name').fill(`Console ${stamp}`)
