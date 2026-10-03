@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/google/uuid"
 
@@ -33,42 +32,23 @@ func itemBuild(e domain.Entry, name string, d itembuild.Design) ItemBuild {
 
 // Item reads a homebrew item in the builder: one of the caller's, or a Shared Library copy.
 func (s *Service) Item(ctx context.Context, c caller.Caller, id uuid.UUID) (ItemBuild, error) {
-	e, err := s.linkable(ctx, c, id)
-	if err == nil && e.Kind != "item" {
-		err = apperr.Refuse("only an item is built in the item builder")
-	}
+	e, err := s.designed(ctx, c, id, "item", "item builder")
 	if err != nil {
 		return ItemBuild{}, err
 	}
-	d := firstItem()
-	if e.Design != nil {
-		_ = json.Unmarshal(e.Design, &d) // stored designs were checked when saved
-	}
-	return itemBuild(e, e.Name, d), nil
+	return itemBuild(e, e.Name, designOf(e, firstItem())), nil
 }
 
 // SaveItem saves a design for one of the caller's items as its next Revision.
 func (s *Service) SaveItem(ctx context.Context, c caller.Caller, id uuid.UUID, d itembuild.Design) (ItemBuild, error) {
-	e, err := s.owned(ctx, c, id)
-	if err == nil && e.Kind != "item" {
-		err = apperr.Refuse("only an item is built in the item builder")
-	}
+	e, err := s.ownDesigned(ctx, c, id, "item", "item builder")
 	if err != nil {
 		return ItemBuild{}, err
 	}
 	if err := itembuild.Check(d); err != nil {
 		return ItemBuild{}, apperr.Refuse(err.Error())
 	}
-	raw, _ := json.Marshal(d) //nolint:errchkjson // a design is plain data
-	now := s.Now()
-	err = s.Repo.InTx(ctx, func(r Repository) error {
-		no, err := r.UpdateEntry(ctx, id, e.Name, e.Fields, raw, now)
-		if err != nil {
-			return err
-		}
-		return r.InsertRevision(ctx, id, domain.Revision{No: no, Name: e.Name, Fields: e.Fields, Design: raw, Author: c.Subject, At: now})
-	})
-	if err != nil {
+	if err := s.saveDesign(ctx, c, e, d); err != nil {
 		return ItemBuild{}, err
 	}
 	return s.Item(ctx, c, id)

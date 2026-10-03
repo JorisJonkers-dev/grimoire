@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/google/uuid"
 
@@ -48,43 +47,25 @@ func (s *Service) build(ctx context.Context, id uuid.UUID, name string, d spellb
 
 // Spell reads a homebrew spell in the builder: one of the caller's, or a Shared Library copy.
 func (s *Service) Spell(ctx context.Context, c caller.Caller, id uuid.UUID) (SpellBuild, error) {
-	e, err := s.linkable(ctx, c, id)
-	if err == nil && e.Kind != "spell" {
-		err = apperr.Refuse("only a spell is built in the Effect builder")
-	}
+	e, err := s.designed(ctx, c, id, "spell", "Effect builder")
 	if err != nil {
 		return SpellBuild{}, err
 	}
-	d := firstDesign()
-	if e.Design != nil {
-		_ = json.Unmarshal(e.Design, &d) // stored designs were checked when saved
-	}
+	d := designOf(e, firstDesign())
 	b, err := s.build(ctx, id, e.Name, d)
 	return SpellBuild{Entry: e, Design: d, Built: b, Hexes: spellbuild.Preview(d.Targeting)}, err
 }
 
 // SaveSpell saves a design for one of the caller's spells as its next Revision.
 func (s *Service) SaveSpell(ctx context.Context, c caller.Caller, id uuid.UUID, d spellbuild.Design) (SpellBuild, error) {
-	e, err := s.owned(ctx, c, id)
-	if err == nil && e.Kind != "spell" {
-		err = apperr.Refuse("only a spell is built in the Effect builder")
-	}
+	e, err := s.ownDesigned(ctx, c, id, "spell", "Effect builder")
 	if err != nil {
 		return SpellBuild{}, err
 	}
 	if _, err := s.build(ctx, id, e.Name, d); err != nil {
 		return SpellBuild{}, err
 	}
-	raw, _ := json.Marshal(d) //nolint:errchkjson // a design is plain data
-	now := s.Now()
-	err = s.Repo.InTx(ctx, func(r Repository) error {
-		no, err := r.UpdateEntry(ctx, id, e.Name, e.Fields, raw, now)
-		if err != nil {
-			return err
-		}
-		return r.InsertRevision(ctx, id, domain.Revision{No: no, Name: e.Name, Fields: e.Fields, Design: raw, Author: c.Subject, At: now})
-	})
-	if err != nil {
+	if err := s.saveDesign(ctx, c, e, d); err != nil {
 		return SpellBuild{}, err
 	}
 	return s.Spell(ctx, c, id)
