@@ -22,6 +22,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/variants"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -130,7 +131,9 @@ type Write struct {
 	Day     *int
 	// Minute is the time of day that goes with Day; Dawned the charges the dawns that passed gave back.
 	Minute int
-	Dawned []domain.Recharge
+	// ShortRests is the count of Short Rests since the last Long Rest, once a rest changes it.
+	ShortRests *int
+	Dawned     []domain.Recharge
 	// March is the Marching Order a marching_order_set leaves, from the front.
 	March  []uuid.UUID
 	haggle *haggleChange
@@ -337,6 +340,10 @@ type Store interface {
 	MarchingOrder(ctx context.Context, campaign uuid.UUID) ([]uuid.UUID, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
+	// RuleVariants reads what the Campaign has each Rule Variant at now, and ShortRests how many Short
+	// Rests the party has taken since its last Long Rest.
+	RuleVariants(ctx context.Context, campaign uuid.UUID) (variants.Set, error)
+	ShortRests(ctx context.Context, campaign uuid.UUID) (int, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
 	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)

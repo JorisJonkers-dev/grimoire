@@ -50,6 +50,7 @@ type CampaignCampaign struct {
 	ExhaustionVariant string
 	NoUndo            bool
 	ShowDcs           bool
+	ShortRests        int32
 }
 
 type CampaignCharacter struct {
@@ -457,6 +458,13 @@ type CampaignRevision struct {
 	Client        string
 	RestoredFrom  pgtype.Int4
 	CreatedAt     time.Time
+}
+
+type CampaignRuleVariant struct {
+	CampaignID uuid.UUID
+	Variant    string
+	Value      string
+	UpdatedAt  time.Time
 }
 
 type CampaignStandingChange struct {

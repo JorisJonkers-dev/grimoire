@@ -19345,6 +19345,56 @@ func (s *ListRollsOKHeaders) SetResponse(val []RollRequest) {
 
 func (*ListRollsOKHeaders) listRollsRes() {}
 
+// ListRuleVariantsOKHeaders wraps []RuleVariant with response headers.
+type ListRuleVariantsOKHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           []RuleVariant
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ListRuleVariantsOKHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ListRuleVariantsOKHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ListRuleVariantsOKHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ListRuleVariantsOKHeaders) GetResponse() []RuleVariant {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ListRuleVariantsOKHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ListRuleVariantsOKHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ListRuleVariantsOKHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ListRuleVariantsOKHeaders) SetResponse(val []RuleVariant) {
+	s.Response = val
+}
+
+func (*ListRuleVariantsOKHeaders) listRuleVariantsRes() {}
+
 // ListSessionsOKHeaders wraps []PlaySession with response headers.
 type ListSessionsOKHeaders struct {
 	RateLimitLimit     OptInt32
@@ -39025,6 +39075,7 @@ func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRetrainChoicesRes()            {}
 func (*ProblemStatusCodeWithHeaders) listRetrainsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
+func (*ProblemStatusCodeWithHeaders) listRuleVariantsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listSettlementsRes()               {}
@@ -39105,6 +39156,7 @@ func (*ProblemStatusCodeWithHeaders) setDiceSetImageRes()               {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
+func (*ProblemStatusCodeWithHeaders) setRuleVariantsRes()               {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) shareDiceSetRes()                  {}
 func (*ProblemStatusCodeWithHeaders) shareLibraryEntryRes()             {}
@@ -42301,6 +42353,150 @@ func (s *RollRequestStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// A built-in Rule Variant with what the Campaign has it at.
+// Ref: #/components/schemas/RuleVariant
+type RuleVariant struct {
+	Slug        string `json:"slug"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// Whether Grimoire applies it in play. The others are the DM's to apply by hand.
+	Automated bool `json:"automated"`
+	// What the Campaign has it at: one of its options.
+	Value string `json:"value"`
+	// What it can be. The first is how the rules play without it.
+	Options []RuleVariantOption `json:"options"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *RuleVariant) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *RuleVariant) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *RuleVariant) GetDescription() string {
+	return s.Description
+}
+
+// GetAutomated returns the value of Automated.
+func (s *RuleVariant) GetAutomated() bool {
+	return s.Automated
+}
+
+// GetValue returns the value of Value.
+func (s *RuleVariant) GetValue() string {
+	return s.Value
+}
+
+// GetOptions returns the value of Options.
+func (s *RuleVariant) GetOptions() []RuleVariantOption {
+	return s.Options
+}
+
+// SetSlug sets the value of Slug.
+func (s *RuleVariant) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *RuleVariant) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *RuleVariant) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetAutomated sets the value of Automated.
+func (s *RuleVariant) SetAutomated(val bool) {
+	s.Automated = val
+}
+
+// SetValue sets the value of Value.
+func (s *RuleVariant) SetValue(val string) {
+	s.Value = val
+}
+
+// SetOptions sets the value of Options.
+func (s *RuleVariant) SetOptions(val []RuleVariantOption) {
+	s.Options = val
+}
+
+// What to set one Rule Variant to.
+// Ref: #/components/schemas/RuleVariantChoice
+type RuleVariantChoice struct {
+	Slug  string `json:"slug"`
+	Value string `json:"value"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *RuleVariantChoice) GetSlug() string {
+	return s.Slug
+}
+
+// GetValue returns the value of Value.
+func (s *RuleVariantChoice) GetValue() string {
+	return s.Value
+}
+
+// SetSlug sets the value of Slug.
+func (s *RuleVariantChoice) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetValue sets the value of Value.
+func (s *RuleVariantChoice) SetValue(val string) {
+	s.Value = val
+}
+
+// The Rule Variants to switch.
+// Ref: #/components/schemas/RuleVariantChoices
+type RuleVariantChoices struct {
+	Choices []RuleVariantChoice `json:"choices"`
+}
+
+// GetChoices returns the value of Choices.
+func (s *RuleVariantChoices) GetChoices() []RuleVariantChoice {
+	return s.Choices
+}
+
+// SetChoices sets the value of Choices.
+func (s *RuleVariantChoices) SetChoices(val []RuleVariantChoice) {
+	s.Choices = val
+}
+
+// One thing a Rule Variant can be.
+// Ref: #/components/schemas/RuleVariantOption
+type RuleVariantOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+// GetValue returns the value of Value.
+func (s *RuleVariantOption) GetValue() string {
+	return s.Value
+}
+
+// GetLabel returns the value of Label.
+func (s *RuleVariantOption) GetLabel() string {
+	return s.Label
+}
+
+// SetValue sets the value of Value.
+func (s *RuleVariantOption) SetValue(val string) {
+	s.Value = val
+}
+
+// SetLabel sets the value of Label.
+func (s *RuleVariantOption) SetLabel(val string) {
+	s.Label = val
+}
+
 // Rules document key.
 // Ref: #/components/schemas/Ruleset
 type Ruleset string
@@ -42806,6 +43002,45 @@ func (s SetPortraitReq) Read(p []byte) (n int, err error) {
 	}
 	return s.Data.Read(p)
 }
+
+// SetRuleVariantsNoContent is response for SetRuleVariants operation.
+type SetRuleVariantsNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SetRuleVariantsNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SetRuleVariantsNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SetRuleVariantsNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SetRuleVariantsNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SetRuleVariantsNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SetRuleVariantsNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*SetRuleVariantsNoContent) setRuleVariantsRes() {}
 
 // SetTokenIconNoContent is response for SetTokenIcon operation.
 type SetTokenIconNoContent struct {

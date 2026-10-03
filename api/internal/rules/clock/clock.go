@@ -7,9 +7,6 @@ const (
 	DayMinutes = 24 * 60
 	// DawnMinute is when dawn comes: six in the morning.
 	DawnMinute = 6 * 60
-	// ShortRest and LongRest are how long each rest takes, in minutes.
-	ShortRest = 60
-	LongRest  = 8 * 60
 	// campMinutes is the night's camp between two days of travel.
 	campMinutes = 16 * 60
 )

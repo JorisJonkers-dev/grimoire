@@ -4509,6 +4509,50 @@ export type ItemReadingResult = {
 };
 
 /**
+ * A built-in Rule Variant with what the Campaign has it at.
+ */
+export type RuleVariant = {
+    slug: string;
+    name: string;
+    description: string;
+    /**
+     * Whether Grimoire applies it in play. The others are the DM's to apply by hand.
+     */
+    automated: boolean;
+    /**
+     * What the Campaign has it at: one of its options.
+     */
+    value: string;
+    /**
+     * What it can be. The first is how the rules play without it.
+     */
+    options: Array<RuleVariantOption>;
+};
+
+/**
+ * One thing a Rule Variant can be.
+ */
+export type RuleVariantOption = {
+    value: string;
+    label: string;
+};
+
+/**
+ * What to set one Rule Variant to.
+ */
+export type RuleVariantChoice = {
+    slug: string;
+    value: string;
+};
+
+/**
+ * The Rule Variants to switch.
+ */
+export type RuleVariantChoices = {
+    choices: Array<RuleVariantChoice>;
+};
+
+/**
  * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
  */
 export type Faction = {
@@ -8507,6 +8551,74 @@ export type UpdateLoreResponses = {
 };
 
 export type UpdateLoreResponse = UpdateLoreResponses[keyof UpdateLoreResponses];
+
+export type ListRuleVariantsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rule-variants';
+};
+
+export type ListRuleVariantsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRuleVariantsError = ListRuleVariantsErrors[keyof ListRuleVariantsErrors];
+
+export type ListRuleVariantsResponses = {
+    /**
+     * The Rule Variants, in the order of the catalogue.
+     */
+    200: Array<RuleVariant>;
+};
+
+export type ListRuleVariantsResponse = ListRuleVariantsResponses[keyof ListRuleVariantsResponses];
+
+export type SetRuleVariantsData = {
+    body: RuleVariantChoices;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rule-variants';
+};
+
+export type SetRuleVariantsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetRuleVariantsError = SetRuleVariantsErrors[keyof SetRuleVariantsErrors];
+
+export type SetRuleVariantsResponses = {
+    /**
+     * The Rule Variants are switched.
+     */
+    204: void;
+};
+
+export type SetRuleVariantsResponse = SetRuleVariantsResponses[keyof SetRuleVariantsResponses];
 
 export type ListFactionsData = {
     body?: never;

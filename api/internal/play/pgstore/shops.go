@@ -51,7 +51,7 @@ func (s *Store) saveMarch(ctx context.Context, campaign uuid.UUID, order []uuid.
 }
 
 // saveShared writes what a change does to what the whole Campaign shares: the Game Clock, the charges
-// the dawns it passed gave back, and the Marching Order.
+// the dawns it passed gave back, the count of Short Rests and the Marching Order.
 //
 //nolint:gosec // days and minutes are bounded by the rules
 func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write) error {
@@ -62,6 +62,11 @@ func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write
 	}
 	for _, rc := range w.Dawned {
 		if err := s.SetCharges(ctx, rc.Instance, rc.Charges); err != nil {
+			return err
+		}
+	}
+	if w.ShortRests != nil {
+		if err := s.q.SetCampaignShortRests(ctx, queries.SetCampaignShortRestsParams{ID: campaign, ShortRests: int32(*w.ShortRests)}); err != nil {
 			return err
 		}
 	}

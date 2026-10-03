@@ -613,6 +613,10 @@ type ListRollsRes interface {
 	listRollsRes()
 }
 
+type ListRuleVariantsRes interface {
+	listRuleVariantsRes()
+}
+
 type ListSessionsRes interface {
 	listSessionsRes()
 }
@@ -931,6 +935,10 @@ type SetNotificationPreferencesRes interface {
 
 type SetPortraitRes interface {
 	setPortraitRes()
+}
+
+type SetRuleVariantsRes interface {
+	setRuleVariantsRes()
 }
 
 type SetTokenIconRes interface {

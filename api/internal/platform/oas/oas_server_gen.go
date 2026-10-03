@@ -825,6 +825,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/portrait
 	SetPortrait(ctx context.Context, req SetPortraitReq, params SetPortraitParams) (SetPortraitRes, error)
+	// SetRuleVariants implements setRuleVariants operation.
+	//
+	// Sets the Rule Variants named to what is chosen and leaves the others alone. Every choice must be one
+	// its variant can be, or nothing changes. A Session under way follows the change at once. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/rule-variants
+	SetRuleVariants(ctx context.Context, req *RuleVariantChoices, params SetRuleVariantsParams) (SetRuleVariantsRes, error)
 	// SetTokenIcon implements setTokenIcon operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -1653,6 +1660,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/rolls
 	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
+	// ListRuleVariants implements listRuleVariants operation.
+	//
+	// Every built-in Rule Variant with what the Campaign has it at, for every Member to see how the table
+	// plays. Each says whether Grimoire applies it in play or the DM applies it by hand.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rule-variants
+	ListRuleVariants(ctx context.Context, params ListRuleVariantsParams) (ListRuleVariantsRes, error)
 	// ListSessions implements listSessions operation.
 	//
 	// The Campaign's Sessions, newest first. Members only.

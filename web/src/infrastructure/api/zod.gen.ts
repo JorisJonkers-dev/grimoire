@@ -3312,6 +3312,41 @@ export const zItemReadingResult = z.object({
 });
 
 /**
+ * One thing a Rule Variant can be.
+ */
+export const zRuleVariantOption = z.object({
+    value: z.string().max(60),
+    label: z.string().max(120)
+});
+
+/**
+ * A built-in Rule Variant with what the Campaign has it at.
+ */
+export const zRuleVariant = z.object({
+    slug: z.string().max(60),
+    name: z.string().max(80),
+    description: z.string().max(400),
+    automated: z.boolean(),
+    value: z.string().max(60),
+    options: z.array(zRuleVariantOption).max(20)
+});
+
+/**
+ * What to set one Rule Variant to.
+ */
+export const zRuleVariantChoice = z.object({
+    slug: z.string().min(1).max(60),
+    value: z.string().min(1).max(60)
+});
+
+/**
+ * The Rule Variants to switch.
+ */
+export const zRuleVariantChoices = z.object({
+    choices: z.array(zRuleVariantChoice).max(100)
+});
+
+/**
  * What only the DM knows of a Faction.
  */
 export const zFactionSecrets = z.object({
@@ -6324,6 +6359,26 @@ export const zUpdateLorePath = z.object({
  * The Lore entry is changed.
  */
 export const zUpdateLoreResponse = z.void();
+
+export const zListRuleVariantsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Rule Variants, in the order of the catalogue.
+ */
+export const zListRuleVariantsResponse = z.array(zRuleVariant).max(100);
+
+export const zSetRuleVariantsBody = zRuleVariantChoices;
+
+export const zSetRuleVariantsPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Rule Variants are switched.
+ */
+export const zSetRuleVariantsResponse = z.void();
 
 export const zListFactionsPath = z.object({
     campaignId: zId
