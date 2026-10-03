@@ -158,6 +158,11 @@ func (h *Handler) relay(ctx context.Context, conn *websocket.Conn, sid playdomai
 		_ = conn.Close(websocket.StatusNormalClosure, "regroup")
 		return
 	}
+	if errors.Is(err, apperr.ErrForbidden) {
+		// A Table Display that would show another group's Party Vision.
+		_ = conn.Close(websocket.StatusPolicyViolation, "not your group")
+		return
+	}
 	if err != nil {
 		_ = conn.Close(websocket.StatusTryAgainLater, "session unavailable")
 		return

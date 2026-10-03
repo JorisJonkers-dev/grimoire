@@ -58,6 +58,9 @@ const follow = (g: LiveGroup) => { emit('send', g.home ? { kind: 'table_follow' 
         </span>
       </li>
     </ul>
+    <p v-if="groups.length" class="dim" data-testid="groups-table">
+      The Table Display shows the group it follows. While the party is split it opens for you, and for the Players of that group.
+    </p>
     <p v-if="away" class="dim" data-testid="groups-away">This group left the party. Bring it back, or send another group off, from the party's own Session.</p>
     <form v-else class="split" data-testid="group-form" @submit.prevent="split">
       <h3>Send a group off</h3>

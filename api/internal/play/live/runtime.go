@@ -332,7 +332,7 @@ type Store interface {
 	MarkRound(ctx context.Context, s domain.Session, c domain.Checkpoint, keep int) error
 	// Groups lists the live Sessions a party is split over; Place is the one of them a member belongs in.
 	Groups(ctx context.Context, s domain.Session) ([]domain.PartyGroup, error)
-	Place(ctx context.Context, id domain.SessionID, member uuid.UUID, dm, table bool) (domain.SessionID, error)
+	Place(ctx context.Context, id domain.SessionID, m domain.Member, a Audience) (domain.SessionID, error)
 	// SplitParty sends tokens off to a Session of their own on another map; RejoinParty brings a group
 	// back and ends its Session; FollowTable has the Table Display follow a group. Like Rewind, the first
 	// two stand only when the Session can be read back from the transaction they are made in.
@@ -466,7 +466,7 @@ func (h *Hub) Join(ctx context.Context, id domain.SessionID, m domain.Member, c 
 		var err error
 		if rt, err = h.start(ctx, id); errors.Is(err, ErrClosed) {
 			// A group's Session that is over sends whoever comes looking back to the party.
-			if at, perr := h.Store.Place(ctx, id, m.ID, a == AudienceDM, a == AudienceTable); perr == nil && at != id {
+			if at, perr := h.Store.Place(ctx, id, m, a); perr == nil && at != id {
 				return nil, &ElsewhereError{Session: at}
 			}
 		}
@@ -474,7 +474,9 @@ func (h *Hub) Join(ctx context.Context, id domain.SessionID, m domain.Member, c 
 			return nil, err
 		}
 	}
-	if at, err := h.Store.Place(ctx, id, m.ID, a == AudienceDM, a == AudienceTable); err != nil {
+	// Asked here so that whoever does not belong is told at once. The Session asks again as they come
+	// in: the party may split between this answer and that moment.
+	if at, err := h.Store.Place(ctx, id, m, a); err != nil {
 		return nil, err
 	} else if at != id {
 		return nil, &ElsewhereError{Session: at}
@@ -732,6 +734,9 @@ func (r *runtime) run() {
 		select {
 		case sub := <-r.join:
 			r.subs[sub] = struct{}{}
+			if !r.admit(sub) {
+				continue
+			}
 			r.send(sub, r.snapshot(sub.Audience))
 			r.seeDM(sub)
 		case sub := <-r.leave:
@@ -884,6 +889,11 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 	next.session.Seq = seq
 	prev := r.st
 	r.st = next
+	// Who belongs with a split party's group follows its party tokens: when those change, so may who is here.
+	moved := next.split() && prev.partyTokens() != next.partyTokens()
+	if moved {
+		r.replace()
+	}
 	r.markRound(prev, next, done.Action)
 	r.nudge(prev, next)
 	views := map[Audience]Update{}
@@ -901,9 +911,12 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 	}
 	r.arm()
 	r.follow(w, actor, c)
-	// The party's other groups keep the same Containers, Shops and day.
+	// The party's other groups keep the same Containers, Shops and day, and are shown who is where.
 	if next.split() && shared(&w) {
 		r.tell(cmdRefresh)
+	}
+	if moved {
+		r.tell(cmdRegroup)
 	}
 }
 

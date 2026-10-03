@@ -47,11 +47,13 @@ func (s *Store) Groups(ctx context.Context, sess domain.Session) ([]domain.Party
 	return out, nil
 }
 
-// Place is the Session of a party's groups a member belongs in. The DM belongs wherever they look. The
-// Table Display belongs with the group the DM has it follow. A Player belongs with a group their own
-// party token is in, and with the Session the party split from when they play none: each group's
-// Party Vision is its own. Everyone belongs in that Session once a group's own Session has ended.
-func (s *Store) Place(ctx context.Context, id domain.SessionID, member uuid.UUID, dm, table bool) (domain.SessionID, error) {
+// Place is the Session of a party's groups a member belongs in. The DM belongs wherever they look. A
+// Player belongs with a group their own party token is in, and with the Session the party split from
+// when they play none: each group's Party Vision is its own. The Table Display belongs with the group
+// the DM has it follow, and shows that group's Party Vision: so it is the DM's to open, and theirs
+// whose own group it shows; anyone else is refused. Everyone belongs in the Session the party split
+// from once a group's own Session has ended.
+func (s *Store) Place(ctx context.Context, id domain.SessionID, m domain.Member, a live.Audience) (domain.SessionID, error) {
 	row, err := s.q.SessionByID(ctx, uuid.UUID(id))
 	if err != nil {
 		return id, notFound(err)
@@ -61,22 +63,32 @@ func (s *Store) Place(ctx context.Context, id domain.SessionID, member uuid.UUID
 	switch {
 	case sess.Status != domain.SessionLive:
 		return root, nil
-	case dm:
+	case a == live.AudienceDM:
 		return id, nil
-	case table:
-		at, err := s.q.SessionPlace(ctx, uuid.UUID(root))
-		return domain.SessionID(at), err
 	}
-	mine, err := s.q.MemberGroups(ctx, queries.MemberGroupsParams{Root: uuid.UUID(root), Member: pgtype.UUID{Bytes: member, Valid: true}})
+	mine, err := s.q.MemberGroups(ctx, queries.MemberGroupsParams{Root: uuid.UUID(root), Member: pgtype.UUID{Bytes: m.ID, Valid: true}})
+	if err != nil {
+		return id, err
+	}
+	// own is the group whose Party Vision is this member's to see.
+	own := root
+	switch {
+	case slices.Contains(mine, uuid.UUID(id)):
+		own = id
+	case len(mine) > 0:
+		own = domain.SessionID(mine[0])
+	}
+	if a != live.AudienceTable {
+		return own, nil
+	}
+	shown, err := s.q.SessionPlace(ctx, uuid.UUID(root))
 	switch {
 	case err != nil:
 		return id, err
-	case slices.Contains(mine, uuid.UUID(id)):
-		return id, nil
-	case len(mine) > 0:
-		return domain.SessionID(mine[0]), nil
+	case m.DM || slices.Contains(mine, shown) || (len(mine) == 0 && domain.SessionID(shown) == root):
+		return domain.SessionID(shown), nil
 	}
-	return root, nil
+	return id, apperr.ErrForbidden
 }
 
 // moveTokens takes tokens from one Session to another, with the Effects on them, the saves those

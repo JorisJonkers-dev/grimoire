@@ -235,19 +235,59 @@ func (r *runtime) regrouped(req request, st *state, done Committed) {
 	r.tell(cmdRegroup)
 }
 
-// sendAway sends every screen that belongs with another group there, and lets it go. A screen whose
-// place cannot be read is let go too: it finds its place when it comes back.
+// admit lets a screen stay when it belongs with this group. One that belongs with another is sent
+// there and let go; one that belongs nowhere it asked for, or whose place cannot be read, is let go
+// without a word. While the party is together in the Session it would split from, everyone belongs
+// here and nobody is asked.
+func (r *runtime) admit(sub *Subscriber) bool {
+	if r.st.session.Parent == nil && !r.st.split() {
+		return true
+	}
+	at, err := r.store.Place(context.Background(), r.st.session.ID, sub.Member, sub.Audience)
+	if err == nil && at == r.st.session.ID {
+		return true
+	}
+	if err == nil {
+		r.send(sub, Update{Kind: UpdRegroup, Seq: r.st.session.Seq, Group: &GroupView{SessionID: uuid.UUID(at).String(), Tokens: []string{}}})
+	}
+	r.drop(sub)
+	return false
+}
+
+// sendAway lets go of every screen that no longer belongs with this group.
 func (r *runtime) sendAway() {
 	for sub := range r.subs {
-		at, err := r.store.Place(context.Background(), r.st.session.ID, sub.Member.ID, sub.Audience == AudienceDM, sub.Audience == AudienceTable)
-		if err == nil && at == r.st.session.ID {
+		r.admit(sub)
+	}
+}
+
+// partyTokens names the party tokens here and who plays each: what decides who belongs with the group.
+func (s *state) partyTokens() string {
+	var out []string
+	for id, t := range s.tokens {
+		if t.Kind != domain.TokenParty {
 			continue
 		}
-		if err == nil {
-			r.send(sub, Update{Kind: UpdRegroup, Seq: r.st.session.Seq, Group: &GroupView{SessionID: uuid.UUID(at).String(), Tokens: []string{}}})
+		who := ""
+		if t.Controller != nil {
+			who = t.Controller.String()
 		}
-		r.drop(sub)
+		out = append(out, uuid.UUID(id).String()+":"+who+":"+t.Label)
 	}
+	slices.Sort(out)
+	return strings.Join(out, " ")
+}
+
+// replace reads the groups afresh after this group's party tokens changed, and lets go of whoever
+// no longer belongs here.
+func (r *runtime) replace() {
+	groups, err := r.store.Groups(context.Background(), r.st.session)
+	if err != nil {
+		r.log.Error("live: read groups", "error", err)
+	} else {
+		r.st.groups = groups
+	}
+	r.sendAway()
 }
 
 // regroup hears from another group that who belongs where has changed.

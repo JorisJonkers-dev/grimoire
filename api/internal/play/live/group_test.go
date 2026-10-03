@@ -13,6 +13,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -86,7 +87,8 @@ func TestThePartySplitsAcrossMaps(t *testing.T) {
 	tb.dmSays(live.Command{Kind: live.CmdPlace, Label: "Brom", TokenKind: domain.TokenParty, Q: 1})
 	// What is on a token goes where the token goes.
 	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Aria"], Effect: "poisoned"})
-	tv := join(t, w, w.player, playerCaller, live.AudienceTable)
+	tv := join(t, w, w.dm, dmCaller, live.AudienceTable)
+	playersTV := join(t, w, w.player, playerCaller, live.AudienceTable)
 	if v := look(t, w, tb.dm); len(v.Groups) != 0 {
 		t.Fatalf("a party that is together has groups: %+v", v.Groups)
 	}
@@ -107,17 +109,28 @@ func TestThePartySplitsAcrossMaps(t *testing.T) {
 	if to := sentAfter(t, tb.player); to != away {
 		t.Fatalf("Aria's player was sent to %s, want the tower", uuid.UUID(to))
 	}
-	// The Table Display stays with the party it was following, and shows the crypt.
+	// The Table Display the DM runs stays with the party it was following, and shows the crypt.
 	if u := next(t, tv); u.Kind != live.UpdSnapshot || u.View.Map.Name != "Crypt" || strings.Contains(tokenLabels(u.View), "Aria") || len(u.View.Groups) != 0 {
 		t.Fatalf("the table after the split = %+v", u)
+	}
+	// A table opened by Aria's player would show them the crypt, which is no longer theirs to see: it is
+	// let go without a word, and not let in again while the table follows the crypt.
+	if to := sentAfter(t, playersTV); to != (domain.SessionID{}) {
+		t.Fatalf("the player's table was sent to %s", uuid.UUID(to))
+	}
+	if _, err := w.hub.Join(ctx, home, w.player, playerCaller, live.AudienceTable); !errors.Is(err, apperr.ErrForbidden) {
+		t.Fatalf("the player's table on the crypt = %v", err)
 	}
 
 	// Each group's Party Vision is its own: Aria's player may not watch the crypt, only the tower.
 	if to := elsewhere(t, w, home, w.player, playerCaller, live.AudienceParty); to != away {
 		t.Fatalf("watching the crypt sends Aria's player to %s", uuid.UUID(to))
 	}
-	if to := elsewhere(t, w, away, w.player, playerCaller, live.AudienceTable); to != home {
+	if to := elsewhere(t, w, away, w.dm, dmCaller, live.AudienceTable); to != home {
 		t.Fatalf("a table opened on the tower is sent to %s", uuid.UUID(to))
+	}
+	if _, err := w.hub.Join(ctx, away, w.player, playerCaller, live.AudienceTable); !errors.Is(err, apperr.ErrForbidden) {
+		t.Fatalf("the player's table on the tower, while the table follows the crypt = %v", err)
 	}
 	up := joinAt(t, w, away, w.player, playerCaller, live.AudienceParty)
 	upDM := joinAt(t, w, away, w.dm, dmCaller, live.AudienceDM)
@@ -161,10 +174,12 @@ func TestThePartySplitsAcrossMaps(t *testing.T) {
 		t.Fatalf("the tower hears the table follows it = %+v", u)
 	}
 	next(t, up)
-	if to := elsewhere(t, w, home, w.player, playerCaller, live.AudienceTable); to != away {
+	if to := elsewhere(t, w, home, w.dm, dmCaller, live.AudienceTable); to != away {
 		t.Fatalf("a table opened on the crypt is sent to %s", uuid.UUID(to))
 	}
-	tv = joinAt(t, w, away, w.player, playerCaller, live.AudienceTable)
+	// Following the tower, the table shows Aria's player only what is theirs already: they may open it.
+	playersTV = joinAt(t, w, away, w.player, playerCaller, live.AudienceTable)
+	tv = joinAt(t, w, away, w.dm, dmCaller, live.AudienceTable)
 	// And back to the party it split from.
 	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableFollow})
 	if u := next(t, tb.dm); u.Kind != live.UpdSnapshot || !u.View.Groups[0].Table {
@@ -172,6 +187,9 @@ func TestThePartySplitsAcrossMaps(t *testing.T) {
 	}
 	if to := sentAfter(t, tv); to != home {
 		t.Fatalf("the table was sent to %s", uuid.UUID(to))
+	}
+	if to := sentAfter(t, playersTV); to != (domain.SessionID{}) {
+		t.Fatalf("the player's table was sent to %s", uuid.UUID(to))
 	}
 	next(t, upDM)
 	next(t, up)
@@ -271,7 +289,7 @@ func (noGroups) Groups(context.Context, domain.Session) ([]domain.PartyGroup, er
 
 type noPlace struct{ live.Store }
 
-func (noPlace) Place(context.Context, domain.SessionID, uuid.UUID, bool, bool) (domain.SessionID, error) {
+func (noPlace) Place(context.Context, domain.SessionID, domain.Member, live.Audience) (domain.SessionID, error) {
 	return domain.SessionID{}, errors.New("gone")
 }
 
@@ -499,6 +517,13 @@ func TestAGroupThatCannotReadWhatItIsTold(t *testing.T) {
 		t.Fatalf("bringing back a group that cannot be read = %+v", u)
 	}
 
+	// A party token placed while the groups cannot be read: the board changes, the list of who is where
+	// waits until it can be read.
+	if v := tbPlace(t, w, tb.dm, live.Command{Kind: live.CmdPlace, Label: "Cade", TokenKind: domain.TokenParty, Q: 2}); len(v.Groups) != 2 || len(v.Tokens) != 1 || len(v.Groups[0].Tokens) != 0 {
+		t.Fatalf("a token placed while the groups cannot be read = %+v, groups %+v", v.Tokens, v.Groups)
+	}
+	still(t, up)
+
 	failing.Store(false)
 	// Once it can read again, the next word it is told brings it up to date.
 	tbPlace(t, w, tb.dm, live.Command{Kind: live.CmdRollLoot, LootTableID: loot["Purse"]})
@@ -509,5 +534,109 @@ func TestAGroupThatCannotReadWhatItIsTold(t *testing.T) {
 	next(t, tb.dm)
 	if u := next(t, up); u.Kind != live.UpdView || u.View.Groups[1].Table || !u.View.Groups[0].Table {
 		t.Fatalf("the tower's groups once they can be read = %+v", u.View.Groups)
+	}
+}
+
+// raced lets the first question of where a member belongs pass, as when the party splits between the
+// answer and the member coming in.
+type raced struct {
+	live.Store
+	asked *atomic.Int32
+}
+
+func (r raced) Place(ctx context.Context, id domain.SessionID, m domain.Member, a live.Audience) (domain.SessionID, error) {
+	if r.asked.Add(1) == 1 {
+		return id, nil
+	}
+	return r.Store.Place(ctx, id, m, a)
+}
+
+// A member let in on an answer that the party has outrun is still not shown another group: the Session
+// asks again as they come in, and sends them after their own.
+func TestAJoinThatRacesASplit(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := magicTable(t)
+	tower := w.picture(t, "Tower", domain.MapLocal)
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdSplitParty, Name: "The tower", TokenIDs: []string{ids["Aria"]}, MapID: uuid.UUID(tower.ID).String()})
+	split := next(t, tb.dm)
+	away := domain.SessionID(uuid.MustParse(split.View.Groups[1].SessionID))
+	sentAfter(t, tb.player)
+	var asked atomic.Int32
+	w.hub.Store = raced{Store: w.hub.Store, asked: &asked}
+	late, err := w.hub.Join(context.Background(), w.session.ID, w.player, playerCaller, live.AudienceParty)
+	if err != nil {
+		t.Fatalf("the join that raced = %v", err)
+	}
+	// The hub asked once and was told they belong; the Session asked for itself and knew better.
+	if to := sentAfter(t, late); to != away || asked.Load() != 1 {
+		t.Fatalf("the member who raced the split was sent to %s after the hub asked %d times", uuid.UUID(to), asked.Load())
+	}
+}
+
+// Who belongs where follows the tokens: when a Player's last party token leaves a group, by the DM's
+// hand and not by the group coming back, their screens are sent after it at once, and every group's
+// DM is shown who is where.
+func TestWhoBelongsWhereFollowsTheTokens(t *testing.T) {
+	t.Parallel()
+	w, tb, ids := magicTable(t)
+	tower := w.picture(t, "Tower", domain.MapLocal)
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdSplitParty, Name: "The tower", TokenIDs: []string{ids["Aria"]}, MapID: uuid.UUID(tower.ID).String()})
+	split := next(t, tb.dm)
+	home, away := w.session.ID, domain.SessionID(uuid.MustParse(split.View.Groups[1].SessionID))
+	sentAfter(t, tb.player)
+	upDM := joinAt(t, w, away, w.dm, dmCaller, live.AudienceDM)
+	up := joinAt(t, w, away, w.player, playerCaller, live.AudienceParty)
+	second := joinAt(t, w, away, w.player, playerCaller, live.AudienceParty)
+	tokens := func(u live.Update, group int) string {
+		t.Helper()
+		if u.Kind != live.UpdView || len(u.View.Groups) != 2 {
+			t.Fatalf("groups = %+v", u)
+		}
+		return strings.Join(u.View.Groups[group].Tokens, ",")
+	}
+
+	// A party token placed in the tower shows in its group, here and for the DM in the crypt.
+	w.hub.Submit(upDM, live.Command{Kind: live.CmdPlace, Label: "Ghost", TokenKind: domain.TokenParty, Q: 3})
+	if got := tokens(next(t, upDM), 1); got != "Aria,Ghost" {
+		t.Fatalf("the tower's tokens = %s", got)
+	}
+	next(t, up)
+	next(t, second)
+	if got := tokens(next(t, tb.dm), 1); got != "Aria,Ghost" {
+		t.Fatalf("the crypt's DM is shown the tower's tokens = %s", got)
+	}
+	// An enemy placed changes nobody's place: the other group hears nothing.
+	w.hub.Submit(upDM, live.Command{Kind: live.CmdPlace, Label: "Rat", TokenKind: domain.TokenEnemy, Q: 4})
+	next(t, upDM)
+	next(t, up)
+	next(t, second)
+	still(t, tb.dm)
+
+	// The DM takes Aria's token off the tower map: her player plays there no longer.
+	w.hub.Submit(upDM, live.Command{Kind: live.CmdRemove, TokenID: ids["Aria"]})
+	if got := tokens(next(t, upDM), 1); got != "Ghost" {
+		t.Fatalf("the tower without Aria = %s", got)
+	}
+	for name, sub := range map[string]*live.Subscriber{"her player": up, "her player's second screen": second} {
+		if to := sentAfter(t, sub); to != home {
+			t.Fatalf("with Aria gone from the tower, %s was sent to %s", name, uuid.UUID(to))
+		}
+	}
+	if got := tokens(next(t, tb.dm), 1); got != "Ghost" {
+		t.Fatalf("the crypt's DM is shown the tower without Aria = %s", got)
+	}
+	if to := elsewhere(t, w, away, w.player, playerCaller, live.AudienceParty); to != home {
+		t.Fatalf("knocking at the tower again sends her player to %s", uuid.UUID(to))
+	}
+	// Back with the party, and then given a token in the tower again from the crypt's side of things:
+	// a Character placed in the tower takes its player there.
+	back := joinAt(t, w, home, w.player, playerCaller, live.AudienceParty)
+	w.hub.Submit(upDM, live.Command{Kind: live.CmdPlace, CharacterID: uuid.NewString(), Q: 1})
+	if got := tokens(next(t, upDM), 1); got != "Aria,Ghost" {
+		t.Fatalf("the tower with Aria again = %s", got)
+	}
+	next(t, tb.dm)
+	if to := sentAfter(t, back); to != away {
+		t.Fatalf("with Aria in the tower again, her player was sent to %s", uuid.UUID(to))
 	}
 }

@@ -78,6 +78,7 @@ describe('a split party', () => {
     expect(panel.get(`[data-testid="group-go-${AWAY}"]`).attributes('href')).toBe(`/campaigns/${ID}/sessions/${AWAY}`)
     const follows = (id: string) => (panel.get(`[data-testid="group-table-${id}"]`).element as HTMLInputElement).checked
     expect([follows(SID), follows(AWAY)]).toEqual([true, false])
+    expect(panel.get('[data-testid="groups-table"]').text()).toContain('opens for you, and for the Players of that group')
     await expectAccessible(wrapper.element as Element)
 
     await panel.get(`[data-testid="group-table-${AWAY}"]`).setValue(true)
