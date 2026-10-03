@@ -4,12 +4,12 @@ import type { Ability, LiveToken } from '@/infrastructure/api/types.gen'
 import { GButton, StatusIcon } from '@/shared/ui'
 import { effectLabel, knownEffects } from './conditions'
 
-const props = defineProps<{ token: LiveToken; tokens: LiveToken[] }>()
+const props = withDefaults(defineProps<{ token: LiveToken; tokens: LiveToken[]; conditions?: { slug: string; name: string }[] }>(), { conditions: () => [] })
 const emit = defineEmits<{
   apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number; effectMode?: string; monsterSlug?: string; tempHp?: number }]
   end: [effectId: string]
 }>()
-const known = knownEffects
+const known = computed(() => [...knownEffects, ...props.conditions])
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
 const form = reactive({ effect: '', source: '', rounds: 0, dc: 0, mode: '', creature: '', temp: 0 })
 const saveWith = ref<Ability | ''>('')
@@ -46,7 +46,7 @@ function apply() {
     <ul v-if="token.effects?.length" class="g-list">
       <li v-for="e in token.effects" :key="e.id" class="effect">
         <span class="what">
-          <StatusIcon :slug="e.slug" :label="effectLabel(e)" />
+          <StatusIcon :slug="e.slug" :label="effectLabel(e)" :icon="e.icon" :color="e.color" />
           {{ effectLabel(e, true) }}
         </span>
         <GButton variant="danger" :data-testid="`end-effect-${e.slug}`" @click="emit('end', e.id)">End</GButton>

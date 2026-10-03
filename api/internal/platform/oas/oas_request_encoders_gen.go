@@ -570,6 +570,20 @@ func encodePreviewClassRequest(
 	return nil
 }
 
+func encodePreviewConditionRequest(
+	req *ConditionPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewFeatRequest(
 	req *FeatPreviewInput,
 	r *http.Request,
@@ -824,6 +838,20 @@ func encodeSaveCharacterDraftRequest(
 
 func encodeSaveClassBuildRequest(
 	req *ClassDesign,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveConditionBuildRequest(
+	req *ConditionDesign,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

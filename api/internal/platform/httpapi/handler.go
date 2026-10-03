@@ -50,6 +50,7 @@ type Handler struct {
 	Subclasses       SubclassBuilder
 	Classes          ClassBuilder
 	BackgroundBuilds BackgroundBuilder
+	ConditionBuilds  ConditionBuilder
 	FeatBuilds       FeatBuilder
 	SpeciesBuilds    SpeciesBuilder
 	// LiveTimeout bounds how long a REST call waits for a live Session; zero means ten seconds.

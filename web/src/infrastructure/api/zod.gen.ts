@@ -1558,7 +1558,8 @@ export const zLibraryKind = z.enum([
     'class',
     'species',
     'background',
-    'feat'
+    'feat',
+    'condition'
 ]);
 
 /**
@@ -2232,6 +2233,48 @@ export const zBackgroundBuild = z.object({
 });
 
 /**
+ * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+ */
+export const zConditionDesign = z.object({
+    icon: z.string().max(40),
+    color: z.string().max(20),
+    text: z.string().max(8000),
+    ends: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    stacks: z.boolean().optional(),
+    maxLevel: z.int().gte(-100000).lte(100000).optional(),
+    perLevel: z.object({
+        d20: z.int().gte(-100000).lte(100000),
+        speedFt: z.int().gte(-100000).lte(100000),
+        deathAt: z.int().gte(-100000).lte(100000)
+    }),
+    parts: z.array(z.object({
+        type: z.string().max(40),
+        ability: z.string().max(40).optional(),
+        feet: z.int().gte(-100000).lte(100000).optional(),
+        text: z.string().max(2000).optional()
+    })).max(40)
+});
+
+/**
+ * A design to preview, with the condition's name.
+ */
+export const zConditionPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zConditionDesign
+});
+
+/**
+ * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ */
+export const zConditionBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zConditionDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
  * A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
  */
 export const zSubclassFeature = z.object({
@@ -2687,7 +2730,9 @@ export const zLiveEffect = z.object({
     roundsLeft: z.int().gte(1).lte(100).optional(),
     level: z.int().gte(1).lte(10).optional(),
     mode: z.string().max(80).optional(),
-    hexes: z.array(zHexCoord).max(2000).optional()
+    hexes: z.array(zHexCoord).max(2000).optional(),
+    icon: z.string().max(40).optional(),
+    color: z.string().max(20).optional()
 });
 
 /**
@@ -4079,6 +4124,12 @@ export const zLiveView = z.object({
         kind: z.string().max(40),
         name: z.string().max(40)
     })).max(500).optional(),
+    conditions: z.array(z.object({
+        slug: z.string().max(80),
+        name: z.string().max(80),
+        icon: z.string().max(40),
+        color: z.string().max(20)
+    })).max(500).optional(),
     objects: z.array(zLiveObject).max(500).optional(),
     zones: z.array(zLiveZone).max(200).optional(),
     perception: z.array(zLivePerception).max(1000).optional(),
@@ -4141,6 +4192,7 @@ export const zCampaignSummary = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -4169,6 +4221,7 @@ export const zCampaign = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
     members: z.array(zMember).max(1000)
@@ -4268,6 +4321,7 @@ export const zCampaignUpdate = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
 
@@ -6240,6 +6294,33 @@ export const zSaveBackgroundBuildPath = z.object({
  * The background.
  */
 export const zSaveBackgroundBuildResponse = zBackgroundBuild;
+
+export const zPreviewConditionBody = zConditionPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewConditionResponse = zConditionBuild;
+
+export const zGetConditionBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The condition.
+ */
+export const zGetConditionBuildResponse = zConditionBuild;
+
+export const zSaveConditionBuildBody = zConditionDesign;
+
+export const zSaveConditionBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The condition.
+ */
+export const zSaveConditionBuildResponse = zConditionBuild;
 
 /**
  * The signed-in account.

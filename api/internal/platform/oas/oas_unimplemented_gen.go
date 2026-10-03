@@ -529,6 +529,15 @@ func (UnimplementedHandler) GetClassBuild(ctx context.Context, params GetClassBu
 	return r, ht.ErrNotImplemented
 }
 
+// GetConditionBuild implements getConditionBuild operation.
+//
+// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/conditions/{entryId}
+func (UnimplementedHandler) GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (r GetConditionBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetEntry implements getEntry operation.
 //
 // One entry rendered for reading, with the conditions its text mentions.
@@ -1361,6 +1370,16 @@ func (UnimplementedHandler) PreviewClass(ctx context.Context, req *ClassPreviewI
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewCondition implements previewCondition operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/conditions/preview
+func (UnimplementedHandler) PreviewCondition(ctx context.Context, req *ConditionPreviewInput) (r PreviewConditionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewFeat implements previewFeat operation.
 //
 // Checks a design without saving it and reads it back. A design the rules refuse comes back with the
@@ -1685,6 +1704,16 @@ func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *Charact
 //
 // PUT /api/v1/builders/classes/{entryId}
 func (UnimplementedHandler) SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (r SaveClassBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveConditionBuild implements saveConditionBuild operation.
+//
+// Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see
+// it offer it in the DM's effect picker, with its icon on every token it is on.
+//
+// PUT /api/v1/builders/conditions/{entryId}
+func (UnimplementedHandler) SaveConditionBuild(ctx context.Context, req *ConditionDesign, params SaveConditionBuildParams) (r SaveConditionBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

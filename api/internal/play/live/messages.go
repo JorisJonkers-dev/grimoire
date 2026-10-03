@@ -333,6 +333,17 @@ type EffectView struct {
 	Level int    `json:"level,omitempty"`
 	Mode  string `json:"mode,omitempty"`
 	Hexes []Hex  `json:"hexes,omitempty"`
+	// Icon and Color are how a homebrew condition shows.
+	Icon  string `json:"icon,omitempty"`
+	Color string `json:"color,omitempty"`
+}
+
+// ConditionKindView is one of the Campaign's homebrew conditions, for the DM's effect picker.
+type ConditionKindView struct {
+	Slug  string `json:"slug"`
+	Name  string `json:"name"`
+	Icon  string `json:"icon"`
+	Color string `json:"color"`
 }
 
 // ManualView is part of an Effect the DM resolves by hand.
@@ -439,12 +450,14 @@ type View struct {
 	Exploration *ExplorationView `json:"exploration,omitempty"`
 	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
-	Perception   []PerceptionView  `json:"perception,omitempty"`
-	Checks       []CheckView       `json:"checks,omitempty"`
-	Inventory    []ContainerView   `json:"inventory,omitempty"`
-	Shop         *ShopView         `json:"shop,omitempty"`
-	Rest         *RestView         `json:"rest,omitempty"`
-	GameDay      int               `json:"gameDay"`
+	// Conditions are the Campaign's homebrew conditions, for the DM's effect picker.
+	Conditions []ConditionKindView `json:"conditions,omitempty"`
+	Perception []PerceptionView    `json:"perception,omitempty"`
+	Checks     []CheckView         `json:"checks,omitempty"`
+	Inventory  []ContainerView     `json:"inventory,omitempty"`
+	Shop       *ShopView           `json:"shop,omitempty"`
+	Rest       *RestView           `json:"rest,omitempty"`
+	GameDay    int                 `json:"gameDay"`
 }
 
 // RestView is the rest the party proposed or is taking: who agreed, who the rest still waits on, and

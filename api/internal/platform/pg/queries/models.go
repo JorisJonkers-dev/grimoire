@@ -30,22 +30,23 @@ type CampaignAccountCharacter struct {
 }
 
 type CampaignCampaign struct {
-	ID               uuid.UUID
-	Name             string
-	RulesetPref      string
-	CreatedBy        string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	ReactionTimeoutS int32
-	HighGround       bool
-	GameDay          int32
-	RestSupplies     bool
-	InitiativeMode   string
-	ShareInitiative  bool
-	CreationMethods  []string
-	StartingLevel    int32
-	HoldLevelUps     bool
-	GameMinute       int32
+	ID                uuid.UUID
+	Name              string
+	RulesetPref       string
+	CreatedBy         string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	ReactionTimeoutS  int32
+	HighGround        bool
+	GameDay           int32
+	RestSupplies      bool
+	InitiativeMode    string
+	ShareInitiative   bool
+	CreationMethods   []string
+	StartingLevel     int32
+	HoldLevelUps      bool
+	GameMinute        int32
+	ExhaustionVariant string
 }
 
 type CampaignCharacter struct {

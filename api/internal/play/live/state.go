@@ -49,8 +49,9 @@ type state struct {
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
 	fx       domain.Effects
-	// catalog is every Effect the rules know.
+	// catalog is every Effect the rules know; looks how the Campaign's homebrew conditions show.
 	catalog effects.Catalog
+	looks   map[string]look
 	// rest is the rest proposed or under way; pending the Hides, Grapples and Shoves waiting on rolls.
 	rest    *domain.Rest
 	pending []domain.PendingAction
@@ -64,7 +65,7 @@ func cloneEffects(fx domain.Effects) domain.Effects {
 }
 
 func (s *state) clone() *state {
-	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog, terrainKinds: s.terrainKinds}
+	next := &state{session: s.session, tokens: maps.Clone(s.tokens), cells: s.cells, worldCells: s.worldCells, observed: map[domain.TokenID]map[domain.TokenID]int{}, now: s.now, fx: cloneEffects(s.fx), catalog: s.catalog, looks: s.looks, terrainKinds: s.terrainKinds}
 	for k, v := range s.observed {
 		next.observed[k] = maps.Clone(v)
 	}
@@ -188,9 +189,19 @@ func (s *state) project(a Audience) View {
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
 	v.Shop, v.Rest, v.GameDay, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen), s.explorationView()
 	if a == AudienceDM {
-		v.Zones, v.SurfaceKinds = s.zoneViews(), s.surfaceKindViews()
+		v.Zones, v.SurfaceKinds, v.Conditions = s.zoneViews(), s.surfaceKindViews(), s.conditionViews()
 	}
 	return v
+}
+
+// conditionViews lists the Campaign's homebrew conditions for the DM's effect picker, by name.
+func (s *state) conditionViews() []ConditionKindView {
+	out := make([]ConditionKindView, 0, len(s.looks))
+	for slug, l := range s.looks {
+		out = append(out, ConditionKindView{Slug: slug, Name: l.name, Icon: l.icon, Color: l.color})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
 }
 
 // surfaceKindViews lists the Surface catalogue for the DM's paint tool.

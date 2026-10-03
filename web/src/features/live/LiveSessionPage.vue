@@ -607,6 +607,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :key="chosen.id"
           :token="chosen"
           :tokens="view?.tokens ?? []"
+          :conditions="view?.conditions ?? []"
           @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
           @end="(id) => live?.send({ kind: 'end_effect', effectId: id })"
         />

@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/featbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
@@ -224,6 +226,8 @@ type UpdateInput struct {
 	StartingLevel   *int
 	// HoldLevelUps stops long rests unlocking the next level.
 	HoldLevelUps *bool
+	// ExhaustionVariant picks the Campaign's exhaustion: srd-2024, gentle, grim or off.
+	ExhaustionVariant *string
 }
 
 // Update changes a Campaign's settings. DM only.
@@ -250,9 +254,13 @@ func (s *Service) Update(ctx context.Context, c caller.Caller, id domain.Campaig
 	if err := creationRules(in); err != nil {
 		return domain.Campaign{}, err
 	}
+	if v := in.ExhaustionVariant; v != nil && !slices.Contains(conditionbuild.Variants(), *v) {
+		return domain.Campaign{}, refuse("exhaustion is srd-2024, gentle, grim or off")
+	}
 	change := domain.SettingsChange{
 		Name: in.Name, Ruleset: in.Ruleset, ReactionTimeoutS: in.ReactionTimeoutS, HighGround: in.HighGround, RestSupplies: in.RestSupplies,
 		InitiativeMode: in.InitiativeMode, ShareInitiative: in.ShareInitiative, CreationMethods: in.CreationMethods, StartingLevel: in.StartingLevel, HoldLevelUps: in.HoldLevelUps,
+		ExhaustionVariant: in.ExhaustionVariant,
 	}
 	return s.Repo.UpdateCampaign(ctx, id, change, s.Now())
 }

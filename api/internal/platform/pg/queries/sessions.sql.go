@@ -124,6 +124,17 @@ func (q *Queries) BumpSessionSeq(ctx context.Context, id uuid.UUID) (int64, erro
 	return seq, err
 }
 
+const campaignExhaustion = `-- name: CampaignExhaustion :one
+SELECT exhaustion_variant FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignExhaustion(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, campaignExhaustion, id)
+	var exhaustion_variant string
+	err := row.Scan(&exhaustion_variant)
+	return exhaustion_variant, err
+}
+
 const campaignHighGround = `-- name: CampaignHighGround :one
 SELECT high_ground FROM campaign.campaigns WHERE id = $1
 `

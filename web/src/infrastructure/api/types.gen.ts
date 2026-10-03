@@ -59,6 +59,10 @@ export type CampaignSummary = {
      */
     holdLevelUps?: boolean;
     /**
+     * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+     */
+    exhaustion?: string;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -116,6 +120,10 @@ export type Campaign = {
      */
     holdLevelUps?: boolean;
     /**
+     * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+     */
+    exhaustion?: string;
+    /**
      * Identical monsters share one initiative roll.
      */
     shareInitiative?: boolean;
@@ -160,6 +168,10 @@ export type CampaignUpdate = {
      * Long rests stop unlocking the next level; the DM grants levels instead.
      */
     holdLevelUps?: boolean;
+    /**
+     * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+     */
+    exhaustion?: string;
     /**
      * Identical monsters share one initiative roll.
      */
@@ -2526,7 +2538,7 @@ export type SessionAction = {
 /**
  * What a Library entry is.
  */
-export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class' | 'species' | 'background' | 'feat';
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class' | 'species' | 'background' | 'feat' | 'condition';
 
 /**
  * One named value of a Library entry.
@@ -3166,6 +3178,48 @@ export type BackgroundDesign = {
 };
 
 /**
+ * A design to preview, with the condition's name.
+ */
+export type ConditionPreviewInput = {
+    name: string;
+    design: ConditionDesign;
+};
+
+/**
+ * A homebrew condition in its builder, the slug it is known by, and how it reads back.
+ */
+export type ConditionBuild = {
+    entry?: LibraryEntry;
+    design: ConditionDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+ */
+export type ConditionDesign = {
+    icon: string;
+    color: string;
+    text: string;
+    ends: string;
+    ability?: string;
+    stacks?: boolean;
+    maxLevel?: number;
+    perLevel: {
+        d20: number;
+        speedFt: number;
+        deathAt: number;
+    };
+    parts: Array<{
+        type: string;
+        ability?: string;
+        feet?: number;
+        text?: string;
+    }>;
+};
+
+/**
  * A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
  */
 export type SubclassDesign = {
@@ -3748,6 +3802,14 @@ export type LiveEffect = {
      * The hexes an emanation covers around the token where it stands now; it moves with the token.
      */
     hexes?: Array<HexCoord>;
+    /**
+     * A homebrew condition's glyph.
+     */
+    icon?: string;
+    /**
+     * A homebrew condition's colour.
+     */
+    color?: string;
 };
 
 /**
@@ -3984,6 +4046,15 @@ export type LiveView = {
     surfaceKinds?: Array<{
         kind: string;
         name: string;
+    }>;
+    /**
+     * The Campaign's homebrew conditions, for the DM's effect picker.
+     */
+    conditions?: Array<{
+        slug: string;
+        name: string;
+        icon: string;
+        color: string;
     }>;
     /**
      * The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.
@@ -10192,6 +10263,103 @@ export type SaveBackgroundBuildResponses = {
 };
 
 export type SaveBackgroundBuildResponse = SaveBackgroundBuildResponses[keyof SaveBackgroundBuildResponses];
+
+export type PreviewConditionData = {
+    body: ConditionPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/conditions/preview';
+};
+
+export type PreviewConditionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewConditionError = PreviewConditionErrors[keyof PreviewConditionErrors];
+
+export type PreviewConditionResponses = {
+    /**
+     * The preview.
+     */
+    200: ConditionBuild;
+};
+
+export type PreviewConditionResponse = PreviewConditionResponses[keyof PreviewConditionResponses];
+
+export type GetConditionBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/conditions/{entryId}';
+};
+
+export type GetConditionBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetConditionBuildError = GetConditionBuildErrors[keyof GetConditionBuildErrors];
+
+export type GetConditionBuildResponses = {
+    /**
+     * The condition.
+     */
+    200: ConditionBuild;
+};
+
+export type GetConditionBuildResponse = GetConditionBuildResponses[keyof GetConditionBuildResponses];
+
+export type SaveConditionBuildData = {
+    body: ConditionDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/conditions/{entryId}';
+};
+
+export type SaveConditionBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveConditionBuildError = SaveConditionBuildErrors[keyof SaveConditionBuildErrors];
+
+export type SaveConditionBuildResponses = {
+    /**
+     * The condition.
+     */
+    200: ConditionBuild;
+};
+
+export type SaveConditionBuildResponse = SaveConditionBuildResponses[keyof SaveConditionBuildResponses];
 
 export type GetMeData = {
     body?: never;

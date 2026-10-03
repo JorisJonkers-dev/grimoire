@@ -3629,6 +3629,8 @@ type Campaign struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool  `json:"shareInitiative"`
 	Me              Member   `json:"me"`
@@ -3698,6 +3700,11 @@ func (s *Campaign) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *Campaign) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetExhaustion returns the value of Exhaustion.
+func (s *Campaign) GetExhaustion() OptString {
+	return s.Exhaustion
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -3778,6 +3785,11 @@ func (s *Campaign) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *Campaign) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetExhaustion sets the value of Exhaustion.
+func (s *Campaign) SetExhaustion(val OptString) {
+	s.Exhaustion = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -4174,6 +4186,8 @@ type CampaignSummary struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -4241,6 +4255,11 @@ func (s *CampaignSummary) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *CampaignSummary) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetExhaustion returns the value of Exhaustion.
+func (s *CampaignSummary) GetExhaustion() OptString {
+	return s.Exhaustion
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -4311,6 +4330,11 @@ func (s *CampaignSummary) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *CampaignSummary) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetExhaustion sets the value of Exhaustion.
+func (s *CampaignSummary) SetExhaustion(val OptString) {
+	s.Exhaustion = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -4385,6 +4409,8 @@ type CampaignUpdate struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
+	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
 	ShareInitiative OptBool `json:"shareInitiative"`
 }
@@ -4432,6 +4458,11 @@ func (s *CampaignUpdate) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *CampaignUpdate) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetExhaustion returns the value of Exhaustion.
+func (s *CampaignUpdate) GetExhaustion() OptString {
+	return s.Exhaustion
 }
 
 // GetShareInitiative returns the value of ShareInitiative.
@@ -4482,6 +4513,11 @@ func (s *CampaignUpdate) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *CampaignUpdate) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetExhaustion sets the value of Exhaustion.
+func (s *CampaignUpdate) SetExhaustion(val OptString) {
+	s.Exhaustion = val
 }
 
 // SetShareInitiative sets the value of ShareInitiative.
@@ -6849,6 +6885,322 @@ func (s *Coin) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A homebrew condition in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/ConditionBuild
+type ConditionBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design ConditionDesign `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *ConditionBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *ConditionBuild) GetDesign() ConditionDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *ConditionBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *ConditionBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *ConditionBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ConditionBuild) SetDesign(val ConditionDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *ConditionBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *ConditionBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// ConditionBuildHeaders wraps ConditionBuild with response headers.
+type ConditionBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ConditionBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ConditionBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ConditionBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ConditionBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ConditionBuildHeaders) GetResponse() ConditionBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ConditionBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ConditionBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ConditionBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ConditionBuildHeaders) SetResponse(val ConditionBuild) {
+	s.Response = val
+}
+
+func (*ConditionBuildHeaders) getConditionBuildRes()  {}
+func (*ConditionBuildHeaders) previewConditionRes()   {}
+func (*ConditionBuildHeaders) saveConditionBuildRes() {}
+
+// A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks
+// and what it does.
+// Ref: #/components/schemas/ConditionDesign
+type ConditionDesign struct {
+	Icon     string                     `json:"icon"`
+	Color    string                     `json:"color"`
+	Text     string                     `json:"text"`
+	Ends     string                     `json:"ends"`
+	Ability  OptString                  `json:"ability"`
+	Stacks   OptBool                    `json:"stacks"`
+	MaxLevel OptInt32                   `json:"maxLevel"`
+	PerLevel ConditionDesignPerLevel    `json:"perLevel"`
+	Parts    []ConditionDesignPartsItem `json:"parts"`
+}
+
+// GetIcon returns the value of Icon.
+func (s *ConditionDesign) GetIcon() string {
+	return s.Icon
+}
+
+// GetColor returns the value of Color.
+func (s *ConditionDesign) GetColor() string {
+	return s.Color
+}
+
+// GetText returns the value of Text.
+func (s *ConditionDesign) GetText() string {
+	return s.Text
+}
+
+// GetEnds returns the value of Ends.
+func (s *ConditionDesign) GetEnds() string {
+	return s.Ends
+}
+
+// GetAbility returns the value of Ability.
+func (s *ConditionDesign) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetStacks returns the value of Stacks.
+func (s *ConditionDesign) GetStacks() OptBool {
+	return s.Stacks
+}
+
+// GetMaxLevel returns the value of MaxLevel.
+func (s *ConditionDesign) GetMaxLevel() OptInt32 {
+	return s.MaxLevel
+}
+
+// GetPerLevel returns the value of PerLevel.
+func (s *ConditionDesign) GetPerLevel() ConditionDesignPerLevel {
+	return s.PerLevel
+}
+
+// GetParts returns the value of Parts.
+func (s *ConditionDesign) GetParts() []ConditionDesignPartsItem {
+	return s.Parts
+}
+
+// SetIcon sets the value of Icon.
+func (s *ConditionDesign) SetIcon(val string) {
+	s.Icon = val
+}
+
+// SetColor sets the value of Color.
+func (s *ConditionDesign) SetColor(val string) {
+	s.Color = val
+}
+
+// SetText sets the value of Text.
+func (s *ConditionDesign) SetText(val string) {
+	s.Text = val
+}
+
+// SetEnds sets the value of Ends.
+func (s *ConditionDesign) SetEnds(val string) {
+	s.Ends = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *ConditionDesign) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetStacks sets the value of Stacks.
+func (s *ConditionDesign) SetStacks(val OptBool) {
+	s.Stacks = val
+}
+
+// SetMaxLevel sets the value of MaxLevel.
+func (s *ConditionDesign) SetMaxLevel(val OptInt32) {
+	s.MaxLevel = val
+}
+
+// SetPerLevel sets the value of PerLevel.
+func (s *ConditionDesign) SetPerLevel(val ConditionDesignPerLevel) {
+	s.PerLevel = val
+}
+
+// SetParts sets the value of Parts.
+func (s *ConditionDesign) SetParts(val []ConditionDesignPartsItem) {
+	s.Parts = val
+}
+
+type ConditionDesignPartsItem struct {
+	Type    string    `json:"type"`
+	Ability OptString `json:"ability"`
+	Feet    OptInt32  `json:"feet"`
+	Text    OptString `json:"text"`
+}
+
+// GetType returns the value of Type.
+func (s *ConditionDesignPartsItem) GetType() string {
+	return s.Type
+}
+
+// GetAbility returns the value of Ability.
+func (s *ConditionDesignPartsItem) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetFeet returns the value of Feet.
+func (s *ConditionDesignPartsItem) GetFeet() OptInt32 {
+	return s.Feet
+}
+
+// GetText returns the value of Text.
+func (s *ConditionDesignPartsItem) GetText() OptString {
+	return s.Text
+}
+
+// SetType sets the value of Type.
+func (s *ConditionDesignPartsItem) SetType(val string) {
+	s.Type = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *ConditionDesignPartsItem) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetFeet sets the value of Feet.
+func (s *ConditionDesignPartsItem) SetFeet(val OptInt32) {
+	s.Feet = val
+}
+
+// SetText sets the value of Text.
+func (s *ConditionDesignPartsItem) SetText(val OptString) {
+	s.Text = val
+}
+
+type ConditionDesignPerLevel struct {
+	D20     int32 `json:"d20"`
+	SpeedFt int32 `json:"speedFt"`
+	DeathAt int32 `json:"deathAt"`
+}
+
+// GetD20 returns the value of D20.
+func (s *ConditionDesignPerLevel) GetD20() int32 {
+	return s.D20
+}
+
+// GetSpeedFt returns the value of SpeedFt.
+func (s *ConditionDesignPerLevel) GetSpeedFt() int32 {
+	return s.SpeedFt
+}
+
+// GetDeathAt returns the value of DeathAt.
+func (s *ConditionDesignPerLevel) GetDeathAt() int32 {
+	return s.DeathAt
+}
+
+// SetD20 sets the value of D20.
+func (s *ConditionDesignPerLevel) SetD20(val int32) {
+	s.D20 = val
+}
+
+// SetSpeedFt sets the value of SpeedFt.
+func (s *ConditionDesignPerLevel) SetSpeedFt(val int32) {
+	s.SpeedFt = val
+}
+
+// SetDeathAt sets the value of DeathAt.
+func (s *ConditionDesignPerLevel) SetDeathAt(val int32) {
+	s.DeathAt = val
+}
+
+// A design to preview, with the condition's name.
+// Ref: #/components/schemas/ConditionPreviewInput
+type ConditionPreviewInput struct {
+	Name   string          `json:"name"`
+	Design ConditionDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *ConditionPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *ConditionPreviewInput) GetDesign() ConditionDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *ConditionPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *ConditionPreviewInput) SetDesign(val ConditionDesign) {
+	s.Design = val
 }
 
 // A condition named in rules text, with its own text for tooltips.
@@ -14819,6 +15171,7 @@ const (
 	LibraryKindSpecies    LibraryKind = "species"
 	LibraryKindBackground LibraryKind = "background"
 	LibraryKindFeat       LibraryKind = "feat"
+	LibraryKindCondition  LibraryKind = "condition"
 )
 
 // AllValues returns all LibraryKind values.
@@ -14836,6 +15189,7 @@ func (LibraryKind) AllValues() []LibraryKind {
 		LibraryKindSpecies,
 		LibraryKindBackground,
 		LibraryKindFeat,
+		LibraryKindCondition,
 	}
 }
 
@@ -14865,6 +15219,8 @@ func (s LibraryKind) MarshalText() ([]byte, error) {
 	case LibraryKindBackground:
 		return []byte(s), nil
 	case LibraryKindFeat:
+		return []byte(s), nil
+	case LibraryKindCondition:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -14909,6 +15265,9 @@ func (s *LibraryKind) UnmarshalText(data []byte) error {
 		return nil
 	case LibraryKindFeat:
 		*s = LibraryKindFeat
+		return nil
+	case LibraryKindCondition:
+		*s = LibraryKindCondition
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -21013,6 +21372,10 @@ type LiveEffect struct {
 	Mode OptString `json:"mode"`
 	// The hexes an emanation covers around the token where it stands now; it moves with the token.
 	Hexes []HexCoord `json:"hexes"`
+	// A homebrew condition's glyph.
+	Icon OptString `json:"icon"`
+	// A homebrew condition's colour.
+	Color OptString `json:"color"`
 }
 
 // GetID returns the value of ID.
@@ -21060,6 +21423,16 @@ func (s *LiveEffect) GetHexes() []HexCoord {
 	return s.Hexes
 }
 
+// GetIcon returns the value of Icon.
+func (s *LiveEffect) GetIcon() OptString {
+	return s.Icon
+}
+
+// GetColor returns the value of Color.
+func (s *LiveEffect) GetColor() OptString {
+	return s.Color
+}
+
 // SetID sets the value of ID.
 func (s *LiveEffect) SetID(val ID) {
 	s.ID = val
@@ -21103,6 +21476,16 @@ func (s *LiveEffect) SetMode(val OptString) {
 // SetHexes sets the value of Hexes.
 func (s *LiveEffect) SetHexes(val []HexCoord) {
 	s.Hexes = val
+}
+
+// SetIcon sets the value of Icon.
+func (s *LiveEffect) SetIcon(val OptString) {
+	s.Icon = val
+}
+
+// SetColor sets the value of Color.
+func (s *LiveEffect) SetColor(val OptString) {
+	s.Color = val
 }
 
 // A raised or sunken hex.
@@ -23896,6 +24279,8 @@ type LiveView struct {
 	Exploration OptLiveViewExploration `json:"exploration"`
 	// The Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
+	// The Campaign's homebrew conditions, for the DM's effect picker.
+	Conditions []LiveViewConditionsItem `json:"conditions"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
 	// seen.
 	Objects    []LiveObject     `json:"objects"`
@@ -23995,6 +24380,11 @@ func (s *LiveView) GetExploration() OptLiveViewExploration {
 // GetSurfaceKinds returns the value of SurfaceKinds.
 func (s *LiveView) GetSurfaceKinds() []LiveViewSurfaceKindsItem {
 	return s.SurfaceKinds
+}
+
+// GetConditions returns the value of Conditions.
+func (s *LiveView) GetConditions() []LiveViewConditionsItem {
+	return s.Conditions
 }
 
 // GetObjects returns the value of Objects.
@@ -24137,6 +24527,11 @@ func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
 	s.SurfaceKinds = val
 }
 
+// SetConditions sets the value of Conditions.
+func (s *LiveView) SetConditions(val []LiveViewConditionsItem) {
+	s.Conditions = val
+}
+
 // SetObjects sets the value of Objects.
 func (s *LiveView) SetObjects(val []LiveObject) {
 	s.Objects = val
@@ -24190,6 +24585,53 @@ func (s *LiveView) SetLights(val []LiveLight) {
 // SetAmbient sets the value of Ambient.
 func (s *LiveView) SetAmbient(val OptAmbientLight) {
 	s.Ambient = val
+}
+
+type LiveViewConditionsItem struct {
+	Slug  string `json:"slug"`
+	Name  string `json:"name"`
+	Icon  string `json:"icon"`
+	Color string `json:"color"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *LiveViewConditionsItem) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *LiveViewConditionsItem) GetName() string {
+	return s.Name
+}
+
+// GetIcon returns the value of Icon.
+func (s *LiveViewConditionsItem) GetIcon() string {
+	return s.Icon
+}
+
+// GetColor returns the value of Color.
+func (s *LiveViewConditionsItem) GetColor() string {
+	return s.Color
+}
+
+// SetSlug sets the value of Slug.
+func (s *LiveViewConditionsItem) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveViewConditionsItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetIcon sets the value of Icon.
+func (s *LiveViewConditionsItem) SetIcon(val string) {
+	s.Icon = val
+}
+
+// SetColor sets the value of Color.
+func (s *LiveViewConditionsItem) SetColor(val string) {
+	s.Color = val
 }
 
 // Exploration in turns, outside a fight.
@@ -32162,6 +32604,7 @@ func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
+func (*ProblemStatusCodeWithHeaders) getConditionBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getFeatBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
@@ -32252,6 +32695,7 @@ func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewBackgroundRes()             {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewClassRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewConditionRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewFeatRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
@@ -32286,6 +32730,7 @@ func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) saveBackgroundBuildRes()           {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveClassBuildRes()                {}
+func (*ProblemStatusCodeWithHeaders) saveConditionBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveFeatBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}

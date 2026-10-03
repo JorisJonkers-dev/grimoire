@@ -590,6 +590,22 @@ describe('effects', () => {
     modifiers: [], createdAt: '2026-09-30T20:00:00Z',
   })
 
+  it('shows a homebrew condition with its own icon and offers the Campaign\'s conditions in the picker', async () => {
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    const frost = { id: '0190c7a8-0000-7000-8000-000000000071', slug: 'hb-frost', name: 'Frostbite', concentration: false, level: 2, icon: 'snow', color: '#7fa8dd' }
+    s.receive(snapshot([{ ...aria, effects: [frost] }, goblin], 'dm', { conditions: [{ slug: 'hb-frost', name: 'Frostbite', icon: 'snow', color: '#7fa8dd' }] }))
+    await flushPromises()
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    const panel = wrapper.get('[data-testid="effects-panel"]')
+    const icon = panel.get('svg[aria-label="Frostbite 2"]')
+    expect(icon.attributes('stroke')).toBe('#7fa8dd')
+    expect(panel.findAll('#known-effects option').map((o) => o.attributes('value'))).toContain('hb-frost')
+  })
+
   it('lets the DM apply, end and resolve effects', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}/rolls/`]: (u) => saveRoll(u.pathname.split('/')[6] ?? ''),

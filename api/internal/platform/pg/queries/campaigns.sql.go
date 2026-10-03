@@ -62,7 +62,7 @@ func (q *Queries) CountDMs(ctx context.Context, campaignID uuid.UUID) (int32, er
 const createCampaign = `-- name: CreateCampaign :one
 INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $4)
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, created_at
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, exhaustion_variant, created_at
 `
 
 type CreateCampaignParams struct {
@@ -73,18 +73,19 @@ type CreateCampaignParams struct {
 }
 
 type CreateCampaignRow struct {
-	ID               uuid.UUID
-	Name             string
-	RulesetPref      string
-	ReactionTimeoutS int32
-	HighGround       bool
-	RestSupplies     bool
-	InitiativeMode   string
-	ShareInitiative  bool
-	CreationMethods  []string
-	StartingLevel    int32
-	HoldLevelUps     bool
-	CreatedAt        time.Time
+	ID                uuid.UUID
+	Name              string
+	RulesetPref       string
+	ReactionTimeoutS  int32
+	HighGround        bool
+	RestSupplies      bool
+	InitiativeMode    string
+	ShareInitiative   bool
+	CreationMethods   []string
+	StartingLevel     int32
+	HoldLevelUps      bool
+	ExhaustionVariant string
+	CreatedAt         time.Time
 }
 
 func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) (CreateCampaignRow, error) {
@@ -107,6 +108,7 @@ func (q *Queries) CreateCampaign(ctx context.Context, arg CreateCampaignParams) 
 		&i.CreationMethods,
 		&i.StartingLevel,
 		&i.HoldLevelUps,
+		&i.ExhaustionVariant,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -178,22 +180,23 @@ func (q *Queries) FindInvite(ctx context.Context, arg FindInviteParams) (FindInv
 }
 
 const getCampaign = `-- name: GetCampaign :one
-SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, created_at FROM campaign.campaigns WHERE id = $1
+SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, exhaustion_variant, created_at FROM campaign.campaigns WHERE id = $1
 `
 
 type GetCampaignRow struct {
-	ID               uuid.UUID
-	Name             string
-	RulesetPref      string
-	ReactionTimeoutS int32
-	HighGround       bool
-	RestSupplies     bool
-	InitiativeMode   string
-	ShareInitiative  bool
-	CreationMethods  []string
-	StartingLevel    int32
-	HoldLevelUps     bool
-	CreatedAt        time.Time
+	ID                uuid.UUID
+	Name              string
+	RulesetPref       string
+	ReactionTimeoutS  int32
+	HighGround        bool
+	RestSupplies      bool
+	InitiativeMode    string
+	ShareInitiative   bool
+	CreationMethods   []string
+	StartingLevel     int32
+	HoldLevelUps      bool
+	ExhaustionVariant string
+	CreatedAt         time.Time
 }
 
 func (q *Queries) GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow, error) {
@@ -211,6 +214,7 @@ func (q *Queries) GetCampaign(ctx context.Context, id uuid.UUID) (GetCampaignRow
 		&i.CreationMethods,
 		&i.StartingLevel,
 		&i.HoldLevelUps,
+		&i.ExhaustionVariant,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -265,7 +269,7 @@ func (q *Queries) GetMembership(ctx context.Context, arg GetMembershipParams) (C
 }
 
 const listCampaignsForSubject = `-- name: ListCampaignsForSubject :many
-SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.hold_level_ups, c.created_at, m.role,
+SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.hold_level_ups, c.exhaustion_variant, c.created_at, m.role,
        (SELECT count(*) FROM campaign.members x WHERE x.campaign_id = c.id)::int AS member_count
 FROM campaign.campaigns c
 JOIN campaign.members m ON m.campaign_id = c.id AND m.auth_subject = $1
@@ -283,20 +287,21 @@ type ListCampaignsForSubjectParams struct {
 }
 
 type ListCampaignsForSubjectRow struct {
-	ID               uuid.UUID
-	Name             string
-	RulesetPref      string
-	ReactionTimeoutS int32
-	HighGround       bool
-	RestSupplies     bool
-	InitiativeMode   string
-	ShareInitiative  bool
-	CreationMethods  []string
-	StartingLevel    int32
-	HoldLevelUps     bool
-	CreatedAt        time.Time
-	Role             string
-	MemberCount      int32
+	ID                uuid.UUID
+	Name              string
+	RulesetPref       string
+	ReactionTimeoutS  int32
+	HighGround        bool
+	RestSupplies      bool
+	InitiativeMode    string
+	ShareInitiative   bool
+	CreationMethods   []string
+	StartingLevel     int32
+	HoldLevelUps      bool
+	ExhaustionVariant string
+	CreatedAt         time.Time
+	Role              string
+	MemberCount       int32
 }
 
 func (q *Queries) ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error) {
@@ -325,6 +330,7 @@ func (q *Queries) ListCampaignsForSubject(ctx context.Context, arg ListCampaigns
 			&i.CreationMethods,
 			&i.StartingLevel,
 			&i.HoldLevelUps,
+			&i.ExhaustionVariant,
 			&i.CreatedAt,
 			&i.Role,
 			&i.MemberCount,
@@ -484,39 +490,42 @@ SET name = coalesce($1::text, name),
     creation_methods = coalesce($8::text[], creation_methods),
     starting_level = coalesce($9::integer, starting_level),
     hold_level_ups = coalesce($10::boolean, hold_level_ups),
-    updated_at = $11
-WHERE id = $12
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, created_at
+    exhaustion_variant = coalesce($11::text, exhaustion_variant),
+    updated_at = $12
+WHERE id = $13
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, exhaustion_variant, created_at
 `
 
 type UpdateCampaignParams struct {
-	Name             pgtype.Text
-	RulesetPref      pgtype.Text
-	ReactionTimeoutS pgtype.Int4
-	HighGround       pgtype.Bool
-	RestSupplies     pgtype.Bool
-	InitiativeMode   pgtype.Text
-	ShareInitiative  pgtype.Bool
-	CreationMethods  []string
-	StartingLevel    pgtype.Int4
-	HoldLevelUps     pgtype.Bool
-	Now              time.Time
-	ID               uuid.UUID
+	Name              pgtype.Text
+	RulesetPref       pgtype.Text
+	ReactionTimeoutS  pgtype.Int4
+	HighGround        pgtype.Bool
+	RestSupplies      pgtype.Bool
+	InitiativeMode    pgtype.Text
+	ShareInitiative   pgtype.Bool
+	CreationMethods   []string
+	StartingLevel     pgtype.Int4
+	HoldLevelUps      pgtype.Bool
+	ExhaustionVariant pgtype.Text
+	Now               time.Time
+	ID                uuid.UUID
 }
 
 type UpdateCampaignRow struct {
-	ID               uuid.UUID
-	Name             string
-	RulesetPref      string
-	ReactionTimeoutS int32
-	HighGround       bool
-	RestSupplies     bool
-	InitiativeMode   string
-	ShareInitiative  bool
-	CreationMethods  []string
-	StartingLevel    int32
-	HoldLevelUps     bool
-	CreatedAt        time.Time
+	ID                uuid.UUID
+	Name              string
+	RulesetPref       string
+	ReactionTimeoutS  int32
+	HighGround        bool
+	RestSupplies      bool
+	InitiativeMode    string
+	ShareInitiative   bool
+	CreationMethods   []string
+	StartingLevel     int32
+	HoldLevelUps      bool
+	ExhaustionVariant string
+	CreatedAt         time.Time
 }
 
 func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error) {
@@ -531,6 +540,7 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		arg.CreationMethods,
 		arg.StartingLevel,
 		arg.HoldLevelUps,
+		arg.ExhaustionVariant,
 		arg.Now,
 		arg.ID,
 	)
@@ -547,6 +557,7 @@ func (q *Queries) UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) 
 		&i.CreationMethods,
 		&i.StartingLevel,
 		&i.HoldLevelUps,
+		&i.ExhaustionVariant,
 		&i.CreatedAt,
 	)
 	return i, err

@@ -12,12 +12,13 @@ import (
 	librarypg "github.com/JorisJonkers-dev/grimoire/api/internal/library/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/pgstore"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 )
 
 // A Campaign's homebrew spells build into Effects for play; a design the rules no longer run is left
-// out rather than stopping the Session.
+// out rather than stopping the Session. Homebrew conditions and the Campaign's exhaustion come along.
 func TestHomebrewSpellsBuildForPlay(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -50,9 +51,29 @@ func TestHomebrewSpellsBuildForPlay(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	brewed, err := store.Homebrew(ctx, tb.campaign)
-	if err != nil || len(brewed) != 1 || brewed[0].Definition.Slug != spellbuild.Slug(ids[0]) || brewed[0].Surface == nil {
-		t.Fatalf("homebrew = %+v %v", brewed, err)
+	frost, err := lib.Create(ctx, dm, librarydomain.Draft{Kind: "condition", Name: "Frostbite"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cold := conditionbuild.Design{Icon: "snow", Color: "#7fa8dd", Ends: "rest", Stacks: true, MaxLevel: 3, PerLevel: conditionbuild.Penalty{D20: 1}, Parts: []conditionbuild.Part{}}
+	if _, err := lib.SaveCondition(ctx, dm, frost.ID, cold); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := lib.Link(ctx, dm, tb.campaign, frost.ID); err != nil {
+		t.Fatal(err)
+	}
+	brew, err := store.Homebrew(ctx, tb.campaign)
+	if err != nil || len(brew.Spells) != 1 || brew.Spells[0].Definition.Slug != spellbuild.Slug(ids[0]) || brew.Spells[0].Surface == nil {
+		t.Fatalf("homebrew = %+v %v", brew, err)
+	}
+	if len(brew.Conditions) != 1 || brew.Conditions[0].Icon != "snow" || brew.Conditions[0].Definition.Name != "Frostbite" || brew.Exhaustion.DeathAt != 6 {
+		t.Fatalf("conditions %+v, exhaustion %+v", brew.Conditions, brew.Exhaustion)
+	}
+	if _, err := tb.pool.Exec(ctx, "UPDATE campaign.campaigns SET exhaustion_variant = 'grim' WHERE id = $1", tb.campaign); err != nil {
+		t.Fatal(err)
+	}
+	if brew, _ := store.Homebrew(ctx, tb.campaign); brew.Exhaustion.DeathAt != 4 {
+		t.Fatalf("grim exhaustion = %+v", brew.Exhaustion)
 	}
 	pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
 		_, err := pgstore.NewFaulty(tb.pool, f).Homebrew(ctx, tb.campaign)

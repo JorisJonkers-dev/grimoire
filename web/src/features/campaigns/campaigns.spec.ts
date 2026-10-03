@@ -234,9 +234,10 @@ describe('table settings', () => {
           sent.push(await req.json())
           return { ...summary(ID, 'Morvain', { myRole: 'dm' }), reactionTimeoutS: 5 }
         }
-        return { ...home('dm'), reactionTimeoutS: 20 }
+        return { ...home('dm'), reactionTimeoutS: 20, exhaustion: 'gentle' }
       },
     })
+    expect((wrapper.get('[data-testid="exhaustion-variant"]').element as HTMLSelectElement).value).toBe('gentle')
     const input = wrapper.get('[data-testid="reaction-timeout"]')
     expect((input.element as HTMLInputElement).value).toBe('20')
     await input.setValue(5)
@@ -247,11 +248,12 @@ describe('table settings', () => {
     await wrapper.get('[data-testid="method-rolled"]').setValue(false)
     await wrapper.get('[data-testid="starting-level-input"]').setValue(3)
     await wrapper.get('[data-testid="hold-level-ups"]').setValue(true)
+    await wrapper.get('[data-testid="exhaustion-variant"]').setValue('grim')
     await wrapper.get('[data-testid="settings"]').trigger('submit')
     await flushPromises()
     expect(sent).toEqual([{
       reactionTimeoutS: 5, highGround: true, restSupplies: true, initiativeMode: 'side', shareInitiative: true,
-      creationMethods: ['standard-array', 'point-buy'], startingLevel: 3, holdLevelUps: true,
+      creationMethods: ['standard-array', 'point-buy'], startingLevel: 3, holdLevelUps: true, exhaustion: 'grim',
     }])
     expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
   })

@@ -225,6 +225,10 @@ type GetClassBuildRes interface {
 	getClassBuildRes()
 }
 
+type GetConditionBuildRes interface {
+	getConditionBuildRes()
+}
+
 type GetEntryRes interface {
 	getEntryRes()
 }
@@ -585,6 +589,10 @@ type PreviewClassRes interface {
 	previewClassRes()
 }
 
+type PreviewConditionRes interface {
+	previewConditionRes()
+}
+
 type PreviewFeatRes interface {
 	previewFeatRes()
 }
@@ -719,6 +727,10 @@ type SaveCharacterDraftRes interface {
 
 type SaveClassBuildRes interface {
 	saveClassBuildRes()
+}
+
+type SaveConditionBuildRes interface {
+	saveConditionBuildRes()
 }
 
 type SaveFeatBuildRes interface {

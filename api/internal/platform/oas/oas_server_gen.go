@@ -625,6 +625,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/classes/{entryId}
 	SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (SaveClassBuildRes, error)
+	// SaveConditionBuild implements saveConditionBuild operation.
+	//
+	// Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see
+	// it offer it in the DM's effect picker, with its icon on every token it is on.
+	//
+	// PUT /api/v1/builders/conditions/{entryId}
+	SaveConditionBuild(ctx context.Context, req *ConditionDesign, params SaveConditionBuildParams) (SaveConditionBuildRes, error)
 	// SaveFeatBuild implements saveFeatBuild operation.
 	//
 	// Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it
@@ -987,6 +994,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/builders/classes/{entryId}
 	GetClassBuild(ctx context.Context, params GetClassBuildParams) (GetClassBuildRes, error)
+	// GetConditionBuild implements getConditionBuild operation.
+	//
+	// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/conditions/{entryId}
+	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -1463,6 +1476,13 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/classes/preview
 	PreviewClass(ctx context.Context, req *ClassPreviewInput) (PreviewClassRes, error)
+	// PreviewCondition implements previewCondition operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/conditions/preview
+	PreviewCondition(ctx context.Context, req *ConditionPreviewInput) (PreviewConditionRes, error)
 	// PreviewFeat implements previewFeat operation.
 	//
 	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the

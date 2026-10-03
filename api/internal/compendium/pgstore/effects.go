@@ -499,7 +499,7 @@ func (s *Store) conditionComponents(ctx context.Context, out map[slot]effects.Co
 		return nil, err
 	}
 	for _, r := range tired {
-		out[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt)}
+		out[slot{r.EffectID, r.Ordinal}] = effects.Exhausting{D20PerLevel: int(r.D20PerLevel), SpeedFtPerLevel: int(r.SpeedFtPerLevel), DeathAt: int(r.DeathAt), MaxLevel: 0}
 	}
 	slow, err := s.q.ListEffectSpeedPenalties(ctx)
 	if err != nil {

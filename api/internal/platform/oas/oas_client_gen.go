@@ -647,6 +647,13 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/builders/classes/{entryId}
 	SaveClassBuild(ctx context.Context, request *ClassDesign, params SaveClassBuildParams) (SaveClassBuildRes, error)
+	// SaveConditionBuild invokes saveConditionBuild operation.
+	//
+	// Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see
+	// it offer it in the DM's effect picker, with its icon on every token it is on.
+	//
+	// PUT /api/v1/builders/conditions/{entryId}
+	SaveConditionBuild(ctx context.Context, request *ConditionDesign, params SaveConditionBuildParams) (SaveConditionBuildRes, error)
 	// SaveFeatBuild invokes saveFeatBuild operation.
 	//
 	// Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it
@@ -1009,6 +1016,12 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/builders/classes/{entryId}
 	GetClassBuild(ctx context.Context, params GetClassBuildParams) (GetClassBuildRes, error)
+	// GetConditionBuild invokes getConditionBuild operation.
+	//
+	// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/conditions/{entryId}
+	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
 	// GetEntry invokes getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -1485,6 +1498,13 @@ type ReadInvoker interface {
 	//
 	// POST /api/v1/builders/classes/preview
 	PreviewClass(ctx context.Context, request *ClassPreviewInput) (PreviewClassRes, error)
+	// PreviewCondition invokes previewCondition operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/conditions/preview
+	PreviewCondition(ctx context.Context, request *ConditionPreviewInput) (PreviewConditionRes, error)
 	// PreviewFeat invokes previewFeat operation.
 	//
 	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
@@ -9211,6 +9231,140 @@ func (c *Client) sendGetClassBuild(ctx context.Context, params GetClassBuildPara
 
 	stage = "DecodeResponse"
 	result, err := decodeGetClassBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetConditionBuild invokes getConditionBuild operation.
+//
+// A homebrew condition's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/conditions/{entryId}
+func (c *Client) GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error) {
+	res, err := c.sendGetConditionBuild(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetConditionBuild(ctx context.Context, params GetConditionBuildParams) (res GetConditionBuildRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getConditionBuild"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/builders/conditions/{entryId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetConditionBuildOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/builders/conditions/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetConditionBuildOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetConditionBuildResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -21727,6 +21881,123 @@ func (c *Client) sendPreviewClass(ctx context.Context, request *ClassPreviewInpu
 	return result, nil
 }
 
+// PreviewCondition invokes previewCondition operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/conditions/preview
+func (c *Client) PreviewCondition(ctx context.Context, request *ConditionPreviewInput) (PreviewConditionRes, error) {
+	res, err := c.sendPreviewCondition(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendPreviewCondition(ctx context.Context, request *ConditionPreviewInput) (res PreviewConditionRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("previewCondition"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/builders/conditions/preview"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, PreviewConditionOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/builders/conditions/preview"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePreviewConditionRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, PreviewConditionOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodePreviewConditionResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // PreviewFeat invokes previewFeat operation.
 //
 // Checks a design without saving it and reads it back. A design the rules refuse comes back with the
@@ -26529,6 +26800,144 @@ func (c *Client) sendSaveClassBuild(ctx context.Context, request *ClassDesign, p
 
 	stage = "DecodeResponse"
 	result, err := decodeSaveClassBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SaveConditionBuild invokes saveConditionBuild operation.
+//
+// Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see
+// it offer it in the DM's effect picker, with its icon on every token it is on.
+//
+// PUT /api/v1/builders/conditions/{entryId}
+func (c *Client) SaveConditionBuild(ctx context.Context, request *ConditionDesign, params SaveConditionBuildParams) (SaveConditionBuildRes, error) {
+	res, err := c.sendSaveConditionBuild(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendSaveConditionBuild(ctx context.Context, request *ConditionDesign, params SaveConditionBuildParams) (res SaveConditionBuildRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("saveConditionBuild"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/builders/conditions/{entryId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SaveConditionBuildOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/builders/conditions/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSaveConditionBuildRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, SaveConditionBuildOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeSaveConditionBuildResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

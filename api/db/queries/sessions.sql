@@ -454,3 +454,6 @@ LEFT JOIN library.campaign_links l ON l.entry_id = e.id AND l.campaign_id = @cam
 LEFT JOIN library.entry_revisions r ON r.entry_id = e.id AND r.no = l.pinned_revision
 WHERE coalesce(r.design, e.design) IS NOT NULL
 ORDER BY e.id;
+
+-- name: CampaignExhaustion :one
+SELECT exhaustion_variant FROM campaign.campaigns WHERE id = $1;

@@ -14,6 +14,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/effects"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
@@ -172,6 +173,7 @@ type Write struct {
 type loaded struct {
 	catalog  effects.Catalog
 	surfaces surface.Catalog
+	looks    map[string]look
 	rest     *domain.Rest
 	pending  []domain.PendingAction
 	dying    map[domain.TokenID]domain.Dying
@@ -190,11 +192,12 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	if out.surfaces, err = h.Store.Surfaces(ctx); err != nil {
 		return out, err
 	}
-	brewed, err := h.Store.Homebrew(ctx, s.CampaignID)
+	brew, err := h.Store.Homebrew(ctx, s.CampaignID)
 	if err != nil {
 		return out, err
 	}
-	out.catalog, out.surfaces = withHomebrew(out.catalog, out.surfaces, brewed)
+	out.catalog, out.surfaces = withHomebrew(out.catalog, out.surfaces, brew)
+	out.looks = looksOf(brew.Conditions)
 	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
@@ -211,23 +214,57 @@ func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
 	return out, err
 }
 
-// withHomebrew adds a Campaign's homebrew spells, and the Surfaces their start-of-turn damage lies on,
-// to copies of the shared catalogues.
-func withHomebrew(cat effects.Catalog, ground surface.Catalog, brewed []spellbuild.Built) (effects.Catalog, surface.Catalog) {
+// Brew is what a Campaign adds to the rules: its homebrew spells and conditions, and the exhaustion it
+// plays with.
+type Brew struct {
+	Spells     []spellbuild.Built
+	Conditions []conditionbuild.Condition
+	Exhaustion effects.Exhausting
+}
+
+// withHomebrew adds a Campaign's homebrew spells, the Surfaces their start-of-turn damage lies on, and
+// its homebrew conditions to copies of the shared catalogues, and makes exhaustion its variant.
+func withHomebrew(cat effects.Catalog, ground surface.Catalog, brew Brew) (effects.Catalog, surface.Catalog) {
 	cat, ground = maps.Clone(cat), maps.Clone(ground)
-	for _, b := range brewed {
+	for _, b := range brew.Spells {
 		cat[b.Definition.Slug] = b.Definition
 		if g := b.Surface; g != nil {
 			ground[surface.Kind(g.Slug)] = surface.Definition{Kind: surface.Kind(g.Slug), Name: g.Name, Cost: 1, HazardDice: g.Dice, HazardType: g.Type}
 		}
 	}
+	for _, c := range brew.Conditions {
+		cat[c.Definition.Slug] = c.Definition
+	}
+	if ex, ok := cat["exhaustion"]; ok {
+		parts := slices.Clone(ex.Components)
+		for i, c := range parts {
+			if _, stacks := c.(effects.Exhausting); stacks {
+				parts[i] = brew.Exhaustion
+			}
+		}
+		ex.Components = parts
+		cat["exhaustion"] = ex
+	}
 	return cat, ground
+}
+
+// look is how a homebrew condition shows on a token.
+type look struct {
+	name, icon, color string
+}
+
+func looksOf(conditions []conditionbuild.Condition) map[string]look {
+	out := make(map[string]look, len(conditions))
+	for _, c := range conditions {
+		out[c.Definition.Slug] = look{name: c.Definition.Name, icon: c.Icon, color: c.Color}
+	}
+	return out
 }
 
 // Store is the runtime's persistence port.
 type Store interface {
-	// Homebrew builds the homebrew spells a Campaign sees.
-	Homebrew(ctx context.Context, campaign uuid.UUID) ([]spellbuild.Built, error)
+	// Homebrew builds the homebrew spells and conditions a Campaign sees, and its exhaustion.
+	Homebrew(ctx context.Context, campaign uuid.UUID) (Brew, error)
 	Load(ctx context.Context, id domain.SessionID) (domain.Session, []domain.Token, *domain.MapState, error)
 	LoadMap(ctx context.Context, campaign uuid.UUID, id domain.MapID) (*domain.MapState, error)
 	LoadCombat(ctx context.Context, id domain.SessionID) (*domain.Combat, error)
@@ -454,7 +491,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
 	}
 	for _, t := range tokens {

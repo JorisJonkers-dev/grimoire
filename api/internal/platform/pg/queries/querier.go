@@ -76,6 +76,7 @@ type Querier interface {
 	CampaignContainerCoins(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainerCoin, error)
 	CampaignContainers(ctx context.Context, campaignID uuid.UUID) ([]CampaignContainersRow, error)
 	CampaignEntryMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepEntryMonster, error)
+	CampaignExhaustion(ctx context.Context, id uuid.UUID) (string, error)
 	CampaignHasLiveSession(ctx context.Context, campaignID uuid.UUID) (bool, error)
 	CampaignHighGround(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignHome(ctx context.Context, campaignID uuid.UUID) (uuid.UUID, error)

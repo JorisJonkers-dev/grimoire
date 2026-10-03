@@ -145,6 +145,7 @@ func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 		"species":    func(raw []byte) error { return checked(raw, checkSpecies) },
 		"background": func(raw []byte) error { return checked(raw, checkBackground) },
 		"feat":       func(raw []byte) error { return checked(raw, checkFeat) },
+		"condition":  func(raw []byte) error { return checked(raw, checkCondition) },
 	}
 	if err := checks[x.Kind](x.Design); err != nil {
 		return err.Error()

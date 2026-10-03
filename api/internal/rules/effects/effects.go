@@ -191,12 +191,14 @@ type Reveal struct {
 	Qualities []string
 }
 
-// Exhausting is exhaustion: each level takes D20PerLevel from every d20 test and SpeedFtPerLevel from
-// speed, and at DeathAt levels the bearer dies.
+// Exhausting is exhaustion, or any condition that stacks: each level takes D20PerLevel from every d20
+// test and SpeedFtPerLevel from speed, at DeathAt levels the bearer dies, and it rises no higher than
+// MaxLevel (0 has no cap).
 type Exhausting struct {
 	D20PerLevel     int
 	SpeedFtPerLevel int
 	DeathAt         int
+	MaxLevel        int
 }
 
 func (BonusDie) isComponent()       {}
@@ -587,6 +589,16 @@ func (cat Catalog) Spell(slug string) bool {
 // Stacks reports whether applying the Effect again adds a level instead of a second copy.
 func (cat Catalog) Stacks(slug string) bool {
 	return slices.ContainsFunc(cat[slug].Components, func(c Component) bool { _, ok := c.(Exhausting); return ok })
+}
+
+// MaxLevel is the highest level a stacking Effect rises to; 0 when it has no cap or does not stack.
+func (cat Catalog) MaxLevel(slug string) int {
+	for _, c := range cat[slug].Components {
+		if e, ok := c.(Exhausting); ok {
+			return e.MaxLevel
+		}
+	}
+	return 0
 }
 
 // Instructions are the parts of an Effect the DM resolves by hand; an unknown Effect is one whole

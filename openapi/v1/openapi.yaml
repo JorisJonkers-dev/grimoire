@@ -5166,6 +5166,96 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/conditions/preview:
+    post:
+      operationId: previewCondition
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew condition
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConditionPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/conditions/{entryId}:
+    get:
+      operationId: getConditionBuild
+      x-ogen-operation-group: Read
+      summary: Open a condition in the condition builder
+      description: "A homebrew condition's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The condition.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveConditionBuild
+      x-ogen-operation-group: Build
+      summary: Save a condition design
+      description: "Saves the design of one of the caller's condition entries as its next Revision; Campaigns that see it offer it in the DM's effect picker, with its icon on every token it is on."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConditionDesign"
+      responses:
+        "200":
+          description: The condition.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -7464,6 +7554,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
       type: object
@@ -7515,6 +7606,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
         members:
@@ -7550,6 +7642,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
       type: object
@@ -10072,7 +10165,7 @@ components:
     LibraryKind:
       type: string
       description: What a Library entry is.
-      enum: [creature, npc, location, shop, item, spell, table, subclass, class, species, background, feat]
+      enum: [creature, npc, location, shop, item, spell, table, subclass, class, species, background, feat, condition]
     LibraryField:
       type: object
       description: One named value of a Library entry.
@@ -10860,6 +10953,60 @@ components:
         equipment: { type: string, maxLength: 2000 }
         gold: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         text: { type: string, maxLength: 8000 }
+    ConditionPreviewInput:
+      type: object
+      description: A design to preview, with the condition's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/ConditionDesign" }
+    ConditionBuild:
+      type: object
+      description: A homebrew condition in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/ConditionDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    ConditionDesign:
+      type: object
+      description: A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
+      additionalProperties: false
+      required: [icon, color, text, ends, perLevel, parts]
+      properties:
+        icon: { type: string, maxLength: 40 }
+        color: { type: string, maxLength: 20 }
+        text: { type: string, maxLength: 8000 }
+        ends: { type: string, maxLength: 40 }
+        ability: { type: string, maxLength: 40 }
+        stacks: { type: boolean }
+        maxLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        perLevel:
+          type: object
+          additionalProperties: false
+          required: [d20, speedFt, deathAt]
+          properties:
+            d20: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            speedFt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+            deathAt: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        parts:
+          type: array
+          maxItems: 40
+          items:
+            type: object
+            additionalProperties: false
+            required: [type]
+            properties:
+              type: { type: string, maxLength: 40 }
+              ability: { type: string, maxLength: 40 }
+              feet: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+              text: { type: string, maxLength: 2000 }
     SubclassDesign:
       type: object
       description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
@@ -11524,6 +11671,8 @@ components:
           description: The hexes an emanation covers around the token where it stands now; it moves with the token.
           maxItems: 2000
           items: { $ref: "#/components/schemas/HexCoord" }
+        icon: { type: string, maxLength: 40, description: "A homebrew condition's glyph." }
+        color: { type: string, maxLength: 20, description: "A homebrew condition's colour." }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.
@@ -11766,6 +11915,19 @@ components:
             properties:
               kind: { type: string, maxLength: 40 }
               name: { type: string, maxLength: 40 }
+        conditions:
+          type: array
+          description: The Campaign's homebrew conditions, for the DM's effect picker.
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [slug, name, icon, color]
+            properties:
+              slug: { type: string, maxLength: 80 }
+              name: { type: string, maxLength: 80 }
+              icon: { type: string, maxLength: 40 }
+              color: { type: string, maxLength: 20 }
         objects:
           type: array
           description: The Map Objects the audience knows; the party never gets secret ones or ones outside what it has seen.

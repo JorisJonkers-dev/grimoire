@@ -203,7 +203,7 @@ func TestExhaustionStacksAndKillsAtSix(t *testing.T) {
 	if name, dead := cat.Fatal([]effects.Active{{Slug: "exhaustion", Level: 6}}); !dead || name != "Exhaustion" {
 		t.Errorf("six levels kill = %q %v", name, dead)
 	}
-	if _, dead := (effects.Catalog{"e": {Name: "E", Components: []effects.Component{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 0, DeathAt: 0}}}}).Fatal([]effects.Active{{Slug: "e", Level: 9}}); dead {
+	if _, dead := (effects.Catalog{"e": {Name: "E", Components: []effects.Component{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 0, DeathAt: 0, MaxLevel: 0}}}}).Fatal([]effects.Active{{Slug: "e", Level: 9}}); dead {
 		t.Error("an exhaustion without a death level never kills")
 	}
 	if !cat.Stacks("exhaustion") || cat.Stacks("prone") {
@@ -372,7 +372,7 @@ func srd() effects.Catalog {
 		"sapped":     {Slug: "sapped", Name: "Sapped", Components: []effects.Component{effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange}}},
 		"slowed":     {Slug: "slowed", Name: "Slowed", Components: []effects.Component{effects.SpeedPenalty{Ft: 10}}},
 		"vexed":      {Slug: "vexed", Name: "Vexed", Components: []effects.Component{effects.Edge{Against: true, Advantage: true, Range: effects.AnyRange, SourceOnly: true}}},
-		"exhaustion": {Slug: "exhaustion", Name: "Exhaustion", Components: []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6}}},
+		"exhaustion": {Slug: "exhaustion", Name: "Exhaustion", Components: []effects.Component{effects.Exhausting{D20PerLevel: 2, SpeedFtPerLevel: 5, DeathAt: 6, MaxLevel: 0}}},
 		"frightened": {Slug: "frightened", Name: "Frightened", Components: []effects.Component{
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.Manual{Instruction: "Frightened: can't willingly move closer to the source of its fear, and the disadvantage holds only while it can see that source."},
@@ -427,5 +427,19 @@ func srd() effects.Catalog {
 			effects.Edge{Against: false, Advantage: false, Range: effects.AnyRange},
 			effects.Manual{Instruction: "Poisoned: ability checks are made with disadvantage."},
 		}},
+	}
+}
+
+func TestStackingEffectsRiseToTheirCap(t *testing.T) {
+	t.Parallel()
+	cat := effects.Catalog{
+		"frostbite": {Slug: "frostbite", Name: "Frostbite", Components: []effects.Component{effects.Exhausting{D20PerLevel: 1, SpeedFtPerLevel: 5, DeathAt: 0, MaxLevel: 3}}},
+		"bless":     {Slug: "bless", Name: "Bless", Components: []effects.Component{effects.BonusDie{On: []effects.Roll{effects.AttackRolls}, Dice: "1d4"}}},
+	}
+	if !cat.Stacks("frostbite") || cat.MaxLevel("frostbite") != 3 || cat.Stacks("bless") || cat.MaxLevel("bless") != 0 || cat.MaxLevel("unknown") != 0 {
+		t.Fatal("frostbite stacks to 3; bless does not stack")
+	}
+	if ft := cat.SpeedPenaltyFt([]effects.Active{{Slug: "frostbite", Source: "", Level: 3, Mode: ""}}); ft != 15 {
+		t.Fatalf("three levels of frostbite = %d feet", ft)
 	}
 }
