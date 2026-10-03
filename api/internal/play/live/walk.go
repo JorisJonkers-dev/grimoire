@@ -24,7 +24,7 @@ func (r *runtime) route(m domain.Member, a Audience, cmd Command) (domain.Token,
 	if err != nil || !ok || (!whole && !r.st.shows(t, seen)) {
 		return domain.Token{}, nil, 0, "No such token."
 	}
-	if !r.st.plays(m, t) {
+	if !r.st.steers(m, t) {
 		return domain.Token{}, nil, 0, "That token is not yours to move."
 	}
 	if t.Mount != nil {

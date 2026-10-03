@@ -74,9 +74,9 @@ func (r *runtime) plan(req request) (Write, string) {
 	case CmdJump:
 		return r.planJump(m, cmd)
 	case CmdMount:
-		return r.planMount(m, cmd)
+		return r.planMount(m, req.from.Audience, cmd)
 	case CmdDismount:
-		return r.planDismount(m, cmd)
+		return r.planDismount(m, req.from.Audience, cmd)
 	case CmdSneak:
 		return r.planSneak(m, cmd)
 	case CmdExplore, CmdPassTurn:

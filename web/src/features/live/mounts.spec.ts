@@ -140,6 +140,30 @@ describe('riding in a live Session', () => {
     }
   })
 
+  it('lets the DM put the creature in hand on a mount, and take it off, outside a fight', async () => {
+    const crate: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000d', label: 'Crate', kind: 'object', q: 0, r: 1, hidden: false, darkvisionFt: 0 }
+    const { wrapper, s } = await open('dm', [aria, steed, goblin, crate])
+    const sent = () => s.sent.at(-1) as Record<string, unknown>
+    expect(wrapper.find('[data-testid="ride-token"]').exists()).toBe(false)
+    // A crate rides nothing.
+    await wrapper.get('[data-hex="0,1"]').trigger('click')
+    expect(wrapper.find('[data-testid="selected-token"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="ride-token"]').exists()).toBe(false)
+    await wrapper.get('[data-hex="0,0"]').trigger('click')
+    expect(wrapper.get('[data-testid="ride-token"]').text()).toBe('Mount')
+    await wrapper.get('[data-testid="ride-token"]').trigger('click')
+    expect(wrapper.get('[data-testid="riding"]').text()).toContain('Tap the creature to ride.')
+    await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(sent()).toMatchObject({ kind: 'mount', tokenId: aria.id, targetId: steed.id, controlled: true })
+
+    s.receive({ kind: 'view', seq: 2, view: view(mounted(true)) })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="ride-token"]').text()).toBe('Dismount')
+    await wrapper.get('[data-testid="ride-token"]').trigger('click')
+    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    expect(sent()).toMatchObject({ kind: 'dismount', tokenId: aria.id, q: 2, r: 0 })
+  })
+
   it('leaves an independent mount to the DM', async () => {
     const { wrapper, s } = await open('player', mounted(false), [aria.id, steed.id])
     expect(wrapper.find('[data-testid="hotbar-Steed"]').exists()).toBe(false)

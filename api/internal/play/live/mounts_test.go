@@ -96,22 +96,30 @@ func TestARiderGoesWhereItsMountGoes(t *testing.T) {
 	for _, target := range []string{uuid.NewString(), ids["Banner"], aria, "the horse"} {
 		tb.refusal(tb.player, "Choose a creature to ride.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: target})
 	}
-	tb.refusal(tb.player, "Goblin will not carry Aria.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: goblin})
+	tb.refusal(tb.dm, "Goblin will not carry Aria.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: goblin})
 	tb.refusal(tb.dm, "Aria will not carry Goblin.", live.Command{Kind: live.CmdMount, TokenID: goblin, TargetID: aria})
+	// A Player gets a creature only onto one of their own: whether another will carry it is the DM's to say.
+	tb.refusal(tb.player, "Steed is not yours to ride: ask the DM.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+	tb.refusal(tb.player, "Goblin is not yours to ride: ask the DM.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: goblin})
+	// One the party cannot see is not there to be ridden, and is not named.
+	d, _ := tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "wolf", TokenKind: domain.TokenParty, Label: "Lurker", Hidden: true, R: 1})
+	lurker := token(d.View, "Lurker").ID
+	tb.refusal(tb.player, "Choose a creature to ride.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: lurker})
+	tb.dmSays(live.Command{Kind: live.CmdRemove, TokenID: lurker})
 	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: steed, Q: 2})
-	tb.refusal(tb.player, "Steed is out of reach.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
+	tb.refusal(tb.dm, "Steed is out of reach.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
 	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: steed, Q: 1})
 	tb.refusal(tb.player, "Aria is not riding.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 0, R: 1})
 	tb.refusal(tb.player, "not yours", live.Command{Kind: live.CmdDismount, TokenID: goblin, Q: 0, R: 1})
 	tb.refusal(tb.player, "No such creature.", live.Command{Kind: live.CmdDismount, TokenID: "her", Q: 0, R: 1})
 
 	// Held fast, she cannot swing herself up.
-	d, _ := tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: aria, Effect: "restrained"})
-	tb.refusal(tb.player, "Aria can't move.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
+	d, _ = tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: aria, Effect: "restrained"})
+	tb.refusal(tb.dm, "Aria can't move.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
 	tb.dmSays(live.Command{Kind: live.CmdEndEffect, EffectID: effect(token(d.View, "Aria"), "Restrained").ID})
 
-	// Aria gets on: she is where the Steed is, and both screens see who rides what.
-	p := tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+	// The DM puts Aria on, holding the reins: she is where the Steed is, and both screens see who rides what.
+	_, p := tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
 	for who, v := range map[string]*live.View{"the party": p.View, "the DM": look(t, w, tb.dm)} {
 		if got, want := seatOf(t, v, aria), (seat{q: 1, mount: steed, controlled: true}); got != want {
 			t.Fatalf("Aria mounted, as %s sees it = %+v", who, got)
@@ -127,7 +135,7 @@ func TestARiderGoesWhereItsMountGoes(t *testing.T) {
 	}
 	tb.dmSays(live.Command{Kind: live.CmdSetHidden, TokenID: steed})
 	tb.refusal(tb.player, "Aria is riding Steed: dismount first.", live.Command{Kind: live.CmdWalk, TokenID: aria, Q: 0, R: 0})
-	tb.refusal(tb.player, "Aria is riding already.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
+	tb.refusal(tb.dm, "Aria is riding already.", live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
 	tb.refusal(tb.dm, "Steed already carries a rider.", live.Command{Kind: live.CmdMount, TokenID: goblin, TargetID: steed})
 	tb.refusal(tb.dm, "Steed is carrying a rider.", live.Command{Kind: live.CmdMount, TokenID: steed, TargetID: goblin})
 	tb.refusal(tb.dm, "Aria is riding, and carries no one.", live.Command{Kind: live.CmdMount, TokenID: goblin, TargetID: aria})
@@ -164,20 +172,31 @@ func TestARiderGoesWhereItsMountGoes(t *testing.T) {
 
 	// Getting off: onto a free hex next to the mount.
 	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: goblin, Q: 1, R: 2})
-	tb.refusal(tb.player, "That hex is off the map.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 99, R: 99})
-	tb.refusal(tb.player, "Dismount next to Steed.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 0, R: 0})
-	tb.refusal(tb.player, "Dismount next to Steed.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 0, R: 2})
-	tb.refusal(tb.player, "That hex is taken.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 1, R: 2})
+	d, _ = tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "wolf", TokenKind: domain.TokenParty, Label: "Pony", ControllerID: w.player.ID.String(), Q: -1, R: 2})
+	pony := token(d.View, "Pony").ID
+	// Off the map, too far, the mount's own hex, a hex a foe or a friend stands on: one answer for each,
+	// so it tells nothing more.
+	for _, to := range [][2]int{{99, 99}, {0, 0}, {0, 2}, {1, 2}, {-1, 2}} {
+		tb.refusal(tb.player, "Dismount onto a free hex next to Steed.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: to[0], R: to[1]})
+	}
 	p = tb.playerSays(live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 0, R: 1})
 	if a, s := seatOf(t, p.View, aria), seatOf(t, p.View, steed); a != (seat{r: 1}) || s != (seat{r: 2}) || riding() != 0 {
 		t.Fatalf("Aria dismounted = %+v beside %+v, %d riding", a, s, riding())
 	}
+	// A creature of her own she gets onto, and off, without asking.
+	p = tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: pony, Controlled: true})
+	if a := seatOf(t, p.View, aria); a != (seat{q: -1, r: 2, mount: pony, controlled: true}) {
+		t.Fatalf("Aria on her own Pony = %+v", a)
+	}
+	tb.playerSays(live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 0, R: 1})
+	tb.dmSays(live.Command{Kind: live.CmdRemove, TokenID: pony})
+
 	// On foot again, she walks by herself, and the Steed is the DM's to move.
 	tb.refusal(tb.player, "not yours to move", live.Command{Kind: live.CmdWalk, TokenID: steed, Q: 0, R: 3})
 	tb.playerSays(live.Command{Kind: live.CmdWalk, TokenID: aria, Q: -1, R: 2})
 
 	// An independent mount carries her, and goes where it likes: only the DM moves it.
-	p = tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
+	_, p = tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
 	if a := seatOf(t, p.View, aria); a != (seat{r: 2, mount: steed}) {
 		t.Fatalf("Aria on an independent mount = %+v", a)
 	}
@@ -209,7 +228,7 @@ func TestARiderGoesWhereItsMountGoes(t *testing.T) {
 	}
 
 	// Her mount leaving the map leaves her standing where it stood.
-	tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+	tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
 	_, p = tb.dmSays(live.Command{Kind: live.CmdRemove, TokenID: steed})
 	if a := seatOf(t, p.View, aria); a != (seat{q: 1}) || riding() != 0 {
 		t.Fatalf("her mount gone, Aria stands where it stood = %+v, %d riding", a, riding())
@@ -225,7 +244,7 @@ func TestARiderSentOffLeavesItsMount(t *testing.T) {
 	t.Parallel()
 	w, tb, ids, _ := stable(t)
 	tower := w.picture(t, "Tower", domain.MapLocal)
-	tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: ids["Aria"], TargetID: ids["Steed"], Controlled: true})
+	tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: ids["Aria"], TargetID: ids["Steed"], Controlled: true})
 	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdSplitParty, Name: "The tower", TokenIDs: []string{ids["Aria"]}, MapID: uuid.UUID(tower.ID).String()})
 	d := next(t, tb.dm)
 	if d.Kind != live.UpdSnapshot || seatOf(t, d.View, ids["Steed"]) != (seat{q: 1}) {
@@ -272,7 +291,7 @@ func TestAMountInAFight(t *testing.T) {
 	// its own initiative.
 	tb.refusal(tb.dm, "It is not Goblin's turn.", live.Command{Kind: live.CmdMount, TokenID: goblin, TargetID: aria})
 	end("Steed")
-	p := tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
+	_, p := tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
 	if a, s := combatant(p.View, "Aria"), combatant(p.View, "Steed"); a.MovementFt != 15 || s.Acting || initiative(p.View, "Steed") == initiative(p.View, "Aria") {
 		t.Fatalf("mounting an independent Steed = %+v, %+v", a, s)
 	}
@@ -299,7 +318,7 @@ func TestAMountInAFight(t *testing.T) {
 	if a := combatant(p.View, "Aria"); a.MovementFt != 15 || seatOf(t, p.View, aria) != (seat{q: 2}) {
 		t.Fatalf("dismounting costs half her Speed = %+v", a)
 	}
-	p = tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+	_, p = tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
 	a, s := combatant(p.View, "Aria"), combatant(p.View, "Steed")
 	if a.MovementFt != 0 || !s.Acting || s.Done || initiative(p.View, "Steed") != initiative(p.View, "Aria") || s.MovementFt != 30 || !s.Action {
 		t.Fatalf("a controlled Steed takes Aria's initiative and can move at once = %+v, %+v", a, s)
@@ -310,6 +329,12 @@ func TestAMountInAFight(t *testing.T) {
 		t.Fatalf("and all of it is kept = %+v, %+v", a, s)
 	}
 	tb.refusal(tb.player, "Aria has 0 ft of movement left.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 2, R: 0})
+	// The reins move it and nothing more: its action, its Bonus Action and whatever else it could do
+	// stay with whoever runs it.
+	tb.refusal(tb.player, "not yours to play", live.Command{Kind: live.CmdSpend, CombatantID: combatant(v, "Steed").ID, Resource: live.ResourceBonusAction})
+	tb.refusal(tb.player, "not yours to play", live.Command{Kind: live.CmdThrow, TokenID: steed})
+	tb.refusal(tb.player, "not yours to play", live.Command{Kind: live.CmdStabilise, TokenID: steed, TargetID: aria})
+	tb.refusal(tb.player, "not yours to play", live.Command{Kind: live.CmdUnarmed, TokenID: steed, TargetID: goblin, Option: "grapple"})
 	// It only Dashes, Disengages or Dodges, whoever asks.
 	for _, sub := range []*live.Subscriber{tb.player, tb.dm} {
 		tb.refusal(sub, "Steed is ridden: it only Dashes, Disengages or Dodges.", live.Command{Kind: live.CmdTakeAction, TokenID: steed, Action: "help"})
@@ -348,7 +373,7 @@ func TestAMountInAFight(t *testing.T) {
 	end("Goblin")
 	tb.refusal(tb.player, "not yours to play", live.Command{Kind: live.CmdTakeAction, TokenID: steed, Action: "dash"})
 	// On it again without the reins, her turn ending leaves the Steed its own, though they share a count.
-	tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
+	tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed})
 	if s := combatant(end("Aria"), "Steed"); s.Done || !s.Acting {
 		t.Fatalf("an independent Steed's turn outlasts its rider's = %+v", s)
 	}
@@ -364,7 +389,7 @@ func TestARiderFallsOff(t *testing.T) {
 	aria, steed, goblin := ids["Aria"], ids["Steed"], ids["Goblin"]
 	mount := func() {
 		t.Helper()
-		tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+		tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
 	}
 	prone := func(label string) *live.EffectView {
 		t.Helper()
@@ -515,7 +540,7 @@ func TestASpellMovesAMountFromUnderItsRider(t *testing.T) {
 	t.Parallel()
 	w, tb, ids, _ := stable(t)
 	aria, steed := ids["Aria"], ids["Steed"]
-	tb.playerSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+	tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
 	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Goblin"]})
 	tb.fight(ids, "Goblin", "Aria", "Steed")
 	d, _ := tb.dmSays(live.Command{Kind: live.CmdCastArea, TokenID: ids["Goblin"], Effect: "thunderwave", Q: 1, R: 0})
@@ -539,5 +564,26 @@ func TestASpellMovesAMountFromUnderItsRider(t *testing.T) {
 	v = look(t, w, tb.player)
 	if a, s := seatOf(t, v, aria), seatOf(t, v, steed); a.mount != "" || s.rider != "" || a.q == s.q && a.r == s.r || effect(token(v, "Aria"), "Prone") == nil {
 		t.Fatalf("failing the save, Aria falls = %+v beside %+v", a, s)
+	}
+}
+
+// Getting off and falling off put a rider only where it could step: never into a wall.
+func TestARiderNeverLandsInAWall(t *testing.T) {
+	t.Parallel()
+	w, tb, ids, _ := stable(t)
+	aria, steed := ids["Aria"], ids["Steed"]
+	tb.dmSays(live.Command{Kind: live.CmdSetMap, MapID: uuid.UUID(w.dungeon(t).ID).String()})
+	tb.dmSays(live.Command{Kind: live.CmdSetAmbient, Ambient: domain.AmbientBright})
+	tb.dmSays(live.Command{Kind: live.CmdMove, TokenID: ids["Goblin"], Q: 5})
+	tb.dmSays(live.Command{Kind: live.CmdMount, TokenID: aria, TargetID: steed, Controlled: true})
+	tb.dmSays(live.Command{Kind: live.CmdSetWalls, Hexes: []live.Hex{{Q: 2, R: 0}}, On: true})
+	for _, sub := range []*live.Subscriber{tb.player, tb.dm} {
+		tb.refusal(sub, "Dismount onto a free hex next to Steed.", live.Command{Kind: live.CmdDismount, TokenID: aria, Q: 2, R: 0})
+	}
+	// Thrown, she lands on the first hex round the Steed she could step onto: the wall east of it is not one.
+	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: steed, Effect: "prone"})
+	v := look(t, w, tb.dm)
+	if a := seatOf(t, v, aria); a.mount != "" || a == (seat{q: 2}) || a == (seat{q: 1}) {
+		t.Fatalf("thrown beside a wall, Aria lands = %+v", a)
 	}
 }

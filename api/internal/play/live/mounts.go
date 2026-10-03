@@ -28,10 +28,15 @@ func (s *state) rider(mount domain.TokenID) (domain.Token, bool) {
 	return domain.Token{}, false
 }
 
-// plays reports whether a member may play a token: the DM, its Controller, or the Player whose own
-// creature rides it and controls it.
-func (s *state) plays(m domain.Member, t domain.Token) bool {
-	if m.DM || (t.Controller != nil && *t.Controller == m.ID) {
+// owns reports whether a token is a member's to play: the DM's, or its Controller's.
+func owns(m domain.Member, t domain.Token) bool {
+	return m.DM || (t.Controller != nil && *t.Controller == m.ID)
+}
+
+// steers reports whether a member may move a token and end its turn: one that is theirs to play, or a
+// mount their own creature rides and controls. The reins give no more than that.
+func (s *state) steers(m domain.Member, t domain.Token) bool {
+	if owns(m, t) {
 		return true
 	}
 	r, ridden := s.rider(t.ID)
@@ -86,7 +91,7 @@ func (r *runtime) saddler(m domain.Member, tokenID string) (domain.Token, *domai
 	switch {
 	case !ok || t.Stats == nil:
 		return t, nil, "No such creature."
-	case !m.DM && (t.Controller == nil || *t.Controller != m.ID):
+	case !owns(m, t):
 		return t, nil, "That token is not yours to play."
 	}
 	// Outside a fight, and for a creature that is not in it, getting on and off is free.
@@ -121,8 +126,9 @@ func (s *state) seatCost(t domain.Token, x *domain.Combatant) (int, string) {
 }
 
 // planMount puts a creature on a willing creature beside it: one of its own side, carrying nobody and
-// riding nothing. The rider says whether it controls the mount or lets it act for itself.
-func (r *runtime) planMount(m domain.Member, cmd Command) (Write, string) {
+// riding nothing. Whether a creature is willing is for whoever plays it: a Player gets a creature only
+// onto one of their own, and the DM onto any. The rider controls the mount or lets it act for itself.
+func (r *runtime) planMount(m domain.Member, a Audience, cmd Command) (Write, string) {
 	t, x, reason := r.saddler(m, cmd.TokenID)
 	if reason != "" {
 		return Write{}, reason
@@ -131,8 +137,11 @@ func (r *runtime) planMount(m domain.Member, cmd Command) (Write, string) {
 	_, carrying := r.st.rider(t.ID)
 	_, ridden := r.st.rider(mount.ID)
 	switch {
-	case !ok || mount.Stats == nil || mount.ID == t.ID:
+	// A creature the party cannot see is no creature at all, on any screen but the DM's own.
+	case !ok || mount.Stats == nil || mount.ID == t.ID || (a != AudienceDM && !r.st.shows(mount, r.st.vision())):
 		return Write{}, "Choose a creature to ride."
+	case !owns(m, mount):
+		return Write{}, mount.Label + " is not yours to ride: ask the DM."
 	case t.Mount != nil:
 		return Write{}, t.Label + " is riding already."
 	case carrying:
@@ -154,8 +163,10 @@ func (r *runtime) planMount(m domain.Member, cmd Command) (Write, string) {
 	return Write{Kind: domain.ActionMounted, Token: t, CostFt: cost, Note: mount.Label}, ""
 }
 
-// planDismount takes a rider off its mount onto a free hex next to it.
-func (r *runtime) planDismount(m domain.Member, cmd Command) (Write, string) {
+// planDismount takes a rider off its mount onto a free hex next to it that it could step onto. Why a
+// hex will not do is not said: the answer is the same for a wall, a hex the asker's screen does not
+// know and a hex somebody stands on.
+func (r *runtime) planDismount(m domain.Member, a Audience, cmd Command) (Write, string) {
 	t, x, reason := r.saddler(m, cmd.TokenID)
 	if reason != "" {
 		return Write{}, reason
@@ -164,13 +175,8 @@ func (r *runtime) planDismount(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, t.Label + " is not riding."
 	}
 	mount, to := r.st.tokens[*t.Mount], hex.Coord{Q: cmd.Q, R: cmd.R}
-	switch {
-	case !r.st.onBoard(to):
-		return Write{}, "That hex is off the map."
-	case hex.Distance(hex.Coord{Q: mount.Q, R: mount.R}, to) != 1:
-		return Write{}, "Dismount next to " + mount.Label + "."
-	case r.st.occupied(to):
-		return Write{}, "That hex is taken."
+	if !r.st.landing(r.st.walkGrid(a == AudienceDM, t, r.st.vision()), mount, to) {
+		return Write{}, "Dismount onto a free hex next to " + mount.Label + "."
 	}
 	cost, reason := r.st.seatCost(t, x)
 	if reason != "" {
@@ -178,6 +184,14 @@ func (r *runtime) planDismount(m domain.Member, cmd Command) (Write, string) {
 	}
 	t.Q, t.R, t.Mount, t.Steers = to.Q, to.R, nil, false
 	return Write{Kind: domain.ActionDismounted, Token: t, CostFt: cost, Note: mount.Label}, ""
+}
+
+// landing reports whether a rider can come off its mount onto a hex: one next to the mount, that the
+// ground lets it step onto, with nobody standing on it.
+func (s *state) landing(g hex.Grid, mount domain.Token, to hex.Coord) bool {
+	from := hex.Coord{Q: mount.Q, R: mount.R}
+	_, open := hex.StepCost(g, from, to, false)
+	return open && hex.Distance(from, to) == 1 && !s.occupied(to)
 }
 
 // applySeat puts a rider where getting on, getting off or falling leaves it, and spends what it cost.
@@ -323,16 +337,17 @@ func (r *runtime) seatRolled(w Write, p domain.PendingAction, roll domain.Roll) 
 	}
 }
 
-// fall takes a rider off its mount onto a free hex beside it, the mount's own when there is none, and
-// leaves it Prone.
+// fall takes a rider off its mount onto the first hex round it that it could step onto, the mount's
+// own when there is none, and leaves it Prone.
 func (r *runtime) fall(id domain.TokenID, actor domain.Member, c caller.Caller) {
 	t := r.st.tokens[id]
 	if t.Mount == nil {
 		return
 	}
 	mount := r.st.tokens[*t.Mount]
+	ground := r.st.walkGrid(true, t, nil)
 	for _, n := range (hex.Coord{Q: mount.Q, R: mount.R}).Neighbors() {
-		if r.st.onBoard(n) && !r.st.occupied(n) {
+		if r.st.landing(ground, mount, n) {
 			t.Q, t.R = n.Q, n.R
 			break
 		}

@@ -30,7 +30,12 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 		ended.Status, ended.EndedAt, ended.Attack, ended.Prompt, ended.Resume = domain.CombatEnded, r.now(), nil, nil, nil
 		return Write{Kind: domain.ActionCombatEnded, Combat: &ended, lootTable: cmd.LootTableID, XP: r.awards(c)}, ""
 	}
-	x, t, reason := r.combatant(m, cmd.CombatantID)
+	// The reins end a controlled mount's turn; spending what it has is for whoever plays it.
+	may := owns
+	if cmd.Kind == CmdEndTurn {
+		may = r.st.steers
+	}
+	x, t, reason := r.combatant(m, cmd.CombatantID, may)
 	if reason != "" {
 		return Write{}, reason
 	}
@@ -58,15 +63,16 @@ func (r *runtime) planCombat(m domain.Member, cmd Command) (Write, string) {
 	return Write{Kind: domain.ActionResourceSpent, Token: t, Combatant: x.ID, resource: res}, ""
 }
 
-// combatant finds a Combatant that the member may act for: the DM, or its token's Controller.
-func (r *runtime) combatant(m domain.Member, id string) (domain.Combatant, domain.Token, string) {
+// combatant finds a Combatant that the member may act for, as may has it: the DM or its token's
+// Controller, and to end its turn the rider who controls it too.
+func (r *runtime) combatant(m domain.Member, id string, may func(domain.Member, domain.Token) bool) (domain.Combatant, domain.Token, string) {
 	cid, _ := uuid.Parse(id)
 	for _, x := range r.st.combat.Combatants {
 		if x.ID != domain.CombatantID(cid) {
 			continue
 		}
 		t := r.st.tokens[x.TokenID]
-		if !r.st.plays(m, t) {
+		if !may(m, t) {
 			return x, t, "That combatant is not yours to play."
 		}
 		return x, t, ""

@@ -886,6 +886,14 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
                 <option v-for="m in campaign.data.value?.members ?? []" :key="m.id" :value="m.id">{{ m.displayName }}</option>
               </select>
             </label>
+            <GButton
+              v-if="isDM && chosen.hp !== undefined"
+              data-testid="ride-token"
+              title="Put the creature on a willing creature next to it, or take it off the one it rides."
+              @click="riding = { tokenId: chosen.id, off: chosen.mountId !== undefined }"
+            >
+              {{ chosen.mountId ? 'Dismount' : 'Mount' }}
+            </GButton>
             <GButton data-testid="toggle-hidden" @click="toggleHidden()">{{ chosen.hidden ? 'Reveal' : 'Hide' }}</GButton>
             <GButton variant="danger" data-testid="remove-token" @click="remove()">Remove</GButton>
           </div>

@@ -2623,7 +2623,7 @@ export type LiveCommand = {
      */
     cured?: boolean;
     /**
-     * With mount, tokenId gets onto targetId, a willing creature of its own side within 5 feet, for half its Speed. Set, the rider controls the mount: it takes the rider's initiative, moves at the rider's word and only Dashes, Disengages or Dodges. Left out, the mount acts for itself. With dismount, tokenId gets off onto the free hex q and r next to its mount, for half its Speed.
+     * With mount, tokenId gets onto targetId, a willing creature of its own side within 5 feet, for half its Speed. A Player gets a creature only onto one they run themselves; the DM puts any creature on any. Set, the rider controls the mount: it takes the rider's initiative, moves at the rider's word and only Dashes, Disengages or Dodges. Left out, the mount acts for itself. The reins give its rider's Player its movement, those three actions and the end of its turn, and nothing else of it. With dismount, tokenId gets off onto the free hex q and r next to its mount that it could step onto, for half its Speed.
      */
     controlled?: boolean;
     manualId?: Id;
