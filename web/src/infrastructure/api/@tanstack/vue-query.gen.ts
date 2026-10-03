@@ -4412,7 +4412,7 @@ export const getDiceSetImageQueryKey = (options: Options<GetDiceSetImageData>) =
 /**
  * Get the picture on a Dice Set
  *
- * The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin reviewing it.
+ * The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced it.
  */
 export const getDiceSetImageOptions = (options: Options<GetDiceSetImageData>) => queryOptions<GetDiceSetImageResponse, GetDiceSetImageError, GetDiceSetImageResponse, ReturnType<typeof getDiceSetImageQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

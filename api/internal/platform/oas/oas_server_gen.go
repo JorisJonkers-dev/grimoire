@@ -1082,7 +1082,8 @@ type ReadHandler interface {
 	// GetDiceSetImage implements getDiceSetImage operation.
 	//
 	// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
-	// reviewing it.
+	// reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced
+	// it.
 	//
 	// GET /api/v1/dice-sets/{diceSetId}/image
 	GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (GetDiceSetImageRes, error)

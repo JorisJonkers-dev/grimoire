@@ -15,6 +15,8 @@ const set = (n: number, name: string, extra: Partial<DiceSet> = {}): DiceSet => 
   design: { dice: { d20: { pattern: 'marble', body: '#102030', numbers: '#ffffff' } } }, ...extra,
 })
 const picture = '/api/v1/dice-sets/x/image?v=abc'
+// A picture is named by the SHA-256 of its content.
+const [seenFirst, seenNext] = ['0123456789abcdef'.repeat(4), 'fedcba9876543210'.repeat(4)]
 
 afterEach(() => { unmountAll() })
 
@@ -252,7 +254,7 @@ describe('the Dice Sets page', () => {
 describe('the Dice Set review page', () => {
   it('shows an Admin each picture that waits, to approve or turn down', async () => {
     const calls: string[] = []
-    const waiting = [set(1, 'Ember', { mine: false, sharing: 'everyone', review: 'pending', hasImage: true, imageUrl: picture, imageVersion: '0123456789ab' })]
+    const waiting = [set(1, 'Ember', { mine: false, sharing: 'everyone', review: 'pending', hasImage: true, imageUrl: picture, imageVersion: seenFirst })]
     let fail = 0
     const { wrapper } = await mountApp('/admin/dice-sets', {
       '/api/v1/admin/dice-sets/': async (url, req) => {
@@ -275,7 +277,7 @@ describe('the Dice Set review page', () => {
     // The owner swapped the picture meanwhile: the decision is refused and the Admin looks again.
     fail = 409
     const [first] = waiting
-    if (first) Object.assign(first, { imageVersion: 'ba9876543210' })
+    if (first) Object.assign(first, { imageVersion: seenNext })
     await wrapper.get('[data-testid="review-approve"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[data-testid="dice-review-problem"]').text()).toContain('changed while you were looking')
@@ -283,7 +285,7 @@ describe('the Dice Set review page', () => {
     await wrapper.get('[data-testid="review-approve"]').trigger('click')
     await flushPromises()
     // Each decision names the picture that was on screen when it was made.
-    expect(calls).toEqual(['41 {"approve":false,"picture":"0123456789ab"}', '41 {"approve":true,"picture":"0123456789ab"}', '41 {"approve":true,"picture":"ba9876543210"}'])
+    expect(calls).toEqual([`41 {"approve":false,"picture":"${seenFirst}"}`, `41 {"approve":true,"picture":"${seenFirst}"}`, `41 {"approve":true,"picture":"${seenNext}"}`])
     expect(wrapper.get('[data-testid="dice-review-none"]').text()).toBe('No pictures wait to be checked.')
   })
 

@@ -189,7 +189,7 @@ func TestDiceSetsAndWhoTheyAreSharedWith(t *testing.T) {
 			t.Fatalf("the review queue = %v", items)
 		}
 		version, _ := items[0].(map[string]any)["imageVersion"].(string)
-		if len(version) != 12 {
+		if len(version) != 64 {
 			t.Fatalf("the picture's version = %q", version)
 		}
 		return version
@@ -218,6 +218,23 @@ func TestDiceSetsAndWhoTheyAreSharedWith(t *testing.T) {
 	second := seen()
 	if second == first {
 		t.Fatal("a new picture keeps the old version")
+	}
+	// A picture is named by the whole hash of its content: one that starts like it is another picture,
+	// and half a name is no name.
+	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":true,"picture":"`+second[:12]+strings.Repeat("0", 52)+`"}`); rec.Code != http.StatusConflict {
+		t.Fatalf("approving a picture that starts like the one on the set: %d", rec.Code)
+	}
+	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":true,"picture":"`+second[:12]+`"}`); rec.Code != http.StatusBadRequest {
+		t.Fatalf("approving half a name: %d", rec.Code)
+	}
+	// What the Admin is shown is the picture the link names, or nothing: never the one that replaced it.
+	for version, want := range map[string]int{second: http.StatusOK, first: http.StatusNotFound, second[:12] + strings.Repeat("0", 52): http.StatusNotFound, "x": http.StatusBadRequest} {
+		if rec := send(trusted, http.MethodGet, one+"/image?v="+version, "", "root", ""); rec.Code != want {
+			t.Fatalf("the picture asked for as %s: %d, want %d", version, rec.Code, want)
+		}
+	}
+	if link, _ := decode(t, send(public, http.MethodGet, "/api/v1/dice-sets", aria, "", ""))["items"].([]any)[0].(map[string]any)["imageUrl"].(string); link != one+"/image?v="+second {
+		t.Fatalf("the link to the picture = %s", link)
 	}
 	if rec := send(trusted, http.MethodPost, "/api/v1/admin/dice-sets/"+id+"/review", "", "root", `{"approve":true,"picture":"`+second+`"}`); rec.Code != http.StatusOK || decode(t, rec)["review"] != "approved" {
 		t.Fatalf("approve: %d", rec.Code)

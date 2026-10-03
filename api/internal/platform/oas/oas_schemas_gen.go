@@ -8337,7 +8337,7 @@ type DiceSet struct {
 	Design   DiceDesign  `json:"design"`
 	HasImage bool        `json:"hasImage"`
 	ImageUrl OptAssetUrl `json:"imageUrl"`
-	// Names the uploaded picture. It changes whenever the picture does.
+	// The SHA-256 of the uploaded picture, which names it.
 	ImageVersion OptString      `json:"imageVersion"`
 	Sharing      DiceSetSharing `json:"sharing"`
 	Review       DiceSetReview  `json:"review"`
@@ -8818,7 +8818,7 @@ func (s *DiceSetSharingChangeSharing) UnmarshalText(data []byte) error {
 // Ref: #/components/schemas/DiceSetVerdict
 type DiceSetVerdict struct {
 	Approve bool `json:"approve"`
-	// The version of the picture the Admin looked at. A decision on a picture that is no longer on the set
+	// The SHA-256 of the picture the Admin looked at. A decision on a picture that is no longer on the set
 	// is refused.
 	Picture string `json:"picture"`
 }

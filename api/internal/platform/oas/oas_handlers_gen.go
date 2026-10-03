@@ -12166,7 +12166,8 @@ func (s *Server) handleGetConditionBuildRequest(args [1]string, argsEscaped bool
 // handleGetDiceSetImageRequest handles getDiceSetImage operation.
 //
 // The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
-// reviewing it.
+// reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced
+// it.
 //
 // GET /api/v1/dice-sets/{diceSetId}/image
 func (s *Server) handleGetDiceSetImageRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -12311,6 +12312,10 @@ func (s *Server) handleGetDiceSetImageRequest(args [1]string, argsEscaped bool, 
 					Name: "diceSetId",
 					In:   "path",
 				}: params.DiceSetId,
+				{
+					Name: "v",
+					In:   "query",
+				}: params.V,
 			},
 			Raw: r,
 		}

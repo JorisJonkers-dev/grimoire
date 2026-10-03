@@ -1104,7 +1104,8 @@ type ReadInvoker interface {
 	// GetDiceSetImage invokes getDiceSetImage operation.
 	//
 	// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
-	// reviewing it.
+	// reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced
+	// it.
 	//
 	// GET /api/v1/dice-sets/{diceSetId}/image
 	GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (GetDiceSetImageRes, error)
@@ -10406,7 +10407,8 @@ func (c *Client) sendGetConditionBuild(ctx context.Context, params GetConditionB
 // GetDiceSetImage invokes getDiceSetImage operation.
 //
 // The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
-// reviewing it.
+// reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced
+// it.
 //
 // GET /api/v1/dice-sets/{diceSetId}/image
 func (c *Client) GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (GetDiceSetImageRes, error) {
@@ -10476,6 +10478,27 @@ func (c *Client) sendGetDiceSetImage(ctx context.Context, params GetDiceSetImage
 	}
 	pathParts[2] = "/image"
 	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "v" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "v",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.V.Get(); ok {
+				return e.EncodeValue(conv.StringToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)

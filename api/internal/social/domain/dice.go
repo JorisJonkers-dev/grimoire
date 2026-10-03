@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -65,9 +66,14 @@ type Picture struct {
 	Type string
 }
 
-// Version names the picture: the start of its content hash, so it changes whenever the picture does.
-func (p Picture) Version() string {
-	return p.Key[len("sha256/") : len("sha256/")+12]
+// Digest is the SHA-256 of the picture's content, which names it: two pictures share one only when
+// they are the same picture. A key that is no content hash has none.
+func (p Picture) Digest() string {
+	sum, _, _ := strings.Cut(strings.TrimPrefix(p.Key, "sha256/"), ".")
+	if len(sum) != 64 || sum == p.Key {
+		return ""
+	}
+	return sum
 }
 
 // DiceSet is the look an Account gives its dice. A copy was taken from a set shared with its owner: it

@@ -24,7 +24,7 @@ type DiceSetService interface {
 	DeleteDiceSet(ctx context.Context, subject string, id domain.DiceSetID) error
 	SetDiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, data []byte) (domain.DiceSet, error)
 	ClearDiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID) (domain.DiceSet, error)
-	DiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, admin bool) (domain.Picture, []byte, error)
+	DiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, admin bool, digest string) (domain.Picture, []byte, error)
 	ChooseDiceSet(ctx context.Context, subject string, id *domain.DiceSetID) error
 	DiceSetsToReview(ctx context.Context) ([]domain.DiceSet, error)
 	ReviewDiceSet(ctx context.Context, id domain.DiceSetID, approve bool, seen string) (domain.DiceSet, error)
@@ -42,7 +42,7 @@ func (h *Handler) diceSetOut(ctx context.Context, subject string, d domain.DiceS
 	convert(d.Design, &out.Design)
 	if d.Image != nil {
 		out.ImageUrl = oas.NewOptAssetUrl(oas.AssetUrl(diceImageURL(d)))
-		out.ImageVersion = oas.NewOptString(d.Image.Version())
+		out.ImageVersion = oas.NewOptString(d.Image.Digest())
 	}
 	return out
 }
@@ -219,7 +219,7 @@ func (h *Handler) GetDiceSetImage(ctx context.Context, p oas.GetDiceSetImagePara
 	if !ok {
 		return unauthorized(), nil
 	}
-	img, data, err := h.DiceSets.DiceSetPicture(ctx, id.Subject, uuid.UUID(p.DiceSetId), h.Accounts.IsAdmin(ctx, id.Subject))
+	img, data, err := h.DiceSets.DiceSetPicture(ctx, id.Subject, uuid.UUID(p.DiceSetId), h.Accounts.IsAdmin(ctx, id.Subject), p.V.Or(""))
 	if err != nil {
 		return h.diceError(ctx, "get dice set image", err), nil
 	}

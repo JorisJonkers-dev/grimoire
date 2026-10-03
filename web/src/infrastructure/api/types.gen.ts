@@ -1180,7 +1180,7 @@ export type DiceSet = {
     hasImage: boolean;
     imageUrl?: AssetUrl;
     /**
-     * Names the uploaded picture. It changes whenever the picture does.
+     * The SHA-256 of the uploaded picture, which names it.
      */
     imageVersion?: string;
     sharing: 'private' | 'friends' | 'everyone';
@@ -1233,7 +1233,7 @@ export type DiceSetChoice = {
 export type DiceSetVerdict = {
     approve: boolean;
     /**
-     * The version of the picture the Admin looked at. A decision on a picture that is no longer on the set is refused.
+     * The SHA-256 of the picture the Admin looked at. A decision on a picture that is no longer on the set is refused.
      */
     picture: string;
 };
@@ -12424,7 +12424,12 @@ export type GetDiceSetImageData = {
          */
         diceSetId: Id;
     };
-    query?: never;
+    query?: {
+        /**
+         * The SHA-256 of the picture that is wanted.
+         */
+        v?: string;
+    };
     url: '/api/v1/dice-sets/{diceSetId}/image';
 };
 

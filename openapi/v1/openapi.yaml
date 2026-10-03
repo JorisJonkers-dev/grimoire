@@ -6895,7 +6895,7 @@ paths:
       operationId: getDiceSetImage
       x-ogen-operation-group: Read
       summary: Get the picture on a Dice Set
-      description: The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin reviewing it.
+      description: The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced it.
       tags: [Social]
       parameters:
         - name: diceSetId
@@ -6903,6 +6903,11 @@ paths:
           required: true
           description: Dice Set id.
           schema: { $ref: "#/components/schemas/Id" }
+        - name: v
+          in: query
+          required: false
+          description: The SHA-256 of the picture that is wanted.
+          schema: { type: string, pattern: "^[0-9a-f]{64}$", maxLength: 64 }
       responses:
         "200":
           description: The picture.
@@ -9285,7 +9290,7 @@ components:
         design: { $ref: "#/components/schemas/DiceDesign" }
         hasImage: { type: boolean }
         imageUrl: { $ref: "#/components/schemas/AssetUrl" }
-        imageVersion: { type: string, pattern: "^[0-9a-f]{12}$", maxLength: 12, description: Names the uploaded picture. It changes whenever the picture does. }
+        imageVersion: { type: string, pattern: "^[0-9a-f]{64}$", maxLength: 64, description: "The SHA-256 of the uploaded picture, which names it." }
         sharing: { type: string, enum: [private, friends, everyone] }
         review: { type: string, enum: [none, pending, approved, rejected] }
         mine: { type: boolean, description: Whether the signed-in Account owns it. }
@@ -9331,7 +9336,7 @@ components:
       required: [approve, picture]
       properties:
         approve: { type: boolean }
-        picture: { type: string, pattern: "^[0-9a-f]{12}$", maxLength: 12, description: The version of the picture the Admin looked at. A decision on a picture that is no longer on the set is refused. }
+        picture: { type: string, pattern: "^[0-9a-f]{64}$", maxLength: 64, description: The SHA-256 of the picture the Admin looked at. A decision on a picture that is no longer on the set is refused. }
     OwnedCharacterChange:
       type: object
       description: A Character's new name and Backstory.

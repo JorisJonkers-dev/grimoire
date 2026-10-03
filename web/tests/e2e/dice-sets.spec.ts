@@ -57,7 +57,7 @@ test('a Dice Set is designed, shared with a Friend who takes a copy, checked by 
   const waiting = (await (await request.get('/api/v1/admin/dice-sets', { headers: admin })).json()) as { items: { id: string; name: string; imageVersion: string }[] }
   const seen = waiting.items.find((s) => s.name === name)
   // A decision on a picture the Admin did not look at is refused.
-  expect((await request.post(`/api/v1/admin/dice-sets/${seen?.id ?? ''}/review`, { headers: admin, data: { approve: true, picture: '0123456789ab' } })).status()).toBe(409)
+  expect((await request.post(`/api/v1/admin/dice-sets/${seen?.id ?? ''}/review`, { headers: admin, data: { approve: true, picture: '0123456789abcdef'.repeat(4) } })).status()).toBe(409)
   expect((await request.post(`/api/v1/admin/dice-sets/${seen?.id ?? ''}/review`, { headers: admin, data: { approve: true, picture: seen?.imageVersion } })).status()).toBe(200)
   await page.reload()
   await expect(page.getByTestId(`review-${name}`)).toContainText('approved')

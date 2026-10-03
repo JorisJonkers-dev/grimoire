@@ -25,7 +25,7 @@ func TestTheLookOfASharedRoll(t *testing.T) {
 	ctx := context.Background()
 	set := domain.DiceSet{
 		ID: uuid.MustParse("0190c7a8-0000-7000-8000-000000000041"), Sharing: domain.SharingEveryone, Review: domain.ReviewPending,
-		Image: &domain.Picture{Key: "sha256/0123456789abcdef.png", Type: "image/png"},
+		Image: &domain.Picture{Key: "sha256/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.png", Type: "image/png"},
 		Design: domain.DiceDesign{Dice: map[string]domain.DieLook{
 			"d20": {Pattern: "marble", Body: "#7a1f1a", Numbers: "#f3d27a", Image: &domain.DiePlacement{X: 0.25, Y: 0.75, Scale: 2, Rotation: -45}},
 			"d6":  {Pattern: "plain", Body: "#000000", Numbers: "#ffffff", Image: nil},
@@ -40,7 +40,7 @@ func TestTheLookOfASharedRoll(t *testing.T) {
 		t.Fatalf("a set that waits = %s", got)
 	}
 	set.Review = domain.ReviewApproved
-	if got := look(chosen{set: &set}); got != `{`+dice+`,"imageUrl":"/api/v1/dice-sets/0190c7a8-0000-7000-8000-000000000041/image?v=0123456789ab"}` {
+	if got := look(chosen{set: &set}); got != `{`+dice+`,"imageUrl":"/api/v1/dice-sets/0190c7a8-0000-7000-8000-000000000041/image?v=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}` {
 		t.Fatalf("an approved set = %s", got)
 	}
 	for name, c := range map[string]chosen{"the plain dice": {}, "a store that fails": {set: &set, err: errors.New("down")}} {

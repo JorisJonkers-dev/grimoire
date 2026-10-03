@@ -239,8 +239,9 @@ func (s *Service) ClearDiceSetPicture(ctx context.Context, subject string, id do
 }
 
 // DiceSetPicture reads a set's uploaded picture for its owner, for anyone the set is shared with, and
-// for an Admin, who has to see it to review it. A picture an Admin approved is anyone's to see.
-func (s *Service) DiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, admin bool) (domain.Picture, []byte, error) {
+// for an Admin, who has to see it to review it. A picture an Admin approved is anyone's to see. Asked
+// for by its digest, it is that picture or not found: what an Admin is shown is what they decide on.
+func (s *Service) DiceSetPicture(ctx context.Context, subject string, id domain.DiceSetID, admin bool, digest string) (domain.Picture, []byte, error) {
 	d, err := s.Repo.DiceSet(ctx, id)
 	if err != nil {
 		return domain.Picture{}, nil, err
@@ -254,7 +255,7 @@ func (s *Service) DiceSetPicture(ctx context.Context, subject string, id domain.
 			return domain.Picture{}, nil, firstErr(err, domain.ErrNotFound)
 		}
 	}
-	if d.Image == nil {
+	if d.Image == nil || (digest != "" && d.Image.Digest() != digest) {
 		return domain.Picture{}, nil, domain.ErrNotFound
 	}
 	data, err := s.Blobs.Get(ctx, d.Image.Key)
@@ -297,13 +298,14 @@ func (s *Service) DiceSetsToReview(ctx context.Context) ([]domain.DiceSet, error
 }
 
 // ReviewDiceSet approves or rejects a set that waits. The decision is for the picture the Admin looked
-// at: when the owner has put another on the set since, or the set no longer waits, it is a conflict.
+// at, named by the whole hash of its content: when the owner has put another on the set since, or the
+// set no longer waits, it is a conflict.
 func (s *Service) ReviewDiceSet(ctx context.Context, id domain.DiceSetID, approve bool, seen string) (domain.DiceSet, error) {
 	d, err := s.Repo.DiceSet(ctx, id)
 	if err != nil {
 		return domain.DiceSet{}, err
 	}
-	if d.Review != domain.ReviewPending || d.Image == nil || d.Image.Version() != seen {
+	if d.Review != domain.ReviewPending || d.Image == nil || seen == "" || d.Image.Digest() != seen {
 		return domain.DiceSet{}, domain.ErrConflict
 	}
 	review := domain.ReviewRejected

@@ -953,7 +953,7 @@ export const zDiceSetChoice = z.object({
  */
 export const zDiceSetVerdict = z.object({
     approve: z.boolean(),
-    picture: z.string().max(12).regex(/^[0-9a-f]{12}$/)
+    picture: z.string().max(64).regex(/^[0-9a-f]{64}$/)
 });
 
 /**
@@ -1033,7 +1033,7 @@ export const zDiceSet = z.object({
     design: zDiceDesign,
     hasImage: z.boolean(),
     imageUrl: zAssetUrl.optional(),
-    imageVersion: z.string().max(12).regex(/^[0-9a-f]{12}$/).optional(),
+    imageVersion: z.string().max(64).regex(/^[0-9a-f]{64}$/).optional(),
     sharing: z.enum([
         'private',
         'friends',
@@ -7089,6 +7089,10 @@ export const zClearDiceSetImageResponse = zDiceSet;
 
 export const zGetDiceSetImagePath = z.object({
     diceSetId: zId
+});
+
+export const zGetDiceSetImageQuery = z.object({
+    v: z.string().max(64).regex(/^[0-9a-f]{64}$/).optional()
 });
 
 /**

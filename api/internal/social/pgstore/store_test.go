@@ -403,7 +403,7 @@ func TestEveryDiceSetDatabaseFaultSurfaces(t *testing.T) {
 			_, err := s.SetDiceSetPicture(ctx, "aria", set.ID, picture.Bytes())
 			return err
 		},
-		"shown":   func(s *app.Service) error { _, _, err := s.DiceSetPicture(ctx, "bram", set.ID, false); return err },
+		"shown":   func(s *app.Service) error { _, _, err := s.DiceSetPicture(ctx, "bram", set.ID, false, ""); return err },
 		"waiting": func(s *app.Service) error { _, err := s.DiceSetsToReview(ctx); return err },
 		"review": func(s *app.Service) error {
 			if err := everyone(); err != nil {
@@ -413,7 +413,7 @@ func TestEveryDiceSetDatabaseFaultSurfaces(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			_, err = s.ReviewDiceSet(ctx, set.ID, true, waiting.Image.Version())
+			_, err = s.ReviewDiceSet(ctx, set.ID, true, waiting.Image.Digest())
 			return err
 		},
 		"bare":   func(s *app.Service) error { _, err := s.ClearDiceSetPicture(ctx, "aria", set.ID); return err },
@@ -512,10 +512,10 @@ func TestWhatADiceSetMayBe(t *testing.T) {
 	if got, err := svc.Repo.DiceSet(ctx, set.ID); err != nil || got.Image != nil {
 		t.Fatalf("after a failed upload = %+v, %v", got.Image, err)
 	}
-	if _, _, err := svc.DiceSetPicture(ctx, "aria", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
+	if _, _, err := svc.DiceSetPicture(ctx, "aria", set.ID, false, ""); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("the picture of a set without one = %v", err)
 	}
-	if _, _, err := svc.DiceSetPicture(ctx, "nobody", set.ID, false); !errors.Is(err, domain.ErrNoAccount) {
+	if _, _, err := svc.DiceSetPicture(ctx, "nobody", set.ID, false, ""); !errors.Is(err, domain.ErrNoAccount) {
 		t.Fatalf("a picture for someone without an Account = %v", err)
 	}
 }
@@ -559,21 +559,33 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 	if got, err := svc.ChosenDiceSet(ctx, "aria"); err != nil || got == nil || got.ID != set.ID || got.Cleared() {
 		t.Fatalf("a set that waits = %+v, %v", got, err)
 	}
-	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
+	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false, ""); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("a stranger fetches a picture that waits = %v", err)
 	}
 	waiting, _ := svc.ChosenDiceSet(ctx, "aria")
 	// The store itself refuses a decision on any picture but the one on the set, whatever was read before.
-	if err := svc.Repo.SetDiceSetReview(ctx, set.ID, domain.ReviewApproved, "sha256/ffffffffffffffff.png", time.Now()); !errors.Is(err, domain.ErrConflict) {
+	if err := svc.Repo.SetDiceSetReview(ctx, set.ID, domain.ReviewApproved, "sha256/ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.png", time.Now()); !errors.Is(err, domain.ErrConflict) {
 		t.Fatalf("approving a picture that is not on the set = %v", err)
 	}
-	if _, err := svc.ReviewDiceSet(ctx, set.ID, true, "ffffffffffff"); !errors.Is(err, domain.ErrConflict) {
-		t.Fatalf("approving a picture the Admin did not see = %v", err)
+	// A picture is named by the whole hash of its content. One that only starts like the picture on the
+	// set, which an owner can make at will, is another picture.
+	lookalike := waiting.Image.Digest()[:12] + strings.Repeat("0", 52)
+	for name, seen := range map[string]string{"another picture": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "a picture that starts alike": lookalike, "no picture": ""} {
+		if _, err := svc.ReviewDiceSet(ctx, set.ID, true, seen); !errors.Is(err, domain.ErrConflict) {
+			t.Fatalf("approving %s = %v", name, err)
+		}
+	}
+	// The picture is served as the one that was asked for, or not at all.
+	if _, _, err := svc.DiceSetPicture(ctx, "aria", set.ID, false, lookalike); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("fetching a picture that starts like the one on the set = %v", err)
+	}
+	if _, data, err := svc.DiceSetPicture(ctx, "aria", set.ID, false, waiting.Image.Digest()); err != nil || !bytes.Equal(data, picture.Bytes()) {
+		t.Fatalf("fetching the picture by its digest = %v", err)
 	}
 	if got, _ := svc.ChosenDiceSet(ctx, "aria"); got == nil || got.Review != domain.ReviewPending {
 		t.Fatalf("after a refused decision = %+v", got)
 	}
-	if _, err := svc.ReviewDiceSet(ctx, set.ID, true, waiting.Image.Version()); err != nil {
+	if _, err := svc.ReviewDiceSet(ctx, set.ID, true, waiting.Image.Digest()); err != nil {
 		t.Fatal(err)
 	}
 	if err := svc.Repo.SetDiceSetReview(ctx, set.ID, domain.ReviewRejected, waiting.Image.Key, time.Now()); !errors.Is(err, domain.ErrConflict) {
@@ -587,7 +599,7 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 	if err != nil || !copied.Cleared() || copied.Sharing != domain.SharingPrivate {
 		t.Fatalf("a copy of an approved set = %+v, %v", copied, err)
 	}
-	if _, data, err := svc.DiceSetPicture(ctx, "cara", copied.ID, false); err != nil || !bytes.Equal(data, picture.Bytes()) {
+	if _, data, err := svc.DiceSetPicture(ctx, "cara", copied.ID, false, ""); err != nil || !bytes.Equal(data, picture.Bytes()) {
 		t.Fatalf("a stranger fetches the picture on a copy of an approved set = %v", err)
 	}
 	if list, err := svc.DiceSetsToReview(ctx); err != nil || len(list) != 0 {
@@ -600,10 +612,10 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 	if got, _ := svc.ChosenDiceSet(ctx, "aria"); got == nil || got.Cleared() {
 		t.Fatalf("a set shared with Friends only = %+v", got)
 	}
-	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
+	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false, ""); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("a stranger fetches the picture of a Friends-only set = %v", err)
 	}
-	if _, _, err := svc.DiceSetPicture(ctx, "cara", copied.ID, false); err != nil {
+	if _, _, err := svc.DiceSetPicture(ctx, "cara", copied.ID, false, ""); err != nil {
 		t.Fatalf("the copy's picture after the original went Friends-only = %v", err)
 	}
 	// A copy of a set nobody approved carries no approval: its picture stays its owner's.
@@ -618,7 +630,7 @@ func TestTheDiceSetARollIsMadeWith(t *testing.T) {
 	if err != nil || plain.Cleared() || plain.Review != domain.ReviewNone {
 		t.Fatalf("a Friend's copy of an unapproved set = %+v, %v", plain, err)
 	}
-	if _, _, err := svc.DiceSetPicture(ctx, "bram", plain.ID, false); !errors.Is(err, domain.ErrNotFound) {
+	if _, _, err := svc.DiceSetPicture(ctx, "bram", plain.ID, false, ""); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("a stranger fetches the picture on a copy nobody approved = %v", err)
 	}
 	// A set without a picture has nothing to clear, whatever its review says.
@@ -644,7 +656,7 @@ func TestTheReviewOfADiceSetFollowsTheSetItself(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	crest := &domain.Picture{Key: "sha256/0123456789abcdef.png", Type: "image/png"}
+	crest := &domain.Picture{Key: "sha256/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.png", Type: "image/png"}
 	review := func() string {
 		t.Helper()
 		d, err := repo.DiceSet(ctx, set.ID)
@@ -680,7 +692,13 @@ func TestTheReviewOfADiceSetFollowsTheSetItself(t *testing.T) {
 			t.Fatalf("%s = %s, want %s", step.what, got, step.want)
 		}
 	}
-	if crest.Version() != "0123456789ab" {
-		t.Fatalf("version = %s", crest.Version())
+	if crest.Digest() != "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" {
+		t.Fatalf("digest = %s", crest.Digest())
+	}
+	// A key that is no content hash names no picture, and matches none.
+	for _, key := range []string{"", "sha256/", "portraits/x.png", "sha256/abc.png"} {
+		if got := (domain.Picture{Key: key, Type: "image/png"}).Digest(); got != "" {
+			t.Fatalf("the digest of %q = %q", key, got)
+		}
 	}
 }

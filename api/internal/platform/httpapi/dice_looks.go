@@ -17,9 +17,10 @@ type DiceLooks struct {
 	Sets ChosenDice
 }
 
-// diceImageURL is where a Dice Set's picture is served; the version changes with the picture.
+// diceImageURL is where a Dice Set's picture is served, asked for by the hash of its content: the link
+// shows that picture or nothing, and no cache can hand back another under the same address.
 func diceImageURL(d domain.DiceSet) string {
-	return "/api/v1/dice-sets/" + d.ID.String() + "/image?v=" + d.Image.Version()
+	return "/api/v1/dice-sets/" + d.ID.String() + "/image?v=" + d.Image.Digest()
 }
 
 // DiceLook is the look of the Dice Set a subject rolls with, or nil for the plain dice. The picture is

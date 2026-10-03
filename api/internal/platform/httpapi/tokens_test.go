@@ -79,7 +79,7 @@ func TestAccessTokensOnREST(t *testing.T) {
 		{http.MethodPost, "/api/v1/dice-sets/" + aSet + "/copy", ""},
 		{http.MethodPut, "/api/v1/dice-sets/" + aSet + "/image", "x"},
 		{http.MethodDelete, "/api/v1/dice-sets/" + aSet + "/image", ""},
-		{http.MethodPost, "/api/v1/admin/dice-sets/" + aSet + "/review", `{"approve":true,"picture":"0123456789ab"}`},
+		{http.MethodPost, "/api/v1/admin/dice-sets/" + aSet + "/review", `{"approve":true,"picture":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}`},
 	} {
 		if rec := bearer(public, c.method, c.path, builder, c.body); rec.Code != http.StatusForbidden {
 			t.Errorf("%s %s with a token: %d", c.method, c.path, rec.Code)

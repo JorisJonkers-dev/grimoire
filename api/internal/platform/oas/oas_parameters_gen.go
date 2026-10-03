@@ -4888,6 +4888,8 @@ func decodeGetConditionBuildParams(args [1]string, argsEscaped bool, r *http.Req
 type GetDiceSetImageParams struct {
 	// Dice Set id.
 	DiceSetId ID
+	// The SHA-256 of the picture that is wanted.
+	V OptString `json:",omitempty,omitzero"`
 }
 
 func unpackGetDiceSetImageParams(packed middleware.Parameters) (params GetDiceSetImageParams) {
@@ -4898,10 +4900,20 @@ func unpackGetDiceSetImageParams(packed middleware.Parameters) (params GetDiceSe
 		}
 		params.DiceSetId = packed[key].(ID)
 	}
+	{
+		key := middleware.ParameterKey{
+			Name: "v",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.V = v.(OptString)
+		}
+	}
 	return params
 }
 
 func decodeGetDiceSetImageParams(args [1]string, argsEscaped bool, r *http.Request) (params GetDiceSetImageParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode path: diceSetId.
 	if err := func() error {
 		param := args[0]
@@ -4951,6 +4963,74 @@ func decodeGetDiceSetImageParams(args [1]string, argsEscaped bool, r *http.Reque
 		return params, &ogenerrors.DecodeParamError{
 			Name: "diceSetId",
 			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: v.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "v",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotVVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotVVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.V.SetTo(paramsDotVVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.V.Get(); ok {
+					if err := func() error {
+						if err := (validate.String{
+							MinLength:     0,
+							MinLengthSet:  false,
+							MaxLength:     64,
+							MaxLengthSet:  true,
+							Email:         false,
+							Hostname:      false,
+							Regex:         regexMap["^[0-9a-f]{64}$"],
+							MinNumeric:    0,
+							MinNumericSet: false,
+							MaxNumeric:    0,
+							MaxNumericSet: false,
+						}).Validate(string(value)); err != nil {
+							return errors.Wrap(err, "string")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "v",
+			In:   "query",
 			Err:  err,
 		}
 	}

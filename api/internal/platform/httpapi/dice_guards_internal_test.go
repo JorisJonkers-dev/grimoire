@@ -84,7 +84,7 @@ func (brokenDice) ClearDiceSetPicture(context.Context, string, domain.DiceSetID)
 	return domain.DiceSet{}, errFriends
 }
 
-func (brokenDice) DiceSetPicture(context.Context, string, domain.DiceSetID, bool) (domain.Picture, []byte, error) {
+func (brokenDice) DiceSetPicture(context.Context, string, domain.DiceSetID, bool, string) (domain.Picture, []byte, error) {
 	return domain.Picture{}, nil, errFriends
 }
 
