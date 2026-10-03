@@ -2,12 +2,12 @@
 import { computed } from 'vue'
 import type { LiveMap, LiveView } from '@/infrastructure/api/types.gen'
 import { type Coord, corners, toPixel } from '@/shared/hex'
-import { DANGER_NOTE, describe, groundNotes, initials } from './board'
+import { type Captions, DANGER_NOTE, describe, groundNotes, initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const props = withDefaults(
-  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; danger?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; title: string }>(),
-  { dm: false, selected: null, path: () => [], danger: () => [], area: () => [], zone: () => [], reach: () => [] },
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; danger?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; captions?: Captions; title: string }>(),
+  { dm: false, selected: null, path: () => [], danger: () => [], captions: () => ({}), area: () => [], zone: () => [], reach: () => [] },
 )
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
@@ -45,6 +45,7 @@ const cells = computed(() =>
       `Hex ${k.replace(',', ', ')}`,
       fog === 'unseen' ? 'never seen' : fog === 'remembered' ? 'remembered' : '',
       t ? describe(t) : '',
+      t ? (props.captions[t.id]?.note ?? '') : '',
       walls.value.has(k) ? 'wall' : '',
       lights.value.has(k) ? 'light' : '',
       objectNote(k),
@@ -89,6 +90,18 @@ const cells = computed(() =>
         <template v-if="c.token">
           <circle :cx="c.centre.x" :cy="c.centre.y" :r="layout.size * 0.62" :class="['token', `token--${c.token.kind}`, { 'token--hidden': c.token.hidden }]" />
           <text :x="c.centre.x" :y="c.centre.y + layout.size * 0.2" text-anchor="middle" class="mark" aria-hidden="true">{{ initials(c.token.label) }}</text>
+          <text
+            v-if="captions[c.token.id]"
+            :x="c.centre.x"
+            :y="c.centre.y + layout.size * 0.95"
+            text-anchor="middle"
+            class="caption"
+            :style="{ fontSize: `${String(Math.round(layout.size * 0.3))}px` }"
+            aria-hidden="true"
+            :data-testid="`caption-${c.token.id}`"
+          >
+            {{ captions[c.token.id]?.text }}
+          </text>
         </template>
       </g>
       <slot :layout="layout" />
@@ -167,6 +180,13 @@ const cells = computed(() =>
 .cell--path polygon {
   fill: rgb(212 175 55 / 30%);
   stroke: var(--color-gold-high);
+}
+.caption {
+  fill: var(--color-gold-high);
+  paint-order: stroke;
+  stroke: #000;
+  stroke-width: 3px;
+  pointer-events: none;
 }
 .cell--danger polygon {
   fill: rgb(200 60 60 / 35%);

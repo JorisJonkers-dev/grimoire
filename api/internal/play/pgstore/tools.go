@@ -87,9 +87,14 @@ func (s *Store) SessionLog(ctx context.Context, id domain.SessionID, limit int) 
 	}
 	out := make([]domain.LoggedAction, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, domain.LoggedAction{
-			Seq: r.Seq, Kind: r.Kind, Actor: r.ActorName, Origin: r.Origin, Client: r.Client, Label: r.Label, Undone: r.Undone, At: r.CreatedAt,
-		})
+		a := domain.LoggedAction{
+			Seq: r.Seq, Kind: r.Kind, Actor: r.ActorName, Origin: r.Origin, Client: r.Client, Label: r.Label, Token: nil, Undone: r.Undone, At: r.CreatedAt,
+		}
+		if r.TokenID != uuid.Nil {
+			id := domain.TokenID(r.TokenID)
+			a.Token = &id
+		}
+		out = append(out, a)
 	}
 	return out, nil
 }

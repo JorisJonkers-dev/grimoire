@@ -59,11 +59,14 @@ func TestToolActionsKeepWhatUndoNeeds(t *testing.T) {
 	if err != nil || len(log) != 3 || log[0].Kind != domain.ActionTokenRemoved || log[0].Label != "Wolf" || log[2].Kind != domain.ActionHPAdjusted {
 		t.Fatalf("log = %+v %v", log, err)
 	}
+	if log[0].Token == nil || *log[0].Token != wolf.ID || log[2].Token == nil || *log[2].Token != goblin.ID {
+		t.Fatalf("each entry names the token it touched = %+v", log)
+	}
 	if !log[1].Undoable() || !log[2].Undoable() || log[0].Undoable() {
 		t.Fatalf("undoable = %+v", log)
 	}
 	all, _ := store.SessionLog(ctx, s.ID, 10)
-	if last := all[3]; last.Kind != domain.ActionEncounterSpawned || last.Label != "Goblin 1, Wolf" || !last.Undone || last.Undoable() {
+	if last := all[3]; last.Kind != domain.ActionEncounterSpawned || last.Label != "Goblin 1, Wolf" || !last.Undone || last.Undoable() || last.Token != nil {
 		t.Fatalf("the spawn in the log = %+v", last)
 	}
 	ops := map[string]func(st *pgstore.Store) error{

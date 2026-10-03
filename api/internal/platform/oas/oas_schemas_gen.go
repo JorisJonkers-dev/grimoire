@@ -37735,7 +37735,8 @@ func (s *SendFriendRequestAccepted) SetRateLimitReset(val OptInt32) {
 
 func (*SendFriendRequestAccepted) sendFriendRequestRes() {}
 
-// One Action of a live Session, what it touched, and whether it can still be undone.
+// One Action of a live Session, what it touched (the one token, when there is one), and whether it can
+// still be undone.
 // Ref: #/components/schemas/SessionAction
 type SessionAction struct {
 	Seq       int32               `json:"seq"`
@@ -37744,6 +37745,7 @@ type SessionAction struct {
 	Origin    SessionActionOrigin `json:"origin"`
 	Client    OptString           `json:"client"`
 	Label     string              `json:"label"`
+	TokenId   OptID               `json:"tokenId"`
 	Undoable  bool                `json:"undoable"`
 	CreatedAt time.Time           `json:"createdAt"`
 }
@@ -37776,6 +37778,11 @@ func (s *SessionAction) GetClient() OptString {
 // GetLabel returns the value of Label.
 func (s *SessionAction) GetLabel() string {
 	return s.Label
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *SessionAction) GetTokenId() OptID {
+	return s.TokenId
 }
 
 // GetUndoable returns the value of Undoable.
@@ -37816,6 +37823,11 @@ func (s *SessionAction) SetClient(val OptString) {
 // SetLabel sets the value of Label.
 func (s *SessionAction) SetLabel(val string) {
 	s.Label = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *SessionAction) SetTokenId(val OptID) {
+	s.TokenId = val
 }
 
 // SetUndoable sets the value of Undoable.

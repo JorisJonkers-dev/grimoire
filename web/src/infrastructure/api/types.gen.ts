@@ -2558,7 +2558,7 @@ export type LiveCommandResult = {
 };
 
 /**
- * One Action of a live Session, what it touched, and whether it can still be undone.
+ * One Action of a live Session, what it touched (the one token, when there is one), and whether it can still be undone.
  */
 export type SessionAction = {
     seq: number;
@@ -2567,6 +2567,7 @@ export type SessionAction = {
     origin: 'ui' | 'mcp' | 'generator' | 'system';
     client?: string;
     label: string;
+    tokenId?: Id;
     undoable: boolean;
     createdAt: string;
 };

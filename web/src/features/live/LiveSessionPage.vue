@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listEncounterTablesOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -14,7 +14,10 @@ import { GButton } from '@/shared/ui'
 import { BANNER_MS } from './motion'
 import { PAGES, usePhoneShell } from './phoneShell'
 import { board, describe, emanations, hexes, zoneHexes } from './board'
+import { runByDM, suggested, taken } from './console'
 import { cellsFor, key, layoutOf } from './geometry'
+import ControlSwitcher from './ControlSwitcher.vue'
+import CreaturePanel from './CreaturePanel.vue'
 import SpellList from './SpellList.vue'
 import WalkPlan from './WalkPlan.vue'
 import AreaPreviewCard from './AreaPreviewCard.vue'
@@ -100,6 +103,7 @@ const walkDanger = computed(() => state.value?.path?.threats.map((t) => ({ q: t.
 const cells = computed(() =>
   board(state.value?.session?.gridRadius ?? 0, view.value?.tokens ?? [], selected.value, walkPath.value, {
     danger: walkDanger.value,
+    captions: suggestions.value,
     surfaces: view.value?.surfaces,
     area: areaHexes.value,
     zone: zoneCells.value,
@@ -156,10 +160,42 @@ const pending = computed(() => combat.value?.attack ?? null)
 const aiming = ref<{ tokenId: string; attackNo: number; offHand?: boolean; cleave?: boolean } | null>(null)
 // grabbing is an Unarmed Strike waiting for its target: the next creature tapped is grappled or shoved.
 const grabbing = ref<{ tokenId: string; option: string } | null>(null)
+// The DM's console: the creatures in hand, one at a time following the turn, or several at once.
+const creatures = computed(() => (isDM.value ? runByDM(view.value?.tokens ?? []) : []))
+const inHand = ref<string[]>([])
+const several = ref(false)
+const actingCreatures = computed(() => turns.value.map((c) => c.tokenId).filter((id) => creatures.value.some((t) => t.id === id)))
+watch(
+  () => actingCreatures.value.join(),
+  () => {
+    if (!several.value && actingCreatures.value.length > 0) inHand.value = actingCreatures.value.slice(0, 1)
+  },
+  { immediate: true },
+)
+function setSeveral(on: boolean) {
+  several.value = on
+  if (!on) inHand.value = (actingCreatures.value.some((id) => inHand.value.includes(id)) ? actingCreatures.value : inHand.value).slice(0, 1)
+}
+const held = computed(() => creatures.value.filter((t) => inHand.value.includes(t.id)))
+const combatantOf = (tokenId: string) => combat.value?.combatants.find((c) => c.tokenId === tokenId)
+const sessionLog = useQuery(computed(() => ({ ...getSessionLogOptions({ path: { campaignId, sessionId }, query: { limit: 15 } }), enabled: isDM.value, retry: false })))
+// Agent notes: what an agent did to a creature, newest first.
+const notesFor = (tokenId: string) => (sessionLog.data.value ?? []).filter((a) => a.origin === 'mcp' && a.tokenId === tokenId)
+const suggestions = computed(() =>
+  Object.fromEntries(
+    (isDM.value ? (combat.value?.combatants ?? []) : []).flatMap((c) => {
+      const token = tokenById(c.tokenId)
+      const said = token ? suggested(c, token, tokenById(c.suggestion?.targetId ?? '')?.label ?? 'its target') : undefined
+      return said ? [[c.tokenId, said] as const] : []
+    }),
+  ),
+)
 const bars = computed(() =>
   turns.value.flatMap((c) => {
     const token = tokenById(c.tokenId)
-    return token?.attacks?.length ? [{ c, token }] : []
+    // A creature the DM runs shows its hotbar only while it is in hand.
+    const shown = !creatures.value.some((t) => t.id === c.tokenId) || inHand.value.includes(c.tokenId)
+    return token?.attacks?.length && shown ? [{ c, token }] : []
   }),
 )
 const blockedFor = (c: LiveCombatant) => (pending.value ? 'An attack is waiting on its roll.' : c.action ? '' : 'The action is used this turn.')
@@ -422,7 +458,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       >
         <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
           <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
-          <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
+          <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
           <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
         </div>
         <div class="zoom" role="group" aria-label="Map zoom">
@@ -493,6 +529,32 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
           <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
         </section>
+        <ControlSwitcher
+          v-if="isDM && creatures.length"
+          data-page="actions"
+          :creatures="creatures"
+          :in-hand="inHand"
+          :acting="actingCreatures"
+          :several="several"
+          @take="(id) => (inHand = taken(inHand, id, several))"
+          @several="setSeveral"
+          @tactics="(t) => t && held.forEach((x) => live?.send({ kind: 'set_tactics', tokenId: x.id, tactics: t }))"
+          @hp="(d) => held.forEach((x) => live?.send({ kind: 'adjust_hp', tokenId: x.id, hpDelta: d }))"
+        />
+        <template v-if="isDM">
+          <CreaturePanel
+            v-for="t in held"
+            :key="`creature-${t.id}`"
+            data-page="actions"
+            :token="t"
+            :combatant="combatantOf(t.id)"
+            :suggestion="suggestions[t.id]?.sentence"
+            :notes="notesFor(t.id)"
+            @tactics="(v) => live?.send({ kind: 'set_tactics', tokenId: t.id, tactics: v })"
+            @use="useSuggestion(t.id, combatantOf(t.id)?.suggestion)"
+            @undo="(seq) => live?.send({ kind: 'undo', seq })"
+          />
+        </template>
         <TurnPanel
           v-for="c in turns"
           :key="c.id"

@@ -2,6 +2,9 @@ import AxeBuilder from '@axe-core/playwright'
 import { devices, expect, type Page, test } from '@playwright/test'
 import { buildFighter } from './wizard'
 
+/** Resolves once the page's next save of a layout has reached the server. */
+const saved = (page: Page) => page.waitForResponse((r) => r.url().includes('/action-bars') && r.request().method() === 'PUT' && r.ok())
+
 async function enter(page: Page, face: string) {
   const card = page.getByTestId('roll-card')
   await card.getByTestId('manual-0').click()
@@ -61,7 +64,9 @@ test('a player arranges their Character\'s action bars, and finds them the same 
   await bars.getByTestId('stow-action:dash').click()
   await expect(bars.getByTestId('stowed-action:dash')).toBeVisible()
   await bars.getByTestId('bar-1').locator('.tile', { hasText: 'Longsword' }).click()
+  const swapped = saved(player)
   await bars.getByTestId('bar-2').locator('.tile').first().click()
+  await swapped
   await expect(bars.getByTestId('bar-2').locator('.tile').first()).toContainText('Longsword')
   await bars.getByTestId('edit-bars').click()
   await expect(bars.getByTestId('bar-drawer')).toHaveCount(0)
@@ -82,7 +87,9 @@ test('a player arranges their Character\'s action bars, and finds them the same 
   await small.getByTestId('action-dodge').dispatchEvent('pointerdown')
   await expect(small.getByTestId('edit-bars')).toHaveAttribute('aria-pressed', 'true')
   await small.getByTestId('add-to-bar-1').click()
+  const broughtBack = saved(phone)
   await small.getByTestId('stowed-action:dash').click()
+  await broughtBack
   await expect(small.getByTestId('bar-1').locator('.tile:not(.tile--add)').last()).toContainText('Dash')
   await small.getByTestId('edit-bars').click()
   expect((await new AxeBuilder({ page: phone }).analyze()).violations).toEqual([])

@@ -1549,7 +1549,7 @@ export const zLiveSessionView = z.object({
 });
 
 /**
- * One Action of a live Session, what it touched, and whether it can still be undone.
+ * One Action of a live Session, what it touched (the one token, when there is one), and whether it can still be undone.
  */
 export const zSessionAction = z.object({
     seq: z.int().gte(1).lte(2147483647),
@@ -1563,6 +1563,7 @@ export const zSessionAction = z.object({
     ]),
     client: z.string().max(80).optional(),
     label: z.string().max(2000),
+    tokenId: zId.optional(),
     undoable: z.boolean(),
     createdAt: z.iso.datetime().max(40)
 });

@@ -1,6 +1,7 @@
 import { type Coord, type Layout, toPixel } from '@/shared/hex'
 
-export type GridCell = Coord & { tone?: string; label?: string; mark?: string }
+/** A hex as drawn: its tone, what it says, the token's initials, and a caption under the token, named by `captionKey`. */
+export type GridCell = Coord & { tone?: string; label?: string; mark?: string; caption?: string; captionKey?: string }
 
 /** The drawn area of a grid of hexes: every centre, padded by one hex. */
 export function gridBox(cells: Coord[], size: number) {

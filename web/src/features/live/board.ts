@@ -36,7 +36,9 @@ export function initials(label: string): string {
     .join('')
 }
 
-export type Ground = { surfaces?: LiveSurface[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; danger?: Coord[] }
+/** What the DM sees written under a token: a few words, and the same in full for a screen reader. */
+export type Captions = Record<string, { text: string; note: string }>
+export type Ground = { surfaces?: LiveSurface[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; danger?: Coord[]; captions?: Captions }
 
 /** What a planned walk draws by leaving a hex. */
 export const DANGER_NOTE = 'leaving here draws an opportunity attack'
@@ -72,6 +74,7 @@ export function board(radius: number, tokens: LiveToken[], selected: string | nu
       return tone ? { ...c, tone, label } : c
     }
     const tone = t.hidden ? 'hidden' : t.kind === 'party' ? 'ally' : t.kind
-    return { ...c, tone: t.id === selected ? 'selected' : tone, label: [describe(t), ...notes].join(', '), mark: initials(t.label) }
+    const caption = ground.captions?.[t.id]
+    return { ...c, tone: t.id === selected ? 'selected' : tone, label: [describe(t), ...notes, caption?.note ?? ''].filter(Boolean).join(', '), mark: initials(t.label), caption: caption?.text, captionKey: t.id }
   })
 }

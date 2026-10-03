@@ -10360,7 +10360,7 @@ components:
         area: { $ref: "#/components/schemas/LiveAreaPreview" }
     SessionAction:
       type: object
-      description: One Action of a live Session, what it touched, and whether it can still be undone.
+      description: One Action of a live Session, what it touched (the one token, when there is one), and whether it can still be undone.
       additionalProperties: false
       required: [seq, kind, actor, origin, label, undoable, createdAt]
       properties:
@@ -10370,6 +10370,7 @@ components:
         origin: { type: string, enum: [ui, mcp, generator, system] }
         client: { type: string, maxLength: 80 }
         label: { type: string, maxLength: 2000 }
+        tokenId: { $ref: "#/components/schemas/Id" }
         undoable: { type: boolean }
         createdAt: { type: string, format: date-time, maxLength: 40 }
     LibraryKind:

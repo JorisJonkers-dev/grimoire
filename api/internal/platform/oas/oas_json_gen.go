@@ -61497,6 +61497,12 @@ func (s *SessionAction) encodeFields(e *jx.Encoder) {
 		e.Str(s.Label)
 	}
 	{
+		if s.TokenId.Set {
+			e.FieldStart("tokenId")
+			s.TokenId.Encode(e)
+		}
+	}
+	{
 		e.FieldStart("undoable")
 		e.Bool(s.Undoable)
 	}
@@ -61506,15 +61512,16 @@ func (s *SessionAction) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfSessionAction = [8]string{
+var jsonFieldsNameOfSessionAction = [9]string{
 	0: "seq",
 	1: "kind",
 	2: "actor",
 	3: "origin",
 	4: "client",
 	5: "label",
-	6: "undoable",
-	7: "createdAt",
+	6: "tokenId",
+	7: "undoable",
+	8: "createdAt",
 }
 
 // Decode decodes SessionAction from json.
@@ -61522,7 +61529,7 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode SessionAction to nil")
 	}
-	var requiredBitSet [1]uint8
+	var requiredBitSet [2]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -61592,8 +61599,18 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"label\"")
 			}
+		case "tokenId":
+			if err := func() error {
+				s.TokenId.Reset()
+				if err := s.TokenId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"tokenId\"")
+			}
 		case "undoable":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Bool()
 				s.Undoable = bool(v)
@@ -61605,7 +61622,7 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"undoable\"")
 			}
 		case "createdAt":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
 				s.CreatedAt = v
@@ -61625,8 +61642,9 @@ func (s *SessionAction) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b11101111,
+	for i, mask := range [2]uint8{
+		0b10101111,
+		0b00000001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
