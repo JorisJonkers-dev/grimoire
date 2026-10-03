@@ -199,7 +199,7 @@ func (s *state) project(a Audience) View {
 		}
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
-	s.firstReactions(v.Tokens)
+	s.firstReactions(v.Tokens, a)
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)

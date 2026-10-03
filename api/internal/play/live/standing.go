@@ -44,7 +44,10 @@ func tierFor(st domain.Standing, t domain.Token) regard.Tier {
 }
 
 // firstReactions tells the DM how each creature of a Faction first takes to the party.
-func (s *state) firstReactions(tokens []TokenView) {
+func (s *state) firstReactions(tokens []TokenView, a Audience) {
+	if a != AudienceDM {
+		return
+	}
 	for i, v := range tokens {
 		id, err := uuid.Parse(v.FactionID)
 		if st, ok := s.factionOf(id); err == nil && ok {
@@ -54,13 +57,16 @@ func (s *state) firstReactions(tokens []TokenView) {
 }
 
 // swayed shapes the check of an Influence action by how the target's Faction regards whoever tries:
-// how the d20 is rolled, and the line the Roll Card carries.
-func (r *runtime) swayed(actor domain.Token, targetID string) (string, *domain.Modifier, string) {
+// how the d20 is rolled, and the line the Roll Card carries. A creature's Faction is open to every
+// screen that can see the creature, so the line tells nobody anything new.
+func (r *runtime) swayed(m domain.Member, actor domain.Token, targetID string) (string, *domain.Modifier, string) {
 	if targetID == "" {
 		return attack.D20(attack.Normal), nil, ""
 	}
+	// A creature the party cannot see is not there to be swayed, and is refused as one that does not
+	// exist: the roll's card would otherwise say whose it is.
 	target, ok := r.st.tokenByID(targetID)
-	if !ok {
+	if !ok || (!m.DM && !r.st.shows(target, r.st.vision())) {
 		return "", nil, "No such creature."
 	}
 	if target.Faction == nil {

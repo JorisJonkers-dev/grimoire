@@ -334,8 +334,9 @@ type TokenView struct {
 	CharacterID string `json:"characterId,omitempty"`
 	// CompanionID is the Companion the token is on the map as: an ally who travels with the party.
 	CompanionID string `json:"companionId,omitempty"`
-	// FactionID is the Faction the creature belongs to and FirstReaction how it first takes to the
-	// party by the Faction's Standing; both for the DM alone.
+	// FactionID is the Faction the creature openly belongs to: every screen is told, as the Roll Card
+	// of a check against it says. FirstReaction is how it first takes to the party by the Faction's
+	// Standing, for the DM alone.
 	FactionID     string `json:"factionId,omitempty"`
 	FirstReaction string `json:"firstReaction,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
@@ -1061,7 +1062,7 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	if t.Companion != nil {
 		v.CompanionID = t.Companion.String()
 	}
-	if a == AudienceDM && t.Faction != nil {
+	if t.Faction != nil {
 		v.FactionID = t.Faction.String()
 	}
 	if a == AudienceDM {

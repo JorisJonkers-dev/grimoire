@@ -58,14 +58,15 @@ describe('a creature of a Faction', () => {
 
   it('lets a Player aim an Influence check at a creature', async () => {
     const aria: LiveToken = { id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', q: 0, r: 0, hidden: false, darkvisionFt: 0, controllerId: player.id, ac: 16, hp: 12, hpMax: 12, attacks: [{ name: 'Longsword', toHit: 5, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d8', damageBonus: 3, damageType: 'slashing' }] }
-    const { wrapper, s } = await open('player', [aria, { ...watchman, factionId: undefined, firstReaction: undefined }])
+    const { wrapper, s } = await open('player', [aria, { ...watchman, firstReaction: undefined }])
     const fighter = (t: LiveToken, acting: boolean) => ({
       id: `${t.id.slice(0, -3)}1${t.id.slice(-2)}`, tokenId: t.id, label: t.label, kind: t.kind, controllerId: t.controllerId, rollId: `${t.id.slice(0, -3)}2${t.id.slice(-2)}`,
       initiative: 10, rank: 1, acting, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30,
     })
-    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, watchman], fog: false, visible: [], remembered: [], combat: { status: 'active', round: 1, combatants: [fighter(aria, true), fighter(watchman, false)] } } })
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [aria, { ...watchman, firstReaction: undefined }, stray], fog: false, visible: [], remembered: [], combat: { status: 'active', round: 1, combatants: [fighter(aria, true), fighter(watchman, false)] } } })
     await flushPromises()
-    expect(wrapper.get('[data-testid="influence-target"]').findAll('option').map((o) => o.text())).toEqual(['Nobody in particular', 'Watchman'])
+    // A creature of a Faction is openly one: whoever aims at it sees whose it is.
+    expect(wrapper.get('[data-testid="influence-target"]').findAll('option').map((o) => o.text())).toEqual(['Nobody in particular', 'Watchman (The Lantern Watch)', 'Stray'])
     await wrapper.get('[data-testid="action-influence"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'take_action', action: 'influence' })
     expect(s.sent.at(-1)).not.toHaveProperty('targetId')
@@ -77,10 +78,8 @@ describe('a creature of a Faction', () => {
     expect(s.sent.at(-1)).not.toHaveProperty('targetId')
   })
 
-  it('shows a Player nothing of whose it is', async () => {
-    const { wrapper, calls } = await open('player', [{ ...watchman, factionId: undefined, firstReaction: undefined }])
+  it('gives a Player no way to place a creature of a Faction', async () => {
+    const { wrapper } = await open('player', [{ ...watchman, firstReaction: undefined }])
     expect(wrapper.find('[data-testid="token-faction"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="token-faction-line"]').exists()).toBe(false)
-    expect(calls.some((u) => u.pathname.endsWith('/factions'))).toBe(false)
   })
 })

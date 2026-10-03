@@ -116,8 +116,8 @@ const elevationFt = ref(10)
 const character = ref('')
 // The Companions of the Campaign that are not on the map yet, for the DM to put there.
 const companions = useQuery(computed(() => ({ ...listCompanionsOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
-// The DM places a creature as one of a Faction; its Standing then shapes social checks with it.
-const factions = useQuery(computed(() => ({ ...listFactionsOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
+// The DM places a creature as one of a Faction, openly: its Standing then shapes social checks with it.
+const factions = useQuery(computed(() => ({ ...listFactionsOptions({ path: { campaignId } }), retry: false })))
 const faction = ref('')
 // An Influence check is aimed at a creature: how its Faction regards whoever tries shapes the roll.
 const swayed = ref('')
@@ -614,7 +614,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           <span>Whom Influence is aimed at</span>
           <select v-model="swayed" data-testid="influence-target">
             <option value="">Nobody in particular</option>
-            <option v-for="t in swayable" :key="t.id" :value="t.id">{{ t.label }}</option>
+            <option v-for="t in swayable" :key="t.id" :value="t.id">{{ t.label }}{{ t.factionId ? ` (${factionName(t.factionId)})` : '' }}</option>
           </select>
         </label>
         <Hotbar
@@ -834,7 +834,9 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           />
           <div v-if="chosen" class="row" data-testid="selected-token">
             <span>{{ chosen.label }}{{ chosen.hidden ? ' (hidden)' : '' }}</span>
-            <p v-if="chosen.factionId" class="hint" data-testid="token-faction-line">Of {{ factionName(chosen.factionId) }}. First reaction: {{ chosen.firstReaction }}.</p>
+            <p v-if="chosen.factionId" class="hint" data-testid="token-faction-line">
+              Of {{ factionName(chosen.factionId) }}.<template v-if="chosen.firstReaction"> First reaction: {{ chosen.firstReaction }}.</template>
+            </p>
             <label v-if="isDM && chosen.companionId" class="g-field">
               <span>Run by</span>
               <select

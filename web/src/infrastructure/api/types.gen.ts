@@ -2400,7 +2400,7 @@ export type LiveToken = {
     companionId?: Id;
     factionId?: Id;
     /**
-     * How a creature of a Faction first takes to the party, by the Faction's Standing. With factionId, for the DM alone.
+     * How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone; factionId itself goes to every screen that sees the creature.
      */
     firstReaction?: 'hostile' | 'indifferent' | 'friendly';
     q: number;
@@ -2691,7 +2691,7 @@ export type LiveCommand = {
      */
     gameMinute?: number;
     /**
-     * With place_token, the Faction the creature belongs to. An Influence check against it (take_action with targetId) is rolled by how that Faction regards whoever tries.
+     * With place_token, the Faction the creature openly belongs to: every screen that sees the creature is told. An Influence check against it (take_action with targetId) is rolled by how that Faction regards whoever tries, and its Roll Card says so. A Player can aim one only at a creature the party can see.
      */
     factionId?: string;
     /**

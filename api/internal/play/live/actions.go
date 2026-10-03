@@ -75,7 +75,7 @@ func (r *runtime) planAction(m domain.Member, cmd Command) (Write, string) {
 	case actions.Ready:
 		return r.ready(t, cmd, w)
 	case actions.Influence:
-		notation, line, reason := r.swayed(t, cmd.TargetID)
+		notation, line, reason := r.swayed(m, t, cmd.TargetID)
 		if reason != "" {
 			return Write{}, reason
 		}

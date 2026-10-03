@@ -11033,7 +11033,7 @@ components:
         darkvisionFt: { type: integer, format: int32, minimum: 0, maximum: 300 }
         companionId: { $ref: "#/components/schemas/Id" }
         factionId: { $ref: "#/components/schemas/Id" }
-        firstReaction: { type: string, enum: [hostile, indifferent, friendly], description: "How a creature of a Faction first takes to the party, by the Faction's Standing. With factionId, for the DM alone." }
+        firstReaction: { type: string, enum: [hostile, indifferent, friendly], description: "How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone; factionId itself goes to every screen that sees the creature." }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
@@ -11277,7 +11277,7 @@ components:
           items: { $ref: "#/components/schemas/Id" }
         gameDay: { type: integer, format: int32, minimum: 0, maximum: 1000000, description: "With set_clock, the day the DM sets the Game Clock to." }
         gameMinute: { type: integer, format: int32, minimum: 0, maximum: 1439, description: "With set_clock, the time of day, in minutes after midnight." }
-        factionId: { type: string, maxLength: 64, description: "With place_token, the Faction the creature belongs to. An Influence check against it (take_action with targetId) is rolled by how that Faction regards whoever tries." }
+        factionId: { type: string, maxLength: 64, description: "With place_token, the Faction the creature openly belongs to: every screen that sees the creature is told. An Influence check against it (take_action with targetId) is rolled by how that Faction regards whoever tries, and its Roll Card says so. A Player can aim one only at a creature the party can see." }
         companionId: { type: string, maxLength: 64, description: "With place_token, the Companion to put on the map. It stands with the party under its own name, run by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the Member who runs the token from now on; left out, the DM does." }
         tokenIds:
           type: array

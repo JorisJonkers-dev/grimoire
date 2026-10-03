@@ -48,12 +48,42 @@ func TestStandingShapesAnInfluenceCheck(t *testing.T) {
 			brom = tv.ID
 		}
 	}
-	// The DM sees whose it is and how it first takes to the party; a Player's screen is told neither.
+	// A creature placed as one of a Faction is openly one of it: every screen is told whose it is, as
+	// the Roll Card of a check against it will say. How it first takes to the party is the DM's to know.
 	if guard.FactionID != watch.String() || guard.FirstReaction != "friendly" {
 		t.Fatalf("the DM's watchman = %+v", guard)
 	}
-	if seen := token(p.View, "Watchman"); seen.FactionID != "" || seen.FirstReaction != "" {
+	if seen := token(p.View, "Watchman"); seen.FactionID != watch.String() || seen.FirstReaction != "" {
 		t.Fatalf("a Player's watchman = %+v", seen)
+	}
+	// A creature the party cannot see is not there to be swayed: a Player who names it learns nothing,
+	// not even whether it exists, and no roll is made that would say whose it is.
+	d, p = tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenNPC, Label: "Spy", Q: 1, R: 1, Hidden: true, FactionID: watch.String()})
+	spy := token(d.View, "Spy")
+	if spy == nil || token(p.View, "Spy") != nil {
+		t.Fatalf("the hidden spy: dm %+v, player %+v", spy, token(p.View, "Spy"))
+	}
+	rolls := func() int {
+		t.Helper()
+		var n int
+		if err := w.pool.QueryRow(ctx, "SELECT count(*) FROM play.roll_requests WHERE campaign_id = $1", w.session.CampaignID).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n
+	}
+	before := rolls()
+	for _, target := range []string{spy.ID, uuid.NewString()} {
+		w.hub.Submit(tb.player, live.Command{Kind: live.CmdTakeAction, TokenID: ids["aria-token"], Action: "influence", TargetID: target})
+		if u := next(t, tb.player); u.Kind != live.UpdRejected || u.Reason != "No such creature." {
+			t.Fatalf("a Player sways a creature they cannot see = %+v", u)
+		}
+	}
+	if rolls() != before {
+		t.Fatal("a roll was made against a creature the party cannot see")
+	}
+	// The DM, who sees everything, may have one creature sway another the party cannot see.
+	if d, _ := tb.dmSays(live.Command{Kind: live.CmdTakeAction, TokenID: guard.ID, Action: "influence", TargetID: spy.ID}); d.View == nil || rolls() != before+1 {
+		t.Fatalf("the DM sways the spy = %+v, %d rolls after %d", d, rolls(), before)
 	}
 	type mod struct {
 		Label string

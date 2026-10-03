@@ -21117,8 +21117,10 @@ type LiveCommand struct {
 	GameDay OptInt32 `json:"gameDay"`
 	// With set_clock, the time of day, in minutes after midnight.
 	GameMinute OptInt32 `json:"gameMinute"`
-	// With place_token, the Faction the creature belongs to. An Influence check against it (take_action
-	// with targetId) is rolled by how that Faction regards whoever tries.
+	// With place_token, the Faction the creature openly belongs to: every screen that sees the creature is
+	// told. An Influence check against it (take_action with targetId) is rolled by how that Faction
+	// regards whoever tries, and its Roll Card says so. A Player can aim one only at a creature the party
+	// can see.
 	FactionId OptString `json:"factionId"`
 	// With place_token, the Companion to put on the map. It stands with the party under its own name, run
 	// by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the
@@ -27173,8 +27175,8 @@ type LiveToken struct {
 	DarkvisionFt int32     `json:"darkvisionFt"`
 	CompanionId  OptID     `json:"companionId"`
 	FactionId    OptID     `json:"factionId"`
-	// How a creature of a Faction first takes to the party, by the Faction's Standing. With factionId, for
-	// the DM alone.
+	// How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone;
+	// factionId itself goes to every screen that sees the creature.
 	FirstReaction OptLiveTokenFirstReaction `json:"firstReaction"`
 	Q             int32                     `json:"q"`
 	R             int32                     `json:"r"`
@@ -27462,8 +27464,8 @@ func (s *LiveToken) SetLegend(val OptLiveLegend) {
 	s.Legend = val
 }
 
-// How a creature of a Faction first takes to the party, by the Faction's Standing. With factionId, for
-// the DM alone.
+// How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone;
+// factionId itself goes to every screen that sees the creature.
 type LiveTokenFirstReaction string
 
 const (
