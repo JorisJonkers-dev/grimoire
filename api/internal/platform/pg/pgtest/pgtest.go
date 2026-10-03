@@ -40,6 +40,7 @@ func URL(t testing.TB) string {
 	}
 	name := "t_" + randomSuffix()
 	exec(t, adminURL, fmt.Sprintf("CREATE DATABASE %s TEMPLATE %s", name, template))
+	dropAfter(t, name)
 	return withDatabase(adminURL, name)
 }
 
@@ -55,7 +56,18 @@ func EmptyURL(t testing.TB) string {
 	}
 	name := "e_" + randomSuffix()
 	exec(t, adminURL, "CREATE DATABASE "+name)
+	dropAfter(t, name)
 	return withDatabase(adminURL, name)
+}
+
+// dropAfter removes a test's database when the test ends. A server that outlives the run, as the one
+// GRIMOIRE_TEST_POSTGRES_URL names does, would otherwise keep every database of every run.
+func dropAfter(t testing.TB, name string) {
+	t.Cleanup(func() {
+		if err := execErr(context.Background(), adminURL, "DROP DATABASE IF EXISTS "+name+" WITH (FORCE)"); err != nil {
+			t.Logf("pgtest: drop %s: %v", name, err)
+		}
+	})
 }
 
 func start() {
