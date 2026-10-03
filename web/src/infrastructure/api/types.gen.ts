@@ -2511,7 +2511,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow';
     caption?: string;
     tokenId?: Id;
     label?: string;
@@ -2665,6 +2665,14 @@ export type LiveCommand = {
      * With rewind, the Checkpoint to go back to.
      */
     checkpointId?: string;
+    /**
+     * With split_party, the party tokens that go off as a group, to the map mapId around q and r.
+     */
+    tokenIds?: Array<Id>;
+    /**
+     * With rejoin_party, the group to bring back around q and r. With table_follow, the group the Table Display follows; left out, it follows the Session the party split from.
+     */
+    sessionId?: string;
 };
 
 /**
@@ -4235,16 +4243,17 @@ export type LiveCombatant = {
 };
 
 /**
- * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export type LiveUpdate = {
-    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview' | 'ping' | 'roll';
+    kind: 'snapshot' | 'view' | 'rejected' | 'ended' | 'path' | 'attack_preview' | 'area_preview' | 'ping' | 'roll' | 'regroup';
     seq: number;
     nonce?: string;
     actionSeq?: number;
     reason?: string;
     session?: LiveSessionView;
     view?: LiveView;
+    group?: LiveGroup;
     steps?: Array<LiveView>;
     path?: LivePath;
     preview?: LiveAttackPreview;
@@ -4270,6 +4279,34 @@ export type LiveRollShown = {
     modifier: number;
     total: number;
     look?: LiveDiceLook;
+};
+
+/**
+ * One of the Sessions a split party plays in, each with its own map, fog and fight. In a regroup frame it names the Session a screen belongs in instead, and is the last frame the screen is sent.
+ */
+export type LiveGroup = {
+    sessionId: Id;
+    number: number;
+    /**
+     * What the group calls itself. The Session the party split from has no name.
+     */
+    name: string;
+    /**
+     * The Session the party split from.
+     */
+    home: boolean;
+    /**
+     * The Session this view is of.
+     */
+    here: boolean;
+    /**
+     * The group the Table Display follows.
+     */
+    table: boolean;
+    /**
+     * The party tokens in the group, by name.
+     */
+    tokens: Array<string>;
 };
 
 /**
@@ -4477,6 +4514,10 @@ export type LiveView = {
      * The Campaign is played without undo. Sent to the DM only.
      */
     noUndo?: boolean;
+    /**
+     * The Sessions a split party plays in. Sent to the DM only, and only while the party is split.
+     */
+    groups?: Array<LiveGroup>;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;

@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -40,6 +41,10 @@ func (h *Handler) joinLive(ctx context.Context, c caller.Caller, campaign, sid u
 		audience = live.AudienceDM
 	}
 	sub, err := h.Hub.Join(ctx, playdomain.SessionID(sid), me, c, audience)
+	var away *live.ElsewhereError
+	if errors.As(err, &away) {
+		return nil, problem(http.StatusConflict, "Another group", "The party is split and you play with another group, in session "+uuid.UUID(away.Session).String()+".")
+	}
 	if err != nil {
 		return nil, h.campaignProblem(ctx, "join session", err)
 	}

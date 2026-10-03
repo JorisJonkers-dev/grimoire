@@ -32,6 +32,10 @@ func samples() contract {
 			{ID: id, Name: "Round 2", Kind: "round", Round: 2, ActionSeq: 57, At: time.Date(2026, 10, 3, 20, 5, 0, 0, time.UTC)},
 		},
 		NoUndo: true,
+		Groups: []live.GroupView{
+			{SessionID: id, Number: 3, Name: "", Home: true, Here: true, Table: false, Tokens: []string{"Brom"}},
+			{SessionID: token.ID, Number: 4, Name: "The tower", Home: false, Here: false, Table: true, Tokens: []string{"Aria"}},
+		},
 		Map: &live.MapView{
 			ID: id, Name: "Crypt", ImageURL: "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/" + id + "/image?v=2",
 			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2,
@@ -206,6 +210,10 @@ func samples() contract {
 			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
 			{Nonce: "n90", Kind: live.CmdCheckpoint, Name: "Before the ambush"},
 			{Nonce: "n91", Kind: live.CmdRewind, CheckpointID: token.ID},
+			{Nonce: "n92", Kind: live.CmdSplitParty, Name: "The tower", TokenIDs: []string{token.ID}, MapID: id, Q: 1},
+			{Nonce: "n93", Kind: live.CmdRejoinParty, SessionID: token.ID, Q: 2},
+			{Nonce: "n94", Kind: live.CmdTableFollow, SessionID: token.ID},
+			{Nonce: "n95", Kind: live.CmdTableFollow},
 			{Nonce: "n73b", Kind: live.CmdSwapWeapons, TokenID: token.ID},
 			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
 			{Nonce: "n76", Kind: live.CmdStabilise, TokenID: token.ID, TargetID: token.ID, Option: "medicine"},
@@ -247,6 +255,7 @@ func samples() contract {
 				Targets: []live.AreaTarget{{TokenID: token.ID, Ally: true}}, Allies: 1,
 			}},
 			{Kind: live.UpdPing, Seq: 7, Ping: &live.Hex{Q: 1, R: 0}},
+			{Kind: live.UpdRegroup, Seq: 7, Group: &live.GroupView{SessionID: token.ID, Tokens: []string{}}},
 			{Kind: live.UpdEnded, Seq: 7},
 		},
 	}

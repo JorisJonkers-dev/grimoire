@@ -3153,6 +3153,19 @@ export const zLiveCombat = z.object({
 });
 
 /**
+ * One of the Sessions a split party plays in, each with its own map, fog and fight. In a regroup frame it names the Session a screen belongs in instead, and is the last frame the screen is sent.
+ */
+export const zLiveGroup = z.object({
+    sessionId: zId,
+    number: z.int().gte(0).lte(100000),
+    name: z.string().max(40),
+    home: z.boolean(),
+    here: z.boolean(),
+    table: z.boolean(),
+    tokens: z.array(z.string().max(40)).max(200)
+});
+
+/**
  * A point in a live Session the DM can rewind to. One the DM named, or the start of a round, which every round of a fight leaves by itself.
  */
 export const zLiveCheckpoint = z.object({
@@ -4274,7 +4287,10 @@ export const zLiveCommand = z.object({
         'lair_action',
         'legendary_resistance',
         'checkpoint',
-        'rewind'
+        'rewind',
+        'split_party',
+        'rejoin_party',
+        'table_follow'
     ]),
     caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
@@ -4416,7 +4432,9 @@ export const zLiveCommand = z.object({
     hpDelta: z.int().gte(-1000).lte(1000).optional(),
     seq: z.int().gte(1).lte(2147483647).optional(),
     name: z.string().max(120).optional(),
-    checkpointId: z.string().max(64).optional()
+    checkpointId: z.string().max(64).optional(),
+    tokenIds: z.array(zId).max(40).optional(),
+    sessionId: z.string().max(64).optional()
 });
 
 /**
@@ -4520,13 +4538,14 @@ export const zLiveView = z.object({
     gameDay: z.int().gte(0).lte(1000000).optional(),
     checkpoints: z.array(zLiveCheckpoint).max(2000).optional(),
     noUndo: z.boolean().optional(),
+    groups: z.array(zLiveGroup).max(8).optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
 });
 
 /**
- * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
  */
 export const zLiveUpdate = z.object({
     kind: z.enum([
@@ -4538,7 +4557,8 @@ export const zLiveUpdate = z.object({
         'attack_preview',
         'area_preview',
         'ping',
-        'roll'
+        'roll',
+        'regroup'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
@@ -4546,6 +4566,7 @@ export const zLiveUpdate = z.object({
     reason: z.string().max(200).optional(),
     session: zLiveSessionView.optional(),
     view: zLiveView.optional(),
+    group: zLiveGroup.optional(),
     steps: z.array(zLiveView).max(60).optional(),
     path: zLivePath.optional(),
     preview: zLiveAttackPreview.optional(),

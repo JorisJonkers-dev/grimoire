@@ -330,6 +330,15 @@ type Store interface {
 	SaveCheckpoint(ctx context.Context, s domain.Session, c domain.Checkpoint, actor domain.Member, cl caller.Caller) (Committed, error)
 	// MarkRound keeps the latest keep rounds and lets the older go.
 	MarkRound(ctx context.Context, s domain.Session, c domain.Checkpoint, keep int) error
+	// Groups lists the live Sessions a party is split over; Place is the one of them a member belongs in.
+	Groups(ctx context.Context, s domain.Session) ([]domain.PartyGroup, error)
+	Place(ctx context.Context, id domain.SessionID, member uuid.UUID, dm, table bool) (domain.SessionID, error)
+	// SplitParty sends tokens off to a Session of their own on another map; RejoinParty brings a group
+	// back and ends its Session; FollowTable has the Table Display follow a group. Like Rewind, the first
+	// two stand only when the Session can be read back from the transaction they are made in.
+	SplitParty(ctx context.Context, s domain.Session, name string, to domain.MapID, places []domain.TokenPlace, actor domain.Member, cl caller.Caller, now time.Time, read func(Store) error) (domain.Session, Committed, error)
+	RejoinParty(ctx context.Context, s domain.Session, group domain.SessionID, places []domain.TokenPlace, actor domain.Member, cl caller.Caller, now time.Time, read func(Store) error) (Committed, error)
+	FollowTable(ctx context.Context, s domain.Session, group *domain.SessionID, actor domain.Member, cl caller.Caller, now time.Time) (Committed, error)
 	// Rewind puts the Session back as a Checkpoint kept it, and hands read the store of the transaction
 	// it does so in: the rewind stands only when the Session can be read back from it.
 	Rewind(ctx context.Context, s domain.Session, c domain.Checkpoint, actor domain.Member, cl caller.Caller, now time.Time, read func(Store) error) (Committed, error)
@@ -362,6 +371,16 @@ type DiceLooks interface {
 // Owner guarantees one runtime per Session across processes.
 type Owner interface {
 	Acquire(ctx context.Context, id domain.SessionID) (func(), error)
+}
+
+// ElsewhereError is returned when joining a Session of a split party one does not belong in: the
+// Session to join instead. Each group's Party Vision is its own.
+type ElsewhereError struct {
+	Session domain.SessionID
+}
+
+func (e *ElsewhereError) Error() string {
+	return "live: belongs with another group of the party"
 }
 
 // ErrClosed is returned when joining a Session whose runtime has shut down.
@@ -404,14 +423,18 @@ type runtime struct {
 	dice     DiceLooks
 	// dm is the DM last seen on this Session; an ambush opens its creatures' rolls for them.
 	dm *domain.Member
-	// reload reads the Session afresh from a store: the transaction a rewind is made in.
-	reload func(ctx context.Context, store Store) (*state, error)
-	subs   map[*Subscriber]struct{}
-	join   chan *Subscriber
-	leave  chan *Subscriber
-	cmds   chan request
-	stop   chan struct{}
-	done   chan struct{}
+	// reload reads a Session afresh from a store: this one from the transaction a rewind is made in, or
+	// another group's as it is kept.
+	reload func(ctx context.Context, store Store, id domain.SessionID) (*state, error)
+	// tell passes a word to the party's other groups; shut ends the runtime of a group that came back.
+	tell  func(kind string)
+	shut  func(id domain.SessionID)
+	subs  map[*Subscriber]struct{}
+	join  chan *Subscriber
+	leave chan *Subscriber
+	cmds  chan request
+	stop  chan struct{}
+	done  chan struct{}
 }
 
 // Hub starts, finds and stops Session runtimes.
@@ -441,9 +464,20 @@ func (h *Hub) Join(ctx context.Context, id domain.SessionID, m domain.Member, c 
 	rt, ok := h.runtimes[id]
 	if !ok {
 		var err error
-		if rt, err = h.start(ctx, id); err != nil {
+		if rt, err = h.start(ctx, id); errors.Is(err, ErrClosed) {
+			// A group's Session that is over sends whoever comes looking back to the party.
+			if at, perr := h.Store.Place(ctx, id, m.ID, a == AudienceDM, a == AudienceTable); perr == nil && at != id {
+				return nil, &ElsewhereError{Session: at}
+			}
+		}
+		if err != nil {
 			return nil, err
 		}
+	}
+	if at, err := h.Store.Place(ctx, id, m.ID, a == AudienceDM, a == AudienceTable); err != nil {
+		return nil, err
+	} else if at != id {
+		return nil, &ElsewhereError{Session: at}
 	}
 	sub := &Subscriber{Member: m, Caller: c, Audience: a, Out: make(chan Update, OutboxSize), rt: rt}
 	// Close removes a runtime under the same lock before stopping it, so this runtime is still running.
@@ -463,9 +497,11 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	}
 	s := st.session
 	rt := &runtime{
-		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, dice: h.Dice, now: h.Now, log: h.Log, release: release, st: st, reload: func(ctx context.Context, store Store) (*state, error) { return h.load(ctx, store, id) }, subs: map[*Subscriber]struct{}{},
+		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, dice: h.Dice, now: h.Now, log: h.Log, release: release, st: st, reload: h.load, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
+	rt.tell = func(kind string) { go h.tellFamily(rt, kind) }
+	rt.shut = func(group domain.SessionID) { go h.endGroup(group) }
 	if h.runtimes == nil {
 		h.runtimes = map[domain.SessionID]*runtime{}
 	}
@@ -533,13 +569,21 @@ func (h *Hub) load(ctx context.Context, store Store, id domain.SessionID) (*stat
 	}
 	st.setBoard(board)
 	st.setWorld(world)
-	if st.noUndo, err = store.NoUndo(ctx, s.CampaignID); err != nil {
-		return nil, err
+	return st, loadStanding(ctx, store, st)
+}
+
+// loadStanding reads how the Session stands beside its board: whether it is played without undo, the
+// Checkpoints it keeps, and the groups its party is split over.
+func loadStanding(ctx context.Context, store Store, st *state) error {
+	var err error
+	if st.noUndo, err = store.NoUndo(ctx, st.session.CampaignID); err != nil {
+		return err
 	}
-	if st.checkpoints, err = store.Checkpoints(ctx, id); err != nil {
-		return nil, err
+	if st.checkpoints, err = store.Checkpoints(ctx, st.session.ID); err != nil {
+		return err
 	}
-	return st, nil
+	st.groups, err = store.Groups(ctx, st.session)
+	return err
 }
 
 // loadTable reads the Table Display and the world map it shows, if any.
@@ -619,6 +663,39 @@ func (h *Hub) Submit(sub *Subscriber, cmd Command) {
 	case sub.rt.cmds <- request{from: sub, cmd: cmd}:
 	case <-sub.rt.done:
 	}
+}
+
+// tellFamily passes a word from one group's runtime to those of the party's other groups.
+func (h *Hub) tellFamily(from *runtime, kind string) {
+	h.mu.Lock()
+	var targets []*runtime
+	for _, rt := range h.runtimes {
+		if rt != from && rt.campaign == from.campaign {
+			targets = append(targets, rt)
+		}
+	}
+	h.mu.Unlock()
+	for _, rt := range targets {
+		select {
+		case rt.cmds <- request{cmd: Command{Kind: kind}}:
+		case <-rt.done:
+		}
+	}
+}
+
+// endGroup ends the runtime of a group that came back: its screens are sent after the party, not told
+// the Session ended.
+func (h *Hub) endGroup(id domain.SessionID) {
+	h.mu.Lock()
+	rt, ok := h.runtimes[id]
+	h.mu.Unlock()
+	if ok {
+		select {
+		case rt.cmds <- request{cmd: Command{Kind: cmdRegroup}}:
+		case <-rt.done:
+		}
+	}
+	h.Close(id)
 }
 
 // Close ends a Session's runtime: everyone gets an ended Update and is disconnected.
@@ -725,6 +802,12 @@ func (r *runtime) handle(req request) {
 	case req.from == nil && req.cmd.Kind == cmdPromptTimeout:
 		r.timedOut(req.cmd.promptID)
 		return
+	case req.from == nil && req.cmd.Kind == cmdRegroup:
+		r.regroup()
+		return
+	case req.from == nil && req.cmd.Kind == cmdRefresh:
+		r.refresh()
+		return
 	case req.from == nil:
 		r.shareRoll(req.cmd.rollID)
 		r.rolled(req)
@@ -758,6 +841,15 @@ func (r *runtime) handle(req request) {
 		return
 	case req.cmd.Kind == CmdRewind:
 		r.rewind(req)
+		return
+	case req.cmd.Kind == CmdSplitParty:
+		r.split(req)
+		return
+	case req.cmd.Kind == CmdRejoinParty:
+		r.rejoin(req)
+		return
+	case req.cmd.Kind == CmdTableFollow:
+		r.followTable(req)
 		return
 	}
 	w, reason := r.plan(req)
@@ -809,6 +901,10 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 	}
 	r.arm()
 	r.follow(w, actor, c)
+	// The party's other groups keep the same Containers, Shops and day.
+	if next.split() && shared(&w) {
+		r.tell(cmdRefresh)
+	}
 }
 
 // viewUpdate projects a change for one audience, with a view per step when a token walked.

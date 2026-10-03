@@ -1573,17 +1573,20 @@ type PlayRollRequestModifier struct {
 }
 
 type PlaySession struct {
-	ID         uuid.UUID
-	CampaignID uuid.UUID
-	Number     int32
-	Status     string
-	Seq        int64
-	GridRadius int32
-	StartedAt  time.Time
-	EndedAt    pgtype.Timestamptz
-	MapID      pgtype.UUID
-	WorldMapID pgtype.UUID
-	Sneaking   bool
+	ID              uuid.UUID
+	CampaignID      uuid.UUID
+	Number          int32
+	Status          string
+	Seq             int64
+	GridRadius      int32
+	StartedAt       time.Time
+	EndedAt         pgtype.Timestamptz
+	MapID           pgtype.UUID
+	WorldMapID      pgtype.UUID
+	Sneaking        bool
+	ParentSessionID pgtype.UUID
+	GroupName       string
+	TableSessionID  pgtype.UUID
 }
 
 type PlaySessionShop struct {

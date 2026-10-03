@@ -222,6 +222,8 @@ type Querier interface {
 	DiceSetsSharedWith(ctx context.Context, me uuid.UUID) ([]SocialDiceSet, error)
 	// The one-to-one Conversation between two Accounts, if they have one.
 	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
+	// A Checkpoint keeps one Session's rows; once tokens change Sessions it can no longer be put back.
+	DropGroupCheckpoints(ctx context.Context, root uuid.UUID) error
 	// A rewind leaves no Checkpoint of the future it took back.
 	DropLaterCheckpoints(ctx context.Context, arg DropLaterCheckpointsParams) error
 	// A Session keeps the start of its latest rounds only.
@@ -230,6 +232,8 @@ type Querier interface {
 	DueDigests(ctx context.Context, cutoff time.Time) ([]uuid.UUID, error)
 	DueReleaseNotes(ctx context.Context, now pgtype.Timestamptz) ([]DueReleaseNotesRow, error)
 	Edits(ctx context.Context, arg EditsParams) ([]EditsRow, error)
+	// The groups of a party do not outlive the Session the party split from.
+	EndGroupSessions(ctx context.Context, arg EndGroupSessionsParams) ([]uuid.UUID, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
 	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)
@@ -325,6 +329,8 @@ type Querier interface {
 	InsertEntryMonster(ctx context.Context, arg InsertEntryMonsterParams) error
 	InsertFriendRequest(ctx context.Context, arg InsertFriendRequestParams) (int64, error)
 	InsertFriendship(ctx context.Context, arg InsertFriendshipParams) error
+	// A group that leaves the party plays in a Session of its own, on its own map.
+	InsertGroupSession(ctx context.Context, arg InsertGroupSessionParams) (PlaySession, error)
 	InsertHPEvent(ctx context.Context, arg InsertHPEventParams) error
 	InsertHexEvent(ctx context.Context, arg InsertHexEventParams) error
 	InsertInstance(ctx context.Context, arg InsertInstanceParams) error
@@ -501,6 +507,8 @@ type Querier interface {
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
 	MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error
 	MarkDigest(ctx context.Context, arg MarkDigestParams) error
+	// The live groups in which a member plays a party token, the Session the party split from first.
+	MemberGroups(ctx context.Context, arg MemberGroupsParams) ([]uuid.UUID, error)
 	// Whether a member plays a Character in the Campaign that holds Heroic Inspiration.
 	MemberInspired(ctx context.Context, arg MemberInspiredParams) (bool, error)
 	MentionableCharacters(ctx context.Context, arg MentionableCharactersParams) ([]MentionableCharactersRow, error)
@@ -519,7 +527,11 @@ type Querier interface {
 	MonsterStats(ctx context.Context, monsterID int64) ([]MonsterStatsRow, error)
 	MonsterTraits(ctx context.Context, monsterID int64) ([]MonsterTraitsRow, error)
 	MonsterXP(ctx context.Context, arg MonsterXPParams) (MonsterXPRow, error)
+	MoveEffectSaves(ctx context.Context, arg MoveEffectSavesParams) error
 	MoveInstance(ctx context.Context, arg MoveInstanceParams) error
+	MoveToken(ctx context.Context, arg MoveTokenParams) (int64, error)
+	MoveTokenDying(ctx context.Context, arg MoveTokenDyingParams) error
+	MoveTokenEffects(ctx context.Context, arg MoveTokenEffectsParams) error
 	NextActionSeq(ctx context.Context, campaignID uuid.UUID) (int32, error)
 	NextRevisionNo(ctx context.Context, arg NextRevisionNoParams) (int32, error)
 	NextSessionNumber(ctx context.Context, campaignID uuid.UUID) (int32, error)
@@ -529,6 +541,9 @@ type Querier interface {
 	OIDCLinkByAccount(ctx context.Context, accountID uuid.UUID) (IdentityOidcLink, error)
 	OIDCLinkBySubject(ctx context.Context, arg OIDCLinkBySubjectParams) (IdentityOidcLink, error)
 	ObserveDamage(ctx context.Context, arg ObserveDamageParams) error
+	PartyGroupTokens(ctx context.Context, root uuid.UUID) ([]PartyGroupTokensRow, error)
+	// The live Sessions a party is split over: the one it split from first, then each group that left it.
+	PartyGroups(ctx context.Context, root uuid.UUID) ([]PartyGroupsRow, error)
 	PartyLevels(ctx context.Context, campaignID uuid.UUID) ([]int32, error)
 	PendingBetween(ctx context.Context, arg PendingBetweenParams) (uuid.UUID, error)
 	PendingRequest(ctx context.Context, id uuid.UUID) (PendingRequestRow, error)
@@ -606,6 +621,9 @@ type Querier interface {
 	SessionObservations(ctx context.Context, sessionID uuid.UUID) ([]PlayObservedDamage, error)
 	SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error)
 	SessionPendingSaves(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingSavesRow, error)
+	// Where the Table Display belongs among a party's groups: the group the DM has it follow, or the
+	// Session the party split from.
+	SessionPlace(ctx context.Context, root uuid.UUID) (uuid.UUID, error)
 	SessionShop(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
 	SessionSneakRolls(ctx context.Context, sessionID uuid.UUID) ([]SessionSneakRollsRow, error)
 	SessionSneaking(ctx context.Context, id uuid.UUID) (bool, error)
@@ -613,6 +631,7 @@ type Querier interface {
 	SessionTable(ctx context.Context, sessionID uuid.UUID) (SessionTableRow, error)
 	SessionTokenAttacks(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenAttack, error)
 	SessionTokenForms(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenForm, error)
+	SessionTokenIDs(ctx context.Context, sessionID uuid.UUID) ([]uuid.UUID, error)
 	SessionTokenQualities(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenQuality, error)
 	SessionTokenReactions(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenReaction, error)
 	SessionTokenSaves(ctx context.Context, sessionID uuid.UUID) ([]PlayTokenSafe, error)
@@ -661,6 +680,7 @@ type Querier interface {
 	SetShopStock(ctx context.Context, arg SetShopStockParams) error
 	SetShopStockedDay(ctx context.Context, arg SetShopStockedDayParams) error
 	SetStack(ctx context.Context, arg SetStackParams) error
+	SetTableSession(ctx context.Context, arg SetTableSessionParams) error
 	SetTokenArmorClass(ctx context.Context, arg SetTokenArmorClassParams) error
 	SetTokenDisguise(ctx context.Context, arg SetTokenDisguiseParams) error
 	SetTokenHP(ctx context.Context, arg SetTokenHPParams) error

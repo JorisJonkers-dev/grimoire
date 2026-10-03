@@ -10,6 +10,8 @@ const route = useRoute()
 const router = useRouter()
 const online = useOnline()
 const bare = computed(() => route.meta.bare === true)
+// A live page belongs to one Session: going to another Session, as a split party does, makes it anew.
+const pageKey = computed(() => String(route.params.sid ?? ''))
 const account = useQuery({ ...getAccountOptions(), retry: false })
 const client = useQueryClient()
 const signOut = useMutation(signOutMutation())
@@ -19,7 +21,7 @@ function leave() {
 </script>
 
 <template>
-  <RouterView v-if="bare" />
+  <RouterView v-if="bare" :key="pageKey" />
   <div v-else class="shell">
     <header class="bar">
       <RouterLink :to="{ name: 'home' }" class="brand">Grimoire</RouterLink>
@@ -45,7 +47,7 @@ function leave() {
     <p v-if="!online" role="status" class="offline" data-testid="offline">
       You are offline. The compendium and your Character sheets still open from this device; live play picks up again when the connection returns.
     </p>
-    <RouterView />
+    <RouterView :key="pageKey" />
     <footer class="credit">
       Grimoire by <a href="https://jorisjonkers.dev">Joris Jonkers</a> ·
       <RouterLink :to="{ name: 'attribution' }">SRD content under CC-BY-4.0</RouterLink> ·

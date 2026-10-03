@@ -32,6 +32,8 @@ export type LiveState = {
   turn: { round: number; tokenIds: string[]; n: number } | null
   roll: LiveRollShown | null
   rolls: number
+  /** The Session of a split party this screen belongs in instead; the page goes there. */
+  regroup: string | null
   rejection: string
 }
 
@@ -47,7 +49,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rolls: 0, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rolls: 0, regroup: null, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -73,6 +75,7 @@ export function useLiveSession(
     view.turn = state.turn
     view.roll = state.roll
     view.rolls = state.rolls
+    view.regroup = state.regroup
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }
@@ -101,7 +104,7 @@ export function useLiveSession(
       sync()
     }
     s.onclose = () => {
-      if (stopped || state.ended) {
+      if (stopped || state.ended || state.regroup) {
         sync()
         return
       }

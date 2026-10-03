@@ -9,6 +9,8 @@ export class SessionState {
   session: LiveSessionView | null = null
   view: LiveView | null = null
   ended = false
+  /** The Session of a split party this screen was sent to; it is the last word from this one. */
+  regroup: string | null = null
   rejection = ''
   /** The views along the last walk, before its final view. */
   steps: LiveView[] = []
@@ -61,6 +63,9 @@ export class SessionState {
         return 'applied'
       case 'ended':
         this.ended = true
+        return 'applied'
+      case 'regroup':
+        this.regroup = u.group?.sessionId ?? null
         return 'applied'
       default:
         if (this.seq < 0 || u.seq !== this.seq + 1) return 'resync'

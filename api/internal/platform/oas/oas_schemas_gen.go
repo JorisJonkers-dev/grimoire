@@ -20160,6 +20160,11 @@ type LiveCommand struct {
 	Name OptString `json:"name"`
 	// With rewind, the Checkpoint to go back to.
 	CheckpointId OptString `json:"checkpointId"`
+	// With split_party, the party tokens that go off as a group, to the map mapId around q and r.
+	TokenIds []ID `json:"tokenIds"`
+	// With rejoin_party, the group to bring back around q and r. With table_follow, the group the Table
+	// Display follows; left out, it follows the Session the party split from.
+	SessionId OptString `json:"sessionId"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -20667,6 +20672,16 @@ func (s *LiveCommand) GetCheckpointId() OptString {
 	return s.CheckpointId
 }
 
+// GetTokenIds returns the value of TokenIds.
+func (s *LiveCommand) GetTokenIds() []ID {
+	return s.TokenIds
+}
+
+// GetSessionId returns the value of SessionId.
+func (s *LiveCommand) GetSessionId() OptString {
+	return s.SessionId
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -21172,6 +21187,16 @@ func (s *LiveCommand) SetCheckpointId(val OptString) {
 	s.CheckpointId = val
 }
 
+// SetTokenIds sets the value of TokenIds.
+func (s *LiveCommand) SetTokenIds(val []ID) {
+	s.TokenIds = val
+}
+
+// SetSessionId sets the value of SessionId.
+func (s *LiveCommand) SetSessionId(val OptString) {
+	s.SessionId = val
+}
+
 type LiveCommandAction string
 
 const (
@@ -21456,6 +21481,9 @@ const (
 	LiveCommandKindLegendaryResistance LiveCommandKind = "legendary_resistance"
 	LiveCommandKindCheckpoint          LiveCommandKind = "checkpoint"
 	LiveCommandKindRewind              LiveCommandKind = "rewind"
+	LiveCommandKindSplitParty          LiveCommandKind = "split_party"
+	LiveCommandKindRejoinParty         LiveCommandKind = "rejoin_party"
+	LiveCommandKindTableFollow         LiveCommandKind = "table_follow"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -21556,6 +21584,9 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindLegendaryResistance,
 		LiveCommandKindCheckpoint,
 		LiveCommandKindRewind,
+		LiveCommandKindSplitParty,
+		LiveCommandKindRejoinParty,
+		LiveCommandKindTableFollow,
 	}
 }
 
@@ -21751,6 +21782,12 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindCheckpoint:
 		return []byte(s), nil
 	case LiveCommandKindRewind:
+		return []byte(s), nil
+	case LiveCommandKindSplitParty:
+		return []byte(s), nil
+	case LiveCommandKindRejoinParty:
+		return []byte(s), nil
+	case LiveCommandKindTableFollow:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -22044,6 +22081,15 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindRewind:
 		*s = LiveCommandKindRewind
+		return nil
+	case LiveCommandKindSplitParty:
+		*s = LiveCommandKindSplitParty
+		return nil
+	case LiveCommandKindRejoinParty:
+		*s = LiveCommandKindRejoinParty
+		return nil
+	case LiveCommandKindTableFollow:
+		*s = LiveCommandKindTableFollow
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -23010,6 +23056,94 @@ func (s *LiveElevation) SetR(val int32) {
 // SetElevationFt sets the value of ElevationFt.
 func (s *LiveElevation) SetElevationFt(val int32) {
 	s.ElevationFt = val
+}
+
+// One of the Sessions a split party plays in, each with its own map, fog and fight. In a regroup frame
+// it names the Session a screen belongs in instead, and is the last frame the screen is sent.
+// Ref: #/components/schemas/LiveGroup
+type LiveGroup struct {
+	SessionId ID    `json:"sessionId"`
+	Number    int32 `json:"number"`
+	// What the group calls itself. The Session the party split from has no name.
+	Name string `json:"name"`
+	// The Session the party split from.
+	Home bool `json:"home"`
+	// The Session this view is of.
+	Here bool `json:"here"`
+	// The group the Table Display follows.
+	Table bool `json:"table"`
+	// The party tokens in the group, by name.
+	Tokens []string `json:"tokens"`
+}
+
+// GetSessionId returns the value of SessionId.
+func (s *LiveGroup) GetSessionId() ID {
+	return s.SessionId
+}
+
+// GetNumber returns the value of Number.
+func (s *LiveGroup) GetNumber() int32 {
+	return s.Number
+}
+
+// GetName returns the value of Name.
+func (s *LiveGroup) GetName() string {
+	return s.Name
+}
+
+// GetHome returns the value of Home.
+func (s *LiveGroup) GetHome() bool {
+	return s.Home
+}
+
+// GetHere returns the value of Here.
+func (s *LiveGroup) GetHere() bool {
+	return s.Here
+}
+
+// GetTable returns the value of Table.
+func (s *LiveGroup) GetTable() bool {
+	return s.Table
+}
+
+// GetTokens returns the value of Tokens.
+func (s *LiveGroup) GetTokens() []string {
+	return s.Tokens
+}
+
+// SetSessionId sets the value of SessionId.
+func (s *LiveGroup) SetSessionId(val ID) {
+	s.SessionId = val
+}
+
+// SetNumber sets the value of Number.
+func (s *LiveGroup) SetNumber(val int32) {
+	s.Number = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveGroup) SetName(val string) {
+	s.Name = val
+}
+
+// SetHome sets the value of Home.
+func (s *LiveGroup) SetHome(val bool) {
+	s.Home = val
+}
+
+// SetHere sets the value of Here.
+func (s *LiveGroup) SetHere(val bool) {
+	s.Here = val
+}
+
+// SetTable sets the value of Table.
+func (s *LiveGroup) SetTable(val bool) {
+	s.Table = val
+}
+
+// SetTokens sets the value of Tokens.
+func (s *LiveGroup) SetTokens(val []string) {
+	s.Tokens = val
 }
 
 // A Character's haggling with the open Shop. While the roll is out it names the roll; once rolled, the
@@ -26264,9 +26398,10 @@ func (s *LiveTurnStart) SetTokenIds(val []ID) {
 	s.TokenIds = val
 }
 
-// A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
-// change, and a view whose seq is not the next one means resync. A walk's view carries the views along
-// the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+// A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the
+// screen to the Session of its own group of a split party; a view follows every change, and a view
+// whose seq is not the next one means resync. A walk's view carries the views along the way as steps,
+// to play back at walking pace; a path answers plan_walk to its sender only.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
 	Kind       LiveUpdateKind          `json:"kind"`
@@ -26276,6 +26411,7 @@ type LiveUpdate struct {
 	Reason     OptString               `json:"reason"`
 	Session    OptLiveSessionView      `json:"session"`
 	View       OptLiveView             `json:"view"`
+	Group      OptLiveGroup            `json:"group"`
 	Steps      []LiveView              `json:"steps"`
 	Path       OptLivePath             `json:"path"`
 	Preview    OptLiveAttackPreview    `json:"preview"`
@@ -26319,6 +26455,11 @@ func (s *LiveUpdate) GetSession() OptLiveSessionView {
 // GetView returns the value of View.
 func (s *LiveUpdate) GetView() OptLiveView {
 	return s.View
+}
+
+// GetGroup returns the value of Group.
+func (s *LiveUpdate) GetGroup() OptLiveGroup {
+	return s.Group
 }
 
 // GetSteps returns the value of Steps.
@@ -26396,6 +26537,11 @@ func (s *LiveUpdate) SetView(val OptLiveView) {
 	s.View = val
 }
 
+// SetGroup sets the value of Group.
+func (s *LiveUpdate) SetGroup(val OptLiveGroup) {
+	s.Group = val
+}
+
 // SetSteps sets the value of Steps.
 func (s *LiveUpdate) SetSteps(val []LiveView) {
 	s.Steps = val
@@ -26448,6 +26594,7 @@ const (
 	LiveUpdateKindAreaPreview   LiveUpdateKind = "area_preview"
 	LiveUpdateKindPing          LiveUpdateKind = "ping"
 	LiveUpdateKindRoll          LiveUpdateKind = "roll"
+	LiveUpdateKindRegroup       LiveUpdateKind = "regroup"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -26462,6 +26609,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindAreaPreview,
 		LiveUpdateKindPing,
 		LiveUpdateKindRoll,
+		LiveUpdateKindRegroup,
 	}
 }
 
@@ -26485,6 +26633,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindPing:
 		return []byte(s), nil
 	case LiveUpdateKindRoll:
+		return []byte(s), nil
+	case LiveUpdateKindRegroup:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -26520,6 +26670,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveUpdateKindRoll:
 		*s = LiveUpdateKindRoll
+		return nil
+	case LiveUpdateKindRegroup:
+		*s = LiveUpdateKindRegroup
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -26574,7 +26727,9 @@ type LiveView struct {
 	// The points the DM can rewind to, oldest first. Sent to the DM only.
 	Checkpoints []LiveCheckpoint `json:"checkpoints"`
 	// The Campaign is played without undo. Sent to the DM only.
-	NoUndo  OptBool         `json:"noUndo"`
+	NoUndo OptBool `json:"noUndo"`
+	// The Sessions a split party plays in. Sent to the DM only, and only while the party is split.
+	Groups  []LiveGroup     `json:"groups"`
 	Walls   []HexCoord      `json:"walls"`
 	Lights  []LiveLight     `json:"lights"`
 	Ambient OptAmbientLight `json:"ambient"`
@@ -26723,6 +26878,11 @@ func (s *LiveView) GetCheckpoints() []LiveCheckpoint {
 // GetNoUndo returns the value of NoUndo.
 func (s *LiveView) GetNoUndo() OptBool {
 	return s.NoUndo
+}
+
+// GetGroups returns the value of Groups.
+func (s *LiveView) GetGroups() []LiveGroup {
+	return s.Groups
 }
 
 // GetWalls returns the value of Walls.
@@ -26883,6 +27043,11 @@ func (s *LiveView) SetCheckpoints(val []LiveCheckpoint) {
 // SetNoUndo sets the value of NoUndo.
 func (s *LiveView) SetNoUndo(val OptBool) {
 	s.NoUndo = val
+}
+
+// SetGroups sets the value of Groups.
+func (s *LiveView) SetGroups(val []LiveGroup) {
+	s.Groups = val
 }
 
 // SetWalls sets the value of Walls.
@@ -33316,6 +33481,52 @@ func (o OptLiveDying) Get() (v LiveDying, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveDying) Or(d LiveDying) LiveDying {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveGroup returns new OptLiveGroup with value set to v.
+func NewOptLiveGroup(v LiveGroup) OptLiveGroup {
+	return OptLiveGroup{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveGroup is optional LiveGroup.
+type OptLiveGroup struct {
+	Value LiveGroup
+	Set   bool
+}
+
+// IsSet returns true if OptLiveGroup was set.
+func (o OptLiveGroup) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveGroup) Reset() {
+	var v LiveGroup
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveGroup) SetTo(v LiveGroup) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveGroup) Get() (v LiveGroup, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveGroup) Or(d LiveGroup) LiveGroup {
 	if v, ok := o.Get(); ok {
 		return v
 	}

@@ -83,6 +83,18 @@ describe('SessionState', () => {
     expect(s.steps).toHaveLength(0)
     expect(s.ended).toBe(true)
   })
+
+  it('learns from a regroup which Session of a split party the screen belongs in', () => {
+    const s = new SessionState()
+    expect(s.regroup).toBeNull()
+    const other = '0190c7a8-0000-7000-8000-00000000000c'
+    expect(s.apply({ kind: 'regroup', seq: 3, group: { sessionId: other, number: 0, name: '', home: false, here: false, table: false, tokens: [] } })).toBe('applied')
+    expect(s.regroup).toBe(other)
+    // A regroup that names no group changes nothing.
+    const t = new SessionState()
+    expect(t.apply({ kind: 'regroup', seq: 3 })).toBe('applied')
+    expect(t.regroup).toBeNull()
+  })
 })
 
 describe('useLiveSession', () => {
@@ -142,6 +154,17 @@ describe('useLiveSession', () => {
     expect(FakeSocket.all).toHaveLength(2)
     w.unmount()
     expect(again.closed).toBe(true)
+  })
+
+  it('does not come back to a Session it was sent away from', () => {
+    const { api } = harness()
+    const s = FakeSocket.last()
+    s.open()
+    s.receive({ kind: 'regroup', seq: 0, group: { sessionId: '0190c7a8-0000-7000-8000-00000000000c', number: 0, name: '', home: false, here: false, table: false, tokens: [] } })
+    expect(api().view.regroup).toBe('0190c7a8-0000-7000-8000-00000000000c')
+    s.drop()
+    vi.advanceTimersByTime(60_000)
+    expect(FakeSocket.all).toHaveLength(1)
   })
 
   it('stops reconnecting once closed and builds secure URLs', () => {
