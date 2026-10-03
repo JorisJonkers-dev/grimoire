@@ -29,7 +29,7 @@ and import their own adventures.
 | [ARCHITECTURE.md](ARCHITECTURE.md) | The source of truth: scope, contexts, contracts, data, rules engine, live play, gates, milestones |
 | [CONTEXT.md](CONTEXT.md) | The glossary. Use these words in code, API and UI |
 | [docs/adr/](docs/adr/) | Decisions that are hard to reverse |
-| [docs/blueprints/](docs/blueprints/) | Generic Go API and Vue SPA blueprints this project specialises |
+| [docs/blueprints/](docs/blueprints/) | A pointer to the generic Go API and Vue SPA blueprints this project specialises, in `template-go-vue` |
 | [CLAUDE.md](CLAUDE.md) | Rules for AI agents working in this repo |
 | [ATTRIBUTION.md](ATTRIBUTION.md) | Credits for SRD content and third-party work |
 
@@ -77,7 +77,7 @@ api/        Go module: cmd/grimoire (composition root) and internal/<context>
 openapi/    The hand-authored OpenAPI 3.1 contract and its lint config
 web/        Vue app (arrives with the design system)
 design/     Design exports and tokens (arrives with the Claude Design mockups)
-docs/       ADRs and blueprints
+docs/       ADRs, and a pointer to the blueprints
 ```
 
 ## Contributing
