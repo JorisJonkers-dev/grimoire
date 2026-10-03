@@ -560,6 +560,37 @@ type CampaignTrackValue struct {
 	Value       int32
 }
 
+type CampaignVehicle struct {
+	ID          uuid.UUID
+	CampaignID  uuid.UUID
+	Name        string
+	Kind        string
+	HullHp      int32
+	HullMax     int32
+	Threshold   int32
+	MilesPerDay int32
+	CreatedAt   time.Time
+}
+
+type CampaignVehicleComponent struct {
+	ID        uuid.UUID
+	VehicleID uuid.UUID
+	Position  int32
+	Name      string
+	Hp        int32
+	HpMax     int32
+	Drives    bool
+}
+
+type CampaignVehicleStation struct {
+	ID        uuid.UUID
+	VehicleID uuid.UUID
+	Position  int32
+	Name      string
+	Crew      int32
+	Posted    int32
+}
+
 type CompendiumAbilityScore struct {
 	ID   int64
 	Slug string
@@ -1903,6 +1934,7 @@ type PlayTravelLeg struct {
 	Days       int32
 	FromSecret bool
 	ToSecret   bool
+	Vehicle    pgtype.Text
 }
 
 type PlayXpAward struct {

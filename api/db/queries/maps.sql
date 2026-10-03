@@ -92,10 +92,10 @@ INSERT INTO campaign.map_parties (map_id, node_id) VALUES (@map_id, @node_id)
 ON CONFLICT (map_id) DO UPDATE SET node_id = excluded.node_id;
 
 -- name: InsertTravelLeg :exec
-INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days, from_secret, to_secret)
-VALUES (@action_id, @session_id, @map_id, @from_name, @to_name, @pace, @distance_mi, @minutes, @days, @from_secret, @to_secret);
+INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days, from_secret, to_secret, vehicle)
+VALUES (@action_id, @session_id, @map_id, @from_name, @to_name, @pace, @distance_mi, @minutes, @days, @from_secret, @to_secret, sqlc.narg(vehicle));
 
 -- name: SessionTravelLegs :many
-SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days, l.from_secret, l.to_secret
+SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days, l.from_secret, l.to_secret, l.vehicle
 FROM play.travel_legs l JOIN play.actions a ON a.id = l.action_id
 WHERE l.session_id = @session_id AND l.map_id = @map_id ORDER BY a.seq;

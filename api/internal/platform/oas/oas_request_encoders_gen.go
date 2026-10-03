@@ -458,6 +458,34 @@ func encodeCreateTrackRequest(
 	return nil
 }
 
+func encodeCreateVehicleRequest(
+	req *VehicleInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeDamageVehicleRequest(
+	req *VehicleBlow,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeDecideStandingChangeRequest(
 	req *StandingDecision,
 	r *http.Request,
@@ -684,6 +712,20 @@ func encodePassTwoStepRequest(
 
 func encodePinLibraryRevisionRequest(
 	req *LibraryPinInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePostVehicleCrewRequest(
+	req *VehicleCrew,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

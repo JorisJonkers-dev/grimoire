@@ -2642,6 +2642,10 @@ export type LiveCommand = {
     routeId?: Id;
     distanceMi?: number;
     pace?: TravelPace;
+    /**
+     * With travel, the vehicle the party travels aboard: the leg takes what the vehicle's speed makes of it as it stands now, round the clock for a ship or an airship, and pace is left out. A vehicle that cannot move is refused.
+     */
+    vehicleId?: string;
     zoneId?: Id;
     radiusHexes?: number;
     /**
@@ -4093,6 +4097,10 @@ export type LiveTravelLeg = {
     distanceMi: number;
     minutes: number;
     days: number;
+    /**
+     * The vehicle the leg was made aboard, by the name it had then; left out on foot, and pace then says nothing.
+     */
+    vehicle?: string;
 };
 
 /**
@@ -4816,6 +4824,127 @@ export type Recipe = {
     days: number;
     costCp: number;
     ingredients: Array<RecipeIngredient>;
+};
+
+/**
+ * What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.
+ */
+export type VehicleKind = 'land' | 'water' | 'air';
+
+/**
+ * A part of a vehicle with hit points of its own.
+ */
+export type VehicleComponentInput = {
+    name: string;
+    hpMax: number;
+    /**
+     * Set for a part that moves the vehicle, such as a sail or a wheel: each one broken takes its share of the speed.
+     */
+    drives?: boolean;
+};
+
+/**
+ * A crew station.
+ */
+export type VehicleStationInput = {
+    name: string;
+    /**
+     * How many crew it takes to man it.
+     */
+    crew: number;
+};
+
+/**
+ * A vehicle or ship as it is built.
+ */
+export type VehicleInput = {
+    name: string;
+    kind: VehicleKind;
+    hullMax: number;
+    /**
+     * The damage threshold: a blow under it does nothing to the hull or to a component.
+     */
+    threshold?: number;
+    /**
+     * The miles it covers in a day's travel when whole and fully crewed.
+     */
+    milesPerDay: number;
+    components?: Array<VehicleComponentInput>;
+    stations?: Array<VehicleStationInput>;
+};
+
+/**
+ * A component of a vehicle as it stands.
+ */
+export type VehicleComponent = {
+    id: Id;
+    name: string;
+    hp: number;
+    hpMax: number;
+    drives: boolean;
+};
+
+/**
+ * A crew station as it stands.
+ */
+export type VehicleStation = {
+    id: Id;
+    name: string;
+    crew: number;
+    posted: number;
+};
+
+/**
+ * A vehicle or ship of the Campaign as it stands.
+ */
+export type Vehicle = {
+    id: Id;
+    name: string;
+    kind: VehicleKind;
+    hull: number;
+    hullMax: number;
+    threshold: number;
+    milesPerDay: number;
+    /**
+     * The miles it makes in a day as it stands now.
+     */
+    speed: number;
+    /**
+     * Set while any crew station has fewer crew than it takes.
+     */
+    shortHanded: boolean;
+    components: Array<VehicleComponent>;
+    stations: Array<VehicleStation>;
+};
+
+/**
+ * The Campaign's vehicles, for the caller.
+ */
+export type Vehicles = {
+    /**
+     * Set when the caller is the DM, who builds and changes vehicles.
+     */
+    dm: boolean;
+    vehicles: Array<Vehicle>;
+};
+
+/**
+ * Damage to a vehicle's hull, or to one component, or the repair of it.
+ */
+export type VehicleBlow = {
+    componentId?: Id;
+    amount: number;
+    /**
+     * Set to give hit points back instead of taking them.
+     */
+    repair?: boolean;
+};
+
+/**
+ * How many crew are posted at a station.
+ */
+export type VehicleCrew = {
+    posted: number;
 };
 
 /**
@@ -9380,6 +9509,192 @@ export type DeleteRecipeResponses = {
 };
 
 export type DeleteRecipeResponse = DeleteRecipeResponses[keyof DeleteRecipeResponses];
+
+export type ListVehiclesData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/vehicles';
+};
+
+export type ListVehiclesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListVehiclesError = ListVehiclesErrors[keyof ListVehiclesErrors];
+
+export type ListVehiclesResponses = {
+    /**
+     * The vehicles, oldest first.
+     */
+    200: Vehicles;
+};
+
+export type ListVehiclesResponse = ListVehiclesResponses[keyof ListVehiclesResponses];
+
+export type CreateVehicleData = {
+    body: VehicleInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/vehicles';
+};
+
+export type CreateVehicleErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateVehicleError = CreateVehicleErrors[keyof CreateVehicleErrors];
+
+export type CreateVehicleResponses = {
+    /**
+     * The new vehicle.
+     */
+    201: Vehicle;
+};
+
+export type CreateVehicleResponse = CreateVehicleResponses[keyof CreateVehicleResponses];
+
+export type DeleteVehicleData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Vehicle id.
+         */
+        vehicleId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/vehicles/{vehicleId}';
+};
+
+export type DeleteVehicleErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteVehicleError = DeleteVehicleErrors[keyof DeleteVehicleErrors];
+
+export type DeleteVehicleResponses = {
+    /**
+     * The vehicle is removed.
+     */
+    204: void;
+};
+
+export type DeleteVehicleResponse = DeleteVehicleResponses[keyof DeleteVehicleResponses];
+
+export type DamageVehicleData = {
+    body: VehicleBlow;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Vehicle id.
+         */
+        vehicleId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/vehicles/{vehicleId}/damage';
+};
+
+export type DamageVehicleErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DamageVehicleError = DamageVehicleErrors[keyof DamageVehicleErrors];
+
+export type DamageVehicleResponses = {
+    /**
+     * The vehicle as the blow or the repair leaves it.
+     */
+    200: Vehicle;
+};
+
+export type DamageVehicleResponse = DamageVehicleResponses[keyof DamageVehicleResponses];
+
+export type PostVehicleCrewData = {
+    body: VehicleCrew;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Vehicle id.
+         */
+        vehicleId: Id;
+        /**
+         * Crew station id.
+         */
+        stationId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/vehicles/{vehicleId}/stations/{stationId}';
+};
+
+export type PostVehicleCrewErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PostVehicleCrewError = PostVehicleCrewErrors[keyof PostVehicleCrewErrors];
+
+export type PostVehicleCrewResponses = {
+    /**
+     * The vehicle with the station manned so.
+     */
+    200: Vehicle;
+};
+
+export type PostVehicleCrewResponse = PostVehicleCrewResponses[keyof PostVehicleCrewResponses];
 
 export type ListFactionsData = {
     body?: never;

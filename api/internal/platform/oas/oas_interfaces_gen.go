@@ -161,6 +161,14 @@ type CreateTrackRes interface {
 	createTrackRes()
 }
 
+type CreateVehicleRes interface {
+	createVehicleRes()
+}
+
+type DamageVehicleRes interface {
+	damageVehicleRes()
+}
+
 type DecideStandingChangeRes interface {
 	decideStandingChangeRes()
 }
@@ -235,6 +243,10 @@ type DeleteShopRes interface {
 
 type DeleteTrackRes interface {
 	deleteTrackRes()
+}
+
+type DeleteVehicleRes interface {
+	deleteVehicleRes()
 }
 
 type DiffNpcRevisionsRes interface {
@@ -705,6 +717,10 @@ type ListTracksRes interface {
 	listTracksRes()
 }
 
+type ListVehiclesRes interface {
+	listVehiclesRes()
+}
+
 type MoveItemRes interface {
 	moveItemRes()
 }
@@ -723,6 +739,10 @@ type PinLibraryRevisionRes interface {
 
 type PlanLevelUpRes interface {
 	planLevelUpRes()
+}
+
+type PostVehicleCrewRes interface {
+	postVehicleCrewRes()
 }
 
 type PrepareSpellsRes interface {

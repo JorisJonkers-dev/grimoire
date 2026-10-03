@@ -288,6 +288,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 			RuleHooks:    &campaignapp.RuleHooks{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 			Tracks:       &campaignapp.Tracks{Repo: campaignpg.New(store.Pool()), Events: playpg.TrackEvents{Hub: hub}, Now: time.Now},
 			Downtime:     &playapp.Downtimes{Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now},
+			Vehicles:     &playapp.Vehicles{Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: campaignpg.New(store.Pool())}, Now: time.Now},
 			Companions: &campaignapp.Companions{
 				Repo: campaignpg.New(store.Pool()), Creatures: playpg.Statblocks{Store: playpg.New(store.Pool()), Characters: characters}, Now: time.Now,
 			},

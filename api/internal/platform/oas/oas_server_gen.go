@@ -520,6 +520,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/tracks
 	CreateTrack(ctx context.Context, req *TrackInput, params CreateTrackParams) (CreateTrackRes, error)
+	// CreateVehicle implements createVehicle operation.
+	//
+	// Adds a vehicle or ship, whole and with nobody at its stations. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/vehicles
+	CreateVehicle(ctx context.Context, req *VehicleInput, params CreateVehicleParams) (CreateVehicleRes, error)
 	// DeclineRetrain implements declineRetrain operation.
 	//
 	// Declines a pending retrain. DM only.
@@ -611,6 +617,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/tracks/{trackId}
 	DeleteTrack(ctx context.Context, params DeleteTrackParams) (DeleteTrackRes, error)
+	// DeleteVehicle implements deleteVehicle operation.
+	//
+	// Removes a vehicle with its components and crew stations. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/vehicles/{vehicleId}
+	DeleteVehicle(ctx context.Context, params DeleteVehicleParams) (DeleteVehicleRes, error)
 	// DiscardCharacterDraft implements discardCharacterDraft operation.
 	//
 	// Starts the wizard over.
@@ -1066,6 +1078,13 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/rolls
 	CreateRoll(ctx context.Context, req *RollCreate, params CreateRollParams) (CreateRollRes, error)
+	// DamageVehicle implements damageVehicle operation.
+	//
+	// Damages the hull, or one component, or repairs it. A blow under the vehicle's damage threshold does
+	// nothing; any other lands in full. A repair stops at what the part can have. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/vehicles/{vehicleId}/damage
+	DamageVehicle(ctx context.Context, req *VehicleBlow, params DamageVehicleParams) (DamageVehicleRes, error)
 	// EndSession implements endSession operation.
 	//
 	// Ends a live Session and disconnects everyone. DM only.
@@ -1099,6 +1118,12 @@ type PlayHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters/{characterId}/inspiration/pass
 	PassInspiration(ctx context.Context, req *InspirationPass, params PassInspirationParams) (PassInspirationRes, error)
+	// PostVehicleCrew implements postVehicleCrew operation.
+	//
+	// Sets how many crew are posted at a crew station, up to what it takes. DM only.
+	//
+	// PUT /api/v1/campaigns/{campaignId}/vehicles/{vehicleId}/stations/{stationId}
+	PostVehicleCrew(ctx context.Context, req *VehicleCrew, params PostVehicleCrewParams) (PostVehicleCrewRes, error)
 	// ReadItem implements readItem operation.
 	//
 	// A Member reads an item they carry, on one of their own Characters or in the Party Stash. Every Lore
@@ -1828,6 +1853,14 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/tracks
 	ListTracks(ctx context.Context, params ListTracksParams) (ListTracksRes, error)
+	// ListVehicles implements listVehicles operation.
+	//
+	// The Campaign's vehicles and ships as they stand: hull, components, crew stations and the miles each
+	// makes in a day now. A vehicle goes slower for every driving component that is broken, at half speed
+	// while any crew station is short of crew, and not at all as a wreck. Every Member sees them.
+	//
+	// GET /api/v1/campaigns/{campaignId}/vehicles
+	ListVehicles(ctx context.Context, params ListVehiclesParams) (ListVehiclesRes, error)
 	// PlanLevelUp implements planLevelUp operation.
 	//
 	// The classes the next level can go to and, for one of them, its hit points, choices and spells. The

@@ -116,6 +116,8 @@ tasks:
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/attack
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/tactics
       - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/effects
+      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/mounted
+      - go tool gremlins unleash --threshold-efficacy 100 --timeout-coefficient 40 --workers 4 ./internal/rules/vehicles
 
   mutation:4:
     desc: Mutation testing, shard 4 of 4 (CI runs the shards in parallel)

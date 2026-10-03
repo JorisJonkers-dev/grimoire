@@ -14,6 +14,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/clock"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/travel"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/vehicles"
 )
 
 func parseID(s string) uuid.UUID {
@@ -45,9 +46,9 @@ func (r *runtime) planWorld(cmd Command) (Write, string) {
 		}
 		return Write{Kind: domain.ActionRouteRemoved, Route: route}, ""
 	case CmdTravel:
-		leg, reason := planTravel(w, cmd)
+		leg, elapsed, reason := r.planTravel(w, cmd)
 		if reason == "" {
-			r.pass(&leg, r.st.gameTime().Add(clock.Journey(leg.Leg.Minutes, leg.Leg.Days)))
+			r.pass(&leg, r.st.gameTime().Add(elapsed))
 		}
 		return leg, reason
 	}
@@ -143,18 +144,20 @@ func planRoute(w *domain.World, cmd Command) (Write, string) {
 }
 
 // planTravel is a Travel Leg: the party walks a route from where it stands to the other end.
-func planTravel(w *domain.World, cmd Command) (Write, string) {
+// planTravel works out a Travel Leg along a route from where the party stands, and how long it takes
+// on the clock: on foot at a pace, or aboard a vehicle at the speed the vehicle makes as it stands.
+func (r *runtime) planTravel(w *domain.World, cmd Command) (Write, int, string) {
 	route, ok := w.Route(domain.RouteID(parseID(cmd.RouteID)))
 	pace, known := travel.ParsePace(cmd.Pace)
 	switch {
 	case !ok:
-		return Write{}, "No such route."
+		return Write{}, 0, "No such route."
 	case w.Party == nil:
-		return Write{}, "Place the party on the world map first."
+		return Write{}, 0, "Place the party on the world map first."
 	case route.From != *w.Party && route.To != *w.Party:
-		return Write{}, "The party is at neither end of that route."
-	case !known:
-		return Write{}, "Travel at a slow, normal or fast pace."
+		return Write{}, 0, "The party is at neither end of that route."
+	case !known && cmd.VehicleID == "":
+		return Write{}, 0, "Travel at a slow, normal or fast pace."
 	}
 	here, _ := w.Node(*w.Party)
 	dest := route.To
@@ -167,7 +170,33 @@ func planTravel(w *domain.World, cmd Command) (Write, string) {
 		From: here.Name, To: there.Name, Pace: pace.String(), DistanceMi: route.DistanceMi, Minutes: p.Minutes, Days: p.Days,
 		FromSecret: here.Secret, ToSecret: there.Secret,
 	}
-	return Write{Kind: domain.ActionTravelLeg, Node: there, Leg: &leg}, ""
+	elapsed := clock.Journey(p.Minutes, p.Days)
+	if cmd.VehicleID != "" {
+		v, reason := r.vehicle(cmd.VehicleID)
+		if reason != "" {
+			return Write{}, 0, reason
+		}
+		leg.Vehicle = v.Name
+		leg.Minutes, leg.Days = vehicles.Leg(route.DistanceMi, v.Speed(), v.Kind)
+		elapsed = vehicles.Elapsed(leg.Minutes, leg.Days, v.Kind)
+	}
+	return Write{Kind: domain.ActionTravelLeg, Node: there, Leg: &leg}, elapsed, ""
+}
+
+// vehicle finds a vehicle of the Campaign that can move, as it stands now.
+func (r *runtime) vehicle(raw string) (domain.Vehicle, string) {
+	list, err := r.store.Vehicles(context.Background(), r.st.session.CampaignID)
+	if err != nil {
+		r.log.Error("live: vehicles", "error", err)
+	}
+	i := slices.IndexFunc(list, func(v domain.Vehicle) bool { return v.ID.String() == raw })
+	switch {
+	case i < 0:
+		return domain.Vehicle{}, "No such vehicle."
+	case list[i].Speed() == 0:
+		return domain.Vehicle{}, list[i].Name + " cannot move as it stands."
+	}
+	return list[i], ""
 }
 
 // setWorld switches the world map and works out which hexes it has.
@@ -285,7 +314,7 @@ func (s *state) worldView(a Audience) *WorldView {
 
 // legView is a Travel Leg as one audience may read it: a secret place at either end is named to the DM only.
 func legView(l domain.TravelLeg, a Audience) LegView {
-	v := LegView{From: l.From, To: l.To, Pace: l.Pace, DistanceMi: l.DistanceMi, Minutes: l.Minutes, Days: l.Days}
+	v := LegView{From: l.From, To: l.To, Pace: l.Pace, DistanceMi: l.DistanceMi, Minutes: l.Minutes, Days: l.Days, Vehicle: l.Vehicle}
 	if a == AudienceDM {
 		return v
 	}
