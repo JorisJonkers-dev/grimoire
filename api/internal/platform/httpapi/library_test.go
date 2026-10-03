@@ -2,6 +2,7 @@ package httpapi_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -534,6 +535,77 @@ func TestSharedLibraryWithAdminReview(t *testing.T) {
 	if rec := call(h, http.MethodPost, "/api/v1/admin/shared-library/"+uuid.NewString()+"/review", "admin", `{"decision":"decline","ipClear":false}`); rec.Code != http.StatusNotFound {
 		t.Fatalf("no such request: %d", rec.Code)
 	}
+}
+
+// Homebrew exported in Grimoire's own schema imports into another Library unchanged, and an import
+// reports what it could not take as Manual.
+func TestHomebrewExportAndImport(t *testing.T) {
+	t.Parallel()
+	h := libraryStack(t)
+	hag := decode(t, call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"creature","name":"Bog Hag","fields":[{"name":"HP","value":"52"},{"name":"Lair","value":"Fen"}]}`))["id"].(string)
+	call(h, http.MethodPost, "/api/v1/library", "dm", `{"kind":"spell","name":"Frost Lance","fields":[{"name":"Damage","value":"3d8"}]}`)
+	col := decode(t, call(h, http.MethodPost, "/api/v1/library/collections", "dm", `{"name":"Fen","description":"Bog things"}`))["id"].(string)
+	call(h, http.MethodPut, "/api/v1/library/collections/"+col, "dm", `{"name":"Fen","description":"Bog things","entryIds":["`+hag+`"]}`)
+
+	rec := call(h, http.MethodGet, "/api/v1/library/export", "dm", "")
+	doc := decode(t, rec)
+	if rec.Code != http.StatusOK || doc["format"] != "grimoire-library" || doc["version"] != float64(1) || len(doc["entries"].([]any)) != 2 || len(doc["collections"].([]any)) != 1 {
+		t.Fatalf("export: %d %v", rec.Code, doc)
+	}
+	if one := decode(t, call(h, http.MethodGet, "/api/v1/library/export?collectionId="+col, "dm", "")); len(one["entries"].([]any)) != 1 || len(one["collections"].([]any)) != 1 {
+		t.Fatalf("a Collection's export = %v", one)
+	}
+	if one := decode(t, call(h, http.MethodGet, "/api/v1/library/export?entryId="+hag, "dm", "")); len(one["entries"].([]any)) != 1 || len(one["collections"].([]any)) != 0 {
+		t.Fatalf("an entry's export = %v", one)
+	}
+	for _, q := range []string{"?entryId=" + hag, "?collectionId=" + col} {
+		if rec := call(h, http.MethodGet, "/api/v1/library/export"+q, "player", ""); rec.Code != http.StatusNotFound {
+			t.Fatalf("exporting another account's %s: %d", q, rec.Code)
+		}
+	}
+
+	rec = call(h, http.MethodPost, "/api/v1/library/import", "player", mustJSON(t, doc))
+	report := decode(t, rec)
+	if rec.Code != http.StatusOK || len(report["entries"].([]any)) != 2 || len(report["collections"].([]any)) != 1 || len(report["manual"].([]any)) != 0 {
+		t.Fatalf("import: %d %v", rec.Code, report)
+	}
+	again := decode(t, call(h, http.MethodGet, "/api/v1/library/export", "player", ""))
+	same := func(d map[string]any) string {
+		var out []string
+		for _, e := range d["entries"].([]any) {
+			m := e.(map[string]any)
+			out = append(out, m["kind"].(string)+"/"+m["name"].(string)+"/"+mustJSON(t, m["fields"]))
+		}
+		for _, c := range d["collections"].([]any) {
+			m := c.(map[string]any)
+			out = append(out, m["name"].(string)+"/"+m["description"].(string)+"/"+strings.Repeat("e", len(m["entries"].([]any))))
+		}
+		return strings.Join(out, "\n")
+	}
+	if same(again) != same(doc) {
+		t.Fatalf("the round trip changed something:\n%s\nwas\n%s", same(again), same(doc))
+	}
+
+	odd := `{"format":"grimoire-library","version":1,"entries":[
+		{"key":"a","kind":"creature","name":"Ogre","fields":{"HP":59,"AC":"11"},"parts":[{"type":"effect"}]},
+		{"key":"b","kind":"vehicle","name":"Cart"}],
+		"collections":[{"name":"Mixed","description":"","entries":["a","b"]}]}`
+	report = decode(t, call(h, http.MethodPost, "/api/v1/library/import", "player", odd))
+	if len(report["entries"].([]any)) != 1 || len(report["manual"].([]any)) != 4 {
+		t.Fatalf("an import with odd parts = %v", report)
+	}
+	if rec := call(h, http.MethodPost, "/api/v1/library/import", "player", `{"format":"other","version":1,"entries":[]}`); rec.Code != http.StatusBadRequest {
+		t.Fatalf("another format: %d", rec.Code)
+	}
+}
+
+func mustJSON(t *testing.T, v any) string {
+	t.Helper()
+	raw, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(raw)
 }
 
 // mute is a bell that never rings.

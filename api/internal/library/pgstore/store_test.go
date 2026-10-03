@@ -148,6 +148,25 @@ func TestEveryLibraryDatabaseFaultSurfaces(t *testing.T) {
 			_, err = s.ReviewSubmission(ctx, dm, x.ID, true, true, "own words", "thanks")
 			return err
 		},
+		"export": func(s *app.Service) error {
+			if _, err := s.Export(ctx, dm, nil, nil); err != nil {
+				return err
+			}
+			col, err := base.CreateCollection(ctx, dm, "Out", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := s.Export(ctx, dm, &col.ID, nil); err != nil {
+				return err
+			}
+			e := fresh()
+			_, err = s.Export(ctx, dm, nil, &e)
+			return err
+		},
+		"import": func(s *app.Service) error {
+			_, err := s.Import(ctx, dm, []domain.Incoming{{Key: "a", Kind: "npc", Name: "Odo"}}, []domain.ExportedCollection{{Name: "In", Entries: []string{"a"}}})
+			return err
+		},
 	}
 	for name, op := range ops {
 		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {

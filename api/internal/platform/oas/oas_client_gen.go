@@ -473,6 +473,14 @@ type BuildInvoker interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/character-draft
 	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
+	// ImportLibrary invokes importLibrary operation.
+	//
+	// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
+	// cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as
+	// Manual, to redo by hand.
+	//
+	// POST /api/v1/library/import
+	ImportLibrary(ctx context.Context, request *LibraryImport) (ImportLibraryRes, error)
 	// JoinCampaign invokes joinCampaign operation.
 	//
 	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -876,6 +884,13 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// ExportLibrary invokes exportLibrary operation.
+	//
+	// The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with
+	// its entries, or one entry.
+	//
+	// GET /api/v1/library/export
+	ExportLibrary(ctx context.Context, params ExportLibraryParams) (ExportLibraryRes, error)
 	// GetAccount invokes getAccount operation.
 	//
 	// The Account the caller is signed in as.
@@ -7289,6 +7304,164 @@ func (c *Client) sendEndSession(ctx context.Context, params EndSessionParams) (r
 	return result, nil
 }
 
+// ExportLibrary invokes exportLibrary operation.
+//
+// The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with
+// its entries, or one entry.
+//
+// GET /api/v1/library/export
+func (c *Client) ExportLibrary(ctx context.Context, params ExportLibraryParams) (ExportLibraryRes, error) {
+	res, err := c.sendExportLibrary(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendExportLibrary(ctx context.Context, params ExportLibraryParams) (res ExportLibraryRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("exportLibrary"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/library/export"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ExportLibraryOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/library/export"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "collectionId" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "collectionId",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.CollectionId.Get(); ok {
+				if unwrapped := uuid.UUID(val); true {
+					return e.EncodeValue(conv.UUIDToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
+		// Encode "entryId" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "entryId",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.EntryId.Get(); ok {
+				if unwrapped := uuid.UUID(val); true {
+					return e.EncodeValue(conv.UUIDToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ExportLibraryOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeExportLibraryResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // FinishOidc invokes finishOidc operation.
 //
 // Takes the code and state the provider sent back. Signs in a linked login, links the login when the
@@ -11967,6 +12140,124 @@ func (c *Client) sendGetUnseenReleaseNote(ctx context.Context) (res GetUnseenRel
 
 	stage = "DecodeResponse"
 	result, err := decodeGetUnseenReleaseNoteResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// ImportLibrary invokes importLibrary operation.
+//
+// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
+// cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as
+// Manual, to redo by hand.
+//
+// POST /api/v1/library/import
+func (c *Client) ImportLibrary(ctx context.Context, request *LibraryImport) (ImportLibraryRes, error) {
+	res, err := c.sendImportLibrary(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendImportLibrary(ctx context.Context, request *LibraryImport) (res ImportLibraryRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("importLibrary"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/library/import"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, ImportLibraryOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/library/import"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeImportLibraryRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, ImportLibraryOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeImportLibraryResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

@@ -3912,6 +3912,71 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/library/export:
+    get:
+      operationId: exportLibrary
+      x-ogen-operation-group: Read
+      summary: Export Homebrew
+      description: "The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with its entries, or one entry."
+      tags: [Library]
+      parameters:
+        - name: collectionId
+          in: query
+          description: Only this Collection and its entries.
+          schema: { $ref: "#/components/schemas/Id" }
+        - name: entryId
+          in: query
+          description: Only this entry.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The export.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryExport"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/library/import:
+    post:
+      operationId: importLibrary
+      x-ogen-operation-group: Build
+      summary: Import Homebrew
+      description: "Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as Manual, to redo by hand."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LibraryImport"
+      responses:
+        "200":
+          description: What was imported, and what needs doing by hand.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReport"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/library/{entryId}:
     get:
       operationId: getLibraryEntry
@@ -9621,6 +9686,111 @@ components:
         ipClear: { type: boolean, description: "The entry carries no non-SRD text." }
         ipNote: { type: string, maxLength: 2000 }
         message: { type: string, maxLength: 2000 }
+    LibraryExport:
+      type: object
+      description: Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+      additionalProperties: false
+      required: [format, version, entries, collections]
+      properties:
+        format: { type: string, enum: [grimoire-library] }
+        version: { type: integer, format: int32, minimum: 1, maximum: 1 }
+        entries:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/ExportedEntry" }
+        collections:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ExportedCollection" }
+    ExportedEntry:
+      type: object
+      description: One entry in an export.
+      additionalProperties: false
+      required: [key, kind, name, fields, parts]
+      properties:
+        key: { type: string, minLength: 1, maxLength: 80 }
+        kind: { $ref: "#/components/schemas/LibraryKind" }
+        name: { type: string, maxLength: 80 }
+        fields:
+          type: object
+          maxProperties: 100
+          additionalProperties: { type: string, maxLength: 4000 }
+        parts:
+          type: array
+          description: Typed parts such as Effects; none are exported yet.
+          maxItems: 100
+          items: { type: object, additionalProperties: true }
+    ExportedCollection:
+      type: object
+      description: One Collection in an export, naming its entries by key.
+      additionalProperties: false
+      required: [name, description, entries]
+      properties:
+        name: { type: string, maxLength: 80 }
+        description: { type: string, maxLength: 2000 }
+        entries:
+          type: array
+          maxItems: 10000
+          items: { type: string, maxLength: 80 }
+    LibraryImport:
+      type: object
+      description: An export to import. Parts of it Grimoire cannot take are reported, not refused.
+      additionalProperties: false
+      required: [format, version, entries]
+      properties:
+        format: { type: string, enum: [grimoire-library] }
+        version: { type: integer, format: int32, minimum: 1, maximum: 1 }
+        entries:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/ImportedEntry" }
+        collections:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/ExportedCollection" }
+    ImportedEntry:
+      type: object
+      description: One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+      additionalProperties: false
+      required: [key, kind, name]
+      properties:
+        key: { type: string, minLength: 1, maxLength: 80 }
+        kind: { type: string, maxLength: 40 }
+        name: { type: string, maxLength: 200 }
+        fields:
+          type: object
+          maxProperties: 200
+          additionalProperties: true
+        parts:
+          type: array
+          maxItems: 200
+          items: { type: object, additionalProperties: true }
+    ImportReport:
+      type: object
+      description: What an import added, and what needs doing by hand.
+      additionalProperties: false
+      required: [entries, collections, manual]
+      properties:
+        entries:
+          type: array
+          maxItems: 10000
+          items: { $ref: "#/components/schemas/LibraryEntry" }
+        collections:
+          type: array
+          maxItems: 1000
+          items: { $ref: "#/components/schemas/LibraryCollection" }
+        manual:
+          type: array
+          maxItems: 100000
+          items: { $ref: "#/components/schemas/ManualPart" }
+    ManualPart:
+      type: object
+      description: A part of an import Grimoire could not take, and why.
+      additionalProperties: false
+      required: [where, reason]
+      properties:
+        where: { type: string, maxLength: 300 }
+        reason: { type: string, maxLength: 300 }
     LiveContainer:
       type: object
       description: A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.

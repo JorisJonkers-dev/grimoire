@@ -173,6 +173,10 @@ type EndSessionRes interface {
 	endSessionRes()
 }
 
+type ExportLibraryRes interface {
+	exportLibraryRes()
+}
+
 type FinishOidcRes interface {
 	finishOidcRes()
 }
@@ -307,6 +311,10 @@ type GetTokenIconRes interface {
 
 type GetUnseenReleaseNoteRes interface {
 	getUnseenReleaseNoteRes()
+}
+
+type ImportLibraryRes interface {
+	importLibraryRes()
 }
 
 type JoinCampaignRes interface {

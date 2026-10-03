@@ -6,6 +6,7 @@ import { createLibraryEntryMutation, listLibraryEntriesOptions } from '@/infrast
 import type { LibraryField, LibraryKind } from '@/infrastructure/api/types.gen'
 import { GButton, GField, GRow, GTabs } from '@/shared/ui'
 import CollectionsPanel from './CollectionsPanel.vue'
+import TransferPanel from './TransferPanel.vue'
 import FieldsEditor from './FieldsEditor.vue'
 import { cleanFields, kindNames } from './fields'
 
@@ -20,6 +21,7 @@ const create = useMutation(createLibraryEntryMutation())
 const kind = ref<LibraryKind>('creature')
 const name = ref('')
 const fields = ref<LibraryField[]>([])
+const transfer = ref<InstanceType<typeof TransferPanel>>()
 
 function add() {
   create.mutate(
@@ -65,7 +67,8 @@ function add() {
         <p v-if="create.error.value" role="alert" class="g-alert">{{ create.error.value.detail ?? 'That entry was not saved.' }}</p>
         <GButton type="submit" variant="primary" :disabled="name.trim() === '' || create.isPending.value" data-testid="library-add">Add to the Library</GButton>
       </form>
-      <CollectionsPanel :entries="entries.data.value ?? []" />
+      <CollectionsPanel :entries="entries.data.value ?? []" @export="(id) => transfer?.download(id)" />
+      <TransferPanel ref="transfer" />
     </template>
   </main>
 </template>

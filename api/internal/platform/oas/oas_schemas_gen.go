@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 	"github.com/google/uuid"
 )
 
@@ -8863,6 +8864,127 @@ func (s *EquipmentSlot) UnmarshalText(data []byte) error {
 	}
 }
 
+// One Collection in an export, naming its entries by key.
+// Ref: #/components/schemas/ExportedCollection
+type ExportedCollection struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Entries     []string `json:"entries"`
+}
+
+// GetName returns the value of Name.
+func (s *ExportedCollection) GetName() string {
+	return s.Name
+}
+
+// GetDescription returns the value of Description.
+func (s *ExportedCollection) GetDescription() string {
+	return s.Description
+}
+
+// GetEntries returns the value of Entries.
+func (s *ExportedCollection) GetEntries() []string {
+	return s.Entries
+}
+
+// SetName sets the value of Name.
+func (s *ExportedCollection) SetName(val string) {
+	s.Name = val
+}
+
+// SetDescription sets the value of Description.
+func (s *ExportedCollection) SetDescription(val string) {
+	s.Description = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *ExportedCollection) SetEntries(val []string) {
+	s.Entries = val
+}
+
+// One entry in an export.
+// Ref: #/components/schemas/ExportedEntry
+type ExportedEntry struct {
+	Key    string              `json:"key"`
+	Kind   LibraryKind         `json:"kind"`
+	Name   string              `json:"name"`
+	Fields ExportedEntryFields `json:"fields"`
+	// Typed parts such as Effects; none are exported yet.
+	Parts []ExportedEntryPartsItem `json:"parts"`
+}
+
+// GetKey returns the value of Key.
+func (s *ExportedEntry) GetKey() string {
+	return s.Key
+}
+
+// GetKind returns the value of Kind.
+func (s *ExportedEntry) GetKind() LibraryKind {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *ExportedEntry) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ExportedEntry) GetFields() ExportedEntryFields {
+	return s.Fields
+}
+
+// GetParts returns the value of Parts.
+func (s *ExportedEntry) GetParts() []ExportedEntryPartsItem {
+	return s.Parts
+}
+
+// SetKey sets the value of Key.
+func (s *ExportedEntry) SetKey(val string) {
+	s.Key = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ExportedEntry) SetKind(val LibraryKind) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *ExportedEntry) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ExportedEntry) SetFields(val ExportedEntryFields) {
+	s.Fields = val
+}
+
+// SetParts sets the value of Parts.
+func (s *ExportedEntry) SetParts(val []ExportedEntryPartsItem) {
+	s.Parts = val
+}
+
+type ExportedEntryFields map[string]string
+
+func (s *ExportedEntryFields) init() ExportedEntryFields {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
+type ExportedEntryPartsItem map[string]jx.Raw
+
+func (s *ExportedEntryPartsItem) init() ExportedEntryPartsItem {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
+
 // A field whose value differs between two Revisions.
 // Ref: #/components/schemas/FieldChange
 type FieldChange struct {
@@ -10289,6 +10411,176 @@ func (s *HexOccupantSide) UnmarshalText(data []byte) error {
 }
 
 type ID uuid.UUID
+
+// What an import added, and what needs doing by hand.
+// Ref: #/components/schemas/ImportReport
+type ImportReport struct {
+	Entries     []LibraryEntry      `json:"entries"`
+	Collections []LibraryCollection `json:"collections"`
+	Manual      []ManualPart        `json:"manual"`
+}
+
+// GetEntries returns the value of Entries.
+func (s *ImportReport) GetEntries() []LibraryEntry {
+	return s.Entries
+}
+
+// GetCollections returns the value of Collections.
+func (s *ImportReport) GetCollections() []LibraryCollection {
+	return s.Collections
+}
+
+// GetManual returns the value of Manual.
+func (s *ImportReport) GetManual() []ManualPart {
+	return s.Manual
+}
+
+// SetEntries sets the value of Entries.
+func (s *ImportReport) SetEntries(val []LibraryEntry) {
+	s.Entries = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *ImportReport) SetCollections(val []LibraryCollection) {
+	s.Collections = val
+}
+
+// SetManual sets the value of Manual.
+func (s *ImportReport) SetManual(val []ManualPart) {
+	s.Manual = val
+}
+
+// ImportReportHeaders wraps ImportReport with response headers.
+type ImportReportHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ImportReport
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ImportReportHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ImportReportHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ImportReportHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ImportReportHeaders) GetResponse() ImportReport {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ImportReportHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ImportReportHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ImportReportHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ImportReportHeaders) SetResponse(val ImportReport) {
+	s.Response = val
+}
+
+func (*ImportReportHeaders) importLibraryRes() {}
+
+// One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+// Ref: #/components/schemas/ImportedEntry
+type ImportedEntry struct {
+	Key    string                   `json:"key"`
+	Kind   string                   `json:"kind"`
+	Name   string                   `json:"name"`
+	Fields OptImportedEntryFields   `json:"fields"`
+	Parts  []ImportedEntryPartsItem `json:"parts"`
+}
+
+// GetKey returns the value of Key.
+func (s *ImportedEntry) GetKey() string {
+	return s.Key
+}
+
+// GetKind returns the value of Kind.
+func (s *ImportedEntry) GetKind() string {
+	return s.Kind
+}
+
+// GetName returns the value of Name.
+func (s *ImportedEntry) GetName() string {
+	return s.Name
+}
+
+// GetFields returns the value of Fields.
+func (s *ImportedEntry) GetFields() OptImportedEntryFields {
+	return s.Fields
+}
+
+// GetParts returns the value of Parts.
+func (s *ImportedEntry) GetParts() []ImportedEntryPartsItem {
+	return s.Parts
+}
+
+// SetKey sets the value of Key.
+func (s *ImportedEntry) SetKey(val string) {
+	s.Key = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ImportedEntry) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetName sets the value of Name.
+func (s *ImportedEntry) SetName(val string) {
+	s.Name = val
+}
+
+// SetFields sets the value of Fields.
+func (s *ImportedEntry) SetFields(val OptImportedEntryFields) {
+	s.Fields = val
+}
+
+// SetParts sets the value of Parts.
+func (s *ImportedEntry) SetParts(val []ImportedEntryPartsItem) {
+	s.Parts = val
+}
+
+type ImportedEntryFields map[string]jx.Raw
+
+func (s *ImportedEntryFields) init() ImportedEntryFields {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
+
+type ImportedEntryPartsItem map[string]jx.Raw
+
+func (s *ImportedEntryPartsItem) init() ImportedEntryPartsItem {
+	m := *s
+	if m == nil {
+		m = map[string]jx.Raw{}
+		*s = m
+	}
+	return m
+}
 
 // How a fight rolls initiative, each Combatant for itself or one roll per side.
 // Ref: #/components/schemas/InitiativeMode
@@ -12392,6 +12684,139 @@ func (s *LibraryEntryUpdate) SetFields(val LibraryFields) {
 	s.Fields = val
 }
 
+// Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+// Ref: #/components/schemas/LibraryExport
+type LibraryExport struct {
+	Format      LibraryExportFormat  `json:"format"`
+	Version     int32                `json:"version"`
+	Entries     []ExportedEntry      `json:"entries"`
+	Collections []ExportedCollection `json:"collections"`
+}
+
+// GetFormat returns the value of Format.
+func (s *LibraryExport) GetFormat() LibraryExportFormat {
+	return s.Format
+}
+
+// GetVersion returns the value of Version.
+func (s *LibraryExport) GetVersion() int32 {
+	return s.Version
+}
+
+// GetEntries returns the value of Entries.
+func (s *LibraryExport) GetEntries() []ExportedEntry {
+	return s.Entries
+}
+
+// GetCollections returns the value of Collections.
+func (s *LibraryExport) GetCollections() []ExportedCollection {
+	return s.Collections
+}
+
+// SetFormat sets the value of Format.
+func (s *LibraryExport) SetFormat(val LibraryExportFormat) {
+	s.Format = val
+}
+
+// SetVersion sets the value of Version.
+func (s *LibraryExport) SetVersion(val int32) {
+	s.Version = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *LibraryExport) SetEntries(val []ExportedEntry) {
+	s.Entries = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *LibraryExport) SetCollections(val []ExportedCollection) {
+	s.Collections = val
+}
+
+type LibraryExportFormat string
+
+const (
+	LibraryExportFormatGrimoireLibrary LibraryExportFormat = "grimoire-library"
+)
+
+// AllValues returns all LibraryExportFormat values.
+func (LibraryExportFormat) AllValues() []LibraryExportFormat {
+	return []LibraryExportFormat{
+		LibraryExportFormatGrimoireLibrary,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LibraryExportFormat) MarshalText() ([]byte, error) {
+	switch s {
+	case LibraryExportFormatGrimoireLibrary:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LibraryExportFormat) UnmarshalText(data []byte) error {
+	switch LibraryExportFormat(data) {
+	case LibraryExportFormatGrimoireLibrary:
+		*s = LibraryExportFormatGrimoireLibrary
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// LibraryExportHeaders wraps LibraryExport with response headers.
+type LibraryExportHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           LibraryExport
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *LibraryExportHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *LibraryExportHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *LibraryExportHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *LibraryExportHeaders) GetResponse() LibraryExport {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *LibraryExportHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *LibraryExportHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *LibraryExportHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *LibraryExportHeaders) SetResponse(val LibraryExport) {
+	s.Response = val
+}
+
+func (*LibraryExportHeaders) exportLibraryRes() {}
+
 // One named value of a Library entry.
 // Ref: #/components/schemas/LibraryField
 type LibraryField struct {
@@ -12420,6 +12845,89 @@ func (s *LibraryField) SetValue(val string) {
 }
 
 type LibraryFields []LibraryField
+
+// An export to import. Parts of it Grimoire cannot take are reported, not refused.
+// Ref: #/components/schemas/LibraryImport
+type LibraryImport struct {
+	Format      LibraryImportFormat  `json:"format"`
+	Version     int32                `json:"version"`
+	Entries     []ImportedEntry      `json:"entries"`
+	Collections []ExportedCollection `json:"collections"`
+}
+
+// GetFormat returns the value of Format.
+func (s *LibraryImport) GetFormat() LibraryImportFormat {
+	return s.Format
+}
+
+// GetVersion returns the value of Version.
+func (s *LibraryImport) GetVersion() int32 {
+	return s.Version
+}
+
+// GetEntries returns the value of Entries.
+func (s *LibraryImport) GetEntries() []ImportedEntry {
+	return s.Entries
+}
+
+// GetCollections returns the value of Collections.
+func (s *LibraryImport) GetCollections() []ExportedCollection {
+	return s.Collections
+}
+
+// SetFormat sets the value of Format.
+func (s *LibraryImport) SetFormat(val LibraryImportFormat) {
+	s.Format = val
+}
+
+// SetVersion sets the value of Version.
+func (s *LibraryImport) SetVersion(val int32) {
+	s.Version = val
+}
+
+// SetEntries sets the value of Entries.
+func (s *LibraryImport) SetEntries(val []ImportedEntry) {
+	s.Entries = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *LibraryImport) SetCollections(val []ExportedCollection) {
+	s.Collections = val
+}
+
+type LibraryImportFormat string
+
+const (
+	LibraryImportFormatGrimoireLibrary LibraryImportFormat = "grimoire-library"
+)
+
+// AllValues returns all LibraryImportFormat values.
+func (LibraryImportFormat) AllValues() []LibraryImportFormat {
+	return []LibraryImportFormat{
+		LibraryImportFormatGrimoireLibrary,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LibraryImportFormat) MarshalText() ([]byte, error) {
+	switch s {
+	case LibraryImportFormatGrimoireLibrary:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LibraryImportFormat) UnmarshalText(data []byte) error {
+	switch LibraryImportFormat(data) {
+	case LibraryImportFormatGrimoireLibrary:
+		*s = LibraryImportFormatGrimoireLibrary
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 // What a Library entry is.
 // Ref: #/components/schemas/LibraryKind
@@ -22805,6 +23313,33 @@ func (s *LootTableInput) SetEntries(val []LootEntry) {
 	s.Entries = val
 }
 
+// A part of an import Grimoire could not take, and why.
+// Ref: #/components/schemas/ManualPart
+type ManualPart struct {
+	Where  string `json:"where"`
+	Reason string `json:"reason"`
+}
+
+// GetWhere returns the value of Where.
+func (s *ManualPart) GetWhere() string {
+	return s.Where
+}
+
+// GetReason returns the value of Reason.
+func (s *ManualPart) GetReason() string {
+	return s.Reason
+}
+
+// SetWhere sets the value of Where.
+func (s *ManualPart) SetWhere(val string) {
+	s.Where = val
+}
+
+// SetReason sets the value of Reason.
+func (s *ManualPart) SetReason(val string) {
+	s.Reason = val
+}
+
 // A Map's name, calibration and ambient light.
 // Ref: #/components/schemas/MapEdit
 type MapEdit struct {
@@ -25960,6 +26495,52 @@ func (o OptID) Get() (v ID, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptID) Or(d ID) ID {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptImportedEntryFields returns new OptImportedEntryFields with value set to v.
+func NewOptImportedEntryFields(v ImportedEntryFields) OptImportedEntryFields {
+	return OptImportedEntryFields{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptImportedEntryFields is optional ImportedEntryFields.
+type OptImportedEntryFields struct {
+	Value ImportedEntryFields
+	Set   bool
+}
+
+// IsSet returns true if OptImportedEntryFields was set.
+func (o OptImportedEntryFields) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptImportedEntryFields) Reset() {
+	var v ImportedEntryFields
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptImportedEntryFields) SetTo(v ImportedEntryFields) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptImportedEntryFields) Get() (v ImportedEntryFields, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptImportedEntryFields) Or(d ImportedEntryFields) ImportedEntryFields {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -29292,6 +29873,7 @@ func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
 func (*ProblemStatusCodeWithHeaders) draftReleaseNoteRes()              {}
 func (*ProblemStatusCodeWithHeaders) editReleaseNoteRes()               {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
+func (*ProblemStatusCodeWithHeaders) exportLibraryRes()                 {}
 func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getAccountHistoryRes()             {}
 func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
@@ -29326,6 +29908,7 @@ func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
+func (*ProblemStatusCodeWithHeaders) importLibraryRes()                 {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
 func (*ProblemStatusCodeWithHeaders) keepRollRes()                      {}
 func (*ProblemStatusCodeWithHeaders) levelUpRes()                       {}

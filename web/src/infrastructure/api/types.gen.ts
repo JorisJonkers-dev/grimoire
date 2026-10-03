@@ -2780,6 +2780,85 @@ export type SharedReviewInput = {
 };
 
 /**
+ * Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+ */
+export type LibraryExport = {
+    format: 'grimoire-library';
+    version: number;
+    entries: Array<ExportedEntry>;
+    collections: Array<ExportedCollection>;
+};
+
+/**
+ * One entry in an export.
+ */
+export type ExportedEntry = {
+    key: string;
+    kind: LibraryKind;
+    name: string;
+    fields: {
+        [key: string]: string;
+    };
+    /**
+     * Typed parts such as Effects; none are exported yet.
+     */
+    parts: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+/**
+ * One Collection in an export, naming its entries by key.
+ */
+export type ExportedCollection = {
+    name: string;
+    description: string;
+    entries: Array<string>;
+};
+
+/**
+ * An export to import. Parts of it Grimoire cannot take are reported, not refused.
+ */
+export type LibraryImport = {
+    format: 'grimoire-library';
+    version: number;
+    entries: Array<ImportedEntry>;
+    collections?: Array<ExportedCollection>;
+};
+
+/**
+ * One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+ */
+export type ImportedEntry = {
+    key: string;
+    kind: string;
+    name: string;
+    fields?: {
+        [key: string]: unknown;
+    };
+    parts?: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+/**
+ * What an import added, and what needs doing by hand.
+ */
+export type ImportReport = {
+    entries: Array<LibraryEntry>;
+    collections: Array<LibraryCollection>;
+    manual: Array<ManualPart>;
+};
+
+/**
+ * A part of an import Grimoire could not take, and why.
+ */
+export type ManualPart = {
+    where: string;
+    reason: string;
+};
+
+/**
  * A Character's Inventory, the Party Stash, a drop of loot, or a bag inside another container, with what it weighs including its bags. A Character's names its owner and how much they can carry.
  */
 export type LiveContainer = {
@@ -8270,6 +8349,73 @@ export type SwitchLibraryCollectionResponses = {
 };
 
 export type SwitchLibraryCollectionResponse = SwitchLibraryCollectionResponses[keyof SwitchLibraryCollectionResponses];
+
+export type ExportLibraryData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Only this Collection and its entries.
+         */
+        collectionId?: Id;
+        /**
+         * Only this entry.
+         */
+        entryId?: Id;
+    };
+    url: '/api/v1/library/export';
+};
+
+export type ExportLibraryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ExportLibraryError = ExportLibraryErrors[keyof ExportLibraryErrors];
+
+export type ExportLibraryResponses = {
+    /**
+     * The export.
+     */
+    200: LibraryExport;
+};
+
+export type ExportLibraryResponse = ExportLibraryResponses[keyof ExportLibraryResponses];
+
+export type ImportLibraryData = {
+    body: LibraryImport;
+    path?: never;
+    query?: never;
+    url: '/api/v1/library/import';
+};
+
+export type ImportLibraryErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ImportLibraryError = ImportLibraryErrors[keyof ImportLibraryErrors];
+
+export type ImportLibraryResponses = {
+    /**
+     * What was imported, and what needs doing by hand.
+     */
+    200: ImportReport;
+};
+
+export type ImportLibraryResponse = ImportLibraryResponses[keyof ImportLibraryResponses];
 
 export type GetLibraryEntryData = {
     body?: never;

@@ -3277,6 +3277,137 @@ func decodeEndSessionParams(args [2]string, argsEscaped bool, r *http.Request) (
 	return params, nil
 }
 
+// ExportLibraryParams is parameters of exportLibrary operation.
+type ExportLibraryParams struct {
+	// Only this Collection and its entries.
+	CollectionId OptID `json:",omitempty,omitzero"`
+	// Only this entry.
+	EntryId OptID `json:",omitempty,omitzero"`
+}
+
+func unpackExportLibraryParams(packed middleware.Parameters) (params ExportLibraryParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "collectionId",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.CollectionId = v.(OptID)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.EntryId = v.(OptID)
+		}
+	}
+	return params
+}
+
+func decodeExportLibraryParams(args [0]string, argsEscaped bool, r *http.Request) (params ExportLibraryParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: collectionId.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "collectionId",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotCollectionIdVal ID
+				if err := func() error {
+					var paramsDotCollectionIdValVal uuid.UUID
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToUUID(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotCollectionIdValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotCollectionIdVal = ID(paramsDotCollectionIdValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CollectionId.SetTo(paramsDotCollectionIdVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "collectionId",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: entryId.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "entryId",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotEntryIdVal ID
+				if err := func() error {
+					var paramsDotEntryIdValVal uuid.UUID
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToUUID(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotEntryIdValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotEntryIdVal = ID(paramsDotEntryIdValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId.SetTo(paramsDotEntryIdVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // FinishOidcParams is parameters of finishOidc operation.
 type FinishOidcParams struct {
 	// The state this browser started the sign-in with.

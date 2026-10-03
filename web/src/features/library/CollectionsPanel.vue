@@ -11,6 +11,7 @@ import { GButton, GField } from '@/shared/ui'
 import { kindNames } from './fields'
 
 const props = defineProps<{ entries: LibraryEntry[] }>()
+const emit = defineEmits<{ export: [collectionId: string] }>()
 const client = useQueryClient()
 const collections = useQuery(computed(() => ({ ...listLibraryCollectionsOptions(), retry: false })))
 const create = useMutation(createLibraryCollectionMutation())
@@ -59,7 +60,10 @@ const count = (c: LibraryCollection) => `${String(c.entryIds.length)} ${c.entryI
       <li v-for="c in collections.data.value ?? []" :key="c.id" :data-testid="`collection-${c.name}`">
         <template v-if="open !== c.id">
           <span class="who">{{ c.name }} · {{ count(c) }}</span>
-          <GButton :data-testid="`collection-edit-${c.name}`" @click="edit(c)">Edit</GButton>
+          <span class="row">
+            <GButton :data-testid="`collection-edit-${c.name}`" @click="edit(c)">Edit</GButton>
+            <GButton :data-testid="`collection-export-${c.name}`" @click="emit('export', c.id)">Export</GButton>
+          </span>
         </template>
         <form v-else class="stack" data-testid="collection-form" @submit.prevent="save">
           <GField v-model="draft.name" label="Name" :maxlength="80" data-testid="collection-name" />

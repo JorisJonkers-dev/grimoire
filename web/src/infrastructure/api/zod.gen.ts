@@ -1830,6 +1830,74 @@ export const zSharedReviewInput = z.object({
 });
 
 /**
+ * One entry in an export.
+ */
+export const zExportedEntry = z.object({
+    key: z.string().min(1).max(80),
+    kind: zLibraryKind,
+    name: z.string().max(80),
+    fields: z.record(z.string(), z.string().max(4000)),
+    parts: z.array(z.record(z.string(), z.unknown())).max(100)
+});
+
+/**
+ * One Collection in an export, naming its entries by key.
+ */
+export const zExportedCollection = z.object({
+    name: z.string().max(80),
+    description: z.string().max(2000),
+    entries: z.array(z.string().max(80)).max(10000)
+});
+
+/**
+ * Homebrew in Grimoire's own JSON schema. Entries are keyed so Collections can name them.
+ */
+export const zLibraryExport = z.object({
+    format: z.enum(['grimoire-library']),
+    version: z.int().gte(1).lte(1),
+    entries: z.array(zExportedEntry).max(10000),
+    collections: z.array(zExportedCollection).max(1000)
+});
+
+/**
+ * One entry to import; its kind, fields and parts are checked by Grimoire, not refused by shape.
+ */
+export const zImportedEntry = z.object({
+    key: z.string().min(1).max(80),
+    kind: z.string().max(40),
+    name: z.string().max(200),
+    fields: z.record(z.string(), z.unknown()).optional(),
+    parts: z.array(z.record(z.string(), z.unknown())).max(200).optional()
+});
+
+/**
+ * An export to import. Parts of it Grimoire cannot take are reported, not refused.
+ */
+export const zLibraryImport = z.object({
+    format: z.enum(['grimoire-library']),
+    version: z.int().gte(1).lte(1),
+    entries: z.array(zImportedEntry).max(10000),
+    collections: z.array(zExportedCollection).max(1000).optional()
+});
+
+/**
+ * A part of an import Grimoire could not take, and why.
+ */
+export const zManualPart = z.object({
+    where: z.string().max(300),
+    reason: z.string().max(300)
+});
+
+/**
+ * What an import added, and what needs doing by hand.
+ */
+export const zImportReport = z.object({
+    entries: z.array(zLibraryEntry).max(10000),
+    collections: z.array(zLibraryCollection).max(1000),
+    manual: z.array(zManualPart).max(100000)
+});
+
+/**
  * A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed, then the higher roll, then the earlier claim.
  */
 export const zLiveClaim = z.object({
@@ -5280,6 +5348,23 @@ export const zSwitchLibraryCollectionPath = z.object({
  * The Campaign's Collections.
  */
 export const zSwitchLibraryCollectionResponse = z.array(zLibraryCollection).max(1000);
+
+export const zExportLibraryQuery = z.object({
+    collectionId: zId.optional(),
+    entryId: zId.optional()
+});
+
+/**
+ * The export.
+ */
+export const zExportLibraryResponse = zLibraryExport;
+
+export const zImportLibraryBody = zLibraryImport;
+
+/**
+ * What was imported, and what needs doing by hand.
+ */
+export const zImportLibraryResponse = zImportReport;
 
 export const zGetLibraryEntryPath = z.object({
     entryId: zId

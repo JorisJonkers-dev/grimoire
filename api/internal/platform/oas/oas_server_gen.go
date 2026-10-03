@@ -451,6 +451,14 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/character-draft
 	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
+	// ImportLibrary implements importLibrary operation.
+	//
+	// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
+	// cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as
+	// Manual, to redo by hand.
+	//
+	// POST /api/v1/library/import
+	ImportLibrary(ctx context.Context, req *LibraryImport) (ImportLibraryRes, error)
 	// JoinCampaign implements joinCampaign operation.
 	//
 	// Adds the Character to a Campaign the signed-in Account belongs to, with its build checked against
@@ -854,6 +862,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/{npcId}/revisions/diff
 	DiffNpcRevisions(ctx context.Context, params DiffNpcRevisionsParams) (DiffNpcRevisionsRes, error)
+	// ExportLibrary implements exportLibrary operation.
+	//
+	// The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with
+	// its entries, or one entry.
+	//
+	// GET /api/v1/library/export
+	ExportLibrary(ctx context.Context, params ExportLibraryParams) (ExportLibraryRes, error)
 	// GetAccount implements getAccount operation.
 	//
 	// The Account the caller is signed in as.

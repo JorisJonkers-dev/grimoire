@@ -349,3 +349,68 @@ describe('shared library', () => {
     expect(refused.wrapper.get('[data-testid="shared-review-forbidden"]').text()).toContain('Only an Admin')
   })
 })
+
+describe('import and export', () => {
+  const FEY = '0190c7a8-0000-7000-8000-0000000000f1'
+  const doc = { format: 'grimoire-library', version: 1, entries: [{ key: HAG, kind: 'creature', name: 'Bog Hag', fields: { HP: '52' }, parts: [] }], collections: [] }
+  const pick = async (input: { element: Element; trigger: (e: string) => Promise<void> }, text: string) => {
+    Object.defineProperty(input.element, 'files', { value: [new File([text], 'lib.json', { type: 'application/json' })], configurable: true })
+    await input.trigger('change')
+    await flushPromises()
+  }
+
+  it('exports everything or one Collection and imports a file with a report', async () => {
+    const asked: string[] = []
+    const made = vi.fn(() => 'blob:export')
+    const freed = vi.fn()
+    Object.assign(URL, { createObjectURL: made, revokeObjectURL: freed })
+    const clicked = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+    let body: unknown
+    const { wrapper } = await mountApp('/library', {
+      '/api/v1/library/export': (u) => {
+        asked.push(u.search)
+        return doc
+      },
+      '/api/v1/library/import': async (_u, req) => {
+        body = await req.clone().json()
+        return { entries: [hag], collections: [], manual: [{ where: 'entries[1] "Cart"', reason: 'the Library keeps no vehicle entries' }] }
+      },
+      '/api/v1/library/collections': () => [{ id: FEY, name: 'Feywild', description: '', entryIds: [], mine: true }],
+      '/api/v1/library': () => [hag],
+    })
+    await wrapper.get('[data-testid="export-all"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="collection-export-Feywild"]').trigger('click')
+    await flushPromises()
+    expect(asked).toEqual(['', `?collectionId=${FEY}`])
+    expect(made).toHaveBeenCalledTimes(2)
+    expect(clicked).toHaveBeenCalledTimes(2)
+    expect(freed).toHaveBeenCalledWith('blob:export')
+    await pick(wrapper.get('[data-testid="import-file"]'), JSON.stringify(doc))
+    expect(body).toEqual(doc)
+    expect(wrapper.get('[data-testid="import-report"]').text()).toContain('Imported 1 entries and 0 Collections.')
+    expect(wrapper.get('[data-testid="manual"]').text()).toBe('entries[1] "Cart": the Library keeps no vehicle entries')
+    await expectAccessible(wrapper.element as Element)
+    clicked.mockRestore()
+  })
+
+  it('says when an export fails or a file is not an export', async () => {
+    const { wrapper } = await mountApp('/library', {
+      '/api/v1/library/export': () => jsonResponse({ type: 'about:blank', title: 'x', status: 503 }, 503),
+      '/api/v1/library/import': () => jsonResponse({ type: 'about:blank', title: 'Bad request', status: 400 }, 400),
+      '/api/v1/library/collections': () => [],
+      '/api/v1/library': () => [],
+    })
+    await wrapper.get('[data-testid="export-all"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="transfer-problem"]').text()).toBe('The export could not be made.')
+    const input = wrapper.get('[data-testid="import-file"]')
+    await pick(input, 'not json')
+    expect(wrapper.get('[data-testid="transfer-problem"]').text()).toBe('That file is not JSON.')
+    await pick(input, '{"format":"other"}')
+    expect(wrapper.get('[data-testid="transfer-problem"]').text()).toBe('That file is not a Grimoire Library export.')
+    Object.defineProperty(input.element, 'files', { value: [], configurable: true })
+    await input.trigger('change')
+    expect(wrapper.find('[data-testid="import-report"]').exists()).toBe(false)
+  })
+})

@@ -407,6 +407,16 @@ func (UnimplementedHandler) EndSession(ctx context.Context, params EndSessionPar
 	return r, ht.ErrNotImplemented
 }
 
+// ExportLibrary implements exportLibrary operation.
+//
+// The caller's Library in Grimoire's own JSON schema: every entry and Collection, one Collection with
+// its entries, or one entry.
+//
+// GET /api/v1/library/export
+func (UnimplementedHandler) ExportLibrary(ctx context.Context, params ExportLibraryParams) (r ExportLibraryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // FinishOidc implements finishOidc operation.
 //
 // Takes the code and state the provider sent back. Signs in a linked login, links the login when the
@@ -717,6 +727,17 @@ func (UnimplementedHandler) GetTokenIcon(ctx context.Context, params GetTokenIco
 //
 // GET /api/v1/release-notes/unseen
 func (UnimplementedHandler) GetUnseenReleaseNote(ctx context.Context) (r GetUnseenReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ImportLibrary implements importLibrary operation.
+//
+// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
+// cannot take (an unknown kind, a field that is not text, a part no builder runs yet) is reported as
+// Manual, to redo by hand.
+//
+// POST /api/v1/library/import
+func (UnimplementedHandler) ImportLibrary(ctx context.Context, req *LibraryImport) (r ImportLibraryRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

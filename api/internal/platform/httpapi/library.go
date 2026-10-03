@@ -2,11 +2,13 @@ package httpapi
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"maps"
 	"net/http"
 	"slices"
 
+	"github.com/go-faster/jx"
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/app"
@@ -42,6 +44,8 @@ type LibraryService interface {
 	Submissions(ctx context.Context, c caller.Caller) ([]domain.Submission, error)
 	AllSubmissions(ctx context.Context, c caller.Caller) ([]domain.Submission, error)
 	ReviewSubmission(ctx context.Context, c caller.Caller, id uuid.UUID, approve, ipClear bool, ipNote, message string) (domain.Submission, error)
+	Export(ctx context.Context, c caller.Caller, collection, entry *uuid.UUID) (domain.Export, error)
+	Import(ctx context.Context, c caller.Caller, in []domain.Incoming, cols []domain.ExportedCollection) (app.Report, error)
 }
 
 var _ LibraryService = (*app.Service)(nil)
@@ -525,4 +529,85 @@ func (h *Handler) ReviewSharedSubmission(ctx context.Context, req *oas.SharedRev
 		return bad, nil
 	}
 	return &oas.SharedSubmissionHeaders{Response: submissionOut(x)}, nil
+}
+
+func optUUIDOf(id oas.OptID) *uuid.UUID {
+	v, ok := id.Get()
+	if !ok {
+		return nil
+	}
+	u := uuid.UUID(v)
+	return &u
+}
+
+// ExportLibrary writes the caller's Homebrew in Grimoire's own schema.
+func (h *Handler) ExportLibrary(ctx context.Context, p oas.ExportLibraryParams) (oas.ExportLibraryRes, error) {
+	x, bad := libraryCall(ctx, h, "export library", func(c caller.Caller) (domain.Export, error) {
+		return h.Library.Export(ctx, c, optUUIDOf(p.CollectionId), optUUIDOf(p.EntryId))
+	})
+	if bad != nil {
+		return bad, nil
+	}
+	out := oas.LibraryExport{Format: oas.LibraryExportFormatGrimoireLibrary, Version: domain.ExportVersion, Entries: []oas.ExportedEntry{}, Collections: []oas.ExportedCollection{}}
+	for _, e := range x.Entries {
+		out.Entries = append(out.Entries, oas.ExportedEntry{
+			Key: e.Key, Kind: oas.LibraryKind(e.Kind), Name: e.Name, Fields: oas.ExportedEntryFields(e.Fields), Parts: []oas.ExportedEntryPartsItem{},
+		})
+	}
+	for _, c := range x.Collections {
+		out.Collections = append(out.Collections, oas.ExportedCollection{Name: c.Name, Description: c.Description, Entries: c.Entries})
+	}
+	return &oas.LibraryExportHeaders{Response: out}, nil
+}
+
+// raw reads a JSON value an import carried, which the decoder already checked, as plain Go values.
+func raw(v jx.Raw) any {
+	var out any
+	_ = json.Unmarshal(v, &out)
+	return out
+}
+
+// ImportLibrary adds an export's entries and Collections to the caller's Library.
+func (h *Handler) ImportLibrary(ctx context.Context, req *oas.LibraryImport) (oas.ImportLibraryRes, error) {
+	in := make([]domain.Incoming, 0, len(req.Entries))
+	for _, e := range req.Entries {
+		x := domain.Incoming{Key: e.Key, Kind: e.Kind, Name: e.Name, Fields: map[string]any{}}
+		for name, v := range e.Fields.Or(nil) {
+			x.Fields[name] = raw(v)
+		}
+		for _, part := range e.Parts {
+			p := map[string]any{}
+			for k, v := range part {
+				p[k] = raw(v)
+			}
+			x.Parts = append(x.Parts, p)
+		}
+		in = append(in, x)
+	}
+	cols := make([]domain.ExportedCollection, 0, len(req.Collections))
+	for _, c := range req.Collections {
+		cols = append(cols, domain.ExportedCollection{Name: c.Name, Description: c.Description, Entries: c.Entries})
+	}
+	r, bad := collectionsCallReport(ctx, h, in, cols)
+	if bad != nil {
+		return bad, nil
+	}
+	return r, nil
+}
+
+func collectionsCallReport(ctx context.Context, h *Handler, in []domain.Incoming, cols []domain.ExportedCollection) (*oas.ImportReportHeaders, *oas.ProblemStatusCodeWithHeaders) {
+	r, me, bad := collectionsCall(ctx, h, "import library", func(c caller.Caller) (app.Report, error) {
+		return h.Library.Import(ctx, c, in, cols)
+	})
+	if bad != nil {
+		return nil, bad
+	}
+	out := oas.ImportReport{Entries: []oas.LibraryEntry{}, Collections: collectionsOut(r.Collections, me, false), Manual: []oas.ManualPart{}}
+	for _, e := range r.Entries {
+		out.Entries = append(out.Entries, libraryEntryOut(e))
+	}
+	for _, m := range r.Manual {
+		out.Manual = append(out.Manual, oas.ManualPart{Where: m.Where, Reason: m.Reason})
+	}
+	return &oas.ImportReportHeaders{Response: out}, nil
 }
