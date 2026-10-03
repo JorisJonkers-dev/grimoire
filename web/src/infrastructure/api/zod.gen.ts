@@ -2418,6 +2418,7 @@ export const zConditionDesign = z.object({
     text: z.string().max(8000),
     ends: z.string().max(40),
     ability: z.string().max(40).optional(),
+    cure: z.string().max(200).optional(),
     stacks: z.boolean().optional(),
     maxLevel: z.int().gte(-100000).lte(100000).optional(),
     perLevel: z.object({
@@ -3053,6 +3054,7 @@ export const zLiveEffect = z.object({
     roundsLeft: z.int().gte(1).lte(100).optional(),
     level: z.int().gte(1).lte(10).optional(),
     mode: z.string().max(80).optional(),
+    cure: z.string().max(80).optional(),
     hexes: z.array(zHexCoord).max(2000).optional(),
     icon: z.string().max(40).optional(),
     color: z.string().max(20).optional()
@@ -4891,6 +4893,7 @@ export const zLiveCommand = z.object({
     saveAbility: zAbility.optional(),
     saveDc: z.int().gte(1).lte(40).optional(),
     effectId: zId.optional(),
+    cured: z.boolean().optional(),
     manualId: zId.optional(),
     surface: z.string().max(40).regex(/^[a-z][a-z0-9-]{0,39}$/).optional(),
     elevationFt: z.int().gte(-100).lte(100).optional(),

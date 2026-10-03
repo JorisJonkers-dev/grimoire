@@ -7,7 +7,7 @@ import { effectLabel, knownEffects } from './conditions'
 const props = withDefaults(defineProps<{ token: LiveToken; tokens: LiveToken[]; conditions?: { slug: string; name: string }[] }>(), { conditions: () => [] })
 const emit = defineEmits<{
   apply: [effect: { effect: string; sourceId?: string; rounds?: number; saveAbility?: Ability; saveDc?: number; effectMode?: string; monsterSlug?: string; tempHp?: number }]
-  end: [effectId: string]
+  end: [effectId: string, cured: boolean]
 }>()
 const known = computed(() => [...knownEffects, ...props.conditions])
 const abilities: Ability[] = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
@@ -49,7 +49,8 @@ function apply() {
           <StatusIcon :slug="e.slug" :label="effectLabel(e)" :icon="e.icon" :color="e.color" />
           {{ effectLabel(e, true) }}
         </span>
-        <GButton variant="danger" :data-testid="`end-effect-${e.slug}`" @click="emit('end', e.id)">End</GButton>
+        <span v-if="e.cure" class="cure" :data-testid="`effect-cure-${e.slug}`">Lingers until cured: {{ e.cure }}</span>
+        <GButton variant="danger" :data-testid="`end-effect-${e.slug}`" @click="emit('end', e.id, Boolean(e.cure))">{{ e.cure ? 'Cured' : 'End' }}</GButton>
       </li>
     </ul>
     <form class="row" @submit.prevent="apply()">

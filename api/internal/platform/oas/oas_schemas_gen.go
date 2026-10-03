@@ -7573,11 +7573,13 @@ func (*ConditionBuildHeaders) saveConditionBuildRes() {}
 // and what it does.
 // Ref: #/components/schemas/ConditionDesign
 type ConditionDesign struct {
-	Icon     string                     `json:"icon"`
-	Color    string                     `json:"color"`
-	Text     string                     `json:"text"`
-	Ends     string                     `json:"ends"`
-	Ability  OptString                  `json:"ability"`
+	Icon    string    `json:"icon"`
+	Color   string    `json:"color"`
+	Text    string    `json:"text"`
+	Ends    string    `json:"ends"`
+	Ability OptString `json:"ability"`
+	// What cures a condition that lasts until cured: a lingering injury.
+	Cure     OptString                  `json:"cure"`
 	Stacks   OptBool                    `json:"stacks"`
 	MaxLevel OptInt32                   `json:"maxLevel"`
 	PerLevel ConditionDesignPerLevel    `json:"perLevel"`
@@ -7607,6 +7609,11 @@ func (s *ConditionDesign) GetEnds() string {
 // GetAbility returns the value of Ability.
 func (s *ConditionDesign) GetAbility() OptString {
 	return s.Ability
+}
+
+// GetCure returns the value of Cure.
+func (s *ConditionDesign) GetCure() OptString {
+	return s.Cure
 }
 
 // GetStacks returns the value of Stacks.
@@ -7652,6 +7659,11 @@ func (s *ConditionDesign) SetEnds(val string) {
 // SetAbility sets the value of Ability.
 func (s *ConditionDesign) SetAbility(val OptString) {
 	s.Ability = val
+}
+
+// SetCure sets the value of Cure.
+func (s *ConditionDesign) SetCure(val OptString) {
+	s.Cure = val
 }
 
 // SetStacks sets the value of Stacks.
@@ -21619,7 +21631,10 @@ type LiveCommand struct {
 	SaveAbility OptAbility           `json:"saveAbility"`
 	SaveDc      OptInt32             `json:"saveDc"`
 	EffectId    OptID                `json:"effectId"`
-	ManualId    OptID                `json:"manualId"`
+	// With end_effect, says a lingering injury ends because its cure was applied; without it such an
+	// Effect is not ended.
+	Cured    OptBool `json:"cured"`
+	ManualId OptID   `json:"manualId"`
 	// With paint_surface, a Surface from the catalogue; leave it out to clear.
 	Surface     OptString      `json:"surface"`
 	ElevationFt OptInt32       `json:"elevationFt"`
@@ -21973,6 +21988,11 @@ func (s *LiveCommand) GetSaveDc() OptInt32 {
 // GetEffectId returns the value of EffectId.
 func (s *LiveCommand) GetEffectId() OptID {
 	return s.EffectId
+}
+
+// GetCured returns the value of Cured.
+func (s *LiveCommand) GetCured() OptBool {
+	return s.Cured
 }
 
 // GetManualId returns the value of ManualId.
@@ -22513,6 +22533,11 @@ func (s *LiveCommand) SetSaveDc(val OptInt32) {
 // SetEffectId sets the value of EffectId.
 func (s *LiveCommand) SetEffectId(val OptID) {
 	s.EffectId = val
+}
+
+// SetCured sets the value of Cured.
+func (s *LiveCommand) SetCured(val OptBool) {
+	s.Cured = val
 }
 
 // SetManualId sets the value of ManualId.
@@ -24520,6 +24545,8 @@ type LiveEffect struct {
 	Level OptInt32 `json:"level"`
 	// The option chosen when the Effect offers a choice.
 	Mode OptString `json:"mode"`
+	// What cures a lingering injury: no rest ends it, and it is ended only as cured.
+	Cure OptString `json:"cure"`
 	// The hexes an emanation covers around the token where it stands now; it moves with the token.
 	Hexes []HexCoord `json:"hexes"`
 	// A homebrew condition's glyph.
@@ -24566,6 +24593,11 @@ func (s *LiveEffect) GetLevel() OptInt32 {
 // GetMode returns the value of Mode.
 func (s *LiveEffect) GetMode() OptString {
 	return s.Mode
+}
+
+// GetCure returns the value of Cure.
+func (s *LiveEffect) GetCure() OptString {
+	return s.Cure
 }
 
 // GetHexes returns the value of Hexes.
@@ -24621,6 +24653,11 @@ func (s *LiveEffect) SetLevel(val OptInt32) {
 // SetMode sets the value of Mode.
 func (s *LiveEffect) SetMode(val OptString) {
 	s.Mode = val
+}
+
+// SetCure sets the value of Cure.
+func (s *LiveEffect) SetCure(val OptString) {
+	s.Cure = val
 }
 
 // SetHexes sets the value of Hexes.

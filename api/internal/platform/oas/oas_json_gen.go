@@ -13912,6 +13912,12 @@ func (s *ConditionDesign) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Cure.Set {
+			e.FieldStart("cure")
+			s.Cure.Encode(e)
+		}
+	}
+	{
 		if s.Stacks.Set {
 			e.FieldStart("stacks")
 			s.Stacks.Encode(e)
@@ -13937,16 +13943,17 @@ func (s *ConditionDesign) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfConditionDesign = [9]string{
+var jsonFieldsNameOfConditionDesign = [10]string{
 	0: "icon",
 	1: "color",
 	2: "text",
 	3: "ends",
 	4: "ability",
-	5: "stacks",
-	6: "maxLevel",
-	7: "perLevel",
-	8: "parts",
+	5: "cure",
+	6: "stacks",
+	7: "maxLevel",
+	8: "perLevel",
+	9: "parts",
 }
 
 // Decode decodes ConditionDesign from json.
@@ -14016,6 +14023,16 @@ func (s *ConditionDesign) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"ability\"")
 			}
+		case "cure":
+			if err := func() error {
+				s.Cure.Reset()
+				if err := s.Cure.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cure\"")
+			}
 		case "stacks":
 			if err := func() error {
 				s.Stacks.Reset()
@@ -14037,7 +14054,7 @@ func (s *ConditionDesign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"maxLevel\"")
 			}
 		case "perLevel":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				if err := s.PerLevel.Decode(d); err != nil {
 					return err
@@ -14047,7 +14064,7 @@ func (s *ConditionDesign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"perLevel\"")
 			}
 		case "parts":
-			requiredBitSet[1] |= 1 << 0
+			requiredBitSet[1] |= 1 << 1
 			if err := func() error {
 				s.Parts = make([]ConditionDesignPartsItem, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -14074,8 +14091,8 @@ func (s *ConditionDesign) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [2]uint8{
-		0b10001111,
-		0b00000001,
+		0b00001111,
+		0b00000011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -35649,6 +35666,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Cured.Set {
+			e.FieldStart("cured")
+			s.Cured.Encode(e)
+		}
+	}
+	{
 		if s.ManualId.Set {
 			e.FieldStart("manualId")
 			s.ManualId.Encode(e)
@@ -35988,7 +36011,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [108]string{
+var jsonFieldsNameOfLiveCommand = [109]string{
 	0:   "nonce",
 	1:   "kind",
 	2:   "caption",
@@ -36044,59 +36067,60 @@ var jsonFieldsNameOfLiveCommand = [108]string{
 	52:  "saveAbility",
 	53:  "saveDc",
 	54:  "effectId",
-	55:  "manualId",
-	56:  "surface",
-	57:  "elevationFt",
-	58:  "camera",
-	59:  "zoomPct",
-	60:  "scene",
-	61:  "title",
-	62:  "body",
-	63:  "nodeId",
-	64:  "toNodeId",
-	65:  "routeId",
-	66:  "distanceMi",
-	67:  "pace",
-	68:  "zoneId",
-	69:  "radiusHexes",
-	70:  "dmOnly",
-	71:  "rest",
-	72:  "tableId",
-	73:  "mode",
-	74:  "entry",
-	75:  "due",
-	76:  "lootTableId",
-	77:  "fromId",
-	78:  "buys",
-	79:  "sells",
-	80:  "instanceId",
-	81:  "action",
-	82:  "legend",
-	83:  "detail",
-	84:  "trigger",
-	85:  "option",
-	86:  "offHand",
-	87:  "cleave",
-	88:  "reactionKind",
-	89:  "reactionMode",
-	90:  "condition",
-	91:  "toId",
-	92:  "itemSlug",
-	93:  "coin",
-	94:  "count",
-	95:  "shopId",
-	96:  "monsters",
-	97:  "hpDelta",
-	98:  "seq",
-	99:  "name",
-	100: "checkpointId",
-	101: "characterIds",
-	102: "gameDay",
-	103: "gameMinute",
-	104: "factionId",
-	105: "companionId",
-	106: "tokenIds",
-	107: "sessionId",
+	55:  "cured",
+	56:  "manualId",
+	57:  "surface",
+	58:  "elevationFt",
+	59:  "camera",
+	60:  "zoomPct",
+	61:  "scene",
+	62:  "title",
+	63:  "body",
+	64:  "nodeId",
+	65:  "toNodeId",
+	66:  "routeId",
+	67:  "distanceMi",
+	68:  "pace",
+	69:  "zoneId",
+	70:  "radiusHexes",
+	71:  "dmOnly",
+	72:  "rest",
+	73:  "tableId",
+	74:  "mode",
+	75:  "entry",
+	76:  "due",
+	77:  "lootTableId",
+	78:  "fromId",
+	79:  "buys",
+	80:  "sells",
+	81:  "instanceId",
+	82:  "action",
+	83:  "legend",
+	84:  "detail",
+	85:  "trigger",
+	86:  "option",
+	87:  "offHand",
+	88:  "cleave",
+	89:  "reactionKind",
+	90:  "reactionMode",
+	91:  "condition",
+	92:  "toId",
+	93:  "itemSlug",
+	94:  "coin",
+	95:  "count",
+	96:  "shopId",
+	97:  "monsters",
+	98:  "hpDelta",
+	99:  "seq",
+	100: "name",
+	101: "checkpointId",
+	102: "characterIds",
+	103: "gameDay",
+	104: "gameMinute",
+	105: "factionId",
+	106: "companionId",
+	107: "tokenIds",
+	108: "sessionId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -36700,6 +36724,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"effectId\"")
+			}
+		case "cured":
+			if err := func() error {
+				s.Cured.Reset()
+				if err := s.Cured.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cured\"")
 			}
 		case "manualId":
 			if err := func() error {
@@ -38894,6 +38928,12 @@ func (s *LiveEffect) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Cure.Set {
+			e.FieldStart("cure")
+			s.Cure.Encode(e)
+		}
+	}
+	{
 		if s.Hexes != nil {
 			e.FieldStart("hexes")
 			e.ArrStart()
@@ -38917,7 +38957,7 @@ func (s *LiveEffect) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveEffect = [11]string{
+var jsonFieldsNameOfLiveEffect = [12]string{
 	0:  "id",
 	1:  "slug",
 	2:  "name",
@@ -38926,9 +38966,10 @@ var jsonFieldsNameOfLiveEffect = [11]string{
 	5:  "roundsLeft",
 	6:  "level",
 	7:  "mode",
-	8:  "hexes",
-	9:  "icon",
-	10: "color",
+	8:  "cure",
+	9:  "hexes",
+	10: "icon",
+	11: "color",
 }
 
 // Decode decodes LiveEffect from json.
@@ -39025,6 +39066,16 @@ func (s *LiveEffect) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"mode\"")
+			}
+		case "cure":
+			if err := func() error {
+				s.Cure.Reset()
+				if err := s.Cure.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cure\"")
 			}
 		case "hexes":
 			if err := func() error {

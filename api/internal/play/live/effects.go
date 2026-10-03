@@ -31,6 +31,9 @@ func (r *runtime) planEffect(cmd Command) (Write, string) {
 			return Write{}, "No such effect."
 		}
 		e := r.st.fx.Active[i]
+		if def, known := r.st.catalog.Lookup(e.Slug); known && def.Duration.Lingers() && !cmd.Cured {
+			return Write{}, e.Name + " lingers until cured: " + r.st.looks[e.Slug].cure + "."
+		}
 		return Write{Kind: domain.ActionEffectEnded, Token: r.st.tokens[e.Target], ended: []domain.EffectID{e.ID}}, ""
 	case CmdResolveManual:
 		i := slices.IndexFunc(r.st.fx.Manual, func(m domain.ManualPrompt) bool { return m.ID.String() == cmd.ManualID })
@@ -454,6 +457,72 @@ func (s *state) forget(id domain.TokenID) {
 	s.endEffects(gone)
 }
 
+// lingering is what an Effect is as a lingering injury on a Character: nothing for an Effect that does
+// not last until cured, and nothing for a creature that is no Character.
+func (s *state) lingering(e domain.Effect) (found domain.Injury, ok bool) {
+	def, known := s.catalog.Lookup(e.Slug)
+	character, is := characterOf(s.tokens[e.Target])
+	if !known || !def.Duration.Lingers() || !is {
+		return found, false
+	}
+	return domain.Injury{Character: character, Slug: e.Slug, Name: e.Name, Cure: s.looks[e.Slug].cure, Level: e.Level}, true
+}
+
+// curedBy lists the lingering injuries a write ends on Characters still on the board; it is asked
+// before the write's Effects are taken off.
+func (s *state) curedBy(w *Write) []domain.Injury {
+	var out []domain.Injury
+	for _, id := range w.ended {
+		i := slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.ID == id })
+		if i < 0 {
+			continue
+		}
+		if inj, ok := s.lingering(s.fx.Active[i]); ok {
+			out = append(out, inj)
+		}
+	}
+	return out
+}
+
+// injuredBy lists the lingering injury a write leaves on a Character, at the level it now stands; it
+// is asked once the write's Effect has landed.
+func (s *state) injuredBy(w *Write) []domain.Injury {
+	if w.effect == nil {
+		return nil
+	}
+	i := slices.IndexFunc(s.fx.Active, func(e domain.Effect) bool { return e.ID == w.effect.ID })
+	if i < 0 {
+		return nil
+	}
+	if inj, ok := s.lingering(s.fx.Active[i]); ok {
+		return []domain.Injury{inj}
+	}
+	return nil
+}
+
+// carryInjuries puts back on a Character's token, as it is placed, the lingering injuries the
+// Character carries. One whose condition the Campaign no longer sees stays off.
+func (r *runtime) carryInjuries(w Write, actor domain.Member, c caller.Caller) {
+	t, here := r.st.tokens[w.Token.ID]
+	character, is := characterOf(t)
+	if w.Kind != domain.ActionTokenPlaced || !here || !is {
+		return
+	}
+	list, err := r.store.Injuries(context.Background(), character)
+	if err != nil {
+		r.log.Error("live: injuries", "error", err)
+		return
+	}
+	for _, inj := range list {
+		def, known := r.st.catalog.Lookup(inj.Slug)
+		if !known || !def.Duration.Lingers() {
+			continue
+		}
+		e := domain.Effect{ID: domain.EffectID(uuid.New()), Target: t.ID, Slug: inj.Slug, Name: def.Name, Level: inj.Level}
+		r.commit(request{}, Write{Kind: domain.ActionEffectApplied, Token: t, effect: &e}, actor, c)
+	}
+}
+
 // effectViews shows a token's Effects.
 func (s *state) effectViews(id domain.TokenID) []EffectView {
 	var out []EffectView
@@ -466,7 +535,7 @@ func (s *state) effectViews(id domain.TokenID) []EffectView {
 			v.Level = max(1, e.Level)
 		}
 		if l, ok := s.looks[e.Slug]; ok {
-			v.Icon, v.Color = l.icon, l.color
+			v.Icon, v.Color, v.Cure = l.icon, l.color, l.cure
 		}
 		if e.Source != nil {
 			v.SourceID = uuid.UUID(*e.Source).String()

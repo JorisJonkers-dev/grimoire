@@ -50,11 +50,41 @@ func (s *Store) saveMarch(ctx context.Context, campaign uuid.UUID, order []uuid.
 	return nil
 }
 
+// saveInjuries keeps the lingering injuries a change leaves on Characters and drops the ones it cures.
+//
+//nolint:gosec // a level is bounded by the rules
+func (s *Store) saveInjuries(ctx context.Context, w live.Write, now time.Time) error {
+	for _, inj := range w.Injured {
+		if err := s.q.UpsertCharacterInjury(ctx, queries.UpsertCharacterInjuryParams{CharacterID: inj.Character, Slug: inj.Slug, Name: inj.Name, Cure: inj.Cure, Level: int32(inj.Level), Now: now}); err != nil {
+			return err
+		}
+	}
+	for _, inj := range w.Cured {
+		if err := s.q.DeleteCharacterInjury(ctx, queries.DeleteCharacterInjuryParams{CharacterID: inj.Character, Slug: inj.Slug}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Injuries reads the lingering injuries a Character carries, oldest first.
+func (s *Store) Injuries(ctx context.Context, character uuid.UUID) ([]domain.Injury, error) {
+	rows, err := s.q.CharacterInjuries(ctx, character)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]domain.Injury, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, domain.Injury{Character: r.CharacterID, Slug: r.Slug, Name: r.Name, Cure: r.Cure, Level: int(r.Level)})
+	}
+	return out, nil
+}
+
 // saveShared writes what a change does to what the whole Campaign shares: the Game Clock, the charges
 // the dawns it passed gave back, the count of Short Rests and the Marching Order.
 //
 //nolint:gosec // days and minutes are bounded by the rules
-func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write) error {
+func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write, now time.Time) error {
 	if w.Day != nil {
 		if err := s.q.SetCampaignClock(ctx, queries.SetCampaignClockParams{ID: campaign, GameDay: int32(*w.Day), GameMinute: int32(w.Minute)}); err != nil {
 			return err
@@ -64,6 +94,9 @@ func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write
 		if err := s.SetCharges(ctx, rc.Instance, rc.Charges); err != nil {
 			return err
 		}
+	}
+	if err := s.saveInjuries(ctx, w, now); err != nil {
+		return err
 	}
 	if w.ShortRests != nil {
 		if err := s.q.SetCampaignShortRests(ctx, queries.SetCampaignShortRestsParams{ID: campaign, ShortRests: int32(*w.ShortRests)}); err != nil {
@@ -205,7 +238,7 @@ func (s *Store) LoadOpenShop(ctx context.Context, campaign uuid.UUID, sid domain
 //nolint:gosec // days, counts, prices and adjustments are bounded by the rules
 func (s *Store) saveShop(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
-	if err := s.saveShared(ctx, sess.CampaignID, w); err != nil {
+	if err := s.saveShared(ctx, sess.CampaignID, w, now); err != nil {
 		return err
 	}
 	switch w.Kind {

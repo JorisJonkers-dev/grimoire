@@ -140,6 +140,7 @@ func TestDurations(t *testing.T) {
 		{effects.Duration{Kind: effects.UntilRest}, 0, "Duration: Until the target finishes a Short or Long Rest."},
 		{effects.Duration{Kind: effects.Permanent}, 0, "Duration: Permanent."},
 		{effects.Duration{Kind: effects.EndOfNextTurn}, 1, "Duration: Until the end of the target's next turn."},
+		{effects.Duration{Kind: effects.UntilCured}, 0, "Duration: Until cured."},
 		{effects.Duration{}, 0, ""},
 	} {
 		if got := c.d.Rounds(); got != c.rounds {
@@ -150,6 +151,10 @@ func TestDurations(t *testing.T) {
 		}
 		if c.d.EndsOnRest() != (c.d.Kind == effects.UntilRest) {
 			t.Errorf("%+v ends on a rest = %v", c.d, c.d.EndsOnRest())
+		}
+		// Only what lasts until cured lingers: no rest ends it, and it goes with its bearer from Session to Session.
+		if c.d.Lingers() != (c.d.Kind == effects.UntilCured) {
+			t.Errorf("%+v lingers = %v", c.d, c.d.Lingers())
 		}
 	}
 	if got := (effects.Duration{Kind: effects.Minutes, Amount: 10}).Text(true); got != "Duration: Concentration, up to 10 minutes." {

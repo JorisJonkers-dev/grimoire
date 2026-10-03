@@ -11829,6 +11829,7 @@ components:
         saveAbility: { $ref: "#/components/schemas/Ability" }
         saveDc: { type: integer, format: int32, minimum: 1, maximum: 40 }
         effectId: { $ref: "#/components/schemas/Id" }
+        cured: { type: boolean, description: "With end_effect, says a lingering injury ends because its cure was applied; without it such an Effect is not ended." }
         manualId: { $ref: "#/components/schemas/Id" }
         surface: { type: string, maxLength: 40, pattern: "^[a-z][a-z0-9-]{0,39}$", description: "With paint_surface, a Surface from the catalogue; leave it out to clear." }
         elevationFt: { type: integer, format: int32, minimum: -100, maximum: 100 }
@@ -12801,6 +12802,7 @@ components:
         text: { type: string, maxLength: 8000 }
         ends: { type: string, maxLength: 40 }
         ability: { type: string, maxLength: 40 }
+        cure: { type: string, maxLength: 200, description: "What cures a condition that lasts until cured: a lingering injury." }
         stacks: { type: boolean }
         maxLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         perLevel:
@@ -13692,6 +13694,7 @@ components:
         roundsLeft: { type: integer, format: int32, minimum: 1, maximum: 100 }
         level: { type: integer, format: int32, minimum: 1, maximum: 10, description: "Levels of a stacking Effect, such as exhaustion." }
         mode: { type: string, maxLength: 80, description: "The option chosen when the Effect offers a choice." }
+        cure: { type: string, maxLength: 80, description: "What cures a lingering injury: no rest ends it, and it is ended only as cured." }
         hexes:
           type: array
           description: The hexes an emanation covers around the token where it stands now; it moves with the token.

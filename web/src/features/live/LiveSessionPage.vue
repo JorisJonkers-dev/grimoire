@@ -833,7 +833,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             :tokens="view?.tokens ?? []"
             :conditions="view?.conditions ?? []"
             @apply="(e) => live?.send({ kind: 'apply_effect', targetId: chosen!.id, ...e })"
-            @end="(id) => live?.send({ kind: 'end_effect', effectId: id })"
+            @end="(id, cured) => live?.send({ kind: 'end_effect', effectId: id, ...(cured ? { cured } : {}) })"
           />
           <VisibilityPanel
             v-if="chosen && isDM"

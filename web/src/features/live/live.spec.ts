@@ -764,6 +764,19 @@ describe('effects', () => {
     expect(panel.text()).toContain('Enlarge/Reduce (Reduce)')
     await panel.get('[data-testid="end-effect-bless"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'end_effect', effectId: aria.effects?.[0]?.id })
+    expect(s.sent.at(-1)).not.toHaveProperty('cured')
+    expect(panel.get('[data-testid="end-effect-bless"]').text()).toBe('End')
+    expect(panel.find('[data-testid^="effect-cure-"]').exists()).toBe(false)
+    // A lingering injury says what cures it, and is ended only as cured.
+    const limp = { id: '0190c7a8-0000-7000-8000-000000000067', slug: 'hb-limp', name: 'Limp', concentration: false, cure: 'Regenerate' }
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [{ ...aria, effects: [...(aria.effects ?? []), limp] }, goblin], fog: false, visible: [], remembered: [], manual, saves } })
+    await flushPromises()
+    expect(panel.get('[data-testid="effect-cure-hb-limp"]').text()).toBe('Lingers until cured: Regenerate')
+    expect(panel.get('[data-testid="end-effect-hb-limp"]').text()).toBe('Cured')
+    await panel.get('[data-testid="end-effect-hb-limp"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'end_effect', effectId: limp.id, cured: true })
+    s.receive({ kind: 'view', seq: 3, view: { tokens: [{ ...aria, effects: [...(aria.effects ?? []), reduced] }, goblin], fog: false, visible: [], remembered: [], manual, saves } })
+    await flushPromises()
     const sent = s.sent.length
     await panel.get('form').trigger('submit')
     expect(s.sent).toHaveLength(sent)
