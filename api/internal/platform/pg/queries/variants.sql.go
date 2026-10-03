@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const campaignShortRests = `-- name: CampaignShortRests :one
@@ -21,6 +22,83 @@ func (q *Queries) CampaignShortRests(ctx context.Context, id uuid.UUID) (int32, 
 	var short_rests int32
 	err := row.Scan(&short_rests)
 	return short_rests, err
+}
+
+const deleteRuleHook = `-- name: DeleteRuleHook :execrows
+DELETE FROM campaign.rule_variant_hooks WHERE campaign_id = $1 AND id = $2
+`
+
+type DeleteRuleHookParams struct {
+	CampaignID uuid.UUID
+	ID         uuid.UUID
+}
+
+func (q *Queries) DeleteRuleHook(ctx context.Context, arg DeleteRuleHookParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteRuleHook, arg.CampaignID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const insertRuleHook = `-- name: InsertRuleHook :exec
+INSERT INTO campaign.rule_variant_hooks (id, campaign_id, name, hook, roll_table, effect, created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+`
+
+type InsertRuleHookParams struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Hook       string
+	RollTable  pgtype.UUID
+	Effect     pgtype.Text
+	Now        time.Time
+}
+
+func (q *Queries) InsertRuleHook(ctx context.Context, arg InsertRuleHookParams) error {
+	_, err := q.db.Exec(ctx, insertRuleHook,
+		arg.ID,
+		arg.CampaignID,
+		arg.Name,
+		arg.Hook,
+		arg.RollTable,
+		arg.Effect,
+		arg.Now,
+	)
+	return err
+}
+
+const listRuleHooks = `-- name: ListRuleHooks :many
+SELECT id, campaign_id, name, hook, roll_table, effect, created_at FROM campaign.rule_variant_hooks WHERE campaign_id = $1 ORDER BY created_at, id
+`
+
+func (q *Queries) ListRuleHooks(ctx context.Context, campaignID uuid.UUID) ([]CampaignRuleVariantHook, error) {
+	rows, err := q.db.Query(ctx, listRuleHooks, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignRuleVariantHook{}
+	for rows.Next() {
+		var i CampaignRuleVariantHook
+		if err := rows.Scan(
+			&i.ID,
+			&i.CampaignID,
+			&i.Name,
+			&i.Hook,
+			&i.RollTable,
+			&i.Effect,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listRuleVariants = `-- name: ListRuleVariants :many

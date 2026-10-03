@@ -61,6 +61,8 @@ type state struct {
 	// rest is the rest proposed or under way; pending the Hides, Grapples and Shoves waiting on rolls.
 	rest    *domain.Rest
 	pending []domain.PendingAction
+	// tableResult is the last result a roll on a Roll Table landed on.
+	tableResult *TableResult
 	// attitudes are how creatures take to Characters, as Influence checks left them.
 	attitudes []domain.Attitude
 	// dying are the Characters at 0 hit points.
@@ -93,7 +95,7 @@ func (s *state) clone() *state {
 	}
 	next.checks = slices.Clone(s.checks)
 	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
-	next.attitudes = slices.Clone(s.attitudes)
+	next.attitudes, next.tableResult = slices.Clone(s.attitudes), s.tableResult
 	next.inventory, next.day, next.minute, next.march, next.standings = cloneInventory(s.inventory), s.day, s.minute, slices.Clone(s.march), s.standings
 	if s.sneak != nil {
 		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
@@ -209,7 +211,7 @@ func (s *state) project(a Audience) View {
 	s.projectPending(&v, a, seen)
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
 	v.Shop, v.Rest, v.GameDay, v.GameMinute, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.minute, s.sneakView(a, seen), s.explorationView()
-	v.MarchingOrder = s.marchView()
+	v.MarchingOrder, v.TableResult = s.marchView(), s.tableResultView(a, seen)
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds, v.Conditions = s.zoneViews(), s.surfaceKindViews(), s.conditionViews()
 		v.Checkpoints, v.NoUndo, v.Groups = s.checkpointViews(), s.noUndo, s.groupViews()

@@ -3401,6 +3401,52 @@ export type BackgroundDesign = {
 };
 
 /**
+ * A design to preview, with the table's name.
+ */
+export type RollTablePreviewInput = {
+    name: string;
+    design: RollTableDesign;
+};
+
+/**
+ * A Roll Table as its builder makes it. Its dice are up to ten of one kind, and its results cover ranges of what they can show, in order and without overlapping.
+ */
+export type RollTableDesign = {
+    /**
+     * The dice to roll, such as 1d20 or 2d6.
+     */
+    dice: string;
+    results: Array<RollTableResult>;
+};
+
+/**
+ * What a range of the dice gives. It may apply an Effect to whoever rolled, and give an Item.
+ */
+export type RollTableResult = {
+    from: number;
+    to: number;
+    text: string;
+    /**
+     * The slug of the Effect it applies.
+     */
+    effect?: string;
+    /**
+     * The slug of the Item it gives.
+     */
+    item?: string;
+    quantity?: number;
+};
+
+/**
+ * A Roll Table in its builder, and how it reads back.
+ */
+export type RollTableBuild = {
+    entry?: LibraryEntry;
+    design: RollTableDesign;
+    lines: Array<string>;
+};
+
+/**
  * A design to preview, with the condition's name.
  */
 export type ConditionPreviewInput = {
@@ -3737,6 +3783,24 @@ export type LiveItem = {
     name: string;
     count: number;
     weightLb: number;
+};
+
+/**
+ * The last result a roll on a Roll Table landed on, sent to the DM and to every screen that sees the creature it was for.
+ */
+export type LiveTableResult = {
+    /**
+     * The Rule Variant that asked for the roll.
+     */
+    hook: string;
+    /**
+     * The Roll Table's name, empty when the Campaign no longer sees it.
+     */
+    table: string;
+    tokenId: Id;
+    label: string;
+    total: number;
+    text: string;
 };
 
 /**
@@ -4553,6 +4617,55 @@ export type RuleVariantChoices = {
 };
 
 /**
+ * A moment in play a Rule Variant of the Campaign's own hangs on.
+ */
+export type HookPointSlug = 'natural-1' | 'critical' | 'drop-to-0' | 'rest' | 'cast';
+
+/**
+ * A Rule Variant the DM authored. It applies an Effect or rolls on a Roll Table, never both. The table's name is empty when the Campaign no longer sees it.
+ */
+export type RuleHook = {
+    id: Id;
+    name: string;
+    hook: HookPointSlug;
+    rollTableId?: Id;
+    tableName?: string;
+    effect?: string;
+};
+
+/**
+ * A new Rule Variant of the Campaign's own: exactly one of a Roll Table and an Effect.
+ */
+export type RuleHookInput = {
+    name: string;
+    hook: HookPointSlug;
+    rollTableId?: Id;
+    /**
+     * The slug of the Effect to apply.
+     */
+    effect?: string;
+};
+
+/**
+ * The Campaign's own Rule Variants with what they can be made of.
+ */
+export type RuleHooks = {
+    dm: boolean;
+    hooks: Array<RuleHook>;
+    points: Array<{
+        slug: HookPointSlug;
+        label: string;
+    }>;
+    /**
+     * The Roll Tables the Campaign sees, by name. Empty for a Player.
+     */
+    tables: Array<{
+        id: Id;
+        name: string;
+    }>;
+};
+
+/**
  * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
  */
 export type Faction = {
@@ -4913,6 +5026,7 @@ export type LiveView = {
     inventory?: Array<LiveContainer>;
     shop?: LiveShop;
     rest?: LiveRest;
+    tableResult?: LiveTableResult;
     /**
      * The day on the Campaign's Game Clock. Rests, travel and the DM move the clock on.
      */
@@ -8620,6 +8734,112 @@ export type SetRuleVariantsResponses = {
 
 export type SetRuleVariantsResponse = SetRuleVariantsResponses[keyof SetRuleVariantsResponses];
 
+export type ListRuleHooksData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rule-hooks';
+};
+
+export type ListRuleHooksErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListRuleHooksError = ListRuleHooksErrors[keyof ListRuleHooksErrors];
+
+export type ListRuleHooksResponses = {
+    /**
+     * The Campaign's own Rule Variants, oldest first.
+     */
+    200: RuleHooks;
+};
+
+export type ListRuleHooksResponse = ListRuleHooksResponses[keyof ListRuleHooksResponses];
+
+export type CreateRuleHookData = {
+    body: RuleHookInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rule-hooks';
+};
+
+export type CreateRuleHookErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateRuleHookError = CreateRuleHookErrors[keyof CreateRuleHookErrors];
+
+export type CreateRuleHookResponses = {
+    /**
+     * The new Rule Variant.
+     */
+    201: RuleHook;
+};
+
+export type CreateRuleHookResponse = CreateRuleHookResponses[keyof CreateRuleHookResponses];
+
+export type DeleteRuleHookData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Rule Variant id.
+         */
+        hookId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/rule-hooks/{hookId}';
+};
+
+export type DeleteRuleHookErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteRuleHookError = DeleteRuleHookErrors[keyof DeleteRuleHookErrors];
+
+export type DeleteRuleHookResponses = {
+    /**
+     * The Rule Variant is removed.
+     */
+    204: void;
+};
+
+export type DeleteRuleHookResponse = DeleteRuleHookResponses[keyof DeleteRuleHookResponses];
+
 export type ListFactionsData = {
     body?: never;
     path: {
@@ -12084,6 +12304,103 @@ export type SaveConditionBuildResponses = {
 };
 
 export type SaveConditionBuildResponse = SaveConditionBuildResponses[keyof SaveConditionBuildResponses];
+
+export type PreviewRollTableData = {
+    body: RollTablePreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/roll-tables/preview';
+};
+
+export type PreviewRollTableErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewRollTableError = PreviewRollTableErrors[keyof PreviewRollTableErrors];
+
+export type PreviewRollTableResponses = {
+    /**
+     * The preview.
+     */
+    200: RollTableBuild;
+};
+
+export type PreviewRollTableResponse = PreviewRollTableResponses[keyof PreviewRollTableResponses];
+
+export type GetRollTableBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/roll-tables/{entryId}';
+};
+
+export type GetRollTableBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetRollTableBuildError = GetRollTableBuildErrors[keyof GetRollTableBuildErrors];
+
+export type GetRollTableBuildResponses = {
+    /**
+     * The Roll Table.
+     */
+    200: RollTableBuild;
+};
+
+export type GetRollTableBuildResponse = GetRollTableBuildResponses[keyof GetRollTableBuildResponses];
+
+export type SaveRollTableBuildData = {
+    body: RollTableDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/roll-tables/{entryId}';
+};
+
+export type SaveRollTableBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveRollTableBuildError = SaveRollTableBuildErrors[keyof SaveRollTableBuildErrors];
+
+export type SaveRollTableBuildResponses = {
+    /**
+     * The Roll Table.
+     */
+    200: RollTableBuild;
+};
+
+export type SaveRollTableBuildResponse = SaveRollTableBuildResponses[keyof SaveRollTableBuildResponses];
 
 export type PreviewMonsterData = {
     body: MonsterPreviewInput;

@@ -324,3 +324,35 @@ func TestEncumbrance(t *testing.T) {
 		t.Errorf("3 ft, past capacity: %d ft", got)
 	}
 }
+
+// A Rule Variant a DM authors hangs on one of five hook points, each named for the table.
+func TestHookPoints(t *testing.T) {
+	t.Parallel()
+	points := variants.HookPoints()
+	slugs := []string{}
+	for _, p := range points {
+		slugs = append(slugs, p.Slug)
+		if p.Label == "" || !variants.ValidHook(p.Slug) {
+			t.Errorf("%q is not a named, valid hook point: %+v", p.Slug, p)
+		}
+	}
+	if !slices.Equal(slugs, []string{variants.HookNatural1, variants.HookCritical, variants.HookDropTo0, variants.HookRest, variants.HookCast}) {
+		t.Fatalf("hook points = %v", slugs)
+	}
+	for _, slug := range []string{"", "natural-2", "Natural-1", "on-hit"} {
+		if variants.ValidHook(slug) {
+			t.Errorf("%q is taken for a hook point", slug)
+		}
+	}
+	// Changing the list a caller was given changes nobody else's.
+	points[0].Slug = "x"
+	if again := variants.HookPoints(); again[0].Slug != variants.HookNatural1 || again[0].Label != "On a natural 1 on an attack roll" {
+		t.Fatalf("the hook points are shared: %+v", again[0])
+	}
+	// An attack's d20 fires the natural 1 hook or the critical hook, never both, and mostly neither.
+	for natural, want := range map[int]string{1: variants.HookNatural1, 20: variants.HookCritical, 2: "", 19: "", 0: "", 21: ""} {
+		if got := variants.AttackHook(natural); got != want {
+			t.Errorf("a natural %d fires %q, want %q", natural, got, want)
+		}
+	}
+}

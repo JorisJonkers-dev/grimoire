@@ -21,7 +21,7 @@ func Kinds() []string {
 
 // BuiltKinds are the kinds a builder designs; an export carries their designs as typed parts.
 func BuiltKinds() []string {
-	return []string{"spell", "item", "subclass", "class", "species", "background", "feat", "condition", "creature"}
+	return []string{"spell", "item", "subclass", "class", "species", "background", "feat", "condition", "creature", "table"}
 }
 
 // Limits on an entry's fields.

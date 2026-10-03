@@ -467,6 +467,16 @@ type CampaignRuleVariant struct {
 	UpdatedAt  time.Time
 }
 
+type CampaignRuleVariantHook struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Hook       string
+	RollTable  pgtype.UUID
+	Effect     pgtype.Text
+	CreatedAt  time.Time
+}
+
 type CampaignStandingChange struct {
 	ID          uuid.UUID
 	FactionID   uuid.UUID
@@ -1585,6 +1595,8 @@ type PlayPendingAction struct {
 	Action        string
 	Dc            int32
 	ObjectID      pgtype.UUID
+	RollTable     pgtype.UUID
+	HookName      pgtype.Text
 }
 
 type PlayPendingSafe struct {

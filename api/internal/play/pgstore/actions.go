@@ -33,6 +33,10 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 			o := domain.ObjectID(r.ObjectID.Bytes)
 			p.Object = &o
 		}
+		if r.RollTable.Valid {
+			table := uuid.UUID(r.RollTable.Bytes)
+			p.Table, p.Hook = &table, r.HookName.String
+		}
 		out = append(out, p)
 	}
 	return out, nil
@@ -45,7 +49,7 @@ func (s *Store) LoadPendingActions(ctx context.Context, id domain.SessionID) ([]
 func (s *Store) saveActions(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
 	opens := w.Kind == domain.ActionTaken || w.Kind == domain.ActionUnarmed || w.Kind == domain.ActionMasteryUsed || w.Kind == domain.ActionConcentrationChecked ||
-		w.Kind == domain.ActionDyingChanged || w.Kind == domain.ActionSneakStarted
+		w.Kind == domain.ActionDyingChanged || w.Kind == domain.ActionSneakStarted || w.Kind == domain.ActionHookFired
 	if opens && w.Combat == nil {
 		if err := s.openRolls(ctx, sess, w.Rolls, actor, c, now); err != nil {
 			return err
@@ -86,6 +90,9 @@ func (s *Store) savePending(ctx context.Context, sid uuid.UUID, w live.Write) er
 		}
 		if p.Object != nil {
 			row.ObjectID = pgtype.UUID{Bytes: *p.Object, Valid: true}
+		}
+		if p.Table != nil {
+			row.RollTable, row.HookName = pgtype.UUID{Bytes: *p.Table, Valid: true}, pgtype.Text{String: p.Hook, Valid: true}
 		}
 		if err := s.q.InsertPendingAction(ctx, row); err != nil {
 			return err

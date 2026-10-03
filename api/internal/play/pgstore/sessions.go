@@ -321,6 +321,7 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 		domain.ActionItemBought, domain.ActionItemSold, domain.ActionHaggleStarted, domain.ActionHaggled, domain.ActionStockRolled,
 		domain.ActionRestProposed, domain.ActionRestAgreed, domain.ActionRestStarted, domain.ActionHitDieSpent, domain.ActionRestInterrupted,
 		domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionObjectUsed, domain.ActionMasteryUsed,
+		domain.ActionHookFired, domain.ActionTableRolled,
 		domain.ActionConcentrationChecked, domain.ActionDowned, domain.ActionCountered, domain.ActionCommanded,
 		domain.ActionObjectPlaced, domain.ActionObjectRemoved, domain.ActionObjectToggled, domain.ActionObjectDamaged, domain.ActionObjectFound,
 		domain.ActionObjectUnlocked, domain.ActionTrapDisarmed, domain.ActionTrapSprung, domain.ActionThrown,
@@ -693,10 +694,14 @@ func (s *Store) logWrite(ctx context.Context, actionID uuid.UUID, w live.Write) 
 		domain.ActionEffectApplied, domain.ActionEffectEnded, domain.ActionSavePassed, domain.ActionSaveFailed, domain.ActionAreaCast,
 		domain.ActionAreaResolved, domain.ActionTaken, domain.ActionUnarmed, domain.ActionResolved, domain.ActionMasteryUsed, domain.ActionReactionSet, domain.ActionConcentrationChecked,
 		domain.ActionDowned, domain.ActionDyingChanged, domain.ActionRevived, domain.ActionTeleported, domain.ActionCountered, domain.ActionVisibilitySet,
-		domain.ActionJumped, domain.ActionThrown:
+		domain.ActionJumped, domain.ActionThrown, domain.ActionHookFired, domain.ActionTableRolled:
 		t := w.Token
+		label := t.Label
+		if w.Note != "" {
+			label += ": " + w.Note
+		}
 		return s.q.InsertTokenEvent(ctx, queries.InsertTokenEventParams{
-			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: t.Label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
+			ActionID: actionID, TokenID: uuid.UUID(t.ID), Label: label, Q: int32(t.Q), R: int32(t.R), Hidden: t.Hidden,
 		})
 	}
 	if h := w.HP; h != nil {

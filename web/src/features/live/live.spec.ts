@@ -2074,6 +2074,24 @@ describe('rest', () => {
     expect(wrapper.find('[aria-label="Spend a Hit Die for Aria"]').exists()).toBe(false)
   })
 
+  it('tells every screen what a roll on a Roll Table landed on', async () => {
+    const result = { hook: 'Critical fumbles', table: 'Fumbles', tokenId: ARIA, label: 'Aria', total: 3, text: 'Your weapon slips from your grip.' }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign('player') })
+    const s = FakeSocket.last()
+    s.receive(snapshot(tokens, 'party'))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="table-result"]').exists()).toBe(false)
+    s.receive({ kind: 'view', seq: 2, view: { tokens, fog: false, visible: [], remembered: [], tableResult: result } })
+    await flushPromises()
+    const line = wrapper.get('[data-testid="table-result"]')
+    expect(line.text()).toBe('Critical fumbles: Aria rolled 3 on Fumbles. Your weapon slips from your grip.')
+    expect(line.attributes('role')).toBe('status')
+    // A table the Campaign no longer sees has no name to give.
+    s.receive({ kind: 'view', seq: 3, view: { tokens, fog: false, visible: [], remembered: [], tableResult: { ...result, table: '', total: 6, text: 'Nothing happens.' } } })
+    await flushPromises()
+    expect(wrapper.get('[data-testid="table-result"]').text()).toBe('Critical fumbles: Aria rolled 6. Nothing happens.')
+  })
+
   it('lets the DM agree, finish, call off or interrupt, and never rest mid-fight', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, { [`/api/v1/campaigns/${ID}`]: () => campaign() })
     const s = FakeSocket.last()

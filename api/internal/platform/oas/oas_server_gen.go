@@ -485,6 +485,14 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/quests
 	CreateQuest(ctx context.Context, req *QuestInput, params CreateQuestParams) (CreateQuestRes, error)
+	// CreateRuleHook implements createRuleHook operation.
+	//
+	// Adds a Rule Variant of the Campaign's own: at a hook point it applies an Effect to whoever it
+	// happened to, or has them roll on a Roll Table the Campaign sees. It names exactly one of the two. A
+	// Session under way follows it at once. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/rule-hooks
+	CreateRuleHook(ctx context.Context, req *RuleHookInput, params CreateRuleHookParams) (CreateRuleHookRes, error)
 	// CreateSettlement implements createSettlement operation.
 	//
 	// Adds a Settlement and records its first Revision. DM only.
@@ -558,6 +566,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
 	DeleteQuest(ctx context.Context, params DeleteQuestParams) (DeleteQuestRes, error)
+	// DeleteRuleHook implements deleteRuleHook operation.
+	//
+	// Removes a Rule Variant the DM authored. DM only.
+	//
+	// DELETE /api/v1/campaigns/{campaignId}/rule-hooks/{hookId}
+	DeleteRuleHook(ctx context.Context, params DeleteRuleHookParams) (DeleteRuleHookRes, error)
 	// DeleteSettlement implements deleteSettlement operation.
 	//
 	// Removes the Settlement; its Revisions keep it restorable. DM only.
@@ -785,6 +799,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/monsters/{entryId}
 	SaveMonsterBuild(ctx context.Context, req *MonsterDesign, params SaveMonsterBuildParams) (SaveMonsterBuildRes, error)
+	// SaveRollTableBuild implements saveRollTableBuild operation.
+	//
+	// Saves the design of one of the caller's table entries as its next Revision. A Campaign that sees the
+	// table can hook it to a Rule Variant of its own.
+	//
+	// PUT /api/v1/builders/roll-tables/{entryId}
+	SaveRollTableBuild(ctx context.Context, req *RollTableDesign, params SaveRollTableBuildParams) (SaveRollTableBuildRes, error)
 	// SaveSpeciesBuild implements saveSpeciesBuild operation.
 	//
 	// Saves the design of one of the caller's species entries as its next Revision; Campaigns that see it
@@ -1330,6 +1351,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
 	GetRoll(ctx context.Context, params GetRollParams) (GetRollRes, error)
+	// GetRollTableBuild implements getRollTableBuild operation.
+	//
+	// A Roll Table's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/roll-tables/{entryId}
+	GetRollTableBuild(ctx context.Context, params GetRollTableBuildParams) (GetRollTableBuildRes, error)
 	// GetSession implements getSession operation.
 	//
 	// One Session. Members only.
@@ -1660,6 +1687,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/rolls
 	ListRolls(ctx context.Context, params ListRollsParams) (ListRollsRes, error)
+	// ListRuleHooks implements listRuleHooks operation.
+	//
+	// The Rule Variants the DM authored from hook points, for every Member to see, with the hook points
+	// there are. The DM also gets the Roll Tables the Campaign sees, to choose from.
+	//
+	// GET /api/v1/campaigns/{campaignId}/rule-hooks
+	ListRuleHooks(ctx context.Context, params ListRuleHooksParams) (ListRuleHooksRes, error)
 	// ListRuleVariants implements listRuleVariants operation.
 	//
 	// Every built-in Rule Variant with what the Campaign has it at, for every Member to see how the table
@@ -1778,6 +1812,13 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/monsters/preview
 	PreviewMonster(ctx context.Context, req *MonsterPreviewInput) (PreviewMonsterRes, error)
+	// PreviewRollTable implements previewRollTable operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/roll-tables/preview
+	PreviewRollTable(ctx context.Context, req *RollTablePreviewInput) (PreviewRollTableRes, error)
 	// PreviewSpecies implements previewSpecies operation.
 	//
 	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the

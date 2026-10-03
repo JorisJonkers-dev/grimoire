@@ -36,6 +36,7 @@ import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
 import ReactionSettings from './ReactionSettings.vue'
 import RestPanel from './RestPanel.vue'
+import { tableResultLine } from './tableResult'
 import Hotbar from './Hotbar.vue'
 import RosterStrip from './RosterStrip.vue'
 import EffectsCard from './EffectsCard.vue'
@@ -549,6 +550,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @pointerup="shell.swipeEnd"
       >
         <p v-if="!isDM && turns.length > 0" data-page="always" role="status" class="banner" data-testid="your-turn">Your turn</p>
+        <p v-if="view?.tableResult" data-page="always" role="status" class="walk" data-testid="table-result">{{ tableResultLine(view.tableResult) }}</p>
         <div v-if="view && !combat && (isDM || view.exploration)" data-page="actions" class="row" data-testid="exploration">
           <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
             {{ view.exploration ? 'End exploration turns' : 'Explore in turns' }}

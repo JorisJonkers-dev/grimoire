@@ -308,11 +308,11 @@ WHERE z.session_id = $1 ORDER BY c.zone_id, c.token_id;
 INSERT INTO play.zone_creatures (zone_id, token_id) VALUES (@zone_id, @token_id) ON CONFLICT DO NOTHING;
 
 -- name: SessionPendingActions :many
-SELECT roll_id, actor_token_id, target_token_id, action, dc, object_id FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id;
+SELECT roll_id, actor_token_id, target_token_id, action, dc, object_id, roll_table, hook_name FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id;
 
 -- name: InsertPendingAction :exec
-INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc, object_id)
-VALUES (@roll_id, @session_id, @actor_token_id, sqlc.narg(target_token_id), @action, @dc, sqlc.narg(object_id));
+INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc, object_id, roll_table, hook_name)
+VALUES (@roll_id, @session_id, @actor_token_id, sqlc.narg(target_token_id), @action, @dc, sqlc.narg(object_id), sqlc.narg(roll_table), sqlc.narg(hook_name));
 
 -- name: DeletePendingAction :exec
 DELETE FROM play.pending_actions WHERE roll_id = $1;

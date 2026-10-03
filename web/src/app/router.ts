@@ -38,6 +38,7 @@ const SpeciesBuilderPage = () => import('@/features/library/SpeciesBuilderPage.v
 const FeatBuilderPage = () => import('@/features/library/FeatBuilderPage.vue')
 const BackgroundBuilderPage = () => import('@/features/library/BackgroundBuilderPage.vue')
 const ConditionBuilderPage = () => import('@/features/library/ConditionBuilderPage.vue')
+const RollTableBuilderPage = () => import('@/features/library/RollTableBuilderPage.vue')
 const MonsterBuilderPage = () => import('@/features/library/MonsterBuilderPage.vue')
 const SharedReviewPage = () => import('@/features/library/SharedReviewPage.vue')
 const ProposalPage = () => import('@/features/library/ProposalPage.vue')
@@ -101,6 +102,7 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/library/:entryId/feat', name: 'feat-builder', component: FeatBuilderPage },
       { path: '/library/:entryId/background', name: 'background-builder', component: BackgroundBuilderPage },
       { path: '/library/:entryId/condition', name: 'condition-builder', component: ConditionBuilderPage },
+      { path: '/library/:entryId/table', name: 'table-builder', component: RollTableBuilderPage },
       { path: '/library/:entryId/monster', name: 'monster-builder', component: MonsterBuilderPage },
       { path: '/campaigns/:id/npcs/:npcId', name: 'npc', component: NpcPage },
       { path: '/campaigns/:id/encounters', name: 'encounters', component: EncountersPage },

@@ -8666,6 +8666,45 @@ func (s *DeleteQuestNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteQuestNoContent) deleteQuestRes() {}
 
+// DeleteRuleHookNoContent is response for DeleteRuleHook operation.
+type DeleteRuleHookNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteRuleHookNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteRuleHookNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteRuleHookNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteRuleHookNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteRuleHookNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteRuleHookNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteRuleHookNoContent) deleteRuleHookRes() {}
+
 // DeleteSettlementNoContent is response for DeleteSettlement operation.
 type DeleteSettlementNoContent struct {
 	RateLimitLimit     OptInt32
@@ -13884,6 +13923,70 @@ func (s *HexOccupantSide) UnmarshalText(data []byte) error {
 		return nil
 	case HexOccupantSideEnemy:
 		*s = HexOccupantSideEnemy
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A moment in play a Rule Variant of the Campaign's own hangs on.
+// Ref: #/components/schemas/HookPointSlug
+type HookPointSlug string
+
+const (
+	HookPointSlugNatural1 HookPointSlug = "natural-1"
+	HookPointSlugCritical HookPointSlug = "critical"
+	HookPointSlugDropTo0  HookPointSlug = "drop-to-0"
+	HookPointSlugRest     HookPointSlug = "rest"
+	HookPointSlugCast     HookPointSlug = "cast"
+)
+
+// AllValues returns all HookPointSlug values.
+func (HookPointSlug) AllValues() []HookPointSlug {
+	return []HookPointSlug{
+		HookPointSlugNatural1,
+		HookPointSlugCritical,
+		HookPointSlugDropTo0,
+		HookPointSlugRest,
+		HookPointSlugCast,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s HookPointSlug) MarshalText() ([]byte, error) {
+	switch s {
+	case HookPointSlugNatural1:
+		return []byte(s), nil
+	case HookPointSlugCritical:
+		return []byte(s), nil
+	case HookPointSlugDropTo0:
+		return []byte(s), nil
+	case HookPointSlugRest:
+		return []byte(s), nil
+	case HookPointSlugCast:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *HookPointSlug) UnmarshalText(data []byte) error {
+	switch HookPointSlug(data) {
+	case HookPointSlugNatural1:
+		*s = HookPointSlugNatural1
+		return nil
+	case HookPointSlugCritical:
+		*s = HookPointSlugCritical
+		return nil
+	case HookPointSlugDropTo0:
+		*s = HookPointSlugDropTo0
+		return nil
+	case HookPointSlugRest:
+		*s = HookPointSlugRest
+		return nil
+	case HookPointSlugCast:
+		*s = HookPointSlugCast
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -27591,6 +27694,80 @@ func (s *LiveTable) SetCaption(val OptString) {
 	s.Caption = val
 }
 
+// The last result a roll on a Roll Table landed on, sent to the DM and to every screen that sees the
+// creature it was for.
+// Ref: #/components/schemas/LiveTableResult
+type LiveTableResult struct {
+	// The Rule Variant that asked for the roll.
+	Hook string `json:"hook"`
+	// The Roll Table's name, empty when the Campaign no longer sees it.
+	Table   string `json:"table"`
+	TokenId ID     `json:"tokenId"`
+	Label   string `json:"label"`
+	Total   int32  `json:"total"`
+	Text    string `json:"text"`
+}
+
+// GetHook returns the value of Hook.
+func (s *LiveTableResult) GetHook() string {
+	return s.Hook
+}
+
+// GetTable returns the value of Table.
+func (s *LiveTableResult) GetTable() string {
+	return s.Table
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveTableResult) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveTableResult) GetLabel() string {
+	return s.Label
+}
+
+// GetTotal returns the value of Total.
+func (s *LiveTableResult) GetTotal() int32 {
+	return s.Total
+}
+
+// GetText returns the value of Text.
+func (s *LiveTableResult) GetText() string {
+	return s.Text
+}
+
+// SetHook sets the value of Hook.
+func (s *LiveTableResult) SetHook(val string) {
+	s.Hook = val
+}
+
+// SetTable sets the value of Table.
+func (s *LiveTableResult) SetTable(val string) {
+	s.Table = val
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveTableResult) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveTableResult) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetTotal sets the value of Total.
+func (s *LiveTableResult) SetTotal(val int32) {
+	s.Total = val
+}
+
+// SetText sets the value of Text.
+func (s *LiveTableResult) SetText(val string) {
+	s.Text = val
+}
+
 // A Token as a connection sees it.
 // Ref: #/components/schemas/LiveToken
 type LiveToken struct {
@@ -28509,13 +28686,14 @@ type LiveView struct {
 	Conditions []LiveViewConditionsItem `json:"conditions"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
 	// seen.
-	Objects    []LiveObject     `json:"objects"`
-	Zones      []LiveZone       `json:"zones"`
-	Perception []LivePerception `json:"perception"`
-	Checks     []LiveCheck      `json:"checks"`
-	Inventory  []LiveContainer  `json:"inventory"`
-	Shop       OptLiveShop      `json:"shop"`
-	Rest       OptLiveRest      `json:"rest"`
+	Objects     []LiveObject       `json:"objects"`
+	Zones       []LiveZone         `json:"zones"`
+	Perception  []LivePerception   `json:"perception"`
+	Checks      []LiveCheck        `json:"checks"`
+	Inventory   []LiveContainer    `json:"inventory"`
+	Shop        OptLiveShop        `json:"shop"`
+	Rest        OptLiveRest        `json:"rest"`
+	TableResult OptLiveTableResult `json:"tableResult"`
 	// The day on the Campaign's Game Clock. Rests, travel and the DM move the clock on.
 	GameDay OptInt32 `json:"gameDay"`
 	// The time of day on the Game Clock, in minutes after midnight. Dawn is at 360; charges that come back
@@ -28663,6 +28841,11 @@ func (s *LiveView) GetShop() OptLiveShop {
 // GetRest returns the value of Rest.
 func (s *LiveView) GetRest() OptLiveRest {
 	return s.Rest
+}
+
+// GetTableResult returns the value of TableResult.
+func (s *LiveView) GetTableResult() OptLiveTableResult {
+	return s.TableResult
 }
 
 // GetGameDay returns the value of GameDay.
@@ -28838,6 +29021,11 @@ func (s *LiveView) SetShop(val OptLiveShop) {
 // SetRest sets the value of Rest.
 func (s *LiveView) SetRest(val OptLiveRest) {
 	s.Rest = val
+}
+
+// SetTableResult sets the value of TableResult.
+func (s *LiveView) SetTableResult(val OptLiveTableResult) {
+	s.TableResult = val
 }
 
 // SetGameDay sets the value of GameDay.
@@ -36647,6 +36835,52 @@ func (o OptLiveTable) Or(d LiveTable) LiveTable {
 	return d
 }
 
+// NewOptLiveTableResult returns new OptLiveTableResult with value set to v.
+func NewOptLiveTableResult(v LiveTableResult) OptLiveTableResult {
+	return OptLiveTableResult{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveTableResult is optional LiveTableResult.
+type OptLiveTableResult struct {
+	Value LiveTableResult
+	Set   bool
+}
+
+// IsSet returns true if OptLiveTableResult was set.
+func (o OptLiveTableResult) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveTableResult) Reset() {
+	var v LiveTableResult
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveTableResult) SetTo(v LiveTableResult) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveTableResult) Get() (v LiveTableResult, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveTableResult) Or(d LiveTableResult) LiveTableResult {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveTokenFirstReaction returns new OptLiveTokenFirstReaction with value set to v.
 func NewOptLiveTokenFirstReaction(v LiveTokenFirstReaction) OptLiveTokenFirstReaction {
 	return OptLiveTokenFirstReaction{
@@ -38956,6 +39190,7 @@ func (*ProblemStatusCodeWithHeaders) createProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createQuestRes()                   {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
+func (*ProblemStatusCodeWithHeaders) createRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) decideStandingChangeRes()          {}
@@ -38972,6 +39207,7 @@ func (*ProblemStatusCodeWithHeaders) deleteLoreRes()                    {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) deletePushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) deleteQuestRes()                   {}
+func (*ProblemStatusCodeWithHeaders) deleteRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
@@ -39016,6 +39252,7 @@ func (*ProblemStatusCodeWithHeaders) getProposalRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getPushKeyRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getReadinessRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getRollRes()                       {}
+func (*ProblemStatusCodeWithHeaders) getRollTableBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) getSessionLogRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getSessionViewRes()                {}
@@ -39075,6 +39312,7 @@ func (*ProblemStatusCodeWithHeaders) listReleaseNotesRes()              {}
 func (*ProblemStatusCodeWithHeaders) listRetrainChoicesRes()            {}
 func (*ProblemStatusCodeWithHeaders) listRetrainsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
+func (*ProblemStatusCodeWithHeaders) listRuleHooksRes()                 {}
 func (*ProblemStatusCodeWithHeaders) listRuleVariantsRes()              {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
@@ -39102,6 +39340,7 @@ func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewMonsterRes()                {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewRollTableRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSpeciesRes()                {}
 func (*ProblemStatusCodeWithHeaders) previewSpellRes()                  {}
@@ -39139,6 +39378,7 @@ func (*ProblemStatusCodeWithHeaders) saveConditionBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveFeatBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveMonsterBuildRes()              {}
+func (*ProblemStatusCodeWithHeaders) saveRollTableBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}
@@ -42351,6 +42591,547 @@ func (s *RollRequestStatus) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// A Roll Table in its builder, and how it reads back.
+// Ref: #/components/schemas/RollTableBuild
+type RollTableBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design RollTableDesign `json:"design"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *RollTableBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *RollTableBuild) GetDesign() RollTableDesign {
+	return s.Design
+}
+
+// GetLines returns the value of Lines.
+func (s *RollTableBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *RollTableBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *RollTableBuild) SetDesign(val RollTableDesign) {
+	s.Design = val
+}
+
+// SetLines sets the value of Lines.
+func (s *RollTableBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// RollTableBuildHeaders wraps RollTableBuild with response headers.
+type RollTableBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RollTableBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RollTableBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RollTableBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RollTableBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RollTableBuildHeaders) GetResponse() RollTableBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RollTableBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RollTableBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RollTableBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RollTableBuildHeaders) SetResponse(val RollTableBuild) {
+	s.Response = val
+}
+
+func (*RollTableBuildHeaders) getRollTableBuildRes()  {}
+func (*RollTableBuildHeaders) previewRollTableRes()   {}
+func (*RollTableBuildHeaders) saveRollTableBuildRes() {}
+
+// A Roll Table as its builder makes it. Its dice are up to ten of one kind, and its results cover
+// ranges of what they can show, in order and without overlapping.
+// Ref: #/components/schemas/RollTableDesign
+type RollTableDesign struct {
+	// The dice to roll, such as 1d20 or 2d6.
+	Dice    string            `json:"dice"`
+	Results []RollTableResult `json:"results"`
+}
+
+// GetDice returns the value of Dice.
+func (s *RollTableDesign) GetDice() string {
+	return s.Dice
+}
+
+// GetResults returns the value of Results.
+func (s *RollTableDesign) GetResults() []RollTableResult {
+	return s.Results
+}
+
+// SetDice sets the value of Dice.
+func (s *RollTableDesign) SetDice(val string) {
+	s.Dice = val
+}
+
+// SetResults sets the value of Results.
+func (s *RollTableDesign) SetResults(val []RollTableResult) {
+	s.Results = val
+}
+
+// A design to preview, with the table's name.
+// Ref: #/components/schemas/RollTablePreviewInput
+type RollTablePreviewInput struct {
+	Name   string          `json:"name"`
+	Design RollTableDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *RollTablePreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *RollTablePreviewInput) GetDesign() RollTableDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *RollTablePreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *RollTablePreviewInput) SetDesign(val RollTableDesign) {
+	s.Design = val
+}
+
+// What a range of the dice gives. It may apply an Effect to whoever rolled, and give an Item.
+// Ref: #/components/schemas/RollTableResult
+type RollTableResult struct {
+	From int32  `json:"from"`
+	To   int32  `json:"to"`
+	Text string `json:"text"`
+	// The slug of the Effect it applies.
+	Effect OptString `json:"effect"`
+	// The slug of the Item it gives.
+	Item     OptString `json:"item"`
+	Quantity OptInt32  `json:"quantity"`
+}
+
+// GetFrom returns the value of From.
+func (s *RollTableResult) GetFrom() int32 {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *RollTableResult) GetTo() int32 {
+	return s.To
+}
+
+// GetText returns the value of Text.
+func (s *RollTableResult) GetText() string {
+	return s.Text
+}
+
+// GetEffect returns the value of Effect.
+func (s *RollTableResult) GetEffect() OptString {
+	return s.Effect
+}
+
+// GetItem returns the value of Item.
+func (s *RollTableResult) GetItem() OptString {
+	return s.Item
+}
+
+// GetQuantity returns the value of Quantity.
+func (s *RollTableResult) GetQuantity() OptInt32 {
+	return s.Quantity
+}
+
+// SetFrom sets the value of From.
+func (s *RollTableResult) SetFrom(val int32) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *RollTableResult) SetTo(val int32) {
+	s.To = val
+}
+
+// SetText sets the value of Text.
+func (s *RollTableResult) SetText(val string) {
+	s.Text = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *RollTableResult) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// SetItem sets the value of Item.
+func (s *RollTableResult) SetItem(val OptString) {
+	s.Item = val
+}
+
+// SetQuantity sets the value of Quantity.
+func (s *RollTableResult) SetQuantity(val OptInt32) {
+	s.Quantity = val
+}
+
+// A Rule Variant the DM authored. It applies an Effect or rolls on a Roll Table, never both. The
+// table's name is empty when the Campaign no longer sees it.
+// Ref: #/components/schemas/RuleHook
+type RuleHook struct {
+	ID          ID            `json:"id"`
+	Name        string        `json:"name"`
+	Hook        HookPointSlug `json:"hook"`
+	RollTableId OptID         `json:"rollTableId"`
+	TableName   OptString     `json:"tableName"`
+	Effect      OptString     `json:"effect"`
+}
+
+// GetID returns the value of ID.
+func (s *RuleHook) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *RuleHook) GetName() string {
+	return s.Name
+}
+
+// GetHook returns the value of Hook.
+func (s *RuleHook) GetHook() HookPointSlug {
+	return s.Hook
+}
+
+// GetRollTableId returns the value of RollTableId.
+func (s *RuleHook) GetRollTableId() OptID {
+	return s.RollTableId
+}
+
+// GetTableName returns the value of TableName.
+func (s *RuleHook) GetTableName() OptString {
+	return s.TableName
+}
+
+// GetEffect returns the value of Effect.
+func (s *RuleHook) GetEffect() OptString {
+	return s.Effect
+}
+
+// SetID sets the value of ID.
+func (s *RuleHook) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *RuleHook) SetName(val string) {
+	s.Name = val
+}
+
+// SetHook sets the value of Hook.
+func (s *RuleHook) SetHook(val HookPointSlug) {
+	s.Hook = val
+}
+
+// SetRollTableId sets the value of RollTableId.
+func (s *RuleHook) SetRollTableId(val OptID) {
+	s.RollTableId = val
+}
+
+// SetTableName sets the value of TableName.
+func (s *RuleHook) SetTableName(val OptString) {
+	s.TableName = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *RuleHook) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// RuleHookHeaders wraps RuleHook with response headers.
+type RuleHookHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RuleHook
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RuleHookHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RuleHookHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RuleHookHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RuleHookHeaders) GetResponse() RuleHook {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RuleHookHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RuleHookHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RuleHookHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RuleHookHeaders) SetResponse(val RuleHook) {
+	s.Response = val
+}
+
+func (*RuleHookHeaders) createRuleHookRes() {}
+
+// A new Rule Variant of the Campaign's own: exactly one of a Roll Table and an Effect.
+// Ref: #/components/schemas/RuleHookInput
+type RuleHookInput struct {
+	Name        string        `json:"name"`
+	Hook        HookPointSlug `json:"hook"`
+	RollTableId OptID         `json:"rollTableId"`
+	// The slug of the Effect to apply.
+	Effect OptString `json:"effect"`
+}
+
+// GetName returns the value of Name.
+func (s *RuleHookInput) GetName() string {
+	return s.Name
+}
+
+// GetHook returns the value of Hook.
+func (s *RuleHookInput) GetHook() HookPointSlug {
+	return s.Hook
+}
+
+// GetRollTableId returns the value of RollTableId.
+func (s *RuleHookInput) GetRollTableId() OptID {
+	return s.RollTableId
+}
+
+// GetEffect returns the value of Effect.
+func (s *RuleHookInput) GetEffect() OptString {
+	return s.Effect
+}
+
+// SetName sets the value of Name.
+func (s *RuleHookInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetHook sets the value of Hook.
+func (s *RuleHookInput) SetHook(val HookPointSlug) {
+	s.Hook = val
+}
+
+// SetRollTableId sets the value of RollTableId.
+func (s *RuleHookInput) SetRollTableId(val OptID) {
+	s.RollTableId = val
+}
+
+// SetEffect sets the value of Effect.
+func (s *RuleHookInput) SetEffect(val OptString) {
+	s.Effect = val
+}
+
+// The Campaign's own Rule Variants with what they can be made of.
+// Ref: #/components/schemas/RuleHooks
+type RuleHooks struct {
+	Dm     bool                  `json:"dm"`
+	Hooks  []RuleHook            `json:"hooks"`
+	Points []RuleHooksPointsItem `json:"points"`
+	// The Roll Tables the Campaign sees, by name. Empty for a Player.
+	Tables []RuleHooksTablesItem `json:"tables"`
+}
+
+// GetDm returns the value of Dm.
+func (s *RuleHooks) GetDm() bool {
+	return s.Dm
+}
+
+// GetHooks returns the value of Hooks.
+func (s *RuleHooks) GetHooks() []RuleHook {
+	return s.Hooks
+}
+
+// GetPoints returns the value of Points.
+func (s *RuleHooks) GetPoints() []RuleHooksPointsItem {
+	return s.Points
+}
+
+// GetTables returns the value of Tables.
+func (s *RuleHooks) GetTables() []RuleHooksTablesItem {
+	return s.Tables
+}
+
+// SetDm sets the value of Dm.
+func (s *RuleHooks) SetDm(val bool) {
+	s.Dm = val
+}
+
+// SetHooks sets the value of Hooks.
+func (s *RuleHooks) SetHooks(val []RuleHook) {
+	s.Hooks = val
+}
+
+// SetPoints sets the value of Points.
+func (s *RuleHooks) SetPoints(val []RuleHooksPointsItem) {
+	s.Points = val
+}
+
+// SetTables sets the value of Tables.
+func (s *RuleHooks) SetTables(val []RuleHooksTablesItem) {
+	s.Tables = val
+}
+
+// RuleHooksHeaders wraps RuleHooks with response headers.
+type RuleHooksHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           RuleHooks
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RuleHooksHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RuleHooksHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RuleHooksHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RuleHooksHeaders) GetResponse() RuleHooks {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RuleHooksHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RuleHooksHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RuleHooksHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RuleHooksHeaders) SetResponse(val RuleHooks) {
+	s.Response = val
+}
+
+func (*RuleHooksHeaders) listRuleHooksRes() {}
+
+type RuleHooksPointsItem struct {
+	Slug  HookPointSlug `json:"slug"`
+	Label string        `json:"label"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *RuleHooksPointsItem) GetSlug() HookPointSlug {
+	return s.Slug
+}
+
+// GetLabel returns the value of Label.
+func (s *RuleHooksPointsItem) GetLabel() string {
+	return s.Label
+}
+
+// SetSlug sets the value of Slug.
+func (s *RuleHooksPointsItem) SetSlug(val HookPointSlug) {
+	s.Slug = val
+}
+
+// SetLabel sets the value of Label.
+func (s *RuleHooksPointsItem) SetLabel(val string) {
+	s.Label = val
+}
+
+type RuleHooksTablesItem struct {
+	ID   ID     `json:"id"`
+	Name string `json:"name"`
+}
+
+// GetID returns the value of ID.
+func (s *RuleHooksTablesItem) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *RuleHooksTablesItem) GetName() string {
+	return s.Name
+}
+
+// SetID sets the value of ID.
+func (s *RuleHooksTablesItem) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *RuleHooksTablesItem) SetName(val string) {
+	s.Name = val
 }
 
 // A built-in Rule Variant with what the Campaign has it at.

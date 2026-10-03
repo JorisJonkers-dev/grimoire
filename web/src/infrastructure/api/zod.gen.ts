@@ -2373,6 +2373,43 @@ export const zBackgroundBuild = z.object({
 });
 
 /**
+ * What a range of the dice gives. It may apply an Effect to whoever rolled, and give an Item.
+ */
+export const zRollTableResult = z.object({
+    from: z.int().gte(-100000).lte(100000),
+    to: z.int().gte(-100000).lte(100000),
+    text: z.string().max(2000),
+    effect: z.string().max(200).optional(),
+    item: z.string().max(200).optional(),
+    quantity: z.int().gte(-100000).lte(100000).optional()
+});
+
+/**
+ * A Roll Table as its builder makes it. Its dice are up to ten of one kind, and its results cover ranges of what they can show, in order and without overlapping.
+ */
+export const zRollTableDesign = z.object({
+    dice: z.string().max(20),
+    results: z.array(zRollTableResult).max(100)
+});
+
+/**
+ * A design to preview, with the table's name.
+ */
+export const zRollTablePreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zRollTableDesign
+});
+
+/**
+ * A Roll Table in its builder, and how it reads back.
+ */
+export const zRollTableBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zRollTableDesign,
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
  * A homebrew condition as the condition builder makes it, from its icon, how it ends, how it stacks and what it does.
  */
 export const zConditionDesign = z.object({
@@ -2675,6 +2712,18 @@ export const zLiveClaim = z.object({
     item: z.string().max(80),
     choice: z.enum(['need', 'greed']),
     roll: z.int().gte(1).lte(20)
+});
+
+/**
+ * The last result a roll on a Roll Table landed on, sent to the DM and to every screen that sees the creature it was for.
+ */
+export const zLiveTableResult = z.object({
+    hook: z.string().max(80),
+    table: z.string().max(80),
+    tokenId: zId,
+    label: z.string().max(200),
+    total: z.int().gte(-100000).lte(100000),
+    text: z.string().max(2000)
 });
 
 /**
@@ -3344,6 +3393,55 @@ export const zRuleVariantChoice = z.object({
  */
 export const zRuleVariantChoices = z.object({
     choices: z.array(zRuleVariantChoice).max(100)
+});
+
+/**
+ * A moment in play a Rule Variant of the Campaign's own hangs on.
+ */
+export const zHookPointSlug = z.enum([
+    'natural-1',
+    'critical',
+    'drop-to-0',
+    'rest',
+    'cast'
+]);
+
+/**
+ * A Rule Variant the DM authored. It applies an Effect or rolls on a Roll Table, never both. The table's name is empty when the Campaign no longer sees it.
+ */
+export const zRuleHook = z.object({
+    id: zId,
+    name: z.string().max(80),
+    hook: zHookPointSlug,
+    rollTableId: zId.optional(),
+    tableName: z.string().max(80).optional(),
+    effect: z.string().max(80).optional()
+});
+
+/**
+ * A new Rule Variant of the Campaign's own: exactly one of a Roll Table and an Effect.
+ */
+export const zRuleHookInput = z.object({
+    name: z.string().min(1).max(80),
+    hook: zHookPointSlug,
+    rollTableId: zId.optional(),
+    effect: z.string().max(80).optional()
+});
+
+/**
+ * The Campaign's own Rule Variants with what they can be made of.
+ */
+export const zRuleHooks = z.object({
+    dm: z.boolean(),
+    hooks: z.array(zRuleHook).max(50),
+    points: z.array(z.object({
+        slug: zHookPointSlug,
+        label: z.string().max(120)
+    })).max(20),
+    tables: z.array(z.object({
+        id: zId,
+        name: z.string().max(80)
+    })).max(2000)
 });
 
 /**
@@ -4915,6 +5013,7 @@ export const zLiveView = z.object({
     inventory: z.array(zLiveContainer).max(1000).optional(),
     shop: zLiveShop.optional(),
     rest: zLiveRest.optional(),
+    tableResult: zLiveTableResult.optional(),
     gameDay: z.int().gte(0).lte(1000000).optional(),
     gameMinute: z.int().gte(0).lte(1439).optional(),
     marchingOrder: z.array(zLiveMarcher).max(1000).optional(),
@@ -6380,6 +6479,36 @@ export const zSetRuleVariantsPath = z.object({
  */
 export const zSetRuleVariantsResponse = z.void();
 
+export const zListRuleHooksPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Campaign's own Rule Variants, oldest first.
+ */
+export const zListRuleHooksResponse = zRuleHooks;
+
+export const zCreateRuleHookBody = zRuleHookInput;
+
+export const zCreateRuleHookPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Rule Variant.
+ */
+export const zCreateRuleHookResponse = zRuleHook;
+
+export const zDeleteRuleHookPath = z.object({
+    campaignId: zId,
+    hookId: zId
+});
+
+/**
+ * The Rule Variant is removed.
+ */
+export const zDeleteRuleHookResponse = z.void();
+
 export const zListFactionsPath = z.object({
     campaignId: zId
 });
@@ -7359,6 +7488,33 @@ export const zSaveConditionBuildPath = z.object({
  * The condition.
  */
 export const zSaveConditionBuildResponse = zConditionBuild;
+
+export const zPreviewRollTableBody = zRollTablePreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewRollTableResponse = zRollTableBuild;
+
+export const zGetRollTableBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The Roll Table.
+ */
+export const zGetRollTableBuildResponse = zRollTableBuild;
+
+export const zSaveRollTableBuildBody = zRollTableDesign;
+
+export const zSaveRollTableBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The Roll Table.
+ */
+export const zSaveRollTableBuildResponse = zRollTableBuild;
 
 export const zPreviewMonsterBody = zMonsterPreviewInput;
 

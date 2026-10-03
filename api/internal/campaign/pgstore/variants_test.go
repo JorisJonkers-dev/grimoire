@@ -93,23 +93,24 @@ func TestTheDMSwitchesRuleVariants(t *testing.T) {
 	}
 
 	// Every operation reports a database fault, and a change is kept whole or not at all.
-	for name, op := range map[string]func(svc *app.RuleVariants) error{
-		"list": func(svc *app.RuleVariants) error { _, err := svc.List(ctx, playerCaller, d.ID); return err },
-		"set": func(svc *app.RuleVariants) error {
-			return svc.Set(ctx, dmCaller, d.ID, variants.Set{variants.Flanking: variants.On, variants.MassiveDamage: variants.On, variants.Rests: variants.RestsEpic})
-		},
-	} {
-		pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
-			err := op(&app.RuleVariants{Repo: pgstore.NewFaulty(db.Pool(), fault), Now: time.Now})
-			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
-				t.Fatalf("%s: %v", name, err)
-			}
-			if got := values("dm"); err != nil && (got[variants.Flanking] != variants.Off || got[variants.MassiveDamage] != variants.Off || got[variants.Rests] != variants.RestsGritty) {
-				t.Fatalf("%s left half a change behind: %v", name, got)
-			}
-			return err
-		})
-	}
+	pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
+		_, err := (&app.RuleVariants{Repo: pgstore.NewFaulty(db.Pool(), fault), Now: time.Now}).List(ctx, playerCaller, d.ID)
+		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+			t.Fatalf("list: %v", err)
+		}
+		return err
+	})
+	pgtest.EveryFault(t, func(fault *pgtest.Faulty) error {
+		change := variants.Set{variants.Flanking: variants.On, variants.MassiveDamage: variants.On, variants.Rests: variants.RestsEpic}
+		err := (&app.RuleVariants{Repo: pgstore.NewFaulty(db.Pool(), fault), Now: time.Now}).Set(ctx, dmCaller, d.ID, change)
+		if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+			t.Fatalf("set: %v", err)
+		}
+		if got := values("dm"); err != nil && (got[variants.Flanking] != variants.Off || got[variants.MassiveDamage] != variants.Off || got[variants.Rests] != variants.RestsGritty) {
+			t.Fatalf("a change that failed left half of itself behind: %v", got)
+		}
+		return err
+	})
 	if got := values("dm"); got[variants.Flanking] != variants.On || got[variants.MassiveDamage] != variants.On || got[variants.Rests] != variants.RestsEpic {
 		t.Fatalf("after the faults = %v", got)
 	}

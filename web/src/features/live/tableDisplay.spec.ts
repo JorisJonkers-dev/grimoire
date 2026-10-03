@@ -37,9 +37,11 @@ describe('table display', () => {
     await flushPromises()
     for (const id of ['table-caption', 'table-roll', 'table-turn']) expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
 
-    s.receive({ kind: 'view', seq: 2, view: view({ table: table({ caption: 'The gate creaks open.' }) }) })
+    s.receive({ kind: 'view', seq: 2, view: view({ table: table({ caption: 'The gate creaks open.' }), tableResult: { hook: 'Critical fumbles', table: 'Fumbles', tokenId: aria.id, label: 'Aria', total: 1, text: 'You fall flat on your face.' } }) })
     await flushPromises()
     expect(wrapper.get('[data-testid="table-caption"]').text()).toBe('The gate creaks open.')
+    // What a roll on a Roll Table landed on is read out to the table.
+    expect(wrapper.get('[data-testid="table-result"]').text()).toBe('Critical fumbles: Aria rolled 1 on Fumbles. You fall flat on your face.')
 
     // The last roll: who, what for, every die (the dropped one marked), the modifier and the total.
     s.receive({ kind: 'roll', seq: 2, roll: athletics })
