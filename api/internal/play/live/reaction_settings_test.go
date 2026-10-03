@@ -86,9 +86,7 @@ func TestReactionSettings(t *testing.T) {
 	tb.dmSays(live.Command{Kind: live.CmdWalk, TokenID: ids["Goblin"], Q: -1, R: 0})
 	d, _ = tb.dmSays(live.Command{Kind: live.CmdAttack, TokenID: ids["Goblin"], TargetID: ids["Aria"]})
 	tb.fill(d.View.Combat.Attack.RollID, w.dm, 13)
-	drain(tb.dm)
-	drain(tb.player)
-	v := look(t, w, tb.dm)
+	v := barrier(t, w, tb)
 	if aria := combatant(v, "Aria"); aria.Reaction || v.Combat.Attack != nil || v.Combat.Prompt != nil || *token(v, "Aria").HP != 12 {
 		t.Fatalf("Shield went up by itself and turned the 17 into a miss = %+v %+v", aria, v.Combat)
 	}
@@ -97,12 +95,9 @@ func TestReactionSettings(t *testing.T) {
 	tb.dmSays(live.Command{Kind: live.CmdApplyEffect, TargetID: ids["Goblin"], Effect: "hellish-rebuke"})
 	p = tb.playerSays(live.Command{Kind: live.CmdAttack, TokenID: ids["Aria"], TargetID: ids["Goblin"]})
 	tb.fill(p.View.Combat.Attack.RollID, w.player, 15)
-	drain(tb.dm)
-	drain(tb.player)
+	barrier(t, w, tb)
 	tb.fill(look(t, w, tb.player).Combat.Attack.RollID, w.player, 1)
-	drain(tb.dm)
-	drain(tb.player)
-	v = look(t, w, tb.dm)
+	v = barrier(t, w, tb)
 	if pr := v.Combat.Prompt; pr == nil || pr.Kind != "effect" || pr.ReactorID != ids["Goblin"] || !strings.HasPrefix(pr.Effect, "Hellish Rebuke:") {
 		t.Fatalf("damage sets off the goblin's Hellish Rebuke = %+v", v.Combat.Prompt)
 	}
@@ -118,4 +113,12 @@ func TestReactionSettings(t *testing.T) {
 	if r := token(look(t, w, tb.dm), "Goblin").Reactions; len(r) != 1 || r[0].Condition != "target_bloodied" {
 		t.Fatalf("settings survive a restart = %+v", r)
 	}
+}
+
+// barrier reads both subscribers up to a fresh snapshot, so no broadcast from a roll that just
+// resolved is left queued; a quiet-window drain can return before a late one lands.
+func barrier(t *testing.T, w world, tb *table) *live.View {
+	t.Helper()
+	look(t, w, tb.player)
+	return look(t, w, tb.dm)
 }
