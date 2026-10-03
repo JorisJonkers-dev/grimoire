@@ -715,6 +715,22 @@
       "detail": "draws a dagger"
     },
     {
+      "nonce": "n90",
+      "kind": "checkpoint",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "name": "Before the ambush"
+    },
+    {
+      "nonce": "n91",
+      "kind": "rewind",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "checkpointId": "0190c7a8-0000-7000-8000-00000000000a"
+    },
+    {
       "nonce": "n73b",
       "kind": "swap_weapons",
       "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
@@ -1202,7 +1218,26 @@
             }
           ]
         },
-        "gameDay": 3
+        "gameDay": 3,
+        "checkpoints": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Before the ambush",
+            "kind": "named",
+            "round": 0,
+            "actionSeq": 41,
+            "at": "2026-10-03T20:00:00Z"
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Round 2",
+            "kind": "round",
+            "round": 2,
+            "actionSeq": 57,
+            "at": "2026-10-03T20:05:00Z"
+          }
+        ],
+        "noUndo": true
       }
     },
     {
@@ -1694,7 +1729,26 @@
             }
           ]
         },
-        "gameDay": 3
+        "gameDay": 3,
+        "checkpoints": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Before the ambush",
+            "kind": "named",
+            "round": 0,
+            "actionSeq": 41,
+            "at": "2026-10-03T20:00:00Z"
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Round 2",
+            "kind": "round",
+            "round": 2,
+            "actionSeq": 57,
+            "at": "2026-10-03T20:05:00Z"
+          }
+        ],
+        "noUndo": true
       }
     },
     {
@@ -2265,7 +2319,26 @@
             }
           ]
         },
-        "gameDay": 3
+        "gameDay": 3,
+        "checkpoints": [
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Before the ambush",
+            "kind": "named",
+            "round": 0,
+            "actionSeq": 41,
+            "at": "2026-10-03T20:00:00Z"
+          },
+          {
+            "id": "0190c7a8-0000-7000-8000-00000000000c",
+            "name": "Round 2",
+            "kind": "round",
+            "round": 2,
+            "actionSeq": 57,
+            "at": "2026-10-03T20:05:00Z"
+          }
+        ],
+        "noUndo": true
       },
       "steps": [
         {
@@ -2697,7 +2770,26 @@
               }
             ]
           },
-          "gameDay": 3
+          "gameDay": 3,
+          "checkpoints": [
+            {
+              "id": "0190c7a8-0000-7000-8000-00000000000c",
+              "name": "Before the ambush",
+              "kind": "named",
+              "round": 0,
+              "actionSeq": 41,
+              "at": "2026-10-03T20:00:00Z"
+            },
+            {
+              "id": "0190c7a8-0000-7000-8000-00000000000c",
+              "name": "Round 2",
+              "kind": "round",
+              "round": 2,
+              "actionSeq": 57,
+              "at": "2026-10-03T20:05:00Z"
+            }
+          ],
+          "noUndo": true
         }
       ]
     },

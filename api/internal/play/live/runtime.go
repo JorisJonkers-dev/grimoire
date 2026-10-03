@@ -185,34 +185,34 @@ type loaded struct {
 
 // loadRules reads the Effect catalogue, the rest the Session has under way, the Hides, Grapples and
 // Shoves waiting on rolls, and the Characters at 0 hit points.
-func (h *Hub) loadRules(ctx context.Context, s domain.Session) (loaded, error) {
+func loadRules(ctx context.Context, store Store, s domain.Session) (loaded, error) {
 	var out loaded
 	var err error
-	if out.catalog, err = h.Store.Effects(ctx); err != nil {
+	if out.catalog, err = store.Effects(ctx); err != nil {
 		return out, err
 	}
-	if out.surfaces, err = h.Store.Surfaces(ctx); err != nil {
+	if out.surfaces, err = store.Surfaces(ctx); err != nil {
 		return out, err
 	}
-	brew, err := h.Store.Homebrew(ctx, s.CampaignID)
+	brew, err := store.Homebrew(ctx, s.CampaignID)
 	if err != nil {
 		return out, err
 	}
 	out.catalog, out.surfaces = withHomebrew(out.catalog, out.surfaces, brew)
 	out.looks = looksOf(brew.Conditions)
-	if out.rest, err = h.Store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
+	if out.rest, err = store.LoadRest(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
-	if out.pending, err = h.Store.LoadPendingActions(ctx, s.ID); err != nil {
+	if out.pending, err = store.LoadPendingActions(ctx, s.ID); err != nil {
 		return out, err
 	}
-	if out.dying, err = h.Store.LoadDying(ctx, s.ID); err != nil {
+	if out.dying, err = store.LoadDying(ctx, s.ID); err != nil {
 		return out, err
 	}
-	if out.sneak, err = h.Store.LoadSneak(ctx, s.ID); err != nil {
+	if out.sneak, err = store.LoadSneak(ctx, s.ID); err != nil {
 		return out, err
 	}
-	out.explore, err = h.Store.LoadExploration(ctx, s.ID)
+	out.explore, err = store.LoadExploration(ctx, s.ID)
 	return out, err
 }
 
@@ -322,6 +322,17 @@ type Store interface {
 	Commit(ctx context.Context, s domain.Session, board *domain.MapState, w Write, actor domain.Member, c caller.Caller, now time.Time) (Committed, error)
 	// Action reads one Action of the Session by its Action Log sequence.
 	Action(ctx context.Context, id domain.SessionID, seq int64) (ActionRecord, error)
+	// NoUndo reports whether the Campaign is played without undo.
+	NoUndo(ctx context.Context, campaign uuid.UUID) (bool, error)
+	// Checkpoints lists the Session's Checkpoints, oldest first.
+	Checkpoints(ctx context.Context, id domain.SessionID) ([]domain.Checkpoint, error)
+	// SaveCheckpoint keeps the Session as it is under a name; MarkRound keeps the start of a round.
+	SaveCheckpoint(ctx context.Context, s domain.Session, c domain.Checkpoint, actor domain.Member, cl caller.Caller) (Committed, error)
+	// MarkRound keeps the latest keep rounds and lets the older go.
+	MarkRound(ctx context.Context, s domain.Session, c domain.Checkpoint, keep int) error
+	// Rewind puts the Session back as a Checkpoint kept it, and hands read the store of the transaction
+	// it does so in: the rewind stands only when the Session can be read back from it.
+	Rewind(ctx context.Context, s domain.Session, c domain.Checkpoint, actor domain.Member, cl caller.Caller, now time.Time, read func(Store) error) (Committed, error)
 }
 
 // Committed is where a write landed: the Session's sequence and the Action Log's.
@@ -392,13 +403,15 @@ type runtime struct {
 	notify   Notifier
 	dice     DiceLooks
 	// dm is the DM last seen on this Session; an ambush opens its creatures' rolls for them.
-	dm    *domain.Member
-	subs  map[*Subscriber]struct{}
-	join  chan *Subscriber
-	leave chan *Subscriber
-	cmds  chan request
-	stop  chan struct{}
-	done  chan struct{}
+	dm *domain.Member
+	// reload reads the Session afresh from a store: the transaction a rewind is made in.
+	reload func(ctx context.Context, store Store) (*state, error)
+	subs   map[*Subscriber]struct{}
+	join   chan *Subscriber
+	leave  chan *Subscriber
+	cmds   chan request
+	stop   chan struct{}
+	done   chan struct{}
 }
 
 // Hub starts, finds and stops Session runtimes.
@@ -443,63 +456,72 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	if err != nil {
 		return nil, err
 	}
-	s, tokens, board, err := h.Store.Load(ctx, id)
+	st, err := h.load(ctx, h.Store, id)
 	if err != nil {
 		release()
+		return nil, err
+	}
+	s := st.session
+	rt := &runtime{
+		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, dice: h.Dice, now: h.Now, log: h.Log, release: release, st: st, reload: func(ctx context.Context, store Store) (*state, error) { return h.load(ctx, store, id) }, subs: map[*Subscriber]struct{}{},
+		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
+	}
+	if h.runtimes == nil {
+		h.runtimes = map[domain.SessionID]*runtime{}
+	}
+	h.runtimes[id] = rt
+	go rt.run()
+	return rt, nil
+}
+
+// load reads a live Session as a store keeps it: what a runtime starts from, and what a rewind reads
+// back from the transaction it is made in.
+func (h *Hub) load(ctx context.Context, store Store, id domain.SessionID) (*state, error) {
+	s, tokens, board, err := store.Load(ctx, id)
+	if err != nil {
 		return nil, err
 	}
 	if s.Status != domain.SessionLive {
-		release()
 		return nil, ErrClosed
 	}
-	fight, err := h.Store.LoadCombat(ctx, id)
+	fight, err := store.LoadCombat(ctx, id)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	seen, err := h.Store.Observations(ctx, id)
+	seen, err := store.Observations(ctx, id)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	fx, err := h.Store.LoadEffects(ctx, id)
+	fx, err := store.LoadEffects(ctx, id)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	kept, err := h.loadRules(ctx, s)
+	kept, err := loadRules(ctx, store, s)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	ground, cast, err := h.Store.LoadTerrain(ctx, id)
+	ground, cast, err := store.LoadTerrain(ctx, id)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	table, tableMap, err := h.loadTable(ctx, s)
+	table, tableMap, err := loadTable(ctx, store, s)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	world, err := h.loadWorld(ctx, s)
+	world, err := loadWorld(ctx, store, s)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	zones, err := h.Store.LoadZones(ctx, id)
+	zones, err := store.LoadZones(ctx, id)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	checks, err := h.Store.LoadChecks(ctx, s.CampaignID, id)
+	checks, err := store.LoadChecks(ctx, s.CampaignID, id)
 	if err != nil {
-		release()
 		return nil, err
 	}
-	trade, err := h.loadTrade(ctx, s)
+	trade, err := loadTrade(ctx, store, s)
 	if err != nil {
-		release()
 		return nil, err
 	}
 	st := &state{
@@ -511,25 +533,22 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	}
 	st.setBoard(board)
 	st.setWorld(world)
-	rt := &runtime{
-		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, dice: h.Dice, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
-		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
+	if st.noUndo, err = store.NoUndo(ctx, s.CampaignID); err != nil {
+		return nil, err
 	}
-	if h.runtimes == nil {
-		h.runtimes = map[domain.SessionID]*runtime{}
+	if st.checkpoints, err = store.Checkpoints(ctx, id); err != nil {
+		return nil, err
 	}
-	h.runtimes[id] = rt
-	go rt.run()
-	return rt, nil
+	return st, nil
 }
 
 // loadTable reads the Table Display and the world map it shows, if any.
-func (h *Hub) loadTable(ctx context.Context, s domain.Session) (domain.TableDisplay, *domain.Map, error) {
-	t, err := h.Store.LoadTable(ctx, s.ID)
+func loadTable(ctx context.Context, store Store, s domain.Session) (domain.TableDisplay, *domain.Map, error) {
+	t, err := store.LoadTable(ctx, s.ID)
 	if err != nil || t.MapID == nil {
 		return t, nil, err
 	}
-	board, err := h.Store.LoadMap(ctx, s.CampaignID, *t.MapID)
+	board, err := store.LoadMap(ctx, s.CampaignID, *t.MapID)
 	if err != nil {
 		return t, nil, err
 	}
@@ -543,28 +562,28 @@ type trading struct {
 }
 
 // loadTrade reads the Campaign's Containers, the Shop the Session has open and the in-game day.
-func (h *Hub) loadTrade(ctx context.Context, s domain.Session) (trading, error) {
+func loadTrade(ctx context.Context, store Store, s domain.Session) (trading, error) {
 	var out trading
 	var err error
-	if out.inventory, err = h.Store.LoadInventory(ctx, s.CampaignID); err != nil {
+	if out.inventory, err = store.LoadInventory(ctx, s.CampaignID); err != nil {
 		return out, err
 	}
-	if out.shop, err = h.Store.LoadOpenShop(ctx, s.CampaignID, s.ID); err != nil {
+	if out.shop, err = store.LoadOpenShop(ctx, s.CampaignID, s.ID); err != nil {
 		return out, err
 	}
-	if err = priceCarried(ctx, h.Store, s.CampaignID, out.inventory, out.shop); err != nil {
+	if err = priceCarried(ctx, store, s.CampaignID, out.inventory, out.shop); err != nil {
 		return out, err
 	}
-	out.day, err = h.Store.GameDay(ctx, s.CampaignID)
+	out.day, err = store.GameDay(ctx, s.CampaignID)
 	return out, err
 }
 
 // loadWorld reads the world map the Session travels, if any.
-func (h *Hub) loadWorld(ctx context.Context, s domain.Session) (*domain.World, error) {
+func loadWorld(ctx context.Context, store Store, s domain.Session) (*domain.World, error) {
 	if s.WorldMapID == nil {
 		return nil, nil //nolint:nilnil // a Session without a world map is not an error
 	}
-	return h.Store.LoadWorld(ctx, s.CampaignID, s.ID, *s.WorldMapID)
+	return store.LoadWorld(ctx, s.CampaignID, s.ID, *s.WorldMapID)
 }
 
 // RollResolved tells the Campaign's running Sessions that a Roll Request resolved, so an initiative
@@ -728,8 +747,17 @@ func (r *runtime) handle(req request) {
 	case !req.from.Member.DM && !playerMay(req.cmd.Kind):
 		r.reject(req, "Only the DM can change the table.")
 		return
+	case r.st.noUndo && takesBack(req.cmd.Kind):
+		r.reject(req, "This Campaign is played without undo.")
+		return
 	case req.cmd.Kind == CmdUndo:
 		r.undo(req)
+		return
+	case req.cmd.Kind == CmdCheckpoint:
+		r.checkpoint(req)
+		return
+	case req.cmd.Kind == CmdRewind:
+		r.rewind(req)
 		return
 	}
 	w, reason := r.plan(req)
@@ -764,6 +792,7 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 	next.session.Seq = seq
 	prev := r.st
 	r.st = next
+	r.markRound(prev, next, done.Action)
 	r.nudge(prev, next)
 	views := map[Audience]Update{}
 	for sub := range r.subs {

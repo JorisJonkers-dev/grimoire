@@ -3773,6 +3773,9 @@ type Campaign struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
+	// rewind.
+	NoUndo OptBool `json:"noUndo"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -3844,6 +3847,11 @@ func (s *Campaign) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *Campaign) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetNoUndo returns the value of NoUndo.
+func (s *Campaign) GetNoUndo() OptBool {
+	return s.NoUndo
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -3929,6 +3937,11 @@ func (s *Campaign) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *Campaign) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetNoUndo sets the value of NoUndo.
+func (s *Campaign) SetNoUndo(val OptBool) {
+	s.NoUndo = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -4330,6 +4343,9 @@ type CampaignSummary struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
+	// rewind.
+	NoUndo OptBool `json:"noUndo"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -4399,6 +4415,11 @@ func (s *CampaignSummary) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *CampaignSummary) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetNoUndo returns the value of NoUndo.
+func (s *CampaignSummary) GetNoUndo() OptBool {
+	return s.NoUndo
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -4474,6 +4495,11 @@ func (s *CampaignSummary) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *CampaignSummary) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetNoUndo sets the value of NoUndo.
+func (s *CampaignSummary) SetNoUndo(val OptBool) {
+	s.NoUndo = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -4553,6 +4579,9 @@ type CampaignUpdate struct {
 	StartingLevel OptInt32 `json:"startingLevel"`
 	// Long rests stop unlocking the next level; the DM grants levels instead.
 	HoldLevelUps OptBool `json:"holdLevelUps"`
+	// The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no
+	// rewind.
+	NoUndo OptBool `json:"noUndo"`
 	// The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	Exhaustion OptString `json:"exhaustion"`
 	// Identical monsters share one initiative roll.
@@ -4602,6 +4631,11 @@ func (s *CampaignUpdate) GetStartingLevel() OptInt32 {
 // GetHoldLevelUps returns the value of HoldLevelUps.
 func (s *CampaignUpdate) GetHoldLevelUps() OptBool {
 	return s.HoldLevelUps
+}
+
+// GetNoUndo returns the value of NoUndo.
+func (s *CampaignUpdate) GetNoUndo() OptBool {
+	return s.NoUndo
 }
 
 // GetExhaustion returns the value of Exhaustion.
@@ -4657,6 +4691,11 @@ func (s *CampaignUpdate) SetStartingLevel(val OptInt32) {
 // SetHoldLevelUps sets the value of HoldLevelUps.
 func (s *CampaignUpdate) SetHoldLevelUps(val OptBool) {
 	s.HoldLevelUps = val
+}
+
+// SetNoUndo sets the value of NoUndo.
+func (s *CampaignUpdate) SetNoUndo(val OptBool) {
+	s.NoUndo = val
 }
 
 // SetExhaustion sets the value of Exhaustion.
@@ -19315,6 +19354,121 @@ func (s *LiveCheckStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// A point in a live Session the DM can rewind to. One the DM named, or the start of a round, which
+// every round of a fight leaves by itself.
+// Ref: #/components/schemas/LiveCheckpoint
+type LiveCheckpoint struct {
+	ID   ID                 `json:"id"`
+	Name string             `json:"name"`
+	Kind LiveCheckpointKind `json:"kind"`
+	// The round of the fight it was made in, or 0 outside one.
+	Round int32 `json:"round"`
+	// The last Action before it. A rewind takes back every Action after that.
+	ActionSeq int32     `json:"actionSeq"`
+	At        time.Time `json:"at"`
+}
+
+// GetID returns the value of ID.
+func (s *LiveCheckpoint) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *LiveCheckpoint) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveCheckpoint) GetKind() LiveCheckpointKind {
+	return s.Kind
+}
+
+// GetRound returns the value of Round.
+func (s *LiveCheckpoint) GetRound() int32 {
+	return s.Round
+}
+
+// GetActionSeq returns the value of ActionSeq.
+func (s *LiveCheckpoint) GetActionSeq() int32 {
+	return s.ActionSeq
+}
+
+// GetAt returns the value of At.
+func (s *LiveCheckpoint) GetAt() time.Time {
+	return s.At
+}
+
+// SetID sets the value of ID.
+func (s *LiveCheckpoint) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveCheckpoint) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveCheckpoint) SetKind(val LiveCheckpointKind) {
+	s.Kind = val
+}
+
+// SetRound sets the value of Round.
+func (s *LiveCheckpoint) SetRound(val int32) {
+	s.Round = val
+}
+
+// SetActionSeq sets the value of ActionSeq.
+func (s *LiveCheckpoint) SetActionSeq(val int32) {
+	s.ActionSeq = val
+}
+
+// SetAt sets the value of At.
+func (s *LiveCheckpoint) SetAt(val time.Time) {
+	s.At = val
+}
+
+type LiveCheckpointKind string
+
+const (
+	LiveCheckpointKindNamed LiveCheckpointKind = "named"
+	LiveCheckpointKindRound LiveCheckpointKind = "round"
+)
+
+// AllValues returns all LiveCheckpointKind values.
+func (LiveCheckpointKind) AllValues() []LiveCheckpointKind {
+	return []LiveCheckpointKind{
+		LiveCheckpointKindNamed,
+		LiveCheckpointKindRound,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveCheckpointKind) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveCheckpointKindNamed:
+		return []byte(s), nil
+	case LiveCheckpointKindRound:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveCheckpointKind) UnmarshalText(data []byte) error {
+	switch LiveCheckpointKind(data) {
+	case LiveCheckpointKindNamed:
+		*s = LiveCheckpointKindNamed
+		return nil
+	case LiveCheckpointKindRound:
+		*s = LiveCheckpointKindRound
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A Character's need or greed call on a loot pile's item, with the d20 it rolled. Need beats greed,
 // then the higher roll, then the earlier claim.
 // Ref: #/components/schemas/LiveClaim
@@ -20002,6 +20156,10 @@ type LiveCommand struct {
 	HpDelta OptInt32 `json:"hpDelta"`
 	// With undo, the Action Log sequence of the Action to undo.
 	Seq OptInt32 `json:"seq"`
+	// With checkpoint, what to call the Checkpoint, in up to 60 characters.
+	Name OptString `json:"name"`
+	// With rewind, the Checkpoint to go back to.
+	CheckpointId OptString `json:"checkpointId"`
 }
 
 // GetNonce returns the value of Nonce.
@@ -20499,6 +20657,16 @@ func (s *LiveCommand) GetSeq() OptInt32 {
 	return s.Seq
 }
 
+// GetName returns the value of Name.
+func (s *LiveCommand) GetName() OptString {
+	return s.Name
+}
+
+// GetCheckpointId returns the value of CheckpointId.
+func (s *LiveCommand) GetCheckpointId() OptString {
+	return s.CheckpointId
+}
+
 // SetNonce sets the value of Nonce.
 func (s *LiveCommand) SetNonce(val string) {
 	s.Nonce = val
@@ -20994,6 +21162,16 @@ func (s *LiveCommand) SetSeq(val OptInt32) {
 	s.Seq = val
 }
 
+// SetName sets the value of Name.
+func (s *LiveCommand) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetCheckpointId sets the value of CheckpointId.
+func (s *LiveCommand) SetCheckpointId(val OptString) {
+	s.CheckpointId = val
+}
+
 type LiveCommandAction string
 
 const (
@@ -21276,6 +21454,8 @@ const (
 	LiveCommandKindLegendaryAction     LiveCommandKind = "legendary_action"
 	LiveCommandKindLairAction          LiveCommandKind = "lair_action"
 	LiveCommandKindLegendaryResistance LiveCommandKind = "legendary_resistance"
+	LiveCommandKindCheckpoint          LiveCommandKind = "checkpoint"
+	LiveCommandKindRewind              LiveCommandKind = "rewind"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -21374,6 +21554,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindLegendaryAction,
 		LiveCommandKindLairAction,
 		LiveCommandKindLegendaryResistance,
+		LiveCommandKindCheckpoint,
+		LiveCommandKindRewind,
 	}
 }
 
@@ -21565,6 +21747,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindLairAction:
 		return []byte(s), nil
 	case LiveCommandKindLegendaryResistance:
+		return []byte(s), nil
+	case LiveCommandKindCheckpoint:
+		return []byte(s), nil
+	case LiveCommandKindRewind:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -21852,6 +22038,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindLegendaryResistance:
 		*s = LiveCommandKindLegendaryResistance
+		return nil
+	case LiveCommandKindCheckpoint:
+		*s = LiveCommandKindCheckpoint
+		return nil
+	case LiveCommandKindRewind:
+		*s = LiveCommandKindRewind
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -26378,7 +26570,11 @@ type LiveView struct {
 	Shop       OptLiveShop      `json:"shop"`
 	Rest       OptLiveRest      `json:"rest"`
 	// Days passed in the Campaign; a long rest or travel moves it on.
-	GameDay OptInt32        `json:"gameDay"`
+	GameDay OptInt32 `json:"gameDay"`
+	// The points the DM can rewind to, oldest first. Sent to the DM only.
+	Checkpoints []LiveCheckpoint `json:"checkpoints"`
+	// The Campaign is played without undo. Sent to the DM only.
+	NoUndo  OptBool         `json:"noUndo"`
 	Walls   []HexCoord      `json:"walls"`
 	Lights  []LiveLight     `json:"lights"`
 	Ambient OptAmbientLight `json:"ambient"`
@@ -26517,6 +26713,16 @@ func (s *LiveView) GetRest() OptLiveRest {
 // GetGameDay returns the value of GameDay.
 func (s *LiveView) GetGameDay() OptInt32 {
 	return s.GameDay
+}
+
+// GetCheckpoints returns the value of Checkpoints.
+func (s *LiveView) GetCheckpoints() []LiveCheckpoint {
+	return s.Checkpoints
+}
+
+// GetNoUndo returns the value of NoUndo.
+func (s *LiveView) GetNoUndo() OptBool {
+	return s.NoUndo
 }
 
 // GetWalls returns the value of Walls.
@@ -26667,6 +26873,16 @@ func (s *LiveView) SetRest(val OptLiveRest) {
 // SetGameDay sets the value of GameDay.
 func (s *LiveView) SetGameDay(val OptInt32) {
 	s.GameDay = val
+}
+
+// SetCheckpoints sets the value of Checkpoints.
+func (s *LiveView) SetCheckpoints(val []LiveCheckpoint) {
+	s.Checkpoints = val
+}
+
+// SetNoUndo sets the value of NoUndo.
+func (s *LiveView) SetNoUndo(val OptBool) {
+	s.NoUndo = val
 }
 
 // SetWalls sets the value of Walls.

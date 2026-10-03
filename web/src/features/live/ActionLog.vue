@@ -5,7 +5,7 @@ import { getSessionLogOptions } from '@/infrastructure/api/@tanstack/vue-query.g
 import type { LiveView, SessionAction } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 
-const props = defineProps<{ campaignId: string; sessionId: string; view: LiveView | null }>()
+const props = withDefaults(defineProps<{ campaignId: string; sessionId: string; view: LiveView | null; noUndo?: boolean }>(), { noUndo: false })
 const emit = defineEmits<{ undo: [seq: number] }>()
 const log = useQuery({ ...getSessionLogOptions({ path: { campaignId: props.campaignId, sessionId: props.sessionId }, query: { limit: 15 } }), retry: false })
 // Every change to the table may add to the log.
@@ -26,7 +26,7 @@ const who = (a: SessionAction) => (a.client ? `${a.actor} via ${a.client}` : a.a
         <span>
           <strong>#{{ a.seq }}</strong> {{ line(a) }} · {{ who(a) }}
         </span>
-        <GButton v-if="a.undoable" :aria-label="`Undo #${String(a.seq)}: ${line(a)}`" :data-testid="`undo-${String(a.seq)}`" @click="emit('undo', a.seq)">Undo</GButton>
+        <GButton v-if="a.undoable && !noUndo" :aria-label="`Undo #${String(a.seq)}: ${line(a)}`" :data-testid="`undo-${String(a.seq)}`" @click="emit('undo', a.seq)">Undo</GButton>
       </li>
     </ol>
   </section>

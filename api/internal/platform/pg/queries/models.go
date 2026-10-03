@@ -48,6 +48,7 @@ type CampaignCampaign struct {
 	HoldLevelUps      bool
 	GameMinute        int32
 	ExhaustionVariant string
+	NoUndo            bool
 }
 
 type CampaignCharacter struct {
@@ -1363,6 +1364,17 @@ type PlayAttack struct {
 	Cleave          bool
 }
 
+type PlayCheckpoint struct {
+	ID        uuid.UUID
+	SessionID uuid.UUID
+	Name      string
+	Kind      string
+	Round     int32
+	ActionSeq int64
+	State     []byte
+	CreatedAt time.Time
+}
+
 type PlayCombat struct {
 	ID            uuid.UUID
 	SessionID     uuid.UUID
@@ -1513,6 +1525,12 @@ type PlayRestRester struct {
 	CharacterID uuid.UUID
 	TokenID     uuid.UUID
 	RollID      pgtype.UUID
+}
+
+type PlayRewind struct {
+	ActionID    uuid.UUID
+	SessionID   uuid.UUID
+	ToActionSeq int64
 }
 
 type PlayRollDice struct {

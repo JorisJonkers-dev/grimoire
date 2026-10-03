@@ -5,6 +5,7 @@ package live
 import (
 	"maps"
 	"slices"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -108,6 +109,8 @@ const (
 	CmdDisarm         = "disarm"
 	CmdJump           = "jump"
 	CmdThrow          = "throw"
+	CmdCheckpoint     = "checkpoint"
+	CmdRewind         = "rewind"
 	CmdSneak          = "sneak"
 	CmdExplore        = "explore"
 	CmdPassTurn       = "pass_turn"
@@ -258,8 +261,11 @@ type Command struct {
 	Monsters []SpawnMonster `json:"monsters,omitempty"`
 	HPDelta  int            `json:"hpDelta,omitempty"`
 	Seq      int64          `json:"seq,omitempty"`
-	promptID uuid.UUID
-	rollID   domain.RollID
+	// Name is what checkpoint calls the Checkpoint; CheckpointID the one rewind goes back to.
+	Name         string `json:"name,omitempty"`
+	CheckpointID string `json:"checkpointId,omitempty"`
+	promptID     uuid.UUID
+	rollID       domain.RollID
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -529,6 +535,21 @@ type View struct {
 	Shop       *ShopView           `json:"shop,omitempty"`
 	Rest       *RestView           `json:"rest,omitempty"`
 	GameDay    int                 `json:"gameDay"`
+	// Checkpoints are the points the DM can rewind to, oldest first, and NoUndo the Campaign played
+	// without undo; both go to the DM only.
+	Checkpoints []CheckpointView `json:"checkpoints,omitempty"`
+	NoUndo      bool             `json:"noUndo,omitempty"`
+}
+
+// CheckpointView is a point the DM can rewind to: one they named, or the start of a round.
+type CheckpointView struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Kind  string `json:"kind"`
+	Round int    `json:"round"`
+	// ActionSeq is the last Action before it: a rewind takes back every Action after that.
+	ActionSeq int64     `json:"actionSeq"`
+	At        time.Time `json:"at"`
 }
 
 // RestView is the rest the party proposed or is taking: who agreed, who the rest still waits on, and

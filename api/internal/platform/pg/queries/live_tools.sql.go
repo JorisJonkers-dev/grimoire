@@ -115,6 +115,48 @@ func (q *Queries) ActionTokenEvent(ctx context.Context, actionID uuid.UUID) (Act
 	return i, err
 }
 
+const campaignNoUndo = `-- name: CampaignNoUndo :one
+SELECT no_undo FROM campaign.campaigns WHERE id = $1
+`
+
+func (q *Queries) CampaignNoUndo(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, campaignNoUndo, id)
+	var no_undo bool
+	err := row.Scan(&no_undo)
+	return no_undo, err
+}
+
+const dropLaterCheckpoints = `-- name: DropLaterCheckpoints :exec
+DELETE FROM play.checkpoints WHERE session_id = $1 AND action_seq > $2
+`
+
+type DropLaterCheckpointsParams struct {
+	SessionID uuid.UUID
+	ActionSeq int64
+}
+
+// A rewind leaves no Checkpoint of the future it took back.
+func (q *Queries) DropLaterCheckpoints(ctx context.Context, arg DropLaterCheckpointsParams) error {
+	_, err := q.db.Exec(ctx, dropLaterCheckpoints, arg.SessionID, arg.ActionSeq)
+	return err
+}
+
+const dropOldRounds = `-- name: DropOldRounds :exec
+DELETE FROM play.checkpoints c WHERE c.session_id = $1 AND c.kind = 'round' AND c.id NOT IN (
+    SELECT k.id FROM play.checkpoints k WHERE k.session_id = $1 AND k.kind = 'round' ORDER BY k.action_seq DESC, k.created_at DESC LIMIT $2)
+`
+
+type DropOldRoundsParams struct {
+	SessionID uuid.UUID
+	Keep      int32
+}
+
+// A Session keeps the start of its latest rounds only.
+func (q *Queries) DropOldRounds(ctx context.Context, arg DropOldRoundsParams) error {
+	_, err := q.db.Exec(ctx, dropOldRounds, arg.SessionID, arg.Keep)
+	return err
+}
+
 const insertEffectEvent = `-- name: InsertEffectEvent :exec
 INSERT INTO play.action_effect_events (action_id, effect_id) VALUES ($1, $2)
 `
@@ -126,6 +168,21 @@ type InsertEffectEventParams struct {
 
 func (q *Queries) InsertEffectEvent(ctx context.Context, arg InsertEffectEventParams) error {
 	_, err := q.db.Exec(ctx, insertEffectEvent, arg.ActionID, arg.EffectID)
+	return err
+}
+
+const insertRewind = `-- name: InsertRewind :exec
+INSERT INTO play.rewinds (action_id, session_id, to_action_seq) VALUES ($1, $2, $3)
+`
+
+type InsertRewindParams struct {
+	ActionID    uuid.UUID
+	SessionID   uuid.UUID
+	ToActionSeq int64
+}
+
+func (q *Queries) InsertRewind(ctx context.Context, arg InsertRewindParams) error {
+	_, err := q.db.Exec(ctx, insertRewind, arg.ActionID, arg.SessionID, arg.ToActionSeq)
 	return err
 }
 
@@ -158,10 +215,53 @@ func (q *Queries) InsertUndo(ctx context.Context, arg InsertUndoParams) error {
 	return err
 }
 
+const listCheckpoints = `-- name: ListCheckpoints :many
+SELECT id, name, kind, round, action_seq, created_at FROM play.checkpoints WHERE session_id = $1 ORDER BY action_seq, created_at, id
+`
+
+type ListCheckpointsRow struct {
+	ID        uuid.UUID
+	Name      string
+	Kind      string
+	Round     int32
+	ActionSeq int64
+	CreatedAt time.Time
+}
+
+func (q *Queries) ListCheckpoints(ctx context.Context, sessionID uuid.UUID) ([]ListCheckpointsRow, error) {
+	rows, err := q.db.Query(ctx, listCheckpoints, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCheckpointsRow{}
+	for rows.Next() {
+		var i ListCheckpointsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Kind,
+			&i.Round,
+			&i.ActionSeq,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const sessionActionBySeq = `-- name: SessionActionBySeq :one
 SELECT a.id, a.kind,
     (EXISTS (SELECT 1 FROM play.action_undos u WHERE u.undoes_action_id = a.id)
-        OR EXISTS (SELECT 1 FROM play.action_hp_events h WHERE h.undoes_action_id = a.id))::boolean AS undone
+        OR EXISTS (SELECT 1 FROM play.action_hp_events h WHERE h.undoes_action_id = a.id))::boolean AS undone,
+    -- A rewind to before this Action, made after it, took it back.
+    EXISTS (SELECT 1 FROM play.rewinds w JOIN play.actions wa ON wa.id = w.action_id
+        WHERE w.session_id = a.session_id AND w.to_action_seq < a.seq AND wa.seq > a.seq)::boolean AS rewound
 FROM play.actions a
 WHERE a.session_id = $1 AND a.seq = $2
 `
@@ -172,15 +272,21 @@ type SessionActionBySeqParams struct {
 }
 
 type SessionActionBySeqRow struct {
-	ID     uuid.UUID
-	Kind   string
-	Undone bool
+	ID      uuid.UUID
+	Kind    string
+	Undone  bool
+	Rewound bool
 }
 
 func (q *Queries) SessionActionBySeq(ctx context.Context, arg SessionActionBySeqParams) (SessionActionBySeqRow, error) {
 	row := q.db.QueryRow(ctx, sessionActionBySeq, arg.SessionID, arg.Seq)
 	var i SessionActionBySeqRow
-	err := row.Scan(&i.ID, &i.Kind, &i.Undone)
+	err := row.Scan(
+		&i.ID,
+		&i.Kind,
+		&i.Undone,
+		&i.Rewound,
+	)
 	return i, err
 }
 
@@ -190,7 +296,10 @@ SELECT a.seq, a.kind, a.actor_name, a.origin, a.client, a.created_at,
     coalesce(t.token_id, (SELECT h.token_id FROM play.action_hp_events h WHERE h.action_id = a.id), '00000000-0000-0000-0000-000000000000')::uuid AS token_id,
     coalesce(t.label, (SELECT string_agg(s.label, ', ' ORDER BY s.label) FROM play.action_spawn_events s WHERE s.action_id = a.id), '')::text AS label,
     (EXISTS (SELECT 1 FROM play.action_undos u WHERE u.undoes_action_id = a.id)
-        OR EXISTS (SELECT 1 FROM play.action_hp_events h WHERE h.undoes_action_id = a.id))::boolean AS undone
+        OR EXISTS (SELECT 1 FROM play.action_hp_events h WHERE h.undoes_action_id = a.id)
+        -- A rewind to before this Action, made after it, took it back with everything else.
+        OR EXISTS (SELECT 1 FROM play.rewinds w JOIN play.actions wa ON wa.id = w.action_id
+            WHERE w.session_id = a.session_id AND w.to_action_seq < a.seq AND wa.seq > a.seq))::boolean AS undone
 FROM play.actions a
 LEFT JOIN play.action_token_events t ON t.action_id = a.id
 WHERE a.session_id = $1

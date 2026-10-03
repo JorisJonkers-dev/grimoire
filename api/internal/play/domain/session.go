@@ -185,3 +185,29 @@ func (a LoggedAction) Undoable() bool {
 	}
 	return false
 }
+
+// CheckpointID identifies a Checkpoint.
+type CheckpointID = uuid.UUID
+
+// Checkpoint kinds: one the DM named, or the start of a round, which every round leaves by itself.
+const (
+	CheckpointNamed = "named"
+	CheckpointRound = "round"
+)
+
+// Checkpoint action kinds in the Action Log.
+const (
+	ActionCheckpointCreated = "checkpoint_created"
+	ActionSessionRewound    = "session_rewound"
+)
+
+// Checkpoint is a named point in a live Session's Action Log the DM can rewind to. ActionSeq is the
+// last Action before it: a rewind takes back every Action after that.
+type Checkpoint struct {
+	ID        CheckpointID
+	Name      string
+	Kind      string
+	Round     int
+	ActionSeq int64
+	CreatedAt time.Time
+}

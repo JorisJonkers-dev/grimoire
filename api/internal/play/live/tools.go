@@ -23,9 +23,11 @@ type SpawnMonster struct {
 
 // ActionRecord is one Action of the Session, with what undoing it needs.
 type ActionRecord struct {
-	ID      uuid.UUID
-	Kind    string
-	Undone  bool
+	ID     uuid.UUID
+	Kind   string
+	Undone bool
+	// Rewound is an Action a later rewind took back, with everything else after its Checkpoint.
+	Rewound bool
 	Token   domain.TokenID
 	Hexes   []hex.Coord
 	HP      HPChange
@@ -143,6 +145,9 @@ func (r *runtime) undo(req request) {
 		return
 	case a.Undone:
 		r.reject(req, "That action is already undone.")
+		return
+	case a.Rewound:
+		r.reject(req, "A rewind already took that action back.")
 		return
 	}
 	if a.Kind == domain.ActionEncounterSpawned {

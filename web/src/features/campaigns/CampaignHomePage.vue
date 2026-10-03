@@ -79,6 +79,11 @@ const holdLevelUps = computed({
   get: () => holdChoice.value ?? campaign.data.value?.holdLevelUps ?? false,
   set: (v: boolean) => (holdChoice.value = v),
 })
+const noUndoChoice = ref<boolean | null>(null)
+const noUndo = computed({
+  get: () => noUndoChoice.value ?? campaign.data.value?.noUndo ?? false,
+  set: (v: boolean) => (noUndoChoice.value = v),
+})
 const exhaustionChoice = ref<string | null>(null)
 const exhaustion = computed({
   get: () => exhaustionChoice.value ?? campaign.data.value?.exhaustion ?? 'srd-2024',
@@ -90,7 +95,7 @@ function saveSettings() {
   settings.mutate({ ...path.value, body: {
     reactionTimeoutS: timeout.value, highGround: highGround.value, restSupplies: restSupplies.value, initiativeMode: initiativeMode.value,
     shareInitiative: shareInitiative.value, creationMethods: creationMethods.value, startingLevel: startingLevel.value,
-    holdLevelUps: holdLevelUps.value, exhaustion: exhaustion.value,
+    holdLevelUps: holdLevelUps.value, noUndo: noUndo.value, exhaustion: exhaustion.value,
   } }, { onSuccess: refresh, onError: onError('The settings could not be saved.') })
 }
 const failed = ref('')
@@ -277,6 +282,10 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <label class="check">
           <input v-model="holdLevelUps" type="checkbox" data-testid="hold-level-ups" />
           <span>Hold level-ups: long rests stop unlocking the next level, and you grant levels from each sheet</span>
+        </label>
+        <label class="check">
+          <input v-model="noUndo" type="checkbox" data-testid="no-undo-setting" />
+          <span>Play without undo: nothing is taken back, no Checkpoints, no rewind. It takes effect when the next Session starts</span>
         </label>
         <label class="g-field">
           <span>Exhaustion</span>

@@ -29,6 +29,7 @@ import LegendPanel from './LegendPanel.vue'
 import VisibilityPanel from './VisibilityPanel.vue'
 import ObjectsPanel from './ObjectsPanel.vue'
 import ActionLog from './ActionLog.vue'
+import CheckpointPanel from './CheckpointPanel.vue'
 import DyingPanel from './DyingPanel.vue'
 import EncounterChecks from './EncounterChecks.vue'
 import InventoryPanel from './InventoryPanel.vue'
@@ -571,6 +572,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             :combatant="combatantOf(t.id)"
             :suggestion="suggestions[t.id]?.sentence"
             :notes="notesFor(t.id)"
+            :no-undo="view?.noUndo ?? false"
             @tactics="(v) => live?.send({ kind: 'set_tactics', tokenId: t.id, tactics: v })"
             @use="useSuggestion(t.id, combatantOf(t.id)?.suggestion)"
             @undo="(seq) => live?.send({ kind: 'undo', seq })"
@@ -791,7 +793,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             <GButton variant="danger" data-testid="remove-token" @click="remove()">Remove</GButton>
           </div>
           <div class="row">
-            <GButton data-testid="undo-damage" @click="live?.send({ kind: 'undo_damage' })">Undo last damage</GButton>
+            <GButton v-if="!view?.noUndo" data-testid="undo-damage" @click="live?.send({ kind: 'undo_damage' })">Undo last damage</GButton>
             <template v-if="combat">
               <label class="g-field">
                 <span>Loot when it ends</span>
@@ -870,7 +872,8 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :tables="encounterTables.data.value ?? []"
           @send="(cmd) => live?.send(cmd)"
         />
-        <ActionLog v-if="isDM" data-page="party" :campaign-id="campaignId" :session-id="sessionId" :view="view" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
+        <CheckpointPanel v-if="isDM" data-page="tools" :checkpoints="view?.checkpoints ?? []" :no-undo="view?.noUndo ?? false" @send="(cmd) => live?.send(cmd)" />
+        <ActionLog v-if="isDM" data-page="party" :campaign-id="campaignId" :session-id="sessionId" :view="view" :no-undo="view?.noUndo ?? false" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
         <ul data-page="party" class="g-list tokens" aria-label="Tokens in view" data-testid="tokens">
           <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
         </ul>

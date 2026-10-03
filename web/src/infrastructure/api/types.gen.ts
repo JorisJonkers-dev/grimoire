@@ -59,6 +59,10 @@ export type CampaignSummary = {
      */
     holdLevelUps?: boolean;
     /**
+     * The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind.
+     */
+    noUndo?: boolean;
+    /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
     exhaustion?: string;
@@ -120,6 +124,10 @@ export type Campaign = {
      */
     holdLevelUps?: boolean;
     /**
+     * The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind.
+     */
+    noUndo?: boolean;
+    /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
     exhaustion?: string;
@@ -168,6 +176,10 @@ export type CampaignUpdate = {
      * Long rests stop unlocking the next level; the DM grants levels instead.
      */
     holdLevelUps?: boolean;
+    /**
+     * The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind.
+     */
+    noUndo?: boolean;
     /**
      * The exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
      */
@@ -2499,7 +2511,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind';
     caption?: string;
     tokenId?: Id;
     label?: string;
@@ -2645,6 +2657,14 @@ export type LiveCommand = {
      * With undo, the Action Log sequence of the Action to undo.
      */
     seq?: number;
+    /**
+     * With checkpoint, what to call the Checkpoint, in up to 60 characters.
+     */
+    name?: string;
+    /**
+     * With rewind, the Checkpoint to go back to.
+     */
+    checkpointId?: string;
 };
 
 /**
@@ -4253,6 +4273,24 @@ export type LiveRollShown = {
 };
 
 /**
+ * A point in a live Session the DM can rewind to. One the DM named, or the start of a round, which every round of a fight leaves by itself.
+ */
+export type LiveCheckpoint = {
+    id: Id;
+    name: string;
+    kind: 'named' | 'round';
+    /**
+     * The round of the fight it was made in, or 0 outside one.
+     */
+    round: number;
+    /**
+     * The last Action before it. A rewind takes back every Action after that.
+     */
+    actionSeq: number;
+    at: string;
+};
+
+/**
  * The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is named only when every screen may fetch it, which is once an Admin approved it.
  */
 export type LiveDiceLook = {
@@ -4431,6 +4469,14 @@ export type LiveView = {
      * Days passed in the Campaign; a long rest or travel moves it on.
      */
     gameDay?: number;
+    /**
+     * The points the DM can rewind to, oldest first. Sent to the DM only.
+     */
+    checkpoints?: Array<LiveCheckpoint>;
+    /**
+     * The Campaign is played without undo. Sent to the DM only.
+     */
+    noUndo?: boolean;
     walls?: Array<HexCoord>;
     lights?: Array<LiveLight>;
     ambient?: AmbientLight;

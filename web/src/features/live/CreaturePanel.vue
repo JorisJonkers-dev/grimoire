@@ -3,7 +3,9 @@ import type { LiveCombatant, LiveToken, SessionAction, Tactics } from '@/infrast
 import { GButton } from '@/shared/ui'
 import { TACTICS } from './console'
 
-defineProps<{ token: LiveToken; combatant?: LiveCombatant; suggestion?: string; notes: SessionAction[] }>()
+withDefaults(defineProps<{ token: LiveToken; combatant?: LiveCombatant; suggestion?: string; notes: SessionAction[]; noUndo?: boolean }>(), {
+  combatant: undefined, suggestion: undefined, noUndo: false,
+})
 const emit = defineEmits<{ tactics: [value: Tactics]; use: []; undo: [seq: number] }>()
 const what = (a: SessionAction) => a.kind.replaceAll('_', ' ')
 </script>
@@ -28,7 +30,7 @@ const what = (a: SessionAction) => a.kind.replaceAll('_', ' ')
       <ol v-else class="g-list">
         <li v-for="a in notes" :key="a.seq" class="note">
           <span><strong>#{{ a.seq }}</strong> {{ what(a) }} · via {{ a.client ?? 'an agent' }}</span>
-          <GButton v-if="a.undoable" :aria-label="`Undo #${String(a.seq)}: ${what(a)}`" :data-testid="`note-undo-${String(a.seq)}`" @click="emit('undo', a.seq)">Undo</GButton>
+          <GButton v-if="a.undoable && !noUndo" :aria-label="`Undo #${String(a.seq)}: ${what(a)}`" :data-testid="`note-undo-${String(a.seq)}`" @click="emit('undo', a.seq)">Undo</GButton>
         </li>
       </ol>
     </div>

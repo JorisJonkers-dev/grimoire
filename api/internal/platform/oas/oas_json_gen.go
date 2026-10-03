@@ -6895,6 +6895,12 @@ func (s *Campaign) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.NoUndo.Set {
+			e.FieldStart("noUndo")
+			s.NoUndo.Encode(e)
+		}
+	}
+	{
 		if s.Exhaustion.Set {
 			e.FieldStart("exhaustion")
 			s.Exhaustion.Encode(e)
@@ -6920,7 +6926,7 @@ func (s *Campaign) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaign = [17]string{
+var jsonFieldsNameOfCampaign = [18]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -6934,10 +6940,11 @@ var jsonFieldsNameOfCampaign = [17]string{
 	10: "creationMethods",
 	11: "startingLevel",
 	12: "holdLevelUps",
-	13: "exhaustion",
-	14: "shareInitiative",
-	15: "me",
-	16: "members",
+	13: "noUndo",
+	14: "exhaustion",
+	15: "shareInitiative",
+	16: "me",
+	17: "members",
 }
 
 // Decode decodes Campaign from json.
@@ -7090,6 +7097,16 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"holdLevelUps\"")
 			}
+		case "noUndo":
+			if err := func() error {
+				s.NoUndo.Reset()
+				if err := s.NoUndo.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"noUndo\"")
+			}
 		case "exhaustion":
 			if err := func() error {
 				s.Exhaustion.Reset()
@@ -7111,7 +7128,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"shareInitiative\"")
 			}
 		case "me":
-			requiredBitSet[1] |= 1 << 7
+			requiredBitSet[2] |= 1 << 0
 			if err := func() error {
 				if err := s.Me.Decode(d); err != nil {
 					return err
@@ -7121,7 +7138,7 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"me\"")
 			}
 		case "members":
-			requiredBitSet[2] |= 1 << 0
+			requiredBitSet[2] |= 1 << 1
 			if err := func() error {
 				s.Members = make([]Member, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -7149,8 +7166,8 @@ func (s *Campaign) Decode(d *jx.Decoder) error {
 	var failures []validate.FieldError
 	for i, mask := range [3]uint8{
 		0b00111111,
-		0b10000000,
-		0b00000001,
+		0b00000000,
+		0b00000011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -7970,6 +7987,12 @@ func (s *CampaignSummary) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.NoUndo.Set {
+			e.FieldStart("noUndo")
+			s.NoUndo.Encode(e)
+		}
+	}
+	{
 		if s.Exhaustion.Set {
 			e.FieldStart("exhaustion")
 			s.Exhaustion.Encode(e)
@@ -7983,7 +8006,7 @@ func (s *CampaignSummary) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaignSummary = [15]string{
+var jsonFieldsNameOfCampaignSummary = [16]string{
 	0:  "id",
 	1:  "name",
 	2:  "ruleset",
@@ -7997,8 +8020,9 @@ var jsonFieldsNameOfCampaignSummary = [15]string{
 	10: "creationMethods",
 	11: "startingLevel",
 	12: "holdLevelUps",
-	13: "exhaustion",
-	14: "shareInitiative",
+	13: "noUndo",
+	14: "exhaustion",
+	15: "shareInitiative",
 }
 
 // Decode decodes CampaignSummary from json.
@@ -8151,6 +8175,16 @@ func (s *CampaignSummary) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"holdLevelUps\"")
 			}
+		case "noUndo":
+			if err := func() error {
+				s.NoUndo.Reset()
+				if err := s.NoUndo.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"noUndo\"")
+			}
 		case "exhaustion":
 			if err := func() error {
 				s.Exhaustion.Reset()
@@ -8296,6 +8330,12 @@ func (s *CampaignUpdate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.NoUndo.Set {
+			e.FieldStart("noUndo")
+			s.NoUndo.Encode(e)
+		}
+	}
+	{
 		if s.Exhaustion.Set {
 			e.FieldStart("exhaustion")
 			s.Exhaustion.Encode(e)
@@ -8309,7 +8349,7 @@ func (s *CampaignUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCampaignUpdate = [11]string{
+var jsonFieldsNameOfCampaignUpdate = [12]string{
 	0:  "name",
 	1:  "ruleset",
 	2:  "reactionTimeoutS",
@@ -8319,8 +8359,9 @@ var jsonFieldsNameOfCampaignUpdate = [11]string{
 	6:  "creationMethods",
 	7:  "startingLevel",
 	8:  "holdLevelUps",
-	9:  "exhaustion",
-	10: "shareInitiative",
+	9:  "noUndo",
+	10: "exhaustion",
+	11: "shareInitiative",
 }
 
 // Decode decodes CampaignUpdate from json.
@@ -8427,6 +8468,16 @@ func (s *CampaignUpdate) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"holdLevelUps\"")
+			}
+		case "noUndo":
+			if err := func() error {
+				s.NoUndo.Reset()
+				if err := s.NoUndo.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"noUndo\"")
 			}
 		case "exhaustion":
 			if err := func() error {
@@ -31971,6 +32022,223 @@ func (s *LiveCheckStatus) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *LiveCheckpoint) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveCheckpoint) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		s.ID.Encode(e)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		e.FieldStart("kind")
+		s.Kind.Encode(e)
+	}
+	{
+		e.FieldStart("round")
+		e.Int32(s.Round)
+	}
+	{
+		e.FieldStart("actionSeq")
+		e.Int32(s.ActionSeq)
+	}
+	{
+		e.FieldStart("at")
+		json.EncodeDateTime(e, s.At)
+	}
+}
+
+var jsonFieldsNameOfLiveCheckpoint = [6]string{
+	0: "id",
+	1: "name",
+	2: "kind",
+	3: "round",
+	4: "actionSeq",
+	5: "at",
+}
+
+// Decode decodes LiveCheckpoint from json.
+func (s *LiveCheckpoint) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveCheckpoint to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.ID.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "kind":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				if err := s.Kind.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"kind\"")
+			}
+		case "round":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int32()
+				s.Round = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"round\"")
+			}
+		case "actionSeq":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Int32()
+				s.ActionSeq = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"actionSeq\"")
+			}
+		case "at":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.At = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"at\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveCheckpoint")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00111111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveCheckpoint) {
+					name = jsonFieldsNameOfLiveCheckpoint[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveCheckpoint) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveCheckpoint) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveCheckpointKind as json.
+func (s LiveCheckpointKind) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes LiveCheckpointKind from json.
+func (s *LiveCheckpointKind) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveCheckpointKind to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch LiveCheckpointKind(v) {
+	case LiveCheckpointKindNamed:
+		*s = LiveCheckpointKindNamed
+	case LiveCheckpointKindRound:
+		*s = LiveCheckpointKindRound
+	default:
+		*s = LiveCheckpointKind(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s LiveCheckpointKind) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveCheckpointKind) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *LiveClaim) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -33762,108 +34030,122 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 			s.Seq.Encode(e)
 		}
 	}
+	{
+		if s.Name.Set {
+			e.FieldStart("name")
+			s.Name.Encode(e)
+		}
+	}
+	{
+		if s.CheckpointId.Set {
+			e.FieldStart("checkpointId")
+			s.CheckpointId.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveCommand = [99]string{
-	0:  "nonce",
-	1:  "kind",
-	2:  "caption",
-	3:  "tokenId",
-	4:  "label",
-	5:  "tokenKind",
-	6:  "q",
-	7:  "r",
-	8:  "hidden",
-	9:  "darkvisionFt",
-	10: "mapId",
-	11: "hexes",
-	12: "on",
-	13: "lightId",
-	14: "brightFt",
-	15: "dimFt",
-	16: "ambient",
-	17: "controllerId",
-	18: "combatants",
-	19: "combatantId",
-	20: "resource",
-	21: "monsterSlug",
-	22: "characterId",
-	23: "targetId",
-	24: "attackNo",
-	25: "tactics",
-	26: "use",
-	27: "shield",
-	28: "effect",
-	29: "effectName",
-	30: "sourceId",
-	31: "rounds",
-	32: "slot",
-	33: "effectMode",
-	34: "tempHp",
-	35: "qualities",
-	36: "seenThrough",
-	37: "disguise",
-	38: "objectId",
-	39: "objectKind",
-	40: "objectName",
-	41: "armorClass",
-	42: "hpMax",
-	43: "secret",
-	44: "radiusFt",
-	45: "links",
-	46: "detectDc",
-	47: "disarmDc",
-	48: "triggerFt",
-	49: "lockDc",
-	50: "key",
-	51: "method",
-	52: "saveAbility",
-	53: "saveDc",
-	54: "effectId",
-	55: "manualId",
-	56: "surface",
-	57: "elevationFt",
-	58: "camera",
-	59: "zoomPct",
-	60: "scene",
-	61: "title",
-	62: "body",
-	63: "nodeId",
-	64: "toNodeId",
-	65: "routeId",
-	66: "distanceMi",
-	67: "pace",
-	68: "zoneId",
-	69: "radiusHexes",
-	70: "dmOnly",
-	71: "rest",
-	72: "tableId",
-	73: "mode",
-	74: "entry",
-	75: "due",
-	76: "lootTableId",
-	77: "fromId",
-	78: "buys",
-	79: "sells",
-	80: "instanceId",
-	81: "action",
-	82: "legend",
-	83: "detail",
-	84: "trigger",
-	85: "option",
-	86: "offHand",
-	87: "cleave",
-	88: "reactionKind",
-	89: "reactionMode",
-	90: "condition",
-	91: "toId",
-	92: "itemSlug",
-	93: "coin",
-	94: "count",
-	95: "shopId",
-	96: "monsters",
-	97: "hpDelta",
-	98: "seq",
+var jsonFieldsNameOfLiveCommand = [101]string{
+	0:   "nonce",
+	1:   "kind",
+	2:   "caption",
+	3:   "tokenId",
+	4:   "label",
+	5:   "tokenKind",
+	6:   "q",
+	7:   "r",
+	8:   "hidden",
+	9:   "darkvisionFt",
+	10:  "mapId",
+	11:  "hexes",
+	12:  "on",
+	13:  "lightId",
+	14:  "brightFt",
+	15:  "dimFt",
+	16:  "ambient",
+	17:  "controllerId",
+	18:  "combatants",
+	19:  "combatantId",
+	20:  "resource",
+	21:  "monsterSlug",
+	22:  "characterId",
+	23:  "targetId",
+	24:  "attackNo",
+	25:  "tactics",
+	26:  "use",
+	27:  "shield",
+	28:  "effect",
+	29:  "effectName",
+	30:  "sourceId",
+	31:  "rounds",
+	32:  "slot",
+	33:  "effectMode",
+	34:  "tempHp",
+	35:  "qualities",
+	36:  "seenThrough",
+	37:  "disguise",
+	38:  "objectId",
+	39:  "objectKind",
+	40:  "objectName",
+	41:  "armorClass",
+	42:  "hpMax",
+	43:  "secret",
+	44:  "radiusFt",
+	45:  "links",
+	46:  "detectDc",
+	47:  "disarmDc",
+	48:  "triggerFt",
+	49:  "lockDc",
+	50:  "key",
+	51:  "method",
+	52:  "saveAbility",
+	53:  "saveDc",
+	54:  "effectId",
+	55:  "manualId",
+	56:  "surface",
+	57:  "elevationFt",
+	58:  "camera",
+	59:  "zoomPct",
+	60:  "scene",
+	61:  "title",
+	62:  "body",
+	63:  "nodeId",
+	64:  "toNodeId",
+	65:  "routeId",
+	66:  "distanceMi",
+	67:  "pace",
+	68:  "zoneId",
+	69:  "radiusHexes",
+	70:  "dmOnly",
+	71:  "rest",
+	72:  "tableId",
+	73:  "mode",
+	74:  "entry",
+	75:  "due",
+	76:  "lootTableId",
+	77:  "fromId",
+	78:  "buys",
+	79:  "sells",
+	80:  "instanceId",
+	81:  "action",
+	82:  "legend",
+	83:  "detail",
+	84:  "trigger",
+	85:  "option",
+	86:  "offHand",
+	87:  "cleave",
+	88:  "reactionKind",
+	89:  "reactionMode",
+	90:  "condition",
+	91:  "toId",
+	92:  "itemSlug",
+	93:  "coin",
+	94:  "count",
+	95:  "shopId",
+	96:  "monsters",
+	97:  "hpDelta",
+	98:  "seq",
+	99:  "name",
+	100: "checkpointId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -34929,6 +35211,26 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"seq\"")
 			}
+		case "name":
+			if err := func() error {
+				s.Name.Reset()
+				if err := s.Name.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "checkpointId":
+			if err := func() error {
+				s.CheckpointId.Reset()
+				if err := s.CheckpointId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"checkpointId\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -35337,6 +35639,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindLairAction
 	case LiveCommandKindLegendaryResistance:
 		*s = LiveCommandKindLegendaryResistance
+	case LiveCommandKindCheckpoint:
+		*s = LiveCommandKindCheckpoint
+	case LiveCommandKindRewind:
+		*s = LiveCommandKindRewind
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -44721,6 +45027,22 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Checkpoints != nil {
+			e.FieldStart("checkpoints")
+			e.ArrStart()
+			for _, elem := range s.Checkpoints {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.NoUndo.Set {
+			e.FieldStart("noUndo")
+			s.NoUndo.Encode(e)
+		}
+	}
+	{
 		if s.Walls != nil {
 			e.FieldStart("walls")
 			e.ArrStart()
@@ -44748,7 +45070,7 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveView = [30]string{
+var jsonFieldsNameOfLiveView = [32]string{
 	0:  "tokens",
 	1:  "map",
 	2:  "fog",
@@ -44776,9 +45098,11 @@ var jsonFieldsNameOfLiveView = [30]string{
 	24: "shop",
 	25: "rest",
 	26: "gameDay",
-	27: "walls",
-	28: "lights",
-	29: "ambient",
+	27: "checkpoints",
+	28: "noUndo",
+	29: "walls",
+	30: "lights",
+	31: "ambient",
 }
 
 // Decode decodes LiveView from json.
@@ -45169,6 +45493,33 @@ func (s *LiveView) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"gameDay\"")
+			}
+		case "checkpoints":
+			if err := func() error {
+				s.Checkpoints = make([]LiveCheckpoint, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LiveCheckpoint
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Checkpoints = append(s.Checkpoints, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"checkpoints\"")
+			}
+		case "noUndo":
+			if err := func() error {
+				s.NoUndo.Reset()
+				if err := s.NoUndo.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"noUndo\"")
 			}
 		case "walls":
 			if err := func() error {

@@ -57,6 +57,10 @@ type state struct {
 	pending []domain.PendingAction
 	// dying are the Characters at 0 hit points.
 	dying map[domain.TokenID]domain.Dying
+	// checkpoints are the points the DM can rewind to, oldest first; a change replaces the list, never
+	// writes into it. noUndo is the Campaign played without undo.
+	checkpoints []domain.Checkpoint
+	noUndo      bool
 }
 
 // cloneEffects copies a Session's Effects so a change never touches the committed state.
@@ -70,6 +74,7 @@ func (s *state) clone() *state {
 		next.observed[k] = maps.Clone(v)
 	}
 	next.surfaces, next.table, next.tableMap = maps.Clone(s.surfaces), s.table, s.tableMap
+	next.checkpoints, next.noUndo = s.checkpoints, s.noUndo
 	if s.world != nil {
 		next.world = s.world.Clone()
 	}
@@ -193,6 +198,7 @@ func (s *state) project(a Audience) View {
 	v.Shop, v.Rest, v.GameDay, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen), s.explorationView()
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds, v.Conditions = s.zoneViews(), s.surfaceKindViews(), s.conditionViews()
+		v.Checkpoints, v.NoUndo = s.checkpointViews(), s.noUndo
 	}
 	v.Roster = rosterOf(v)
 	return v

@@ -73,6 +73,8 @@ type Campaign struct {
 	StartingLevel   int
 	// HoldLevelUps stops long rests unlocking the next level; the DM grants levels instead.
 	HoldLevelUps bool
+	// NoUndo plays the Campaign without undo: nothing is taken back, no Checkpoint is kept, no rewind.
+	NoUndo bool
 	// ExhaustionVariant is the exhaustion the Campaign plays with: srd-2024, gentle, grim or off.
 	ExhaustionVariant string
 }
@@ -89,6 +91,7 @@ type SettingsChange struct {
 	CreationMethods  []string
 	StartingLevel    *int
 	HoldLevelUps     *bool
+	NoUndo           *bool
 	// ExhaustionVariant picks the Campaign's exhaustion.
 	ExhaustionVariant *string
 }
