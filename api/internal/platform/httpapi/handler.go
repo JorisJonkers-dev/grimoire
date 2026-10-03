@@ -32,6 +32,7 @@ type Handler struct {
 	RuleVariants RuleVariantService
 	RuleHooks    RuleHookService
 	Tracks       TrackService
+	Downtime     DowntimeService
 	Rolls        RollService
 	Inventory    InventoryService
 	Sessions     SessionService

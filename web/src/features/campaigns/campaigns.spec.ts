@@ -123,6 +123,7 @@ describe('campaign home', () => {
     expect(wrapper.get('[data-testid="journal-link"]').attributes('href')).toBe(`/campaigns/${ID}/journal`)
     expect(wrapper.get('[data-testid="rules-link"]').attributes('href')).toBe(`/campaigns/${ID}/rules`)
     expect(wrapper.get('[data-testid="tracks-link"]').attributes('href')).toBe(`/campaigns/${ID}/tracks`)
+    expect(wrapper.get('[data-testid="downtime-link"]').attributes('href')).toBe(`/campaigns/${ID}/downtime`)
     expect(wrapper.get('[data-testid="sessions"]').text()).toContain('Session 1 is live')
     expect(wrapper.get('[data-testid="member-list"]').text()).toContain('Joris (you)')
     expect(wrapper.get('[data-testid="invite-list"]').text()).toContain('By Joris')

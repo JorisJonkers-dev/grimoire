@@ -8678,6 +8678,45 @@ func (s *DeleteQuestNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteQuestNoContent) deleteQuestRes() {}
 
+// DeleteRecipeNoContent is response for DeleteRecipe operation.
+type DeleteRecipeNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteRecipeNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteRecipeNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteRecipeNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteRecipeNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteRecipeNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteRecipeNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteRecipeNoContent) deleteRecipeRes() {}
+
 // DeleteRuleHookNoContent is response for DeleteRuleHook operation.
 type DeleteRuleHookNoContent struct {
 	RateLimitLimit     OptInt32
@@ -10005,6 +10044,386 @@ func (s *Disposition) UnmarshalText(data []byte) error {
 		return nil
 	case DispositionHostile:
 		*s = DispositionHostile
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A Campaign's downtime.
+// Ref: #/components/schemas/Downtime
+type Downtime struct {
+	Dm         bool                `json:"dm"`
+	GameDay    int32               `json:"gameDay"`
+	GameMinute int32               `json:"gameMinute"`
+	Characters []DowntimeCharacter `json:"characters"`
+	Recipes    []Recipe            `json:"recipes"`
+	// What was done, newest first.
+	Log []DowntimeEntry `json:"log"`
+}
+
+// GetDm returns the value of Dm.
+func (s *Downtime) GetDm() bool {
+	return s.Dm
+}
+
+// GetGameDay returns the value of GameDay.
+func (s *Downtime) GetGameDay() int32 {
+	return s.GameDay
+}
+
+// GetGameMinute returns the value of GameMinute.
+func (s *Downtime) GetGameMinute() int32 {
+	return s.GameMinute
+}
+
+// GetCharacters returns the value of Characters.
+func (s *Downtime) GetCharacters() []DowntimeCharacter {
+	return s.Characters
+}
+
+// GetRecipes returns the value of Recipes.
+func (s *Downtime) GetRecipes() []Recipe {
+	return s.Recipes
+}
+
+// GetLog returns the value of Log.
+func (s *Downtime) GetLog() []DowntimeEntry {
+	return s.Log
+}
+
+// SetDm sets the value of Dm.
+func (s *Downtime) SetDm(val bool) {
+	s.Dm = val
+}
+
+// SetGameDay sets the value of GameDay.
+func (s *Downtime) SetGameDay(val int32) {
+	s.GameDay = val
+}
+
+// SetGameMinute sets the value of GameMinute.
+func (s *Downtime) SetGameMinute(val int32) {
+	s.GameMinute = val
+}
+
+// SetCharacters sets the value of Characters.
+func (s *Downtime) SetCharacters(val []DowntimeCharacter) {
+	s.Characters = val
+}
+
+// SetRecipes sets the value of Recipes.
+func (s *Downtime) SetRecipes(val []Recipe) {
+	s.Recipes = val
+}
+
+// SetLog sets the value of Log.
+func (s *Downtime) SetLog(val []DowntimeEntry) {
+	s.Log = val
+}
+
+// Downtime days to spend: crafting from a Recipe, which takes the days the Recipe says, or a number of
+// days of work, or of training or research in a subject.
+// Ref: #/components/schemas/DowntimeActivity
+type DowntimeActivity struct {
+	Activity DowntimeKind `json:"activity"`
+	Days     OptInt32     `json:"days"`
+	RecipeId OptID        `json:"recipeId"`
+	Subject  OptString    `json:"subject"`
+}
+
+// GetActivity returns the value of Activity.
+func (s *DowntimeActivity) GetActivity() DowntimeKind {
+	return s.Activity
+}
+
+// GetDays returns the value of Days.
+func (s *DowntimeActivity) GetDays() OptInt32 {
+	return s.Days
+}
+
+// GetRecipeId returns the value of RecipeId.
+func (s *DowntimeActivity) GetRecipeId() OptID {
+	return s.RecipeId
+}
+
+// GetSubject returns the value of Subject.
+func (s *DowntimeActivity) GetSubject() OptString {
+	return s.Subject
+}
+
+// SetActivity sets the value of Activity.
+func (s *DowntimeActivity) SetActivity(val DowntimeKind) {
+	s.Activity = val
+}
+
+// SetDays sets the value of Days.
+func (s *DowntimeActivity) SetDays(val OptInt32) {
+	s.Days = val
+}
+
+// SetRecipeId sets the value of RecipeId.
+func (s *DowntimeActivity) SetRecipeId(val OptID) {
+	s.RecipeId = val
+}
+
+// SetSubject sets the value of Subject.
+func (s *DowntimeActivity) SetSubject(val OptString) {
+	s.Subject = val
+}
+
+// A Character with the downtime days it has left.
+// Ref: #/components/schemas/DowntimeCharacter
+type DowntimeCharacter struct {
+	ID   ID     `json:"id"`
+	Name string `json:"name"`
+	Days int32  `json:"days"`
+	// Whether the caller may spend its days.
+	Mine bool `json:"mine"`
+}
+
+// GetID returns the value of ID.
+func (s *DowntimeCharacter) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *DowntimeCharacter) GetName() string {
+	return s.Name
+}
+
+// GetDays returns the value of Days.
+func (s *DowntimeCharacter) GetDays() int32 {
+	return s.Days
+}
+
+// GetMine returns the value of Mine.
+func (s *DowntimeCharacter) GetMine() bool {
+	return s.Mine
+}
+
+// SetID sets the value of ID.
+func (s *DowntimeCharacter) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *DowntimeCharacter) SetName(val string) {
+	s.Name = val
+}
+
+// SetDays sets the value of Days.
+func (s *DowntimeCharacter) SetDays(val int32) {
+	s.Days = val
+}
+
+// SetMine sets the value of Mine.
+func (s *DowntimeCharacter) SetMine(val bool) {
+	s.Mine = val
+}
+
+// Something a Character did with its downtime.
+// Ref: #/components/schemas/DowntimeEntry
+type DowntimeEntry struct {
+	ID        ID           `json:"id"`
+	Character string       `json:"character"`
+	Activity  DowntimeKind `json:"activity"`
+	// The Recipe crafted, or the subject trained in or researched.
+	Detail string    `json:"detail"`
+	Days   int32     `json:"days"`
+	At     time.Time `json:"at"`
+}
+
+// GetID returns the value of ID.
+func (s *DowntimeEntry) GetID() ID {
+	return s.ID
+}
+
+// GetCharacter returns the value of Character.
+func (s *DowntimeEntry) GetCharacter() string {
+	return s.Character
+}
+
+// GetActivity returns the value of Activity.
+func (s *DowntimeEntry) GetActivity() DowntimeKind {
+	return s.Activity
+}
+
+// GetDetail returns the value of Detail.
+func (s *DowntimeEntry) GetDetail() string {
+	return s.Detail
+}
+
+// GetDays returns the value of Days.
+func (s *DowntimeEntry) GetDays() int32 {
+	return s.Days
+}
+
+// GetAt returns the value of At.
+func (s *DowntimeEntry) GetAt() time.Time {
+	return s.At
+}
+
+// SetID sets the value of ID.
+func (s *DowntimeEntry) SetID(val ID) {
+	s.ID = val
+}
+
+// SetCharacter sets the value of Character.
+func (s *DowntimeEntry) SetCharacter(val string) {
+	s.Character = val
+}
+
+// SetActivity sets the value of Activity.
+func (s *DowntimeEntry) SetActivity(val DowntimeKind) {
+	s.Activity = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *DowntimeEntry) SetDetail(val string) {
+	s.Detail = val
+}
+
+// SetDays sets the value of Days.
+func (s *DowntimeEntry) SetDays(val int32) {
+	s.Days = val
+}
+
+// SetAt sets the value of At.
+func (s *DowntimeEntry) SetAt(val time.Time) {
+	s.At = val
+}
+
+// Downtime days to give: to one Character, or to every Character when none is named.
+// Ref: #/components/schemas/DowntimeGrant
+type DowntimeGrant struct {
+	Days        int32 `json:"days"`
+	CharacterId OptID `json:"characterId"`
+}
+
+// GetDays returns the value of Days.
+func (s *DowntimeGrant) GetDays() int32 {
+	return s.Days
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *DowntimeGrant) GetCharacterId() OptID {
+	return s.CharacterId
+}
+
+// SetDays sets the value of Days.
+func (s *DowntimeGrant) SetDays(val int32) {
+	s.Days = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *DowntimeGrant) SetCharacterId(val OptID) {
+	s.CharacterId = val
+}
+
+// DowntimeHeaders wraps Downtime with response headers.
+type DowntimeHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Downtime
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DowntimeHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DowntimeHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DowntimeHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *DowntimeHeaders) GetResponse() Downtime {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DowntimeHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DowntimeHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DowntimeHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *DowntimeHeaders) SetResponse(val Downtime) {
+	s.Response = val
+}
+
+func (*DowntimeHeaders) getDowntimeRes()   {}
+func (*DowntimeHeaders) grantDowntimeRes() {}
+func (*DowntimeHeaders) spendDowntimeRes() {}
+
+// How a Character spends downtime days.
+// Ref: #/components/schemas/DowntimeKind
+type DowntimeKind string
+
+const (
+	DowntimeKindCraft    DowntimeKind = "craft"
+	DowntimeKindWork     DowntimeKind = "work"
+	DowntimeKindTrain    DowntimeKind = "train"
+	DowntimeKindResearch DowntimeKind = "research"
+)
+
+// AllValues returns all DowntimeKind values.
+func (DowntimeKind) AllValues() []DowntimeKind {
+	return []DowntimeKind{
+		DowntimeKindCraft,
+		DowntimeKindWork,
+		DowntimeKindTrain,
+		DowntimeKindResearch,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DowntimeKind) MarshalText() ([]byte, error) {
+	switch s {
+	case DowntimeKindCraft:
+		return []byte(s), nil
+	case DowntimeKindWork:
+		return []byte(s), nil
+	case DowntimeKindTrain:
+		return []byte(s), nil
+	case DowntimeKindResearch:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DowntimeKind) UnmarshalText(data []byte) error {
+	switch DowntimeKind(data) {
+	case DowntimeKindCraft:
+		*s = DowntimeKindCraft
+		return nil
+	case DowntimeKindWork:
+		*s = DowntimeKindWork
+		return nil
+	case DowntimeKindTrain:
+		*s = DowntimeKindTrain
+		return nil
+	case DowntimeKindResearch:
+		*s = DowntimeKindResearch
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -39266,6 +39685,7 @@ func (*ProblemStatusCodeWithHeaders) createOidcAccountRes()             {}
 func (*ProblemStatusCodeWithHeaders) createProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) createPushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) createQuestRes()                   {}
+func (*ProblemStatusCodeWithHeaders) createRecipeRes()                  {}
 func (*ProblemStatusCodeWithHeaders) createRollRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
@@ -39285,6 +39705,7 @@ func (*ProblemStatusCodeWithHeaders) deleteLoreRes()                    {}
 func (*ProblemStatusCodeWithHeaders) deleteNpcRes()                     {}
 func (*ProblemStatusCodeWithHeaders) deletePushSubscriptionRes()        {}
 func (*ProblemStatusCodeWithHeaders) deleteQuestRes()                   {}
+func (*ProblemStatusCodeWithHeaders) deleteRecipeRes()                  {}
 func (*ProblemStatusCodeWithHeaders) deleteRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
@@ -39312,6 +39733,7 @@ func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getConditionBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) getDiceSetImageRes()               {}
+func (*ProblemStatusCodeWithHeaders) getDowntimeRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getFeatBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
@@ -39344,6 +39766,7 @@ func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getSubclassBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
+func (*ProblemStatusCodeWithHeaders) grantDowntimeRes()                 {}
 func (*ProblemStatusCodeWithHeaders) importLibraryRes()                 {}
 func (*ProblemStatusCodeWithHeaders) joinCampaignRes()                  {}
 func (*ProblemStatusCodeWithHeaders) keepRollRes()                      {}
@@ -39482,6 +39905,7 @@ func (*ProblemStatusCodeWithHeaders) shareDiceSetRes()                  {}
 func (*ProblemStatusCodeWithHeaders) shareLibraryEntryRes()             {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
 func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
+func (*ProblemStatusCodeWithHeaders) spendDowntimeRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startConversationRes()             {}
 func (*ProblemStatusCodeWithHeaders) startOidcLinkRes()                 {}
 func (*ProblemStatusCodeWithHeaders) startOidcSignInRes()               {}
@@ -40935,6 +41359,262 @@ func (s *ReadNotificationNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*ReadNotificationNoContent) readNotificationRes() {}
+
+// A Recipe of the Campaign.
+// Ref: #/components/schemas/Recipe
+type Recipe struct {
+	ID          ID                 `json:"id"`
+	Name        string             `json:"name"`
+	Makes       string             `json:"makes"`
+	Quantity    int32              `json:"quantity"`
+	Tool        OptString          `json:"tool"`
+	Days        int32              `json:"days"`
+	CostCp      int32              `json:"costCp"`
+	Ingredients []RecipeIngredient `json:"ingredients"`
+}
+
+// GetID returns the value of ID.
+func (s *Recipe) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Recipe) GetName() string {
+	return s.Name
+}
+
+// GetMakes returns the value of Makes.
+func (s *Recipe) GetMakes() string {
+	return s.Makes
+}
+
+// GetQuantity returns the value of Quantity.
+func (s *Recipe) GetQuantity() int32 {
+	return s.Quantity
+}
+
+// GetTool returns the value of Tool.
+func (s *Recipe) GetTool() OptString {
+	return s.Tool
+}
+
+// GetDays returns the value of Days.
+func (s *Recipe) GetDays() int32 {
+	return s.Days
+}
+
+// GetCostCp returns the value of CostCp.
+func (s *Recipe) GetCostCp() int32 {
+	return s.CostCp
+}
+
+// GetIngredients returns the value of Ingredients.
+func (s *Recipe) GetIngredients() []RecipeIngredient {
+	return s.Ingredients
+}
+
+// SetID sets the value of ID.
+func (s *Recipe) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Recipe) SetName(val string) {
+	s.Name = val
+}
+
+// SetMakes sets the value of Makes.
+func (s *Recipe) SetMakes(val string) {
+	s.Makes = val
+}
+
+// SetQuantity sets the value of Quantity.
+func (s *Recipe) SetQuantity(val int32) {
+	s.Quantity = val
+}
+
+// SetTool sets the value of Tool.
+func (s *Recipe) SetTool(val OptString) {
+	s.Tool = val
+}
+
+// SetDays sets the value of Days.
+func (s *Recipe) SetDays(val int32) {
+	s.Days = val
+}
+
+// SetCostCp sets the value of CostCp.
+func (s *Recipe) SetCostCp(val int32) {
+	s.CostCp = val
+}
+
+// SetIngredients sets the value of Ingredients.
+func (s *Recipe) SetIngredients(val []RecipeIngredient) {
+	s.Ingredients = val
+}
+
+// RecipeHeaders wraps Recipe with response headers.
+type RecipeHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Recipe
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *RecipeHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *RecipeHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *RecipeHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *RecipeHeaders) GetResponse() Recipe {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *RecipeHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *RecipeHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *RecipeHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RecipeHeaders) SetResponse(val Recipe) {
+	s.Response = val
+}
+
+func (*RecipeHeaders) createRecipeRes() {}
+
+// An Item a Recipe uses up, and how many.
+// Ref: #/components/schemas/RecipeIngredient
+type RecipeIngredient struct {
+	// The Item's slug.
+	Item  string `json:"item"`
+	Count int32  `json:"count"`
+}
+
+// GetItem returns the value of Item.
+func (s *RecipeIngredient) GetItem() string {
+	return s.Item
+}
+
+// GetCount returns the value of Count.
+func (s *RecipeIngredient) GetCount() int32 {
+	return s.Count
+}
+
+// SetItem sets the value of Item.
+func (s *RecipeIngredient) SetItem(val string) {
+	s.Item = val
+}
+
+// SetCount sets the value of Count.
+func (s *RecipeIngredient) SetCount(val int32) {
+	s.Count = val
+}
+
+// A Recipe: what it makes, from what, with which tool, over how many days and at what cost.
+// Ref: #/components/schemas/RecipeInput
+type RecipeInput struct {
+	Name string `json:"name"`
+	// The slug of the Item it makes.
+	Makes    string `json:"makes"`
+	Quantity int32  `json:"quantity"`
+	// The slug of the tool it needs at hand.
+	Tool OptString `json:"tool"`
+	Days int32     `json:"days"`
+	// What it costs, in copper.
+	CostCp      OptInt32           `json:"costCp"`
+	Ingredients []RecipeIngredient `json:"ingredients"`
+}
+
+// GetName returns the value of Name.
+func (s *RecipeInput) GetName() string {
+	return s.Name
+}
+
+// GetMakes returns the value of Makes.
+func (s *RecipeInput) GetMakes() string {
+	return s.Makes
+}
+
+// GetQuantity returns the value of Quantity.
+func (s *RecipeInput) GetQuantity() int32 {
+	return s.Quantity
+}
+
+// GetTool returns the value of Tool.
+func (s *RecipeInput) GetTool() OptString {
+	return s.Tool
+}
+
+// GetDays returns the value of Days.
+func (s *RecipeInput) GetDays() int32 {
+	return s.Days
+}
+
+// GetCostCp returns the value of CostCp.
+func (s *RecipeInput) GetCostCp() OptInt32 {
+	return s.CostCp
+}
+
+// GetIngredients returns the value of Ingredients.
+func (s *RecipeInput) GetIngredients() []RecipeIngredient {
+	return s.Ingredients
+}
+
+// SetName sets the value of Name.
+func (s *RecipeInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetMakes sets the value of Makes.
+func (s *RecipeInput) SetMakes(val string) {
+	s.Makes = val
+}
+
+// SetQuantity sets the value of Quantity.
+func (s *RecipeInput) SetQuantity(val int32) {
+	s.Quantity = val
+}
+
+// SetTool sets the value of Tool.
+func (s *RecipeInput) SetTool(val OptString) {
+	s.Tool = val
+}
+
+// SetDays sets the value of Days.
+func (s *RecipeInput) SetDays(val int32) {
+	s.Days = val
+}
+
+// SetCostCp sets the value of CostCp.
+func (s *RecipeInput) SetCostCp(val OptInt32) {
+	s.CostCp = val
+}
+
+// SetIngredients sets the value of Ingredients.
+func (s *RecipeInput) SetIngredients(val []RecipeIngredient) {
+	s.Ingredients = val
+}
 
 // Recovery codes, each good once; shown only when made.
 // Ref: #/components/schemas/RecoveryCodes

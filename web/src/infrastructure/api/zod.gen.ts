@@ -3522,6 +3522,103 @@ export const zTrackAdjusted = z.object({
 });
 
 /**
+ * An Item a Recipe uses up, and how many.
+ */
+export const zRecipeIngredient = z.object({
+    item: z.string().min(1).max(80),
+    count: z.int().gte(1).lte(100)
+});
+
+/**
+ * A Recipe: what it makes, from what, with which tool, over how many days and at what cost.
+ */
+export const zRecipeInput = z.object({
+    name: z.string().min(1).max(80),
+    makes: z.string().min(1).max(80),
+    quantity: z.int().gte(1).lte(100),
+    tool: z.string().max(80).optional(),
+    days: z.int().gte(1).lte(365),
+    costCp: z.int().gte(0).lte(100000000).optional(),
+    ingredients: z.array(zRecipeIngredient).max(20).optional()
+});
+
+/**
+ * A Recipe of the Campaign.
+ */
+export const zRecipe = z.object({
+    id: zId,
+    name: z.string().max(80),
+    makes: z.string().max(80),
+    quantity: z.int().gte(1).lte(100),
+    tool: z.string().max(80).optional(),
+    days: z.int().gte(1).lte(365),
+    costCp: z.int().gte(0).lte(100000000),
+    ingredients: z.array(zRecipeIngredient).max(20)
+});
+
+/**
+ * How a Character spends downtime days.
+ */
+export const zDowntimeKind = z.enum([
+    'craft',
+    'work',
+    'train',
+    'research'
+]);
+
+/**
+ * Downtime days to spend: crafting from a Recipe, which takes the days the Recipe says, or a number of days of work, or of training or research in a subject.
+ */
+export const zDowntimeActivity = z.object({
+    activity: zDowntimeKind,
+    days: z.int().gte(1).lte(3650).optional(),
+    recipeId: zId.optional(),
+    subject: z.string().max(200).optional()
+});
+
+/**
+ * Downtime days to give: to one Character, or to every Character when none is named.
+ */
+export const zDowntimeGrant = z.object({
+    days: z.int().gte(1).lte(3650),
+    characterId: zId.optional()
+});
+
+/**
+ * A Character with the downtime days it has left.
+ */
+export const zDowntimeCharacter = z.object({
+    id: zId,
+    name: z.string().max(200),
+    days: z.int().gte(0).lte(100000),
+    mine: z.boolean()
+});
+
+/**
+ * Something a Character did with its downtime.
+ */
+export const zDowntimeEntry = z.object({
+    id: zId,
+    character: z.string().max(200),
+    activity: zDowntimeKind,
+    detail: z.string().max(200),
+    days: z.int().gte(1).lte(100000),
+    at: z.iso.datetime().max(40)
+});
+
+/**
+ * A Campaign's downtime.
+ */
+export const zDowntime = z.object({
+    dm: z.boolean(),
+    gameDay: z.int().gte(0).lte(1000000),
+    gameMinute: z.int().gte(0).lte(1439),
+    characters: z.array(zDowntimeCharacter).max(2000),
+    recipes: z.array(zRecipe).max(200),
+    log: z.array(zDowntimeEntry).max(50)
+});
+
+/**
  * What only the DM knows of a Faction.
  */
 export const zFactionSecrets = z.object({
@@ -6628,6 +6725,59 @@ export const zAdjustTrackPath = z.object({
  * Where the score stands now, and the thresholds it crossed.
  */
 export const zAdjustTrackResponse = zTrackAdjusted;
+
+export const zGetDowntimePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Campaign's downtime.
+ */
+export const zGetDowntimeResponse = zDowntime;
+
+export const zGrantDowntimeBody = zDowntimeGrant;
+
+export const zGrantDowntimePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The Campaign's downtime after the grant.
+ */
+export const zGrantDowntimeResponse = zDowntime;
+
+export const zSpendDowntimeBody = zDowntimeActivity;
+
+export const zSpendDowntimePath = z.object({
+    campaignId: zId,
+    characterId: zId
+});
+
+/**
+ * The Campaign's downtime after the days were spent.
+ */
+export const zSpendDowntimeResponse = zDowntime;
+
+export const zCreateRecipeBody = zRecipeInput;
+
+export const zCreateRecipePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new Recipe.
+ */
+export const zCreateRecipeResponse = zRecipe;
+
+export const zDeleteRecipePath = z.object({
+    campaignId: zId,
+    recipeId: zId
+});
+
+/**
+ * The Recipe is removed.
+ */
+export const zDeleteRecipeResponse = z.void();
 
 export const zListFactionsPath = z.object({
     campaignId: zId
