@@ -242,6 +242,8 @@ describe('table settings', () => {
     expect((input.element as HTMLInputElement).value).toBe('20')
     await input.setValue(5)
     await wrapper.get('[data-testid="high-ground"]').setValue(true)
+    expect((wrapper.get('[data-testid="no-undo-setting"]').element as HTMLInputElement).checked).toBe(false)
+    await wrapper.get('[data-testid="no-undo-setting"]').setValue(true)
     await wrapper.get('[data-testid="rest-supplies"]').setValue(true)
     await wrapper.get('[data-testid="initiative-mode"]').setValue('side')
     await wrapper.get('[data-testid="share-initiative"]').setValue(true)
@@ -253,7 +255,7 @@ describe('table settings', () => {
     await flushPromises()
     expect(sent).toEqual([{
       reactionTimeoutS: 5, highGround: true, restSupplies: true, initiativeMode: 'side', shareInitiative: true,
-      creationMethods: ['standard-array', 'point-buy'], startingLevel: 3, holdLevelUps: true, exhaustion: 'grim',
+      creationMethods: ['standard-array', 'point-buy'], startingLevel: 3, holdLevelUps: true, noUndo: true, exhaustion: 'grim',
     }])
     expect(wrapper.get('[data-testid="settings-saved"]').text()).toBe('Saved.')
   })

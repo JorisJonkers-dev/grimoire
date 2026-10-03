@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 )
@@ -26,6 +27,11 @@ func samples() contract {
 	view := &live.View{
 		Roster: []live.RosterEntry{{TokenID: token.ID, Label: token.Label, Kind: token.Kind, HP: nil, HPMax: nil, TempHP: 0, Health: "hurt", Hidden: false, Acting: true, Effects: []live.EffectView{}}},
 		Tokens: []live.TokenView{token}, Fog: true, Visible: []live.Hex{{Q: 0, R: 0}}, Remembered: []live.Hex{{Q: 1, R: 0}},
+		Checkpoints: []live.CheckpointView{
+			{ID: id, Name: "Before the ambush", Kind: "named", Round: 0, ActionSeq: 41, At: time.Date(2026, 10, 3, 20, 0, 0, 0, time.UTC)},
+			{ID: id, Name: "Round 2", Kind: "round", Round: 2, ActionSeq: 57, At: time.Date(2026, 10, 3, 20, 5, 0, 0, time.UTC)},
+		},
+		NoUndo: true,
 		Map: &live.MapView{
 			ID: id, Name: "Crypt", ImageURL: "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/" + id + "/image?v=2",
 			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2,
@@ -198,6 +204,8 @@ func samples() contract {
 			{Nonce: "n71", Kind: live.CmdUnarmed, TokenID: token.ID, TargetID: token.ID, Option: "shove_push"},
 			{Nonce: "n72", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 1, TargetID: token.ID, OffHand: true},
 			{Nonce: "n73", Kind: live.CmdInteract, TokenID: token.ID, Detail: "draws a dagger"},
+			{Nonce: "n90", Kind: live.CmdCheckpoint, Name: "Before the ambush"},
+			{Nonce: "n91", Kind: live.CmdRewind, CheckpointID: token.ID},
 			{Nonce: "n73b", Kind: live.CmdSwapWeapons, TokenID: token.ID},
 			{Nonce: "n74", Kind: live.CmdAttack, TokenID: token.ID, AttackNo: 0, TargetID: token.ID, Cleave: true},
 			{Nonce: "n76", Kind: live.CmdStabilise, TokenID: token.ID, TargetID: token.ID, Option: "medicine"},

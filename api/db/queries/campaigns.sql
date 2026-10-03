@@ -1,7 +1,7 @@
 -- name: CreateCampaign :one
 INSERT INTO campaign.campaigns (name, ruleset_pref, created_by, created_at, updated_at)
 VALUES (@name, @ruleset_pref, @created_by, @now, @now)
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, exhaustion_variant, created_at;
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, created_at;
 
 -- name: UpdateCampaign :one
 UPDATE campaign.campaigns
@@ -15,16 +15,17 @@ SET name = coalesce(sqlc.narg(name)::text, name),
     creation_methods = coalesce(sqlc.narg(creation_methods)::text[], creation_methods),
     starting_level = coalesce(sqlc.narg(starting_level)::integer, starting_level),
     hold_level_ups = coalesce(sqlc.narg(hold_level_ups)::boolean, hold_level_ups),
+    no_undo = coalesce(sqlc.narg(no_undo)::boolean, no_undo),
     exhaustion_variant = coalesce(sqlc.narg(exhaustion_variant)::text, exhaustion_variant),
     updated_at = @now
 WHERE id = @id
-RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, exhaustion_variant, created_at;
+RETURNING id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, created_at;
 
 -- name: GetCampaign :one
-SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, exhaustion_variant, created_at FROM campaign.campaigns WHERE id = $1;
+SELECT id, name, ruleset_pref, reaction_timeout_s, high_ground, rest_supplies, initiative_mode, share_initiative, creation_methods, starting_level, hold_level_ups, no_undo, exhaustion_variant, created_at FROM campaign.campaigns WHERE id = $1;
 
 -- name: ListCampaignsForSubject :many
-SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.hold_level_ups, c.exhaustion_variant, c.created_at, m.role,
+SELECT c.id, c.name, c.ruleset_pref, c.reaction_timeout_s, c.high_ground, c.rest_supplies, c.initiative_mode, c.share_initiative, c.creation_methods, c.starting_level, c.hold_level_ups, c.no_undo, c.exhaustion_variant, c.created_at, m.role,
        (SELECT count(*) FROM campaign.members x WHERE x.campaign_id = c.id)::int AS member_count
 FROM campaign.campaigns c
 JOIN campaign.members m ON m.campaign_id = c.id AND m.auth_subject = @subject

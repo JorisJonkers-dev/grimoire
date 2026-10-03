@@ -3153,6 +3153,18 @@ export const zLiveCombat = z.object({
 });
 
 /**
+ * A point in a live Session the DM can rewind to. One the DM named, or the start of a round, which every round of a fight leaves by itself.
+ */
+export const zLiveCheckpoint = z.object({
+    id: zId,
+    name: z.string().min(1).max(60),
+    kind: z.enum(['named', 'round']),
+    round: z.int().gte(0).lte(100000),
+    actionSeq: z.int().gte(0).lte(2147483647),
+    at: z.iso.datetime().max(40)
+});
+
+/**
  * The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is named only when every screen may fetch it, which is once an Admin approved it.
  */
 export const zLiveDiceLook = z.object({
@@ -4260,7 +4272,9 @@ export const zLiveCommand = z.object({
         'pass_turn',
         'legendary_action',
         'lair_action',
-        'legendary_resistance'
+        'legendary_resistance',
+        'checkpoint',
+        'rewind'
     ]),
     caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
@@ -4400,7 +4414,9 @@ export const zLiveCommand = z.object({
     shopId: zId.optional(),
     monsters: z.array(zSpawnMonster).max(10).optional(),
     hpDelta: z.int().gte(-1000).lte(1000).optional(),
-    seq: z.int().gte(1).lte(2147483647).optional()
+    seq: z.int().gte(1).lte(2147483647).optional(),
+    name: z.string().max(120).optional(),
+    checkpointId: z.string().max(64).optional()
 });
 
 /**
@@ -4502,6 +4518,8 @@ export const zLiveView = z.object({
     shop: zLiveShop.optional(),
     rest: zLiveRest.optional(),
     gameDay: z.int().gte(0).lte(1000000).optional(),
+    checkpoints: z.array(zLiveCheckpoint).max(2000).optional(),
+    noUndo: z.boolean().optional(),
     walls: z.array(zHexCoord).max(100000).optional(),
     lights: z.array(zLiveLight).max(500).optional(),
     ambient: zAmbientLight.optional()
@@ -4560,6 +4578,7 @@ export const zCampaignSummary = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    noUndo: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });
@@ -4589,6 +4608,7 @@ export const zCampaign = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    noUndo: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional(),
     me: zMember,
@@ -4689,6 +4709,7 @@ export const zCampaignUpdate = z.object({
     creationMethods: z.array(zCreationMethod).min(1).max(3).optional(),
     startingLevel: z.int().gte(1).lte(20).optional(),
     holdLevelUps: z.boolean().optional(),
+    noUndo: z.boolean().optional(),
     exhaustion: z.string().max(40).optional(),
     shareInitiative: z.boolean().optional()
 });

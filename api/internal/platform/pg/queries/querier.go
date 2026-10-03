@@ -93,6 +93,7 @@ type Querier interface {
 	CampaignLocations(ctx context.Context, campaignID uuid.UUID) ([]CampaignLocationsRow, error)
 	CampaignLootClaims(ctx context.Context, campaignID uuid.UUID) ([]CampaignLootClaim, error)
 	CampaignLootEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepLootEntry, error)
+	CampaignNoUndo(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignNode(ctx context.Context, arg CampaignNodeParams) (CampaignNodeRow, error)
 	CampaignNpc(ctx context.Context, arg CampaignNpcParams) (string, error)
 	CampaignPoolMembers(ctx context.Context, campaignID uuid.UUID) ([]PrepPoolMember, error)
@@ -221,6 +222,10 @@ type Querier interface {
 	DiceSetsSharedWith(ctx context.Context, me uuid.UUID) ([]SocialDiceSet, error)
 	// The one-to-one Conversation between two Accounts, if they have one.
 	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
+	// A rewind leaves no Checkpoint of the future it took back.
+	DropLaterCheckpoints(ctx context.Context, arg DropLaterCheckpointsParams) error
+	// A Session keeps the start of its latest rounds only.
+	DropOldRounds(ctx context.Context, arg DropOldRoundsParams) error
 	DropPushEndpoint(ctx context.Context, endpoint string) error
 	DueDigests(ctx context.Context, cutoff time.Time) ([]uuid.UUID, error)
 	DueReleaseNotes(ctx context.Context, now pgtype.Timestamptz) ([]DueReleaseNotesRow, error)
@@ -353,6 +358,7 @@ type Querier interface {
 	InsertReleaseNote(ctx context.Context, arg InsertReleaseNoteParams) error
 	InsertRetrain(ctx context.Context, arg InsertRetrainParams) error
 	InsertRevision(ctx context.Context, arg InsertRevisionParams) (uuid.UUID, error)
+	InsertRewind(ctx context.Context, arg InsertRewindParams) error
 	InsertRoll(ctx context.Context, arg InsertRollParams) (uuid.UUID, error)
 	InsertRollDie(ctx context.Context, arg InsertRollDieParams) error
 	InsertRollEvent(ctx context.Context, arg InsertRollEventParams) error
@@ -412,6 +418,7 @@ type Querier interface {
 	ListBlocked(ctx context.Context, me uuid.UUID) ([]ListBlockedRow, error)
 	ListCampaignsForSubject(ctx context.Context, arg ListCampaignsForSubjectParams) ([]ListCampaignsForSubjectRow, error)
 	ListCharacters(ctx context.Context, campaignID uuid.UUID) ([]ListCharactersRow, error)
+	ListCheckpoints(ctx context.Context, sessionID uuid.UUID) ([]ListCheckpointsRow, error)
 	ListChoices(ctx context.Context) ([]ListChoicesRow, error)
 	ListConversations(ctx context.Context, me uuid.UUID) ([]ListConversationsRow, error)
 	ListEffectAreas(ctx context.Context) ([]ListEffectAreasRow, error)

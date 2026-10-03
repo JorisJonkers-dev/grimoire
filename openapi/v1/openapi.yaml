@@ -8121,6 +8121,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     CampaignPage:
@@ -8173,6 +8174,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
         me: { $ref: "#/components/schemas/Member" }
@@ -8209,6 +8211,7 @@ components:
           items: { $ref: "#/components/schemas/CreationMethod" }
         startingLevel: { type: integer, format: int32, minimum: 1, maximum: 20, description: "The level new Characters start at." }
         holdLevelUps: { type: boolean, description: "Long rests stop unlocking the next level; the DM grants levels instead." }
+        noUndo: { type: boolean, description: "The Campaign is played without undo: nothing is taken back, no Checkpoint is kept and there is no rewind." }
         exhaustion: { type: string, maxLength: 40, description: "The exhaustion the Campaign plays with: srd-2024, gentle, grim or off." }
         shareInitiative: { type: boolean, description: "Identical monsters share one initiative roll." }
     Account:
@@ -10732,7 +10735,7 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance, checkpoint, rewind] }
         caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
@@ -10847,6 +10850,8 @@ components:
           items: { $ref: "#/components/schemas/SpawnMonster" }
         hpDelta: { type: integer, format: int32, minimum: -1000, maximum: 1000, description: "With adjust_hp, hit points to add; negative takes them away." }
         seq: { type: integer, format: int32, minimum: 1, maximum: 2147483647, description: "With undo, the Action Log sequence of the Action to undo." }
+        name: { type: string, maxLength: 120, description: "With checkpoint, what to call the Checkpoint, in up to 60 characters." }
+        checkpointId: { type: string, maxLength: 64, description: "With rewind, the Checkpoint to go back to." }
     SpawnMonster:
       type: object
       description: One kind of monster an encounter spawns, and how many.
@@ -12724,6 +12729,18 @@ components:
         modifier: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         total: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         look: { $ref: "#/components/schemas/LiveDiceLook" }
+    LiveCheckpoint:
+      type: object
+      description: A point in a live Session the DM can rewind to. One the DM named, or the start of a round, which every round of a fight leaves by itself.
+      additionalProperties: false
+      required: [id, name, kind, round, actionSeq, at]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, minLength: 1, maxLength: 60 }
+        kind: { type: string, enum: [named, round] }
+        round: { type: integer, format: int32, minimum: 0, maximum: 100000, description: "The round of the fight it was made in, or 0 outside one." }
+        actionSeq: { type: integer, format: int32, minimum: 0, maximum: 2147483647, description: "The last Action before it. A rewind takes back every Action after that." }
+        at: { type: string, format: date-time, maxLength: 40 }
     LiveDiceLook:
       type: object
       description: The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is named only when every screen may fetch it, which is once an Admin approved it.
@@ -12957,6 +12974,12 @@ components:
         shop: { $ref: "#/components/schemas/LiveShop" }
         rest: { $ref: "#/components/schemas/LiveRest" }
         gameDay: { type: integer, format: int32, minimum: 0, maximum: 1000000, description: "Days passed in the Campaign; a long rest or travel moves it on." }
+        checkpoints:
+          type: array
+          maxItems: 2000
+          description: The points the DM can rewind to, oldest first. Sent to the DM only.
+          items: { $ref: "#/components/schemas/LiveCheckpoint" }
+        noUndo: { type: boolean, description: "The Campaign is played without undo. Sent to the DM only." }
         walls:
           type: array
           maxItems: 100000

@@ -43,7 +43,7 @@ func (s *Store) Action(ctx context.Context, id domain.SessionID, seq int64) (liv
 	if err != nil {
 		return live.ActionRecord{}, err
 	}
-	a := live.ActionRecord{ID: row.ID, Kind: row.Kind, Undone: row.Undone}
+	a := live.ActionRecord{ID: row.ID, Kind: row.Kind, Undone: row.Undone, Rewound: row.Rewound}
 	switch a.Kind {
 	case domain.ActionTokenPlaced:
 		err = s.tokenOf(ctx, &a)

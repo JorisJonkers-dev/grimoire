@@ -22,6 +22,8 @@ import (
 // Store implements app.Repository.
 type Store struct {
 	pool *pgxpool.Pool
+	// db is what q runs on, for the few statements built from the list of tables a Checkpoint keeps.
+	db   queries.DBTX
 	q    *queries.Queries
 	wrap func(queries.DBTX) queries.DBTX
 }
@@ -34,13 +36,15 @@ func New(pool *pgxpool.Pool) *Store {
 }
 
 func newWrapped(pool *pgxpool.Pool, wrap func(queries.DBTX) queries.DBTX) *Store {
-	return &Store{pool: pool, q: queries.New(wrap(pool)), wrap: wrap}
+	db := wrap(pool)
+	return &Store{pool: pool, db: db, q: queries.New(db), wrap: wrap}
 }
 
 // InTx runs fn against a Store bound to one transaction.
 func (s *Store) InTx(ctx context.Context, fn func(app.Repository) error) error {
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
-		return fn(&Store{pool: s.pool, q: queries.New(s.wrap(tx)), wrap: s.wrap})
+		db := s.wrap(tx)
+		return fn(&Store{pool: s.pool, db: db, q: queries.New(db), wrap: s.wrap})
 	})
 }
 
