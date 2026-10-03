@@ -291,22 +291,25 @@ func (r *runtime) replace() {
 	r.sendAway()
 }
 
-// regroup hears from another group that who belongs where has changed. A word that changes nothing
-// here, as one that was already heard, is let pass: nobody is asked, and nobody is shown anything.
+// regroup hears from another group that who belongs where has changed. Every screen's place is asked
+// afresh, whether or not the groups could be read: one whose place cannot be confirmed is let go, never
+// kept on what was known before. The Session is shown again only when its groups changed, so a word
+// that was already heard shows nothing twice.
 func (r *runtime) regroup() {
 	groups, err := r.store.Groups(context.Background(), r.st.session)
+	changed := err == nil && !reflect.DeepEqual(groups, r.st.groups)
 	if err != nil {
 		r.log.Error("live: read groups", "error", err)
-		return
 	}
-	if reflect.DeepEqual(groups, r.st.groups) {
-		return
+	if changed {
+		next := r.st.clone()
+		next.groups = groups
+		r.st = next
 	}
-	next := r.st.clone()
-	next.groups = groups
-	r.st = next
 	r.sendAway()
-	r.show()
+	if changed {
+		r.show()
+	}
 }
 
 // refresh hears from another group that the Campaign's Containers, open Shop or day have changed.

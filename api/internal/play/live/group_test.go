@@ -500,15 +500,27 @@ func TestAGroupThatCannotReadWhatItIsTold(t *testing.T) {
 	away := split.View.Groups[1].SessionID
 	up := joinAt(t, w, domain.SessionID(uuid.MustParse(away)), w.dm, dmCaller, live.AudienceDM)
 
+	// The Table Display follows the tower, and the DM opens it there.
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableFollow, SessionID: away})
+	if u := next(t, tb.dm); u.Kind != live.UpdSnapshot || len(u.View.Groups) != 2 || !u.View.Groups[1].Table || u.View.Groups[0].Table {
+		t.Fatalf("the table follows the tower = %+v", u)
+	}
+	next(t, up)
+	towerTV := joinAt(t, w, domain.SessionID(uuid.MustParse(away)), w.dm, dmCaller, live.AudienceTable)
+
 	failing.Store(true)
 	// Loot drops for the party; the tower cannot read the Containers and is shown nothing.
 	tbPlace(t, w, tb.dm, live.Command{Kind: live.CmdRollLoot, LootTableID: loot["Hoard"]})
 	still(t, up)
-	// The Table Display is sent to follow the tower: the DM is shown so, and the tower, which cannot
-	// read the groups, hears nothing yet.
-	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableFollow, SessionID: away})
-	if u := next(t, tb.dm); u.Kind != live.UpdSnapshot || len(u.View.Groups) != 2 || !u.View.Groups[1].Table || u.View.Groups[0].Table {
-		t.Fatalf("the table follows the tower = %+v", u)
+	// The Table Display is sent back to the party. The tower cannot read the groups, but it does not
+	// keep a screen on what it knew before: it asks where each belongs, and the table is sent after
+	// the party. The DM's own screen belongs where it is and, with nothing read, is shown nothing.
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableFollow})
+	if u := next(t, tb.dm); u.Kind != live.UpdSnapshot || len(u.View.Groups) != 2 || u.View.Groups[1].Table || !u.View.Groups[0].Table {
+		t.Fatalf("the table follows the party again = %+v", u)
+	}
+	if to := sentAfter(t, towerTV); to != w.session.ID {
+		t.Fatalf("the tower's table was sent to %s", uuid.UUID(to))
 	}
 	still(t, up)
 	// A group that cannot be read is not brought back.
@@ -530,9 +542,9 @@ func TestAGroupThatCannotReadWhatItIsTold(t *testing.T) {
 	if u := next(t, up); u.Kind != live.UpdView || !slicesContainLabel(u.View, "Loot: Hoard") || !slicesContainLabel(u.View, "Loot: Purse") {
 		t.Fatalf("the tower once it can read again = %+v", u)
 	}
-	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableFollow})
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableFollow, SessionID: away})
 	next(t, tb.dm)
-	if u := next(t, up); u.Kind != live.UpdView || u.View.Groups[1].Table || !u.View.Groups[0].Table {
+	if u := next(t, up); u.Kind != live.UpdView || !u.View.Groups[1].Table || u.View.Groups[0].Table {
 		t.Fatalf("the tower's groups once they can be read = %+v", u.View.Groups)
 	}
 }
