@@ -2,6 +2,7 @@ package live
 
 import (
 	"context"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -290,11 +291,15 @@ func (r *runtime) replace() {
 	r.sendAway()
 }
 
-// regroup hears from another group that who belongs where has changed.
+// regroup hears from another group that who belongs where has changed. A word that changes nothing
+// here, as one that was already heard, is let pass: nobody is asked, and nobody is shown anything.
 func (r *runtime) regroup() {
 	groups, err := r.store.Groups(context.Background(), r.st.session)
 	if err != nil {
 		r.log.Error("live: read groups", "error", err)
+		return
+	}
+	if reflect.DeepEqual(groups, r.st.groups) {
 		return
 	}
 	next := r.st.clone()

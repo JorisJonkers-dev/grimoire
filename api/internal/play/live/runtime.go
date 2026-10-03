@@ -461,25 +461,20 @@ type Hub struct {
 func (h *Hub) Join(ctx context.Context, id domain.SessionID, m domain.Member, c caller.Caller, a Audience) (*Subscriber, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	rt, ok := h.runtimes[id]
-	if !ok {
-		var err error
-		if rt, err = h.start(ctx, id); errors.Is(err, ErrClosed) {
-			// A group's Session that is over sends whoever comes looking back to the party.
-			if at, perr := h.Store.Place(ctx, id, m, a); perr == nil && at != id {
-				return nil, &ElsewhereError{Session: at}
-			}
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	// Asked here so that whoever does not belong is told at once. The Session asks again as they come
-	// in: the party may split between this answer and that moment.
+	// Asked before anything is started, so that whoever does not belong is told at once: a group's
+	// Session that is over sends them back to the party without a runtime being woken for it. The Session
+	// asks again as they come in: the party may split between this answer and that moment.
 	if at, err := h.Store.Place(ctx, id, m, a); err != nil {
 		return nil, err
 	} else if at != id {
 		return nil, &ElsewhereError{Session: at}
+	}
+	rt, ok := h.runtimes[id]
+	if !ok {
+		var err error
+		if rt, err = h.start(ctx, id); err != nil {
+			return nil, err
+		}
 	}
 	sub := &Subscriber{Member: m, Caller: c, Audience: a, Out: make(chan Update, OutboxSize), rt: rt}
 	// Close removes a runtime under the same lock before stopping it, so this runtime is still running.

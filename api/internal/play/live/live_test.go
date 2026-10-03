@@ -474,7 +474,7 @@ func TestFailuresAndLifecycle(t *testing.T) {
 	w.hub.Submit(dm, live.Command{Kind: live.CmdResync})
 	w.hub.Leave(dm)
 	w.hub.Close(w.session.ID)
-	w.hub.Store = failingLoad{}
+	w.hub.Store = failingLoad{Store: pgstore.New(w.pool)}
 	if _, err := w.hub.Join(ctx, w.session.ID, w.dm, dmCaller, live.AudienceDM); err == nil {
 		t.Fatal("load failure ignored")
 	}
