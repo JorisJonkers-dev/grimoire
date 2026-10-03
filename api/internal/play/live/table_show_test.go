@@ -58,6 +58,17 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 			t.Fatalf("a caption that should be refused = %+v, want %q", u, want)
 		}
 	}
+	// The limit is in what the screens count, so 150 dice emoji are 300 and too many; the same goes for a title.
+	barrier(t, w, tb)
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableScene, Scene: domain.SceneTitle, Title: strings.Repeat("🎲", 50)})
+	if u := next(t, tb.dm); u.Kind != live.UpdRejected || !strings.Contains(u.Reason, "Titles run to 80") {
+		t.Fatalf("a title too long on the wire = %+v", u)
+	}
+	barrier(t, w, tb)
+	w.hub.Submit(tb.dm, live.Command{Kind: live.CmdTableCaption, Caption: strings.Repeat("🎲", 150)})
+	if u := next(t, tb.dm); u.Kind != live.UpdRejected || u.Reason != "Captions run to 200 characters." {
+		t.Fatalf("a caption too long on the wire = %+v", u)
+	}
 
 	// A player's roll shows on the table with its dice; the DM's does not.
 	roll := func(c *app.Rolls, who domain.Member, purpose string, face int) {
@@ -82,6 +93,9 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 		t.Fatalf("the player's roll on the table = %+v %+v", u, u.Roll)
 	}
 	roll(rolls, w.dm, "Lurker's Stealth", 19)
+	// What the screens are sent has to fit what they accept, or a roll kept for later screens would
+	// spoil every snapshot. A purpose within its limit in characters can still be too long on the wire.
+	roll(rolls, w.player, strings.Repeat("🎲", 100), 9)
 	barrier(t, w, tb)
 	w.hub.Submit(tv, live.Command{Kind: live.CmdResync})
 	snap := tvNext()

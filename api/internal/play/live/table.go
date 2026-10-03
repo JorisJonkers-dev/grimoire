@@ -3,7 +3,7 @@ package live
 import (
 	"context"
 	"strings"
-	"unicode/utf8"
+	"unicode/utf16"
 
 	"github.com/google/uuid"
 
@@ -11,7 +11,37 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
 
-const maxCaptionRunes = 200
+// What every screen is sent has to fit what the screens accept, counted as they count it: the caption
+// is kept, and the last roll is sent again with every snapshot, so one that did not fit would leave no
+// screen able to read a snapshot at all.
+const (
+	maxCaption      = 200
+	maxRollPurpose  = 120
+	maxRollerName   = 60
+	maxRollDice     = 100
+	maxRollDieFaces = 1000
+	maxRollNumber   = 100000
+)
+
+// wireLen is a string's length as the screens count it, in UTF-16 code units: a character outside the
+// basic plane, such as an emoji, counts twice.
+func wireLen(s string) int {
+	return len(utf16.Encode([]rune(s)))
+}
+
+// fits reports whether a roll is within what the screens accept.
+func (r RollShown) fits() bool {
+	ok := wireLen(r.Purpose) <= maxRollPurpose && wireLen(r.Roller) <= maxRollerName && r.Roller != "" && len(r.Dice) <= maxRollDice &&
+		abs(r.Modifier) <= maxRollNumber && abs(r.Total) <= maxRollNumber
+	for _, d := range r.Dice {
+		ok = ok && d.Faces >= 2 && d.Faces <= maxRollDieFaces && d.Value >= 0 && d.Value <= maxRollDieFaces
+	}
+	return ok
+}
+
+func abs(n int) int {
+	return max(n, -n)
+}
 
 // planTable changes what the Table Display shows: its camera, its scene, its caption or its blackout.
 func (r *runtime) planTable(cmd Command) (Write, string) {
@@ -28,7 +58,7 @@ func (r *runtime) planTable(cmd Command) (Write, string) {
 		switch {
 		case cmd.Scene != domain.SceneLocal && cmd.Scene != domain.SceneWorld && cmd.Scene != domain.SceneHandout && cmd.Scene != domain.SceneTitle:
 			return Write{}, "Scenes are the local map, the world map, a handout or a title card."
-		case utf8.RuneCountInString(title) > 80 || utf8.RuneCountInString(body) > 1000:
+		case wireLen(title) > 80 || wireLen(body) > 1000:
 			return Write{}, "Titles run to 80 characters and handouts to 1000."
 		}
 		next.Scene, next.Title, next.Body, next.MapID, shown = cmd.Scene, title, body, nil, nil
@@ -42,7 +72,7 @@ func (r *runtime) planTable(cmd Command) (Write, string) {
 		}
 	case CmdTableCaption:
 		caption := strings.TrimSpace(cmd.Caption)
-		if utf8.RuneCountInString(caption) > maxCaptionRunes {
+		if wireLen(caption) > maxCaption {
 			return Write{}, "Captions run to 200 characters."
 		}
 		next.Caption = caption
@@ -89,6 +119,9 @@ func (r *runtime) shareRoll(id domain.RollID) {
 		if kept[i] {
 			shown.Modifier -= d.Value
 		}
+	}
+	if !shown.fits() {
+		return
 	}
 	r.lastRoll = &shown
 	for sub := range r.subs {
