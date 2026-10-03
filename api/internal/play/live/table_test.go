@@ -57,7 +57,7 @@ func TestTheDMSteersTheTableDisplay(t *testing.T) {
 		t.Fatalf("title card = %+v", tv)
 	}
 	_, tb = say(live.Command{Kind: live.CmdTableScene, Scene: domain.SceneWorld, MapID: uuid.UUID(m.ID).String()})
-	if wm := tb.View.Table.WorldMap; wm == nil || wm.Name != "Realm" || !strings.HasSuffix(wm.ImageURL, "/image") || tb.View.Table.Title != "" {
+	if wm := tb.View.Table.WorldMap; wm == nil || wm.Name != "Realm" || !strings.HasSuffix(wm.ImageURL, "/image") || tb.View.Table.Title != "" || wm.GridKind != domain.GridSquares || wm.GridStrength != 35 {
 		t.Fatalf("world scene = %+v", tb.View.Table)
 	}
 	d, tb := say(live.Command{Kind: live.CmdTableBlackout, On: true})

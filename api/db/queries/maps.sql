@@ -1,19 +1,21 @@
 -- name: InsertMap :one
-INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, created_at, updated_at)
-VALUES (@campaign_id, @name, @kind, @image_key, @image_type, @width_px, @height_px, @hex_size_px, @origin_x, @origin_y, @now, @now)
-RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind;
+INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, grid_kind,
+    grid_strength, scale_miles, created_at, updated_at)
+VALUES (@campaign_id, @name, @kind, @image_key, @image_type, @width_px, @height_px, @hex_size_px, @origin_x, @origin_y, @grid_kind,
+    @grid_strength, @scale_miles, @now, @now)
+RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles;
 
 -- name: GetMap :one
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
 FROM campaign.maps WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: ListMaps :many
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
 FROM campaign.maps WHERE campaign_id = $1 ORDER BY name, id;
 
 -- name: UpdateMap :execrows
 UPDATE campaign.maps SET name = @name, hex_size_px = @hex_size_px, origin_x = @origin_x, origin_y = @origin_y, ambient = @ambient,
-    updated_at = @now
+    grid_kind = @grid_kind, grid_strength = @grid_strength, scale_miles = @scale_miles, updated_at = @now
 WHERE campaign_id = @campaign_id AND id = @id;
 
 -- name: SetMapAmbient :exec

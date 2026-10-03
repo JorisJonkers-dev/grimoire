@@ -90,6 +90,44 @@ func TestMapsOverHTTP(t *testing.T) {
 	if rec := call(h, http.MethodGet, one+"/image", "stranger", ""); rec.Code != http.StatusNotFound {
 		t.Fatalf("stranger image: %d", rec.Code)
 	}
+	// A battle map says what its grid is, and keeps its 5 ft hexes.
+	if m["gridKind"] != "hexes" || m["gridStrength"] != float64(20) || m["scaleMiles"] != float64(6) {
+		t.Fatalf("a new map's grid: %s", rec.Body.String())
+	}
+	squares := `{"name":"Crypt 1","hexSizePx":30,"originX":26,"originY":30,"ambient":"dark","gridKind":"squares"}`
+	if rec := call(h, http.MethodPut, one, "dm", squares); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("squares on a battle map: %d %s", rec.Code, rec.Body.String())
+	}
+	// The Default World is a world Map nobody has to upload; its grid, scale and strength are the DM's to set.
+	world := "/api/v1/campaigns/" + id + "/default-world"
+	if rec := call(h, http.MethodPost, world, "player", ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("player takes the Default World: %d", rec.Code)
+	}
+	rec = call(h, http.MethodPost, world, "dm", "")
+	w := decode(t, rec)
+	worldID, _ := w["id"].(string)
+	if rec.Code != http.StatusCreated || w["name"] != "Default World" || w["kind"] != "world" || w["width"] != float64(1600) {
+		t.Fatalf("the Default World: %d %s", rec.Code, rec.Body.String())
+	}
+	edit = `{"name":"The Realm","hexSizePx":24,"originX":20,"originY":24,"ambient":"bright","gridKind":"squares","gridStrength":45,"scaleMiles":12}`
+	rec = call(h, http.MethodPut, base+"/"+worldID, "dm", edit)
+	if w = decode(t, rec); rec.Code != 200 || w["gridKind"] != "squares" || w["gridStrength"] != float64(45) || w["scaleMiles"] != float64(12) {
+		t.Fatalf("the world's grid: %d %s", rec.Code, rec.Body.String())
+	}
+	// Two points 120 miles apart are ten cells of 12 miles apart.
+	points := `{"ax":100,"ay":200,"bx":100,"by":546.4101615137754,"distance":120}`
+	if rec := call(h, http.MethodPost, base+"/"+worldID+"/calibration", "player", points); rec.Code != http.StatusForbidden {
+		t.Fatalf("player calibrates: %d", rec.Code)
+	}
+	rec = call(h, http.MethodPost, base+"/"+worldID+"/calibration", "dm", points)
+	w = decode(t, rec)
+	size, _ := w["hexSizePx"].(float64)
+	if rec.Code != 200 || size < 19.999 || size > 20.001 || w["originX"] != float64(100) || w["originY"] != float64(200) || w["gridKind"] != "squares" {
+		t.Fatalf("calibrated: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPost, base+"/"+worldID+"/calibration", "dm", `{"ax":100,"ay":200,"bx":100,"by":200,"distance":120}`); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("one point twice: %d", rec.Code)
+	}
 }
 
 type brokenMaps struct{ err error }
@@ -107,6 +145,14 @@ func (b brokenMaps) Get(context.Context, caller.Caller, uuid.UUID, playdomain.Ma
 }
 
 func (b brokenMaps) Update(context.Context, caller.Caller, uuid.UUID, playdomain.MapID, playapp.MapEdit) (playdomain.Map, error) {
+	return playdomain.Map{}, b.err
+}
+
+func (b brokenMaps) Calibrate(context.Context, caller.Caller, uuid.UUID, playdomain.MapID, playapp.Calibration) (playdomain.Map, error) {
+	return playdomain.Map{}, b.err
+}
+
+func (b brokenMaps) UseDefaultWorld(context.Context, caller.Caller, uuid.UUID) (playdomain.Map, error) {
 	return playdomain.Map{}, b.err
 }
 
@@ -133,6 +179,8 @@ func TestMapErrorsAndPictureTypes(t *testing.T) {
 		{http.MethodGet, one, ""},
 		{http.MethodGet, one + "/image", ""},
 		{http.MethodPut, one, `{"name":"A","hexSizePx":40,"originX":0,"originY":0,"ambient":"dim"}`},
+		{http.MethodPost, one + "/calibration", `{"ax":0,"ay":0,"bx":10,"by":0,"distance":5}`},
+		{http.MethodPost, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/default-world", ""},
 	} {
 		if rec := call(h, o.method, o.path, "u", o.body); rec.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s: %d", o.method, o.path, rec.Code)
@@ -156,6 +204,8 @@ func TestMapErrorsAndPictureTypes(t *testing.T) {
 	add(hh.GetMap(ctx, oas.GetMapParams{}))
 	add(hh.UpdateMap(ctx, &oas.MapEdit{}, oas.UpdateMapParams{}))
 	add(hh.GetMapImage(ctx, oas.GetMapImageParams{}))
+	add(hh.CalibrateMap(ctx, &oas.MapCalibration{}, oas.CalibrateMapParams{}))
+	add(hh.UseDefaultWorld(ctx, oas.UseDefaultWorldParams{}))
 	for i, r := range results {
 		if p, ok := r.(*oas.ProblemStatusCodeWithHeaders); !ok || p.StatusCode != http.StatusUnauthorized {
 			t.Errorf("operation %d: %+v", i, r)

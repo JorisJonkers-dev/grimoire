@@ -87,9 +87,14 @@ func (w world) realm(t *testing.T) domain.Map {
 
 func (w world) picture(t *testing.T, name, kind string) domain.Map {
 	t.Helper()
+	// A world map is drawn in squares here, a battle map in its hexes.
+	grid, strength := domain.GridHexes, 20
+	if kind == domain.MapWorld {
+		grid, strength = domain.GridSquares, 35
+	}
 	m, err := pgstore.New(w.pool).InsertMap(context.Background(), domain.Map{
 		CampaignID: w.session.CampaignID, Name: name, Kind: kind, ImageKey: "sha256/x.png", ImageType: "image/png", Width: 400, Height: 300,
-		HexSize: 40, OriginX: 34.64, OriginY: 40,
+		Grid: grid, GridStrength: strength, ScaleMiles: 6, HexSize: 40, OriginX: 34.64, OriginY: 40,
 	}, time.Now())
 	if err != nil {
 		t.Fatal(err)
@@ -374,7 +379,7 @@ func TestMapCommandsAreValidated(t *testing.T) {
 	m := w.dungeon(t)
 	dm := join(t, w, w.dm, dmCaller, live.AudienceDM)
 	w.hub.Submit(dm, live.Command{Kind: live.CmdSetMap, MapID: uuid.UUID(m.ID).String()})
-	if u := next(t, dm); !u.View.Fog || u.View.Map.Name != "Crypt" || !strings.Contains(u.View.Map.ImageURL, "/maps/") {
+	if u := next(t, dm); !u.View.Fog || u.View.Map.Name != "Crypt" || !strings.Contains(u.View.Map.ImageURL, "/maps/") || u.View.Map.GridKind != domain.GridHexes || u.View.Map.GridStrength != 20 {
 		t.Fatalf("set map = %+v", u)
 	}
 	bad := map[string]live.Command{

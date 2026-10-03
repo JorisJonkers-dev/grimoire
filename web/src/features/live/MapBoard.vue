@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { LiveMap, LiveView } from '@/infrastructure/api/types.gen'
 import { type Coord, corners, toPixel } from '@/shared/hex'
 import { type Captions, DANGER_NOTE, describe, groundNotes, initials } from './board'
-import { cellsFor, key, layoutOf } from './geometry'
+import { cellsFor, key, layoutOf, squareLines } from './geometry'
 
 const props = withDefaults(
   defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; danger?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; captions?: Captions; title: string }>(),
@@ -12,6 +12,12 @@ const props = withDefaults(
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
 const layout = computed(() => layoutOf(props.map))
+// The grid lies see-through over the picture: as hexes, as squares the width of a hex, or not drawn.
+const grid = computed(() => {
+  const strength = String(props.map.gridStrength / 100)
+  return { '--grid': props.map.gridKind === 'hexes' ? strength : '0', '--grid-squares': props.map.gridKind === 'squares' ? strength : '0' }
+})
+const squares = computed(() => (props.map.gridKind === 'squares' ? squareLines(layout.value, props.map.width, props.map.height) : ''))
 const visible = computed(() => new Set(props.view.visible.map(key)))
 const remembered = computed(() => new Set(props.view.remembered.map(key)))
 const walls = computed(() => new Set((props.view.walls ?? []).map(key)))
@@ -71,6 +77,8 @@ const cells = computed(() =>
       role="group"
       :aria-label="title"
       data-testid="map-board"
+      :data-grid="map.gridKind"
+      :style="grid"
     >
       <image :href="map.imageUrl" x="0" y="0" :width="map.width" :height="map.height" preserveAspectRatio="none" data-testid="map-image" />
       <g
@@ -104,6 +112,7 @@ const cells = computed(() =>
           </text>
         </template>
       </g>
+      <path v-if="squares" :d="squares" class="squares" data-testid="grid-squares" />
       <slot :layout="layout" />
     </svg>
   </div>
@@ -120,9 +129,15 @@ const cells = computed(() =>
 }
 .cell polygon {
   fill: transparent;
-  stroke: rgb(255 255 255 / 12%);
+  stroke: rgb(255 255 255 / var(--grid));
   stroke-width: 1;
   cursor: pointer;
+}
+.squares {
+  fill: none;
+  stroke: rgb(255 255 255 / var(--grid-squares));
+  stroke-width: 1;
+  pointer-events: none;
 }
 .cell .height {
   pointer-events: none;

@@ -239,6 +239,7 @@ func routeView(x domain.WorldRoute) RouteView {
 func mapView(m domain.Map, version int) MapView {
 	return MapView{
 		ID: uuid.UUID(m.ID).String(), Name: m.Name, Width: m.Width, Height: m.Height, HexSizePx: m.HexSize, OriginX: m.OriginX, OriginY: m.OriginY,
+		GridKind: m.Grid, GridStrength: m.GridStrength,
 		ImageVersion: version, ImageURL: "/api/v1/campaigns/" + m.CampaignID.String() + "/maps/" + uuid.UUID(m.ID).String() + "/image?v=" + strconv.Itoa(version),
 	}
 }

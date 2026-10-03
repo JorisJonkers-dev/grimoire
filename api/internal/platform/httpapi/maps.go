@@ -10,6 +10,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/oas"
 	playapp "github.com/JorisJonkers-dev/grimoire/api/internal/play/app"
 	playdomain "github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -19,6 +20,8 @@ type MapService interface {
 	List(ctx context.Context, c caller.Caller, campaign uuid.UUID) ([]playdomain.Map, error)
 	Get(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.MapID) (playdomain.Map, error)
 	Update(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.MapID, e playapp.MapEdit) (playdomain.Map, error)
+	Calibrate(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.MapID, k playapp.Calibration) (playdomain.Map, error)
+	UseDefaultWorld(ctx context.Context, c caller.Caller, campaign uuid.UUID) (playdomain.Map, error)
 	Image(ctx context.Context, c caller.Caller, campaign uuid.UUID, id playdomain.MapID) (string, []byte, error)
 }
 
@@ -26,6 +29,7 @@ func mapOut(m playdomain.Map) oas.LocalMap {
 	return oas.LocalMap{
 		ID: oas.ID(m.ID), Name: m.Name, Kind: oas.MapKind(m.Kind), Width: int32(m.Width), Height: int32(m.Height), HexSizePx: m.HexSize, //nolint:gosec // capped pixels
 		OriginX: m.OriginX, OriginY: m.OriginY, Ambient: oas.AmbientLight(m.Ambient),
+		GridKind: oas.GridKind(m.Grid), GridStrength: oas.GridStrength(m.GridStrength), ScaleMiles: oas.ScaleMiles(m.ScaleMiles), //nolint:gosec // 0 to 100
 		ImageUrl: oas.AssetUrl("/api/v1/campaigns/" + m.CampaignID.String() + "/maps/" + uuid.UUID(m.ID).String() + "/image"),
 	}
 }
@@ -80,11 +84,48 @@ func (h *Handler) UpdateMap(ctx context.Context, req *oas.MapEdit, p oas.UpdateM
 	if !ok {
 		return unauthorized(), nil
 	}
-	m, err := h.Maps.Update(ctx, c, uuid.UUID(p.CampaignId), playdomain.MapID(p.MapId), playapp.MapEdit{
-		Name: req.Name, HexSize: req.HexSizePx, OriginX: req.OriginX, OriginY: req.OriginY, Ambient: string(req.Ambient),
-	})
+	edit := playapp.MapEdit{
+		Name: req.Name, HexSize: req.HexSizePx, OriginX: req.OriginX, OriginY: req.OriginY, Ambient: string(req.Ambient), Grid: string(req.GridKind.Value),
+	}
+	if v, ok := req.GridStrength.Get(); ok {
+		strength := int(v)
+		edit.GridStrength = &strength
+	}
+	if v, ok := req.ScaleMiles.Get(); ok {
+		miles := float64(v)
+		edit.ScaleMiles = &miles
+	}
+	m, err := h.Maps.Update(ctx, c, uuid.UUID(p.CampaignId), playdomain.MapID(p.MapId), edit)
 	if err != nil {
 		return h.campaignProblem(ctx, "update map", err), nil
+	}
+	return &oas.LocalMapHeaders{Response: mapOut(m)}, nil
+}
+
+// CalibrateMap sizes a Map's grid from two points a known distance apart.
+func (h *Handler) CalibrateMap(ctx context.Context, req *oas.MapCalibration, p oas.CalibrateMapParams) (oas.CalibrateMapRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	m, err := h.Maps.Calibrate(ctx, c, uuid.UUID(p.CampaignId), playdomain.MapID(p.MapId), playapp.Calibration{
+		A: hex.Point{X: req.Ax, Y: req.Ay}, B: hex.Point{X: req.Bx, Y: req.By}, Distance: req.Distance,
+	})
+	if err != nil {
+		return h.campaignProblem(ctx, "calibrate map", err), nil
+	}
+	return &oas.LocalMapHeaders{Response: mapOut(m)}, nil
+}
+
+// UseDefaultWorld gives the Campaign the painted Default World.
+func (h *Handler) UseDefaultWorld(ctx context.Context, p oas.UseDefaultWorldParams) (oas.UseDefaultWorldRes, error) {
+	c, ok := uiCaller(ctx)
+	if !ok {
+		return unauthorized(), nil
+	}
+	m, err := h.Maps.UseDefaultWorld(ctx, c, uuid.UUID(p.CampaignId))
+	if err != nil {
+		return h.campaignProblem(ctx, "use the default world", err), nil
 	}
 	return &oas.LocalMapHeaders{Response: mapOut(m)}, nil
 }

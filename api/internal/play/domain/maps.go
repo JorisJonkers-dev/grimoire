@@ -18,21 +18,43 @@ const (
 	AmbientDark   = "dark"
 )
 
-// Map is an uploaded picture calibrated to the hex grid.
+// How a Map's grid is drawn over its picture. A local Map is always hexes of 5 feet.
+const (
+	GridHexes   = "hexes"
+	GridSquares = "squares"
+	GridOff     = "off"
+)
+
+// LocalHexFt is how far across one hex of a local Map is.
+const LocalHexFt = 5
+
+// Map is an uploaded picture calibrated to the hex grid. GridStrength is how solid the grid is drawn,
+// 0 to 100; ScaleMiles is how many miles one cell of a world Map covers.
 type Map struct {
-	ID         MapID
-	CampaignID uuid.UUID
-	Name       string
-	Kind       string
-	ImageKey   string
-	ImageType  string
-	Width      int
-	Height     int
-	HexSize    float64
-	OriginX    float64
-	OriginY    float64
-	Ambient    string
-	UpdatedAt  time.Time
+	ID           MapID
+	CampaignID   uuid.UUID
+	Name         string
+	Kind         string
+	ImageKey     string
+	ImageType    string
+	Width        int
+	Height       int
+	HexSize      float64
+	OriginX      float64
+	OriginY      float64
+	Ambient      string
+	Grid         string
+	GridStrength int
+	ScaleMiles   float64
+	UpdatedAt    time.Time
+}
+
+// CellSpan is the distance one cell covers: feet on a local Map, miles on a world Map.
+func (m Map) CellSpan() float64 {
+	if m.Kind == MapWorld {
+		return m.ScaleMiles
+	}
+	return LocalHexFt
 }
 
 // Layout is the Map's pixel geometry.

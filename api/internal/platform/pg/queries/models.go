@@ -239,20 +239,23 @@ type CampaignLootClaim struct {
 }
 
 type CampaignMap struct {
-	ID         uuid.UUID
-	CampaignID uuid.UUID
-	Name       string
-	ImageKey   string
-	ImageType  string
-	WidthPx    int32
-	HeightPx   int32
-	HexSizePx  float64
-	OriginX    float64
-	OriginY    float64
-	Ambient    string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Kind       string
+	ID           uuid.UUID
+	CampaignID   uuid.UUID
+	Name         string
+	ImageKey     string
+	ImageType    string
+	WidthPx      int32
+	HeightPx     int32
+	HexSizePx    float64
+	OriginX      float64
+	OriginY      float64
+	Ambient      string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Kind         string
+	GridKind     string
+	GridStrength int32
+	ScaleMiles   float64
 }
 
 type CampaignMapEdge struct {

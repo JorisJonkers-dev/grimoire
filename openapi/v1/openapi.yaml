@@ -3666,6 +3666,67 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/maps/{mapId}/calibration:
+    post:
+      operationId: calibrateMap
+      x-ogen-operation-group: Build
+      summary: Calibrate a map from two points
+      description: "Sizes the Map's grid so that two points on its picture are a known distance apart, and centres a cell on the first point. The distance is in feet on a local Map, whose hexes are 5 feet, and in miles on a world Map. DM only."
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - $ref: "#/components/parameters/MapId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MapCalibration"
+      responses:
+        "200":
+          description: The calibrated map.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalMap"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/default-world:
+    post:
+      operationId: useDefaultWorld
+      x-ogen-operation-group: Build
+      summary: Use the Default World
+      description: Gives the Campaign the painted Default World as a world Map, with a default calibration. DM only.
+      tags: [Prep]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "201":
+          description: The new world map.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalMap"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/maps/{mapId}/image:
     get:
       operationId: getMapImage
@@ -13015,7 +13076,7 @@ components:
       type: object
       description: The active Map's picture and hex calibration.
       additionalProperties: false
-      required: [id, name, imageUrl, width, height, hexSizePx, originX, originY, imageVersion]
+      required: [id, name, imageUrl, width, height, hexSizePx, originX, originY, imageVersion, gridKind, gridStrength]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
@@ -13026,6 +13087,8 @@ components:
         originX: { type: number, format: double, minimum: -100000, maximum: 100000 }
         originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
         imageVersion: { type: integer, format: int32, minimum: 0, maximum: 1000000 }
+        gridKind: { $ref: "#/components/schemas/GridKind" }
+        gridStrength: { $ref: "#/components/schemas/GridStrength" }
     LiveLight:
       type: object
       description: A light on the Map, for the DM.
@@ -13180,7 +13243,7 @@ components:
       type: object
       description: An uploaded Map and its hex calibration.
       additionalProperties: false
-      required: [id, name, kind, width, height, hexSizePx, originX, originY, ambient, imageUrl]
+      required: [id, name, kind, width, height, hexSizePx, originX, originY, ambient, imageUrl, gridKind, gridStrength, scaleMiles]
       properties:
         id: { $ref: "#/components/schemas/Id" }
         name: { type: string, maxLength: 80 }
@@ -13192,9 +13255,28 @@ components:
         originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
         ambient: { $ref: "#/components/schemas/AmbientLight" }
         imageUrl: { $ref: "#/components/schemas/AssetUrl" }
+        gridKind: { $ref: "#/components/schemas/GridKind" }
+        gridStrength: { $ref: "#/components/schemas/GridStrength" }
+        scaleMiles: { $ref: "#/components/schemas/ScaleMiles" }
+    GridKind:
+      type: string
+      description: How a Map's grid is drawn over its picture. A local Map is always hexes, each 5 feet across; squares are as wide as the hexes they stand for.
+      enum: [hexes, squares, "off"]
+    GridStrength:
+      type: integer
+      format: int32
+      description: How solid the grid is drawn over the picture, from 0 for unseen to 100 for opaque.
+      minimum: 0
+      maximum: 100
+    ScaleMiles:
+      type: number
+      format: double
+      description: How many miles one cell of a world Map covers.
+      minimum: 0.1
+      maximum: 1000
     MapEdit:
       type: object
-      description: A Map's name, calibration and ambient light.
+      description: A Map's name, calibration and ambient light, and optionally its grid and scale; what is left out stays as it is. A local Map takes no grid but hexes and no scale.
       additionalProperties: false
       required: [name, hexSizePx, originX, originY, ambient]
       properties:
@@ -13203,6 +13285,20 @@ components:
         originX: { type: number, format: double, minimum: -100000, maximum: 100000 }
         originY: { type: number, format: double, minimum: -100000, maximum: 100000 }
         ambient: { $ref: "#/components/schemas/AmbientLight" }
+        gridKind: { $ref: "#/components/schemas/GridKind" }
+        gridStrength: { $ref: "#/components/schemas/GridStrength" }
+        scaleMiles: { $ref: "#/components/schemas/ScaleMiles" }
+    MapCalibration:
+      type: object
+      description: Two points on a Map's picture, in pixels, and how far apart they are in the world.
+      additionalProperties: false
+      required: [ax, ay, bx, by, distance]
+      properties:
+        ax: { type: number, format: double, minimum: 0, maximum: 100000 }
+        ay: { type: number, format: double, minimum: 0, maximum: 100000 }
+        bx: { type: number, format: double, minimum: 0, maximum: 100000 }
+        by: { type: number, format: double, minimum: 0, maximum: 100000 }
+        distance: { type: number, format: double, minimum: 0.01, maximum: 1000000 }
     Slug:
       type: string
       description: Lower-case, hyphenated identifier.

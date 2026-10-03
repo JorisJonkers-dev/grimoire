@@ -1,5 +1,5 @@
 import type { LiveMap } from '@/infrastructure/api/types.gen'
-import { type Coord, fromPixel, type Layout, toPixel } from '@/shared/hex'
+import { type Coord, fromPixel, type Layout, type Point, toPixel } from '@/shared/hex'
 
 export const layoutOf = (m: Pick<LiveMap, 'hexSizePx' | 'originX' | 'originY'>): Layout => ({
   size: m.hexSizePx,
@@ -27,3 +27,20 @@ export function cellsFor(l: Layout, width: number, height: number): Coord[] {
 }
 
 export const key = (c: Coord) => `${String(c.q)},${String(c.r)}`
+
+/** How far apart neighbouring cells are, centre to centre; a grid drawn as squares has squares this wide. */
+export const across = (size: number) => size * Math.sqrt(3)
+
+/** The distance between two points on a picture, in cells of a grid of that size. */
+export const cellsBetween = (size: number, a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y) / across(size)
+
+/** The lines of a square grid over a picture, as an SVG path: one square is centred on the grid's origin. */
+export function squareLines(l: Layout, width: number, height: number): string {
+  const side = across(l.size)
+  const first = (origin: number) => (((origin - side / 2) % side) + side) % side
+  const at = (v: number) => String(Number(v.toFixed(1)))
+  const out: string[] = []
+  for (let x = first(l.origin.x); x <= width; x += side) out.push(`M${at(x)} 0V${String(height)}`)
+  for (let y = first(l.origin.y); y <= height; y += side) out.push(`M0 ${at(y)}H${String(width)}`)
+  return out.join(' ')
+}

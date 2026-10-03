@@ -86,7 +86,7 @@ func (q *Queries) DeleteNode(ctx context.Context, arg DeleteNodeParams) error {
 }
 
 const getMap = `-- name: GetMap :one
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
 FROM campaign.maps WHERE campaign_id = $1 AND id = $2
 `
 
@@ -113,6 +113,9 @@ func (q *Queries) GetMap(ctx context.Context, arg GetMapParams) (CampaignMap, er
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Kind,
+		&i.GridKind,
+		&i.GridStrength,
+		&i.ScaleMiles,
 	)
 	return i, err
 }
@@ -181,23 +184,28 @@ func (q *Queries) InsertLight(ctx context.Context, arg InsertLightParams) error 
 }
 
 const insertMap = `-- name: InsertMap :one
-INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
-RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
+INSERT INTO campaign.maps (campaign_id, name, kind, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, grid_kind,
+    grid_strength, scale_miles, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+    $12, $13, $14, $14)
+RETURNING id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
 `
 
 type InsertMapParams struct {
-	CampaignID uuid.UUID
-	Name       string
-	Kind       string
-	ImageKey   string
-	ImageType  string
-	WidthPx    int32
-	HeightPx   int32
-	HexSizePx  float64
-	OriginX    float64
-	OriginY    float64
-	Now        time.Time
+	CampaignID   uuid.UUID
+	Name         string
+	Kind         string
+	ImageKey     string
+	ImageType    string
+	WidthPx      int32
+	HeightPx     int32
+	HexSizePx    float64
+	OriginX      float64
+	OriginY      float64
+	GridKind     string
+	GridStrength int32
+	ScaleMiles   float64
+	Now          time.Time
 }
 
 func (q *Queries) InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error) {
@@ -212,6 +220,9 @@ func (q *Queries) InsertMap(ctx context.Context, arg InsertMapParams) (CampaignM
 		arg.HexSizePx,
 		arg.OriginX,
 		arg.OriginY,
+		arg.GridKind,
+		arg.GridStrength,
+		arg.ScaleMiles,
 		arg.Now,
 	)
 	var i CampaignMap
@@ -230,6 +241,9 @@ func (q *Queries) InsertMap(ctx context.Context, arg InsertMapParams) (CampaignM
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Kind,
+		&i.GridKind,
+		&i.GridStrength,
+		&i.ScaleMiles,
 	)
 	return i, err
 }
@@ -290,7 +304,7 @@ func (q *Queries) InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams
 }
 
 const listMaps = `-- name: ListMaps :many
-SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind
+SELECT id, campaign_id, name, image_key, image_type, width_px, height_px, hex_size_px, origin_x, origin_y, ambient, created_at, updated_at, kind, grid_kind, grid_strength, scale_miles
 FROM campaign.maps WHERE campaign_id = $1 ORDER BY name, id
 `
 
@@ -318,6 +332,9 @@ func (q *Queries) ListMaps(ctx context.Context, campaignID uuid.UUID) ([]Campaig
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Kind,
+			&i.GridKind,
+			&i.GridStrength,
+			&i.ScaleMiles,
 		); err != nil {
 			return nil, err
 		}
@@ -658,19 +675,22 @@ func (q *Queries) SetSessionWorld(ctx context.Context, arg SetSessionWorldParams
 
 const updateMap = `-- name: UpdateMap :execrows
 UPDATE campaign.maps SET name = $1, hex_size_px = $2, origin_x = $3, origin_y = $4, ambient = $5,
-    updated_at = $6
-WHERE campaign_id = $7 AND id = $8
+    grid_kind = $6, grid_strength = $7, scale_miles = $8, updated_at = $9
+WHERE campaign_id = $10 AND id = $11
 `
 
 type UpdateMapParams struct {
-	Name       string
-	HexSizePx  float64
-	OriginX    float64
-	OriginY    float64
-	Ambient    string
-	Now        time.Time
-	CampaignID uuid.UUID
-	ID         uuid.UUID
+	Name         string
+	HexSizePx    float64
+	OriginX      float64
+	OriginY      float64
+	Ambient      string
+	GridKind     string
+	GridStrength int32
+	ScaleMiles   float64
+	Now          time.Time
+	CampaignID   uuid.UUID
+	ID           uuid.UUID
 }
 
 func (q *Queries) UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error) {
@@ -680,6 +700,9 @@ func (q *Queries) UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, er
 		arg.OriginX,
 		arg.OriginY,
 		arg.Ambient,
+		arg.GridKind,
+		arg.GridStrength,
+		arg.ScaleMiles,
 		arg.Now,
 		arg.CampaignID,
 		arg.ID,

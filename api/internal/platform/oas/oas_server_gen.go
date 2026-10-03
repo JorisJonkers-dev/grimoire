@@ -369,6 +369,14 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
 	ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (ApproveRetrainRes, error)
+	// CalibrateMap implements calibrateMap operation.
+	//
+	// Sizes the Map's grid so that two points on its picture are a known distance apart, and centres a
+	// cell on the first point. The distance is in feet on a local Map, whose hexes are 5 feet, and in
+	// miles on a world Map. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/maps/{mapId}/calibration
+	CalibrateMap(ctx context.Context, req *MapCalibration, params CalibrateMapParams) (CalibrateMapRes, error)
 	// ClearTokenIcon implements clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -898,6 +906,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/maps
 	UploadMap(ctx context.Context, req UploadMapReq, params UploadMapParams) (UploadMapRes, error)
+	// UseDefaultWorld implements useDefaultWorld operation.
+	//
+	// Gives the Campaign the painted Default World as a world Map, with a default calibration. DM only.
+	//
+	// POST /api/v1/campaigns/{campaignId}/default-world
+	UseDefaultWorld(ctx context.Context, params UseDefaultWorldParams) (UseDefaultWorldRes, error)
 }
 
 // PlayHandler handles operations described by OpenAPI v3 specification.

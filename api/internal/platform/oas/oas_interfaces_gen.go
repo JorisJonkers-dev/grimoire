@@ -21,6 +21,10 @@ type BeginTwoStepRes interface {
 	beginTwoStepRes()
 }
 
+type CalibrateMapRes interface {
+	calibrateMapRes()
+}
+
 type CancelFriendRequestRes interface {
 	cancelFriendRequestRes()
 }
@@ -1015,6 +1019,10 @@ type UpdateShopRes interface {
 
 type UploadMapRes interface {
 	uploadMapRes()
+}
+
+type UseDefaultWorldRes interface {
+	useDefaultWorldRes()
 }
 
 type UseItemRes interface {

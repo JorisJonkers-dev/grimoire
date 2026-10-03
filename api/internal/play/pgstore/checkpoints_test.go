@@ -27,7 +27,7 @@ func TestACheckpointKeepsTheSessionAndARewindPutsItBack(t *testing.T) {
 	store := pgstore.New(tb.pool)
 	sess, _ := sessions(tb, store, &closed{}).Start(ctx, dm, tb.campaign)
 	actor := tb.dmMember(t)
-	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Crypt", Kind: domain.MapLocal, ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
+	m, err := store.InsertMap(ctx, domain.Map{CampaignID: tb.campaign, Name: "Crypt", Kind: domain.MapLocal, ImageKey: "k", ImageType: "image/png", Width: 400, Height: 300, Grid: "hexes", GridStrength: 20, ScaleMiles: 6, HexSize: 40, OriginX: 35, OriginY: 40}, time.Now())
 	if err != nil {
 		t.Fatal(err)
 	}

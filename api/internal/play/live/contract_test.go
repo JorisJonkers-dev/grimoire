@@ -38,7 +38,7 @@ func samples() contract {
 		},
 		Map: &live.MapView{
 			ID: id, Name: "Crypt", ImageURL: "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/" + id + "/image?v=2",
-			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2,
+			Width: 400, Height: 300, HexSizePx: 40, OriginX: 34.64, OriginY: 40, ImageVersion: 2, GridKind: "squares", GridStrength: 35,
 		},
 	}
 	ac, hp, most := 15, 4, 7
