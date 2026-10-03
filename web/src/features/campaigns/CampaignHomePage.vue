@@ -183,6 +183,7 @@ const expires = (iso: string) => new Date(iso).toLocaleDateString(undefined, { d
         <RouterLink :to="{ name: 'rule-variants', params: { id } }" data-testid="rules-link">Rule Variants</RouterLink>
         <RouterLink :to="{ name: 'tracks', params: { id } }" data-testid="tracks-link">Tracks</RouterLink>
         <RouterLink :to="{ name: 'downtime', params: { id } }" data-testid="downtime-link">Downtime</RouterLink>
+        <RouterLink :to="{ name: 'vehicles', params: { id } }" data-testid="vehicles-link">Vehicles</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'encounters', params: { id } }" data-testid="encounters-link">Random encounters</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'loot', params: { id } }" data-testid="loot-link">Loot tables</RouterLink>
         <RouterLink v-if="isDM" :to="{ name: 'shops', params: { id } }" data-testid="shops-link">Settlements and shops</RouterLink>

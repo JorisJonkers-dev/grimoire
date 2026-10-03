@@ -97,6 +97,8 @@ type TravelLeg struct {
 	Days       int
 	FromSecret bool
 	ToSecret   bool
+	// Vehicle is the vehicle the leg was made aboard, by the name it had then; empty on foot.
+	Vehicle string
 }
 
 // World action kinds in the Action Log.

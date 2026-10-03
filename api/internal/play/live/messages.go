@@ -238,6 +238,8 @@ type Command struct {
 	RouteID     string `json:"routeId,omitempty"`
 	DistanceMi  int    `json:"distanceMi,omitempty"`
 	Pace        string `json:"pace,omitempty"`
+	// VehicleID is the vehicle travel is made aboard, at the speed it makes as it stands; pace is then left out.
+	VehicleID   string `json:"vehicleId,omitempty"`
 	ZoneID      string `json:"zoneId,omitempty"`
 	RadiusHexes int    `json:"radiusHexes,omitempty"`
 	DMOnly      bool   `json:"dmOnly,omitempty"`
@@ -846,6 +848,8 @@ type LegView struct {
 	DistanceMi int    `json:"distanceMi"`
 	Minutes    int    `json:"minutes"`
 	Days       int    `json:"days"`
+	// Vehicle is the vehicle the leg was made aboard, by the name it had then.
+	Vehicle string `json:"vehicle,omitempty"`
 }
 
 // SaveView is a saving throw waiting on its Roll Card to end an Effect.

@@ -2900,8 +2900,9 @@ export const zLiveTravelLeg = z.object({
     to: z.string().max(40),
     pace: zTravelPace,
     distanceMi: z.int().gte(1).lte(2000),
-    minutes: z.int().gte(0).lte(100000),
-    days: z.int().gte(0).lte(1000)
+    minutes: z.int().gte(0).lte(3000000),
+    days: z.int().gte(0).lte(2000),
+    vehicle: z.string().max(80).optional()
 });
 
 /**
@@ -3557,6 +3558,107 @@ export const zRecipe = z.object({
     days: z.int().gte(1).lte(365),
     costCp: z.int().gte(0).lte(100000000),
     ingredients: z.array(zRecipeIngredient).max(20)
+});
+
+/**
+ * What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.
+ */
+export const zVehicleKind = z.enum([
+    'land',
+    'water',
+    'air'
+]);
+
+/**
+ * A part of a vehicle with hit points of its own.
+ */
+export const zVehicleComponentInput = z.object({
+    name: z.string().min(1).max(80),
+    hpMax: z.int().gte(1).lte(10000),
+    drives: z.boolean().optional()
+});
+
+/**
+ * A crew station.
+ */
+export const zVehicleStationInput = z.object({
+    name: z.string().min(1).max(80),
+    crew: z.int().gte(0).lte(200)
+});
+
+/**
+ * A vehicle or ship as it is built.
+ */
+export const zVehicleInput = z.object({
+    name: z.string().min(1).max(80),
+    kind: zVehicleKind,
+    hullMax: z.int().gte(1).lte(10000),
+    threshold: z.int().gte(0).lte(100).optional(),
+    milesPerDay: z.int().gte(1).lte(1000),
+    components: z.array(zVehicleComponentInput).max(20).optional(),
+    stations: z.array(zVehicleStationInput).max(20).optional()
+});
+
+/**
+ * A component of a vehicle as it stands.
+ */
+export const zVehicleComponent = z.object({
+    id: zId,
+    name: z.string().max(80),
+    hp: z.int().gte(0).lte(10000),
+    hpMax: z.int().gte(1).lte(10000),
+    drives: z.boolean()
+});
+
+/**
+ * A crew station as it stands.
+ */
+export const zVehicleStation = z.object({
+    id: zId,
+    name: z.string().max(80),
+    crew: z.int().gte(0).lte(200),
+    posted: z.int().gte(0).lte(200)
+});
+
+/**
+ * A vehicle or ship of the Campaign as it stands.
+ */
+export const zVehicle = z.object({
+    id: zId,
+    name: z.string().max(80),
+    kind: zVehicleKind,
+    hull: z.int().gte(0).lte(10000),
+    hullMax: z.int().gte(1).lte(10000),
+    threshold: z.int().gte(0).lte(100),
+    milesPerDay: z.int().gte(1).lte(1000),
+    speed: z.int().gte(0).lte(1000),
+    shortHanded: z.boolean(),
+    components: z.array(zVehicleComponent).max(20),
+    stations: z.array(zVehicleStation).max(20)
+});
+
+/**
+ * The Campaign's vehicles, for the caller.
+ */
+export const zVehicles = z.object({
+    dm: z.boolean(),
+    vehicles: z.array(zVehicle).max(50)
+});
+
+/**
+ * Damage to a vehicle's hull, or to one component, or the repair of it.
+ */
+export const zVehicleBlow = z.object({
+    componentId: zId.optional(),
+    amount: z.int().gte(1).lte(10000),
+    repair: z.boolean().optional()
+});
+
+/**
+ * How many crew are posted at a station.
+ */
+export const zVehicleCrew = z.object({
+    posted: z.int().gte(0).lte(200)
 });
 
 /**
@@ -5010,6 +5112,7 @@ export const zLiveCommand = z.object({
     routeId: zId.optional(),
     distanceMi: z.int().gte(1).lte(2000).optional(),
     pace: zTravelPace.optional(),
+    vehicleId: z.string().max(64).optional(),
     zoneId: zId.optional(),
     radiusHexes: z.int().gte(1).lte(20).optional(),
     dmOnly: z.boolean().optional(),
@@ -6784,6 +6887,61 @@ export const zDeleteRecipePath = z.object({
  * The Recipe is removed.
  */
 export const zDeleteRecipeResponse = z.void();
+
+export const zListVehiclesPath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The vehicles, oldest first.
+ */
+export const zListVehiclesResponse = zVehicles;
+
+export const zCreateVehicleBody = zVehicleInput;
+
+export const zCreateVehiclePath = z.object({
+    campaignId: zId
+});
+
+/**
+ * The new vehicle.
+ */
+export const zCreateVehicleResponse = zVehicle;
+
+export const zDeleteVehiclePath = z.object({
+    campaignId: zId,
+    vehicleId: zId
+});
+
+/**
+ * The vehicle is removed.
+ */
+export const zDeleteVehicleResponse = z.void();
+
+export const zDamageVehicleBody = zVehicleBlow;
+
+export const zDamageVehiclePath = z.object({
+    campaignId: zId,
+    vehicleId: zId
+});
+
+/**
+ * The vehicle as the blow or the repair leaves it.
+ */
+export const zDamageVehicleResponse = zVehicle;
+
+export const zPostVehicleCrewBody = zVehicleCrew;
+
+export const zPostVehicleCrewPath = z.object({
+    campaignId: zId,
+    vehicleId: zId,
+    stationId: zId
+});
+
+/**
+ * The vehicle with the station manned so.
+ */
+export const zPostVehicleCrewResponse = zVehicle;
 
 export const zListFactionsPath = z.object({
     campaignId: zId

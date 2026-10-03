@@ -392,6 +392,25 @@ func (UnimplementedHandler) CreateTrack(ctx context.Context, req *TrackInput, pa
 	return r, ht.ErrNotImplemented
 }
 
+// CreateVehicle implements createVehicle operation.
+//
+// Adds a vehicle or ship, whole and with nobody at its stations. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/vehicles
+func (UnimplementedHandler) CreateVehicle(ctx context.Context, req *VehicleInput, params CreateVehicleParams) (r CreateVehicleRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DamageVehicle implements damageVehicle operation.
+//
+// Damages the hull, or one component, or repairs it. A blow under the vehicle's damage threshold does
+// nothing; any other lands in full. A repair stops at what the part can have. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/vehicles/{vehicleId}/damage
+func (UnimplementedHandler) DamageVehicle(ctx context.Context, req *VehicleBlow, params DamageVehicleParams) (r DamageVehicleRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DecideStandingChange implements decideStandingChange operation.
 //
 // The DM's word on a pending Standing Change, confirmed as suggested or edited, or dismissed.
@@ -563,6 +582,15 @@ func (UnimplementedHandler) DeleteShop(ctx context.Context, params DeleteShopPar
 //
 // DELETE /api/v1/campaigns/{campaignId}/tracks/{trackId}
 func (UnimplementedHandler) DeleteTrack(ctx context.Context, params DeleteTrackParams) (r DeleteTrackRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteVehicle implements deleteVehicle operation.
+//
+// Removes a vehicle with its components and crew stations. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/vehicles/{vehicleId}
+func (UnimplementedHandler) DeleteVehicle(ctx context.Context, params DeleteVehicleParams) (r DeleteVehicleRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1659,6 +1687,17 @@ func (UnimplementedHandler) ListTracks(ctx context.Context, params ListTracksPar
 	return r, ht.ErrNotImplemented
 }
 
+// ListVehicles implements listVehicles operation.
+//
+// The Campaign's vehicles and ships as they stand: hull, components, crew stations and the miles each
+// makes in a day now. A vehicle goes slower for every driving component that is broken, at half speed
+// while any crew station is short of crew, and not at all as a wreck. Every Member sees them.
+//
+// GET /api/v1/campaigns/{campaignId}/vehicles
+func (UnimplementedHandler) ListVehicles(ctx context.Context, params ListVehiclesParams) (r ListVehiclesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // MoveItem implements moveItem operation.
 //
 // Puts an item in a slot, back in the bag, with another Character or in the Party Stash. Not during a
@@ -1706,6 +1745,15 @@ func (UnimplementedHandler) PinLibraryRevision(ctx context.Context, req *Library
 //
 // GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 func (UnimplementedHandler) PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (r PlanLevelUpRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PostVehicleCrew implements postVehicleCrew operation.
+//
+// Sets how many crew are posted at a crew station, up to what it takes. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/vehicles/{vehicleId}/stations/{stationId}
+func (UnimplementedHandler) PostVehicleCrew(ctx context.Context, req *VehicleCrew, params PostVehicleCrewParams) (r PostVehicleCrewRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

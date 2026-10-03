@@ -362,6 +362,8 @@ type Store interface {
 	// the Roll Tables of the Library the Campaign sees, at the Revision each is pinned to.
 	RuleHooks(ctx context.Context, campaign uuid.UUID) ([]Hook, error)
 	RollTables(ctx context.Context, campaign uuid.UUID) ([]Table, error)
+	// Vehicles reads the Campaign's vehicles as they stand.
+	Vehicles(ctx context.Context, campaign uuid.UUID) ([]domain.Vehicle, error)
 	// Injuries reads the lingering injuries a Character carries.
 	Injuries(ctx context.Context, character uuid.UUID) ([]domain.Injury, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.

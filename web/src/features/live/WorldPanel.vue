@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { LiveMarcher, LiveMeasure, LiveWorld, LocalMap, TravelPace } from '@/infrastructure/api/types.gen'
+import type { LiveMarcher, LiveMeasure, LiveTravelLeg, LiveWorld, LocalMap, TravelPace, Vehicle } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import { GButton } from '@/shared/ui'
@@ -12,7 +12,7 @@ import WorldOverlay from './WorldOverlay.vue'
 
 type Tool = 'node' | 'route' | 'party' | 'remove'
 
-const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; localMaps: LocalMap[]; measure: LiveMeasure | null; gameDay: number; gameMinute: number; marchingOrder: LiveMarcher[] }>()
+const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; localMaps: LocalMap[]; measure: LiveMeasure | null; gameDay: number; gameMinute: number; marchingOrder: LiveMarcher[]; vehicles: Vehicle[] }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
 const choice = ref('')
 const tool = ref<Tool>('node')
@@ -20,6 +20,11 @@ const name = ref('')
 const from = ref<string | null>(null)
 const distance = ref(12)
 const pace = ref<TravelPace>('normal')
+// aboard is the vehicle the party travels in; a vehicle that cannot move is not offered.
+const aboard = ref('')
+const afloat = computed(() => props.vehicles.filter((v) => v.speed > 0))
+const travel = (routeId: string) => { emit('send', aboard.value ? { kind: 'travel', routeId, vehicleId: aboard.value } : { kind: 'travel', routeId, pace: pace.value }) }
+const how = (l: LiveTravelLeg) => (l.vehicle ? `aboard ${l.vehicle}` : `at a ${l.pace} pace`)
 
 const nodes = computed(() => new Map((props.world?.nodes ?? []).map((n) => [n.id, n])))
 const here = computed(() => (props.world?.partyNodeId ? nodes.value.get(props.world.partyNodeId) : undefined))
@@ -143,7 +148,14 @@ function tap(c: Coord) {
       </section>
       <section v-if="roads.length > 0" class="g-card" aria-label="Routes from here" data-testid="roads">
         <h2>Routes from here</h2>
-        <label v-if="dm" class="g-field">
+        <label v-if="afloat.length > 0" class="g-field">
+          <span>Travelling</span>
+          <select v-model="aboard" data-testid="aboard">
+            <option value="">On foot</option>
+            <option v-for="v in afloat" :key="v.id" :value="v.id">{{ v.name }} ({{ v.speed }} miles a day)</option>
+          </select>
+        </label>
+        <label v-if="dm && !aboard" class="g-field">
           <span>Pace</span>
           <select v-model="pace" data-testid="pace">
             <option value="slow">Slow (2 mph)</option>
@@ -153,15 +165,15 @@ function tap(c: Coord) {
         </label>
         <ul class="g-list">
           <li v-for="r in roads" :key="r.route.id" class="row">
-            <span>{{ r.to }} · {{ r.route.distanceMi }} mi · {{ r.time }}</span>
-            <GButton v-if="dm" :aria-label="`Travel to ${r.to}`" @click="emit('send', { kind: 'travel', routeId: r.route.id, pace })">Travel</GButton>
+            <span>{{ r.to }} · {{ r.route.distanceMi }} mi<template v-if="!aboard"> · {{ r.time }}</template></span>
+            <GButton v-if="dm" :aria-label="`Travel to ${r.to}`" @click="travel(r.route.id)">Travel</GButton>
           </li>
         </ul>
       </section>
       <section v-if="world.legs.length > 0" class="g-card" aria-label="Journey this session" data-testid="legs">
         <h2>Journey this session</h2>
         <ol class="g-list">
-          <li v-for="(l, i) in world.legs" :key="i">{{ l.from }} → {{ l.to }} · {{ l.distanceMi }} mi at a {{ l.pace }} pace · {{ duration(l.minutes, l.days) }}</li>
+          <li v-for="(l, i) in world.legs" :key="i">{{ l.from }} → {{ l.to }} · {{ l.distanceMi }} mi {{ how(l) }} · {{ duration(l.minutes, l.days) }}</li>
         </ol>
         <p data-testid="journey">In all: {{ journey(world.legs) }}</p>
       </section>

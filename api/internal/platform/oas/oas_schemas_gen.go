@@ -8873,6 +8873,45 @@ func (s *DeleteTrackNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteTrackNoContent) deleteTrackRes() {}
 
+// DeleteVehicleNoContent is response for DeleteVehicle operation.
+type DeleteVehicleNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteVehicleNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteVehicleNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteVehicleNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteVehicleNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteVehicleNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteVehicleNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteVehicleNoContent) deleteVehicleRes() {}
+
 // An NPC that only its Revisions remember.
 // Ref: #/components/schemas/DeletedNpc
 type DeletedNpc struct {
@@ -22075,8 +22114,12 @@ type LiveCommand struct {
 	RouteId     OptID          `json:"routeId"`
 	DistanceMi  OptInt32       `json:"distanceMi"`
 	Pace        OptTravelPace  `json:"pace"`
-	ZoneId      OptID          `json:"zoneId"`
-	RadiusHexes OptInt32       `json:"radiusHexes"`
+	// With travel, the vehicle the party travels aboard: the leg takes what the vehicle's speed makes of
+	// it as it stands now, round the clock for a ship or an airship, and pace is left out. A vehicle that
+	// cannot move is refused.
+	VehicleId   OptString `json:"vehicleId"`
+	ZoneId      OptID     `json:"zoneId"`
+	RadiusHexes OptInt32  `json:"radiusHexes"`
 	// With add_zone, the zone springs only when the DM springs it.
 	DmOnly  OptBool            `json:"dmOnly"`
 	Rest    OptLiveCommandRest `json:"rest"`
@@ -22490,6 +22533,11 @@ func (s *LiveCommand) GetDistanceMi() OptInt32 {
 // GetPace returns the value of Pace.
 func (s *LiveCommand) GetPace() OptTravelPace {
 	return s.Pace
+}
+
+// GetVehicleId returns the value of VehicleId.
+func (s *LiveCommand) GetVehicleId() OptString {
+	return s.VehicleId
 }
 
 // GetZoneId returns the value of ZoneId.
@@ -23040,6 +23088,11 @@ func (s *LiveCommand) SetDistanceMi(val OptInt32) {
 // SetPace sets the value of Pace.
 func (s *LiveCommand) SetPace(val OptTravelPace) {
 	s.Pace = val
+}
+
+// SetVehicleId sets the value of VehicleId.
+func (s *LiveCommand) SetVehicleId(val OptString) {
+	s.VehicleId = val
 }
 
 // SetZoneId sets the value of ZoneId.
@@ -28785,6 +28838,9 @@ type LiveTravelLeg struct {
 	DistanceMi int32      `json:"distanceMi"`
 	Minutes    int32      `json:"minutes"`
 	Days       int32      `json:"days"`
+	// The vehicle the leg was made aboard, by the name it had then; left out on foot, and pace then says
+	// nothing.
+	Vehicle OptString `json:"vehicle"`
 }
 
 // GetFrom returns the value of From.
@@ -28817,6 +28873,11 @@ func (s *LiveTravelLeg) GetDays() int32 {
 	return s.Days
 }
 
+// GetVehicle returns the value of Vehicle.
+func (s *LiveTravelLeg) GetVehicle() OptString {
+	return s.Vehicle
+}
+
 // SetFrom sets the value of From.
 func (s *LiveTravelLeg) SetFrom(val string) {
 	s.From = val
@@ -28845,6 +28906,11 @@ func (s *LiveTravelLeg) SetMinutes(val int32) {
 // SetDays sets the value of Days.
 func (s *LiveTravelLeg) SetDays(val int32) {
 	s.Days = val
+}
+
+// SetVehicle sets the value of Vehicle.
+func (s *LiveTravelLeg) SetVehicle(val OptString) {
+	s.Vehicle = val
 }
 
 // How long a route takes at one pace, in minutes on the road and the travel days they span.
@@ -39759,6 +39825,8 @@ func (*ProblemStatusCodeWithHeaders) createRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) createSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) createTrackRes()                   {}
+func (*ProblemStatusCodeWithHeaders) createVehicleRes()                 {}
+func (*ProblemStatusCodeWithHeaders) damageVehicleRes()                 {}
 func (*ProblemStatusCodeWithHeaders) decideStandingChangeRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineRetrainRes()                {}
@@ -39778,6 +39846,7 @@ func (*ProblemStatusCodeWithHeaders) deleteRuleHookRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteSettlementRes()              {}
 func (*ProblemStatusCodeWithHeaders) deleteShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) deleteTrackRes()                   {}
+func (*ProblemStatusCodeWithHeaders) deleteVehicleRes()                 {}
 func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
@@ -39895,11 +39964,13 @@ func (*ProblemStatusCodeWithHeaders) listShopsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSourcesRes()                   {}
 func (*ProblemStatusCodeWithHeaders) listSpellsRes()                    {}
 func (*ProblemStatusCodeWithHeaders) listTracksRes()                    {}
+func (*ProblemStatusCodeWithHeaders) listVehiclesRes()                  {}
 func (*ProblemStatusCodeWithHeaders) moveItemRes()                      {}
 func (*ProblemStatusCodeWithHeaders) passInspirationRes()               {}
 func (*ProblemStatusCodeWithHeaders) passTwoStepRes()                   {}
 func (*ProblemStatusCodeWithHeaders) pinLibraryRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
+func (*ProblemStatusCodeWithHeaders) postVehicleCrewRes()               {}
 func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
 func (*ProblemStatusCodeWithHeaders) previewBackgroundRes()             {}
@@ -51107,6 +51178,631 @@ func (s UploadMapReq) Read(p []byte) (n int, err error) {
 }
 
 type Username string
+
+// A vehicle or ship of the Campaign as it stands.
+// Ref: #/components/schemas/Vehicle
+type Vehicle struct {
+	ID          ID          `json:"id"`
+	Name        string      `json:"name"`
+	Kind        VehicleKind `json:"kind"`
+	Hull        int32       `json:"hull"`
+	HullMax     int32       `json:"hullMax"`
+	Threshold   int32       `json:"threshold"`
+	MilesPerDay int32       `json:"milesPerDay"`
+	// The miles it makes in a day as it stands now.
+	Speed int32 `json:"speed"`
+	// Set while any crew station has fewer crew than it takes.
+	ShortHanded bool               `json:"shortHanded"`
+	Components  []VehicleComponent `json:"components"`
+	Stations    []VehicleStation   `json:"stations"`
+}
+
+// GetID returns the value of ID.
+func (s *Vehicle) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *Vehicle) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *Vehicle) GetKind() VehicleKind {
+	return s.Kind
+}
+
+// GetHull returns the value of Hull.
+func (s *Vehicle) GetHull() int32 {
+	return s.Hull
+}
+
+// GetHullMax returns the value of HullMax.
+func (s *Vehicle) GetHullMax() int32 {
+	return s.HullMax
+}
+
+// GetThreshold returns the value of Threshold.
+func (s *Vehicle) GetThreshold() int32 {
+	return s.Threshold
+}
+
+// GetMilesPerDay returns the value of MilesPerDay.
+func (s *Vehicle) GetMilesPerDay() int32 {
+	return s.MilesPerDay
+}
+
+// GetSpeed returns the value of Speed.
+func (s *Vehicle) GetSpeed() int32 {
+	return s.Speed
+}
+
+// GetShortHanded returns the value of ShortHanded.
+func (s *Vehicle) GetShortHanded() bool {
+	return s.ShortHanded
+}
+
+// GetComponents returns the value of Components.
+func (s *Vehicle) GetComponents() []VehicleComponent {
+	return s.Components
+}
+
+// GetStations returns the value of Stations.
+func (s *Vehicle) GetStations() []VehicleStation {
+	return s.Stations
+}
+
+// SetID sets the value of ID.
+func (s *Vehicle) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *Vehicle) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *Vehicle) SetKind(val VehicleKind) {
+	s.Kind = val
+}
+
+// SetHull sets the value of Hull.
+func (s *Vehicle) SetHull(val int32) {
+	s.Hull = val
+}
+
+// SetHullMax sets the value of HullMax.
+func (s *Vehicle) SetHullMax(val int32) {
+	s.HullMax = val
+}
+
+// SetThreshold sets the value of Threshold.
+func (s *Vehicle) SetThreshold(val int32) {
+	s.Threshold = val
+}
+
+// SetMilesPerDay sets the value of MilesPerDay.
+func (s *Vehicle) SetMilesPerDay(val int32) {
+	s.MilesPerDay = val
+}
+
+// SetSpeed sets the value of Speed.
+func (s *Vehicle) SetSpeed(val int32) {
+	s.Speed = val
+}
+
+// SetShortHanded sets the value of ShortHanded.
+func (s *Vehicle) SetShortHanded(val bool) {
+	s.ShortHanded = val
+}
+
+// SetComponents sets the value of Components.
+func (s *Vehicle) SetComponents(val []VehicleComponent) {
+	s.Components = val
+}
+
+// SetStations sets the value of Stations.
+func (s *Vehicle) SetStations(val []VehicleStation) {
+	s.Stations = val
+}
+
+// Damage to a vehicle's hull, or to one component, or the repair of it.
+// Ref: #/components/schemas/VehicleBlow
+type VehicleBlow struct {
+	ComponentId OptID `json:"componentId"`
+	Amount      int32 `json:"amount"`
+	// Set to give hit points back instead of taking them.
+	Repair OptBool `json:"repair"`
+}
+
+// GetComponentId returns the value of ComponentId.
+func (s *VehicleBlow) GetComponentId() OptID {
+	return s.ComponentId
+}
+
+// GetAmount returns the value of Amount.
+func (s *VehicleBlow) GetAmount() int32 {
+	return s.Amount
+}
+
+// GetRepair returns the value of Repair.
+func (s *VehicleBlow) GetRepair() OptBool {
+	return s.Repair
+}
+
+// SetComponentId sets the value of ComponentId.
+func (s *VehicleBlow) SetComponentId(val OptID) {
+	s.ComponentId = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *VehicleBlow) SetAmount(val int32) {
+	s.Amount = val
+}
+
+// SetRepair sets the value of Repair.
+func (s *VehicleBlow) SetRepair(val OptBool) {
+	s.Repair = val
+}
+
+// A component of a vehicle as it stands.
+// Ref: #/components/schemas/VehicleComponent
+type VehicleComponent struct {
+	ID     ID     `json:"id"`
+	Name   string `json:"name"`
+	Hp     int32  `json:"hp"`
+	HpMax  int32  `json:"hpMax"`
+	Drives bool   `json:"drives"`
+}
+
+// GetID returns the value of ID.
+func (s *VehicleComponent) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *VehicleComponent) GetName() string {
+	return s.Name
+}
+
+// GetHp returns the value of Hp.
+func (s *VehicleComponent) GetHp() int32 {
+	return s.Hp
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *VehicleComponent) GetHpMax() int32 {
+	return s.HpMax
+}
+
+// GetDrives returns the value of Drives.
+func (s *VehicleComponent) GetDrives() bool {
+	return s.Drives
+}
+
+// SetID sets the value of ID.
+func (s *VehicleComponent) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *VehicleComponent) SetName(val string) {
+	s.Name = val
+}
+
+// SetHp sets the value of Hp.
+func (s *VehicleComponent) SetHp(val int32) {
+	s.Hp = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *VehicleComponent) SetHpMax(val int32) {
+	s.HpMax = val
+}
+
+// SetDrives sets the value of Drives.
+func (s *VehicleComponent) SetDrives(val bool) {
+	s.Drives = val
+}
+
+// A part of a vehicle with hit points of its own.
+// Ref: #/components/schemas/VehicleComponentInput
+type VehicleComponentInput struct {
+	Name  string `json:"name"`
+	HpMax int32  `json:"hpMax"`
+	// Set for a part that moves the vehicle, such as a sail or a wheel: each one broken takes its share of
+	// the speed.
+	Drives OptBool `json:"drives"`
+}
+
+// GetName returns the value of Name.
+func (s *VehicleComponentInput) GetName() string {
+	return s.Name
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *VehicleComponentInput) GetHpMax() int32 {
+	return s.HpMax
+}
+
+// GetDrives returns the value of Drives.
+func (s *VehicleComponentInput) GetDrives() OptBool {
+	return s.Drives
+}
+
+// SetName sets the value of Name.
+func (s *VehicleComponentInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *VehicleComponentInput) SetHpMax(val int32) {
+	s.HpMax = val
+}
+
+// SetDrives sets the value of Drives.
+func (s *VehicleComponentInput) SetDrives(val OptBool) {
+	s.Drives = val
+}
+
+// How many crew are posted at a station.
+// Ref: #/components/schemas/VehicleCrew
+type VehicleCrew struct {
+	Posted int32 `json:"posted"`
+}
+
+// GetPosted returns the value of Posted.
+func (s *VehicleCrew) GetPosted() int32 {
+	return s.Posted
+}
+
+// SetPosted sets the value of Posted.
+func (s *VehicleCrew) SetPosted(val int32) {
+	s.Posted = val
+}
+
+// VehicleHeaders wraps Vehicle with response headers.
+type VehicleHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Vehicle
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *VehicleHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *VehicleHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *VehicleHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *VehicleHeaders) GetResponse() Vehicle {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *VehicleHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *VehicleHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *VehicleHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *VehicleHeaders) SetResponse(val Vehicle) {
+	s.Response = val
+}
+
+func (*VehicleHeaders) createVehicleRes()   {}
+func (*VehicleHeaders) damageVehicleRes()   {}
+func (*VehicleHeaders) postVehicleCrewRes() {}
+
+// A vehicle or ship as it is built.
+// Ref: #/components/schemas/VehicleInput
+type VehicleInput struct {
+	Name    string      `json:"name"`
+	Kind    VehicleKind `json:"kind"`
+	HullMax int32       `json:"hullMax"`
+	// The damage threshold: a blow under it does nothing to the hull or to a component.
+	Threshold OptInt32 `json:"threshold"`
+	// The miles it covers in a day's travel when whole and fully crewed.
+	MilesPerDay int32                   `json:"milesPerDay"`
+	Components  []VehicleComponentInput `json:"components"`
+	Stations    []VehicleStationInput   `json:"stations"`
+}
+
+// GetName returns the value of Name.
+func (s *VehicleInput) GetName() string {
+	return s.Name
+}
+
+// GetKind returns the value of Kind.
+func (s *VehicleInput) GetKind() VehicleKind {
+	return s.Kind
+}
+
+// GetHullMax returns the value of HullMax.
+func (s *VehicleInput) GetHullMax() int32 {
+	return s.HullMax
+}
+
+// GetThreshold returns the value of Threshold.
+func (s *VehicleInput) GetThreshold() OptInt32 {
+	return s.Threshold
+}
+
+// GetMilesPerDay returns the value of MilesPerDay.
+func (s *VehicleInput) GetMilesPerDay() int32 {
+	return s.MilesPerDay
+}
+
+// GetComponents returns the value of Components.
+func (s *VehicleInput) GetComponents() []VehicleComponentInput {
+	return s.Components
+}
+
+// GetStations returns the value of Stations.
+func (s *VehicleInput) GetStations() []VehicleStationInput {
+	return s.Stations
+}
+
+// SetName sets the value of Name.
+func (s *VehicleInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetKind sets the value of Kind.
+func (s *VehicleInput) SetKind(val VehicleKind) {
+	s.Kind = val
+}
+
+// SetHullMax sets the value of HullMax.
+func (s *VehicleInput) SetHullMax(val int32) {
+	s.HullMax = val
+}
+
+// SetThreshold sets the value of Threshold.
+func (s *VehicleInput) SetThreshold(val OptInt32) {
+	s.Threshold = val
+}
+
+// SetMilesPerDay sets the value of MilesPerDay.
+func (s *VehicleInput) SetMilesPerDay(val int32) {
+	s.MilesPerDay = val
+}
+
+// SetComponents sets the value of Components.
+func (s *VehicleInput) SetComponents(val []VehicleComponentInput) {
+	s.Components = val
+}
+
+// SetStations sets the value of Stations.
+func (s *VehicleInput) SetStations(val []VehicleStationInput) {
+	s.Stations = val
+}
+
+// What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's
+// eight hours.
+// Ref: #/components/schemas/VehicleKind
+type VehicleKind string
+
+const (
+	VehicleKindLand  VehicleKind = "land"
+	VehicleKindWater VehicleKind = "water"
+	VehicleKindAir   VehicleKind = "air"
+)
+
+// AllValues returns all VehicleKind values.
+func (VehicleKind) AllValues() []VehicleKind {
+	return []VehicleKind{
+		VehicleKindLand,
+		VehicleKindWater,
+		VehicleKindAir,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s VehicleKind) MarshalText() ([]byte, error) {
+	switch s {
+	case VehicleKindLand:
+		return []byte(s), nil
+	case VehicleKindWater:
+		return []byte(s), nil
+	case VehicleKindAir:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *VehicleKind) UnmarshalText(data []byte) error {
+	switch VehicleKind(data) {
+	case VehicleKindLand:
+		*s = VehicleKindLand
+		return nil
+	case VehicleKindWater:
+		*s = VehicleKindWater
+		return nil
+	case VehicleKindAir:
+		*s = VehicleKindAir
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A crew station as it stands.
+// Ref: #/components/schemas/VehicleStation
+type VehicleStation struct {
+	ID     ID     `json:"id"`
+	Name   string `json:"name"`
+	Crew   int32  `json:"crew"`
+	Posted int32  `json:"posted"`
+}
+
+// GetID returns the value of ID.
+func (s *VehicleStation) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *VehicleStation) GetName() string {
+	return s.Name
+}
+
+// GetCrew returns the value of Crew.
+func (s *VehicleStation) GetCrew() int32 {
+	return s.Crew
+}
+
+// GetPosted returns the value of Posted.
+func (s *VehicleStation) GetPosted() int32 {
+	return s.Posted
+}
+
+// SetID sets the value of ID.
+func (s *VehicleStation) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *VehicleStation) SetName(val string) {
+	s.Name = val
+}
+
+// SetCrew sets the value of Crew.
+func (s *VehicleStation) SetCrew(val int32) {
+	s.Crew = val
+}
+
+// SetPosted sets the value of Posted.
+func (s *VehicleStation) SetPosted(val int32) {
+	s.Posted = val
+}
+
+// A crew station.
+// Ref: #/components/schemas/VehicleStationInput
+type VehicleStationInput struct {
+	Name string `json:"name"`
+	// How many crew it takes to man it.
+	Crew int32 `json:"crew"`
+}
+
+// GetName returns the value of Name.
+func (s *VehicleStationInput) GetName() string {
+	return s.Name
+}
+
+// GetCrew returns the value of Crew.
+func (s *VehicleStationInput) GetCrew() int32 {
+	return s.Crew
+}
+
+// SetName sets the value of Name.
+func (s *VehicleStationInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetCrew sets the value of Crew.
+func (s *VehicleStationInput) SetCrew(val int32) {
+	s.Crew = val
+}
+
+// The Campaign's vehicles, for the caller.
+// Ref: #/components/schemas/Vehicles
+type Vehicles struct {
+	// Set when the caller is the DM, who builds and changes vehicles.
+	Dm       bool      `json:"dm"`
+	Vehicles []Vehicle `json:"vehicles"`
+}
+
+// GetDm returns the value of Dm.
+func (s *Vehicles) GetDm() bool {
+	return s.Dm
+}
+
+// GetVehicles returns the value of Vehicles.
+func (s *Vehicles) GetVehicles() []Vehicle {
+	return s.Vehicles
+}
+
+// SetDm sets the value of Dm.
+func (s *Vehicles) SetDm(val bool) {
+	s.Dm = val
+}
+
+// SetVehicles sets the value of Vehicles.
+func (s *Vehicles) SetVehicles(val []Vehicle) {
+	s.Vehicles = val
+}
+
+// VehiclesHeaders wraps Vehicles with response headers.
+type VehiclesHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Vehicles
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *VehiclesHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *VehiclesHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *VehiclesHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *VehiclesHeaders) GetResponse() Vehicles {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *VehiclesHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *VehiclesHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *VehiclesHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *VehiclesHeaders) SetResponse(val Vehicles) {
+	s.Response = val
+}
+
+func (*VehiclesHeaders) listVehiclesRes() {}
 
 // Something that keeps a creature or object from being seen for what it is.
 // Ref: #/components/schemas/VisibilityQuality

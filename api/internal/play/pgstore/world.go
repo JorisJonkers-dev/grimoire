@@ -55,7 +55,7 @@ func (s *Store) LoadWorld(ctx context.Context, campaign uuid.UUID, sid domain.Se
 	for _, l := range legs {
 		w.Legs = append(w.Legs, domain.TravelLeg{
 			From: l.FromName, To: l.ToName, Pace: l.Pace, DistanceMi: int(l.DistanceMi), Minutes: int(l.Minutes), Days: int(l.Days),
-			FromSecret: l.FromSecret, ToSecret: l.ToSecret,
+			FromSecret: l.FromSecret, ToSecret: l.ToSecret, Vehicle: l.Vehicle.String,
 		})
 	}
 	return w, nil
@@ -113,5 +113,6 @@ func (s *Store) logLeg(ctx context.Context, actionID, sid uuid.UUID, w live.Writ
 	return s.q.InsertTravelLeg(ctx, queries.InsertTravelLegParams{
 		ActionID: actionID, SessionID: sid, MapID: uuid.UUID(w.WorldMap), FromName: l.From, ToName: l.To, Pace: l.Pace,
 		DistanceMi: int32(l.DistanceMi), Minutes: int32(l.Minutes), Days: int32(l.Days), FromSecret: l.FromSecret, ToSecret: l.ToSecret,
+		Vehicle: pgtype.Text{String: l.Vehicle, Valid: l.Vehicle != ""},
 	})
 }

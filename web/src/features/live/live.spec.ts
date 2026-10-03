@@ -1423,6 +1423,62 @@ describe('world map', () => {
     expect(wrapper.get('[data-testid="dm-controls"]').isVisible()).toBe(true)
   })
 
+
+  it('lets the DM take the party aboard a vehicle that can move, and says which legs were made aboard', async () => {
+    const gull = { id: '0190c7a8-0000-7000-8000-0000000000a1', name: 'The Gull', kind: 'water', hull: 300, hullMax: 300, threshold: 15, milesPerDay: 48, speed: 24, shortHanded: true, components: [], stations: [] }
+    const wreck = { ...gull, id: '0190c7a8-0000-7000-8000-0000000000a2', name: 'Wreck', hull: 0, speed: 0 }
+    const aboard = { from: 'Oakford', to: 'Mill', pace: 'normal' as const, distanceMi: 48, minutes: 2880, days: 2, vehicle: 'The Gull' }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/maps`]: () => [localMap, realmMap],
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}/vehicles`]: () => ({ dm: true, vehicles: [gull, wreck] }),
+      [`/api/v1/campaigns/${ID}`]: () => campaign(),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'dm'))
+    await flushPromises()
+    await wrapper.get('[data-testid="scope-world"]').setValue(true)
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], fog: false, visible: [], remembered: [], world: realm({ legs: [...realm().legs, aboard] }) } })
+    await flushPromises()
+    const roads = wrapper.get('[data-testid="roads"]')
+    // A wreck is not offered: it goes nowhere.
+    expect(roads.get('[data-testid="aboard"]').findAll('option').map((o) => o.text())).toEqual(['On foot', 'The Gull (24 miles a day)'])
+    expect(roads.text()).toContain('Mill · 12 mi · 4 h')
+    await roads.get('[data-testid="aboard"]').setValue(gull.id)
+    // Aboard, the pace is the vehicle's: there is none to choose, and no time on foot to show.
+    expect(roads.find('[data-testid="pace"]').exists()).toBe(false)
+    expect(roads.text()).toContain('Mill · 12 mi')
+    expect(roads.text()).not.toContain('4 h')
+    await roads.get('button').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'travel', routeId: ROAD, vehicleId: gull.id })
+    expect(s.sent.at(-1)).not.toHaveProperty('pace')
+    expect(wrapper.get('[data-testid="legs"]').findAll('li').map((li) => li.text()).slice(1)).toEqual([
+      'Oakford → Mill · 30 mi at a slow pace · 2 days (15 h on the road)',
+      'Oakford → Mill · 48 mi aboard The Gull · 2 days (48 h on the road)',
+    ])
+    // Back on foot, the pace is theirs to choose again.
+    await roads.get('[data-testid="aboard"]').setValue('')
+    await roads.get('[data-testid="pace"]').setValue('slow')
+    await roads.get('button').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'travel', routeId: ROAD, pace: 'slow' })
+    expect(s.sent.at(-1)).not.toHaveProperty('vehicleId')
+  })
+
+  it('offers a Player no vehicle to board and asks for none', async () => {
+    const { wrapper, calls } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
+      [`/api/v1/campaigns/${ID}/characters`]: () => [],
+      [`/api/v1/campaigns/${ID}`]: () => campaign('player'),
+    })
+    const s = FakeSocket.last()
+    s.receive(snapshot([goblin], 'party'))
+    await flushPromises()
+    s.receive({ kind: 'view', seq: 2, view: { tokens: [goblin], fog: false, visible: [], remembered: [], world: realm() } })
+    await flushPromises()
+    await wrapper.get('[data-testid="scope-world"]').setValue(true)
+    expect(wrapper.find('[data-testid="roads"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="aboard"]').exists()).toBe(false)
+    expect(calls.some((u) => u.pathname.endsWith('/vehicles'))).toBe(false)
+  })
   it('shows players the world map without the DM tools', async () => {
     const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}`, {
       [`/api/v1/campaigns/${ID}`]: () => campaign('player'),

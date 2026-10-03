@@ -2,7 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listFactionsOptions, listEncounterTablesOptions, listRuleVariantsOptions, listLootTablesOptions, listMapsOptions, listShopsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
+import { endSessionMutation, getCampaignOptions, getSessionLogOptions, listCharactersOptions, listCompanionsOptions, listFactionsOptions, listEncounterTablesOptions, listRuleVariantsOptions, listLootTablesOptions, listMapsOptions, listShopsOptions, listVehiclesOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import { rollRest } from '@/infrastructure/api/sdk.gen'
 import type { AmbientLight, LiveCombatant, LiveCombatantSetup, LiveSuggestion, LiveToken, MapObjectKind, TokenKind } from '@/infrastructure/api/types.gen'
 import { useLiveSession } from '@/realtime/liveSession'
@@ -229,6 +229,8 @@ function setSeveral(on: boolean) {
 const held = computed(() => creatures.value.filter((t) => inHand.value.includes(t.id)))
 const combatantOf = (tokenId: string) => combat.value?.combatants.find((c) => c.tokenId === tokenId)
 const sessionLog = useQuery(computed(() => ({ ...getSessionLogOptions({ path: { campaignId, sessionId }, query: { limit: 15 } }), enabled: isDM.value, retry: false })))
+// The vehicles the DM may take the party aboard on the world map.
+const fleet = useQuery(computed(() => ({ ...listVehiclesOptions({ path: { campaignId } }), enabled: isDM.value, retry: false })))
 // Agent notes: what an agent did to a creature, newest first.
 const notesFor = (tokenId: string) => (sessionLog.data.value ?? []).filter((a) => a.origin === 'mcp' && a.tokenId === tokenId)
 const suggestions = computed(() =>
@@ -525,7 +527,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @pointerleave="shell.pinchEnd"
       >
         <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
-          <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" :game-day="view?.gameDay ?? 0" :game-minute="view?.gameMinute ?? 0" :marching-order="view?.marchingOrder ?? []" @send="(cmd) => live?.send(cmd)" />
+          <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" :game-day="view?.gameDay ?? 0" :game-minute="view?.gameMinute ?? 0" :marching-order="view?.marchingOrder ?? []" :vehicles="fleet.data.value?.vehicles ?? []" @send="(cmd) => live?.send(cmd)" />
           <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
           <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
         </div>

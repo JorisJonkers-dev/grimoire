@@ -232,6 +232,7 @@ type Querier interface {
 	DeleteTokenAttacks(ctx context.Context, tokenID uuid.UUID) error
 	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteTrack(ctx context.Context, arg DeleteTrackParams) (int64, error)
+	DeleteVehicle(ctx context.Context, arg DeleteVehicleParams) (int64, error)
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
 	DiceSet(ctx context.Context, id uuid.UUID) (SocialDiceSet, error)
@@ -437,6 +438,9 @@ type Querier interface {
 	InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error
 	InsertTwoStepChallenge(ctx context.Context, arg InsertTwoStepChallengeParams) error
 	InsertUndo(ctx context.Context, arg InsertUndoParams) error
+	InsertVehicle(ctx context.Context, arg InsertVehicleParams) error
+	InsertVehicleComponent(ctx context.Context, arg InsertVehicleComponentParams) error
+	InsertVehicleStation(ctx context.Context, arg InsertVehicleStationParams) error
 	// Recorded for a Character the Campaign still has; a token whose Character is gone earns nothing.
 	InsertXPAward(ctx context.Context, arg InsertXPAwardParams) error
 	InventoryCharacters(ctx context.Context, campaignID uuid.UUID) ([]InventoryCharactersRow, error)
@@ -552,6 +556,9 @@ type Querier interface {
 	ListTrackValues(ctx context.Context, campaignID uuid.UUID) ([]CampaignTrackValue, error)
 	ListTracks(ctx context.Context, campaignID uuid.UUID) ([]CampaignTrack, error)
 	ListUnusedInvites(ctx context.Context) ([]ListUnusedInvitesRow, error)
+	ListVehicleComponents(ctx context.Context, campaignID uuid.UUID) ([]ListVehicleComponentsRow, error)
+	ListVehicleStations(ctx context.Context, campaignID uuid.UUID) ([]ListVehicleStationsRow, error)
+	ListVehicles(ctx context.Context, campaignID uuid.UUID) ([]ListVehiclesRow, error)
 	LockCampaign(ctx context.Context, id uuid.UUID) error
 	// Holds the Campaign's downtime for one change at a time: whoever comes second reads what the first left.
 	LockCampaignDowntime(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
@@ -778,6 +785,9 @@ type Querier interface {
 	SetTokenSeat(ctx context.Context, arg SetTokenSeatParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
+	SetVehicleComponentHP(ctx context.Context, arg SetVehicleComponentHPParams) error
+	SetVehicleHull(ctx context.Context, arg SetVehicleHullParams) error
+	SetVehicleStationPosted(ctx context.Context, arg SetVehicleStationPostedParams) error
 	SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error
 	SharedSubmission(ctx context.Context, id uuid.UUID) (LibrarySharedSubmission, error)
 	SharedSubmissions(ctx context.Context, submitterSubject pgtype.Text) ([]LibrarySharedSubmission, error)

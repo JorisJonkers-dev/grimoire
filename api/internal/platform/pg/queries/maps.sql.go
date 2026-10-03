@@ -279,8 +279,8 @@ func (q *Queries) InsertNode(ctx context.Context, arg InsertNodeParams) error {
 }
 
 const insertTravelLeg = `-- name: InsertTravelLeg :exec
-INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days, from_secret, to_secret)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO play.travel_legs (action_id, session_id, map_id, from_name, to_name, pace, distance_mi, minutes, days, from_secret, to_secret, vehicle)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 `
 
 type InsertTravelLegParams struct {
@@ -295,6 +295,7 @@ type InsertTravelLegParams struct {
 	Days       int32
 	FromSecret bool
 	ToSecret   bool
+	Vehicle    pgtype.Text
 }
 
 func (q *Queries) InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams) error {
@@ -310,6 +311,7 @@ func (q *Queries) InsertTravelLeg(ctx context.Context, arg InsertTravelLegParams
 		arg.Days,
 		arg.FromSecret,
 		arg.ToSecret,
+		arg.Vehicle,
 	)
 	return err
 }
@@ -590,7 +592,7 @@ func (q *Queries) RemoveWall(ctx context.Context, arg RemoveWallParams) error {
 }
 
 const sessionTravelLegs = `-- name: SessionTravelLegs :many
-SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days, l.from_secret, l.to_secret
+SELECT l.from_name, l.to_name, l.pace, l.distance_mi, l.minutes, l.days, l.from_secret, l.to_secret, l.vehicle
 FROM play.travel_legs l JOIN play.actions a ON a.id = l.action_id
 WHERE l.session_id = $1 AND l.map_id = $2 ORDER BY a.seq
 `
@@ -609,6 +611,7 @@ type SessionTravelLegsRow struct {
 	Days       int32
 	FromSecret bool
 	ToSecret   bool
+	Vehicle    pgtype.Text
 }
 
 func (q *Queries) SessionTravelLegs(ctx context.Context, arg SessionTravelLegsParams) ([]SessionTravelLegsRow, error) {
@@ -629,6 +632,7 @@ func (q *Queries) SessionTravelLegs(ctx context.Context, arg SessionTravelLegsPa
 			&i.Days,
 			&i.FromSecret,
 			&i.ToSecret,
+			&i.Vehicle,
 		); err != nil {
 			return nil, err
 		}

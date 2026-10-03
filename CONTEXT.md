@@ -364,6 +364,10 @@ _Avoid_: Blueprint, formula, schematic
 A creature another creature rides. A controlled Mount takes its rider's initiative, moves at the rider's word and only Dashes, Disengages or Dodges; an independent Mount acts for itself.
 _Avoid_: Steed, ride, vehicle
 
+**Vehicle**:
+A wagon, ship or airship of a Campaign, with a hull, components and crew stations, that the party travels the world map aboard. It goes slower for every broken component that drives it, at half speed with a short crew, and not at all as a wreck.
+_Avoid_: Mount, transport, craft
+
 **Track**:
 A Campaign-specific score such as sanity, stress, honour or renown, with thresholds that trigger Effects or Roll Tables.
 _Avoid_: Meter, counter, stat
