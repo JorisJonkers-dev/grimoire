@@ -8759,6 +8759,62 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/dashboard:
+    get:
+      operationId: getDashboard
+      x-ogen-operation-group: Read
+      summary: Read my Dashboard
+      description: "What the caller sees first: the Sessions under way in the Campaigns they are a Member of, to join in one click, and what needs them before the next Session. That is their Characters that can level up or have downtime days to spend, Proposals to review where they are the DM, their own Proposals sent back for changes, rolls waiting on them and Friend Requests."
+      tags: [Social]
+      responses:
+        "200":
+          description: The Dashboard.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/search:
+    get:
+      operationId: search
+      x-ogen-operation-group: Read
+      summary: Search everything I may open
+      description: "Finds what the caller may open whose name holds the query, with a line that previews each: the compendium, their own Library and the Shared Library, the Campaigns they are a Member of with the Characters in them and, where they are the DM, the NPCs, and their Friends. Nothing of a Campaign they are not in, of another's private Library or of an Account that is not a Friend is ever returned. Up to five of each kind of thing, by name. What is typed is matched as it stands, whatever its case."
+      tags: [Social]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: What to look for, 2 to 80 characters once trimmed.
+          schema: { type: string, minLength: 1, maxLength: 200 }
+      responses:
+        "200":
+          description: The results, grouped.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/notifications:
     get:
       operationId: listNotifications
@@ -14568,6 +14624,62 @@ components:
           type: array
           maxItems: 20
           items: { $ref: "#/components/schemas/RecipeIngredient" }
+    DashboardLiveSession:
+      type: object
+      description: A Session under way in a Campaign the caller is a Member of.
+      additionalProperties: false
+      required: [campaignId, campaign, sessionId, number, dm]
+      properties:
+        campaignId: { $ref: "#/components/schemas/Id" }
+        campaign: { $ref: "#/components/schemas/CampaignName" }
+        sessionId: { $ref: "#/components/schemas/Id" }
+        number: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        dm: { type: boolean, description: "Set when the caller is the Campaign's DM." }
+    DashboardNeed:
+      type: object
+      description: One thing that needs the caller before the next Session, and where to deal with it.
+      additionalProperties: false
+      required: [kind, title, path]
+      properties:
+        kind: { type: string, enum: [level_up, proposals, revise_proposal, rolls, downtime, friend_requests] }
+        campaign: { type: string, maxLength: 80, description: "The Campaign it belongs to, by name; left out for what belongs to none." }
+        title: { type: string, maxLength: 200 }
+        path: { type: string, maxLength: 300, pattern: "^/", description: "Where in the app to deal with it." }
+    Dashboard:
+      type: object
+      description: What the caller sees first.
+      additionalProperties: false
+      required: [live, needs]
+      properties:
+        live:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/DashboardLiveSession" }
+        needs:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/DashboardNeed" }
+    SearchHit:
+      type: object
+      description: One search result the caller may open.
+      additionalProperties: false
+      required: [group, kind, title, preview, path]
+      properties:
+        group: { type: string, enum: [compendium, library, campaigns, people] }
+        kind: { type: string, maxLength: 40, description: "What kind of thing it is: spell, monster, item, magic-item, campaign, character, npc, friend, or the kind of a Library entry." }
+        title: { type: string, maxLength: 200 }
+        preview: { type: string, maxLength: 300, description: "A line that says what it is." }
+        path: { type: string, maxLength: 300, pattern: "^/", description: "Where in the app it opens." }
+    SearchResults:
+      type: object
+      description: What a search found, in the order to show it.
+      additionalProperties: false
+      required: [hits]
+      properties:
+        hits:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SearchHit" }
     VehicleKind:
       type: string
       description: What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.

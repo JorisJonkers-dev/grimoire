@@ -8171,6 +8171,264 @@ func (s *CreationMethod) UnmarshalText(data []byte) error {
 	}
 }
 
+// What the caller sees first.
+// Ref: #/components/schemas/Dashboard
+type Dashboard struct {
+	Live  []DashboardLiveSession `json:"live"`
+	Needs []DashboardNeed        `json:"needs"`
+}
+
+// GetLive returns the value of Live.
+func (s *Dashboard) GetLive() []DashboardLiveSession {
+	return s.Live
+}
+
+// GetNeeds returns the value of Needs.
+func (s *Dashboard) GetNeeds() []DashboardNeed {
+	return s.Needs
+}
+
+// SetLive sets the value of Live.
+func (s *Dashboard) SetLive(val []DashboardLiveSession) {
+	s.Live = val
+}
+
+// SetNeeds sets the value of Needs.
+func (s *Dashboard) SetNeeds(val []DashboardNeed) {
+	s.Needs = val
+}
+
+// DashboardHeaders wraps Dashboard with response headers.
+type DashboardHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           Dashboard
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DashboardHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DashboardHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DashboardHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *DashboardHeaders) GetResponse() Dashboard {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DashboardHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DashboardHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DashboardHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *DashboardHeaders) SetResponse(val Dashboard) {
+	s.Response = val
+}
+
+func (*DashboardHeaders) getDashboardRes() {}
+
+// A Session under way in a Campaign the caller is a Member of.
+// Ref: #/components/schemas/DashboardLiveSession
+type DashboardLiveSession struct {
+	CampaignId ID           `json:"campaignId"`
+	Campaign   CampaignName `json:"campaign"`
+	SessionId  ID           `json:"sessionId"`
+	Number     int32        `json:"number"`
+	// Set when the caller is the Campaign's DM.
+	Dm bool `json:"dm"`
+}
+
+// GetCampaignId returns the value of CampaignId.
+func (s *DashboardLiveSession) GetCampaignId() ID {
+	return s.CampaignId
+}
+
+// GetCampaign returns the value of Campaign.
+func (s *DashboardLiveSession) GetCampaign() CampaignName {
+	return s.Campaign
+}
+
+// GetSessionId returns the value of SessionId.
+func (s *DashboardLiveSession) GetSessionId() ID {
+	return s.SessionId
+}
+
+// GetNumber returns the value of Number.
+func (s *DashboardLiveSession) GetNumber() int32 {
+	return s.Number
+}
+
+// GetDm returns the value of Dm.
+func (s *DashboardLiveSession) GetDm() bool {
+	return s.Dm
+}
+
+// SetCampaignId sets the value of CampaignId.
+func (s *DashboardLiveSession) SetCampaignId(val ID) {
+	s.CampaignId = val
+}
+
+// SetCampaign sets the value of Campaign.
+func (s *DashboardLiveSession) SetCampaign(val CampaignName) {
+	s.Campaign = val
+}
+
+// SetSessionId sets the value of SessionId.
+func (s *DashboardLiveSession) SetSessionId(val ID) {
+	s.SessionId = val
+}
+
+// SetNumber sets the value of Number.
+func (s *DashboardLiveSession) SetNumber(val int32) {
+	s.Number = val
+}
+
+// SetDm sets the value of Dm.
+func (s *DashboardLiveSession) SetDm(val bool) {
+	s.Dm = val
+}
+
+// One thing that needs the caller before the next Session, and where to deal with it.
+// Ref: #/components/schemas/DashboardNeed
+type DashboardNeed struct {
+	Kind DashboardNeedKind `json:"kind"`
+	// The Campaign it belongs to, by name; left out for what belongs to none.
+	Campaign OptString `json:"campaign"`
+	Title    string    `json:"title"`
+	// Where in the app to deal with it.
+	Path string `json:"path"`
+}
+
+// GetKind returns the value of Kind.
+func (s *DashboardNeed) GetKind() DashboardNeedKind {
+	return s.Kind
+}
+
+// GetCampaign returns the value of Campaign.
+func (s *DashboardNeed) GetCampaign() OptString {
+	return s.Campaign
+}
+
+// GetTitle returns the value of Title.
+func (s *DashboardNeed) GetTitle() string {
+	return s.Title
+}
+
+// GetPath returns the value of Path.
+func (s *DashboardNeed) GetPath() string {
+	return s.Path
+}
+
+// SetKind sets the value of Kind.
+func (s *DashboardNeed) SetKind(val DashboardNeedKind) {
+	s.Kind = val
+}
+
+// SetCampaign sets the value of Campaign.
+func (s *DashboardNeed) SetCampaign(val OptString) {
+	s.Campaign = val
+}
+
+// SetTitle sets the value of Title.
+func (s *DashboardNeed) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetPath sets the value of Path.
+func (s *DashboardNeed) SetPath(val string) {
+	s.Path = val
+}
+
+type DashboardNeedKind string
+
+const (
+	DashboardNeedKindLevelUp        DashboardNeedKind = "level_up"
+	DashboardNeedKindProposals      DashboardNeedKind = "proposals"
+	DashboardNeedKindReviseProposal DashboardNeedKind = "revise_proposal"
+	DashboardNeedKindRolls          DashboardNeedKind = "rolls"
+	DashboardNeedKindDowntime       DashboardNeedKind = "downtime"
+	DashboardNeedKindFriendRequests DashboardNeedKind = "friend_requests"
+)
+
+// AllValues returns all DashboardNeedKind values.
+func (DashboardNeedKind) AllValues() []DashboardNeedKind {
+	return []DashboardNeedKind{
+		DashboardNeedKindLevelUp,
+		DashboardNeedKindProposals,
+		DashboardNeedKindReviseProposal,
+		DashboardNeedKindRolls,
+		DashboardNeedKindDowntime,
+		DashboardNeedKindFriendRequests,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DashboardNeedKind) MarshalText() ([]byte, error) {
+	switch s {
+	case DashboardNeedKindLevelUp:
+		return []byte(s), nil
+	case DashboardNeedKindProposals:
+		return []byte(s), nil
+	case DashboardNeedKindReviseProposal:
+		return []byte(s), nil
+	case DashboardNeedKindRolls:
+		return []byte(s), nil
+	case DashboardNeedKindDowntime:
+		return []byte(s), nil
+	case DashboardNeedKindFriendRequests:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DashboardNeedKind) UnmarshalText(data []byte) error {
+	switch DashboardNeedKind(data) {
+	case DashboardNeedKindLevelUp:
+		*s = DashboardNeedKindLevelUp
+		return nil
+	case DashboardNeedKindProposals:
+		*s = DashboardNeedKindProposals
+		return nil
+	case DashboardNeedKindReviseProposal:
+		*s = DashboardNeedKindReviseProposal
+		return nil
+	case DashboardNeedKindRolls:
+		*s = DashboardNeedKindRolls
+		return nil
+	case DashboardNeedKindDowntime:
+		*s = DashboardNeedKindDowntime
+		return nil
+	case DashboardNeedKindFriendRequests:
+		*s = DashboardNeedKindFriendRequests
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // DecideStandingChangeNoContent is response for DecideStandingChange operation.
 type DecideStandingChangeNoContent struct {
 	RateLimitLimit     OptInt32
@@ -39869,6 +40127,7 @@ func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getConditionBuildRes()             {}
+func (*ProblemStatusCodeWithHeaders) getDashboardRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getDiceSetImageRes()               {}
 func (*ProblemStatusCodeWithHeaders) getDowntimeRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
@@ -40024,6 +40283,7 @@ func (*ProblemStatusCodeWithHeaders) saveRollTableBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
 func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}
+func (*ProblemStatusCodeWithHeaders) searchRes()                        {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
@@ -44221,6 +44481,191 @@ func (s *Ruleset) UnmarshalText(data []byte) error {
 }
 
 type ScaleMiles float64
+
+// One search result the caller may open.
+// Ref: #/components/schemas/SearchHit
+type SearchHit struct {
+	Group SearchHitGroup `json:"group"`
+	// What kind of thing it is: spell, monster, item, magic-item, campaign, character, npc, friend, or the
+	// kind of a Library entry.
+	Kind  string `json:"kind"`
+	Title string `json:"title"`
+	// A line that says what it is.
+	Preview string `json:"preview"`
+	// Where in the app it opens.
+	Path string `json:"path"`
+}
+
+// GetGroup returns the value of Group.
+func (s *SearchHit) GetGroup() SearchHitGroup {
+	return s.Group
+}
+
+// GetKind returns the value of Kind.
+func (s *SearchHit) GetKind() string {
+	return s.Kind
+}
+
+// GetTitle returns the value of Title.
+func (s *SearchHit) GetTitle() string {
+	return s.Title
+}
+
+// GetPreview returns the value of Preview.
+func (s *SearchHit) GetPreview() string {
+	return s.Preview
+}
+
+// GetPath returns the value of Path.
+func (s *SearchHit) GetPath() string {
+	return s.Path
+}
+
+// SetGroup sets the value of Group.
+func (s *SearchHit) SetGroup(val SearchHitGroup) {
+	s.Group = val
+}
+
+// SetKind sets the value of Kind.
+func (s *SearchHit) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetTitle sets the value of Title.
+func (s *SearchHit) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetPreview sets the value of Preview.
+func (s *SearchHit) SetPreview(val string) {
+	s.Preview = val
+}
+
+// SetPath sets the value of Path.
+func (s *SearchHit) SetPath(val string) {
+	s.Path = val
+}
+
+type SearchHitGroup string
+
+const (
+	SearchHitGroupCompendium SearchHitGroup = "compendium"
+	SearchHitGroupLibrary    SearchHitGroup = "library"
+	SearchHitGroupCampaigns  SearchHitGroup = "campaigns"
+	SearchHitGroupPeople     SearchHitGroup = "people"
+)
+
+// AllValues returns all SearchHitGroup values.
+func (SearchHitGroup) AllValues() []SearchHitGroup {
+	return []SearchHitGroup{
+		SearchHitGroupCompendium,
+		SearchHitGroupLibrary,
+		SearchHitGroupCampaigns,
+		SearchHitGroupPeople,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SearchHitGroup) MarshalText() ([]byte, error) {
+	switch s {
+	case SearchHitGroupCompendium:
+		return []byte(s), nil
+	case SearchHitGroupLibrary:
+		return []byte(s), nil
+	case SearchHitGroupCampaigns:
+		return []byte(s), nil
+	case SearchHitGroupPeople:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SearchHitGroup) UnmarshalText(data []byte) error {
+	switch SearchHitGroup(data) {
+	case SearchHitGroupCompendium:
+		*s = SearchHitGroupCompendium
+		return nil
+	case SearchHitGroupLibrary:
+		*s = SearchHitGroupLibrary
+		return nil
+	case SearchHitGroupCampaigns:
+		*s = SearchHitGroupCampaigns
+		return nil
+	case SearchHitGroupPeople:
+		*s = SearchHitGroupPeople
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// What a search found, in the order to show it.
+// Ref: #/components/schemas/SearchResults
+type SearchResults struct {
+	Hits []SearchHit `json:"hits"`
+}
+
+// GetHits returns the value of Hits.
+func (s *SearchResults) GetHits() []SearchHit {
+	return s.Hits
+}
+
+// SetHits sets the value of Hits.
+func (s *SearchResults) SetHits(val []SearchHit) {
+	s.Hits = val
+}
+
+// SearchResultsHeaders wraps SearchResults with response headers.
+type SearchResultsHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SearchResults
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SearchResultsHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SearchResultsHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SearchResultsHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SearchResultsHeaders) GetResponse() SearchResults {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SearchResultsHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SearchResultsHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SearchResultsHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SearchResultsHeaders) SetResponse(val SearchResults) {
+	s.Response = val
+}
+
+func (*SearchResultsHeaders) searchRes() {}
 
 // SeeReleaseNoteNoContent is response for SeeReleaseNote operation.
 type SeeReleaseNoteNoContent struct {

@@ -337,6 +337,10 @@ type GetConditionBuildRes interface {
 	getConditionBuildRes()
 }
 
+type GetDashboardRes interface {
+	getDashboardRes()
+}
+
 type GetDiceSetImageRes interface {
 	getDiceSetImageRes()
 }
@@ -955,6 +959,10 @@ type SaveSpellBuildRes interface {
 
 type SaveSubclassBuildRes interface {
 	saveSubclassBuildRes()
+}
+
+type SearchRes interface {
+	searchRes()
 }
 
 type SeeReleaseNoteRes interface {

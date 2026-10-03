@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DashboardPanel from '@/features/home/DashboardPanel.vue'
 import WhoAmI from '@/features/identity/WhoAmI.vue'
 import ReleaseNoteCard from '@/features/releases/ReleaseNoteCard.vue'
 import StatusPanel from '@/features/status/StatusPanel.vue'
@@ -9,6 +10,7 @@ import StatusPanel from '@/features/status/StatusPanel.vue'
     <h1>Grimoire</h1>
     <p class="flavour">The table is set. Nothing stirs yet.</p>
     <ReleaseNoteCard />
+    <DashboardPanel />
     <WhoAmI />
     <StatusPanel />
   </main>

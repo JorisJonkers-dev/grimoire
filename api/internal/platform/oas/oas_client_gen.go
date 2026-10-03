@@ -1320,6 +1320,15 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/builders/conditions/{entryId}
 	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
+	// GetDashboard invokes getDashboard operation.
+	//
+	// What the caller sees first: the Sessions under way in the Campaigns they are a Member of, to join in
+	// one click, and what needs them before the next Session. That is their Characters that can level up
+	// or have downtime days to spend, Proposals to review where they are the DM, their own Proposals sent
+	// back for changes, rolls waiting on them and Friend Requests.
+	//
+	// GET /api/v1/dashboard
+	GetDashboard(ctx context.Context) (GetDashboardRes, error)
 	// GetDiceSetImage invokes getDiceSetImage operation.
 	//
 	// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
@@ -1960,6 +1969,17 @@ type ReadInvoker interface {
 	//
 	// POST /api/v1/builders/subclasses/preview
 	PreviewSubclass(ctx context.Context, request *SubclassPreviewInput) (PreviewSubclassRes, error)
+	// Search invokes search operation.
+	//
+	// Finds what the caller may open whose name holds the query, with a line that previews each: the
+	// compendium, their own Library and the Shared Library, the Campaigns they are a Member of with the
+	// Characters in them and, where they are the DM, the NPCs, and their Friends. Nothing of a Campaign
+	// they are not in, of another's private Library or of an Account that is not a Friend is ever
+	// returned. Up to five of each kind of thing, by name. What is typed is matched as it stands, whatever
+	// its case.
+	//
+	// GET /api/v1/search
+	Search(ctx context.Context, params SearchParams) (SearchRes, error)
 }
 
 // Client implements OAS client.
@@ -13704,6 +13724,122 @@ func (c *Client) sendGetConditionBuild(ctx context.Context, params GetConditionB
 
 	stage = "DecodeResponse"
 	result, err := decodeGetConditionBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetDashboard invokes getDashboard operation.
+//
+// What the caller sees first: the Sessions under way in the Campaigns they are a Member of, to join in
+// one click, and what needs them before the next Session. That is their Characters that can level up
+// or have downtime days to spend, Proposals to review where they are the DM, their own Proposals sent
+// back for changes, rolls waiting on them and Friend Requests.
+//
+// GET /api/v1/dashboard
+func (c *Client) GetDashboard(ctx context.Context) (GetDashboardRes, error) {
+	res, err := c.sendGetDashboard(ctx)
+	return res, err
+}
+
+func (c *Client) sendGetDashboard(ctx context.Context) (res GetDashboardRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getDashboard"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/dashboard"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetDashboardOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/dashboard"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetDashboardOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetDashboardResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -35210,6 +35346,142 @@ func (c *Client) sendSaveSubclassBuild(ctx context.Context, request *SubclassDes
 
 	stage = "DecodeResponse"
 	result, err := decodeSaveSubclassBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// Search invokes search operation.
+//
+// Finds what the caller may open whose name holds the query, with a line that previews each: the
+// compendium, their own Library and the Shared Library, the Campaigns they are a Member of with the
+// Characters in them and, where they are the DM, the NPCs, and their Friends. Nothing of a Campaign
+// they are not in, of another's private Library or of an Account that is not a Friend is ever
+// returned. Up to five of each kind of thing, by name. What is typed is matched as it stands, whatever
+// its case.
+//
+// GET /api/v1/search
+func (c *Client) Search(ctx context.Context, params SearchParams) (SearchRes, error) {
+	res, err := c.sendSearch(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendSearch(ctx context.Context, params SearchParams) (res SearchRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("search"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/search"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SearchOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/search"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "q" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "q",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			return e.EncodeValue(conv.StringToString(params.Q))
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, SearchOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeSearchResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

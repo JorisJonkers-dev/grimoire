@@ -42,6 +42,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var ts httpapi.TrackService
 	var ds httpapi.DowntimeService
 	var vs httpapi.VehicleService
+	var hs httpapi.HomeService
 	var rs httpapi.RollService
 	var ss httpapi.SessionService
 	var hub httpapi.LiveHub
@@ -108,10 +109,12 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 			ds = v
 		case httpapi.VehicleService:
 			vs = v
+		case httpapi.HomeService:
+			hs = v
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Companions: comps, Factions: facs, Journal: js, RuleVariants: rvs, RuleHooks: rhs, Tracks: ts, Downtime: ds, Vehicles: vs, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, FeatBuilds: featb, BackgroundBuilds: backgroundb, ConditionBuilds: conditionb, RollTableBuilds: tableb, MonsterBuilds: monsterb, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Companions: comps, Factions: facs, Journal: js, RuleVariants: rvs, RuleHooks: rhs, Tracks: ts, Downtime: ds, Vehicles: vs, Home: hs, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, FeatBuilds: featb, BackgroundBuilds: backgroundb, ConditionBuilds: conditionb, RollTableBuilds: tableb, MonsterBuilds: monsterb, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {

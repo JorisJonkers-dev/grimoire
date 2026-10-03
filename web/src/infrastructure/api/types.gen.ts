@@ -4827,6 +4827,71 @@ export type Recipe = {
 };
 
 /**
+ * A Session under way in a Campaign the caller is a Member of.
+ */
+export type DashboardLiveSession = {
+    campaignId: Id;
+    campaign: CampaignName;
+    sessionId: Id;
+    number: number;
+    /**
+     * Set when the caller is the Campaign's DM.
+     */
+    dm: boolean;
+};
+
+/**
+ * One thing that needs the caller before the next Session, and where to deal with it.
+ */
+export type DashboardNeed = {
+    kind: 'level_up' | 'proposals' | 'revise_proposal' | 'rolls' | 'downtime' | 'friend_requests';
+    /**
+     * The Campaign it belongs to, by name; left out for what belongs to none.
+     */
+    campaign?: string;
+    title: string;
+    /**
+     * Where in the app to deal with it.
+     */
+    path: string;
+};
+
+/**
+ * What the caller sees first.
+ */
+export type Dashboard = {
+    live: Array<DashboardLiveSession>;
+    needs: Array<DashboardNeed>;
+};
+
+/**
+ * One search result the caller may open.
+ */
+export type SearchHit = {
+    group: 'compendium' | 'library' | 'campaigns' | 'people';
+    /**
+     * What kind of thing it is: spell, monster, item, magic-item, campaign, character, npc, friend, or the kind of a Library entry.
+     */
+    kind: string;
+    title: string;
+    /**
+     * A line that says what it is.
+     */
+    preview: string;
+    /**
+     * Where in the app it opens.
+     */
+    path: string;
+};
+
+/**
+ * What a search found, in the order to show it.
+ */
+export type SearchResults = {
+    hits: Array<SearchHit>;
+};
+
+/**
  * What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.
  */
 export type VehicleKind = 'land' | 'water' | 'air';
@@ -15478,6 +15543,69 @@ export type ListMentionablesResponses = {
 };
 
 export type ListMentionablesResponse = ListMentionablesResponses[keyof ListMentionablesResponses];
+
+export type GetDashboardData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/dashboard';
+};
+
+export type GetDashboardErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetDashboardError = GetDashboardErrors[keyof GetDashboardErrors];
+
+export type GetDashboardResponses = {
+    /**
+     * The Dashboard.
+     */
+    200: Dashboard;
+};
+
+export type GetDashboardResponse = GetDashboardResponses[keyof GetDashboardResponses];
+
+export type SearchData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * What to look for, 2 to 80 characters once trimmed.
+         */
+        q: string;
+    };
+    url: '/api/v1/search';
+};
+
+export type SearchErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SearchError = SearchErrors[keyof SearchErrors];
+
+export type SearchResponses = {
+    /**
+     * The results, grouped.
+     */
+    200: SearchResults;
+};
+
+export type SearchResponse = SearchResponses[keyof SearchResponses];
 
 export type ListNotificationsData = {
     body?: never;

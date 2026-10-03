@@ -34,6 +34,7 @@ type Handler struct {
 	Tracks       TrackService
 	Downtime     DowntimeService
 	Vehicles     VehicleService
+	Home         HomeService
 	Rolls        RollService
 	Inventory    InventoryService
 	Sessions     SessionService

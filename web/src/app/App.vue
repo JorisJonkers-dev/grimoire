@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NotificationBell from '@/features/notifications/NotificationBell.vue'
 import { getAccountOptions, signOutMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
@@ -15,6 +15,13 @@ const pageKey = computed(() => String(route.params.sid ?? ''))
 const account = useQuery({ ...getAccountOptions(), retry: false })
 const client = useQueryClient()
 const signOut = useMutation(signOutMutation())
+// The header's search box hands what was typed to the search page.
+const sought = ref('')
+function seek() {
+  const q = sought.value.trim()
+  sought.value = ''
+  void router.push({ name: 'search', query: q ? { q } : {} })
+}
 function leave() {
   signOut.mutate({}, { onSuccess: () => { client.clear(); void router.push({ name: 'sign-in' }) } })
 }
@@ -35,6 +42,9 @@ function leave() {
         <RouterLink :to="{ name: 'spells' }">Compendium</RouterLink>
         <RouterLink v-if="account.data.value?.adminPowers" :to="{ name: 'admin' }" data-testid="admin-link">Admin</RouterLink>
       </nav>
+      <form v-if="route.name !== 'search'" role="search" aria-label="Search everything" class="seek" data-testid="header-search" @submit.prevent="seek">
+        <input v-model="sought" type="search" maxlength="80" placeholder="Search" aria-label="Search everything" data-testid="header-search-input" />
+      </form>
       <div class="me" data-testid="account-menu">
         <template v-if="account.data.value">
           <NotificationBell />
@@ -70,6 +80,21 @@ function leave() {
   min-height: 56px;
   border-bottom: 1px solid var(--color-line);
   background: var(--color-surface);
+}
+.seek {
+  margin-left: auto;
+}
+.seek input {
+  width: 150px;
+  max-width: 34vw;
+  padding: 6px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.seek + .me {
+  margin-left: 0;
 }
 .me {
   margin-left: auto;

@@ -3561,6 +3561,65 @@ export const zRecipe = z.object({
 });
 
 /**
+ * A Session under way in a Campaign the caller is a Member of.
+ */
+export const zDashboardLiveSession = z.object({
+    campaignId: zId,
+    campaign: zCampaignName,
+    sessionId: zId,
+    number: z.int().gte(1).lte(100000),
+    dm: z.boolean()
+});
+
+/**
+ * One thing that needs the caller before the next Session, and where to deal with it.
+ */
+export const zDashboardNeed = z.object({
+    kind: z.enum([
+        'level_up',
+        'proposals',
+        'revise_proposal',
+        'rolls',
+        'downtime',
+        'friend_requests'
+    ]),
+    campaign: z.string().max(80).optional(),
+    title: z.string().max(200),
+    path: z.string().max(300).regex(/^\//)
+});
+
+/**
+ * What the caller sees first.
+ */
+export const zDashboard = z.object({
+    live: z.array(zDashboardLiveSession).max(20),
+    needs: z.array(zDashboardNeed).max(200)
+});
+
+/**
+ * One search result the caller may open.
+ */
+export const zSearchHit = z.object({
+    group: z.enum([
+        'compendium',
+        'library',
+        'campaigns',
+        'people'
+    ]),
+    kind: z.string().max(40),
+    title: z.string().max(200),
+    preview: z.string().max(300),
+    path: z.string().max(300).regex(/^\//)
+});
+
+/**
+ * What a search found, in the order to show it.
+ */
+export const zSearchResults = z.object({
+    hits: z.array(zSearchHit).max(100)
+});
+
+/**
  * What a vehicle travels over. A ship or an airship travels round the clock; a land vehicle a day's eight hours.
  */
 export const zVehicleKind = z.enum([
@@ -8485,6 +8544,20 @@ export const zListMentionablesQuery = z.object({
  * What may be mentioned.
  */
 export const zListMentionablesResponse = zMentionableList;
+
+/**
+ * The Dashboard.
+ */
+export const zGetDashboardResponse = zDashboard;
+
+export const zSearchQuery = z.object({
+    q: z.string().min(1).max(200)
+});
+
+/**
+ * The results, grouped.
+ */
+export const zSearchResponse = zSearchResults;
 
 /**
  * The Notifications.
