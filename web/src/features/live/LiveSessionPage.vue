@@ -490,7 +490,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         @pointerleave="shell.pinchEnd"
       >
         <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
-          <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" @send="(cmd) => live?.send(cmd)" />
+          <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" :local-maps="localMaps" :measure="state?.measure ?? null" :game-day="view?.gameDay ?? 0" :game-minute="view?.gameMinute ?? 0" :marching-order="view?.marchingOrder ?? []" @send="(cmd) => live?.send(cmd)" />
           <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :captions="suggestions" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
           <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
         </div>

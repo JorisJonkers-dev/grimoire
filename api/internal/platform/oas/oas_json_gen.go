@@ -34630,6 +34630,28 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.CharacterIds != nil {
+			e.FieldStart("characterIds")
+			e.ArrStart()
+			for _, elem := range s.CharacterIds {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
+		if s.GameDay.Set {
+			e.FieldStart("gameDay")
+			s.GameDay.Encode(e)
+		}
+	}
+	{
+		if s.GameMinute.Set {
+			e.FieldStart("gameMinute")
+			s.GameMinute.Encode(e)
+		}
+	}
+	{
 		if s.CompanionId.Set {
 			e.FieldStart("companionId")
 			s.CompanionId.Encode(e)
@@ -34653,7 +34675,7 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [104]string{
+var jsonFieldsNameOfLiveCommand = [107]string{
 	0:   "nonce",
 	1:   "kind",
 	2:   "caption",
@@ -34755,9 +34777,12 @@ var jsonFieldsNameOfLiveCommand = [104]string{
 	98:  "seq",
 	99:  "name",
 	100: "checkpointId",
-	101: "companionId",
-	102: "tokenIds",
-	103: "sessionId",
+	101: "characterIds",
+	102: "gameDay",
+	103: "gameMinute",
+	104: "companionId",
+	105: "tokenIds",
+	106: "sessionId",
 }
 
 // Decode decodes LiveCommand from json.
@@ -34765,7 +34790,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveCommand to nil")
 	}
-	var requiredBitSet [13]uint8
+	var requiredBitSet [14]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -35843,6 +35868,43 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"checkpointId\"")
 			}
+		case "characterIds":
+			if err := func() error {
+				s.CharacterIds = make([]ID, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem ID
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.CharacterIds = append(s.CharacterIds, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"characterIds\"")
+			}
+		case "gameDay":
+			if err := func() error {
+				s.GameDay.Reset()
+				if err := s.GameDay.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gameDay\"")
+			}
+		case "gameMinute":
+			if err := func() error {
+				s.GameMinute.Reset()
+				if err := s.GameMinute.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gameMinute\"")
+			}
 		case "companionId":
 			if err := func() error {
 				s.CompanionId.Reset()
@@ -35889,9 +35951,10 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [13]uint8{
+	for i, mask := range [14]uint8{
 		0b11000011,
 		0b00000001,
+		0b00000000,
 		0b00000000,
 		0b00000000,
 		0b00000000,
@@ -36304,6 +36367,10 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindMeasureRoute
 	case LiveCommandKindFindMap:
 		*s = LiveCommandKindFindMap
+	case LiveCommandKindSetClock:
+		*s = LiveCommandKindSetClock
+	case LiveCommandKindSetMarchingOrder:
+		*s = LiveCommandKindSetMarchingOrder
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -39806,6 +39873,134 @@ func (s *LiveMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveMap) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveMarcher) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveMarcher) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("characterId")
+		s.CharacterId.Encode(e)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
+		if s.Place.Set {
+			e.FieldStart("place")
+			s.Place.Encode(e)
+		}
+	}
+}
+
+var jsonFieldsNameOfLiveMarcher = [3]string{
+	0: "characterId",
+	1: "name",
+	2: "place",
+}
+
+// Decode decodes LiveMarcher from json.
+func (s *LiveMarcher) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveMarcher to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "characterId":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.CharacterId.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"characterId\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
+		case "place":
+			if err := func() error {
+				s.Place.Reset()
+				if err := s.Place.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"place\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveMarcher")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000011,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveMarcher) {
+					name = jsonFieldsNameOfLiveMarcher[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveMarcher) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveMarcher) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -46267,6 +46462,22 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.GameMinute.Set {
+			e.FieldStart("gameMinute")
+			s.GameMinute.Encode(e)
+		}
+	}
+	{
+		if s.MarchingOrder != nil {
+			e.FieldStart("marchingOrder")
+			e.ArrStart()
+			for _, elem := range s.MarchingOrder {
+				elem.Encode(e)
+			}
+			e.ArrEnd()
+		}
+	}
+	{
 		if s.Checkpoints != nil {
 			e.FieldStart("checkpoints")
 			e.ArrStart()
@@ -46320,7 +46531,7 @@ func (s *LiveView) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveView = [33]string{
+var jsonFieldsNameOfLiveView = [35]string{
 	0:  "tokens",
 	1:  "map",
 	2:  "fog",
@@ -46348,12 +46559,14 @@ var jsonFieldsNameOfLiveView = [33]string{
 	24: "shop",
 	25: "rest",
 	26: "gameDay",
-	27: "checkpoints",
-	28: "noUndo",
-	29: "groups",
-	30: "walls",
-	31: "lights",
-	32: "ambient",
+	27: "gameMinute",
+	28: "marchingOrder",
+	29: "checkpoints",
+	30: "noUndo",
+	31: "groups",
+	32: "walls",
+	33: "lights",
+	34: "ambient",
 }
 
 // Decode decodes LiveView from json.
@@ -46744,6 +46957,33 @@ func (s *LiveView) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"gameDay\"")
+			}
+		case "gameMinute":
+			if err := func() error {
+				s.GameMinute.Reset()
+				if err := s.GameMinute.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"gameMinute\"")
+			}
+		case "marchingOrder":
+			if err := func() error {
+				s.MarchingOrder = make([]LiveMarcher, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LiveMarcher
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.MarchingOrder = append(s.MarchingOrder, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"marchingOrder\"")
 			}
 		case "checkpoints":
 			if err := func() error {

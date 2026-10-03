@@ -349,6 +349,9 @@ func (s *Store) write(ctx context.Context, sid uuid.UUID, board *domain.MapState
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg, domain.ActionMapFound, domain.ActionMapLost:
 		return s.writeWorld(ctx, sid, w)
+	case domain.ActionClockSet, domain.ActionMarchingOrderSet:
+		// The clock and the Marching Order are kept with what the Campaign shares, for every kind of change.
+		return nil
 	case domain.ActionTacticsSet:
 		return s.q.SetTokenTactics(ctx, queries.SetTokenTacticsParams{SessionID: sid, ID: uuid.UUID(w.Token.ID), Tactics: w.Token.Tactics})
 	case domain.ActionMapSet:

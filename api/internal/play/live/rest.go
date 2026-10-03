@@ -10,6 +10,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/clock"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/inventory"
@@ -250,7 +251,8 @@ func (r *runtime) hitDieRolled(i int, id domain.RollID) {
 }
 
 // finishRest ends a rest with its benefits: a Short Rest gives back what recharges on one; a Long Rest
-// heals everyone, gives back every Hit Die and Resource, unlocks a level-up and moves the day on.
+// heals everyone, gives back every Hit Die and Resource and unlocks a level-up. Either moves the Game
+// Clock on: an hour, or eight.
 func (r *runtime) finishRest(rest *domain.Rest) (Write, string) {
 	if slices.ContainsFunc(rest.Resters, func(x domain.Rester) bool { return x.RollID != nil }) {
 		return Write{}, "Wait for the Hit Dice still rolling."
@@ -261,12 +263,11 @@ func (r *runtime) finishRest(rest *domain.Rest) (Write, string) {
 		return Write{}, "The rest could not be finished."
 	}
 	w := Write{Kind: domain.ActionRestTaken, Rest: rest.Kind, RestOver: true}
-	event := features.ShortRest
+	event, took := features.ShortRest, clock.ShortRest
 	if rest.Kind == RestLong {
-		event = features.LongRest
-		day := r.st.day + 1
-		w.Day = &day
+		event, took = features.LongRest, clock.LongRest
 	}
+	r.pass(&w, r.st.gameTime().Add(took))
 	for _, x := range rest.Resters {
 		t := r.st.tokens[x.TokenID]
 		res := domain.RestResult{CharacterID: x.CharacterID, HPCurrent: t.Stats.HP, HitDiceSpent: x.Level - x.HitDiceLeft, Used: map[string]int{}}
@@ -291,8 +292,8 @@ func (r *runtime) finishRest(rest *domain.Rest) (Write, string) {
 	return w, ""
 }
 
-// recharge rolls what a rest gives back to the charged magic items a Character carries; a Long Rest
-// passes a dawn.
+// recharge rolls what a rest gives back to the charged magic items a Character carries. What comes back
+// at dawn waits for the Game Clock to pass one.
 func (r *runtime) recharge(character uuid.UUID, kind string) []domain.Recharge {
 	when := inventory.ShortRest
 	if kind == RestLong {

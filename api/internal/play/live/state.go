@@ -45,6 +45,10 @@ type state struct {
 	// shop is the Shop open in the Session; day the Campaign's in-game day.
 	shop *domain.OpenShop
 	day  int
+	// minute is the time of day on the Game Clock, in minutes after midnight.
+	minute int
+	// march is the Marching Order: the Characters that have a place in it, from the front.
+	march []uuid.UUID
 	// observed is the ranged damage each creature has seen each other creature deal.
 	observed map[domain.TokenID]map[domain.TokenID]int
 	now      func() time.Time
@@ -85,7 +89,7 @@ func (s *state) clone() *state {
 	}
 	next.checks = slices.Clone(s.checks)
 	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
-	next.inventory, next.day = cloneInventory(s.inventory), s.day
+	next.inventory, next.day, next.minute, next.march = cloneInventory(s.inventory), s.day, s.minute, slices.Clone(s.march)
 	if s.sneak != nil {
 		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
 	}
@@ -197,7 +201,8 @@ func (s *state) project(a Audience) View {
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)
 	v.Table, v.World, v.Perception, v.Checks, v.Inventory = s.tableView(), s.worldView(a), s.perceptionViews(), s.checkViews(a), s.inventoryViews(a)
-	v.Shop, v.Rest, v.GameDay, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.sneakView(a, seen), s.explorationView()
+	v.Shop, v.Rest, v.GameDay, v.GameMinute, v.Sneak, v.Exploration = s.shopView(), s.restView(a), s.day, s.minute, s.sneakView(a, seen), s.explorationView()
+	v.MarchingOrder = s.marchView()
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds, v.Conditions = s.zoneViews(), s.surfaceKindViews(), s.conditionViews()
 		v.Checkpoints, v.NoUndo, v.Groups = s.checkpointViews(), s.noUndo, s.groupViews()

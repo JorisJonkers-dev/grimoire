@@ -166,7 +166,7 @@ func UnknownName(category string) string {
 	return "Unknown " + kind
 }
 
-// Rest is the rest a recharge happens on; a long rest passes a dawn.
+// Rest is the rest a recharge happens on.
 type Rest string
 
 // Rests.
@@ -192,9 +192,17 @@ type Charges struct {
 }
 
 // Regain is the charges an item holds after a rest: what it had plus the rolled dice and bonus, never
-// past its maximum, when the rest fits its schedule.
+// past its maximum, when the rest fits its schedule. An item that recharges at dawn waits for dawn.
 func (c Charges) Regain(rest Rest, current, rolled int) int {
-	if rest == ShortRest && c.On != ShortRestRecharge {
+	if c.On == Dawn || (rest == ShortRest && c.On != ShortRestRecharge) {
+		return current
+	}
+	return min(c.Max, current+rolled+c.Bonus)
+}
+
+// AtDawn is the charges an item holds once a dawn has passed: more only when dawn is its schedule.
+func (c Charges) AtDawn(current, rolled int) int {
+	if c.On != Dawn {
 		return current
 	}
 	return min(c.Max, current+rolled+c.Bonus)

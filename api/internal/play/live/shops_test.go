@@ -150,6 +150,8 @@ func TestShoppingBuysSellsHagglesAndRestocks(t *testing.T) {
 		t.Fatalf("the open shop and a haggle rolled while down survive a restart = %+v", s)
 	}
 	for day := 1; day <= 3; day++ {
+		// Each night's Long Rest begins at ten in the evening and ends the next morning.
+		tb.dmSays(live.Command{Kind: live.CmdSetClock, GameDay: day - 1, GameMinute: 22 * 60})
 		d, _ = tb.dmSays(live.Command{Kind: live.CmdRest, Rest: live.RestLong})
 		if d.View.GameDay != day {
 			t.Fatalf("day after rest = %d", d.View.GameDay)
@@ -169,8 +171,8 @@ func TestShoppingBuysSellsHagglesAndRestocks(t *testing.T) {
 	if err := w.pool.QueryRow(ctx, "SELECT count(*) FROM campaign.revisions WHERE entity_type = 'shop' AND action = 'update'").Scan(&revisions); err != nil || revisions != 6 {
 		t.Fatalf("stock revisions = %d %v", revisions, err)
 	}
-	if day, _ := pgstore.New(w.pool).GameDay(ctx, w.session.CampaignID); day != 3 {
-		t.Fatalf("the game day is kept = %d", day)
+	if now, _ := pgstore.New(w.pool).GameClock(ctx, w.session.CampaignID); now.Day != 3 || now.Minute != 6*60 {
+		t.Fatalf("the Game Clock is kept = %+v", now)
 	}
 }
 

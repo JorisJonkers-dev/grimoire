@@ -155,7 +155,8 @@ func TestALongRestCanBeInterruptedAndCostsRations(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	w, tb, ids := restingParty(t)
-	if _, err := w.pool.Exec(ctx, "UPDATE campaign.campaigns SET rest_supplies = true WHERE id = $1", w.session.CampaignID); err != nil {
+	// The night's rest begins at ten in the evening, so that it passes a dawn.
+	if _, err := w.pool.Exec(ctx, "UPDATE campaign.campaigns SET rest_supplies = true, game_minute = 1320 WHERE id = $1", w.session.CampaignID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := w.pool.Exec(ctx, "UPDATE campaign.characters SET hit_dice_spent = 2 WHERE id = $1", ids["Aria"]); err != nil {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/imaging"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/clock"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/hex"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/travel"
 )
@@ -46,8 +47,7 @@ func (r *runtime) planWorld(cmd Command) (Write, string) {
 	case CmdTravel:
 		leg, reason := planTravel(w, cmd)
 		if reason == "" {
-			day := r.st.day + leg.Leg.Days
-			leg.Day = &day
+			r.pass(&leg, r.st.gameTime().Add(clock.Journey(leg.Leg.Minutes, leg.Leg.Days)))
 		}
 		return leg, reason
 	}

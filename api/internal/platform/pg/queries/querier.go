@@ -146,6 +146,7 @@ type Querier interface {
 	ClearLootEntries(ctx context.Context, tableID uuid.UUID) error
 	ClearManuals(ctx context.Context, sessionID uuid.UUID) error
 	ClearMapObjectLinks(ctx context.Context, objectID uuid.UUID) error
+	ClearMarchingOrder(ctx context.Context, campaignID uuid.UUID) error
 	ClearMonsterChildren(ctx context.Context, monsterID int64) error
 	ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error
 	ClearPoolMembers(ctx context.Context, poolID uuid.UUID) error
@@ -349,6 +350,8 @@ type Querier interface {
 	InsertLootTableRevision(ctx context.Context, arg InsertLootTableRevisionParams) error
 	InsertManual(ctx context.Context, arg InsertManualParams) error
 	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
+	// Only a Character of the Campaign takes a place in its Marching Order.
+	InsertMarcher(ctx context.Context, arg InsertMarcherParams) error
 	InsertMention(ctx context.Context, arg InsertMentionParams) error
 	InsertMessage(ctx context.Context, arg InsertMessageParams) error
 	InsertNPC(ctx context.Context, arg InsertNPCParams) (uuid.UUID, error)
@@ -517,6 +520,7 @@ type Querier interface {
 	MapParty(ctx context.Context, mapID uuid.UUID) ([]uuid.UUID, error)
 	MapReveals(ctx context.Context, mapID uuid.UUID) ([]MapRevealsRow, error)
 	MapWalls(ctx context.Context, mapID uuid.UUID) ([]MapWallsRow, error)
+	MarchingOrder(ctx context.Context, campaignID uuid.UUID) ([]uuid.UUID, error)
 	MarkConversationRead(ctx context.Context, arg MarkConversationReadParams) error
 	MarkDigest(ctx context.Context, arg MarkDigestParams) error
 	// The live groups in which a member plays a party token, the Session the party split from first.
@@ -673,7 +677,6 @@ type Querier interface {
 	// The review follows from the row as it is now, so a picture uploaded meanwhile is never missed.
 	SetDiceSetSharing(ctx context.Context, arg SetDiceSetSharingParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
-	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
 	SetInstanceAttuned(ctx context.Context, arg SetInstanceAttunedParams) error
 	SetInstanceCharges(ctx context.Context, arg SetInstanceChargesParams) error

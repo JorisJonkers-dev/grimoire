@@ -16,6 +16,7 @@ import (
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	preppg "github.com/JorisJonkers-dev/grimoire/api/internal/prep/pgstore"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/clock"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/apperr"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -31,10 +32,49 @@ func (s *Store) ItemPrices(ctx context.Context, campaign uuid.UUID, slugs []stri
 	return preppg.LoadItemPrices(ctx, s.q, campaign, slugs)
 }
 
-// GameDay reads the Campaign's in-game day.
-func (s *Store) GameDay(ctx context.Context, campaign uuid.UUID) (int, error) {
-	d, err := s.q.GameDay(ctx, campaign)
-	return int(d), err
+// MarchingOrder reads the Characters placed in the Campaign's Marching Order, from the front.
+func (s *Store) MarchingOrder(ctx context.Context, campaign uuid.UUID) ([]uuid.UUID, error) {
+	return s.q.MarchingOrder(ctx, campaign)
+}
+
+// saveMarch replaces the Campaign's Marching Order.
+func (s *Store) saveMarch(ctx context.Context, campaign uuid.UUID, order []uuid.UUID) error {
+	if err := s.q.ClearMarchingOrder(ctx, campaign); err != nil {
+		return err
+	}
+	for i, id := range order {
+		if err := s.q.InsertMarcher(ctx, queries.InsertMarcherParams{CampaignID: campaign, Position: int32(i), CharacterID: id}); err != nil { //nolint:gosec // as many places as Characters
+			return err
+		}
+	}
+	return nil
+}
+
+// saveShared writes what a change does to what the whole Campaign shares: the Game Clock, the charges
+// the dawns it passed gave back, and the Marching Order.
+//
+//nolint:gosec // days and minutes are bounded by the rules
+func (s *Store) saveShared(ctx context.Context, campaign uuid.UUID, w live.Write) error {
+	if w.Day != nil {
+		if err := s.q.SetCampaignClock(ctx, queries.SetCampaignClockParams{ID: campaign, GameDay: int32(*w.Day), GameMinute: int32(w.Minute)}); err != nil {
+			return err
+		}
+	}
+	for _, rc := range w.Dawned {
+		if err := s.SetCharges(ctx, rc.Instance, rc.Charges); err != nil {
+			return err
+		}
+	}
+	if w.Kind == domain.ActionMarchingOrderSet {
+		return s.saveMarch(ctx, campaign, w.March)
+	}
+	return nil
+}
+
+// GameClock reads the Campaign's Game Clock.
+func (s *Store) GameClock(ctx context.Context, campaign uuid.UUID) (clock.Time, error) {
+	c, err := s.q.CampaignClock(ctx, campaign)
+	return clock.Time{Day: int(c.GameDay), Minute: int(c.GameMinute)}, err
 }
 
 // stockReader reads what generating Stock needs through one set of queries.
@@ -137,10 +177,8 @@ func (s *Store) LoadOpenShop(ctx context.Context, campaign uuid.UUID, sid domain
 //nolint:gosec // days, counts, prices and adjustments are bounded by the rules
 func (s *Store) saveShop(ctx context.Context, sess domain.Session, w live.Write, actor domain.Member, c caller.Caller, now time.Time) error {
 	sid := uuid.UUID(sess.ID)
-	if w.Day != nil {
-		if err := s.q.SetGameDay(ctx, queries.SetGameDayParams{ID: sess.CampaignID, GameDay: int32(*w.Day)}); err != nil {
-			return err
-		}
+	if err := s.saveShared(ctx, sess.CampaignID, w); err != nil {
+		return err
 	}
 	switch w.Kind {
 	case domain.ActionShopOpened:

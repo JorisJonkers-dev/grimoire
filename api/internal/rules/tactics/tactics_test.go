@@ -124,3 +124,27 @@ func TestNoSuggestion(t *testing.T) {
 		}
 	}
 }
+
+// Between enemies equally near, whoever marches further to the front is met first; an enemy with no
+// place in the Marching Order comes after those who have one. Distance still comes before all of it.
+func TestTheFrontOfTheMarchingOrderIsMetFirst(t *testing.T) {
+	t.Parallel()
+	sword := []tactics.Attack{{ReachFt: 5}}
+	for _, c := range []struct {
+		name    string
+		targets []tactics.Target
+		want    string
+	}{
+		{"the front of two equally near", []tactics.Target{{ID: "a", DistanceFt: 5, March: 2}, {ID: "b", DistanceFt: 5, March: 1}}, "b"},
+		{"the same two the other way round", []tactics.Target{{ID: "b", DistanceFt: 5, March: 1}, {ID: "a", DistanceFt: 5, March: 2}}, "b"},
+		{"a marcher before one with no place", []tactics.Target{{ID: "a", DistanceFt: 5}, {ID: "b", DistanceFt: 5, March: 3}}, "b"},
+		{"the nearer one, though it marches behind", []tactics.Target{{ID: "a", DistanceFt: 10, March: 1}, {ID: "b", DistanceFt: 5, March: 4}}, "b"},
+		{"by name when neither has a place", []tactics.Target{{ID: "b", DistanceFt: 5}, {ID: "a", DistanceFt: 5}}, "a"},
+		{"by name when both share a place", []tactics.Target{{ID: "b", DistanceFt: 5, March: 2}, {ID: "a", DistanceFt: 5, March: 2}}, "a"},
+	} {
+		got, ok := tactics.Suggest(tactics.Simple, sword, c.targets)
+		if !ok || got.Target.ID != c.want {
+			t.Errorf("%s: %q, %v; want %q", c.name, got.Target.ID, ok, c.want)
+		}
+	}
+}
