@@ -77,6 +77,8 @@ test('a player arranges their Character\'s action bars, and finds them the same 
   const quick = phone.getByTestId('stage').getByTestId('quick-bar')
   await expect(quick).toBeVisible()
   await expect(quick.getByRole('button')).toHaveCount(3)
+  await phone.getByTestId('page-actions').click()
+  await expect(small).toBeVisible()
   await small.getByTestId('action-dodge').dispatchEvent('pointerdown')
   await expect(small.getByTestId('edit-bars')).toHaveAttribute('aria-pressed', 'true')
   await small.getByTestId('add-to-bar-1').click()

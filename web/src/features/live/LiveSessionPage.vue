@@ -12,8 +12,10 @@ import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
 import { BANNER_MS } from './motion'
+import { PAGES, usePhoneShell } from './phoneShell'
 import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
+import SpellList from './SpellList.vue'
 import WalkPlan from './WalkPlan.vue'
 import AreaPreviewCard from './AreaPreviewCard.vue'
 import AttackPreview from './AttackPreview.vue'
@@ -112,6 +114,13 @@ const combat = computed(() => view.value?.combat ?? null)
 const roster = computed(() => view.value?.roster ?? [])
 const card = ref('')
 const cardEntry = computed(() => roster.value.find((e) => e.tokenId === card.value))
+// On a phone a player swipes between pages over the map and pinches to zoom it.
+const shell = usePhoneShell()
+const chips = [
+  { key: 'action', field: 'action', label: 'Action' },
+  { key: 'bonus', field: 'bonusAction', label: 'Bonus' },
+  { key: 'reaction', field: 'reaction', label: 'Reaction' },
+] as const
 // "It's your turn" rises over a player's screen as their turn starts, then fades.
 const banner = ref('')
 let bannerTimer: ReturnType<typeof setTimeout> | undefined
@@ -398,13 +407,29 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
 </script>
 
 <template>
-  <main class="live">
+  <main :class="['live', { 'live--player': !isDM }]">
     <p v-if="campaign.isError.value" role="alert" class="g-alert" data-testid="live-missing">This session is not available to you.</p>
     <template v-else-if="state">
-      <div class="stage" data-testid="stage">
-        <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
-        <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
-        <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a pinch is the touch shortcut; the zoom buttons do the same -->
+      <div
+        class="stage"
+        data-testid="stage"
+        @pointerdown="shell.pinchStart"
+        @pointermove="shell.pinchMove"
+        @pointerup="shell.pinchEnd"
+        @pointercancel="shell.pinchEnd"
+        @pointerleave="shell.pinchEnd"
+      >
+        <div class="zoomer" data-testid="zoomer" :style="{ width: `${String(Math.round(shell.zoom.value * 100))}%` }">
+          <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
+          <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
+          <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
+        </div>
+        <div class="zoom" role="group" aria-label="Map zoom">
+          <button type="button" aria-label="Zoom out" :disabled="!shell.canZoomOut.value" data-testid="zoom-out" @click="shell.zoomOut">−</button>
+          <button type="button" aria-label="Reset zoom" data-testid="zoom-reset" @click="shell.zoomReset">{{ Math.round(shell.zoom.value * 100) }}%</button>
+          <button type="button" aria-label="Zoom in" :disabled="!shell.canZoomIn.value" data-testid="zoom-in" @click="shell.zoomIn">+</button>
+        </div>
         <div id="quick-bar-slot" class="quick-slot" />
         <WalkPlan v-if="state.path" :path="state.path" :mover="tokenById(state.path.tokenId)?.label ?? 'it'" @confirm="confirmWalk" @cancel="live?.dropPath()" />
         <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
@@ -431,9 +456,15 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </label>
         </fieldset>
       </div>
-      <div class="dock" data-testid="dock">
-        <p v-if="!isDM && turns.length > 0" role="status" class="banner" data-testid="your-turn">Your turn</p>
-        <div v-if="view && !combat && (isDM || view.exploration)" class="row" data-testid="exploration">
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a swipe is the touch shortcut; the page buttons do the same -->
+      <div
+        :class="['dock', isDM ? '' : `dock--page-${shell.page.value}`]"
+        data-testid="dock"
+        @pointerdown="isDM || shell.swipeStart($event)"
+        @pointerup="isDM || shell.swipeEnd($event)"
+      >
+        <p v-if="!isDM && turns.length > 0" data-page="always" role="status" class="banner" data-testid="your-turn">Your turn</p>
+        <div v-if="view && !combat && (isDM || view.exploration)" data-page="actions" class="row" data-testid="exploration">
           <GButton v-if="isDM" :data-testid="view.exploration ? 'stop-turns' : 'start-turns'" @click="live?.send({ kind: 'explore', on: !view.exploration })">
             {{ view.exploration ? 'End exploration turns' : 'Explore in turns' }}
           </GButton>
@@ -450,7 +481,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             </GButton>
           </template>
         </div>
-        <div v-if="view && !combat" class="row" data-testid="sneak">
+        <div v-if="view && !combat" data-page="actions" class="row" data-testid="sneak">
           <GButton :data-testid="view.sneak ? 'stop-sneaking' : 'start-sneaking'" @click="live?.send({ kind: 'sneak', on: !view.sneak })">
             {{ view.sneak ? 'Stop sneaking' : 'Sneak' }}
           </GButton>
@@ -458,13 +489,14 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             {{ view.sneak.waiting ? 'Sneaking: roll Stealth.' : 'Sneaking. Tinted hexes are watched.' }}
           </span>
         </div>
-        <section v-if="toRoll.length > 0" class="rolls" aria-label="Initiative to roll">
+        <section v-if="toRoll.length > 0" data-page="always" class="rolls" aria-label="Initiative to roll">
           <GButton v-if="isDM && toRoll.length > 1" data-testid="roll-all" @click="rollAll()">Roll every initiative for me</GButton>
           <LiveRoll v-for="c in toRoll" :key="c.rollId" :campaign-id="campaignId" :roll-id="c.rollId" />
         </section>
         <TurnPanel
           v-for="c in turns"
           :key="c.id"
+          data-page="actions"
           :combatant="c"
           @spend="(r) => live?.send({ kind: 'spend', combatantId: c.id, resource: r })"
           @end="live?.send({ kind: 'end_turn', combatantId: c.id })"
@@ -472,6 +504,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <Hotbar
           v-for="b in bars"
           :key="b.token.id"
+          data-page="actions"
           :token="b.token"
           :armed="aiming?.tokenId === b.token.id ? aiming.attackNo : null"
           :blocked="blockedFor(b.c)"
@@ -501,18 +534,30 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
           @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
         />
-        <p v-if="summoning" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
-        <p v-if="teleporting" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
-        <p v-if="jumping" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
-        <p v-if="throwing" role="status" class="walk" data-testid="throwing">
+        <template v-if="!isDM">
+          <SpellList
+            v-for="b in bars"
+            :key="`spells-${b.token.id}`"
+            data-page="spells"
+            :token="b.token"
+            :blocked="blockedFor(b.c)"
+            @area="(e, n) => (aimArea(b.token, e, n), (shell.page.value = 'map'))"
+            @summon="(e) => ((summoning = { tokenId: b.token.id, effect: e }), (shell.page.value = 'map'))"
+          />
+        </template>
+        <p v-if="summoning" data-page="always" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
+        <p v-if="teleporting" data-page="always" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
+        <p v-if="jumping" data-page="always" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
+        <p v-if="throwing" data-page="always" role="status" class="walk" data-testid="throwing">
           {{ throwing.targetId || throwing.objectId ? 'Tap where it lands.' : 'Tap the creature or object to throw.' }}
         </p>
-        <p v-if="grabbing" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
-        <p v-if="areaAiming && !areaPreview" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
-        <AreaPreviewCard v-if="areaPreview" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
-        <LiveRoll v-for="id in areaRolls" :key="id" :campaign-id="campaignId" :roll-id="id" />
+        <p v-if="grabbing" data-page="always" role="status" class="walk" data-testid="grabbing">Tap the creature to grapple or shove.</p>
+        <p v-if="areaAiming && !areaPreview" data-page="always" role="status" class="walk" data-testid="area-aiming">Tap where the spell goes.</p>
+        <AreaPreviewCard v-if="areaPreview" data-page="always" :preview="areaPreview" :names="names" @confirm="castArea()" @cancel="areaAiming = null" />
+        <LiveRoll v-for="id in areaRolls" :key="id" data-page="always" :campaign-id="campaignId" :roll-id="id" />
         <AttackPreview
           v-if="preview"
+          data-page="always"
           :preview="preview"
           :target="tokenById(preview.targetId)?.label ?? 'the target'"
           @confirm="confirmAttack(preview)"
@@ -520,20 +565,21 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         />
         <ReactionPrompt
           v-if="prompt"
+          data-page="always"
           :prompt="prompt"
           :reactor="tokenById(prompt.reactorId)?.label ?? 'A creature'"
           :answerable="answerable"
           @answer="(use) => live?.send({ kind: 'react', use })"
         />
-        <p v-if="pending" role="status" class="walk" data-testid="pending-attack">
+        <p v-if="pending" data-page="always" role="status" class="walk" data-testid="pending-attack">
           {{ pending.name }}{{ pending.critical ? ' (critical)' : '' }}: waiting for {{ { to_hit: 'the attack roll', reaction: 'a reaction', damage: 'the damage roll' }[pending.stage] }}.
         </p>
-        <LiveRoll v-if="attackRoll" :key="attackRoll" :campaign-id="campaignId" :roll-id="attackRoll" />
-        <LiveRoll v-for="s in mySaves" :key="s.rollId" :campaign-id="campaignId" :roll-id="s.rollId" />
-        <LiveRoll v-for="p in myChecks" :key="p.rollId" :campaign-id="campaignId" :roll-id="p.rollId" />
-        <LiveRoll v-for="id in checkRolls" :key="id" :campaign-id="campaignId" :roll-id="id" />
-        <p v-if="view?.resolving" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
-        <section v-if="view?.manual?.length" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
+        <LiveRoll v-if="attackRoll" :key="attackRoll" data-page="always" :campaign-id="campaignId" :roll-id="attackRoll" />
+        <LiveRoll v-for="s in mySaves" :key="s.rollId" data-page="always" :campaign-id="campaignId" :roll-id="s.rollId" />
+        <LiveRoll v-for="p in myChecks" :key="p.rollId" data-page="always" :campaign-id="campaignId" :roll-id="p.rollId" />
+        <LiveRoll v-for="id in checkRolls" :key="id" data-page="always" :campaign-id="campaignId" :roll-id="id" />
+        <p v-if="view?.resolving" data-page="always" role="status" class="walk" data-testid="resolving">The DM is resolving an effect.</p>
+        <section v-if="view?.manual?.length" data-page="party" class="g-card manual" aria-label="Resolve by hand" data-testid="manual">
           <h2>Resolve by hand</h2>
           <ul class="g-list">
             <li v-for="m in view.manual" :key="m.id" class="row">
@@ -542,7 +588,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             </li>
           </ul>
         </section>
-        <section v-if="isDM" v-show="scope === 'local'" class="g-card controls" data-testid="dm-controls">
+        <section v-if="isDM" v-show="scope === 'local'" data-page="party" class="g-card controls" data-testid="dm-controls">
           <div class="row">
             <label class="g-field grow">
               <span>Map</span>
@@ -679,7 +725,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           </div>
           <StartCombat v-if="choosing && !combat" :tokens="view?.tokens ?? []" @start="startCombat" />
         </section>
-        <section v-if="isDM" class="g-card controls">
+        <section v-if="isDM" data-page="party" class="g-card controls">
           <TableRemote
             :table="view?.table"
             :maps="worldMaps"
@@ -691,6 +737,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         </section>
         <InventoryPanel
           v-if="view?.inventory?.length"
+          data-page="party"
           :containers="view.inventory"
           :dm="isDM"
           :me="campaign.data.value?.me.id ?? ''"
@@ -699,6 +746,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         />
         <ShopPanel
           v-if="isDM || view?.shop"
+          data-page="party"
           :shop="view?.shop"
           :shops="shops.data.value ?? []"
           :containers="view?.inventory ?? []"
@@ -708,15 +756,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :game-day="view?.gameDay ?? 0"
           @send="(cmd) => live?.send(cmd)"
         />
-        <DyingPanel v-if="view" :tokens="view.tokens" :dm="isDM" :helper="walker" @send="(cmd) => live?.send(cmd)" />
+        <DyingPanel v-if="view" data-page="character" :tokens="view.tokens" :dm="isDM" :helper="walker" @send="(cmd) => live?.send(cmd)" />
         <ReactionSettings
           v-if="walker?.attacks"
+          data-page="character"
           :token="walker"
           @set="(kind, mode, condition) => live?.send({ kind: 'set_reaction', tokenId: walker?.id ?? '', reactionKind: kind, reactionMode: mode, condition })"
         />
-        <ObjectsPanel v-if="view?.objects?.length" :objects="view.objects" :dm="isDM" :user="walker?.id" @send="(cmd) => live?.send(cmd)" />
+        <ObjectsPanel v-if="view?.objects?.length" data-page="party" :objects="view.objects" :dm="isDM" :user="walker?.id" @send="(cmd) => live?.send(cmd)" />
         <RestPanel
           v-if="view"
+          data-page="character"
           :rest="view.rest"
           :dm="isDM"
           :me="campaign.data.value?.me.id ?? ''"
@@ -726,16 +776,46 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         />
         <EncounterChecks
           v-if="isDM || (view?.checks?.length ?? 0) > 0"
+          data-page="party"
           :checks="view?.checks ?? []"
           :dm="isDM"
           :tables="encounterTables.data.value ?? []"
           @send="(cmd) => live?.send(cmd)"
         />
-        <ActionLog v-if="isDM" :campaign-id="campaignId" :session-id="sessionId" :view="view" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
-        <ul class="g-list tokens" aria-label="Tokens in view">
+        <ActionLog v-if="isDM" data-page="party" :campaign-id="campaignId" :session-id="sessionId" :view="view" @undo="(seq) => live?.send({ kind: 'undo', seq })" />
+        <ul data-page="party" class="g-list tokens" aria-label="Tokens in view" data-testid="tokens">
           <li v-for="t in view?.tokens ?? []" :key="t.id">{{ describe(t) }} · {{ t.kind }}</li>
         </ul>
       </div>
+      <template v-if="!isDM">
+        <div v-if="turns.length" class="resources" role="group" aria-label="This turn" data-testid="resources">
+          <template v-for="c in turns" :key="c.id">
+            <span
+              v-for="r in chips"
+              :key="r.field"
+              :class="['chip', { 'chip--spent': !c[r.field] }]"
+              role="img"
+              :aria-label="`${r.label}: ${c[r.field] ? 'available' : 'spent'}`"
+              :data-testid="`chip-${r.key}`"
+            >{{ r.label }}</span>
+            <span class="chip chip--move">{{ c.movementFt }} / {{ c.speedFt }} ft</span>
+          </template>
+        </div>
+        <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -- a swipe is the touch shortcut; the buttons turn the pages too -->
+        <nav class="pagebar" aria-label="Live play pages" data-testid="phone-pages" @pointerdown="shell.swipeStart" @pointerup="shell.swipeEnd">
+          <button
+            v-for="p in PAGES"
+            :key="p.key"
+            type="button"
+            :class="['page', { 'page--on': shell.page.value === p.key }]"
+            :aria-current="shell.page.value === p.key ? 'page' : undefined"
+            :data-testid="`page-${p.key}`"
+            @click="shell.page.value = p.key"
+          >
+            {{ p.label }}
+          </button>
+        </nav>
+      </template>
     </template>
     <p v-else>Opening the session…</p>
   </main>
@@ -770,6 +850,124 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   flex-direction: column;
   align-items: center;
   gap: 8px;
+}
+.zoomer {
+  min-width: 50%;
+}
+.zoom {
+  position: sticky;
+  bottom: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 4px;
+  margin: 8px;
+}
+.zoom button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+.zoom button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.pagebar,
+.resources {
+  display: none;
+}
+/* A player's phone: the map fills the screen, the dock is a sheet attached to a bar that runs edge to
+   edge, and the turn's resources float above the bar. */
+@media (max-width: 899px) {
+  .live--player {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+  .live--player .stage {
+    max-height: none;
+    height: calc(100dvh - 250px);
+    touch-action: pan-x pan-y;
+  }
+  .live--player .dock {
+    position: fixed;
+    right: 0;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    left: 0;
+    z-index: 3;
+    max-height: 55dvh;
+    padding: 10px 12px;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+    box-shadow: 0 -8px 24px rgb(0 0 0 / 35%);
+    /* Sideways movement is ours, to turn the page; up and down still scrolls the sheet. */
+    touch-action: pan-y;
+  }
+  .live--player .dock--page-map {
+    background: transparent;
+    box-shadow: none;
+  }
+  .dock--page-map > :not([data-page~='always']),
+  .dock--page-actions > :not([data-page~='actions'], [data-page~='always']),
+  .dock--page-spells > :not([data-page~='spells'], [data-page~='always']),
+  .dock--page-character > :not([data-page~='character'], [data-page~='always']),
+  .dock--page-party > :not([data-page~='party'], [data-page~='always']) {
+    display: none;
+  }
+  .live--player .resources {
+    position: fixed;
+    right: 0;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    left: 0;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--color-surface);
+  }
+  .live--player .pagebar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 4;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--color-line);
+    background: var(--color-surface);
+    touch-action: pan-y;
+  }
+}
+.chip {
+  padding: 2px 8px;
+  border: 1px solid var(--color-success);
+  border-radius: 999px;
+  font-size: 13px;
+}
+.chip--spent {
+  border-color: var(--color-line);
+  color: var(--color-text-2);
+  text-decoration: line-through;
+}
+.chip--move {
+  border-color: var(--color-line);
+}
+.page {
+  min-height: 56px;
+  border: 0;
+  color: var(--color-text-2);
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.page--on {
+  color: var(--color-gold-high);
+  box-shadow: inset 0 3px 0 var(--color-gold-high);
 }
 .turn-banner {
   position: fixed;
