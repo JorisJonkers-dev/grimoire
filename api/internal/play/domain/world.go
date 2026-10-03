@@ -121,3 +121,12 @@ const (
 	ActionEncounterChecked  = "encounter_checked"
 	ActionEncounterResolved = "encounter_resolved"
 )
+
+// Standing is how a Faction of the Campaign regards the party, as a score, and the Characters whose
+// Personal Standing with it is used instead.
+type Standing struct {
+	Faction  uuid.UUID
+	Name     string
+	Score    int
+	Personal map[uuid.UUID]int
+}

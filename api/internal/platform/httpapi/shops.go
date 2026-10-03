@@ -35,6 +35,10 @@ func shopIn(id domain.ShopID, req *oas.ShopInput) domain.Shop {
 		u := uuid.UUID(o)
 		x.OwnerID = &u
 	}
+	if f, ok := req.FactionId.Get(); ok {
+		u := uuid.UUID(f)
+		x.FactionID = &u
+	}
 	if l, ok := req.LootTableId.Get(); ok {
 		t := domain.LootTableID(l)
 		x.LootTable = &t
@@ -50,6 +54,9 @@ func shopOut(x domain.Shop) oas.Shop {
 	}
 	if x.OwnerID != nil {
 		out.OwnerId = oas.NewOptID(oas.ID(*x.OwnerID))
+	}
+	if x.FactionID != nil {
+		out.FactionId = oas.NewOptID(oas.ID(*x.FactionID))
 	}
 	if x.LootTable != nil {
 		out.LootTableId = oas.NewOptID(oas.ID(*x.LootTable))

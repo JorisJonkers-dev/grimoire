@@ -59,6 +59,8 @@ type Entry struct {
 	Label    string
 	PoolID   *PoolID
 	Monsters []EntryMonster
+	// FactionID marks the entry as a Faction's own: it weighs by how that Faction regards the party.
+	FactionID *uuid.UUID
 }
 
 // Table is a Region's chance of an encounter and its weighted entries. A Table without a Region applies everywhere.

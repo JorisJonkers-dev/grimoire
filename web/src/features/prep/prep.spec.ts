@@ -7,6 +7,7 @@ import { formatMonsters, parseMonsters } from './monsters'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
 const POOL = '0190c7a8-0000-7000-8000-000000000031'
+const FACTION = '0190c7a8-0000-7000-8000-0000000000f1'
 const TABLE = '0190c7a8-0000-7000-8000-000000000032'
 const TOWN = '0190c7a8-0000-7000-8000-000000000033'
 const base = `/api/v1/campaigns/${ID}`
@@ -119,6 +120,7 @@ describe('random encounters page', () => {
         return [table, { ...table, id: '0190c7a8-0000-7000-8000-000000000034', name: 'Wilds', regionId: undefined, entries: [{ weight: 1, kind: 'pool', label: '', poolId: '0190c7a8-0000-7000-8000-000000000099', monsters: [] }] }]
       },
       [`${base}/encounter-pools`]: () => [pool],
+      [`${base}/factions`]: () => [{ id: FACTION, name: 'The Lantern Watch', archetype: '', tier: 'neutral', personal: [], changes: [] }],
       [`${base}/locations`]: () => [{ id: TOWN, name: 'Oakford', mapName: 'Realm' }],
       [`${base}/encounter-checks`]: () => checks,
     })
@@ -146,6 +148,8 @@ describe('random encounters page', () => {
     await editor.get('[data-testid="entry-monsters-1"]').setValue('goblin x2')
     await editor.get('[data-testid="entry-label-1"]').setValue('Bandits')
     await editor.get('[data-testid="entry-weight-1"]').setValue(4)
+    expect(editor.get('[data-testid="entry-faction-1"]').findAll('option').map((o) => o.text())).toEqual(['No Faction', 'The Lantern Watch'])
+    await editor.get('[data-testid="entry-faction-1"]').setValue(FACTION)
     await editor.get('[data-testid="add-entry"]').trigger('click')
     await editor.get('[data-testid="entry-kind-2"]').setValue('pool')
     await editor.get('[data-testid="entry-pool-2"]').setValue(POOL)
@@ -158,7 +162,7 @@ describe('random encounters page', () => {
       name: 'Swamp', chancePct: 15, visibility: 'open', regionId: TOWN,
       entries: [
         { weight: 1, kind: 'nothing', label: 'Fog' },
-        { weight: 4, kind: 'encounter', label: 'Bandits', monsters: [{ monsterSlug: 'goblin', count: 2 }] },
+        { weight: 4, kind: 'encounter', label: 'Bandits', monsters: [{ monsterSlug: 'goblin', count: 2 }], factionId: FACTION },
         { weight: 1, kind: 'pool', label: '', poolId: POOL },
       ],
     })
@@ -282,6 +286,7 @@ describe('settlements and shops page', () => {
   const FORGE = '0190c7a8-0000-7000-8000-000000000054'
   const NODE = '0190c7a8-0000-7000-8000-000000000055'
   const NPC = '0190c7a8-0000-7000-8000-000000000056'
+  const WATCH = '0190c7a8-0000-7000-8000-0000000000f1'
   const HOARD = '0190c7a8-0000-7000-8000-000000000057'
   const at = '2026-10-01T20:00:00Z'
   const oak = { id: OAK, name: 'Oakford', size: 'town', wealth: 'modest', locationId: NODE, updatedAt: at }
@@ -296,6 +301,7 @@ describe('settlements and shops page', () => {
   const lists = {
     [`${base}/locations`]: () => [{ id: NODE, name: 'Oakford crossing', mapName: 'Realm' }],
     [`${base}/npcs`]: () => [{ id: NPC, name: 'Tamsin', title: '', description: '', dmNotes: '', disposition: 'friendly', updatedAt: at }],
+    [`${base}/factions`]: () => [{ id: WATCH, name: 'The Lantern Watch', archetype: '', tier: 'neutral', personal: [], changes: [] }],
     [`${base}/loot-tables`]: () => [{ id: HOARD, name: 'Hoard', rolls: 1, entries: [], updatedAt: at }],
   }
 
@@ -393,6 +399,8 @@ describe('settlements and shops page', () => {
     await editor.get('[data-testid="shop-settlement"]').setValue(OAK)
     await editor.get('[data-testid="shop-kind"]').setValue(' smith ')
     await editor.get('[data-testid="shop-owner"]').setValue(NPC)
+    expect(editor.get('[data-testid="shop-faction"]').findAll('option').map((o) => o.text())).toEqual(['No Faction', 'The Lantern Watch'])
+    await editor.get('[data-testid="shop-faction"]').setValue(WATCH)
     await editor.get('[data-testid="shop-markup"]').setValue(25)
     await editor.get('[data-testid="shop-haggle-dc"]').setValue(14)
     await editor.get('[data-testid="shop-haggle-pct"]').setValue(20)
@@ -403,7 +411,7 @@ describe('settlements and shops page', () => {
     await editor.trigger('submit')
     await flushPromises()
     expect(JSON.parse(writes.at(-1)?.slice(5) ?? '{}')).toEqual({
-      settlementId: OAK, name: 'Smithy', kind: 'smith', ownerId: NPC, markupPct: 25, haggleDc: 14, hagglePct: 20, lootTableId: HOARD, restock: 'days', restockDays: 5,
+      settlementId: OAK, name: 'Smithy', kind: 'smith', ownerId: NPC, factionId: WATCH, markupPct: 25, haggleDc: 14, hagglePct: 20, lootTableId: HOARD, restock: 'days', restockDays: 5,
     })
     await wrapper.get('[data-testid="new-shop"]').trigger('click')
     await wrapper.get('[data-testid="shop-editor"]').findAll('button').at(-1)?.trigger('click')

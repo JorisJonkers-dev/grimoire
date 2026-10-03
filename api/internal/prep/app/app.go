@@ -61,6 +61,7 @@ type Repository interface {
 	RecordShop(ctx context.Context, campaign uuid.UUID, rev campaigndomain.Revision, c caller.Caller, s domain.Shop) error
 	ShopAt(ctx context.Context, campaign uuid.UUID, id domain.ShopID, no int) (domain.Shop, error)
 	NpcExists(ctx context.Context, campaign, id uuid.UUID) (bool, error)
+	FactionExists(ctx context.Context, campaign, id uuid.UUID) (bool, error)
 	ItemPrices(ctx context.Context, campaign uuid.UUID, slugs []string) (map[string]domain.ItemPrice, error)
 	GameDay(ctx context.Context, campaign uuid.UUID) (int, error)
 	// Checks lists the Campaign's latest Encounter Checks, newest first.
@@ -177,6 +178,13 @@ func cleanEntry(ctx context.Context, r Repository, campaign uuid.UUID, e domain.
 	e.Label = strings.TrimSpace(e.Label)
 	if e.Weight < 1 || e.Weight > 100 || utf8.RuneCountInString(e.Label) > 80 {
 		return e, apperr.Refuse("weights run from 1 to 100 and labels to 80 characters")
+	}
+	if e.FactionID != nil {
+		if ok, err := r.FactionExists(ctx, campaign, *e.FactionID); err != nil {
+			return e, err
+		} else if !ok {
+			return e, apperr.Refuse("choose one of the campaign's Factions")
+		}
 	}
 	switch e.Kind {
 	case domain.EntryNothing:

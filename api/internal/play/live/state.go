@@ -47,6 +47,8 @@ type state struct {
 	day  int
 	// minute is the time of day on the Game Clock, in minutes after midnight.
 	minute int
+	// standings are how the Campaign's Factions regard the party, as last read.
+	standings []domain.Standing
 	// march is the Marching Order: the Characters that have a place in it, from the front.
 	march []uuid.UUID
 	// observed is the ranged damage each creature has seen each other creature deal.
@@ -89,7 +91,7 @@ func (s *state) clone() *state {
 	}
 	next.checks = slices.Clone(s.checks)
 	next.rest, next.pending, next.dying = s.rest.Clone(), slices.Clone(s.pending), maps.Clone(s.dying)
-	next.inventory, next.day, next.minute, next.march = cloneInventory(s.inventory), s.day, s.minute, slices.Clone(s.march)
+	next.inventory, next.day, next.minute, next.march, next.standings = cloneInventory(s.inventory), s.day, s.minute, slices.Clone(s.march), s.standings
 	if s.sneak != nil {
 		next.sneak = &domain.Sneak{Rolls: slices.Clone(s.sneak.Rolls)}
 	}
@@ -197,6 +199,7 @@ func (s *state) project(a Audience) View {
 		}
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
+	s.firstReactions(v.Tokens)
 	s.projectCombat(&v, a, seen)
 	s.terrainViews(&v, a, seen)
 	s.projectPending(&v, a, seen)

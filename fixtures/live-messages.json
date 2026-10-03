@@ -456,6 +456,27 @@
       "gameMinute": 360
     },
     {
+      "nonce": "n44e",
+      "kind": "place_token",
+      "label": "Watchman",
+      "tokenKind": "npc",
+      "q": 1,
+      "r": 0,
+      "hidden": false,
+      "monsterSlug": "goblin",
+      "factionId": "0190c7a8-0000-7000-8000-0000000000f1"
+    },
+    {
+      "nonce": "n44f",
+      "kind": "take_action",
+      "tokenId": "0190c7a8-0000-7000-8000-00000000000a",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "targetId": "0190c7a8-0000-7000-8000-000000000013",
+      "action": "influence"
+    },
+    {
       "nonce": "n44d",
       "kind": "set_marching_order",
       "q": 0,
@@ -921,6 +942,8 @@
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
             "companionId": "0190c7a8-0000-7000-8000-00000000000d",
+            "factionId": "0190c7a8-0000-7000-8000-0000000000f1",
+            "firstReaction": "indifferent",
             "effects": [
               {
                 "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -1425,6 +1448,8 @@
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
             "companionId": "0190c7a8-0000-7000-8000-00000000000d",
+            "factionId": "0190c7a8-0000-7000-8000-0000000000f1",
+            "firstReaction": "indifferent",
             "effects": [
               {
                 "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -2039,7 +2064,9 @@
             "hidden": false,
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
-            "companionId": "0190c7a8-0000-7000-8000-00000000000d"
+            "companionId": "0190c7a8-0000-7000-8000-00000000000d",
+            "factionId": "0190c7a8-0000-7000-8000-0000000000f1",
+            "firstReaction": "indifferent"
           }
         ],
         "fog": false,
@@ -2121,6 +2148,8 @@
             "darkvisionFt": 0,
             "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
             "companionId": "0190c7a8-0000-7000-8000-00000000000d",
+            "factionId": "0190c7a8-0000-7000-8000-0000000000f1",
+            "firstReaction": "indifferent",
             "effects": [
               {
                 "id": "0190c7a8-0000-7000-8000-000000000017",
@@ -2620,6 +2649,8 @@
               "darkvisionFt": 0,
               "controllerId": "0190c7a8-0000-7000-8000-00000000000f",
               "companionId": "0190c7a8-0000-7000-8000-00000000000d",
+              "factionId": "0190c7a8-0000-7000-8000-0000000000f1",
+              "firstReaction": "indifferent",
               "effects": [
                 {
                   "id": "0190c7a8-0000-7000-8000-000000000017",

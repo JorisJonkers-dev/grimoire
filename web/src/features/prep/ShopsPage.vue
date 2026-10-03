@@ -9,6 +9,7 @@ import {
   deleteShopMutation,
   listLocationsOptions,
   listLootTablesOptions,
+  listFactionsOptions,
   listNpcsOptions,
   listSettlementRevisionsOptions,
   listSettlementsOptions,
@@ -35,6 +36,7 @@ const settlements = useQuery({ ...listSettlementsOptions(path), retry: false })
 const shops = useQuery({ ...listShopsOptions(path), retry: false })
 const locations = useQuery({ ...listLocationsOptions(path), retry: false })
 const npcs = useQuery({ ...listNpcsOptions(path), retry: false })
+const factions = useQuery({ ...listFactionsOptions(path), retry: false })
 const lootTables = useQuery({ ...listLootTablesOptions(path), retry: false })
 const editing = ref<string | null>(null)
 const history = ref<{ kind: 'settlement' | 'shop'; id: string } | null>(null)
@@ -138,6 +140,7 @@ const restocks = (s: Shop) => (s.restock === 'never' ? 'never restocks' : s.rest
                 :shop="s"
                 :settlements="settlements.data.value ?? []"
                 :npcs="npcs.data.value ?? []"
+                :factions="factions.data.value ?? []"
                 :loot-tables="lootTables.data.value ?? []"
                 @save="saveShop"
                 @cancel="editing = null"
@@ -157,6 +160,7 @@ const restocks = (s: Shop) => (s.restock === 'never' ? 'never restocks' : s.rest
         v-else-if="editing === 'new-shop'"
         :settlements="settlements.data.value ?? []"
         :npcs="npcs.data.value ?? []"
+        :factions="factions.data.value ?? []"
         :loot-tables="lootTables.data.value ?? []"
         @save="saveShop"
         @cancel="editing = null"

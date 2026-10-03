@@ -389,6 +389,37 @@ func (q *Queries) SetPersonalStanding(ctx context.Context, arg SetPersonalStandi
 	return err
 }
 
+const standings = `-- name: Standings :many
+SELECT id, name, score FROM campaign.factions WHERE campaign_id = $1 ORDER BY name, id
+`
+
+type StandingsRow struct {
+	ID    uuid.UUID
+	Name  string
+	Score int32
+}
+
+// How each Faction of a Campaign regards the party.
+func (q *Queries) Standings(ctx context.Context, campaignID uuid.UUID) ([]StandingsRow, error) {
+	rows, err := q.db.Query(ctx, standings, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []StandingsRow{}
+	for rows.Next() {
+		var i StandingsRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Score); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateFaction = `-- name: UpdateFaction :execrows
 UPDATE campaign.factions SET name = $1, archetype = $2, goals = $3, territory = $4, notes = $5, updated_at = $6
 WHERE campaign_id = $7 AND id = $8

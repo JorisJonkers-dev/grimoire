@@ -304,8 +304,14 @@
             "entries": {
               "items": {
                 "additionalProperties": false,
-                "description": "One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.",
+                "description": "One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither. An entry with factionId is that Faction's own and weighs by how the Faction regards the party, twice as much when Hostile down to a fifth when Allied.",
                 "properties": {
+                  "factionId": {
+                    "description": "Random identifier.",
+                    "format": "uuid",
+                    "maxLength": 36,
+                    "type": "string"
+                  },
                   "kind": {
                     "enum": [
                       "encounter",
@@ -674,6 +680,12 @@
           "additionalProperties": false,
           "description": "A Shop as the DM writes it. restockDays is required when it restocks every few days.",
           "properties": {
+            "factionId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
             "haggleDc": {
               "format": "int32",
               "maximum": 30,
@@ -3000,8 +3012,14 @@
             "entries": {
               "items": {
                 "additionalProperties": false,
-                "description": "One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.",
+                "description": "One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither. An entry with factionId is that Faction's own and weighs by how the Faction regards the party, twice as much when Hostile down to a fifth when Allied.",
                 "properties": {
+                  "factionId": {
+                    "description": "Random identifier.",
+                    "format": "uuid",
+                    "maxLength": 36,
+                    "type": "string"
+                  },
                   "kind": {
                     "enum": [
                       "encounter",
@@ -3406,6 +3424,12 @@
           "additionalProperties": false,
           "description": "A Shop as the DM writes it. restockDays is required when it restocks every few days.",
           "properties": {
+            "factionId": {
+              "description": "Random identifier.",
+              "format": "uuid",
+              "maxLength": 36,
+              "type": "string"
+            },
             "haggleDc": {
               "format": "int32",
               "maximum": 30,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watchEffect } from 'vue'
-import type { LiveContainer, LiveShop, Shop } from '@/infrastructure/api/types.gen'
+import type { LiveContainer, LiveShop, LiveShopStanding, Shop } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import { formatPrice, haggled } from '@/shared/coins/price'
 import { GButton } from '@/shared/ui'
@@ -40,6 +40,12 @@ function makeTrade(sellList: { itemSlug: string; count: number }[], buyList: { i
   for (const k of Object.keys(give)) give[k] = 0
 }
 const outcome = (pct: number) => (pct < 0 ? `${String(-pct)}% off` : pct > 0 ? `${String(pct)}% dearer` : 'no change')
+// What a member Shop's Faction thinks of the party, and what that does to its prices.
+const tierNames = { hostile: 'Hostile', unfriendly: 'Unfriendly', neutral: 'Neutral', friendly: 'Friendly', allied: 'Allied' }
+function standingLine(st: LiveShopStanding): string {
+  const prices = st.pricePct === 0 ? 'as listed' : `${String(Math.abs(st.pricePct))}% ${st.pricePct > 0 ? 'higher' : 'lower'}`
+  return `${st.faction} holds the party ${tierNames[st.tier]}: prices are ${prices}.`
+}
 </script>
 
 <template>
@@ -62,6 +68,7 @@ const outcome = (pct: number) => (pct < 0 ? `${String(-pct)}% off` : pct > 0 ? `
       <p data-testid="shop-open">
         <strong>{{ shop.name }}</strong> · {{ shop.kind }} in {{ shop.settlement }}<template v-if="shop.owner"> · kept by {{ shop.owner }}</template>
       </p>
+      <p v-if="shop.standing" class="hint" data-testid="shop-standing">{{ standingLine(shop.standing) }}</p>
       <label v-if="traders.length > 1" class="g-field">
         <span>Trading as</span>
         <select v-model="buyer" data-testid="shop-buyer">

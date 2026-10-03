@@ -1715,6 +1715,7 @@ type PlayToken struct {
 	CreatureType       string
 	Legend             []byte
 	CompanionID        pgtype.UUID
+	FactionID          pgtype.UUID
 }
 
 type PlayTokenAttack struct {
@@ -1953,6 +1954,7 @@ type PrepShop struct {
 	RestockDays  pgtype.Int4
 	StockedDay   int32
 	UpdatedAt    time.Time
+	FactionID    pgtype.UUID
 }
 
 type PrepShopRevision struct {
@@ -1968,6 +1970,7 @@ type PrepShopRevision struct {
 	Restock      string
 	RestockDays  pgtype.Int4
 	StockedDay   int32
+	FactionID    pgtype.UUID
 }
 
 type PrepShopRevisionStock struct {
@@ -1985,12 +1988,13 @@ type PrepShopStock struct {
 }
 
 type PrepTableEntry struct {
-	TableID  uuid.UUID
-	Ordering int32
-	Weight   int32
-	Kind     string
-	Label    string
-	PoolID   pgtype.UUID
+	TableID   uuid.UUID
+	Ordering  int32
+	Weight    int32
+	Kind      string
+	Label     string
+	PoolID    pgtype.UUID
+	FactionID pgtype.UUID
 }
 
 type PrepTableRevision struct {
@@ -2008,6 +2012,7 @@ type PrepTableRevisionEntry struct {
 	Kind       string
 	Label      string
 	PoolID     pgtype.UUID
+	FactionID  pgtype.UUID
 }
 
 type PrepTableRevisionMonster struct {

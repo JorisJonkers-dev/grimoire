@@ -321,6 +321,8 @@ type Store interface {
 	// TradeBonus is a Character's Persuasion bonus.
 	TradeBonus(ctx context.Context, campaign, character uuid.UUID) (int, error)
 	GameClock(ctx context.Context, campaign uuid.UUID) (clock.Time, error)
+	// Standings reads how each Faction of the Campaign regards the party and its Characters.
+	Standings(ctx context.Context, campaign uuid.UUID) ([]domain.Standing, error)
 	// MarchingOrder reads the Characters that have a place in the Campaign's Marching Order, from the front.
 	MarchingOrder(ctx context.Context, campaign uuid.UUID) ([]uuid.UUID, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
@@ -806,6 +808,7 @@ func (r *runtime) drop(sub *Subscriber) {
 }
 
 func (r *runtime) snapshot(a Audience) Update {
+	r.readStandings()
 	v := r.st.project(a)
 	s := r.st.session
 	return Update{

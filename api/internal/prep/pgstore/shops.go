@@ -66,7 +66,7 @@ func (s *Store) SettlementAt(ctx context.Context, campaign uuid.UUID, id domain.
 
 func shopRow(r queries.PrepShop) domain.Shop {
 	return domain.Shop{
-		ID: domain.ShopID(r.ID), SettlementID: domain.SettlementID(r.SettlementID), Name: r.Name, Kind: r.Kind, OwnerID: fromUUID(r.OwnerNpcID),
+		ID: domain.ShopID(r.ID), SettlementID: domain.SettlementID(r.SettlementID), Name: r.Name, Kind: r.Kind, OwnerID: fromUUID(r.OwnerNpcID), FactionID: fromUUID(r.FactionID),
 		MarkupPct: int(r.MarkupPct), HaggleDC: int(r.HaggleDc), HagglePct: int(r.HagglePct), LootTable: lootRef(r.LootTableID), Restock: r.Restock,
 		RestockDays: int(r.RestockDays.Int32), StockedDay: int(r.StockedDay), Stock: []domain.StockItem{}, UpdatedAt: r.UpdatedAt,
 	}
@@ -109,7 +109,7 @@ func optInt(n int) pgtype.Int4 {
 //nolint:gosec // percentages and days are bounded by the rules
 func (s *Store) SaveShop(ctx context.Context, x domain.Shop, now time.Time) error {
 	return s.q.SaveShop(ctx, queries.SaveShopParams{
-		ID: uuid.UUID(x.ID), SettlementID: uuid.UUID(x.SettlementID), Name: x.Name, Kind: x.Kind, OwnerNpcID: optUUID(x.OwnerID),
+		ID: uuid.UUID(x.ID), SettlementID: uuid.UUID(x.SettlementID), Name: x.Name, Kind: x.Kind, OwnerNpcID: optUUID(x.OwnerID), FactionID: optUUID(x.FactionID),
 		MarkupPct: int32(x.MarkupPct), HaggleDc: int32(x.HaggleDC), HagglePct: int32(x.HagglePct), LootTableID: lootUUID(x.LootTable),
 		Restock: x.Restock, RestockDays: optInt(x.RestockDays), StockedDay: int32(x.StockedDay), Now: now,
 	})
@@ -156,7 +156,7 @@ func (s *Store) RecordShop(ctx context.Context, campaign uuid.UUID, rev campaign
 //nolint:gosec // percentages, counts and prices are bounded by the rules
 func ShopSnapshot(ctx context.Context, q *queries.Queries, revID uuid.UUID, x domain.Shop) error {
 	if err := q.InsertShopRevision(ctx, queries.InsertShopRevisionParams{
-		RevisionID: revID, SettlementID: uuid.UUID(x.SettlementID), Name: x.Name, Kind: x.Kind, OwnerNpcID: optUUID(x.OwnerID), MarkupPct: int32(x.MarkupPct),
+		RevisionID: revID, SettlementID: uuid.UUID(x.SettlementID), Name: x.Name, Kind: x.Kind, OwnerNpcID: optUUID(x.OwnerID), FactionID: optUUID(x.FactionID), MarkupPct: int32(x.MarkupPct),
 		HaggleDc: int32(x.HaggleDC), HagglePct: int32(x.HagglePct), LootTableID: lootUUID(x.LootTable), Restock: x.Restock, RestockDays: optInt(x.RestockDays),
 		StockedDay: int32(x.StockedDay),
 	}); err != nil {
@@ -181,7 +181,7 @@ func (s *Store) ShopAt(ctx context.Context, campaign uuid.UUID, id domain.ShopID
 		return domain.Shop{}, err
 	}
 	x := domain.Shop{
-		ID: id, SettlementID: domain.SettlementID(r.SettlementID), Name: r.Name, Kind: r.Kind, OwnerID: fromUUID(r.OwnerNpcID), MarkupPct: int(r.MarkupPct),
+		ID: id, SettlementID: domain.SettlementID(r.SettlementID), Name: r.Name, Kind: r.Kind, OwnerID: fromUUID(r.OwnerNpcID), FactionID: fromUUID(r.FactionID), MarkupPct: int(r.MarkupPct),
 		HaggleDC: int(r.HaggleDc), HagglePct: int(r.HagglePct), LootTable: lootRef(r.LootTableID), Restock: r.Restock, RestockDays: int(r.RestockDays.Int32),
 		StockedDay: int(r.StockedDay), Stock: []domain.StockItem{},
 	}
@@ -189,6 +189,11 @@ func (s *Store) ShopAt(ctx context.Context, campaign uuid.UUID, id domain.ShopID
 		x.Stock = append(x.Stock, domain.StockItem{Slug: k.ItemSlug, Quantity: int(k.Quantity), PriceCP: int(k.PriceCp)})
 	}
 	return x, nil
+}
+
+// FactionExists reports whether a Faction belongs to the Campaign.
+func (s *Store) FactionExists(ctx context.Context, campaign, id uuid.UUID) (bool, error) {
+	return s.q.FactionExists(ctx, queries.FactionExistsParams{CampaignID: campaign, ID: id})
 }
 
 // NpcExists reports whether an NPC belongs to the Campaign.

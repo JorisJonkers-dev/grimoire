@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
-import type { LootTable, Npc, Settlement, Shop, ShopInput } from '@/infrastructure/api/types.gen'
+import type { Faction, LootTable, Npc, Settlement, Shop, ShopInput } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
 
-const props = defineProps<{ shop?: Shop; settlements: Settlement[]; npcs: Npc[]; lootTables: LootTable[] }>()
+const props = defineProps<{ shop?: Shop; settlements: Settlement[]; npcs: Npc[]; factions: Faction[]; lootTables: LootTable[] }>()
 const emit = defineEmits<{ save: [input: ShopInput]; cancel: [] }>()
 const form = reactive({
   settlementId: props.shop?.settlementId ?? props.settlements[0]?.id ?? '',
   name: props.shop?.name ?? '',
   kind: props.shop?.kind ?? 'general',
   ownerId: props.shop?.ownerId ?? '',
+  factionId: props.shop?.factionId ?? '',
   markupPct: props.shop?.markupPct ?? 0,
   haggleDc: props.shop?.haggleDc ?? 15,
   hagglePct: props.shop?.hagglePct ?? 10,
@@ -23,6 +24,7 @@ function save() {
     haggleDc: form.haggleDc, hagglePct: form.hagglePct, restock: form.restock,
   }
   if (form.ownerId) input.ownerId = form.ownerId
+  if (form.factionId) input.factionId = form.factionId
   if (form.lootTableId) input.lootTableId = form.lootTableId
   if (form.restock === 'days') input.restockDays = form.restockDays
   emit('save', input)
@@ -45,6 +47,13 @@ function save() {
         <select v-model="form.ownerId" data-testid="shop-owner">
           <option value="">Nobody in particular</option>
           <option v-for="n in npcs" :key="n.id" :value="n.id">{{ n.name }}</option>
+        </select>
+      </label>
+      <label class="g-field">
+        <span>Faction (prices follow its Standing)</span>
+        <select v-model="form.factionId" data-testid="shop-faction">
+          <option value="">No Faction</option>
+          <option v-for="f in factions" :key="f.id" :value="f.id">{{ f.name }}</option>
         </select>
       </label>
     </div>

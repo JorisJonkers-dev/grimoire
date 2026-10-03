@@ -241,6 +241,7 @@ type Querier interface {
 	// The groups of a party do not outlive the Session the party split from.
 	EndGroupSessions(ctx context.Context, arg EndGroupSessionsParams) ([]uuid.UUID, error)
 	EndSession(ctx context.Context, arg EndSessionParams) (int64, error)
+	FactionExists(ctx context.Context, arg FactionExistsParams) (bool, error)
 	FeatBenefits(ctx context.Context, featID int64) ([]string, error)
 	FindEntry(ctx context.Context, arg FindEntryParams) (FindEntryRow, error)
 	FindInvite(ctx context.Context, arg FindInviteParams) (FindInviteRow, error)
@@ -747,6 +748,8 @@ type Querier interface {
 	SpellScaling(ctx context.Context, spellID int64) ([]SpellScalingRow, error)
 	SpendHitDie(ctx context.Context, id uuid.UUID) error
 	SpendMemberInspiration(ctx context.Context, arg SpendMemberInspirationParams) (int64, error)
+	// How each Faction of a Campaign regards the party.
+	Standings(ctx context.Context, campaignID uuid.UUID) ([]StandingsRow, error)
 	StartTOTP(ctx context.Context, arg StartTOTPParams) (int64, error)
 	StrengthenSession(ctx context.Context, arg StrengthenSessionParams) error
 	SwitchOffLibraryCollection(ctx context.Context, arg SwitchOffLibraryCollectionParams) error

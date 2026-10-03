@@ -190,13 +190,23 @@ func TestEncounterPrepOverHTTP(t *testing.T) {
 	if rec := call(h, http.MethodPost, base+"/encounter-pools", "dm", `{"name":"Band","levelMin":1,"levelMax":4,"difficulty":"low","members":[{"monsterSlug":"dragon","weight":1,"min":0,"max":1}]}`); rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "dragon") {
 		t.Fatalf("unknown monster: %d %s", rec.Code, rec.Body.String())
 	}
+	// An entry can be a Faction's own, and a Shop can belong to one.
+	watch := uuid.NewString()
+	if _, err := store.Pool().Exec(ctx, `INSERT INTO campaign.factions (id, campaign_id, name, archetype, goals, territory, notes, score, created_at, updated_at)
+		VALUES ($1, $2, 'The Lantern Watch', '', '', '', '', 0, now(), now())`, watch, id); err != nil {
+		t.Fatal(err)
+	}
 	table := `{"name":"Road","chancePct":30,"visibility":"open","entries":[` +
-		`{"weight":1,"kind":"encounter","label":"Ambush","monsters":[{"monsterSlug":"goblin","count":3}]},` +
+		`{"weight":1,"kind":"encounter","label":"Ambush","factionId":"` + watch + `","monsters":[{"monsterSlug":"goblin","count":3}]},` +
 		`{"weight":2,"kind":"pool","label":"","poolId":"` + poolID + `"},{"weight":3,"kind":"nothing","label":"Birdsong"}]}`
 	rec = call(h, http.MethodPost, base+"/encounter-tables", "dm", table)
 	tableID, _ := decode(t, rec)["id"].(string)
-	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"poolId":"`+poolID+`"`) || !strings.Contains(rec.Body.String(), `"count":3`) {
+	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"poolId":"`+poolID+`"`) || !strings.Contains(rec.Body.String(), `"count":3`) ||
+		!strings.Contains(rec.Body.String(), `"factionId":"`+watch+`"`) {
 		t.Fatalf("create table: %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := call(h, http.MethodPost, base+"/encounter-tables", "dm", strings.Replace(table, watch, uuid.NewString(), 1)); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("an entry of an unknown Faction: %d %s", rec.Code, rec.Body.String())
 	}
 	one := base + "/encounter-tables/" + tableID
 	if rec := call(h, http.MethodPut, one, "dm", strings.Replace(table, `"chancePct":30`, `"chancePct":60`, 1)); rec.Code != 200 {
@@ -298,10 +308,11 @@ func TestEncounterPrepOverHTTP(t *testing.T) {
 	if rec := call(h, http.MethodGet, base+"/settlements", "dm", ""); !strings.Contains(rec.Body.String(), `"wealth":"wealthy"`) {
 		t.Fatalf("list settlements: %s", rec.Body.String())
 	}
-	shopBody := `{"settlementId":"` + townID + `","ownerId":"` + owner.String() + `","name":"Store","kind":"general","markupPct":50,"haggleDc":15,"hagglePct":20,"lootTableId":"` + hoard + `","restock":"days","restockDays":3}`
+	// The Shop belongs to a Faction of the Campaign.
+	shopBody := `{"settlementId":"` + townID + `","ownerId":"` + owner.String() + `","factionId":"` + watch + `","name":"Store","kind":"general","markupPct":50,"haggleDc":15,"hagglePct":20,"lootTableId":"` + hoard + `","restock":"days","restockDays":3}`
 	rec = call(h, http.MethodPost, base+"/shops", "dm", shopBody)
 	shopID, _ := decode(t, rec)["id"].(string)
-	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"restockDays":3`) || !strings.Contains(rec.Body.String(), `"ownerId":"`+owner.String()) {
+	if rec.Code != http.StatusCreated || !strings.Contains(rec.Body.String(), `"restockDays":3`) || !strings.Contains(rec.Body.String(), `"ownerId":"`+owner.String()) || !strings.Contains(rec.Body.String(), `"factionId":"`+watch) {
 		t.Fatalf("create shop: %d %s", rec.Code, rec.Body.String())
 	}
 	shop := base + "/shops/" + shopID

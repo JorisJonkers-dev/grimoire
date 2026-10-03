@@ -477,11 +477,40 @@ func TestSettlementsAndShopsStockFromLootAndKeepTheirHistory(t *testing.T) {
 		_, err := s.SaveSettlement(ctx, dm, w.campaign, x)
 		refused(t, err, want)
 	}
-	shop := domain.Shop{SettlementID: town.ID, Name: "Store", Kind: " general ", OwnerID: &npc, MarkupPct: 50, HaggleDC: 15, HagglePct: 20, LootTable: &wares.ID, Restock: "days", RestockDays: 3}
+	// The Shop belongs to a Faction of the Campaign.
+	watch := uuid.New()
+	if _, err := w.pool.Exec(ctx, `INSERT INTO campaign.factions (id, campaign_id, name, archetype, goals, territory, notes, score, created_at, updated_at)
+		VALUES ($1, $2, 'The Lantern Watch', '', '', '', '', 0, now(), now())`, watch, w.campaign); err != nil {
+		t.Fatal(err)
+	}
+	shop := domain.Shop{SettlementID: town.ID, Name: "Store", Kind: " general ", OwnerID: &npc, FactionID: &watch, MarkupPct: 50, HaggleDC: 15, HagglePct: 20, LootTable: &wares.ID, Restock: "days", RestockDays: 3}
 	store, err := s.SaveShop(ctx, dm, w.campaign, shop)
-	if err != nil || store.Kind != "general" || len(store.Stock) != 0 {
+	if err != nil || store.Kind != "general" || len(store.Stock) != 0 || store.FactionID == nil || *store.FactionID != watch {
 		t.Fatalf("shop = %+v %v", store, err)
 	}
+	if listed, err := s.Shops(ctx, dm, w.campaign); err != nil || len(listed) != 1 || listed[0].FactionID == nil || *listed[0].FactionID != watch {
+		t.Fatalf("the listed shop = %+v %v", listed, err)
+	}
+	// An entry of an Encounter Table can be the Faction's own; a restored Table keeps whose it was.
+	patrols, err := s.SaveTable(ctx, dm, w.campaign, domain.Table{Name: "Watch road", ChancePct: 10, Visibility: domain.Secret, Entries: []domain.Entry{
+		{Weight: 2, Kind: domain.EntryNothing, Label: "A patrol passes", FactionID: &watch}, {Weight: 1, Kind: domain.EntryNothing, Label: "Quiet"},
+	}})
+	if err != nil || patrols.Entries[0].FactionID == nil || *patrols.Entries[0].FactionID != watch || patrols.Entries[1].FactionID != nil {
+		t.Fatalf("a table with a Faction's entry = %+v %v", patrols, err)
+	}
+	if listed, err := s.Tables(ctx, dm, w.campaign); err != nil || !slices.ContainsFunc(listed, func(x domain.Table) bool {
+		return x.ID == patrols.ID && x.Entries[0].FactionID != nil && *x.Entries[0].FactionID == watch
+	}) {
+		t.Fatalf("the listed table = %+v %v", listed, err)
+	}
+	if err := s.DeleteTable(ctx, dm, w.campaign, patrols.ID); err != nil {
+		t.Fatal(err)
+	}
+	if back, err := s.RestoreTable(ctx, dm, w.campaign, patrols.ID, 1); err != nil || back.Entries[0].FactionID == nil || *back.Entries[0].FactionID != watch {
+		t.Fatalf("the restored table = %+v %v", back, err)
+	}
+	_, err = s.SaveTable(ctx, dm, w.campaign, domain.Table{Name: "Nowhere", ChancePct: 10, Visibility: domain.Secret, Entries: []domain.Entry{{Weight: 1, Kind: domain.EntryNothing, FactionID: &stranger}}})
+	refused(t, err, "campaign's Factions")
 	missingTable := domain.LootTableID(uuid.New())
 	for want, change := range map[string]func(x *domain.Shop){
 		"trade of up to 40":      func(x *domain.Shop) { x.Kind = "" },
@@ -491,6 +520,7 @@ func TestSettlementsAndShopsStockFromLootAndKeepTheirHistory(t *testing.T) {
 		"every 1 to 365":         func(x *domain.Shop) { x.RestockDays = 0 },
 		"campaign's settlements": func(x *domain.Shop) { x.SettlementID = domain.SettlementID(uuid.New()) },
 		"NPCs as the owner":      func(x *domain.Shop) { x.OwnerID = &stranger },
+		"campaign's Factions":    func(x *domain.Shop) { x.FactionID = &stranger },
 		"loot tables for":        func(x *domain.Shop) { x.LootTable = &missingTable },
 		"name of up to 80":       func(x *domain.Shop) { x.Name = "" },
 	} {
@@ -524,7 +554,7 @@ func TestSettlementsAndShopsStockFromLootAndKeepTheirHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 	back, err := s.RestoreShop(ctx, dm, w.campaign, store.ID, 2)
-	if err != nil || len(back.Stock) != 1 || back.Stock[0].Quantity != 6 || back.Restock != "days" {
+	if err != nil || len(back.Stock) != 1 || back.Stock[0].Quantity != 6 || back.Restock != "days" || back.FactionID == nil || *back.FactionID != watch {
 		t.Fatalf("restoring the shop brings its stock back = %+v %v", back, err)
 	}
 	revs, err := s.ShopRevisions(ctx, dm, w.campaign, store.ID)

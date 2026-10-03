@@ -377,6 +377,9 @@ func (s *Store) insertToken(ctx context.Context, sid uuid.UUID, t domain.Token) 
 	if t.Companion != nil {
 		p.CompanionID = pgtype.UUID{Bytes: *t.Companion, Valid: true}
 	}
+	if t.Faction != nil {
+		p.FactionID = pgtype.UUID{Bytes: *t.Faction, Valid: true}
+	}
 	if t.Summon != nil {
 		p.SummonEffectID = pgtype.UUID{Bytes: *t.Summon, Valid: true}
 	}
@@ -1165,6 +1168,10 @@ func tokenFrom(t queries.SessionTokensRow) domain.Token {
 	if t.CompanionID.Valid {
 		c := uuid.UUID(t.CompanionID.Bytes)
 		tok.Companion = &c
+	}
+	if t.FactionID.Valid {
+		f := uuid.UUID(t.FactionID.Bytes)
+		tok.Faction = &f
 	}
 	if t.StatSource.Valid {
 		tok.Stats = &domain.Stats{

@@ -10492,7 +10492,7 @@ components:
         count: { type: integer, format: int32, minimum: 1, maximum: 100 }
     EncounterEntry:
       type: object
-      description: One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither.
+      description: One weighted line of an Encounter Table. An encounter lists its monsters, a pool names poolId, nothing has neither. An entry with factionId is that Faction's own and weighs by how the Faction regards the party, twice as much when Hostile down to a fifth when Allied.
       additionalProperties: false
       required: [weight, kind, label]
       properties:
@@ -10500,6 +10500,7 @@ components:
         kind: { type: string, enum: [encounter, pool, nothing] }
         label: { type: string, maxLength: 80 }
         poolId: { $ref: "#/components/schemas/Id" }
+        factionId: { $ref: "#/components/schemas/Id" }
         monsters:
           type: array
           maxItems: 10
@@ -10658,6 +10659,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 80 }
         kind: { type: string, minLength: 1, maxLength: 40 }
         ownerId: { $ref: "#/components/schemas/Id" }
+        factionId: { $ref: "#/components/schemas/Id" }
         markupPct: { type: integer, format: int32, minimum: 0, maximum: 300 }
         haggleDc: { type: integer, format: int32, minimum: 5, maximum: 30 }
         hagglePct: { type: integer, format: int32, minimum: 0, maximum: 50 }
@@ -10684,6 +10686,7 @@ components:
         name: { type: string, maxLength: 80 }
         kind: { type: string, maxLength: 40 }
         ownerId: { $ref: "#/components/schemas/Id" }
+        factionId: { $ref: "#/components/schemas/Id" }
         markupPct: { type: integer, format: int32, minimum: 0, maximum: 300 }
         haggleDc: { type: integer, format: int32, minimum: 5, maximum: 30 }
         hagglePct: { type: integer, format: int32, minimum: 0, maximum: 50 }
@@ -11029,6 +11032,8 @@ components:
         kind: { $ref: "#/components/schemas/TokenKind" }
         darkvisionFt: { type: integer, format: int32, minimum: 0, maximum: 300 }
         companionId: { $ref: "#/components/schemas/Id" }
+        factionId: { $ref: "#/components/schemas/Id" }
+        firstReaction: { type: string, enum: [hostile, indifferent, friendly], description: "How a creature of a Faction first takes to the party, by the Faction's Standing. With factionId, for the DM alone." }
         q: { type: integer, format: int32, minimum: -500, maximum: 500 }
         r: { type: integer, format: int32, minimum: -500, maximum: 500 }
         hidden: { type: boolean }
@@ -11272,6 +11277,7 @@ components:
           items: { $ref: "#/components/schemas/Id" }
         gameDay: { type: integer, format: int32, minimum: 0, maximum: 1000000, description: "With set_clock, the day the DM sets the Game Clock to." }
         gameMinute: { type: integer, format: int32, minimum: 0, maximum: 1439, description: "With set_clock, the time of day, in minutes after midnight." }
+        factionId: { type: string, maxLength: 64, description: "With place_token, the Faction the creature belongs to. An Influence check against it (take_action with targetId) is rolled by how that Faction regards whoever tries." }
         companionId: { type: string, maxLength: 64, description: "With place_token, the Companion to put on the map. It stands with the party under its own name, run by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the Member who runs the token from now on; left out, the DM does." }
         tokenIds:
           type: array
@@ -12606,6 +12612,15 @@ components:
       properties:
         coin: { $ref: "#/components/schemas/Coin" }
         count: { type: integer, format: int32, minimum: 1, maximum: 10000000 }
+    LiveShopStanding:
+      type: object
+      description: The Faction a Shop belongs to, the tier it holds the party in, and what that adds to the Shop's prices in percent. A Character with a Personal Standing pays by that instead.
+      additionalProperties: false
+      required: [faction, tier, pricePct]
+      properties:
+        faction: { type: string, maxLength: 80 }
+        tier: { $ref: "#/components/schemas/StandingTier" }
+        pricePct: { type: integer, format: int32, minimum: -100, maximum: 100 }
     LiveShop:
       type: object
       description: The Shop open in the Session, its Stock at asking prices in copper, and each Character's haggling.
@@ -12617,6 +12632,7 @@ components:
         kind: { type: string, maxLength: 40 }
         settlement: { type: string, maxLength: 80 }
         owner: { type: string, maxLength: 80 }
+        standing: { $ref: "#/components/schemas/LiveShopStanding" }
         stock:
           type: array
           maxItems: 200

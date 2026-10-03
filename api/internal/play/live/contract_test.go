@@ -22,7 +22,7 @@ type contract struct {
 
 // samples covers every command and update kind; the web client parses each with its generated schemas.
 func samples() contract {
-	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, CompanionID: "0190c7a8-0000-7000-8000-00000000000d", ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
+	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, CompanionID: "0190c7a8-0000-7000-8000-00000000000d", FactionID: "0190c7a8-0000-7000-8000-0000000000f1", FirstReaction: "indifferent", ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
 	id := "0190c7a8-0000-7000-8000-00000000000c"
 	view := &live.View{
 		Roster: []live.RosterEntry{{TokenID: token.ID, Label: token.Label, Kind: token.Kind, HP: nil, HPMax: nil, TempHP: 0, Health: "hurt", Hidden: false, Acting: true, Effects: []live.EffectView{}, Companion: true}},
@@ -181,6 +181,8 @@ func samples() contract {
 			{Nonce: "n44a", Kind: live.CmdAddNode, Label: "Lair", Q: 1, R: 1, Secret: true, MapID: "0190c7a8-0000-7000-8000-00000000000d"},
 			{Nonce: "n44b", Kind: live.CmdFindMap, MapID: "0190c7a8-0000-7000-8000-00000000000d", On: true},
 			{Nonce: "n44c", Kind: live.CmdSetClock, GameDay: 3, GameMinute: 6 * 60},
+			{Nonce: "n44e", Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: "npc", Label: "Watchman", Q: 1, FactionID: "0190c7a8-0000-7000-8000-0000000000f1"},
+			{Nonce: "n44f", Kind: live.CmdTakeAction, TokenID: token.ID, Action: "influence", TargetID: "0190c7a8-0000-7000-8000-000000000013"},
 			{Nonce: "n44d", Kind: live.CmdSetMarchingOrder, CharacterIDs: []string{"0190c7a8-0000-7000-8000-000000000031", "0190c7a8-0000-7000-8000-000000000032"}},
 			{Nonce: "n44", Kind: live.CmdTravel, RouteID: "0190c7a8-0000-7000-8000-000000000024", Pace: "fast"},
 			{Nonce: "n45", Kind: live.CmdAddZone, Label: "Ambush", Q: 3, R: 0, RadiusHexes: 2, DMOnly: true},

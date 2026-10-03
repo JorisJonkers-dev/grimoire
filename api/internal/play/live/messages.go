@@ -282,6 +282,8 @@ type Command struct {
 	// GameDay and GameMinute are the day and the minutes after midnight set_clock sets the Game Clock to.
 	GameDay    int `json:"gameDay,omitempty"`
 	GameMinute int `json:"gameMinute,omitempty"`
+	// FactionID is the Faction a creature placed by place_token belongs to.
+	FactionID string `json:"factionId,omitempty"`
 	// CompanionID is the Companion place_token puts on the map.
 	CompanionID string `json:"companionId,omitempty"`
 	// companion is that Companion once the Campaign is known to have it: the only one a token is tied to.
@@ -332,6 +334,10 @@ type TokenView struct {
 	CharacterID string `json:"characterId,omitempty"`
 	// CompanionID is the Companion the token is on the map as: an ally who travels with the party.
 	CompanionID string `json:"companionId,omitempty"`
+	// FactionID is the Faction the creature belongs to and FirstReaction how it first takes to the
+	// party by the Faction's Standing; both for the DM alone.
+	FactionID     string `json:"factionId,omitempty"`
+	FirstReaction string `json:"firstReaction,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
 	AC     *int   `json:"ac,omitempty"`
 	HP     *int   `json:"hp,omitempty"`
@@ -1055,6 +1061,9 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	if t.Companion != nil {
 		v.CompanionID = t.Companion.String()
 	}
+	if a == AudienceDM && t.Faction != nil {
+		v.FactionID = t.Faction.String()
+	}
 	if a == AudienceDM {
 		v.Disguise = t.Disguise
 		for _, q := range slices.Sorted(maps.Keys(t.Qualities)) {
@@ -1126,14 +1135,24 @@ type OfferView struct {
 // ShopView is the Shop open in the Session: its Stock with asking prices in copper, and each
 // Character's haggling there, settled or waiting on its roll.
 type ShopView struct {
-	ID         string       `json:"id"`
-	Name       string       `json:"name"`
-	Kind       string       `json:"kind"`
-	Settlement string       `json:"settlement"`
-	Owner      string       `json:"owner,omitempty"`
-	Stock      []StockView  `json:"stock"`
-	Haggles    []HaggleView `json:"haggles"`
-	Offers     []OfferView  `json:"offers"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Kind       string `json:"kind"`
+	Settlement string `json:"settlement"`
+	Owner      string `json:"owner,omitempty"`
+	// Standing is how the Faction the Shop belongs to regards the party, and what that does to its prices.
+	Standing *ShopStandingView `json:"standing,omitempty"`
+	Stock    []StockView       `json:"stock"`
+	Haggles  []HaggleView      `json:"haggles"`
+	Offers   []OfferView       `json:"offers"`
+}
+
+// ShopStandingView is a member Shop's Faction, the tier it holds the party in, and what it adds to its
+// prices in percent. A Character with a Personal Standing pays by that instead.
+type ShopStandingView struct {
+	Faction  string `json:"faction"`
+	Tier     string `json:"tier"`
+	PricePct int    `json:"pricePct"`
 }
 
 // StockView is one item the open Shop sells.

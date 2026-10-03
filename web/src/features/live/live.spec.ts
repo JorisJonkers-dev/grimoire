@@ -1872,7 +1872,16 @@ describe('shopping', () => {
     expect(wrapper.get('[data-testid="trade-window"]').text()).toContain('Nothing to sell.')
     await wrapper.get('[data-testid="haggle"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'haggle', fromId: BROM_PACK })
-    s.receive({ ...view({ shop: { ...open, stock: [] } }), seq: 3 })
+    // A Shop of a Faction says how that Faction's Standing moves its prices; a Shop of none says nothing.
+    expect(wrapper.find('[data-testid="shop-standing"]').exists()).toBe(false)
+    const lines = { friendly: 'The Lantern Watch holds the party Friendly: prices are 10% lower.', hostile: 'The Lantern Watch holds the party Hostile: prices are 50% higher.', neutral: 'The Lantern Watch holds the party Neutral: prices are as listed.' }
+    let n = 3
+    for (const [tier, pricePct] of [['friendly', -10], ['hostile', 50], ['neutral', 0]] as const) {
+      s.receive({ ...view({ shop: { ...open, standing: { faction: 'The Lantern Watch', tier, pricePct } } }), seq: n++ })
+      await flushPromises()
+      expect(wrapper.get('[data-testid="shop-standing"]').text()).toBe(lines[tier])
+    }
+    s.receive({ ...view({ shop: { ...open, stock: [] } }), seq: n })
     await flushPromises()
     expect(wrapper.get('[aria-label="Stock of Store"]').text()).toBe('Sold out.')
     await wrapper.get('[data-testid="close-shop"]').trigger('click')

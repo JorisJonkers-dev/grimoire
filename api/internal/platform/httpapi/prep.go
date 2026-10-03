@@ -93,6 +93,10 @@ func tableIn(id domain.TableID, req *oas.EncounterTableInput) domain.Table {
 			pid := domain.PoolID(p)
 			entry.PoolID = &pid
 		}
+		if f, ok := e.FactionId.Get(); ok {
+			fid := uuid.UUID(f)
+			entry.FactionID = &fid
+		}
 		t.Entries = append(t.Entries, entry)
 	}
 	return t
@@ -111,6 +115,9 @@ func tableOut(t domain.Table) oas.EncounterTable {
 		entry := oas.EncounterEntry{Weight: int32(e.Weight), Kind: oas.EncounterEntryKind(e.Kind), Label: e.Label, Monsters: monstersOut(e.Monsters)}
 		if e.PoolID != nil {
 			entry.PoolId = oas.NewOptID(oas.ID(*e.PoolID))
+		}
+		if e.FactionID != nil {
+			entry.FactionId = oas.NewOptID(oas.ID(*e.FactionID))
 		}
 		out.Entries = append(out.Entries, entry)
 	}

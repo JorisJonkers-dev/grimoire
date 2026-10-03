@@ -176,23 +176,34 @@ func (r *runtime) planPlace(c caller.Caller, cmd Command) (Write, string) {
 	}
 	t := domain.Token{ID: domain.TokenID(uuid.New()), Label: label, Kind: cmd.TokenKind, Q: cmd.Q, R: cmd.R, Hidden: cmd.Hidden, DarkvisionFt: cmd.DarkvisionFt, Stats: stats, Tactics: tactics.FromIntelligence}
 	t.CanShield = cmd.Shield || (stats != nil && stats.Shield)
+	if t.Faction, reason = r.factionNamed(cmd.FactionID); reason != "" {
+		return Write{}, reason
+	}
 	if cmd.companion != nil {
 		if r.st.companionToken(*cmd.companion) != nil {
 			return Write{}, "That Companion is on the map already."
 		}
 		t.Companion = cmd.companion
 	}
-	if cmd.ControllerID != "" {
-		id, err := uuid.Parse(cmd.ControllerID)
-		if err != nil {
-			return Write{}, "No such member."
-		}
-		if _, err := r.members.Member(context.Background(), r.st.session.CampaignID, id); err != nil {
-			return Write{}, "No such member."
-		}
-		t.Controller = &id
+	if t.Controller, reason = r.memberNamed(cmd.ControllerID); reason != "" {
+		return Write{}, reason
 	}
 	return Write{Kind: domain.ActionTokenPlaced, Token: t}, ""
+}
+
+// memberNamed is the Member of the Campaign a command names to run a token, or nil when it names none.
+func (r *runtime) memberNamed(raw string) (*uuid.UUID, string) {
+	if raw == "" {
+		return nil, ""
+	}
+	id, err := uuid.Parse(raw)
+	if err != nil {
+		return nil, "No such member."
+	}
+	if _, err := r.members.Member(context.Background(), r.st.session.CampaignID, id); err != nil {
+		return nil, "No such member."
+	}
+	return &id, ""
 }
 
 // statblock loads the stats a new token fights with and fills in what they imply: a monster's name,

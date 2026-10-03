@@ -11,6 +11,7 @@ import (
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/encounters"
+	regard "github.com/JorisJonkers-dev/grimoire/api/internal/rules/standing"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -94,13 +95,13 @@ func (r *runtime) check(dm domain.Member, p prep.Prep, t prep.Table, trigger, mo
 	if mode == prep.ModeNormal {
 		chance = dice.Face(src, 100)
 	}
-	resolveCheck(&c, p, t, src, chance, pick)
+	resolveCheck(&c, p, t, r.standingsNow(), src, chance, pick)
 	return Write{Kind: domain.ActionEncounterChecked, Check: &c}
 }
 
 // resolveCheck rolls the chance, draws an entry by weight (never Nothing when forced), and fills a Pool
 // draw to the party's XP budget.
-func resolveCheck(c *prep.Check, p prep.Prep, t prep.Table, src dice.Source, chance, pick int) {
+func resolveCheck(c *prep.Check, p prep.Prep, t prep.Table, standings []domain.Standing, src dice.Source, chance, pick int) {
 	c.Status, c.Outcome = prep.CheckResolved, prep.OutcomeNothing
 	if c.Mode == prep.ModeNormal {
 		c.ChanceRoll = chance
@@ -110,13 +111,7 @@ func resolveCheck(c *prep.Check, p prep.Prep, t prep.Table, src dice.Source, cha
 	}
 	i := pick
 	if c.Mode != prep.ModePick {
-		weights := make([]int, len(t.Entries))
-		for j, e := range t.Entries {
-			if c.Mode != prep.ModeForce || e.Kind != prep.EntryNothing {
-				weights[j] = e.Weight
-			}
-		}
-		if i = encounters.Draw(src, weights); i < 0 {
+		if i = encounters.Draw(src, entryWeights(t, c.Mode, standings)); i < 0 {
 			return
 		}
 	}
@@ -185,7 +180,7 @@ func (r *runtime) checkRolled(c prep.Check) {
 		return
 	}
 	t, _ := tableByID(p.Tables, uuid.UUID(*c.TableID).String())
-	resolveCheck(&c, p, t, r.source(uint64(c.Seed)), roll.Total, -1) //nolint:gosec // the seed round-trips its 64 bits
+	resolveCheck(&c, p, t, r.standingsNow(), r.source(uint64(c.Seed)), roll.Total, -1) //nolint:gosec // the seed round-trips its 64 bits
 	r.commit(request{}, Write{Kind: domain.ActionEncounterResolved, Check: &c}, roll.Roller, caller.Caller{Subject: roll.Roller.Subject, Origin: caller.OriginSystem})
 }
 
@@ -261,4 +256,23 @@ func (s *state) checkViews(a Audience) []CheckView {
 		out = append(out, v)
 	}
 	return out
+}
+
+// entryWeights are the weights an Encounter Table's entries are drawn by. A Faction's own entries weigh
+// by how the Faction regards the party; a forced check leaves Nothing out.
+func entryWeights(t prep.Table, mode string, standings []domain.Standing) []int {
+	weights := make([]int, len(t.Entries))
+	for j, e := range t.Entries {
+		if mode == prep.ModeForce && e.Kind == prep.EntryNothing {
+			continue
+		}
+		weights[j] = e.Weight
+		if e.FactionID == nil {
+			continue
+		}
+		if i := slices.IndexFunc(standings, func(st domain.Standing) bool { return st.Faction == *e.FactionID }); i >= 0 {
+			weights[j] = regard.Weight(regard.TierOf(standings[i].Score), e.Weight)
+		}
+	}
+	return weights
 }

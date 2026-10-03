@@ -11,6 +11,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/shops"
+	regard "github.com/JorisJonkers-dev/grimoire/api/internal/rules/standing"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -26,6 +27,7 @@ func (r *runtime) planShop(m domain.Member, cmd Command) (Write, string) {
 		if err != nil {
 			return Write{}, "No such shop."
 		}
+		r.readStandings()
 		return Write{Kind: domain.ActionShopOpened, Shop: open}, ""
 	case CmdCloseShop:
 		if r.st.shop == nil {
@@ -50,7 +52,7 @@ func (r *runtime) planShop(m domain.Member, cmd Command) (Write, string) {
 	case cmd.Count < 1:
 		return Write{}, "Trade at least one."
 	case cmd.Kind == CmdBuy:
-		return buy(o, c, cmd)
+		return buy(o, c, cmd, r.shopPct(c))
 	}
 	return r.sell(o, c, cmd)
 }
@@ -64,13 +66,13 @@ func adjustFor(o *domain.OpenShop, c domain.Container) int {
 }
 
 // buy pays for items from the Shop's Stock out of a Character's purse, with change.
-func buy(o *domain.OpenShop, c domain.Container, cmd Command) (Write, string) {
+func buy(o *domain.OpenShop, c domain.Container, cmd Command, standingPct int) (Write, string) {
 	i := slices.IndexFunc(o.Shop.Stock, func(k prep.StockItem) bool { return k.Slug == cmd.ItemSlug })
 	if i < 0 || o.Shop.Stock[i].Quantity < cmd.Count {
 		return Write{}, "The shop has not that many."
 	}
 	k := o.Shop.Stock[i]
-	unit := shops.Price(k.PriceCP, 0, adjustFor(o, c))
+	unit := shops.Price(k.PriceCP, 0, adjustFor(o, c)+standingPct)
 	purse, ok := shops.Pay(c.Coins, unit*cmd.Count)
 	if !ok {
 		return Write{}, "That is more than the purse holds."
@@ -232,6 +234,10 @@ func (s *state) shopView() *ShopView {
 		return nil
 	}
 	v := &ShopView{ID: uuid.UUID(o.Shop.ID).String(), Name: o.Shop.Name, Kind: o.Shop.Kind, Settlement: o.Settlement, Owner: o.Owner, Stock: []StockView{}, Haggles: []HaggleView{}}
+	if st, ok := s.shopFaction(); ok {
+		tier := regard.TierOf(st.Score)
+		v.Standing = &ShopStandingView{Faction: st.Name, Tier: string(tier), PricePct: regard.PricePct(tier)}
+	}
 	for _, k := range o.Shop.Stock {
 		info := o.Items[k.Slug]
 		name := info.Name
@@ -306,7 +312,7 @@ func (r *runtime) planTrade(cmd Command) (Write, string) {
 		switch {
 		case l.Count < 1:
 		case one.Kind == CmdBuy:
-			done, reason = buy(scratch.shop, c, one)
+			done, reason = buy(scratch.shop, c, one, r.shopPct(c))
 		default:
 			done, reason = r.sell(scratch.shop, c, one)
 		}
