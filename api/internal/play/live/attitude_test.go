@@ -2,6 +2,7 @@ package live_test
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -175,5 +176,70 @@ func TestInfluenceMovesACreaturesAttitude(t *testing.T) {
 	look(t, w, tb.player)
 	if got := attitudes(tb.dm)[ids["Aria"]]; got != "friendly" || purpose != "Influence: Charisma check" {
 		t.Fatalf("after swaying nobody = %q, for %q", got, purpose)
+	}
+}
+
+type unreadableDCs struct{ live.Store }
+
+func (unreadableDCs) ShowDCs(context.Context, uuid.UUID) (bool, error) {
+	return true, errors.New("no such column")
+}
+
+// The DC of a check is on its Roll Card only while the Campaign shows DCs. The DM changes that outside
+// the Session, and a Session under way follows it at the next check; when the setting cannot be read,
+// the DC stays the DM's to know.
+func TestTheDCIsShownOnlyWhileTheCampaignShowsIt(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	w, tb, ids := restingParty(t)
+	d, _ := tb.dmSays(live.Command{Kind: live.CmdPlace, MonsterSlug: "goblin", TokenKind: domain.TokenNPC, Label: "Innkeeper", Q: 1})
+	keeper := token(d.View, "Innkeeper")
+	shows := func(shown bool) {
+		t.Helper()
+		if _, err := w.pool.Exec(ctx, "UPDATE campaign.campaigns SET show_dcs = $2 WHERE id = $1", w.session.CampaignID, shown); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// try has Aria try the Innkeeper, and says what the Roll Card is for.
+	try := func() string {
+		t.Helper()
+		if p := tb.playerSays(live.Command{Kind: live.CmdTakeAction, TokenID: ids["aria-token"], Action: "influence", TargetID: keeper.ID}); p.View == nil {
+			t.Fatalf("the try was refused: %+v", p)
+		}
+		var id uuid.UUID
+		var purpose string
+		if err := w.pool.QueryRow(ctx, "SELECT id, purpose FROM play.roll_requests WHERE campaign_id = $1 ORDER BY created_at DESC, id LIMIT 1", w.session.CampaignID).Scan(&id, &purpose); err != nil {
+			t.Fatal(err)
+		}
+		tb.fill(id.String(), w.player, 12)
+		look(t, w, tb.player)
+		look(t, w, tb.dm)
+		return purpose
+	}
+	const hidden, shown = "Influence: Charisma check", "Influence: Charisma check (DC 15)"
+	if got := try(); got != hidden {
+		t.Fatalf("before the Campaign shows DCs = %q", got)
+	}
+	shows(true)
+	if got := try(); got != shown {
+		t.Fatalf("once the Campaign shows DCs, in the Session under way = %q", got)
+	}
+	// The DM takes it back: the very next check keeps its DC to the DM, with the Session still running.
+	shows(false)
+	if got := try(); got != hidden {
+		t.Fatalf("once the Campaign hides DCs again, in the Session under way = %q", got)
+	}
+	// A setting that cannot be read hides the DC, though it was last read as shown; and the Session
+	// still starts.
+	shows(true)
+	if got := try(); got != shown {
+		t.Fatalf("shown again = %q", got)
+	}
+	w.hub.Close(w.session.ID)
+	w.hub.Store = unreadableDCs{Store: w.hub.Store}
+	tb.dm = join(t, w, w.dm, dmCaller, live.AudienceDM)
+	tb.player = join(t, w, w.player, playerCaller, live.AudienceParty)
+	if got := try(); got != hidden {
+		t.Fatalf("when the setting cannot be read = %q", got)
 	}
 }

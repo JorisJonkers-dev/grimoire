@@ -25,6 +25,17 @@ func (r *runtime) readStandings() {
 	r.st.standings = list
 }
 
+// showsDCs reads whether the Campaign shows the DC of a check on its Roll Card now. The DM changes it
+// outside the Session, so it is read at each check; a setting that cannot be read hides the DC.
+func (r *runtime) showsDCs() bool {
+	shown, err := r.store.ShowDCs(context.Background(), r.campaign)
+	if err != nil {
+		r.log.Error("live: show dcs", "error", err)
+		return false
+	}
+	return shown
+}
+
 // factionOf finds a Faction of the Campaign among the Standings read last.
 func (s *state) factionOf(id uuid.UUID) (domain.Standing, bool) {
 	i := slices.IndexFunc(s.standings, func(x domain.Standing) bool { return x.Faction == id })
@@ -133,7 +144,7 @@ func (r *runtime) aimed(out *sway, target, actor domain.Token) regard.Mode {
 		return regard.Straight
 	}
 	out.target, out.dc = &target.ID, influenceDC(target)
-	if r.st.showDCs {
+	if r.showsDCs() {
 		out.shownDC = " (DC " + strconv.Itoa(out.dc) + ")"
 	}
 	attitude, moved := r.st.movedAttitude(target.ID, character)

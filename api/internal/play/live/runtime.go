@@ -192,7 +192,6 @@ type loaded struct {
 	rest      *domain.Rest
 	pending   []domain.PendingAction
 	attitudes []domain.Attitude
-	showDCs   bool
 	dying     map[domain.TokenID]domain.Dying
 	sneak     *domain.Sneak
 	explore   *domain.Exploration
@@ -222,9 +221,6 @@ func loadRules(ctx context.Context, store Store, s domain.Session) (loaded, erro
 		return out, err
 	}
 	if out.attitudes, err = store.LoadAttitudes(ctx, s.ID); err != nil {
-		return out, err
-	}
-	if out.showDCs, err = store.ShowDCs(ctx, s.CampaignID); err != nil {
 		return out, err
 	}
 	if out.dying, err = store.LoadDying(ctx, s.ID); err != nil {
@@ -297,7 +293,7 @@ type Store interface {
 	// LoadPendingActions reads the Hides, Grapples and Shoves waiting on rolls.
 	LoadPendingActions(ctx context.Context, id domain.SessionID) ([]domain.PendingAction, error)
 	// LoadAttitudes reads how the Session's creatures take to the Campaign's Characters, and ShowDCs
-	// whether the Campaign shows the DC of a check on its Roll Card.
+	// whether the Campaign shows the DC of a check on its Roll Card now.
 	LoadAttitudes(ctx context.Context, id domain.SessionID) ([]domain.Attitude, error)
 	ShowDCs(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// LoadDying reads the Characters at 0 hit points.
@@ -592,7 +588,7 @@ func (h *Hub) load(ctx context.Context, store Store, id domain.SessionID) (*stat
 		return nil, err
 	}
 	st := &state{
-		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, attitudes: kept.attitudes, showDCs: kept.showDCs, dying: kept.dying, surfaces: ground, cast: cast, table: table,
+		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, attitudes: kept.attitudes, dying: kept.dying, surfaces: ground, cast: cast, table: table,
 		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.clock.Day, minute: trade.clock.Minute, march: trade.march,
 	}
 	for _, t := range tokens {
