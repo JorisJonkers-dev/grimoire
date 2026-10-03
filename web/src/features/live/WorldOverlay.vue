@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { LiveWorld } from '@/infrastructure/api/types.gen'
-import { type Layout, toPixel } from '@/shared/hex'
+import { type Coord, type Layout, toPixel } from '@/shared/hex'
 
-const props = defineProps<{ world: LiveWorld; layout: Layout; from: string | null }>()
+const props = defineProps<{ world: LiveWorld; layout: Layout; from: string | null; measured: Coord[] }>()
 const nodes = computed(() => props.world.nodes.map((n) => ({ ...n, p: toPixel(props.layout, n) })))
 const byId = computed(() => new Map(nodes.value.map((n) => [n.id, n])))
 const lines = computed(() =>
@@ -13,6 +13,9 @@ const lines = computed(() =>
     return a && b ? [{ id: r.id, a: a.p, b: b.p }] : []
   }),
 )
+// The route being measured: a point at each waypoint, and a line through them once there are two.
+const waypoints = computed(() => props.measured.map((c) => toPixel(props.layout, c)))
+const drawn = computed(() => waypoints.value.map((p) => `${String(Number(p.x.toFixed(1)))},${String(Number(p.y.toFixed(1)))}`).join(' '))
 const party = computed(() => (props.world.partyNodeId ? byId.value.get(props.world.partyNodeId) : undefined))
 </script>
 
@@ -23,6 +26,8 @@ const party = computed(() => (props.world.partyNodeId ? byId.value.get(props.wor
       <circle :cx="n.p.x" :cy="n.p.y" :r="layout.size * 0.3" :class="['node', { 'node--from': n.id === from }]" />
       <text :x="n.p.x" :y="n.p.y - layout.size * 0.45" text-anchor="middle" class="name">{{ n.name }}</text>
     </g>
+    <polyline v-if="waypoints.length > 1" :points="drawn" class="measure" data-testid="measure-line" />
+    <circle v-for="(p, i) in waypoints" :key="i" :cx="p.x" :cy="p.y" :r="layout.size * 0.16" class="waypoint" :data-waypoint="i" />
     <circle v-if="party" :cx="party.p.x" :cy="party.p.y" :r="layout.size * 0.55" class="party" data-testid="party-marker" />
   </g>
 </template>
@@ -51,6 +56,18 @@ const party = computed(() => (props.world.partyNodeId ? byId.value.get(props.wor
   paint-order: stroke;
   stroke: #000;
   stroke-width: 3;
+}
+.measure {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+.waypoint {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 2;
 }
 .party {
   fill: none;

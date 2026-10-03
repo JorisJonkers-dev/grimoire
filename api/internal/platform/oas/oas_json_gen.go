@@ -36300,6 +36300,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindTableFollow
 	case LiveCommandKindAssignControl:
 		*s = LiveCommandKindAssignControl
+	case LiveCommandKindMeasureRoute:
+		*s = LiveCommandKindMeasureRoute
 	default:
 		*s = LiveCommandKind(v)
 	}
@@ -39802,6 +39804,274 @@ func (s *LiveMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *LiveMap) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveMeasure) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveMeasure) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("hexes")
+		e.Int32(s.Hexes)
+	}
+	{
+		e.FieldStart("miles")
+		e.Float64(s.Miles)
+	}
+	{
+		e.FieldStart("plans")
+		e.ArrStart()
+		for _, elem := range s.Plans {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+}
+
+var jsonFieldsNameOfLiveMeasure = [3]string{
+	0: "hexes",
+	1: "miles",
+	2: "plans",
+}
+
+// Decode decodes LiveMeasure from json.
+func (s *LiveMeasure) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveMeasure to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "hexes":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.Hexes = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"hexes\"")
+			}
+		case "miles":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Float64()
+				s.Miles = float64(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"miles\"")
+			}
+		case "plans":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				s.Plans = make([]LiveMeasurePlan, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LiveMeasurePlan
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Plans = append(s.Plans, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"plans\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveMeasure")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveMeasure) {
+					name = jsonFieldsNameOfLiveMeasure[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveMeasure) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveMeasure) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveMeasurePlan) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveMeasurePlan) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("pace")
+		s.Pace.Encode(e)
+	}
+	{
+		e.FieldStart("minutes")
+		e.Int32(s.Minutes)
+	}
+	{
+		e.FieldStart("days")
+		e.Int32(s.Days)
+	}
+}
+
+var jsonFieldsNameOfLiveMeasurePlan = [3]string{
+	0: "pace",
+	1: "minutes",
+	2: "days",
+}
+
+// Decode decodes LiveMeasurePlan from json.
+func (s *LiveMeasurePlan) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveMeasurePlan to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "pace":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.Pace.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"pace\"")
+			}
+		case "minutes":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Int32()
+				s.Minutes = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"minutes\"")
+			}
+		case "days":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Int32()
+				s.Days = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"days\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveMeasurePlan")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveMeasurePlan) {
+					name = jsonFieldsNameOfLiveMeasurePlan[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveMeasurePlan) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveMeasurePlan) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -45416,6 +45686,12 @@ func (s *LiveUpdate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Measure.Set {
+			e.FieldStart("measure")
+			s.Measure.Encode(e)
+		}
+	}
+	{
 		if s.Ping.Set {
 			e.FieldStart("ping")
 			s.Ping.Encode(e)
@@ -45441,7 +45717,7 @@ func (s *LiveUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveUpdate = [16]string{
+var jsonFieldsNameOfLiveUpdate = [17]string{
 	0:  "kind",
 	1:  "seq",
 	2:  "nonce",
@@ -45454,10 +45730,11 @@ var jsonFieldsNameOfLiveUpdate = [16]string{
 	9:  "path",
 	10: "preview",
 	11: "area",
-	12: "ping",
-	13: "initiative",
-	14: "turn",
-	15: "roll",
+	12: "measure",
+	13: "ping",
+	14: "initiative",
+	15: "turn",
+	16: "roll",
 }
 
 // Decode decodes LiveUpdate from json.
@@ -45465,7 +45742,7 @@ func (s *LiveUpdate) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode LiveUpdate to nil")
 	}
-	var requiredBitSet [2]uint8
+	var requiredBitSet [3]uint8
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
@@ -45598,6 +45875,16 @@ func (s *LiveUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"area\"")
 			}
+		case "measure":
+			if err := func() error {
+				s.Measure.Reset()
+				if err := s.Measure.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"measure\"")
+			}
 		case "ping":
 			if err := func() error {
 				s.Ping.Reset()
@@ -45647,8 +45934,9 @@ func (s *LiveUpdate) Decode(d *jx.Decoder) error {
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
-	for i, mask := range [2]uint8{
+	for i, mask := range [3]uint8{
 		0b00000011,
+		0b00000000,
 		0b00000000,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
@@ -45731,6 +46019,8 @@ func (s *LiveUpdateKind) Decode(d *jx.Decoder) error {
 		*s = LiveUpdateKindRoll
 	case LiveUpdateKindRegroup:
 		*s = LiveUpdateKindRegroup
+	case LiveUpdateKindRouteMeasured:
+		*s = LiveUpdateKindRouteMeasured
 	default:
 		*s = LiveUpdateKind(v)
 	}
@@ -57377,6 +57667,39 @@ func (s OptLiveMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveMap) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveMeasure as json.
+func (o OptLiveMeasure) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveMeasure from json.
+func (o *OptLiveMeasure) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveMeasure to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveMeasure) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveMeasure) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

@@ -21964,6 +21964,7 @@ const (
 	LiveCommandKindRejoinParty         LiveCommandKind = "rejoin_party"
 	LiveCommandKindTableFollow         LiveCommandKind = "table_follow"
 	LiveCommandKindAssignControl       LiveCommandKind = "assign_control"
+	LiveCommandKindMeasureRoute        LiveCommandKind = "measure_route"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -22068,6 +22069,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindRejoinParty,
 		LiveCommandKindTableFollow,
 		LiveCommandKindAssignControl,
+		LiveCommandKindMeasureRoute,
 	}
 }
 
@@ -22271,6 +22273,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindTableFollow:
 		return []byte(s), nil
 	case LiveCommandKindAssignControl:
+		return []byte(s), nil
+	case LiveCommandKindMeasureRoute:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -22576,6 +22580,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindAssignControl:
 		*s = LiveCommandKindAssignControl
+		return nil
+	case LiveCommandKindMeasureRoute:
+		*s = LiveCommandKindMeasureRoute
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -24368,6 +24375,83 @@ func (s *LiveMap) SetGridKind(val GridKind) {
 // SetGridStrength sets the value of GridStrength.
 func (s *LiveMap) SetGridStrength(val GridStrength) {
 	s.GridStrength = val
+}
+
+// The length of a measured route over the world map, in hexes and in miles by the Map's scale, and how
+// long it takes at each pace. A route of more than a million miles is refused.
+// Ref: #/components/schemas/LiveMeasure
+type LiveMeasure struct {
+	Hexes int32             `json:"hexes"`
+	Miles float64           `json:"miles"`
+	Plans []LiveMeasurePlan `json:"plans"`
+}
+
+// GetHexes returns the value of Hexes.
+func (s *LiveMeasure) GetHexes() int32 {
+	return s.Hexes
+}
+
+// GetMiles returns the value of Miles.
+func (s *LiveMeasure) GetMiles() float64 {
+	return s.Miles
+}
+
+// GetPlans returns the value of Plans.
+func (s *LiveMeasure) GetPlans() []LiveMeasurePlan {
+	return s.Plans
+}
+
+// SetHexes sets the value of Hexes.
+func (s *LiveMeasure) SetHexes(val int32) {
+	s.Hexes = val
+}
+
+// SetMiles sets the value of Miles.
+func (s *LiveMeasure) SetMiles(val float64) {
+	s.Miles = val
+}
+
+// SetPlans sets the value of Plans.
+func (s *LiveMeasure) SetPlans(val []LiveMeasurePlan) {
+	s.Plans = val
+}
+
+// How long a measured route takes at one pace, in minutes on the road and the travel days they span.
+// Ref: #/components/schemas/LiveMeasurePlan
+type LiveMeasurePlan struct {
+	Pace    TravelPace `json:"pace"`
+	Minutes int32      `json:"minutes"`
+	Days    int32      `json:"days"`
+}
+
+// GetPace returns the value of Pace.
+func (s *LiveMeasurePlan) GetPace() TravelPace {
+	return s.Pace
+}
+
+// GetMinutes returns the value of Minutes.
+func (s *LiveMeasurePlan) GetMinutes() int32 {
+	return s.Minutes
+}
+
+// GetDays returns the value of Days.
+func (s *LiveMeasurePlan) GetDays() int32 {
+	return s.Days
+}
+
+// SetPace sets the value of Pace.
+func (s *LiveMeasurePlan) SetPace(val TravelPace) {
+	s.Pace = val
+}
+
+// SetMinutes sets the value of Minutes.
+func (s *LiveMeasurePlan) SetMinutes(val int32) {
+	s.Minutes = val
+}
+
+// SetDays sets the value of Days.
+func (s *LiveMeasurePlan) SetDays(val int32) {
+	s.Days = val
 }
 
 // A Map Object; its numbers, trigger and secrecy go to the DM only.
@@ -26932,7 +27016,8 @@ func (s *LiveTurnStart) SetTokenIds(val []ID) {
 // A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the
 // screen to the Session of its own group of a split party; a view follows every change, and a view
 // whose seq is not the next one means resync. A walk's view carries the views along the way as steps,
-// to play back at walking pace; a path answers plan_walk to its sender only.
+// to play back at walking pace; a path answers plan_walk to its sender only, and route_measured
+// answers measure_route, whose hexes are the waypoints of a route over the world map.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
 	Kind       LiveUpdateKind          `json:"kind"`
@@ -26947,6 +27032,7 @@ type LiveUpdate struct {
 	Path       OptLivePath             `json:"path"`
 	Preview    OptLiveAttackPreview    `json:"preview"`
 	Area       OptLiveAreaPreview      `json:"area"`
+	Measure    OptLiveMeasure          `json:"measure"`
 	Ping       OptHexCoord             `json:"ping"`
 	Initiative OptLiveInitiativeReveal `json:"initiative"`
 	Turn       OptLiveTurnStart        `json:"turn"`
@@ -27011,6 +27097,11 @@ func (s *LiveUpdate) GetPreview() OptLiveAttackPreview {
 // GetArea returns the value of Area.
 func (s *LiveUpdate) GetArea() OptLiveAreaPreview {
 	return s.Area
+}
+
+// GetMeasure returns the value of Measure.
+func (s *LiveUpdate) GetMeasure() OptLiveMeasure {
+	return s.Measure
 }
 
 // GetPing returns the value of Ping.
@@ -27093,6 +27184,11 @@ func (s *LiveUpdate) SetArea(val OptLiveAreaPreview) {
 	s.Area = val
 }
 
+// SetMeasure sets the value of Measure.
+func (s *LiveUpdate) SetMeasure(val OptLiveMeasure) {
+	s.Measure = val
+}
+
 // SetPing sets the value of Ping.
 func (s *LiveUpdate) SetPing(val OptHexCoord) {
 	s.Ping = val
@@ -27126,6 +27222,7 @@ const (
 	LiveUpdateKindPing          LiveUpdateKind = "ping"
 	LiveUpdateKindRoll          LiveUpdateKind = "roll"
 	LiveUpdateKindRegroup       LiveUpdateKind = "regroup"
+	LiveUpdateKindRouteMeasured LiveUpdateKind = "route_measured"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -27141,6 +27238,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindPing,
 		LiveUpdateKindRoll,
 		LiveUpdateKindRegroup,
+		LiveUpdateKindRouteMeasured,
 	}
 }
 
@@ -27166,6 +27264,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindRoll:
 		return []byte(s), nil
 	case LiveUpdateKindRegroup:
+		return []byte(s), nil
+	case LiveUpdateKindRouteMeasured:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -27204,6 +27304,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveUpdateKindRegroup:
 		*s = LiveUpdateKindRegroup
+		return nil
+	case LiveUpdateKindRouteMeasured:
+		*s = LiveUpdateKindRouteMeasured
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -34463,6 +34566,52 @@ func (o OptLiveMap) Get() (v LiveMap, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveMap) Or(d LiveMap) LiveMap {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveMeasure returns new OptLiveMeasure with value set to v.
+func NewOptLiveMeasure(v LiveMeasure) OptLiveMeasure {
+	return OptLiveMeasure{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveMeasure is optional LiveMeasure.
+type OptLiveMeasure struct {
+	Value LiveMeasure
+	Set   bool
+}
+
+// IsSet returns true if OptLiveMeasure was set.
+func (o OptLiveMeasure) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveMeasure) Reset() {
+	var v LiveMeasure
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveMeasure) SetTo(v LiveMeasure) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveMeasure) Get() (v LiveMeasure, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveMeasure) Or(d LiveMeasure) LiveMeasure {
 	if v, ok := o.Get(); ok {
 		return v
 	}

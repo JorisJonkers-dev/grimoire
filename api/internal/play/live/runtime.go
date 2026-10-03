@@ -831,6 +831,9 @@ func (r *runtime) handle(req request) {
 	case req.cmd.Kind == CmdPreviewArea:
 		r.previewArea(req)
 		return
+	case req.cmd.Kind == CmdMeasureRoute:
+		r.measure(req)
+		return
 	case req.cmd.Kind == CmdPing && req.from.Member.DM:
 		r.ping(req)
 		return

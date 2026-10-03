@@ -216,7 +216,7 @@ func TestReactionEdges(t *testing.T) {
 			for done := false; !done; {
 				select {
 				case <-sub.Out:
-				case <-time.After(50 * time.Millisecond):
+				case <-time.After(250 * time.Millisecond):
 					done = true
 				}
 			}

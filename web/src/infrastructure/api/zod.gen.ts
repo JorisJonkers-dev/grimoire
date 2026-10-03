@@ -2800,6 +2800,24 @@ export const zLiveWorldRoute = z.object({
 });
 
 /**
+ * How long a measured route takes at one pace, in minutes on the road and the travel days they span.
+ */
+export const zLiveMeasurePlan = z.object({
+    pace: zTravelPace,
+    minutes: z.int().gte(0).lte(30000000),
+    days: z.int().gte(0).lte(62500)
+});
+
+/**
+ * The length of a measured route over the world map, in hexes and in miles by the Map's scale, and how long it takes at each pace. A route of more than a million miles is refused.
+ */
+export const zLiveMeasure = z.object({
+    hexes: z.int().gte(0).lte(1000000),
+    miles: z.number().gte(0).lte(1000000),
+    plans: z.array(zLiveMeasurePlan).max(3)
+});
+
+/**
  * One Travel Leg the party made this Session.
  */
 export const zLiveTravelLeg = z.object({
@@ -4358,7 +4376,8 @@ export const zLiveCommand = z.object({
         'split_party',
         'rejoin_party',
         'table_follow',
-        'assign_control'
+        'assign_control',
+        'measure_route'
     ]),
     caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
@@ -4614,7 +4633,7 @@ export const zLiveView = z.object({
 });
 
 /**
- * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
+ * A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a regroup sends the screen to the Session of its own group of a split party; a view follows every change, and a view whose seq is not the next one means resync. A walk's view carries the views along the way as steps, to play back at walking pace; a path answers plan_walk to its sender only, and route_measured answers measure_route, whose hexes are the waypoints of a route over the world map.
  */
 export const zLiveUpdate = z.object({
     kind: z.enum([
@@ -4627,7 +4646,8 @@ export const zLiveUpdate = z.object({
         'area_preview',
         'ping',
         'roll',
-        'regroup'
+        'regroup',
+        'route_measured'
     ]),
     seq: z.int().gte(0).lte(2147483647),
     nonce: z.string().max(64).optional(),
@@ -4640,6 +4660,7 @@ export const zLiveUpdate = z.object({
     path: zLivePath.optional(),
     preview: zLiveAttackPreview.optional(),
     area: zLiveAreaPreview.optional(),
+    measure: zLiveMeasure.optional(),
     ping: zHexCoord.optional(),
     initiative: zLiveInitiativeReveal.optional(),
     turn: zLiveTurnStart.optional(),

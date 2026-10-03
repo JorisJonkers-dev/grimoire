@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { LiveWorld, LocalMap, TravelPace } from '@/infrastructure/api/types.gen'
+import type { LiveMeasure, LiveWorld, LocalMap, TravelPace } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import { GButton } from '@/shared/ui'
 import MapBoard from './MapBoard.vue'
-import { duration, journey } from './travel'
+import { duration, journey, MAX_WAYPOINTS, measured } from './travel'
 import WorldOverlay from './WorldOverlay.vue'
 
 type Tool = 'node' | 'route' | 'party' | 'remove'
 
-const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[] }>()
+const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; measure: LiveMeasure | null }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
 const choice = ref('')
 const tool = ref<Tool>('node')
@@ -38,7 +38,30 @@ const tools: { value: Tool; label: string }[] = [
   { value: 'remove', label: 'Remove a location' },
 ]
 
+// Anyone measures a route: each tap adds a waypoint, and the server answers with its length.
+const measuring = ref(false)
+const waypoints = ref<Coord[]>([])
+const measurePace = ref<TravelPace>('normal')
+const full = computed(() => waypoints.value.length >= MAX_WAYPOINTS)
+const result = computed(() => (waypoints.value.length > 1 && props.measure ? measured(props.measure, measurePace.value) : ''))
+const hint = computed(() => {
+  if (full.value) return `A route has at most ${String(MAX_WAYPOINTS)} points.`
+  return waypoints.value.length === 0 ? 'Tap the map to mark the route. Each tap adds a point.' : 'Tap where the route goes next.'
+})
+function route(points: Coord[]) {
+  waypoints.value = points
+  if (points.length > 1) emit('send', { kind: 'measure_route', hexes: points })
+}
+function toggleMeasure() {
+  measuring.value = !measuring.value
+  waypoints.value = []
+}
+
 function tap(c: Coord) {
+  if (measuring.value) {
+    if (!full.value) route([...waypoints.value, { q: c.q, r: c.r }])
+    return
+  }
   if (!props.dm) return
   const n = props.world?.nodes.find((x) => x.q === c.q && x.r === c.r)
   if (tool.value === 'node') {
@@ -70,12 +93,31 @@ function tap(c: Coord) {
     </div>
     <p v-if="!world" class="hint" data-testid="no-world">{{ dm ? 'Choose a world map for the party to travel.' : 'The DM has not opened a world map yet.' }}</p>
     <template v-else>
-      <MapBoard :map="world.map" :view="board" :dm="dm" :title="world.map.name" @select="tap">
+      <MapBoard :map="world.map" :view="board" :dm="dm" :title="world.map.name" :path="waypoints" @select="tap">
         <template #default="{ layout }">
-          <WorldOverlay :world="world" :layout="layout" :from="from" />
+          <WorldOverlay :world="world" :layout="layout" :from="from" :measured="waypoints" />
         </template>
       </MapBoard>
       <p role="status" data-testid="party-at">{{ here ? `The party is at ${here.name}.` : 'The party is not on this map yet.' }}</p>
+      <div class="row">
+        <GButton :aria-pressed="measuring" data-testid="measure-toggle" @click="toggleMeasure()">Measure a route</GButton>
+      </div>
+      <section v-if="measuring" class="g-card" aria-label="Measured route" data-testid="measure">
+        <p v-if="result" role="status" class="measured" data-testid="measure-result">{{ result }}</p>
+        <p class="hint" data-testid="measure-hint">{{ hint }}</p>
+        <div class="row">
+          <label class="g-field">
+            <span>Pace</span>
+            <select v-model="measurePace" data-testid="measure-pace">
+              <option value="slow">Slow (2 mph)</option>
+              <option value="normal">Normal (3 mph)</option>
+              <option value="fast">Fast (4 mph)</option>
+            </select>
+          </label>
+          <GButton :disabled="waypoints.length === 0" data-testid="measure-undo" @click="route(waypoints.slice(0, -1))">Take back a point</GButton>
+          <GButton :disabled="waypoints.length === 0" data-testid="measure-clear" @click="route([])">Clear</GButton>
+        </div>
+      </section>
       <section v-if="roads.length > 0" class="g-card" aria-label="Routes from here" data-testid="roads">
         <h2>Routes from here</h2>
         <label v-if="dm" class="g-field">
@@ -135,6 +177,10 @@ function tap(c: Coord) {
   flex-wrap: wrap;
   align-items: end;
   gap: 8px;
+}
+.measured {
+  margin: 0;
+  font-weight: 700;
 }
 .tools {
   margin: 0;
