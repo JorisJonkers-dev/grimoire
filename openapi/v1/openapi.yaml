@@ -2528,6 +2528,254 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/journal:
+    get:
+      operationId: getJournal
+      x-ogen-operation-group: Read
+      summary: Read the Journal
+      description: "The Campaign's Quests and Lore as the caller may see them. The DM gets all of it. A Player gets the Quests the party has been given and the Lore it has unlocked: a hidden Quest and a locked Lore entry are left out whole. Readable lists the books and letters the caller carries, on their own Characters or in the Party Stash, that still hold Lore."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      responses:
+        "200":
+          description: The Journal.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Journal"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/journal/readings:
+    post:
+      operationId: readItem
+      x-ogen-operation-group: Play
+      summary: Read a book or letter
+      description: "A Member reads an item they carry, on one of their own Characters or in the Party Stash. Every Lore entry that item holds is unlocked for the whole party. An item the Member does not carry and an item that holds nothing are refused alike."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemReading"
+      responses:
+        "200":
+          description: How many Lore entries the reading unlocked.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemReadingResult"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/quests:
+    post:
+      operationId: createQuest
+      x-ogen-operation-group: Build
+      summary: Add a Quest
+      description: "Adds a Quest with its steps. A hidden Quest is the DM's alone until its status changes. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestInput"
+      responses:
+        "201":
+          description: The new Quest.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quest"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/quests/{questId}:
+    put:
+      operationId: updateQuest
+      x-ogen-operation-group: Build
+      summary: Change a Quest
+      description: "Changes a Quest: its words, its status, its steps and which of them are done. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: questId
+          in: path
+          required: true
+          description: Quest id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestInput"
+      responses:
+        "204":
+          description: The Quest is changed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteQuest
+      x-ogen-operation-group: Build
+      summary: Remove a Quest
+      description: "Removes a Quest and its steps. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: questId
+          in: path
+          required: true
+          description: Quest id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: The Quest is removed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/lore:
+    post:
+      operationId: createLore
+      x-ogen-operation-group: Build
+      summary: Add a Lore entry
+      description: "Adds a Lore entry, locked unless the DM says the party knows it. An entry may name the item that holds it: reading that item unlocks it. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoreInput"
+      responses:
+        "201":
+          description: The new Lore entry.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lore"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/campaigns/{campaignId}/lore/{loreId}:
+    put:
+      operationId: updateLore
+      x-ogen-operation-group: Build
+      summary: Change a Lore entry
+      description: "Changes a Lore entry, and locks or unlocks it at the DM's word. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: loreId
+          in: path
+          required: true
+          description: Lore entry id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoreInput"
+      responses:
+        "204":
+          description: The Lore entry is changed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteLore
+      x-ogen-operation-group: Build
+      summary: Remove a Lore entry
+      description: "Removes a Lore entry. DM only."
+      tags: [Campaign]
+      parameters:
+        - $ref: "#/components/parameters/CampaignId"
+        - name: loreId
+          in: path
+          required: true
+          description: Lore entry id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: The Lore entry is removed.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/campaigns/{campaignId}/factions:
     get:
       operationId: listFactions
@@ -13239,6 +13487,105 @@ components:
         name: { type: string, maxLength: 80 }
         description: { type: string, maxLength: 500 }
         goals: { type: string, maxLength: 500 }
+    Journal:
+      type: object
+      description: The Journal of a Campaign as the caller may see it.
+      additionalProperties: false
+      required: [dm, quests, lore, readable]
+      properties:
+        dm: { type: boolean, description: "Whether the caller is the DM, who sees and keeps all of it." }
+        quests:
+          type: array
+          maxItems: 2000
+          description: Quests, oldest first. A Player gets none that is hidden.
+          items: { $ref: "#/components/schemas/Quest" }
+        lore:
+          type: array
+          maxItems: 5000
+          description: Lore entries, by title. A Player gets none that is locked.
+          items: { $ref: "#/components/schemas/Lore" }
+        readable:
+          type: array
+          maxItems: 5000
+          description: The slugs of the items the caller carries that still hold locked Lore.
+          items: { type: string, maxLength: 80 }
+    QuestStatus:
+      type: string
+      description: "Where a Quest stands. A hidden Quest is the DM's alone."
+      enum: [hidden, active, completed, failed]
+    QuestStep:
+      type: object
+      description: One step of a Quest.
+      additionalProperties: false
+      required: [text, done]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 400 }
+        done: { type: boolean }
+    Quest:
+      type: object
+      description: A Quest of the Campaign with its steps in order.
+      additionalProperties: false
+      required: [id, name, summary, status, steps, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, maxLength: 120 }
+        summary: { type: string, maxLength: 4000 }
+        status: { $ref: "#/components/schemas/QuestStatus" }
+        steps:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/QuestStep" }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    QuestInput:
+      type: object
+      description: The editable part of a Quest. The steps given replace the ones it had.
+      additionalProperties: false
+      required: [name, status]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        summary: { type: string, maxLength: 4000 }
+        status: { $ref: "#/components/schemas/QuestStatus" }
+        steps:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/QuestStep" }
+    Lore:
+      type: object
+      description: A Lore entry. The item that holds it is there for the DM alone.
+      additionalProperties: false
+      required: [id, title, body, unlocked, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        title: { type: string, maxLength: 120 }
+        body: { type: string, maxLength: 8000 }
+        unlocked: { type: boolean, description: "Whether the party knows it." }
+        unlockedAt: { type: string, format: date-time, maxLength: 40 }
+        itemSlug: { type: string, maxLength: 80, description: "The item whose reading unlocks the entry, or empty." }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    LoreInput:
+      type: object
+      description: The editable part of a Lore entry.
+      additionalProperties: false
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 120 }
+        body: { type: string, maxLength: 8000 }
+        itemSlug: { type: string, maxLength: 80 }
+        unlocked: { type: boolean, description: "The DM's word that the party knows it. Left out, the entry is locked." }
+    ItemReading:
+      type: object
+      description: A book or letter to read.
+      additionalProperties: false
+      required: [itemSlug]
+      properties:
+        itemSlug: { type: string, minLength: 1, maxLength: 80 }
+    ItemReadingResult:
+      type: object
+      description: What a reading did.
+      additionalProperties: false
+      required: [unlocked]
+      properties:
+        unlocked: { type: integer, format: int32, minimum: 1, maximum: 5000, description: "How many Lore entries it unlocked." }
     Faction:
       type: object
       description: A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.

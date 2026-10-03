@@ -107,6 +107,9 @@ type Querier interface {
 	CampaignShops(ctx context.Context, campaignID uuid.UUID) ([]PrepShop, error)
 	CampaignShowDCs(ctx context.Context, id uuid.UUID) (bool, error)
 	CampaignTableEntries(ctx context.Context, campaignID uuid.UUID) ([]PrepTableEntry, error)
+	// The items a Member can read: what their own Characters carry in the Campaign and what lies in its
+	// Party Stash, in the bags inside those too.
+	CarriedItems(ctx context.Context, arg CarriedItemsParams) ([]string, error)
 	CastHexes(ctx context.Context, castID uuid.UUID) ([]CastHexesRow, error)
 	CastTargets(ctx context.Context, castID uuid.UUID) ([]CastTargetsRow, error)
 	ChangeResourceUsed(ctx context.Context, arg ChangeResourceUsedParams) error
@@ -153,6 +156,7 @@ type Querier interface {
 	ClearPendingSaves(ctx context.Context, sessionID uuid.UUID) error
 	ClearPoolMembers(ctx context.Context, poolID uuid.UUID) error
 	ClearPrompts(ctx context.Context, combatID uuid.UUID) error
+	ClearQuestSteps(ctx context.Context, questID uuid.UUID) error
 	ClearRest(ctx context.Context, sessionID uuid.UUID) error
 	ClearRestMembers(ctx context.Context, sessionID uuid.UUID) error
 	ClearResumePath(ctx context.Context, combatID uuid.UUID) error
@@ -202,6 +206,7 @@ type Querier interface {
 	DeleteLight(ctx context.Context, arg DeleteLightParams) error
 	DeleteLootClaim(ctx context.Context, arg DeleteLootClaimParams) error
 	DeleteLootTable(ctx context.Context, arg DeleteLootTableParams) (int64, error)
+	DeleteLore(ctx context.Context, arg DeleteLoreParams) (int64, error)
 	DeleteMapObject(ctx context.Context, arg DeleteMapObjectParams) error
 	DeleteNPC(ctx context.Context, arg DeleteNPCParams) (int64, error)
 	DeleteNode(ctx context.Context, arg DeleteNodeParams) error
@@ -209,6 +214,7 @@ type Querier interface {
 	DeletePendingAction(ctx context.Context, rollID uuid.UUID) error
 	DeletePool(ctx context.Context, arg DeletePoolParams) (int64, error)
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
+	DeleteQuest(ctx context.Context, arg DeleteQuestParams) (int64, error)
 	DeleteRecoveryCodes(ctx context.Context, accountID uuid.UUID) error
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
 	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
@@ -355,6 +361,7 @@ type Querier interface {
 	InsertLootEntry(ctx context.Context, arg InsertLootEntryParams) error
 	InsertLootRevisionEntry(ctx context.Context, arg InsertLootRevisionEntryParams) error
 	InsertLootTableRevision(ctx context.Context, arg InsertLootTableRevisionParams) error
+	InsertLore(ctx context.Context, arg InsertLoreParams) error
 	InsertManual(ctx context.Context, arg InsertManualParams) error
 	InsertMap(ctx context.Context, arg InsertMapParams) (CampaignMap, error)
 	// Only a Character of the Campaign takes a place in its Marching Order.
@@ -374,6 +381,8 @@ type Querier interface {
 	InsertPoolRevisionMember(ctx context.Context, arg InsertPoolRevisionMemberParams) error
 	InsertProposal(ctx context.Context, arg InsertProposalParams) error
 	InsertProposalReview(ctx context.Context, arg InsertProposalReviewParams) error
+	InsertQuest(ctx context.Context, arg InsertQuestParams) error
+	InsertQuestStep(ctx context.Context, arg InsertQuestStepParams) error
 	InsertRecoveryCode(ctx context.Context, arg InsertRecoveryCodeParams) error
 	InsertReleaseNote(ctx context.Context, arg InsertReleaseNoteParams) error
 	InsertRetrain(ctx context.Context, arg InsertRetrainParams) error
@@ -484,6 +493,7 @@ type Querier interface {
 	ListIncomingRequests(ctx context.Context, me uuid.UUID) ([]ListIncomingRequestsRow, error)
 	ListInvites(ctx context.Context, arg ListInvitesParams) ([]ListInvitesRow, error)
 	ListLootTables(ctx context.Context, campaignID uuid.UUID) ([]ListLootTablesRow, error)
+	ListLore(ctx context.Context, campaignID uuid.UUID) ([]CampaignLore, error)
 	ListMaps(ctx context.Context, campaignID uuid.UUID) ([]CampaignMap, error)
 	ListMembers(ctx context.Context, campaignID uuid.UUID) ([]CampaignMember, error)
 	ListMessages(ctx context.Context, arg ListMessagesParams) ([]ListMessagesRow, error)
@@ -494,6 +504,8 @@ type Querier interface {
 	ListPersonalStandings(ctx context.Context, campaignID uuid.UUID) ([]ListPersonalStandingsRow, error)
 	ListPools(ctx context.Context, campaignID uuid.UUID) ([]ListPoolsRow, error)
 	ListPrerequisites(ctx context.Context) ([]CompendiumPrerequisite, error)
+	ListQuestSteps(ctx context.Context, campaignID uuid.UUID) ([]CampaignQuestStep, error)
+	ListQuests(ctx context.Context, campaignID uuid.UUID) ([]CampaignQuest, error)
 	ListReleaseNotes(ctx context.Context) ([]ListReleaseNotesRow, error)
 	ListResourceDice(ctx context.Context) ([]CompendiumResourceDice, error)
 	ListResourceMaxima(ctx context.Context) ([]CompendiumResourceMaxima, error)
@@ -770,6 +782,8 @@ type Querier interface {
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
 	UnchooseDiceSet(ctx context.Context, accountID uuid.UUID) error
 	UnlinkLibraryEntry(ctx context.Context, arg UnlinkLibraryEntryParams) (int64, error)
+	// Reading an item unlocks every Lore entry of the Campaign it holds that is still locked.
+	UnlockLoreByItem(ctx context.Context, arg UnlockLoreByItemParams) ([]uuid.UUID, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UnreadNotifications(ctx context.Context, accountID uuid.UUID) (int32, error)
 	// The newest live Release Note an Account has not seen.
@@ -784,10 +798,12 @@ type Querier interface {
 	UpdateFaction(ctx context.Context, arg UpdateFactionParams) (int64, error)
 	UpdateLibraryCollection(ctx context.Context, arg UpdateLibraryCollectionParams) error
 	UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntryParams) (int32, error)
+	UpdateLore(ctx context.Context, arg UpdateLoreParams) (int64, error)
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)
 	UpdateNPC(ctx context.Context, arg UpdateNPCParams) (int64, error)
 	UpdateOIDCLink(ctx context.Context, arg UpdateOIDCLinkParams) error
 	UpdateProposal(ctx context.Context, arg UpdateProposalParams) error
+	UpdateQuest(ctx context.Context, arg UpdateQuestParams) (int64, error)
 	UpdateReleaseNote(ctx context.Context, arg UpdateReleaseNoteParams) (int64, error)
 	UpdateToken(ctx context.Context, arg UpdateTokenParams) error
 	UpsertArmor(ctx context.Context, arg UpsertArmorParams) error

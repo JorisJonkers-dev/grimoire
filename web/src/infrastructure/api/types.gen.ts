@@ -4403,6 +4403,112 @@ export type FactionArchetype = {
 };
 
 /**
+ * The Journal of a Campaign as the caller may see it.
+ */
+export type Journal = {
+    /**
+     * Whether the caller is the DM, who sees and keeps all of it.
+     */
+    dm: boolean;
+    /**
+     * Quests, oldest first. A Player gets none that is hidden.
+     */
+    quests: Array<Quest>;
+    /**
+     * Lore entries, by title. A Player gets none that is locked.
+     */
+    lore: Array<Lore>;
+    /**
+     * The slugs of the items the caller carries that still hold locked Lore.
+     */
+    readable: Array<string>;
+};
+
+/**
+ * Where a Quest stands. A hidden Quest is the DM's alone.
+ */
+export type QuestStatus = 'hidden' | 'active' | 'completed' | 'failed';
+
+/**
+ * One step of a Quest.
+ */
+export type QuestStep = {
+    text: string;
+    done: boolean;
+};
+
+/**
+ * A Quest of the Campaign with its steps in order.
+ */
+export type Quest = {
+    id: Id;
+    name: string;
+    summary: string;
+    status: QuestStatus;
+    steps: Array<QuestStep>;
+    updatedAt: string;
+};
+
+/**
+ * The editable part of a Quest. The steps given replace the ones it had.
+ */
+export type QuestInput = {
+    name: string;
+    summary?: string;
+    status: QuestStatus;
+    steps?: Array<QuestStep>;
+};
+
+/**
+ * A Lore entry. The item that holds it is there for the DM alone.
+ */
+export type Lore = {
+    id: Id;
+    title: string;
+    body: string;
+    /**
+     * Whether the party knows it.
+     */
+    unlocked: boolean;
+    unlockedAt?: string;
+    /**
+     * The item whose reading unlocks the entry, or empty.
+     */
+    itemSlug?: string;
+    updatedAt: string;
+};
+
+/**
+ * The editable part of a Lore entry.
+ */
+export type LoreInput = {
+    title: string;
+    body?: string;
+    itemSlug?: string;
+    /**
+     * The DM's word that the party knows it. Left out, the entry is locked.
+     */
+    unlocked?: boolean;
+};
+
+/**
+ * A book or letter to read.
+ */
+export type ItemReading = {
+    itemSlug: string;
+};
+
+/**
+ * What a reading did.
+ */
+export type ItemReadingResult = {
+    /**
+     * How many Lore entries it unlocked.
+     */
+    unlocked: number;
+};
+
+/**
  * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
  */
 export type Faction = {
@@ -8113,6 +8219,294 @@ export type ListFactionArchetypesResponses = {
 };
 
 export type ListFactionArchetypesResponse = ListFactionArchetypesResponses[keyof ListFactionArchetypesResponses];
+
+export type GetJournalData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/journal';
+};
+
+export type GetJournalErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetJournalError = GetJournalErrors[keyof GetJournalErrors];
+
+export type GetJournalResponses = {
+    /**
+     * The Journal.
+     */
+    200: Journal;
+};
+
+export type GetJournalResponse = GetJournalResponses[keyof GetJournalResponses];
+
+export type ReadItemData = {
+    body: ItemReading;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/journal/readings';
+};
+
+export type ReadItemErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReadItemError = ReadItemErrors[keyof ReadItemErrors];
+
+export type ReadItemResponses = {
+    /**
+     * How many Lore entries the reading unlocked.
+     */
+    200: ItemReadingResult;
+};
+
+export type ReadItemResponse = ReadItemResponses[keyof ReadItemResponses];
+
+export type CreateQuestData = {
+    body: QuestInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/quests';
+};
+
+export type CreateQuestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateQuestError = CreateQuestErrors[keyof CreateQuestErrors];
+
+export type CreateQuestResponses = {
+    /**
+     * The new Quest.
+     */
+    201: Quest;
+};
+
+export type CreateQuestResponse = CreateQuestResponses[keyof CreateQuestResponses];
+
+export type DeleteQuestData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Quest id.
+         */
+        questId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/quests/{questId}';
+};
+
+export type DeleteQuestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteQuestError = DeleteQuestErrors[keyof DeleteQuestErrors];
+
+export type DeleteQuestResponses = {
+    /**
+     * The Quest is removed.
+     */
+    204: void;
+};
+
+export type DeleteQuestResponse = DeleteQuestResponses[keyof DeleteQuestResponses];
+
+export type UpdateQuestData = {
+    body: QuestInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Quest id.
+         */
+        questId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/quests/{questId}';
+};
+
+export type UpdateQuestErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateQuestError = UpdateQuestErrors[keyof UpdateQuestErrors];
+
+export type UpdateQuestResponses = {
+    /**
+     * The Quest is changed.
+     */
+    204: void;
+};
+
+export type UpdateQuestResponse = UpdateQuestResponses[keyof UpdateQuestResponses];
+
+export type CreateLoreData = {
+    body: LoreInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/lore';
+};
+
+export type CreateLoreErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateLoreError = CreateLoreErrors[keyof CreateLoreErrors];
+
+export type CreateLoreResponses = {
+    /**
+     * The new Lore entry.
+     */
+    201: Lore;
+};
+
+export type CreateLoreResponse = CreateLoreResponses[keyof CreateLoreResponses];
+
+export type DeleteLoreData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Lore entry id.
+         */
+        loreId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/lore/{loreId}';
+};
+
+export type DeleteLoreErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteLoreError = DeleteLoreErrors[keyof DeleteLoreErrors];
+
+export type DeleteLoreResponses = {
+    /**
+     * The Lore entry is removed.
+     */
+    204: void;
+};
+
+export type DeleteLoreResponse = DeleteLoreResponses[keyof DeleteLoreResponses];
+
+export type UpdateLoreData = {
+    body: LoreInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Lore entry id.
+         */
+        loreId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/lore/{loreId}';
+};
+
+export type UpdateLoreErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateLoreError = UpdateLoreErrors[keyof UpdateLoreErrors];
+
+export type UpdateLoreResponses = {
+    /**
+     * The Lore entry is changed.
+     */
+    204: void;
+};
+
+export type UpdateLoreResponse = UpdateLoreResponses[keyof UpdateLoreResponses];
 
 export type ListFactionsData = {
     body?: never;

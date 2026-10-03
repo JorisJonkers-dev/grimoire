@@ -109,6 +109,10 @@ type CreateLootTableRes interface {
 	createLootTableRes()
 }
 
+type CreateLoreRes interface {
+	createLoreRes()
+}
+
 type CreateNpcRes interface {
 	createNpcRes()
 }
@@ -123,6 +127,10 @@ type CreateProposalRes interface {
 
 type CreatePushSubscriptionRes interface {
 	createPushSubscriptionRes()
+}
+
+type CreateQuestRes interface {
+	createQuestRes()
 }
 
 type CreateRollRes interface {
@@ -177,12 +185,20 @@ type DeleteLootTableRes interface {
 	deleteLootTableRes()
 }
 
+type DeleteLoreRes interface {
+	deleteLoreRes()
+}
+
 type DeleteNpcRes interface {
 	deleteNpcRes()
 }
 
 type DeletePushSubscriptionRes interface {
 	deletePushSubscriptionRes()
+}
+
+type DeleteQuestRes interface {
+	deleteQuestRes()
 }
 
 type DeleteSettlementRes interface {
@@ -303,6 +319,10 @@ type GetInventoryRes interface {
 
 type GetItemBuildRes interface {
 	getItemBuildRes()
+}
+
+type GetJournalRes interface {
+	getJournalRes()
 }
 
 type GetLibraryEntryRes interface {
@@ -725,6 +745,10 @@ type ReadAllNotificationsRes interface {
 	readAllNotificationsRes()
 }
 
+type ReadItemRes interface {
+	readItemRes()
+}
+
 type ReadNotificationRes interface {
 	readNotificationRes()
 }
@@ -1021,6 +1045,10 @@ type UpdateLootTableRes interface {
 	updateLootTableRes()
 }
 
+type UpdateLoreRes interface {
+	updateLoreRes()
+}
+
 type UpdateMapRes interface {
 	updateMapRes()
 }
@@ -1035,6 +1063,10 @@ type UpdateMyCharacterRes interface {
 
 type UpdateNpcRes interface {
 	updateNpcRes()
+}
+
+type UpdateQuestRes interface {
+	updateQuestRes()
 }
 
 type UpdateSettlementRes interface {

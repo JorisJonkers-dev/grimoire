@@ -252,6 +252,17 @@ type CampaignLootClaim struct {
 	CreatedAt   time.Time
 }
 
+type CampaignLore struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Title      string
+	Body       string
+	ItemSlug   string
+	UnlockedAt pgtype.Timestamptz
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
 type CampaignMap struct {
 	ID           uuid.UUID
 	CampaignID   uuid.UUID
@@ -401,6 +412,23 @@ type CampaignPushSubscription struct {
 	P256dh    string
 	Auth      string
 	CreatedAt time.Time
+}
+
+type CampaignQuest struct {
+	ID         uuid.UUID
+	CampaignID uuid.UUID
+	Name       string
+	Summary    string
+	Status     string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type CampaignQuestStep struct {
+	QuestID  uuid.UUID
+	Position int32
+	Body     string
+	Done     bool
 }
 
 type CampaignRetrain struct {

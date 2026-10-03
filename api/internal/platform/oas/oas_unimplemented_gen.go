@@ -266,6 +266,16 @@ func (UnimplementedHandler) CreateLootTable(ctx context.Context, req *LootTableI
 	return r, ht.ErrNotImplemented
 }
 
+// CreateLore implements createLore operation.
+//
+// Adds a Lore entry, locked unless the DM says the party knows it. An entry may name the item that
+// holds it: reading that item unlocks it. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/lore
+func (UnimplementedHandler) CreateLore(ctx context.Context, req *LoreInput, params CreateLoreParams) (r CreateLoreRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateNpc implements createNpc operation.
 //
 // Adds an NPC and records its first Revision. DM only.
@@ -300,6 +310,15 @@ func (UnimplementedHandler) CreateProposal(ctx context.Context, req *ProposalInp
 //
 // POST /api/v1/push/subscriptions
 func (UnimplementedHandler) CreatePushSubscription(ctx context.Context, req *PushSubscriptionInput) (r CreatePushSubscriptionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateQuest implements createQuest operation.
+//
+// Adds a Quest with its steps. A hidden Quest is the DM's alone until its status changes. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/quests
+func (UnimplementedHandler) CreateQuest(ctx context.Context, req *QuestInput, params CreateQuestParams) (r CreateQuestRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -423,6 +442,15 @@ func (UnimplementedHandler) DeleteLootTable(ctx context.Context, params DeleteLo
 	return r, ht.ErrNotImplemented
 }
 
+// DeleteLore implements deleteLore operation.
+//
+// Removes a Lore entry. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/lore/{loreId}
+func (UnimplementedHandler) DeleteLore(ctx context.Context, params DeleteLoreParams) (r DeleteLoreRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteNpc implements deleteNpc operation.
 //
 // Removes the NPC; its Revisions keep it restorable. DM only.
@@ -438,6 +466,15 @@ func (UnimplementedHandler) DeleteNpc(ctx context.Context, params DeleteNpcParam
 //
 // DELETE /api/v1/push/subscriptions/{subscriptionId}
 func (UnimplementedHandler) DeletePushSubscription(ctx context.Context, params DeletePushSubscriptionParams) (r DeletePushSubscriptionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteQuest implements deleteQuest operation.
+//
+// Removes a Quest and its steps. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
+func (UnimplementedHandler) DeleteQuest(ctx context.Context, params DeleteQuestParams) (r DeleteQuestRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -719,6 +756,18 @@ func (UnimplementedHandler) GetInventory(ctx context.Context, params GetInventor
 //
 // GET /api/v1/builders/items/{entryId}
 func (UnimplementedHandler) GetItemBuild(ctx context.Context, params GetItemBuildParams) (r GetItemBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetJournal implements getJournal operation.
+//
+// The Campaign's Quests and Lore as the caller may see them. The DM gets all of it. A Player gets the
+// Quests the party has been given and the Lore it has unlocked: a hidden Quest and a locked Lore entry
+// are left out whole. Readable lists the books and letters the caller carries, on their own Characters
+// or in the Party Stash, that still hold Lore.
+//
+// GET /api/v1/campaigns/{campaignId}/journal
+func (UnimplementedHandler) GetJournal(ctx context.Context, params GetJournalParams) (r GetJournalRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1703,6 +1752,17 @@ func (UnimplementedHandler) ReadAllNotifications(ctx context.Context) (r ReadAll
 	return r, ht.ErrNotImplemented
 }
 
+// ReadItem implements readItem operation.
+//
+// A Member reads an item they carry, on one of their own Characters or in the Party Stash. Every Lore
+// entry that item holds is unlocked for the whole party. An item the Member does not carry and an item
+// that holds nothing are refused alike.
+//
+// POST /api/v1/campaigns/{campaignId}/journal/readings
+func (UnimplementedHandler) ReadItem(ctx context.Context, req *ItemReading, params ReadItemParams) (r ReadItemRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ReadNotification implements readNotification operation.
 //
 // Marks one Notification read, as acting on it does.
@@ -2411,6 +2471,15 @@ func (UnimplementedHandler) UpdateLootTable(ctx context.Context, req *LootTableI
 	return r, ht.ErrNotImplemented
 }
 
+// UpdateLore implements updateLore operation.
+//
+// Changes a Lore entry, and locks or unlocks it at the DM's word. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/lore/{loreId}
+func (UnimplementedHandler) UpdateLore(ctx context.Context, req *LoreInput, params UpdateLoreParams) (r UpdateLoreRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // UpdateMap implements updateMap operation.
 //
 // Renames a Map and sets its hex size, grid origin and ambient light. DM only.
@@ -2444,6 +2513,15 @@ func (UnimplementedHandler) UpdateMyCharacter(ctx context.Context, req *OwnedCha
 //
 // PUT /api/v1/campaigns/{campaignId}/npcs/{npcId}
 func (UnimplementedHandler) UpdateNpc(ctx context.Context, req *NpcInput, params UpdateNpcParams) (r UpdateNpcRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateQuest implements updateQuest operation.
+//
+// Changes a Quest: its words, its status, its steps and which of them are done. DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/quests/{questId}
+func (UnimplementedHandler) UpdateQuest(ctx context.Context, req *QuestInput, params UpdateQuestParams) (r UpdateQuestRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
