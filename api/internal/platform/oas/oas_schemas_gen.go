@@ -21598,6 +21598,72 @@ func (s *LiveHaggle) SetAdjustPct(val OptInt32) {
 	s.AdjustPct = val
 }
 
+// Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves
+// out creatures the audience may not see.
+// Ref: #/components/schemas/LiveInitiativeReveal
+type LiveInitiativeReveal struct {
+	Order []LiveInitiativeRoll `json:"order"`
+}
+
+// GetOrder returns the value of Order.
+func (s *LiveInitiativeReveal) GetOrder() []LiveInitiativeRoll {
+	return s.Order
+}
+
+// SetOrder sets the value of Order.
+func (s *LiveInitiativeReveal) SetOrder(val []LiveInitiativeRoll) {
+	s.Order = val
+}
+
+// One Combatant's place in the initiative reveal.
+// Ref: #/components/schemas/LiveInitiativeRoll
+type LiveInitiativeRoll struct {
+	TokenId    ID        `json:"tokenId"`
+	Label      string    `json:"label"`
+	Kind       TokenKind `json:"kind"`
+	Initiative int32     `json:"initiative"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveInitiativeRoll) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveInitiativeRoll) GetLabel() string {
+	return s.Label
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveInitiativeRoll) GetKind() TokenKind {
+	return s.Kind
+}
+
+// GetInitiative returns the value of Initiative.
+func (s *LiveInitiativeRoll) GetInitiative() int32 {
+	return s.Initiative
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveInitiativeRoll) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveInitiativeRoll) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveInitiativeRoll) SetKind(val TokenKind) {
+	s.Kind = val
+}
+
+// SetInitiative sets the value of Initiative.
+func (s *LiveInitiativeRoll) SetInitiative(val int32) {
+	s.Initiative = val
+}
+
 // A stack of one item and what it weighs in all.
 // Ref: #/components/schemas/LiveItem
 type LiveItem struct {
@@ -22484,12 +22550,16 @@ func (s *LiveOffer) SetJunk(val OptBool) {
 	s.Junk = val
 }
 
-// The route a walk would take, start first, and the movement it costs.
+// The route a walk would take, start first, the movement it costs, the opportunity attacks it would
+// draw in order, and how each creature of the other side would see the mover where it ends. It names
+// only creatures the asker may see.
 // Ref: #/components/schemas/LivePath
 type LivePath struct {
-	TokenId ID         `json:"tokenId"`
-	Hexes   []HexCoord `json:"hexes"`
-	CostFt  int32      `json:"costFt"`
+	TokenId ID               `json:"tokenId"`
+	Hexes   []HexCoord       `json:"hexes"`
+	CostFt  int32            `json:"costFt"`
+	Threats []LivePathThreat `json:"threats"`
+	Sight   []LivePathSight  `json:"sight"`
 }
 
 // GetTokenId returns the value of TokenId.
@@ -22507,6 +22577,16 @@ func (s *LivePath) GetCostFt() int32 {
 	return s.CostFt
 }
 
+// GetThreats returns the value of Threats.
+func (s *LivePath) GetThreats() []LivePathThreat {
+	return s.Threats
+}
+
+// GetSight returns the value of Sight.
+func (s *LivePath) GetSight() []LivePathSight {
+	return s.Sight
+}
+
 // SetTokenId sets the value of TokenId.
 func (s *LivePath) SetTokenId(val ID) {
 	s.TokenId = val
@@ -22520,6 +22600,170 @@ func (s *LivePath) SetHexes(val []HexCoord) {
 // SetCostFt sets the value of CostFt.
 func (s *LivePath) SetCostFt(val int32) {
 	s.CostFt = val
+}
+
+// SetThreats sets the value of Threats.
+func (s *LivePath) SetThreats(val []LivePathThreat) {
+	s.Threats = val
+}
+
+// SetSight sets the value of Sight.
+func (s *LivePath) SetSight(val []LivePathSight) {
+	s.Sight = val
+}
+
+// Whether a creature has a line to the end of a planned walk, and the cover the mover has from it
+// there.
+// Ref: #/components/schemas/LivePathSight
+type LivePathSight struct {
+	TokenId ID                 `json:"tokenId"`
+	Label   string             `json:"label"`
+	Visible bool               `json:"visible"`
+	Cover   LivePathSightCover `json:"cover"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LivePathSight) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LivePathSight) GetLabel() string {
+	return s.Label
+}
+
+// GetVisible returns the value of Visible.
+func (s *LivePathSight) GetVisible() bool {
+	return s.Visible
+}
+
+// GetCover returns the value of Cover.
+func (s *LivePathSight) GetCover() LivePathSightCover {
+	return s.Cover
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LivePathSight) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LivePathSight) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetVisible sets the value of Visible.
+func (s *LivePathSight) SetVisible(val bool) {
+	s.Visible = val
+}
+
+// SetCover sets the value of Cover.
+func (s *LivePathSight) SetCover(val LivePathSightCover) {
+	s.Cover = val
+}
+
+type LivePathSightCover string
+
+const (
+	LivePathSightCoverNone          LivePathSightCover = "none"
+	LivePathSightCoverHalf          LivePathSightCover = "half"
+	LivePathSightCoverThreeQuarters LivePathSightCover = "three_quarters"
+	LivePathSightCoverTotal         LivePathSightCover = "total"
+)
+
+// AllValues returns all LivePathSightCover values.
+func (LivePathSightCover) AllValues() []LivePathSightCover {
+	return []LivePathSightCover{
+		LivePathSightCoverNone,
+		LivePathSightCoverHalf,
+		LivePathSightCoverThreeQuarters,
+		LivePathSightCoverTotal,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LivePathSightCover) MarshalText() ([]byte, error) {
+	switch s {
+	case LivePathSightCoverNone:
+		return []byte(s), nil
+	case LivePathSightCoverHalf:
+		return []byte(s), nil
+	case LivePathSightCoverThreeQuarters:
+		return []byte(s), nil
+	case LivePathSightCoverTotal:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LivePathSightCover) UnmarshalText(data []byte) error {
+	switch LivePathSightCover(data) {
+	case LivePathSightCoverNone:
+		*s = LivePathSightCoverNone
+		return nil
+	case LivePathSightCoverHalf:
+		*s = LivePathSightCoverHalf
+		return nil
+	case LivePathSightCoverThreeQuarters:
+		*s = LivePathSightCoverThreeQuarters
+		return nil
+	case LivePathSightCoverTotal:
+		*s = LivePathSightCoverTotal
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+// Ref: #/components/schemas/LivePathThreat
+type LivePathThreat struct {
+	TokenId ID     `json:"tokenId"`
+	Label   string `json:"label"`
+	Q       int32  `json:"q"`
+	R       int32  `json:"r"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LivePathThreat) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LivePathThreat) GetLabel() string {
+	return s.Label
+}
+
+// GetQ returns the value of Q.
+func (s *LivePathThreat) GetQ() int32 {
+	return s.Q
+}
+
+// GetR returns the value of R.
+func (s *LivePathThreat) GetR() int32 {
+	return s.R
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LivePathThreat) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LivePathThreat) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetQ sets the value of Q.
+func (s *LivePathThreat) SetQ(val int32) {
+	s.Q = val
+}
+
+// SetR sets the value of R.
+func (s *LivePathThreat) SetR(val int32) {
+	s.R = val
 }
 
 // An attack waiting on its attack or damage Roll Card.
@@ -23283,6 +23527,177 @@ func (s *LiveResterHitDie) UnmarshalText(data []byte) error {
 		return nil
 	case LiveResterHitDieD12:
 		*s = LiveResterHitDieD12
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// One creature on the roster strip: hit points for the DM and the party's own, a rough health for
+// anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+// Ref: #/components/schemas/LiveRosterEntry
+type LiveRosterEntry struct {
+	TokenId ID                       `json:"tokenId"`
+	Label   string                   `json:"label"`
+	Kind    string                   `json:"kind"`
+	Hp      OptInt32                 `json:"hp"`
+	HpMax   OptInt32                 `json:"hpMax"`
+	TempHp  OptInt32                 `json:"tempHp"`
+	Health  OptLiveRosterEntryHealth `json:"health"`
+	Hidden  OptBool                  `json:"hidden"`
+	Acting  bool                     `json:"acting"`
+	Effects []LiveEffect             `json:"effects"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveRosterEntry) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveRosterEntry) GetLabel() string {
+	return s.Label
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveRosterEntry) GetKind() string {
+	return s.Kind
+}
+
+// GetHp returns the value of Hp.
+func (s *LiveRosterEntry) GetHp() OptInt32 {
+	return s.Hp
+}
+
+// GetHpMax returns the value of HpMax.
+func (s *LiveRosterEntry) GetHpMax() OptInt32 {
+	return s.HpMax
+}
+
+// GetTempHp returns the value of TempHp.
+func (s *LiveRosterEntry) GetTempHp() OptInt32 {
+	return s.TempHp
+}
+
+// GetHealth returns the value of Health.
+func (s *LiveRosterEntry) GetHealth() OptLiveRosterEntryHealth {
+	return s.Health
+}
+
+// GetHidden returns the value of Hidden.
+func (s *LiveRosterEntry) GetHidden() OptBool {
+	return s.Hidden
+}
+
+// GetActing returns the value of Acting.
+func (s *LiveRosterEntry) GetActing() bool {
+	return s.Acting
+}
+
+// GetEffects returns the value of Effects.
+func (s *LiveRosterEntry) GetEffects() []LiveEffect {
+	return s.Effects
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveRosterEntry) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveRosterEntry) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveRosterEntry) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetHp sets the value of Hp.
+func (s *LiveRosterEntry) SetHp(val OptInt32) {
+	s.Hp = val
+}
+
+// SetHpMax sets the value of HpMax.
+func (s *LiveRosterEntry) SetHpMax(val OptInt32) {
+	s.HpMax = val
+}
+
+// SetTempHp sets the value of TempHp.
+func (s *LiveRosterEntry) SetTempHp(val OptInt32) {
+	s.TempHp = val
+}
+
+// SetHealth sets the value of Health.
+func (s *LiveRosterEntry) SetHealth(val OptLiveRosterEntryHealth) {
+	s.Health = val
+}
+
+// SetHidden sets the value of Hidden.
+func (s *LiveRosterEntry) SetHidden(val OptBool) {
+	s.Hidden = val
+}
+
+// SetActing sets the value of Acting.
+func (s *LiveRosterEntry) SetActing(val bool) {
+	s.Acting = val
+}
+
+// SetEffects sets the value of Effects.
+func (s *LiveRosterEntry) SetEffects(val []LiveEffect) {
+	s.Effects = val
+}
+
+type LiveRosterEntryHealth string
+
+const (
+	LiveRosterEntryHealthUnhurt   LiveRosterEntryHealth = "unhurt"
+	LiveRosterEntryHealthHurt     LiveRosterEntryHealth = "hurt"
+	LiveRosterEntryHealthBloodied LiveRosterEntryHealth = "bloodied"
+	LiveRosterEntryHealthDown     LiveRosterEntryHealth = "down"
+)
+
+// AllValues returns all LiveRosterEntryHealth values.
+func (LiveRosterEntryHealth) AllValues() []LiveRosterEntryHealth {
+	return []LiveRosterEntryHealth{
+		LiveRosterEntryHealthUnhurt,
+		LiveRosterEntryHealthHurt,
+		LiveRosterEntryHealthBloodied,
+		LiveRosterEntryHealthDown,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s LiveRosterEntryHealth) MarshalText() ([]byte, error) {
+	switch s {
+	case LiveRosterEntryHealthUnhurt:
+		return []byte(s), nil
+	case LiveRosterEntryHealthHurt:
+		return []byte(s), nil
+	case LiveRosterEntryHealthBloodied:
+		return []byte(s), nil
+	case LiveRosterEntryHealthDown:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *LiveRosterEntryHealth) UnmarshalText(data []byte) error {
+	switch LiveRosterEntryHealth(data) {
+	case LiveRosterEntryHealthUnhurt:
+		*s = LiveRosterEntryHealthUnhurt
+		return nil
+	case LiveRosterEntryHealthHurt:
+		*s = LiveRosterEntryHealthHurt
+		return nil
+	case LiveRosterEntryHealthBloodied:
+		*s = LiveRosterEntryHealthBloodied
+		return nil
+	case LiveRosterEntryHealthDown:
+		*s = LiveRosterEntryHealthDown
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -24227,23 +24642,53 @@ func (s *LiveTravelPlan) SetDays(val int32) {
 	s.Days = val
 }
 
+// The tokens whose turn a change started, sent with that change's view. It leaves out creatures the
+// audience may not see.
+// Ref: #/components/schemas/LiveTurnStart
+type LiveTurnStart struct {
+	Round    int32 `json:"round"`
+	TokenIds []ID  `json:"tokenIds"`
+}
+
+// GetRound returns the value of Round.
+func (s *LiveTurnStart) GetRound() int32 {
+	return s.Round
+}
+
+// GetTokenIds returns the value of TokenIds.
+func (s *LiveTurnStart) GetTokenIds() []ID {
+	return s.TokenIds
+}
+
+// SetRound sets the value of Round.
+func (s *LiveTurnStart) SetRound(val int32) {
+	s.Round = val
+}
+
+// SetTokenIds sets the value of TokenIds.
+func (s *LiveTurnStart) SetTokenIds(val []ID) {
+	s.TokenIds = val
+}
+
 // A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
 // change, and a view whose seq is not the next one means resync. A walk's view carries the views along
 // the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
-	Kind      LiveUpdateKind       `json:"kind"`
-	Seq       int32                `json:"seq"`
-	Nonce     OptString            `json:"nonce"`
-	ActionSeq OptInt32             `json:"actionSeq"`
-	Reason    OptString            `json:"reason"`
-	Session   OptLiveSessionView   `json:"session"`
-	View      OptLiveView          `json:"view"`
-	Steps     []LiveView           `json:"steps"`
-	Path      OptLivePath          `json:"path"`
-	Preview   OptLiveAttackPreview `json:"preview"`
-	Area      OptLiveAreaPreview   `json:"area"`
-	Ping      OptHexCoord          `json:"ping"`
+	Kind       LiveUpdateKind          `json:"kind"`
+	Seq        int32                   `json:"seq"`
+	Nonce      OptString               `json:"nonce"`
+	ActionSeq  OptInt32                `json:"actionSeq"`
+	Reason     OptString               `json:"reason"`
+	Session    OptLiveSessionView      `json:"session"`
+	View       OptLiveView             `json:"view"`
+	Steps      []LiveView              `json:"steps"`
+	Path       OptLivePath             `json:"path"`
+	Preview    OptLiveAttackPreview    `json:"preview"`
+	Area       OptLiveAreaPreview      `json:"area"`
+	Ping       OptHexCoord             `json:"ping"`
+	Initiative OptLiveInitiativeReveal `json:"initiative"`
+	Turn       OptLiveTurnStart        `json:"turn"`
 }
 
 // GetKind returns the value of Kind.
@@ -24306,6 +24751,16 @@ func (s *LiveUpdate) GetPing() OptHexCoord {
 	return s.Ping
 }
 
+// GetInitiative returns the value of Initiative.
+func (s *LiveUpdate) GetInitiative() OptLiveInitiativeReveal {
+	return s.Initiative
+}
+
+// GetTurn returns the value of Turn.
+func (s *LiveUpdate) GetTurn() OptLiveTurnStart {
+	return s.Turn
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -24364,6 +24819,16 @@ func (s *LiveUpdate) SetArea(val OptLiveAreaPreview) {
 // SetPing sets the value of Ping.
 func (s *LiveUpdate) SetPing(val OptHexCoord) {
 	s.Ping = val
+}
+
+// SetInitiative sets the value of Initiative.
+func (s *LiveUpdate) SetInitiative(val OptLiveInitiativeReveal) {
+	s.Initiative = val
+}
+
+// SetTurn sets the value of Turn.
+func (s *LiveUpdate) SetTurn(val OptLiveTurnStart) {
+	s.Turn = val
 }
 
 type LiveUpdateKind string
@@ -24478,6 +24943,9 @@ type LiveView struct {
 	Exploration OptLiveViewExploration `json:"exploration"`
 	// The Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []LiveViewSurfaceKindsItem `json:"surfaceKinds"`
+	// The shared roster strip as this audience may see it, the fight in initiative order or every creature
+	// it can see.
+	Roster []LiveRosterEntry `json:"roster"`
 	// The Campaign's homebrew conditions, for the DM's effect picker.
 	Conditions []LiveViewConditionsItem `json:"conditions"`
 	// The Map Objects the audience knows; the party never gets secret ones or ones outside what it has
@@ -24579,6 +25047,11 @@ func (s *LiveView) GetExploration() OptLiveViewExploration {
 // GetSurfaceKinds returns the value of SurfaceKinds.
 func (s *LiveView) GetSurfaceKinds() []LiveViewSurfaceKindsItem {
 	return s.SurfaceKinds
+}
+
+// GetRoster returns the value of Roster.
+func (s *LiveView) GetRoster() []LiveRosterEntry {
+	return s.Roster
 }
 
 // GetConditions returns the value of Conditions.
@@ -24724,6 +25197,11 @@ func (s *LiveView) SetExploration(val OptLiveViewExploration) {
 // SetSurfaceKinds sets the value of SurfaceKinds.
 func (s *LiveView) SetSurfaceKinds(val []LiveViewSurfaceKindsItem) {
 	s.SurfaceKinds = val
+}
+
+// SetRoster sets the value of Roster.
+func (s *LiveView) SetRoster(val []LiveRosterEntry) {
+	s.Roster = val
 }
 
 // SetConditions sets the value of Conditions.
@@ -31070,6 +31548,52 @@ func (o OptLiveDying) Or(d LiveDying) LiveDying {
 	return d
 }
 
+// NewOptLiveInitiativeReveal returns new OptLiveInitiativeReveal with value set to v.
+func NewOptLiveInitiativeReveal(v LiveInitiativeReveal) OptLiveInitiativeReveal {
+	return OptLiveInitiativeReveal{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveInitiativeReveal is optional LiveInitiativeReveal.
+type OptLiveInitiativeReveal struct {
+	Value LiveInitiativeReveal
+	Set   bool
+}
+
+// IsSet returns true if OptLiveInitiativeReveal was set.
+func (o OptLiveInitiativeReveal) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveInitiativeReveal) Reset() {
+	var v LiveInitiativeReveal
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveInitiativeReveal) SetTo(v LiveInitiativeReveal) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveInitiativeReveal) Get() (v LiveInitiativeReveal, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveInitiativeReveal) Or(d LiveInitiativeReveal) LiveInitiativeReveal {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveItemInstanceSlot returns new OptLiveItemInstanceSlot with value set to v.
 func NewOptLiveItemInstanceSlot(v LiveItemInstanceSlot) OptLiveItemInstanceSlot {
 	return OptLiveItemInstanceSlot{
@@ -31438,6 +31962,52 @@ func (o OptLiveRest) Or(d LiveRest) LiveRest {
 	return d
 }
 
+// NewOptLiveRosterEntryHealth returns new OptLiveRosterEntryHealth with value set to v.
+func NewOptLiveRosterEntryHealth(v LiveRosterEntryHealth) OptLiveRosterEntryHealth {
+	return OptLiveRosterEntryHealth{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveRosterEntryHealth is optional LiveRosterEntryHealth.
+type OptLiveRosterEntryHealth struct {
+	Value LiveRosterEntryHealth
+	Set   bool
+}
+
+// IsSet returns true if OptLiveRosterEntryHealth was set.
+func (o OptLiveRosterEntryHealth) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveRosterEntryHealth) Reset() {
+	var v LiveRosterEntryHealth
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveRosterEntryHealth) SetTo(v LiveRosterEntryHealth) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveRosterEntryHealth) Get() (v LiveRosterEntryHealth, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveRosterEntryHealth) Or(d LiveRosterEntryHealth) LiveRosterEntryHealth {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveSessionView returns new OptLiveSessionView with value set to v.
 func NewOptLiveSessionView(v LiveSessionView) OptLiveSessionView {
 	return OptLiveSessionView{
@@ -31662,6 +32232,52 @@ func (o OptLiveTokenHealth) Get() (v LiveTokenHealth, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveTokenHealth) Or(d LiveTokenHealth) LiveTokenHealth {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveTurnStart returns new OptLiveTurnStart with value set to v.
+func NewOptLiveTurnStart(v LiveTurnStart) OptLiveTurnStart {
+	return OptLiveTurnStart{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveTurnStart is optional LiveTurnStart.
+type OptLiveTurnStart struct {
+	Value LiveTurnStart
+	Set   bool
+}
+
+// IsSet returns true if OptLiveTurnStart was set.
+func (o OptLiveTurnStart) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveTurnStart) Reset() {
+	var v LiveTurnStart
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveTurnStart) SetTo(v LiveTurnStart) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveTurnStart) Get() (v LiveTurnStart, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveTurnStart) Or(d LiveTurnStart) LiveTurnStart {
 	if v, ok := o.Get(); ok {
 		return v
 	}

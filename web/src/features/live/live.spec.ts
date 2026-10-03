@@ -3,13 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveCheck, LiveContainer, LiveShop, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
-import { fakeClock, mountApp } from '@/test/mountApp'
+import { fakeClock, mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials, zoneHexes } from './board'
 import { focus } from './camera'
 import { checkLine } from './checks'
 import { canPut, canTake, instanceLabel, load } from './inventory'
 import { cellsFor, key, layoutOf } from './geometry'
+import { BANNER_MS, REVEAL_FADE_MS, REVEAL_HOLD_MS } from './motion'
 import { duration, journey } from './travel'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
@@ -95,11 +96,11 @@ describe('live session page', () => {
     expect(wrapper.get('[data-testid="selected-token"]').text()).toContain('Goblin Boss')
     await wrapper.get('[data-hex="2,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', tokenId: goblin.id, q: 2, r: 0 })
-    s.receive({ kind: 'path', seq: 1, path: { tokenId: goblin.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5 } })
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: goblin.id, hexes: [{ q: 1, r: 0 }, { q: 2, r: 0 }], costFt: 5, threats: [], sight: [] } })
     await flushPromises()
     expect(wrapper.get('[data-testid="walk-preview"]').text()).toContain('Walk 5 ft')
     expect(wrapper.get('[data-hex="2,0"]').attributes('aria-label')).toContain('on the path')
-    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    await wrapper.get('[data-testid="confirm-walk"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: goblin.id, q: 2, r: 0 })
     await wrapper.get('[data-testid="toggle-hidden"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'set_token_hidden', tokenId: goblin.id, hidden: true })
@@ -233,17 +234,45 @@ describe('exploration', () => {
     expect(wrapper.get('[data-testid="walker"]').text()).toContain('Brom')
     await wrapper.get('[data-hex="1,0"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', tokenId: brom.id, q: 1, r: 0 })
-    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 0 }], costFt: 5 } })
+    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 0 }], costFt: 5, threats: [], sight: [] } })
     await flushPromises()
+    expect(wrapper.get('[data-testid="walk-preview"]').text()).toContain('No opportunity attacks.')
+    // Tapping the same hex again only plans again: nothing moves without Confirm.
+    await wrapper.get('[data-hex="1,0"]').trigger('click')
+    expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', q: 1, r: 0 })
+    await wrapper.get('[data-testid="cancel-walk"]').trigger('click')
+    expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
+    expect(wrapper.get('[data-hex="1,0"]').attributes('aria-label')).not.toContain('on the path')
+    expect(s.sent.every((c) => (c as { kind: string }).kind !== 'walk')).toBe(true)
     await wrapper.get('[data-hex="2,-1"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'plan_walk', q: 2, r: -1 })
     s.receive({ kind: 'rejected', seq: 1, reason: 'There is no way there.' })
     await flushPromises()
     expect(wrapper.find('[data-testid="walk-preview"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="rejection"]').text()).toBe('There is no way there.')
-    s.receive({ kind: 'path', seq: 1, path: { tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 1 }, { q: 2, r: 0 }], costFt: 10 } })
+    s.receive({
+      kind: 'path', seq: 1,
+      path: {
+        tokenId: brom.id, hexes: [{ q: 0, r: 1 }, { q: 1, r: 1 }, { q: 2, r: 0 }], costFt: 10,
+        threats: [{ tokenId: goblin.id, label: 'Goblin Boss', q: 0, r: 1 }],
+        sight: [
+          { tokenId: goblin.id, label: 'Goblin Boss', visible: true, cover: 'half' },
+          { tokenId: lurker.id, label: 'Archer', visible: false, cover: 'total' },
+          { tokenId: '0190c7a8-0000-7000-8000-0000000000aa', label: 'Wolf', visible: true, cover: 'none' },
+          { tokenId: '0190c7a8-0000-7000-8000-0000000000ab', label: 'Ogre', visible: true, cover: 'three_quarters' },
+        ],
+      },
+    })
     await flushPromises()
-    await wrapper.get('[data-hex="2,0"]').trigger('click')
+    const plan = wrapper.get('[data-testid="walk-preview"]')
+    expect(plan.text()).toContain('Walk 10 ft')
+    expect(plan.get('[data-testid="walk-threats"]').text()).toBe('Leaving Goblin Boss\'s reach draws an opportunity attack.')
+    expect(plan.findAll('[data-testid="walk-sight"] li').map((li) => li.text())).toEqual([
+      'Goblin Boss sees Brom there, behind half cover.', 'Archer has no line to Brom there.', 'Wolf sees Brom there.', 'Ogre sees Brom there, behind three-quarters cover.',
+    ])
+    expect(wrapper.get('[data-hex="0,1"]').attributes('aria-label')).toContain('opportunity attack')
+    await expectAccessible(wrapper.element as Element)
+    await wrapper.get('[data-testid="confirm-walk"]').trigger('click')
     expect(s.sent.at(-1)).toMatchObject({ kind: 'walk', tokenId: brom.id, q: 2, r: 0 })
     const at = (q: number, r: number) => ({ tokens: [aria, { ...brom, q, r }], fog: false, visible: [], remembered: [] })
     fakeClock()
@@ -258,7 +287,7 @@ describe('exploration', () => {
 
 describe('combat', () => {
   const fighter = (label: string, extra: Record<string, unknown> = {}) => ({
-    id: `0190c7a8-0000-7000-8000-0000000001${label.length.toString().padStart(2, '0')}`, tokenId: goblin.id, label, kind: 'enemy',
+    id: `0190c7a8-0000-7000-8000-0000000001${label.length.toString().padStart(2, '0')}`, tokenId: ({ Lurker: lurker.id } as Record<string, string>)[label] ?? goblin.id, label, kind: 'enemy',
     rollId: `0190c7a8-0000-7000-8000-0000000002${label.length.toString().padStart(2, '0')}`, acting: false, done: false,
     action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30, ...extra,
   })
@@ -370,6 +399,79 @@ describe('combat', () => {
     await flushPromises()
     expect(table.wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Round 2')
     expect(table.wrapper.findAll('[data-testid="table-display"] polygon')).toHaveLength(19)
+  })
+
+  it('reveals initiative before the faces slide into order, and raises a player\'s banner as their turn starts', async () => {
+    const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', controllerId: player.id, q: 0, r: 0 }
+    const ariaFights = (extra: Record<string, unknown> = {}) => fighter('Aria', { kind: 'party', controllerId: player.id, tokenId: aria.id, ...extra })
+    const frame = (seq: number, combat: object, extra: object = {}) => ({ kind: 'view', seq, view: { tokens: [aria, goblin], fog: false, visible: [], remembered: [], combat }, ...extra })
+    const order = [{ tokenId: goblin.id, label: 'Goblin Boss', kind: 'enemy', initiative: 18 }, { tokenId: aria.id, label: 'Aria', kind: 'party', initiative: 5 }]
+    const goblinActs = { status: 'active', round: 1, combatants: [fighter('Goblin Boss', { initiative: 18, rank: 1, acting: true }), ariaFights({ initiative: 5, rank: 2 })] }
+    const ariaActs = { status: 'active', round: 1, combatants: [fighter('Goblin Boss', { initiative: 18, rank: 1, done: true }), ariaFights({ initiative: 5, rank: 2, acting: true })] }
+    const open = async (role: string, path = '') => {
+      const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}${path}`, { [`/api/v1/campaigns/${ID}/rolls/`]: (u) => initiativeRoll(u.pathname.split('/')[6] ?? ''), [`/api/v1/campaigns/${ID}`]: () => campaign(role) })
+      const s = FakeSocket.last()
+      s.receive(snapshot([aria, goblin], path ? 'table' : role === 'dm' ? 'dm' : 'party', { combat: { status: 'rolling', round: 0, combatants: [ariaFights(), fighter('Goblin Boss')] } }))
+      await flushPromises()
+      const faces = () => wrapper.findAll('[data-testid="roster-strip"] li').map((li) => li.attributes('data-testid'))
+      return { wrapper, s, faces }
+    }
+    fakeClock()
+    const { wrapper, s, faces } = await open('player')
+    s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="roster-strip"]').classes()).toContain('roster--reveal')
+    expect(wrapper.get('[data-testid="rolled-Aria"]').text()).toBe('5')
+    expect(wrapper.get('[data-testid="rolled-Goblin Boss"]').text()).toBe('18')
+    expect(faces()).toEqual(['rail-Aria', 'rail-Goblin Boss'])
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+    await vi.advanceTimersByTimeAsync(REVEAL_HOLD_MS)
+    expect(faces()).toEqual(['rail-Goblin Boss', 'rail-Aria'])
+    expect(wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(true)
+    await vi.advanceTimersByTimeAsync(REVEAL_FADE_MS)
+    expect(wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="roster-strip"]').classes()).not.toContain('roster--reveal')
+
+    s.receive(frame(3, ariaActs, { turn: { round: 1, tokenIds: [aria.id] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="turn-banner"]').text()).toBe("It's your turn Aria")
+    s.receive(frame(4, ariaActs))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(true)
+    await vi.advanceTimersByTimeAsync(BANNER_MS)
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+    s.receive(frame(5, { ...ariaActs, round: 2 }, { turn: { round: 2, tokenIds: [aria.id] } }))
+    await flushPromises()
+    await wrapper.get('[data-testid="turn-banner"]').trigger('click')
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+
+    // A monster's turn is nobody's banner; the DM and the Table Display see the reveal too.
+    const dm = await open('dm')
+    dm.s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(dm.wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(true)
+    expect(dm.wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+    const table = await open('player', '/table')
+    table.s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(table.wrapper.get('[data-testid="rolled-Goblin Boss"]').text()).toBe('18')
+
+    // Reduced motion: straight into order, nothing to fade; the banner still says whose turn it is.
+    unmountAll()
+    document.body.innerHTML = ''
+    vi.useRealTimers()
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    const still = await open('player')
+    still.s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(still.faces()).toEqual(['rail-Goblin Boss', 'rail-Aria'])
+    expect(still.wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(false)
+    expect(still.wrapper.get('[data-testid="roster-strip"]').classes()).not.toContain('roster--reveal')
+    still.s.receive(frame(3, ariaActs, { turn: { round: 1, tokenIds: [aria.id] } }))
+    await flushPromises()
+    expect(still.wrapper.get('[data-testid="turn-banner"]').text()).toContain('Aria')
+    await expectAccessible(still.wrapper.element as Element)
+    still.wrapper.unmount()
   })
 })
 
@@ -2060,9 +2162,9 @@ describe('the fallen', () => {
     w.unmount()
   })
 
-  it('marks the fallen on the initiative rail', async () => {
+  it('marks the fallen on the roster strip', async () => {
     const { mount } = await import('@vue/test-utils')
-    const InitiativeRail = (await import('./InitiativeRail.vue')).default
+    const RosterStrip = (await import('./RosterStrip.vue')).default
     const tokens: LiveToken[] = [
       { ...goblin, id: '0190c7a8-0000-7000-8000-000000000091', dying: { successes: 1, failures: 2 } },
       { ...goblin, id: '0190c7a8-0000-7000-8000-000000000092', dying: { successes: 0, failures: 0, stable: true } },
@@ -2072,7 +2174,8 @@ describe('the fallen', () => {
       id: `0190c7a8-0000-7000-8000-00000000010${String(n)}`, tokenId: tokens[n]?.id ?? '', label, kind: 'party' as const, rollId: goblin.id,
       acting: false, done: false, action: true, bonusAction: true, reaction: true, movementFt: 30, speedFt: 30,
     })
-    const w = mount(InitiativeRail, { props: { combat: { status: 'active', round: 1, combatants: [c(0, 'A'), c(1, 'B'), c(2, 'C')] }, tokens } })
+    const roster = [0, 1, 2].map((n) => ({ tokenId: tokens[n]?.id ?? '', label: 'ABC'[n] ?? '', kind: 'party' as const, acting: false, effects: [] }))
+    const w = mount(RosterStrip, { props: { roster, combat: { status: 'active', round: 1, combatants: [c(0, 'A'), c(1, 'B'), c(2, 'C')] }, tokens } })
     expect(w.findAll('[data-testid="fallen"]').map((f) => f.text())).toEqual(['Dying 1✓ 2✗', 'Stable', 'Dead'])
   })
 })

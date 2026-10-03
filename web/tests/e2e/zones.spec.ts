@@ -57,7 +57,7 @@ test('a hidden goblin springs its zone on the party, and whoever missed it is su
 
   await player.locator('[data-hex="1,0"]').click()
   await expect(player.getByTestId('walk-preview')).toBeVisible()
-  await player.locator('[data-hex="1,0"]').click()
+  await player.getByTestId('confirm-walk').click()
   await expect(page.getByTestId('zone-Ambush')).toContainText('Waiting for Perception · Stealth DC 16')
   await expect(player.getByTestId('roll-card')).toContainText('Perception for Aria')
   await expect(player.locator('[data-hex="3,0"]')).not.toHaveAttribute('aria-label', /Goblin/)

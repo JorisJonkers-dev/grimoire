@@ -2,12 +2,12 @@
 import { computed } from 'vue'
 import type { LiveMap, LiveView } from '@/infrastructure/api/types.gen'
 import { type Coord, corners, toPixel } from '@/shared/hex'
-import { describe, groundNotes, initials } from './board'
+import { DANGER_NOTE, describe, groundNotes, initials } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 
 const props = withDefaults(
-  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; title: string }>(),
-  { dm: false, selected: null, path: () => [], area: () => [], zone: () => [], reach: () => [] },
+  defineProps<{ map: LiveMap; view: LiveView; dm?: boolean; selected?: string | null; path?: Coord[]; danger?: Coord[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; title: string }>(),
+  { dm: false, selected: null, path: () => [], danger: () => [], area: () => [], zone: () => [], reach: () => [] },
 )
 const emit = defineEmits<{ select: [coord: Coord] }>()
 
@@ -18,6 +18,7 @@ const walls = computed(() => new Set((props.view.walls ?? []).map(key)))
 const lights = computed(() => new Map((props.view.lights ?? []).map((l) => [key(l), l])))
 const tokens = computed(() => new Map(props.view.tokens.map((t) => [key(t), t])))
 const route = computed(() => new Set(props.path.map(key)))
+const danger = computed(() => new Set(props.danger.map(key)))
 const surfaces = computed(() => new Map((props.view.surfaces ?? []).map((s) => [key(s), s])))
 const heights = computed(() => new Map((props.view.elevation ?? []).map((e) => [key(e), e.elevationFt])))
 // shade darkens sunken ground and lightens raised ground, more the further from level it is.
@@ -48,6 +49,7 @@ const cells = computed(() =>
       lights.value.has(k) ? 'light' : '',
       objectNote(k),
       route.value.has(k) ? 'on the path' : '',
+      danger.value.has(k) ? DANGER_NOTE : '',
       ...groundNotes(k, surfaces.value, area.value, zone.value, reach.value),
       heights.value.has(k) ? `${String(heights.value.get(k))} ft high` : '',
     ]
@@ -73,7 +75,7 @@ const cells = computed(() =>
       <g
         v-for="c in cells"
         :key="c.k"
-        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k), 'cell--watched': reach.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
+        :class="['cell', `cell--${c.fog}`, { 'cell--wall': walls.has(c.k), 'cell--selected': c.token && c.token.id === selected, 'cell--dm': dm, 'cell--path': route.has(c.k), 'cell--danger': danger.has(c.k), 'cell--area': area.has(c.k), 'cell--zone': zone.has(c.k), 'cell--watched': reach.has(c.k) }, surfaces.has(c.k) ? `cell--surface-${surfaces.get(c.k)?.kind ?? ''}` : '']"
         role="button"
         tabindex="0"
         :aria-label="c.label"
@@ -165,6 +167,10 @@ const cells = computed(() =>
 .cell--path polygon {
   fill: rgb(212 175 55 / 30%);
   stroke: var(--color-gold-high);
+}
+.cell--danger polygon {
+  fill: rgb(200 60 60 / 35%);
+  stroke: var(--color-enemy);
 }
 .cell--selected polygon {
   stroke: var(--color-gold-high);

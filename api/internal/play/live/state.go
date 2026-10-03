@@ -164,7 +164,7 @@ func (s *state) vision() map[hex.Coord]bool {
 // hidden tokens, tokens outside current sight, never-seen hexes, walls or lights.
 func (s *state) project(a Audience) View {
 	if a == AudienceTable && s.table.Blackout {
-		return View{Tokens: []TokenView{}, Visible: []Hex{}, Remembered: []Hex{}, Table: s.tableView()}
+		return View{Tokens: []TokenView{}, Visible: []Hex{}, Remembered: []Hex{}, Table: s.tableView(), Roster: []RosterEntry{}}
 	}
 	v := View{Tokens: []TokenView{}, Visible: []Hex{}, Remembered: []Hex{}}
 	seen := s.vision()
@@ -194,7 +194,50 @@ func (s *state) project(a Audience) View {
 	if a == AudienceDM {
 		v.Zones, v.SurfaceKinds, v.Conditions = s.zoneViews(), s.surfaceKindViews(), s.conditionViews()
 	}
+	v.Roster = rosterOf(v)
 	return v
+}
+
+// rosterOf is the roster strip from what an audience already sees: the fight in initiative order, or
+// the party and then everyone else by name.
+func rosterOf(v View) []RosterEntry {
+	seen := make(map[string]TokenView, len(v.Tokens))
+	for _, t := range v.Tokens {
+		seen[t.ID] = t
+	}
+	out := []RosterEntry{}
+	if v.Combat != nil {
+		for _, c := range v.Combat.Combatants {
+			if t, ok := seen[c.TokenID]; ok {
+				out = append(out, rosterEntry(t, c.Acting))
+			}
+		}
+		return out
+	}
+	for _, t := range v.Tokens {
+		if t.HP != nil || t.Health != "" {
+			out = append(out, rosterEntry(t, false))
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		a, b := out[i].Kind == domain.TokenParty, out[j].Kind == domain.TokenParty
+		if a != b {
+			return a
+		}
+		return out[i].Label < out[j].Label
+	})
+	return out
+}
+
+func rosterEntry(t TokenView, acting bool) RosterEntry {
+	effects := t.Effects
+	if effects == nil {
+		effects = []EffectView{}
+	}
+	return RosterEntry{
+		TokenID: t.ID, Label: t.Label, Kind: t.Kind, HP: t.HP, HPMax: t.HPMax, TempHP: t.TempHP, Health: t.Health, Hidden: t.Hidden,
+		Acting: acting, Effects: effects,
+	}
 }
 
 // conditionViews lists the Campaign's homebrew conditions for the DM's effect picker, by name.

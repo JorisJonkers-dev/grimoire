@@ -98,7 +98,7 @@ func (r *runtime) plan(req request) (Write, string) {
 	case CmdReact:
 		return r.planReact(m, cmd)
 	case CmdWalk:
-		t, path, _, reason := r.route(m, cmd)
+		t, path, _, reason := r.route(m, req.from.Audience, cmd)
 		if reason != "" {
 			return Write{}, reason
 		}

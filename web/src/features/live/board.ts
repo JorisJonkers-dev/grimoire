@@ -36,7 +36,10 @@ export function initials(label: string): string {
     .join('')
 }
 
-export type Ground = { surfaces?: LiveSurface[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[] }
+export type Ground = { surfaces?: LiveSurface[]; area?: Coord[]; zone?: Coord[]; reach?: Coord[]; danger?: Coord[] }
+
+/** What a planned walk draws by leaving a hex. */
+export const DANGER_NOTE = 'leaving here draws an opportunity attack'
 
 /** What lies on a hex besides a token: a Surface, whether an area spell covers it, and whether an Encounter Zone does. */
 export function groundNotes(k: string, surfaces: Map<string, LiveSurface>, area: Set<string>, zone: Set<string> = new Set(), reach: Set<string> = new Set()): string[] {
@@ -58,12 +61,13 @@ export function board(radius: number, tokens: LiveToken[], selected: string | nu
   const area = new Set((ground.area ?? []).map(key))
   const zone = new Set((ground.zone ?? []).map(key))
   const reach = new Set((ground.reach ?? []).map(key))
+  const danger = new Set((ground.danger ?? []).map(key))
   return hexes(radius).map((c) => {
     const k = key(c)
     const t = at.get(k)
-    const notes = groundNotes(k, surfaces, area, zone, reach)
+    const notes = [...groundNotes(k, surfaces, area, zone, reach), danger.has(k) ? DANGER_NOTE : ''].filter(Boolean)
     if (!t) {
-      const tone = route.has(k) ? 'path' : area.has(k) ? 'area' : surfaces.has(k) ? `surface-${surfaces.get(k)?.kind ?? ''}` : zone.has(k) ? 'zone' : reach.has(k) ? 'watched' : undefined
+      const tone = danger.has(k) ? 'danger' : route.has(k) ? 'path' : area.has(k) ? 'area' : surfaces.has(k) ? `surface-${surfaces.get(k)?.kind ?? ''}` : zone.has(k) ? 'zone' : reach.has(k) ? 'watched' : undefined
       const label = [route.has(k) ? 'on the path' : '', ...notes].filter(Boolean).join(', ')
       return tone ? { ...c, tone, label } : c
     }

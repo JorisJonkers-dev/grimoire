@@ -3937,6 +3937,22 @@ export type LiveLegendAction = {
 };
 
 /**
+ * One creature on the roster strip: hit points for the DM and the party's own, a rough health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+ */
+export type LiveRosterEntry = {
+    tokenId: Id;
+    label: string;
+    kind: string;
+    hp?: number;
+    hpMax?: number;
+    tempHp?: number;
+    health?: 'unhurt' | 'hurt' | 'bloodied' | 'down';
+    hidden?: boolean;
+    acting: boolean;
+    effects: Array<LiveEffect>;
+};
+
+/**
  * Part of an Effect the engine cannot compute, for the DM to resolve by hand.
  */
 export type LiveManual = {
@@ -4072,15 +4088,64 @@ export type LiveUpdate = {
     preview?: LiveAttackPreview;
     area?: LiveAreaPreview;
     ping?: HexCoord;
+    initiative?: LiveInitiativeReveal;
+    turn?: LiveTurnStart;
 };
 
 /**
- * The route a walk would take, start first, and the movement it costs.
+ * Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.
+ */
+export type LiveInitiativeReveal = {
+    order: Array<LiveInitiativeRoll>;
+};
+
+/**
+ * One Combatant's place in the initiative reveal.
+ */
+export type LiveInitiativeRoll = {
+    tokenId: Id;
+    label: string;
+    kind: TokenKind;
+    initiative: number;
+};
+
+/**
+ * The tokens whose turn a change started, sent with that change's view. It leaves out creatures the audience may not see.
+ */
+export type LiveTurnStart = {
+    round: number;
+    tokenIds: Array<Id>;
+};
+
+/**
+ * The route a walk would take, start first, the movement it costs, the opportunity attacks it would draw in order, and how each creature of the other side would see the mover where it ends. It names only creatures the asker may see.
  */
 export type LivePath = {
     tokenId: Id;
     hexes: Array<HexCoord>;
     costFt: number;
+    threats: Array<LivePathThreat>;
+    sight: Array<LivePathSight>;
+};
+
+/**
+ * A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+ */
+export type LivePathThreat = {
+    tokenId: Id;
+    label: string;
+    q: number;
+    r: number;
+};
+
+/**
+ * Whether a creature has a line to the end of a planned walk, and the cover the mover has from it there.
+ */
+export type LivePathSight = {
+    tokenId: Id;
+    label: string;
+    visible: boolean;
+    cover: 'none' | 'half' | 'three_quarters' | 'total';
 };
 
 /**
@@ -4171,6 +4236,10 @@ export type LiveView = {
         kind: string;
         name: string;
     }>;
+    /**
+     * The shared roster strip as this audience may see it, the fight in initiative order or every creature it can see.
+     */
+    roster?: Array<LiveRosterEntry>;
     /**
      * The Campaign's homebrew conditions, for the DM's effect picker.
      */

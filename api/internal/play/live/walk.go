@@ -12,13 +12,16 @@ import (
 // MaxWalkFt caps one walk, so a path and the views along it stay small.
 const MaxWalkFt = 300
 
-// route finds the path a member may walk a token along. A Player's route only crosses hexes the party
-// knows and only avoids creatures the party sees, so neither the path nor its refusal reveals the fog.
-func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord, int, string) {
+// route finds the path a member may walk a token along. Whose tokens they may move goes by who they
+// are; what the route may cross goes by their screen. Off the DM's own screen a route only crosses
+// hexes the party knows and only avoids creatures the party sees, so neither the path nor its refusal
+// reveals the fog.
+func (r *runtime) route(m domain.Member, a Audience, cmd Command) (domain.Token, []hex.Coord, int, string) {
 	id, err := uuid.Parse(cmd.TokenID)
 	t, ok := r.st.tokens[domain.TokenID(id)]
 	seen := r.st.vision()
-	if err != nil || !ok || (!m.DM && !r.st.shows(t, seen)) {
+	whole := a == AudienceDM
+	if err != nil || !ok || (!whole && !r.st.shows(t, seen)) {
 		return domain.Token{}, nil, 0, "No such token."
 	}
 	if !m.DM && (t.Controller == nil || *t.Controller != m.ID) {
@@ -31,7 +34,7 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 	if r.st.catalog.Immobile(r.st.actives(t.ID)) {
 		return domain.Token{}, nil, 0, t.Label + " can't move."
 	}
-	reach := hex.Reachable(r.st.walkGrid(m.DM, t, seen), start, hex.MoveOptions{SpeedFt: MaxWalkFt, ClimbSpeed: false})
+	reach := hex.Reachable(r.st.walkGrid(whole, t, seen), start, hex.MoveOptions{SpeedFt: MaxWalkFt, ClimbSpeed: false})
 	path, ok := reach.Path(to)
 	if !ok {
 		return domain.Token{}, nil, 0, "There is no way there."
@@ -44,15 +47,62 @@ func (r *runtime) route(m domain.Member, cmd Command) (domain.Token, []hex.Coord
 }
 
 func (r *runtime) previewWalk(req request) {
-	_, path, cost, reason := r.route(req.from.Member, req.cmd)
+	t, path, cost, reason := r.route(req.from.Member, req.from.Audience, req.cmd)
 	if reason != "" {
 		r.reject(req, reason)
 		return
 	}
+	k := r.st.knownTo(req.from.Audience)
 	r.send(req.from, Update{
 		Kind: UpdPath, Seq: r.st.session.Seq, Nonce: req.cmd.Nonce,
-		Path: &PathView{TokenID: req.cmd.TokenID, Hexes: wireHexes(path), CostFt: cost},
+		Path: &PathView{
+			TokenID: req.cmd.TokenID, Hexes: wireHexes(path), CostFt: cost,
+			Threats: r.st.threats(t, path, k), Sight: r.st.sightAt(t, path[len(path)-1], k),
+		},
 	})
+}
+
+// knownTo is what an audience may be told of the board: all of it for the DM's own screen, and for any
+// other the hexes the party has seen and the creatures it sees now. It goes by the screen, not by who
+// is signed in, so a DM's Table Display learns no more than the table.
+func (s *state) knownTo(a Audience) knowledge {
+	if a == AudienceDM {
+		return everything
+	}
+	seen := s.vision()
+	return knowledge{
+		hex:   func(c hex.Coord) bool { return s.board == nil || seen[c] || s.board.Reveals[c] },
+		token: func(o domain.Token) bool { return s.shows(o, seen) },
+	}
+}
+
+// threats are the opportunity attacks a walk would draw as far as its asker knows: the reactions
+// engine's own walk over only the creatures and ground the asker may know, so one they cannot see
+// neither shows nor changes what is said of the others.
+func (s *state) threats(mover domain.Token, path []hex.Coord, k knowledge) []PathThreat {
+	out := []PathThreat{}
+	for _, o := range s.opportunities(mover, path, 0, k) {
+		out = append(out, PathThreat{TokenID: uuid.UUID(o.reactor.ID).String(), Label: o.reactor.Label, Q: path[o.step].Q, R: path[o.step].R})
+	}
+	return out
+}
+
+// sightAt is how each standing creature of the other side that the asker knows of would see the mover at a hex.
+func (s *state) sightAt(mover domain.Token, at hex.Coord, k knowledge) []PathSight {
+	out := []PathSight{}
+	for _, o := range s.ordered() {
+		if o.Stats == nil || !standing(o) || (o.Kind == domain.TokenParty) == (mover.Kind == domain.TokenParty) || !k.token(o) {
+			continue
+		}
+		sight := hex.LineOfSight(s.coverGrid(k, mover.ID, o.ID), hex.Coord{Q: o.Q, R: o.R}, at)
+		out = append(out, PathSight{TokenID: uuid.UUID(o.ID).String(), Label: o.Label, Visible: sight.Visible, Cover: coverName(sight.Cover)})
+	}
+	return out
+}
+
+// coverName is a level of cover as the wire names it.
+func coverName(c hex.Cover) string {
+	return [...]string{hex.NoCover: "none", hex.HalfCover: "half", hex.ThreeQuartersCover: "three_quarters", hex.TotalCover: "total"}[c]
 }
 
 // moveLeft refuses a walk a Combatant cannot make now: out of turn, or longer than its movement left.

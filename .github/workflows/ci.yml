@@ -222,6 +222,14 @@ jobs:
         run: |
           pnpm --filter @grimoire/web exec playwright install --with-deps chromium
           pnpm --filter @grimoire/web e2e --project=${{ matrix.device }}
+      - name: Keep the traces of failed tests
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-traces-${{ matrix.device }}
+          path: web/test-results
+          retention-days: 7
+          if-no-files-found: ignore
 
   pipeline-complete:
     name: Pipeline Complete

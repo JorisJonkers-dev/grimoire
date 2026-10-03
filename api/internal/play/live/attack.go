@@ -177,16 +177,7 @@ func (s *state) shape(p aim) (aim, string) {
 		return aim{}, "The target is out of range."
 	}
 	p.ranged = band != attack.InReach
-	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: map[hex.Coord]hex.Occupant{}}
-	for _, c := range s.ground() {
-		g.Cells[c] = s.cell(c)
-	}
-	for _, t := range s.tokens {
-		if t.ID != p.attacker.ID && t.ID != p.target.ID && standing(t) {
-			g.Occupants[hex.Coord{Q: t.Q, R: t.R}] = hex.Enemy
-		}
-	}
-	sight := hex.LineOfSight(g, from, to)
+	sight := hex.LineOfSight(s.coverGrid(everything, p.attacker.ID, p.target.ID), from, to)
 	if !sight.Visible {
 		return aim{}, "There is no clear line to the target."
 	}
@@ -364,6 +355,29 @@ func (r *runtime) hurt(t domain.Token, amount int, w Write) Write {
 	return w
 }
 
+// knowledge is what someone may be told of the board: which hexes and which creatures.
+type knowledge struct {
+	hex   func(hex.Coord) bool
+	token func(domain.Token) bool
+}
+
+//nolint:gochecknoglobals // the rules engine itself knows the whole board
+var everything = knowledge{hex: func(hex.Coord) bool { return true }, token: func(domain.Token) bool { return true }}
+
+// coverGrid is the board for creatures looking at each other, as far as it is known: its walls and
+// heights, and the standing creatures that give cover but for the ones looking. An unknown hex is open
+// ground and an unknown creature is not there.
+func (s *state) coverGrid(k knowledge, but ...domain.TokenID) hex.Grid {
+	g := s.sightGridOf(k)
+	g.Occupants = map[hex.Coord]hex.Occupant{}
+	for _, t := range s.tokens {
+		if !slices.Contains(but, t.ID) && standing(t) && k.token(t) {
+			g.Occupants[hex.Coord{Q: t.Q, R: t.R}] = hex.Enemy
+		}
+	}
+	return g
+}
+
 // witnesses are the standing creatures on the other side from a token that have a clear line to it.
 func (s *state) witnesses(t domain.Token) []domain.TokenID {
 	g := s.sightGrid()
@@ -379,9 +393,16 @@ func (s *state) witnesses(t domain.Token) []domain.TokenID {
 
 // sightGrid is the board with its walls, for creatures looking at each other.
 func (s *state) sightGrid() hex.Grid {
+	return s.sightGridOf(everything)
+}
+
+// sightGridOf is the board with its walls as far as it is known; an unknown hex is open ground.
+func (s *state) sightGridOf(k knowledge) hex.Grid {
 	g := hex.Grid{Cells: map[hex.Coord]hex.Cell{}, Occupants: nil}
 	for _, c := range s.ground() {
-		g.Cells[c] = s.cell(c)
+		if k.hex(c) {
+			g.Cells[c] = s.cell(c)
+		}
 	}
 	return g
 }

@@ -46,7 +46,11 @@ test('leaving reach prompts an opportunity attack that declines itself when nobo
 
   await player.locator('[data-hex="-2,0"]').click()
   await expect(player.getByTestId('walk-preview')).toContainText('Walk 10 ft')
-  await player.locator('[data-hex="-2,0"]').click()
+  // The plan warns of exactly the opportunity attack the walk then draws.
+  await expect(player.getByTestId('walk-threats')).toHaveText("Leaving Grik's reach draws an opportunity attack.")
+  await expect(player.getByTestId('walk-sight')).toContainText('Grik sees Scout there.')
+  await expect(player.locator('[data-hex="0,0"]')).toHaveAttribute('aria-label', /leaving here draws an opportunity attack/)
+  await player.getByTestId('confirm-walk').click()
   const prompt = page.getByTestId('reaction-prompt')
   await expect(prompt).toContainText('Scout leaves Grik\'s reach')
   await expect(prompt.getByTestId('use-reaction')).toBeVisible()

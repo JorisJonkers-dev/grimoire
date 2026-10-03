@@ -60,15 +60,16 @@ describe('the Friends page', () => {
     await wrapper.get('[data-testid="unblock-gus"]').trigger('click')
     await flushPromises()
     await vi.waitFor(() => { expect(calls).toHaveLength(8) })
-    expect(calls).toEqual([
-      'ask nobody', 'ask Hana',
+    expect(calls.slice(0, 2)).toEqual(['ask nobody', 'ask Hana'])
+    // The six answers race each other, so only which went out matters.
+    expect(calls.slice(2).sort()).toEqual([
       'POST 0190c7a8-0000-7000-8000-0000000001a3/accept',
       'POST 0190c7a8-0000-7000-8000-0000000001a4/decline {}',
       'POST 0190c7a8-0000-7000-8000-0000000001a5/decline {"block":true}',
       'DELETE 0190c7a8-0000-7000-8000-0000000001a6',
       'unfriend 0190c7a8-0000-7000-8000-000000000002',
       'unblock 0190c7a8-0000-7000-8000-000000000007',
-    ])
+    ].sort())
   })
 
   it('shows an empty list, and explains a missing Account', async () => {

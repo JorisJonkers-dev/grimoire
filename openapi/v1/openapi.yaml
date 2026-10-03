@@ -11935,6 +11935,22 @@ components:
         name: { type: string, maxLength: 200 }
         cost: { type: integer, format: int32, minimum: 0, maximum: 3 }
         text: { type: string, maxLength: 8000 }
+    LiveRosterEntry:
+      type: object
+      description: "One creature on the roster strip: hit points for the DM and the party's own, a rough health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only."
+      additionalProperties: false
+      required: [tokenId, label, kind, acting, effects]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        kind: { type: string, maxLength: 20 }
+        hp: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        hpMax: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        tempHp: { type: integer, format: int32, minimum: 0, maximum: 100000 }
+        health: { type: string, enum: [unhurt, hurt, bloodied, down] }
+        hidden: { type: boolean }
+        acting: { type: boolean }
+        effects: { type: array, maxItems: 100, items: { $ref: "#/components/schemas/LiveEffect" } }
     LiveManual:
       type: object
       description: Part of an Effect the engine cannot compute, for the DM to resolve by hand.
@@ -12054,11 +12070,45 @@ components:
         preview: { $ref: "#/components/schemas/LiveAttackPreview" }
         area: { $ref: "#/components/schemas/LiveAreaPreview" }
         ping: { $ref: "#/components/schemas/HexCoord" }
+        initiative: { $ref: "#/components/schemas/LiveInitiativeReveal" }
+        turn: { $ref: "#/components/schemas/LiveTurnStart" }
+    LiveInitiativeReveal:
+      type: object
+      description: Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.
+      additionalProperties: false
+      required: [order]
+      properties:
+        order:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LiveInitiativeRoll" }
+    LiveInitiativeRoll:
+      type: object
+      description: One Combatant's place in the initiative reveal.
+      additionalProperties: false
+      required: [tokenId, label, kind, initiative]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        kind: { $ref: "#/components/schemas/TokenKind" }
+        initiative: { type: integer, format: int32, minimum: -20, maximum: 60 }
+    LiveTurnStart:
+      type: object
+      description: The tokens whose turn a change started, sent with that change's view. It leaves out creatures the audience may not see.
+      additionalProperties: false
+      required: [round, tokenIds]
+      properties:
+        round: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        tokenIds:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: "#/components/schemas/Id" }
     LivePath:
       type: object
-      description: The route a walk would take, start first, and the movement it costs.
+      description: The route a walk would take, start first, the movement it costs, the opportunity attacks it would draw in order, and how each creature of the other side would see the mover where it ends. It names only creatures the asker may see.
       additionalProperties: false
-      required: [tokenId, hexes, costFt]
+      required: [tokenId, hexes, costFt, threats, sight]
       properties:
         tokenId: { $ref: "#/components/schemas/Id" }
         hexes:
@@ -12066,6 +12116,34 @@ components:
           maxItems: 61
           items: { $ref: "#/components/schemas/HexCoord" }
         costFt: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+        threats:
+          type: array
+          maxItems: 60
+          items: { $ref: "#/components/schemas/LivePathThreat" }
+        sight:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LivePathSight" }
+    LivePathThreat:
+      type: object
+      description: A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+      additionalProperties: false
+      required: [tokenId, label, q, r]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        q: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+        r: { type: integer, format: int32, minimum: -1000, maximum: 1000 }
+    LivePathSight:
+      type: object
+      description: Whether a creature has a line to the end of a planned walk, and the cover the mover has from it there.
+      additionalProperties: false
+      required: [tokenId, label, visible, cover]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        visible: { type: boolean }
+        cover: { type: string, enum: [none, half, three_quarters, total] }
     MapKind:
       type: string
       description: A local tactical map, or a world map of locations and routes.
@@ -12177,6 +12255,11 @@ components:
             properties:
               kind: { type: string, maxLength: 40 }
               name: { type: string, maxLength: 40 }
+        roster:
+          type: array
+          description: The shared roster strip as this audience may see it, the fight in initiative order or every creature it can see.
+          maxItems: 500
+          items: { $ref: "#/components/schemas/LiveRosterEntry" }
         conditions:
           type: array
           description: The Campaign's homebrew conditions, for the DM's effect picker.

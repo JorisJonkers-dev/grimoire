@@ -758,6 +758,7 @@ func (r *runtime) commit(req request, w Write, actor domain.Member, c caller.Cal
 		u, ok := views[sub.Audience]
 		if !ok {
 			u = r.viewUpdate(sub.Audience, seq, &w)
+			announce(&u, prev, next)
 			views[sub.Audience] = u
 		}
 		if sub == req.from {

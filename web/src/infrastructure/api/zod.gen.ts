@@ -2886,6 +2886,27 @@ export const zLiveToken = z.object({
 });
 
 /**
+ * One creature on the roster strip: hit points for the DM and the party's own, a rough health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+ */
+export const zLiveRosterEntry = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    kind: z.string().max(20),
+    hp: z.int().gte(0).lte(100000).optional(),
+    hpMax: z.int().gte(0).lte(100000).optional(),
+    tempHp: z.int().gte(0).lte(100000).optional(),
+    health: z.enum([
+        'unhurt',
+        'hurt',
+        'bloodied',
+        'down'
+    ]).optional(),
+    hidden: z.boolean().optional(),
+    acting: z.boolean(),
+    effects: z.array(zLiveEffect).max(100)
+});
+
+/**
  * Part of an Effect the engine cannot compute, for the DM to resolve by hand.
  */
 export const zLiveManual = z.object({
@@ -2992,12 +3013,64 @@ export const zLiveCombat = z.object({
 });
 
 /**
- * The route a walk would take, start first, and the movement it costs.
+ * One Combatant's place in the initiative reveal.
+ */
+export const zLiveInitiativeRoll = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    kind: zTokenKind,
+    initiative: z.int().gte(-20).lte(60)
+});
+
+/**
+ * Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.
+ */
+export const zLiveInitiativeReveal = z.object({
+    order: z.array(zLiveInitiativeRoll).max(200)
+});
+
+/**
+ * The tokens whose turn a change started, sent with that change's view. It leaves out creatures the audience may not see.
+ */
+export const zLiveTurnStart = z.object({
+    round: z.int().gte(1).lte(100000),
+    tokenIds: z.array(zId).min(1).max(200)
+});
+
+/**
+ * A creature whose reach a planned walk leaves, and the hex the mover leaves it from.
+ */
+export const zLivePathThreat = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    q: z.int().gte(-1000).lte(1000),
+    r: z.int().gte(-1000).lte(1000)
+});
+
+/**
+ * Whether a creature has a line to the end of a planned walk, and the cover the mover has from it there.
+ */
+export const zLivePathSight = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    visible: z.boolean(),
+    cover: z.enum([
+        'none',
+        'half',
+        'three_quarters',
+        'total'
+    ])
+});
+
+/**
+ * The route a walk would take, start first, the movement it costs, the opportunity attacks it would draw in order, and how each creature of the other side would see the mover where it ends. It names only creatures the asker may see.
  */
 export const zLivePath = z.object({
     tokenId: zId,
     hexes: z.array(zHexCoord).max(61),
-    costFt: z.int().gte(0).lte(1000)
+    costFt: z.int().gte(0).lte(1000),
+    threats: z.array(zLivePathThreat).max(60),
+    sight: z.array(zLivePathSight).max(200)
 });
 
 /**
@@ -4246,6 +4319,7 @@ export const zLiveView = z.object({
         kind: z.string().max(40),
         name: z.string().max(40)
     })).max(500).optional(),
+    roster: z.array(zLiveRosterEntry).max(500).optional(),
     conditions: z.array(z.object({
         slug: z.string().max(80),
         name: z.string().max(80),
@@ -4289,7 +4363,9 @@ export const zLiveUpdate = z.object({
     path: zLivePath.optional(),
     preview: zLiveAttackPreview.optional(),
     area: zLiveAreaPreview.optional(),
-    ping: zHexCoord.optional()
+    ping: zHexCoord.optional(),
+    initiative: zLiveInitiativeReveal.optional(),
+    turn: zLiveTurnStart.optional()
 });
 
 /**

@@ -342,6 +342,21 @@ type EffectView struct {
 	Color string `json:"color,omitempty"`
 }
 
+// RosterEntry is one creature on the roster strip: hit points for the DM and the party's own, a rough
+// health for anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
+type RosterEntry struct {
+	TokenID string       `json:"tokenId"`
+	Label   string       `json:"label"`
+	Kind    string       `json:"kind"`
+	HP      *int         `json:"hp,omitempty"`
+	HPMax   *int         `json:"hpMax,omitempty"`
+	TempHP  int          `json:"tempHp,omitempty"`
+	Health  string       `json:"health,omitempty"`
+	Hidden  bool         `json:"hidden,omitempty"`
+	Acting  bool         `json:"acting"`
+	Effects []EffectView `json:"effects"`
+}
+
 // LegendView is a legendary creature's actions and what it has left: legendary actions once another
 // creature's turn ends (Ready), the lair's once a round on initiative count 20 (LairReady), Legendary
 // Resistance, and its mythic phases.
@@ -424,6 +439,27 @@ type PathView struct {
 	TokenID string `json:"tokenId"`
 	Hexes   []Hex  `json:"hexes"`
 	CostFt  int    `json:"costFt"`
+	// Threats are the opportunity attacks the walk would draw, in the order it draws them; Sight is how
+	// each creature of the other side would see the mover where the walk ends. Both name only creatures
+	// the asker may see.
+	Threats []PathThreat `json:"threats"`
+	Sight   []PathSight  `json:"sight"`
+}
+
+// PathThreat is a creature whose reach a planned walk leaves, and the hex it leaves it from.
+type PathThreat struct {
+	TokenID string `json:"tokenId"`
+	Label   string `json:"label"`
+	Q       int    `json:"q"`
+	R       int    `json:"r"`
+}
+
+// PathSight is whether a creature has a line to the end of a planned walk, and the cover the mover has from it.
+type PathSight struct {
+	TokenID string `json:"tokenId"`
+	Label   string `json:"label"`
+	Visible bool   `json:"visible"`
+	Cover   string `json:"cover"`
 }
 
 // MapView is the active Map's geometry and picture.
@@ -477,6 +513,9 @@ type View struct {
 	Exploration *ExplorationView `json:"exploration,omitempty"`
 	// SurfaceKinds is the Surface catalogue, for the DM's paint tool.
 	SurfaceKinds []SurfaceKindView `json:"surfaceKinds,omitempty"`
+	// Roster is the shared roster strip as this audience may see it: the fight in initiative order, or
+	// every creature the audience can see.
+	Roster []RosterEntry `json:"roster"`
 	// Conditions are the Campaign's homebrew conditions, for the DM's effect picker.
 	Conditions []ConditionKindView `json:"conditions,omitempty"`
 	Perception []PerceptionView    `json:"perception,omitempty"`
@@ -751,6 +790,29 @@ type Update struct {
 	Preview *AttackPreview `json:"preview,omitempty"`
 	Area    *AreaPreview   `json:"area,omitempty"`
 	Ping    *Hex           `json:"ping,omitempty"`
+	// Initiative comes with the view that settles initiative, Turn with each view that starts a turn;
+	// both leave out what the audience may not see.
+	Initiative *InitiativeReveal `json:"initiative,omitempty"`
+	Turn       *TurnStart        `json:"turn,omitempty"`
+}
+
+// InitiativeReveal is every Combatant's initiative in turn order, for screens to show as the fight begins.
+type InitiativeReveal struct {
+	Order []InitiativeRoll `json:"order"`
+}
+
+// InitiativeRoll is one Combatant's place in the reveal.
+type InitiativeRoll struct {
+	TokenID    string `json:"tokenId"`
+	Label      string `json:"label"`
+	Kind       string `json:"kind"`
+	Initiative int    `json:"initiative"`
+}
+
+// TurnStart names the tokens whose turn a change started, and the round.
+type TurnStart struct {
+	Round    int      `json:"round"`
+	TokenIDs []string `json:"tokenIds"`
 }
 
 // TableView is what the Table Display shows: its camera, its scene and whether it is blacked out.

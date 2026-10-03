@@ -24,6 +24,7 @@ func samples() contract {
 	token := live.TokenView{ID: "0190c7a8-0000-7000-8000-00000000000a", Label: "Goblin", Kind: "enemy", Q: 2, R: -1, Hidden: false, DarkvisionFt: 0, ControllerID: "0190c7a8-0000-7000-8000-00000000000f"}
 	id := "0190c7a8-0000-7000-8000-00000000000c"
 	view := &live.View{
+		Roster: []live.RosterEntry{{TokenID: token.ID, Label: token.Label, Kind: token.Kind, HP: nil, HPMax: nil, TempHP: 0, Health: "hurt", Hidden: false, Acting: true, Effects: []live.EffectView{}}},
 		Tokens: []live.TokenView{token}, Fog: true, Visible: []live.Hex{{Q: 0, R: 0}}, Remembered: []live.Hex{{Q: 1, R: 0}},
 		Map: &live.MapView{
 			ID: id, Name: "Crypt", ImageURL: "/api/v1/campaigns/0190c7a8-0000-7000-8000-00000000000d/maps/" + id + "/image?v=2",
@@ -208,9 +209,18 @@ func samples() contract {
 				Session: &live.SessionView{ID: "0190c7a8-0000-7000-8000-00000000000b", Number: 3, GridRadius: 10, Audience: live.AudienceParty},
 			},
 			{Kind: live.UpdView, Seq: 5, Nonce: "n3", ActionSeq: 42, View: &dmView},
-			{Kind: live.UpdView, Seq: 6, View: &live.View{Tokens: []live.TokenView{}, Visible: []live.Hex{}, Remembered: []live.Hex{}}},
+			{Kind: live.UpdView, Seq: 6, View: &live.View{Tokens: []live.TokenView{}, Visible: []live.Hex{}, Remembered: []live.Hex{}, Roster: []live.RosterEntry{}}},
 			{Kind: live.UpdRejected, Seq: 6, Nonce: "n9", Reason: "Only the DM can change the table."},
-			{Kind: live.UpdPath, Seq: 6, Nonce: "n13", Path: &live.PathView{TokenID: token.ID, Hexes: []live.Hex{{Q: 2, R: -1}, {Q: 3, R: -1}, {Q: 3, R: 0}}, CostFt: 10}},
+			{Kind: live.UpdPath, Seq: 6, Nonce: "n13", Path: &live.PathView{
+				TokenID: token.ID, Hexes: []live.Hex{{Q: 2, R: -1}, {Q: 3, R: -1}, {Q: 3, R: 0}}, CostFt: 10,
+				Threats: []live.PathThreat{{TokenID: token.ID, Label: "Goblin", Q: 2, R: -1}},
+				Sight:   []live.PathSight{{TokenID: token.ID, Label: "Goblin", Visible: true, Cover: "half"}},
+			}},
+			{
+				Kind: live.UpdView, Seq: 7, View: &live.View{Tokens: []live.TokenView{token}, Visible: []live.Hex{}, Remembered: []live.Hex{}, Roster: []live.RosterEntry{}},
+				Initiative: &live.InitiativeReveal{Order: []live.InitiativeRoll{{TokenID: token.ID, Label: "Goblin", Kind: "enemy", Initiative: 17}}},
+				Turn:       &live.TurnStart{Round: 1, TokenIDs: []string{token.ID}},
+			},
 			{Kind: live.UpdView, Seq: 7, Nonce: "n14", View: view, Steps: []live.View{*view}},
 			{Kind: live.UpdAttackPreview, Seq: 7, Nonce: "n21", Preview: &live.AttackPreview{
 				TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", AttackNo: 1, Name: "Shortbow", HitChance: 30, Mode: "disadvantage",
