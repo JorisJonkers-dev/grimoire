@@ -1,4 +1,4 @@
-import type { LiveAreaPreview, LiveAttackPreview, LivePath, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
+import type { LiveAreaPreview, LiveAttackPreview, LiveInitiativeRoll, LivePath, LiveSessionView, LiveUpdate, LiveView } from '@/infrastructure/api/types.gen'
 import { zLiveUpdate } from '@/infrastructure/api/zod.gen'
 
 export type Outcome = 'applied' | 'resync' | 'ignored'
@@ -17,6 +17,9 @@ export class SessionState {
   areaPreview: LiveAreaPreview | null = null
   /** The last pinged hex, with a count so the same hex can be pinged twice. */
   ping: { q: number; r: number; n: number } | null = null
+  /** The initiative order as the fight began, and the last turns that started, each counted like a ping. */
+  reveal: { order: LiveInitiativeRoll[]; n: number } | null = null
+  turn: { round: number; tokenIds: string[]; n: number } | null = null
 
   apply(frame: unknown): Outcome {
     const parsed = zLiveUpdate.safeParse(frame)
@@ -55,6 +58,8 @@ export class SessionState {
         this.seq = u.seq
         this.view = u.view ?? this.view
         this.steps = u.steps ?? []
+        if (u.initiative) this.reveal = { order: u.initiative.order, n: (this.reveal?.n ?? 0) + 1 }
+        if (u.turn) this.turn = { ...u.turn, n: (this.turn?.n ?? 0) + 1 }
         this.path = null
         this.preview = null
         this.areaPreview = null

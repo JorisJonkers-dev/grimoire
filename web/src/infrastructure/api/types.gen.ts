@@ -4088,6 +4088,33 @@ export type LiveUpdate = {
     preview?: LiveAttackPreview;
     area?: LiveAreaPreview;
     ping?: HexCoord;
+    initiative?: LiveInitiativeReveal;
+    turn?: LiveTurnStart;
+};
+
+/**
+ * Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.
+ */
+export type LiveInitiativeReveal = {
+    order: Array<LiveInitiativeRoll>;
+};
+
+/**
+ * One Combatant's place in the initiative reveal.
+ */
+export type LiveInitiativeRoll = {
+    tokenId: Id;
+    label: string;
+    kind: TokenKind;
+    initiative: number;
+};
+
+/**
+ * The tokens whose turn a change started, sent with that change's view. It leaves out creatures the audience may not see.
+ */
+export type LiveTurnStart = {
+    round: number;
+    tokenIds: Array<Id>;
 };
 
 /**

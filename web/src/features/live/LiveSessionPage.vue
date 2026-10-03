@@ -11,6 +11,7 @@ import HexGrid from '@/shared/map/HexGrid.vue'
 import NotifyToggle from '@/shared/pwa/NotifyToggle.vue'
 import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
+import { BANNER_MS } from './motion'
 import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { cellsFor, key, layoutOf } from './geometry'
 import AreaPreviewCard from './AreaPreviewCard.vue'
@@ -69,7 +70,10 @@ watch(
   { immediate: true },
 )
 // The session opens in a watcher, outside setup, so the page closes it itself.
-onBeforeUnmount(() => live.value?.close())
+onBeforeUnmount(() => {
+  clearTimeout(bannerTimer)
+  live.value?.close()
+})
 
 const tool = ref<Tool>('tokens')
 const selected = ref<string | null>(null)
@@ -105,6 +109,21 @@ const combat = computed(() => view.value?.combat ?? null)
 const roster = computed(() => view.value?.roster ?? [])
 const card = ref('')
 const cardEntry = computed(() => roster.value.find((e) => e.tokenId === card.value))
+// "It's your turn" rises over a player's screen as their turn starts, then fades.
+const banner = ref('')
+let bannerTimer: ReturnType<typeof setTimeout> | undefined
+watch(() => state.value?.turn?.n, () => {
+  const starting = state.value?.turn?.tokenIds ?? []
+  const names = mine.value.filter((t) => starting.includes(t.id)).map((t) => t.label)
+  if (names.length === 0) return
+  clearTimeout(bannerTimer)
+  banner.value = names.join(' and ')
+  bannerTimer = setTimeout(() => { banner.value = '' }, BANNER_MS)
+})
+function dismissBanner() {
+  clearTimeout(bannerTimer)
+  banner.value = ''
+}
 const playable = (c: LiveCombatant) => isDM.value || (c.controllerId !== undefined && c.controllerId === campaign.data.value?.me.id)
 const turns = computed(() => combat.value?.combatants.filter((c) => c.acting && playable(c)) ?? [])
 const toRoll = computed(() =>
@@ -395,8 +414,11 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <NotifyToggle />
       </header>
       <p v-if="state.rejection" role="alert" class="g-alert" data-testid="rejection">{{ state.rejection }}</p>
+      <button v-if="banner" type="button" class="turn-banner" data-testid="turn-banner" @click="dismissBanner">
+        <strong>It's your turn</strong> <span>{{ banner }}</span>
+      </button>
       <div class="top">
-        <RosterStrip v-if="roster.length || combat" :roster="roster" :combat="combat ?? undefined" :tokens="view?.tokens ?? []" @effects="(id) => (card = id)" />
+        <RosterStrip v-if="roster.length || combat" :roster="roster" :combat="combat ?? undefined" :tokens="view?.tokens ?? []" :reveal="state.reveal" @effects="(id) => (card = id)" />
         <EffectsCard v-if="cardEntry" :entry="cardEntry" @close="card = ''" />
         <fieldset class="scope" data-testid="scope">
           <legend class="sr-only">Which map</legend>
@@ -744,6 +766,49 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   flex-direction: column;
   align-items: center;
   gap: 8px;
+}
+.turn-banner {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  z-index: 5;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 20px 36px;
+  border: 2px solid var(--color-gold-high);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 50%);
+  transform: translate(-50%, -50%);
+  animation: banner 2800ms ease forwards;
+  cursor: pointer;
+}
+.turn-banner strong {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 6vw, 56px);
+  color: var(--color-gold-high);
+}
+@keyframes banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  12%,
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turn-banner {
+    animation: none;
+  }
 }
 .dock > :deep(*),
 .head {

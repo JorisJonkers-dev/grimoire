@@ -12070,6 +12070,40 @@ components:
         preview: { $ref: "#/components/schemas/LiveAttackPreview" }
         area: { $ref: "#/components/schemas/LiveAreaPreview" }
         ping: { $ref: "#/components/schemas/HexCoord" }
+        initiative: { $ref: "#/components/schemas/LiveInitiativeReveal" }
+        turn: { $ref: "#/components/schemas/LiveTurnStart" }
+    LiveInitiativeReveal:
+      type: object
+      description: Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.
+      additionalProperties: false
+      required: [order]
+      properties:
+        order:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/LiveInitiativeRoll" }
+    LiveInitiativeRoll:
+      type: object
+      description: One Combatant's place in the initiative reveal.
+      additionalProperties: false
+      required: [tokenId, label, kind, initiative]
+      properties:
+        tokenId: { $ref: "#/components/schemas/Id" }
+        label: { type: string, maxLength: 80 }
+        kind: { $ref: "#/components/schemas/TokenKind" }
+        initiative: { type: integer, format: int32, minimum: -20, maximum: 60 }
+    LiveTurnStart:
+      type: object
+      description: The tokens whose turn a change started, sent with that change's view. It leaves out creatures the audience may not see.
+      additionalProperties: false
+      required: [round, tokenIds]
+      properties:
+        round: { type: integer, format: int32, minimum: 1, maximum: 100000 }
+        tokenIds:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: "#/components/schemas/Id" }
     LivePath:
       type: object
       description: The route a walk would take, start first, and the movement it costs.

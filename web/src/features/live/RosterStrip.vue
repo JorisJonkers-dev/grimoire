@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
-import type { LiveCombat, LiveRosterEntry, LiveToken } from '@/infrastructure/api/types.gen'
+import { computed, nextTick, onBeforeUnmount, ref, watch, type ComponentPublicInstance } from 'vue'
+import type { LiveCombat, LiveInitiativeRoll, LiveRosterEntry, LiveToken } from '@/infrastructure/api/types.gen'
 import { StatusIcon } from '@/shared/ui'
 import { initials } from './board'
 import { effectLabel } from './conditions'
+import { REVEAL_FADE_MS, REVEAL_HOLD_MS, reducedMotion } from './motion'
 
-const props = withDefaults(defineProps<{ roster: LiveRosterEntry[]; combat?: LiveCombat; tokens?: LiveToken[] }>(), { combat: undefined, tokens: () => [] })
+const props = withDefaults(
+  defineProps<{ roster: LiveRosterEntry[]; combat?: LiveCombat; tokens?: LiveToken[]; reveal?: { order: LiveInitiativeRoll[]; n: number } | null }>(),
+  { combat: undefined, tokens: () => [], reveal: null },
+)
 const emit = defineEmits<{ effects: [tokenId: string] }>()
 
 const combatantOf = (tokenId: string) => props.combat?.combatants.find((c) => c.tokenId === tokenId)
@@ -31,28 +35,51 @@ function healthText(e: LiveRosterEntry): string {
   return e.health ?? 'unhurt'
 }
 
+// As a fight begins the rolls show over the faces where they stood, the faces slide into initiative
+// order, and the numbers fade. Reduced motion goes straight to the order.
+const phase = ref<'' | 'rolls' | 'settle'>('')
+let stood: string[] = []
+const held = ref<string[]>([])
+let timer: ReturnType<typeof setTimeout> | undefined
+watch(() => props.roster, (_now, before) => { stood = before.map((e) => e.tokenId) })
+watch(() => props.reveal?.n, (n) => {
+  if (n === undefined || reducedMotion()) return
+  clearTimeout(timer)
+  held.value = stood
+  phase.value = 'rolls'
+  timer = setTimeout(() => {
+    phase.value = 'settle'
+    timer = setTimeout(() => { phase.value = '' }, REVEAL_FADE_MS)
+  }, REVEAL_HOLD_MS)
+})
+onBeforeUnmount(() => { clearTimeout(timer) })
+const place = (id: string) => (held.value.includes(id) ? held.value.indexOf(id) : held.value.length)
+const shown = computed(() => (phase.value === 'rolls' ? [...props.roster].sort((a, b) => place(a.tokenId) - place(b.tokenId)) : props.roster))
+const rolled = (tokenId: string) => (phase.value ? props.reveal?.order.find((r) => r.tokenId === tokenId)?.initiative : undefined)
+
 // The strip keeps the face that acts now in view.
-const strip = ref<HTMLElement>()
+const strip = ref<ComponentPublicInstance>()
 const acting = computed(() => props.roster.find((e) => e.acting)?.tokenId)
 watch(acting, async (id) => {
   await nextTick()
-  const el = id ? strip.value?.querySelector<HTMLElement>(`[data-token="${id}"]`) : undefined
+  const el = id ? (strip.value?.$el as HTMLElement | undefined)?.querySelector<HTMLElement>(`[data-token="${id}"]`) : undefined
   el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
 })
 </script>
 
 <template>
-  <section class="roster" aria-label="Roster" data-testid="roster-strip">
+  <section :class="['roster', { 'roster--reveal': phase, 'roster--settle': phase === 'settle' }]" aria-label="Roster" data-testid="roster-strip">
     <h2 v-if="combat" class="round" data-testid="initiative-rail">{{ combat.status === 'rolling' ? 'Rolling initiative' : `Round ${String(combat.round)}` }}</h2>
-    <ol ref="strip">
+    <TransitionGroup ref="strip" tag="ol" name="slot">
       <li
-        v-for="e in roster"
+        v-for="e in shown"
         :key="e.tokenId"
         :class="['slot', `slot--${e.kind}`, { 'slot--acting': e.acting, 'slot--done': combatantOf(e.tokenId)?.done, 'slot--hidden': e.hidden }]"
         :aria-current="e.acting ? 'step' : undefined"
         :data-token="e.tokenId"
         :data-testid="`rail-${e.label}`"
       >
+        <span v-if="rolled(e.tokenId) !== undefined" class="rolled" :data-testid="`rolled-${e.label}`">{{ rolled(e.tokenId) }}</span>
         <span class="badge" aria-hidden="true">{{ initials(e.label) }}</span>
         <span class="name">{{ e.label }}<span v-if="e.hidden" class="sr-only"> (hidden)</span></span>
         <span class="bar" role="img" :aria-label="healthText(e)" :data-testid="`health-${e.label}`">
@@ -81,7 +108,7 @@ watch(acting, async (id) => {
         </button>
         <span v-if="e.acting" class="sr-only">acting now</span>
       </li>
-    </ol>
+    </TransitionGroup>
   </section>
 </template>
 
@@ -120,6 +147,32 @@ ol {
   background: color-mix(in srgb, var(--color-surface) 82%, transparent);
   backdrop-filter: blur(6px);
   scroll-snap-align: center;
+}
+.slot-move {
+  transition: transform 600ms ease;
+}
+.rolled {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-gold-high);
+}
+.roster--settle .rolled {
+  animation: roll-fade 1600ms ease forwards;
+}
+@keyframes roll-fade {
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slot-move {
+    transition: none;
+  }
+  .roster--settle .rolled {
+    animation: none;
+  }
 }
 .slot--acting {
   border-color: var(--color-gold-high);

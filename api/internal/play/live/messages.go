@@ -769,6 +769,29 @@ type Update struct {
 	Preview *AttackPreview `json:"preview,omitempty"`
 	Area    *AreaPreview   `json:"area,omitempty"`
 	Ping    *Hex           `json:"ping,omitempty"`
+	// Initiative comes with the view that settles initiative, Turn with each view that starts a turn;
+	// both leave out what the audience may not see.
+	Initiative *InitiativeReveal `json:"initiative,omitempty"`
+	Turn       *TurnStart        `json:"turn,omitempty"`
+}
+
+// InitiativeReveal is every Combatant's initiative in turn order, for screens to show as the fight begins.
+type InitiativeReveal struct {
+	Order []InitiativeRoll `json:"order"`
+}
+
+// InitiativeRoll is one Combatant's place in the reveal.
+type InitiativeRoll struct {
+	TokenID    string `json:"tokenId"`
+	Label      string `json:"label"`
+	Kind       string `json:"kind"`
+	Initiative int    `json:"initiative"`
+}
+
+// TurnStart names the tokens whose turn a change started, and the round.
+type TurnStart struct {
+	Round    int      `json:"round"`
+	TokenIDs []string `json:"tokenIds"`
 }
 
 // TableView is what the Table Display shows: its camera, its scene and whether it is blacked out.

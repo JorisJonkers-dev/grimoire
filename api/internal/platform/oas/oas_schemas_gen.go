@@ -21598,6 +21598,72 @@ func (s *LiveHaggle) SetAdjustPct(val OptInt32) {
 	s.AdjustPct = val
 }
 
+// Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves
+// out creatures the audience may not see.
+// Ref: #/components/schemas/LiveInitiativeReveal
+type LiveInitiativeReveal struct {
+	Order []LiveInitiativeRoll `json:"order"`
+}
+
+// GetOrder returns the value of Order.
+func (s *LiveInitiativeReveal) GetOrder() []LiveInitiativeRoll {
+	return s.Order
+}
+
+// SetOrder sets the value of Order.
+func (s *LiveInitiativeReveal) SetOrder(val []LiveInitiativeRoll) {
+	s.Order = val
+}
+
+// One Combatant's place in the initiative reveal.
+// Ref: #/components/schemas/LiveInitiativeRoll
+type LiveInitiativeRoll struct {
+	TokenId    ID        `json:"tokenId"`
+	Label      string    `json:"label"`
+	Kind       TokenKind `json:"kind"`
+	Initiative int32     `json:"initiative"`
+}
+
+// GetTokenId returns the value of TokenId.
+func (s *LiveInitiativeRoll) GetTokenId() ID {
+	return s.TokenId
+}
+
+// GetLabel returns the value of Label.
+func (s *LiveInitiativeRoll) GetLabel() string {
+	return s.Label
+}
+
+// GetKind returns the value of Kind.
+func (s *LiveInitiativeRoll) GetKind() TokenKind {
+	return s.Kind
+}
+
+// GetInitiative returns the value of Initiative.
+func (s *LiveInitiativeRoll) GetInitiative() int32 {
+	return s.Initiative
+}
+
+// SetTokenId sets the value of TokenId.
+func (s *LiveInitiativeRoll) SetTokenId(val ID) {
+	s.TokenId = val
+}
+
+// SetLabel sets the value of Label.
+func (s *LiveInitiativeRoll) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetKind sets the value of Kind.
+func (s *LiveInitiativeRoll) SetKind(val TokenKind) {
+	s.Kind = val
+}
+
+// SetInitiative sets the value of Initiative.
+func (s *LiveInitiativeRoll) SetInitiative(val int32) {
+	s.Initiative = val
+}
+
 // A stack of one item and what it weighs in all.
 // Ref: #/components/schemas/LiveItem
 type LiveItem struct {
@@ -24398,23 +24464,53 @@ func (s *LiveTravelPlan) SetDays(val int32) {
 	s.Days = val
 }
 
+// The tokens whose turn a change started, sent with that change's view. It leaves out creatures the
+// audience may not see.
+// Ref: #/components/schemas/LiveTurnStart
+type LiveTurnStart struct {
+	Round    int32 `json:"round"`
+	TokenIds []ID  `json:"tokenIds"`
+}
+
+// GetRound returns the value of Round.
+func (s *LiveTurnStart) GetRound() int32 {
+	return s.Round
+}
+
+// GetTokenIds returns the value of TokenIds.
+func (s *LiveTurnStart) GetTokenIds() []ID {
+	return s.TokenIds
+}
+
+// SetRound sets the value of Round.
+func (s *LiveTurnStart) SetRound(val int32) {
+	s.Round = val
+}
+
+// SetTokenIds sets the value of TokenIds.
+func (s *LiveTurnStart) SetTokenIds(val []ID) {
+	s.TokenIds = val
+}
+
 // A WebSocket frame from a live Session. Snapshots answer joins and resyncs; a view follows every
 // change, and a view whose seq is not the next one means resync. A walk's view carries the views along
 // the way as steps, to play back at walking pace; a path answers plan_walk to its sender only.
 // Ref: #/components/schemas/LiveUpdate
 type LiveUpdate struct {
-	Kind      LiveUpdateKind       `json:"kind"`
-	Seq       int32                `json:"seq"`
-	Nonce     OptString            `json:"nonce"`
-	ActionSeq OptInt32             `json:"actionSeq"`
-	Reason    OptString            `json:"reason"`
-	Session   OptLiveSessionView   `json:"session"`
-	View      OptLiveView          `json:"view"`
-	Steps     []LiveView           `json:"steps"`
-	Path      OptLivePath          `json:"path"`
-	Preview   OptLiveAttackPreview `json:"preview"`
-	Area      OptLiveAreaPreview   `json:"area"`
-	Ping      OptHexCoord          `json:"ping"`
+	Kind       LiveUpdateKind          `json:"kind"`
+	Seq        int32                   `json:"seq"`
+	Nonce      OptString               `json:"nonce"`
+	ActionSeq  OptInt32                `json:"actionSeq"`
+	Reason     OptString               `json:"reason"`
+	Session    OptLiveSessionView      `json:"session"`
+	View       OptLiveView             `json:"view"`
+	Steps      []LiveView              `json:"steps"`
+	Path       OptLivePath             `json:"path"`
+	Preview    OptLiveAttackPreview    `json:"preview"`
+	Area       OptLiveAreaPreview      `json:"area"`
+	Ping       OptHexCoord             `json:"ping"`
+	Initiative OptLiveInitiativeReveal `json:"initiative"`
+	Turn       OptLiveTurnStart        `json:"turn"`
 }
 
 // GetKind returns the value of Kind.
@@ -24477,6 +24573,16 @@ func (s *LiveUpdate) GetPing() OptHexCoord {
 	return s.Ping
 }
 
+// GetInitiative returns the value of Initiative.
+func (s *LiveUpdate) GetInitiative() OptLiveInitiativeReveal {
+	return s.Initiative
+}
+
+// GetTurn returns the value of Turn.
+func (s *LiveUpdate) GetTurn() OptLiveTurnStart {
+	return s.Turn
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -24535,6 +24641,16 @@ func (s *LiveUpdate) SetArea(val OptLiveAreaPreview) {
 // SetPing sets the value of Ping.
 func (s *LiveUpdate) SetPing(val OptHexCoord) {
 	s.Ping = val
+}
+
+// SetInitiative sets the value of Initiative.
+func (s *LiveUpdate) SetInitiative(val OptLiveInitiativeReveal) {
+	s.Initiative = val
+}
+
+// SetTurn sets the value of Turn.
+func (s *LiveUpdate) SetTurn(val OptLiveTurnStart) {
+	s.Turn = val
 }
 
 type LiveUpdateKind string
@@ -31254,6 +31370,52 @@ func (o OptLiveDying) Or(d LiveDying) LiveDying {
 	return d
 }
 
+// NewOptLiveInitiativeReveal returns new OptLiveInitiativeReveal with value set to v.
+func NewOptLiveInitiativeReveal(v LiveInitiativeReveal) OptLiveInitiativeReveal {
+	return OptLiveInitiativeReveal{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveInitiativeReveal is optional LiveInitiativeReveal.
+type OptLiveInitiativeReveal struct {
+	Value LiveInitiativeReveal
+	Set   bool
+}
+
+// IsSet returns true if OptLiveInitiativeReveal was set.
+func (o OptLiveInitiativeReveal) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveInitiativeReveal) Reset() {
+	var v LiveInitiativeReveal
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveInitiativeReveal) SetTo(v LiveInitiativeReveal) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveInitiativeReveal) Get() (v LiveInitiativeReveal, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveInitiativeReveal) Or(d LiveInitiativeReveal) LiveInitiativeReveal {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptLiveItemInstanceSlot returns new OptLiveItemInstanceSlot with value set to v.
 func NewOptLiveItemInstanceSlot(v LiveItemInstanceSlot) OptLiveItemInstanceSlot {
 	return OptLiveItemInstanceSlot{
@@ -31892,6 +32054,52 @@ func (o OptLiveTokenHealth) Get() (v LiveTokenHealth, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveTokenHealth) Or(d LiveTokenHealth) LiveTokenHealth {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveTurnStart returns new OptLiveTurnStart with value set to v.
+func NewOptLiveTurnStart(v LiveTurnStart) OptLiveTurnStart {
+	return OptLiveTurnStart{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveTurnStart is optional LiveTurnStart.
+type OptLiveTurnStart struct {
+	Value LiveTurnStart
+	Set   bool
+}
+
+// IsSet returns true if OptLiveTurnStart was set.
+func (o OptLiveTurnStart) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveTurnStart) Reset() {
+	var v LiveTurnStart
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveTurnStart) SetTo(v LiveTurnStart) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveTurnStart) Get() (v LiveTurnStart, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveTurnStart) Or(d LiveTurnStart) LiveTurnStart {
 	if v, ok := o.Get(); ok {
 		return v
 	}

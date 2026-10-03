@@ -3,13 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveCheck, LiveContainer, LiveShop, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
 import { expectAccessible } from '@/test/axe'
 import { FakeSocket } from '@/test/fakeSocket'
-import { fakeClock, mountApp } from '@/test/mountApp'
+import { fakeClock, mountApp, unmountAll } from '@/test/mountApp'
 import { jsonResponse } from '@/test/mountWithQuery'
 import { board, hexes, initials, zoneHexes } from './board'
 import { focus } from './camera'
 import { checkLine } from './checks'
 import { canPut, canTake, instanceLabel, load } from './inventory'
 import { cellsFor, key, layoutOf } from './geometry'
+import { BANNER_MS, REVEAL_FADE_MS, REVEAL_HOLD_MS } from './motion'
 import { duration, journey } from './travel'
 
 const ID = '0190c7a8-0000-7000-8000-000000000001'
@@ -370,6 +371,79 @@ describe('combat', () => {
     await flushPromises()
     expect(table.wrapper.get('[data-testid="initiative-rail"]').text()).toContain('Round 2')
     expect(table.wrapper.findAll('[data-testid="table-display"] polygon')).toHaveLength(19)
+  })
+
+  it('reveals initiative before the faces slide into order, and raises a player\'s banner as their turn starts', async () => {
+    const aria: LiveToken = { ...goblin, id: '0190c7a8-0000-7000-8000-00000000000e', label: 'Aria', kind: 'party', controllerId: player.id, q: 0, r: 0 }
+    const ariaFights = (extra: Record<string, unknown> = {}) => fighter('Aria', { kind: 'party', controllerId: player.id, tokenId: aria.id, ...extra })
+    const frame = (seq: number, combat: object, extra: object = {}) => ({ kind: 'view', seq, view: { tokens: [aria, goblin], fog: false, visible: [], remembered: [], combat }, ...extra })
+    const order = [{ tokenId: goblin.id, label: 'Goblin Boss', kind: 'enemy', initiative: 18 }, { tokenId: aria.id, label: 'Aria', kind: 'party', initiative: 5 }]
+    const goblinActs = { status: 'active', round: 1, combatants: [fighter('Goblin Boss', { initiative: 18, rank: 1, acting: true }), ariaFights({ initiative: 5, rank: 2 })] }
+    const ariaActs = { status: 'active', round: 1, combatants: [fighter('Goblin Boss', { initiative: 18, rank: 1, done: true }), ariaFights({ initiative: 5, rank: 2, acting: true })] }
+    const open = async (role: string, path = '') => {
+      const { wrapper } = await mountApp(`/campaigns/${ID}/sessions/${SID}${path}`, { [`/api/v1/campaigns/${ID}/rolls/`]: (u) => initiativeRoll(u.pathname.split('/')[6] ?? ''), [`/api/v1/campaigns/${ID}`]: () => campaign(role) })
+      const s = FakeSocket.last()
+      s.receive(snapshot([aria, goblin], path ? 'table' : role === 'dm' ? 'dm' : 'party', { combat: { status: 'rolling', round: 0, combatants: [ariaFights(), fighter('Goblin Boss')] } }))
+      await flushPromises()
+      const faces = () => wrapper.findAll('[data-testid="roster-strip"] li').map((li) => li.attributes('data-testid'))
+      return { wrapper, s, faces }
+    }
+    fakeClock()
+    const { wrapper, s, faces } = await open('player')
+    s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="roster-strip"]').classes()).toContain('roster--reveal')
+    expect(wrapper.get('[data-testid="rolled-Aria"]').text()).toBe('5')
+    expect(wrapper.get('[data-testid="rolled-Goblin Boss"]').text()).toBe('18')
+    expect(faces()).toEqual(['rail-Aria', 'rail-Goblin Boss'])
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+    await vi.advanceTimersByTimeAsync(REVEAL_HOLD_MS)
+    expect(faces()).toEqual(['rail-Goblin Boss', 'rail-Aria'])
+    expect(wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(true)
+    await vi.advanceTimersByTimeAsync(REVEAL_FADE_MS)
+    expect(wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="roster-strip"]').classes()).not.toContain('roster--reveal')
+
+    s.receive(frame(3, ariaActs, { turn: { round: 1, tokenIds: [aria.id] } }))
+    await flushPromises()
+    expect(wrapper.get('[data-testid="turn-banner"]').text()).toBe("It's your turn Aria")
+    s.receive(frame(4, ariaActs))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(true)
+    await vi.advanceTimersByTimeAsync(BANNER_MS)
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+    s.receive(frame(5, { ...ariaActs, round: 2 }, { turn: { round: 2, tokenIds: [aria.id] } }))
+    await flushPromises()
+    await wrapper.get('[data-testid="turn-banner"]').trigger('click')
+    expect(wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+
+    // A monster's turn is nobody's banner; the DM and the Table Display see the reveal too.
+    const dm = await open('dm')
+    dm.s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(dm.wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(true)
+    expect(dm.wrapper.find('[data-testid="turn-banner"]').exists()).toBe(false)
+    const table = await open('player', '/table')
+    table.s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(table.wrapper.get('[data-testid="rolled-Goblin Boss"]').text()).toBe('18')
+
+    // Reduced motion: straight into order, nothing to fade; the banner still says whose turn it is.
+    unmountAll()
+    document.body.innerHTML = ''
+    vi.useRealTimers()
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    const still = await open('player')
+    still.s.receive(frame(2, goblinActs, { initiative: { order }, turn: { round: 1, tokenIds: [goblin.id] } }))
+    await flushPromises()
+    expect(still.faces()).toEqual(['rail-Goblin Boss', 'rail-Aria'])
+    expect(still.wrapper.find('[data-testid="rolled-Aria"]').exists()).toBe(false)
+    expect(still.wrapper.get('[data-testid="roster-strip"]').classes()).not.toContain('roster--reveal')
+    still.s.receive(frame(3, ariaActs, { turn: { round: 1, tokenIds: [aria.id] } }))
+    await flushPromises()
+    expect(still.wrapper.get('[data-testid="turn-banner"]').text()).toContain('Aria')
+    await expectAccessible(still.wrapper.element as Element)
+    still.wrapper.unmount()
   })
 })
 

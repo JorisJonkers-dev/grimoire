@@ -69,6 +69,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
         :roster="state.view.roster ?? []"
         :combat="state.view.combat"
         :tokens="state.view.tokens"
+        :reveal="state.reveal"
       />
       <CameraView :focus="centre" :zoom="(table?.zoomPct ?? 100) / 100" :ping="ping">
         <MapBoard v-if="state.view.map" :map="state.view.map" :view="state.view" :area="state.view.area?.hexes" title="The table" />

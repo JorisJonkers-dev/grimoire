@@ -1,10 +1,14 @@
 import { notifyManager } from '@tanstack/vue-query'
+import { config } from '@vue/test-utils'
 import { afterEach, vi } from 'vitest'
 import { FakeSocket } from './fakeSocket'
 import { unmountAll } from './mountApp'
 
 // jsdom lays nothing out, so it has no scrollIntoView; the roster strip calls it to keep a face in view.
 Element.prototype.scrollIntoView = function scrollIntoView() {}
+
+// The stub of a TransitionGroup drops its tag, which would leave the roster's faces outside their list.
+config.global.stubs = { ...config.global.stubs, TransitionGroup: false }
 
 // Query results reach components on the microtask queue, so a test's fake timers never hold them back.
 notifyManager.setScheduler(queueMicrotask)

@@ -3013,6 +3013,31 @@ export const zLiveCombat = z.object({
 });
 
 /**
+ * One Combatant's place in the initiative reveal.
+ */
+export const zLiveInitiativeRoll = z.object({
+    tokenId: zId,
+    label: z.string().max(80),
+    kind: zTokenKind,
+    initiative: z.int().gte(-20).lte(60)
+});
+
+/**
+ * Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.
+ */
+export const zLiveInitiativeReveal = z.object({
+    order: z.array(zLiveInitiativeRoll).max(200)
+});
+
+/**
+ * The tokens whose turn a change started, sent with that change's view. It leaves out creatures the audience may not see.
+ */
+export const zLiveTurnStart = z.object({
+    round: z.int().gte(1).lte(100000),
+    tokenIds: z.array(zId).min(1).max(200)
+});
+
+/**
  * The route a walk would take, start first, and the movement it costs.
  */
 export const zLivePath = z.object({
@@ -4311,7 +4336,9 @@ export const zLiveUpdate = z.object({
     path: zLivePath.optional(),
     preview: zLiveAttackPreview.optional(),
     area: zLiveAreaPreview.optional(),
-    ping: zHexCoord.optional()
+    ping: zHexCoord.optional(),
+    initiative: zLiveInitiativeReveal.optional(),
+    turn: zLiveTurnStart.optional()
 });
 
 /**
