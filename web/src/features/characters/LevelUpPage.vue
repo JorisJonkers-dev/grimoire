@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { levelUpMutation, planLevelUpOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
@@ -12,13 +12,19 @@ const router = useRouter()
 const client = useQueryClient()
 const ids = computed(() => ({ campaignId: String(route.params.id), characterId: String(route.params.characterId) }))
 const klass = ref('')
+const picks = reactive<Record<string, string[]>>({})
+// A subclass picked on this level asks for its own choices, so the plan is read again with it.
+const subclass = computed(() => picks.subclass?.[0] ?? '')
 const plan = useQuery(
-  computed(() => ({ ...planLevelUpOptions({ path: ids.value, query: klass.value ? { class: klass.value } : {} }), retry: false })),
+  computed(() => ({
+    ...planLevelUpOptions({ path: ids.value, query: { ...(klass.value ? { class: klass.value } : {}), ...(subclass.value ? { subclass: subclass.value } : {}) } }),
+    retry: false,
+    placeholderData: keepPreviousData,
+  })),
 )
 const p = computed(() => plan.data.value)
 const take = useMutation(levelUpMutation())
 
-const picks = reactive<Record<string, string[]>>({})
 const spells = ref<string[]>([])
 const hitPoints = ref<'average' | 'roll'>('average')
 const asiFirst = ref<Ability | ''>('')
@@ -84,7 +90,9 @@ function submit() {
   const body = {
     class: klass.value,
     hitPoints: hitPoints.value,
-    picks: Object.entries(picks).map(([choice, values]) => ({ choice, values })),
+    picks: Object.entries(picks)
+      .filter(([choice]) => p.value?.choices.some((c) => c.slug === choice))
+      .map(([choice, values]) => ({ choice, values })),
     increase: increase.value,
     spells: spells.value,
   }

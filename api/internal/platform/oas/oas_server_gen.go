@@ -625,6 +625,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/spells/{entryId}
 	SaveSpellBuild(ctx context.Context, req *SpellDesign, params SaveSpellBuildParams) (SaveSpellBuildRes, error)
+	// SaveSubclassBuild implements saveSubclassBuild operation.
+	//
+	// Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer
+	// it on levelling up its class.
+	//
+	// PUT /api/v1/builders/subclasses/{entryId}
+	SaveSubclassBuild(ctx context.Context, req *SubclassDesign, params SaveSubclassBuildParams) (SaveSubclassBuildRes, error)
 	// SetCampaignOverride implements setCampaignOverride operation.
 	//
 	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
@@ -1089,6 +1096,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// GetSubclassBuild implements getSubclassBuild operation.
+	//
+	// A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/subclasses/{entryId}
+	GetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (GetSubclassBuildRes, error)
 	// GetTokenIcon implements getTokenIcon operation.
 	//
 	// The picture itself, served only to Members of the Campaign.
@@ -1397,6 +1410,13 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/spells/preview
 	PreviewSpell(ctx context.Context, req *SpellPreviewInput) (PreviewSpellRes, error)
+	// PreviewSubclass implements previewSubclass operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/subclasses/preview
+	PreviewSubclass(ctx context.Context, req *SubclassPreviewInput) (PreviewSubclassRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

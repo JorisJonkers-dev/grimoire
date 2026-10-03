@@ -21,7 +21,7 @@ type Exported struct {
 	Kind   string
 	Name   string
 	Fields Fields
-	// Design is a spell's or an item's builder design, its typed part.
+	// Design is a built kind's builder design, its typed part.
 	Design []byte
 }
 
@@ -94,7 +94,7 @@ func planEntry(i int, e Incoming, keys map[string]bool, note func(string, string
 	for j, p := range e.Parts {
 		kind, _ := p["type"].(string)
 		design, isDesign := p["design"].(map[string]any)
-		if (kind == "spell" || kind == "item") && kind == e.Kind && isDesign && x.Design == nil {
+		if slices.Contains(BuiltKinds(), kind) && kind == e.Kind && isDesign && x.Design == nil {
 			x.Design, _ = json.Marshal(design) //nolint:errchkjson // decoded JSON marshals back
 			continue
 		}

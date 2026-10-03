@@ -179,14 +179,22 @@ const (
 	Listed       Pool = "listed"
 )
 
-// Choice is a pick a feature asks for at a level: a Fighting Style, a subclass, two Expertise skills.
+// Choice is a pick a feature asks for at a level: a Fighting Style, a subclass, two Expertise skills. A
+// Listed choice names its own Options.
 type Choice struct {
-	Slug  string
-	Name  string
-	Level int
-	Count int
-	Pool  Pool
-	From  string
+	Slug    string
+	Name    string
+	Level   int
+	Count   int
+	Pool    Pool
+	From    string
+	Options []Option
+}
+
+// Option is one option a Listed choice offers.
+type Option struct {
+	Slug string
+	Name string
 }
 
 // ChoicesAt are the choices made on reaching a level.

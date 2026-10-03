@@ -76,15 +76,20 @@ func featCategories() map[string]string {
 
 // PlanLevelUp is what the next level in a class offers a Character; an empty class means its starting
 // class. The owner or a DM, out of combat.
-func (s *Characters) PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (LevelUpPlan, error) {
+func (s *Characters) PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class, subclass string) (LevelUpPlan, error) {
 	sheet, err := s.editable(ctx, c, id, ch)
 	if err != nil {
 		return LevelUpPlan{}, err
 	}
-	return s.plan(ctx, sheet, class)
+	return s.plan(ctx, sheet, class, subclass)
 }
 
-func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (LevelUpPlan, error) {
+// plan is what the next level in a class offers; a subclass picked on this level adds its choices.
+func (s *Characters) plan(ctx context.Context, sheet Sheet, class, subclass string) (LevelUpPlan, error) {
+	s, err := s.within(ctx, sheet.CampaignID)
+	if err != nil {
+		return LevelUpPlan{}, err
+	}
 	o, err := s.Compendium.BuilderOptions(ctx, sheet.Ruleset)
 	if err != nil {
 		return LevelUpPlan{}, err
@@ -117,7 +122,7 @@ func (s *Characters) plan(ctx context.Context, sheet Sheet, class string) (Level
 	if err != nil {
 		return LevelUpPlan{}, err
 	}
-	p.Choices = choicesFor(cat, lu, sheet, class, p.ClassLevel, offer.Level == 0)
+	p.Choices = choicesFor(cat, lu, sheet, levelChoice{class: class, subclass: subclass, level: p.ClassLevel, multiclass: offer.Level == 0})
 	p.SpellList = spellList(lu.Spells, sheet.Spells, p.Cantrips, p.Spells)
 	return p, nil
 }
@@ -181,13 +186,29 @@ func classOffers(o compendium.BuilderOptions, sheet Sheet) []LevelUpClass {
 	return out
 }
 
+// levelChoice is the class level a plan is for, and the subclass picked on it, if any.
+type levelChoice struct {
+	class      string
+	subclass   string
+	level      int
+	multiclass bool
+}
+
 // choicesFor are the picks a class level asks for, from its Feature data and its subclass's. Weapon
 // Mastery follows the weapons carried, so it is not picked here; a new class grants a skill only where
 // the multiclass rules give one.
-func choicesFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet, class string, level int, multiclass bool) []LevelUpChoice {
+func choicesFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet, at levelChoice) []LevelUpChoice {
+	class, level, multiclass := at.class, at.level, at.multiclass
 	raw := features.ChoicesAt(cat.Choices[features.Owner{Kind: "class", Slug: class}], level)
+	sub := ""
+	if slices.ContainsFunc(lu.Subclasses, func(x compendium.Named) bool { return x.Slug == at.subclass }) {
+		sub = at.subclass
+	}
 	if x, ok := find(sheet.Classes, func(x domain.ClassLevel) bool { return x.Class == class }); ok && x.Subclass != "" {
-		raw = append(raw, features.ChoicesAt(cat.Choices[features.Owner{Kind: "subclass", Slug: x.Subclass}], level)...)
+		sub = x.Subclass
+	}
+	if sub != "" {
+		raw = append(raw, features.ChoicesAt(cat.Choices[features.Owner{Kind: "subclass", Slug: sub}], level)...)
 	}
 	var out []LevelUpChoice
 	for _, ch := range raw {
@@ -224,8 +245,12 @@ func optionsFor(cat features.Catalog, lu compendium.LevelUpOptions, sheet Sheet,
 				out = append(out, LevelUpOption{Slug: string(sk.Skill), Name: titleCase(string(sk.Skill)), Unmet: nil})
 			}
 		}
-	case features.Listed, features.WeaponKind:
-		// No class level lists its own options in the SRD, and Weapon Mastery follows the weapons carried.
+	case features.Listed:
+		for _, o := range ch.Options {
+			out = append(out, LevelUpOption{Slug: o.Slug, Name: o.Name, Unmet: nil})
+		}
+	case features.WeaponKind:
+		// Weapon Mastery follows the weapons carried.
 	}
 	return out
 }
@@ -279,7 +304,7 @@ func (s *Characters) LevelUp(ctx context.Context, c caller.Caller, id domain.Cam
 	if err != nil {
 		return Sheet{}, err
 	}
-	p, err := s.plan(ctx, sheet, req.Class)
+	p, err := s.plan(ctx, sheet, req.Class, firstOf(req.Picks["subclass"]))
 	if err != nil {
 		return Sheet{}, err
 	}
@@ -412,4 +437,12 @@ func advance(classes []domain.ClassLevel, p LevelUpPlan, picks []domain.Pick) []
 		}
 	}
 	return classes
+}
+
+// firstOf is a pick's first value, or nothing.
+func firstOf(values []string) string {
+	if len(values) == 0 {
+		return ""
+	}
+	return values[0]
 }

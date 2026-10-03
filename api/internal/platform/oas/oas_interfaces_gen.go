@@ -313,6 +313,10 @@ type GetStatusRes interface {
 	getStatusRes()
 }
 
+type GetSubclassBuildRes interface {
+	getSubclassBuildRes()
+}
+
 type GetTokenIconRes interface {
 	getTokenIconRes()
 }
@@ -577,6 +581,10 @@ type PreviewSpellRes interface {
 	previewSpellRes()
 }
 
+type PreviewSubclassRes interface {
+	previewSubclassRes()
+}
+
 type PublishReleaseNoteRes interface {
 	publishReleaseNoteRes()
 }
@@ -679,6 +687,10 @@ type SaveItemBuildRes interface {
 
 type SaveSpellBuildRes interface {
 	saveSpellBuildRes()
+}
+
+type SaveSubclassBuildRes interface {
+	saveSubclassBuildRes()
 }
 
 type SeeReleaseNoteRes interface {

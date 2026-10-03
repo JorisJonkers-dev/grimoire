@@ -7,6 +7,18 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
 )
 
+func TestEveryClassHasPrimaryAbilities(t *testing.T) {
+	t.Parallel()
+	if len(rules.Classes()) != 12 {
+		t.Fatalf("classes = %v", rules.Classes())
+	}
+	for _, c := range rules.Classes() {
+		if len(rules.PrimaryAbilities(c)) == 0 {
+			t.Errorf("%s has no primary ability", c)
+		}
+	}
+}
+
 func TestPrimaryAbilities(t *testing.T) {
 	t.Parallel()
 	for class, want := range map[string][]rules.Ability{

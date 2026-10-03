@@ -83,6 +83,7 @@ function linkInto() {
       <h1>{{ d.entry.name }} <span class="g-tag">{{ kindNames[d.entry.kind] }}</span></h1>
       <RouterLink v-if="d.entry.kind === 'spell'" :to="{ name: 'spell-builder', params: { entryId: d.entry.id } }" data-testid="open-builder">Open in the Effect builder</RouterLink>
       <RouterLink v-if="d.entry.kind === 'item'" :to="{ name: 'item-builder', params: { entryId: d.entry.id } }" data-testid="open-item-builder">Open in the item builder</RouterLink>
+      <RouterLink v-if="d.entry.kind === 'subclass'" :to="{ name: 'subclass-builder', params: { entryId: d.entry.id } }" data-testid="open-subclass-builder">Open in the subclass builder</RouterLink>
       <p v-if="status" role="status" class="g-tag" data-testid="entry-status">{{ status }}</p>
       <p v-if="shared" class="g-card hint" data-testid="entry-shared">A read-only copy from the Shared Library. Link it into a Campaign, then override its fields there.</p>
       <dl v-if="shared" class="g-card fields" data-testid="entry-fields">

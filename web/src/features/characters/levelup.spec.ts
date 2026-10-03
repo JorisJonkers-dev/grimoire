@@ -93,6 +93,41 @@ describe('level-up wizard', () => {
     }])
   })
 
+  it('asks for a homebrew subclass\'s own choices once it is picked, and sends only the choices the plan asks for', async () => {
+    const sent: unknown[] = []
+    const subclass = { slug: 'subclass', name: 'Subclass', pool: 'subclass', count: 1, options: [
+      { slug: 'champion', name: 'Champion', unmet: [] }, { slug: 'hb-0190c7a80000', name: 'Lantern Warden', unmet: [] },
+    ] }
+    const style = { slug: 'hb-0190c7a80000-lantern-style', name: 'Lantern Style', pool: 'listed', count: 1, options: [
+      { slug: 'bog-glass', name: 'Bog Glass', unmet: [] }, { slug: 'ember-wick', name: 'Ember Wick', unmet: [] },
+    ] }
+    const level3 = { ...fighterPlan, level: 3, classLevel: 3, choices: [subclass] }
+    const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}/level-up`, {
+      [`${base}/level-up`]: async (url, req) => {
+        if (req.method === 'POST') {
+          sent.push(await req.clone().json())
+          return sheet({ level: 3 })
+        }
+        return url.searchParams.get('subclass') === 'hb-0190c7a80000' ? { ...level3, choices: [subclass, style] } : level3
+      },
+      [base]: () => sheet({ level: 3 }),
+    })
+    await wrapper.get('[data-testid="next"]').trigger('click')
+    expect(wrapper.find('[data-testid="choice-hb-0190c7a80000-lantern-style"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="pick-subclass-hb-0190c7a80000"]').setValue(true)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="next"]').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-testid="pick-hb-0190c7a80000-lantern-style-ember-wick"]').setValue(true)
+    await wrapper.get('[data-testid="pick-subclass-champion"]').setValue(true)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="choice-hb-0190c7a80000-lantern-style"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="next"]').trigger('click')
+    await wrapper.get('[data-testid="next"]').trigger('click')
+    await wrapper.get('[data-testid="take-level"]').trigger('click')
+    await flushPromises()
+    expect(sent).toEqual([{ class: 'fighter', hitPoints: 'average', increase: {}, spells: [], picks: [{ choice: 'subclass', values: ['champion'] }] }])
+  })
+
   it('multiclasses into wizard and learns a cantrip and a spell', async () => {
     const sent: unknown[] = []
     const { wrapper } = await mountApp(`/campaigns/${ID}/characters/${CH}/level-up`, {

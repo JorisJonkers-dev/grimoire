@@ -12,6 +12,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -128,18 +129,24 @@ func importCollection(ctx context.Context, repo Repository, c caller.Caller, x d
 	return col, repo.UpdateCollection(ctx, col)
 }
 
-// checkDesign says why an imported spell's design cannot be run, or nothing when it can or there is none.
+// checkDesign says why an imported design cannot be built, or nothing when it can or there is none.
 func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 	if x.Design == nil {
 		return ""
 	}
 	var err error
-	if x.Kind == "item" {
+	switch x.Kind {
+	case "item":
 		var d itembuild.Design
 		if err = json.Unmarshal(x.Design, &d); err == nil {
 			err = itembuild.Check(d)
 		}
-	} else {
+	case "subclass":
+		var d subclassbuild.Design
+		if err = json.Unmarshal(x.Design, &d); err == nil {
+			err = checkSubclass(d)
+		}
+	default:
 		var d spellbuild.Design
 		if err = json.Unmarshal(x.Design, &d); err == nil {
 			_, err = s.build(ctx, uuid.Nil, x.Name, d)

@@ -149,6 +149,10 @@ func samePicks(had, want []domain.Pick) error {
 // checkPicks checks each picked value against the options its choice offers the rebuilt Character, as
 // if that one choice were still open.
 func (s *Characters) checkPicks(ctx context.Context, o compendium.BuilderOptions, next domain.Character) error {
+	s, err := s.within(ctx, next.CampaignID)
+	if err != nil {
+		return err
+	}
 	cat, err := s.Compendium.Features(ctx)
 	if err != nil {
 		return err
@@ -192,6 +196,10 @@ func (s *Characters) RetrainChoices(ctx context.Context, c caller.Caller, id dom
 	}
 	if !sheet.Mine {
 		return nil, domain.ErrForbidden
+	}
+	s, err = s.within(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 	o, err := s.Compendium.BuilderOptions(ctx, sheet.Ruleset)
 	if err != nil {

@@ -800,6 +800,11 @@ paths:
           required: false
           description: The class to level in; the starting class when omitted.
           schema: { $ref: "#/components/schemas/Slug" }
+        - name: subclass
+          in: query
+          required: false
+          description: A subclass picked on this level, so the plan adds the choices it asks for at once.
+          schema: { $ref: "#/components/schemas/Slug" }
       responses:
         "200":
           description: What the next level offers.
@@ -4702,6 +4707,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ItemBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/subclasses/preview:
+    post:
+      operationId: previewSubclass
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew subclass
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubclassPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubclassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/subclasses/{entryId}:
+    get:
+      operationId: getSubclassBuild
+      x-ogen-operation-group: Read
+      summary: Open a subclass in the subclass builder
+      description: "A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The subclass.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubclassBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveSubclassBuild
+      x-ogen-operation-group: Build
+      summary: Save a subclass design
+      description: "Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer it on levelling up its class."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubclassDesign"
+      responses:
+        "200":
+          description: The subclass.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubclassBuild"
         "4XX":
           $ref: "#/components/responses/Problem"
         "5XX":
@@ -9612,7 +9707,7 @@ components:
     LibraryKind:
       type: string
       description: What a Library entry is.
-      enum: [creature, npc, location, shop, item, spell, table]
+      enum: [creature, npc, location, shop, item, spell, table, subclass]
     LibraryField:
       type: object
       description: One named value of a Library entry.
@@ -10101,6 +10196,85 @@ components:
           type: array
           maxItems: 20000
           items: { $ref: "#/components/schemas/BuilderHex" }
+    SubclassDesign:
+      type: object
+      description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
+      additionalProperties: false
+      required: [class, features, resources, choices]
+      properties:
+        class: { type: string, maxLength: 40 }
+        features:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SubclassFeature" }
+        resources:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SubclassResource" }
+        choices:
+          type: array
+          maxItems: 100
+          items: { $ref: "#/components/schemas/SubclassChoice" }
+    SubclassFeature:
+      type: object
+      description: A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
+      additionalProperties: false
+      required: [level, name, text]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        name: { type: string, maxLength: 200 }
+        text: { type: string, maxLength: 4000 }
+        uses: { type: string, maxLength: 80 }
+        spell: { type: string, maxLength: 120 }
+        spellName: { type: string, maxLength: 200 }
+    SubclassResource:
+      type: object
+      description: "A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn."
+      additionalProperties: false
+      required: [key, name, basis, fromLevel, recharge]
+      properties:
+        key: { type: string, maxLength: 80 }
+        name: { type: string, maxLength: 200 }
+        basis: { type: string, maxLength: 40 }
+        amount: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        ability: { type: string, maxLength: 40 }
+        fromLevel: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        die: { type: string, maxLength: 20 }
+        recharge: { type: string, maxLength: 40 }
+    SubclassChoice:
+      type: object
+      description: A pick from listed options at a level.
+      additionalProperties: false
+      required: [level, name, count, options]
+      properties:
+        level: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        name: { type: string, maxLength: 200 }
+        count: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        options:
+          type: array
+          maxItems: 100
+          items: { type: string, maxLength: 200 }
+    SubclassPreviewInput:
+      type: object
+      description: A design to preview, with the subclass's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/SubclassDesign" }
+    SubclassBuild:
+      type: object
+      description: A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/SubclassDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 200
+          items: { type: string, maxLength: 1200 }
     ItemDesign:
       type: object
       description: A homebrew item as the item builder makes it, from its kind, base item, rarity, enchantment, attunement, charges and Item Properties.

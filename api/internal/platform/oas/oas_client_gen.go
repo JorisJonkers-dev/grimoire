@@ -647,6 +647,13 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/builders/spells/{entryId}
 	SaveSpellBuild(ctx context.Context, request *SpellDesign, params SaveSpellBuildParams) (SaveSpellBuildRes, error)
+	// SaveSubclassBuild invokes saveSubclassBuild operation.
+	//
+	// Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer
+	// it on levelling up its class.
+	//
+	// PUT /api/v1/builders/subclasses/{entryId}
+	SaveSubclassBuild(ctx context.Context, request *SubclassDesign, params SaveSubclassBuildParams) (SaveSubclassBuildRes, error)
 	// SetCampaignOverride invokes setCampaignOverride operation.
 	//
 	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
@@ -1111,6 +1118,12 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/status
 	GetStatus(ctx context.Context) (GetStatusRes, error)
+	// GetSubclassBuild invokes getSubclassBuild operation.
+	//
+	// A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/subclasses/{entryId}
+	GetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (GetSubclassBuildRes, error)
 	// GetTokenIcon invokes getTokenIcon operation.
 	//
 	// The picture itself, served only to Members of the Campaign.
@@ -1419,6 +1432,13 @@ type ReadInvoker interface {
 	//
 	// POST /api/v1/builders/spells/preview
 	PreviewSpell(ctx context.Context, request *SpellPreviewInput) (PreviewSpellRes, error)
+	// PreviewSubclass invokes previewSubclass operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/subclasses/preview
+	PreviewSubclass(ctx context.Context, request *SubclassPreviewInput) (PreviewSubclassRes, error)
 }
 
 // Client implements OAS client.
@@ -12189,6 +12209,140 @@ func (c *Client) sendGetStatus(ctx context.Context) (res GetStatusRes, err error
 	return result, nil
 }
 
+// GetSubclassBuild invokes getSubclassBuild operation.
+//
+// A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+//
+// GET /api/v1/builders/subclasses/{entryId}
+func (c *Client) GetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (GetSubclassBuildRes, error) {
+	res, err := c.sendGetSubclassBuild(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (res GetSubclassBuildRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getSubclassBuild"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/builders/subclasses/{entryId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetSubclassBuildOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/builders/subclasses/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetSubclassBuildOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetSubclassBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
 // GetTokenIcon invokes getTokenIcon operation.
 //
 // The picture itself, served only to Members of the Campaign.
@@ -20236,6 +20390,26 @@ func (c *Client) sendPlanLevelUp(ctx context.Context, params PlanLevelUpParams) 
 			return res, errors.Wrap(err, "encode query")
 		}
 	}
+	{
+		// Encode "subclass" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "subclass",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Subclass.Get(); ok {
+				if unwrapped := string(val); true {
+					return e.EncodeValue(conv.StringToString(unwrapped))
+				}
+				return nil
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
 	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
@@ -21256,6 +21430,123 @@ func (c *Client) sendPreviewSpell(ctx context.Context, request *SpellPreviewInpu
 
 	stage = "DecodeResponse"
 	result, err := decodePreviewSpellResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// PreviewSubclass invokes previewSubclass operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/subclasses/preview
+func (c *Client) PreviewSubclass(ctx context.Context, request *SubclassPreviewInput) (PreviewSubclassRes, error) {
+	res, err := c.sendPreviewSubclass(ctx, request)
+	return res, err
+}
+
+func (c *Client) sendPreviewSubclass(ctx context.Context, request *SubclassPreviewInput) (res PreviewSubclassRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("previewSubclass"),
+		semconv.HTTPRequestMethodKey.String("POST"),
+		semconv.URLTemplateKey.String("/api/v1/builders/subclasses/preview"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, PreviewSubclassOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [1]string
+	pathParts[0] = "/api/v1/builders/subclasses/preview"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "POST", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodePreviewSubclassRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, PreviewSubclassOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodePreviewSubclassResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -25132,6 +25423,144 @@ func (c *Client) sendSaveSpellBuild(ctx context.Context, request *SpellDesign, p
 
 	stage = "DecodeResponse"
 	result, err := decodeSaveSpellBuildResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SaveSubclassBuild invokes saveSubclassBuild operation.
+//
+// Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer
+// it on levelling up its class.
+//
+// PUT /api/v1/builders/subclasses/{entryId}
+func (c *Client) SaveSubclassBuild(ctx context.Context, request *SubclassDesign, params SaveSubclassBuildParams) (SaveSubclassBuildRes, error) {
+	res, err := c.sendSaveSubclassBuild(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendSaveSubclassBuild(ctx context.Context, request *SubclassDesign, params SaveSubclassBuildParams) (res SaveSubclassBuildRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("saveSubclassBuild"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/builders/subclasses/{entryId}"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SaveSubclassBuildOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [2]string
+	pathParts[0] = "/api/v1/builders/subclasses/"
+	{
+		// Encode "entryId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "entryId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.EntryId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSaveSubclassBuildRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, SaveSubclassBuildOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeSaveSubclassBuildResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

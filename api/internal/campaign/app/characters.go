@@ -426,6 +426,10 @@ func (s *Characters) get(ctx context.Context, c caller.Caller, id domain.Campaig
 // extras adds what a saved Character's sheet shows beyond its build: attacks with Weapon Mastery,
 // class features and species traits up to its level, and its training.
 func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
+	s, err := s.within(ctx, sheet.CampaignID)
+	if err != nil {
+		return Sheet{}, err
+	}
 	cat, err := s.Compendium.Features(ctx)
 	if err != nil {
 		return Sheet{}, err

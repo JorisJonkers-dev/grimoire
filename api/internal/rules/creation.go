@@ -6,6 +6,11 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
 )
 
+// Classes are the SRD classes, by slug.
+func Classes() []string {
+	return []string{"barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"}
+}
+
 // PrimaryAbilities are the abilities a class leans on most (2024 rules), highlighted when choosing a
 // class; a class Grimoire does not know has none.
 func PrimaryAbilities(class string) []Ability {

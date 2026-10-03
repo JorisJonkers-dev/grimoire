@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -24,6 +25,8 @@ type Repository interface {
 	GetCampaign(ctx context.Context, id domain.CampaignID) (domain.Campaign, error)
 	ListCampaigns(ctx context.Context, subject string, after *domain.ListCursor, pageSize int) ([]domain.Summary, error)
 	LockCampaign(ctx context.Context, id domain.CampaignID) error
+	// HomebrewSubclasses are the subclasses a Campaign's Library links and Collections add.
+	HomebrewSubclasses(ctx context.Context, id domain.CampaignID) ([]subclassbuild.Subclass, error)
 	AddMember(ctx context.Context, m domain.Member) (domain.Member, error)
 	Membership(ctx context.Context, id domain.CampaignID, subject string) (domain.Member, error)
 	Member(ctx context.Context, id domain.CampaignID, member domain.MemberID) (domain.Member, error)

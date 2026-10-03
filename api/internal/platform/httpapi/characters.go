@@ -32,7 +32,7 @@ type CharacterService interface {
 	SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error)
 	DiscardDraft(ctx context.Context, c caller.Caller, id domain.CampaignID) error
 	RollScores(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
-	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string) (app.LevelUpPlan, error)
+	PlanLevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class, subclass string) (app.LevelUpPlan, error)
 	LevelUp(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, req app.LevelUpRequest) (app.Sheet, error)
 	Spells(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID) (app.Spellcasting, error)
 	Prepare(ctx context.Context, c caller.Caller, id domain.CampaignID, ch domain.CharacterID, class string, spells []string) (app.Spellcasting, error)

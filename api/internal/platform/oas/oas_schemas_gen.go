@@ -13881,6 +13881,7 @@ const (
 	LibraryKindItem     LibraryKind = "item"
 	LibraryKindSpell    LibraryKind = "spell"
 	LibraryKindTable    LibraryKind = "table"
+	LibraryKindSubclass LibraryKind = "subclass"
 )
 
 // AllValues returns all LibraryKind values.
@@ -13893,6 +13894,7 @@ func (LibraryKind) AllValues() []LibraryKind {
 		LibraryKindItem,
 		LibraryKindSpell,
 		LibraryKindTable,
+		LibraryKindSubclass,
 	}
 }
 
@@ -13912,6 +13914,8 @@ func (s LibraryKind) MarshalText() ([]byte, error) {
 	case LibraryKindSpell:
 		return []byte(s), nil
 	case LibraryKindTable:
+		return []byte(s), nil
+	case LibraryKindSubclass:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -13941,6 +13945,9 @@ func (s *LibraryKind) UnmarshalText(data []byte) error {
 		return nil
 	case LibraryKindTable:
 		*s = LibraryKindTable
+		return nil
+	case LibraryKindSubclass:
+		*s = LibraryKindSubclass
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -31216,6 +31223,7 @@ func (*ProblemStatusCodeWithHeaders) getSpellBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getSpellRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getSpellcastingRes()               {}
 func (*ProblemStatusCodeWithHeaders) getStatusRes()                     {}
+func (*ProblemStatusCodeWithHeaders) getSubclassBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) getTokenIconRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getUnseenReleaseNoteRes()          {}
 func (*ProblemStatusCodeWithHeaders) importLibraryRes()                 {}
@@ -31282,6 +31290,7 @@ func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSightRes()                  {}
 func (*ProblemStatusCodeWithHeaders) previewSpellRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewSubclassRes()               {}
 func (*ProblemStatusCodeWithHeaders) publishReleaseNoteRes()            {}
 func (*ProblemStatusCodeWithHeaders) readAllNotificationsRes()          {}
 func (*ProblemStatusCodeWithHeaders) readNotificationRes()              {}
@@ -31308,6 +31317,7 @@ func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}
+func (*ProblemStatusCodeWithHeaders) saveSubclassBuildRes()             {}
 func (*ProblemStatusCodeWithHeaders) seeReleaseNoteRes()                {}
 func (*ProblemStatusCodeWithHeaders) sendAdminSignInLinkRes()           {}
 func (*ProblemStatusCodeWithHeaders) sendFriendRequestRes()             {}
@@ -38428,6 +38438,400 @@ func (s *StockItem) SetQuantity(val int32) {
 // SetPriceCp sets the value of PriceCp.
 func (s *StockItem) SetPriceCp(val int32) {
 	s.PriceCp = val
+}
+
+// A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads
+// back.
+// Ref: #/components/schemas/SubclassBuild
+type SubclassBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design SubclassDesign  `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *SubclassBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *SubclassBuild) GetDesign() SubclassDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *SubclassBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *SubclassBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *SubclassBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SubclassBuild) SetDesign(val SubclassDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *SubclassBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *SubclassBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// SubclassBuildHeaders wraps SubclassBuild with response headers.
+type SubclassBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           SubclassBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *SubclassBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *SubclassBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *SubclassBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *SubclassBuildHeaders) GetResponse() SubclassBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *SubclassBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *SubclassBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *SubclassBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *SubclassBuildHeaders) SetResponse(val SubclassBuild) {
+	s.Response = val
+}
+
+func (*SubclassBuildHeaders) getSubclassBuildRes()  {}
+func (*SubclassBuildHeaders) previewSubclassRes()   {}
+func (*SubclassBuildHeaders) saveSubclassBuildRes() {}
+
+// A pick from listed options at a level.
+// Ref: #/components/schemas/SubclassChoice
+type SubclassChoice struct {
+	Level   int32    `json:"level"`
+	Name    string   `json:"name"`
+	Count   int32    `json:"count"`
+	Options []string `json:"options"`
+}
+
+// GetLevel returns the value of Level.
+func (s *SubclassChoice) GetLevel() int32 {
+	return s.Level
+}
+
+// GetName returns the value of Name.
+func (s *SubclassChoice) GetName() string {
+	return s.Name
+}
+
+// GetCount returns the value of Count.
+func (s *SubclassChoice) GetCount() int32 {
+	return s.Count
+}
+
+// GetOptions returns the value of Options.
+func (s *SubclassChoice) GetOptions() []string {
+	return s.Options
+}
+
+// SetLevel sets the value of Level.
+func (s *SubclassChoice) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetName sets the value of Name.
+func (s *SubclassChoice) SetName(val string) {
+	s.Name = val
+}
+
+// SetCount sets the value of Count.
+func (s *SubclassChoice) SetCount(val int32) {
+	s.Count = val
+}
+
+// SetOptions sets the value of Options.
+func (s *SubclassChoice) SetOptions(val []string) {
+	s.Options = val
+}
+
+// A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they
+// spend and the choices they ask for.
+// Ref: #/components/schemas/SubclassDesign
+type SubclassDesign struct {
+	Class     string             `json:"class"`
+	Features  []SubclassFeature  `json:"features"`
+	Resources []SubclassResource `json:"resources"`
+	Choices   []SubclassChoice   `json:"choices"`
+}
+
+// GetClass returns the value of Class.
+func (s *SubclassDesign) GetClass() string {
+	return s.Class
+}
+
+// GetFeatures returns the value of Features.
+func (s *SubclassDesign) GetFeatures() []SubclassFeature {
+	return s.Features
+}
+
+// GetResources returns the value of Resources.
+func (s *SubclassDesign) GetResources() []SubclassResource {
+	return s.Resources
+}
+
+// GetChoices returns the value of Choices.
+func (s *SubclassDesign) GetChoices() []SubclassChoice {
+	return s.Choices
+}
+
+// SetClass sets the value of Class.
+func (s *SubclassDesign) SetClass(val string) {
+	s.Class = val
+}
+
+// SetFeatures sets the value of Features.
+func (s *SubclassDesign) SetFeatures(val []SubclassFeature) {
+	s.Features = val
+}
+
+// SetResources sets the value of Resources.
+func (s *SubclassDesign) SetResources(val []SubclassResource) {
+	s.Resources = val
+}
+
+// SetChoices sets the value of Choices.
+func (s *SubclassDesign) SetChoices(val []SubclassChoice) {
+	s.Choices = val
+}
+
+// A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast
+// a spell.
+// Ref: #/components/schemas/SubclassFeature
+type SubclassFeature struct {
+	Level     int32     `json:"level"`
+	Name      string    `json:"name"`
+	Text      string    `json:"text"`
+	Uses      OptString `json:"uses"`
+	Spell     OptString `json:"spell"`
+	SpellName OptString `json:"spellName"`
+}
+
+// GetLevel returns the value of Level.
+func (s *SubclassFeature) GetLevel() int32 {
+	return s.Level
+}
+
+// GetName returns the value of Name.
+func (s *SubclassFeature) GetName() string {
+	return s.Name
+}
+
+// GetText returns the value of Text.
+func (s *SubclassFeature) GetText() string {
+	return s.Text
+}
+
+// GetUses returns the value of Uses.
+func (s *SubclassFeature) GetUses() OptString {
+	return s.Uses
+}
+
+// GetSpell returns the value of Spell.
+func (s *SubclassFeature) GetSpell() OptString {
+	return s.Spell
+}
+
+// GetSpellName returns the value of SpellName.
+func (s *SubclassFeature) GetSpellName() OptString {
+	return s.SpellName
+}
+
+// SetLevel sets the value of Level.
+func (s *SubclassFeature) SetLevel(val int32) {
+	s.Level = val
+}
+
+// SetName sets the value of Name.
+func (s *SubclassFeature) SetName(val string) {
+	s.Name = val
+}
+
+// SetText sets the value of Text.
+func (s *SubclassFeature) SetText(val string) {
+	s.Text = val
+}
+
+// SetUses sets the value of Uses.
+func (s *SubclassFeature) SetUses(val OptString) {
+	s.Uses = val
+}
+
+// SetSpell sets the value of Spell.
+func (s *SubclassFeature) SetSpell(val OptString) {
+	s.Spell = val
+}
+
+// SetSpellName sets the value of SpellName.
+func (s *SubclassFeature) SetSpellName(val OptString) {
+	s.SpellName = val
+}
+
+// A design to preview, with the subclass's name.
+// Ref: #/components/schemas/SubclassPreviewInput
+type SubclassPreviewInput struct {
+	Name   string         `json:"name"`
+	Design SubclassDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *SubclassPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *SubclassPreviewInput) GetDesign() SubclassDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *SubclassPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *SubclassPreviewInput) SetDesign(val SubclassDesign) {
+	s.Design = val
+}
+
+// A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus,
+// from a level on, coming back on a rest or at dawn.
+// Ref: #/components/schemas/SubclassResource
+type SubclassResource struct {
+	Key       string    `json:"key"`
+	Name      string    `json:"name"`
+	Basis     string    `json:"basis"`
+	Amount    OptInt32  `json:"amount"`
+	Ability   OptString `json:"ability"`
+	FromLevel int32     `json:"fromLevel"`
+	Die       OptString `json:"die"`
+	Recharge  string    `json:"recharge"`
+}
+
+// GetKey returns the value of Key.
+func (s *SubclassResource) GetKey() string {
+	return s.Key
+}
+
+// GetName returns the value of Name.
+func (s *SubclassResource) GetName() string {
+	return s.Name
+}
+
+// GetBasis returns the value of Basis.
+func (s *SubclassResource) GetBasis() string {
+	return s.Basis
+}
+
+// GetAmount returns the value of Amount.
+func (s *SubclassResource) GetAmount() OptInt32 {
+	return s.Amount
+}
+
+// GetAbility returns the value of Ability.
+func (s *SubclassResource) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetFromLevel returns the value of FromLevel.
+func (s *SubclassResource) GetFromLevel() int32 {
+	return s.FromLevel
+}
+
+// GetDie returns the value of Die.
+func (s *SubclassResource) GetDie() OptString {
+	return s.Die
+}
+
+// GetRecharge returns the value of Recharge.
+func (s *SubclassResource) GetRecharge() string {
+	return s.Recharge
+}
+
+// SetKey sets the value of Key.
+func (s *SubclassResource) SetKey(val string) {
+	s.Key = val
+}
+
+// SetName sets the value of Name.
+func (s *SubclassResource) SetName(val string) {
+	s.Name = val
+}
+
+// SetBasis sets the value of Basis.
+func (s *SubclassResource) SetBasis(val string) {
+	s.Basis = val
+}
+
+// SetAmount sets the value of Amount.
+func (s *SubclassResource) SetAmount(val OptInt32) {
+	s.Amount = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *SubclassResource) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetFromLevel sets the value of FromLevel.
+func (s *SubclassResource) SetFromLevel(val int32) {
+	s.FromLevel = val
+}
+
+// SetDie sets the value of Die.
+func (s *SubclassResource) SetDie(val OptString) {
+	s.Die = val
+}
+
+// SetRecharge sets the value of Recharge.
+func (s *SubclassResource) SetRecharge(val string) {
+	s.Recharge = val
 }
 
 // SwitchLibraryCollectionOKHeaders wraps []LibraryCollection with response headers.

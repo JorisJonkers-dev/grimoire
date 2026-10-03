@@ -155,7 +155,7 @@ func (b brokenCharacters) RollScores(context.Context, caller.Caller, domain.Camp
 	return domain.Draft{}, b.err
 }
 
-func (b brokenCharacters) PlanLevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string) (app.LevelUpPlan, error) {
+func (b brokenCharacters) PlanLevelUp(context.Context, caller.Caller, domain.CampaignID, domain.CharacterID, string, string) (app.LevelUpPlan, error) {
 	return app.LevelUpPlan{}, b.err
 }
 

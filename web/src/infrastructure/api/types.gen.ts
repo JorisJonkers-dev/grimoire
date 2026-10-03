@@ -2526,7 +2526,7 @@ export type SessionAction = {
 /**
  * What a Library entry is.
  */
-export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table';
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass';
 
 /**
  * One named value of a Library entry.
@@ -2954,6 +2954,70 @@ export type SpellBuild = {
     effect: string;
     text: Array<string>;
     hexes: Array<BuilderHex>;
+};
+
+/**
+ * A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
+ */
+export type SubclassDesign = {
+    class: string;
+    features: Array<SubclassFeature>;
+    resources: Array<SubclassResource>;
+    choices: Array<SubclassChoice>;
+};
+
+/**
+ * A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
+ */
+export type SubclassFeature = {
+    level: number;
+    name: string;
+    text: string;
+    uses?: string;
+    spell?: string;
+    spellName?: string;
+};
+
+/**
+ * A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn.
+ */
+export type SubclassResource = {
+    key: string;
+    name: string;
+    basis: string;
+    amount?: number;
+    ability?: string;
+    fromLevel: number;
+    die?: string;
+    recharge: string;
+};
+
+/**
+ * A pick from listed options at a level.
+ */
+export type SubclassChoice = {
+    level: number;
+    name: string;
+    count: number;
+    options: Array<string>;
+};
+
+/**
+ * A design to preview, with the subclass's name.
+ */
+export type SubclassPreviewInput = {
+    name: string;
+    design: SubclassDesign;
+};
+
+/**
+ * A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads back.
+ */
+export type SubclassBuild = {
+    entry?: LibraryEntry;
+    design: SubclassDesign;
+    slug?: string;
+    lines: Array<string>;
 };
 
 /**
@@ -4930,6 +4994,10 @@ export type PlanLevelUpData = {
          * The class to level in; the starting class when omitted.
          */
         class?: Slug;
+        /**
+         * A subclass picked on this level, so the plan adds the choices it asks for at once.
+         */
+        subclass?: Slug;
     };
     url: '/api/v1/campaigns/{campaignId}/characters/{characterId}/level-up';
 };
@@ -9426,6 +9494,103 @@ export type SaveItemBuildResponses = {
 };
 
 export type SaveItemBuildResponse = SaveItemBuildResponses[keyof SaveItemBuildResponses];
+
+export type PreviewSubclassData = {
+    body: SubclassPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/subclasses/preview';
+};
+
+export type PreviewSubclassErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewSubclassError = PreviewSubclassErrors[keyof PreviewSubclassErrors];
+
+export type PreviewSubclassResponses = {
+    /**
+     * The preview.
+     */
+    200: SubclassBuild;
+};
+
+export type PreviewSubclassResponse = PreviewSubclassResponses[keyof PreviewSubclassResponses];
+
+export type GetSubclassBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/subclasses/{entryId}';
+};
+
+export type GetSubclassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetSubclassBuildError = GetSubclassBuildErrors[keyof GetSubclassBuildErrors];
+
+export type GetSubclassBuildResponses = {
+    /**
+     * The subclass.
+     */
+    200: SubclassBuild;
+};
+
+export type GetSubclassBuildResponse = GetSubclassBuildResponses[keyof GetSubclassBuildResponses];
+
+export type SaveSubclassBuildData = {
+    body: SubclassDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/subclasses/{entryId}';
+};
+
+export type SaveSubclassBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveSubclassBuildError = SaveSubclassBuildErrors[keyof SaveSubclassBuildErrors];
+
+export type SaveSubclassBuildResponses = {
+    /**
+     * The subclass.
+     */
+    200: SubclassBuild;
+};
+
+export type SaveSubclassBuildResponse = SaveSubclassBuildResponses[keyof SaveSubclassBuildResponses];
 
 export type GetMeData = {
     body?: never;

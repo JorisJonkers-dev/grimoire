@@ -1553,7 +1553,8 @@ export const zLibraryKind = z.enum([
     'shop',
     'item',
     'spell',
-    'table'
+    'table',
+    'subclass'
 ]);
 
 /**
@@ -2015,6 +2016,70 @@ export const zSpellBuild = z.object({
     effect: z.string().max(40),
     text: z.array(z.string().max(1000)).max(200),
     hexes: z.array(zBuilderHex).max(20000)
+});
+
+/**
+ * A Feature gained at a class level; it may spend a use of a Resource, by key, and let its bearer cast a spell.
+ */
+export const zSubclassFeature = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    name: z.string().max(200),
+    text: z.string().max(4000),
+    uses: z.string().max(80).optional(),
+    spell: z.string().max(120).optional(),
+    spellName: z.string().max(200).optional()
+});
+
+/**
+ * A pool of uses: a fixed number, some per class level, an ability modifier or the Proficiency Bonus, from a level on, coming back on a rest or at dawn.
+ */
+export const zSubclassResource = z.object({
+    key: z.string().max(80),
+    name: z.string().max(200),
+    basis: z.string().max(40),
+    amount: z.int().gte(-100000).lte(100000).optional(),
+    ability: z.string().max(40).optional(),
+    fromLevel: z.int().gte(-100000).lte(100000),
+    die: z.string().max(20).optional(),
+    recharge: z.string().max(40)
+});
+
+/**
+ * A pick from listed options at a level.
+ */
+export const zSubclassChoice = z.object({
+    level: z.int().gte(-100000).lte(100000),
+    name: z.string().max(200),
+    count: z.int().gte(-100000).lte(100000),
+    options: z.array(z.string().max(200)).max(100)
+});
+
+/**
+ * A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.
+ */
+export const zSubclassDesign = z.object({
+    class: z.string().max(40),
+    features: z.array(zSubclassFeature).max(100),
+    resources: z.array(zSubclassResource).max(100),
+    choices: z.array(zSubclassChoice).max(100)
+});
+
+/**
+ * A design to preview, with the subclass's name.
+ */
+export const zSubclassPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zSubclassDesign
+});
+
+/**
+ * A homebrew subclass in the subclass builder, the slug it is known by on a sheet, and how it reads back.
+ */
+export const zSubclassBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zSubclassDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(1200)).max(200)
 });
 
 /**
@@ -4554,7 +4619,8 @@ export const zPlanLevelUpPath = z.object({
 });
 
 export const zPlanLevelUpQuery = z.object({
-    class: zSlug.optional()
+    class: zSlug.optional(),
+    subclass: zSlug.optional()
 });
 
 /**
@@ -5823,6 +5889,33 @@ export const zSaveItemBuildPath = z.object({
  * The item.
  */
 export const zSaveItemBuildResponse = zItemBuild;
+
+export const zPreviewSubclassBody = zSubclassPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewSubclassResponse = zSubclassBuild;
+
+export const zGetSubclassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The subclass.
+ */
+export const zGetSubclassBuildResponse = zSubclassBuild;
+
+export const zSaveSubclassBuildBody = zSubclassDesign;
+
+export const zSaveSubclassBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The subclass.
+ */
+export const zSaveSubclassBuildResponse = zSubclassBuild;
 
 /**
  * The signed-in account.

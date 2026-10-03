@@ -732,6 +732,15 @@ func (UnimplementedHandler) GetStatus(ctx context.Context) (r GetStatusRes, _ er
 	return r, ht.ErrNotImplemented
 }
 
+// GetSubclassBuild implements getSubclassBuild operation.
+//
+// A homebrew subclass's design, read back: one of the caller's subclasses, or a Shared Library copy.
+//
+// GET /api/v1/builders/subclasses/{entryId}
+func (UnimplementedHandler) GetSubclassBuild(ctx context.Context, params GetSubclassBuildParams) (r GetSubclassBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetTokenIcon implements getTokenIcon operation.
 //
 // The picture itself, served only to Members of the Campaign.
@@ -1342,6 +1351,16 @@ func (UnimplementedHandler) PreviewSpell(ctx context.Context, req *SpellPreviewI
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewSubclass implements previewSubclass operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/subclasses/preview
+func (UnimplementedHandler) PreviewSubclass(ctx context.Context, req *SubclassPreviewInput) (r PreviewSubclassRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PublishReleaseNote implements publishReleaseNote operation.
 //
 // Puts it live now, or at a later moment; once live it is announced in every bell. For Admins.
@@ -1589,6 +1608,16 @@ func (UnimplementedHandler) SaveItemBuild(ctx context.Context, req *ItemDesign, 
 //
 // PUT /api/v1/builders/spells/{entryId}
 func (UnimplementedHandler) SaveSpellBuild(ctx context.Context, req *SpellDesign, params SaveSpellBuildParams) (r SaveSpellBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveSubclassBuild implements saveSubclassBuild operation.
+//
+// Saves the design of one of the caller's subclasses as its next Revision; Campaigns that see it offer
+// it on levelling up its class.
+//
+// PUT /api/v1/builders/subclasses/{entryId}
+func (UnimplementedHandler) SaveSubclassBuild(ctx context.Context, req *SubclassDesign, params SaveSubclassBuildParams) (r SaveSubclassBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

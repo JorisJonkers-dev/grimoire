@@ -6684,6 +6684,79 @@ func decodeGetSpellcastingParams(args [2]string, argsEscaped bool, r *http.Reque
 	return params, nil
 }
 
+// GetSubclassBuildParams is parameters of getSubclassBuild operation.
+type GetSubclassBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackGetSubclassBuildParams(packed middleware.Parameters) (params GetSubclassBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetSubclassBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params GetSubclassBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // GetTokenIconParams is parameters of getTokenIcon operation.
 type GetTokenIconParams struct {
 	// Campaign id.
@@ -11871,6 +11944,8 @@ type PlanLevelUpParams struct {
 	CharacterId ID
 	// The class to level in; the starting class when omitted.
 	Class OptSlug `json:",omitempty,omitzero"`
+	// A subclass picked on this level, so the plan adds the choices it asks for at once.
+	Subclass OptSlug `json:",omitempty,omitzero"`
 }
 
 func unpackPlanLevelUpParams(packed middleware.Parameters) (params PlanLevelUpParams) {
@@ -11895,6 +11970,15 @@ func unpackPlanLevelUpParams(packed middleware.Parameters) (params PlanLevelUpPa
 		}
 		if v, ok := packed[key]; ok {
 			params.Class = v.(OptSlug)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "subclass",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Subclass = v.(OptSlug)
 		}
 	}
 	return params
@@ -12065,6 +12149,69 @@ func decodePlanLevelUpParams(args [2]string, argsEscaped bool, r *http.Request) 
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "class",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: subclass.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "subclass",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSubclassVal Slug
+				if err := func() error {
+					var paramsDotSubclassValVal string
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotSubclassValVal = c
+						return nil
+					}(); err != nil {
+						return err
+					}
+					paramsDotSubclassVal = Slug(paramsDotSubclassValVal)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Subclass.SetTo(paramsDotSubclassVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Subclass.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "subclass",
 			In:   "query",
 			Err:  err,
 		}
@@ -15189,6 +15336,79 @@ func unpackSaveSpellBuildParams(packed middleware.Parameters) (params SaveSpellB
 }
 
 func decodeSaveSpellBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveSpellBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SaveSubclassBuildParams is parameters of saveSubclassBuild operation.
+type SaveSubclassBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackSaveSubclassBuildParams(packed middleware.Parameters) (params SaveSubclassBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSaveSubclassBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveSubclassBuildParams, _ error) {
 	// Decode path: entryId.
 	if err := func() error {
 		param := args[0]
