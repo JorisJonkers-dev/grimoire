@@ -35,6 +35,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var cs httpapi.CharacterService
 	var ns httpapi.NPCService
 	var comps httpapi.CompanionService
+	var facs httpapi.FactionService
 	var rs httpapi.RollService
 	var ss httpapi.SessionService
 	var hub httpapi.LiveHub
@@ -85,10 +86,12 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 			ns = v
 		case httpapi.CompanionService:
 			comps = v
+		case httpapi.FactionService:
+			facs = v
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Companions: comps, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, FeatBuilds: featb, BackgroundBuilds: backgroundb, ConditionBuilds: conditionb, MonsterBuilds: monsterb, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Companions: comps, Factions: facs, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, FeatBuilds: featb, BackgroundBuilds: backgroundb, ConditionBuilds: conditionb, MonsterBuilds: monsterb, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {
@@ -112,6 +115,7 @@ func realCampaigns(t *testing.T) http.Handler {
 		},
 		&app.NPCs{Repo: repo, Now: time.Now},
 		&app.Companions{Repo: repo, Creatures: bestiaryOf{"goblin", "wolf"}, Now: time.Now},
+		httpapi.FactionService(&app.Factions{Repo: repo, Now: time.Now}),
 		httpapi.RollService(&playapp.Rolls{
 			Repo: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo},
 			Seed: rng.Seed, Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now,

@@ -4342,6 +4342,123 @@ export type LiveRollShown = {
 };
 
 /**
+ * How a Faction regards the party or a Character, from worst to best. The score behind it is never shown to Players.
+ */
+export type StandingTier = 'hostile' | 'unfriendly' | 'neutral' | 'friendly' | 'allied';
+
+/**
+ * A generic Faction a DM copies and names.
+ */
+export type FactionArchetype = {
+    slug: Slug;
+    name: string;
+    description: string;
+    goals: string;
+};
+
+/**
+ * A Faction of the Campaign as the caller may see it. Everyone gets its name, archetype and the tier of its Standing. The dm part is there for the DM alone.
+ */
+export type Faction = {
+    id: Id;
+    name: string;
+    /**
+     * The slug of the archetype it was copied from, or empty.
+     */
+    archetype: string;
+    tier: StandingTier;
+    dm?: FactionSecrets;
+    /**
+     * Personal Standings with this Faction; a Player gets those of their own Characters.
+     */
+    personal: Array<PersonalStanding>;
+    /**
+     * Standing Changes, newest first. A Player gets the confirmed ones for the party and for their own Characters.
+     */
+    changes: Array<StandingChange>;
+};
+
+/**
+ * What only the DM knows of a Faction.
+ */
+export type FactionSecrets = {
+    goals: string;
+    territory: string;
+    notes: string;
+    score: number;
+};
+
+/**
+ * The editable part of a Faction.
+ */
+export type FactionInput = {
+    name: string;
+    archetype?: string;
+    goals?: string;
+    territory?: string;
+    notes?: string;
+};
+
+/**
+ * One Character's own Standing with a Faction, used instead of the party's. The score is there for the DM alone.
+ */
+export type PersonalStanding = {
+    characterId: Id;
+    character: string;
+    tier: StandingTier;
+    score?: number;
+};
+
+/**
+ * A move in Standing. A Player sees which way a confirmed change went, and its reason when the DM shared it. The dm part is there for the DM alone.
+ */
+export type StandingChange = {
+    id: Id;
+    characterId?: Id;
+    /**
+     * Whether the Standing went up.
+     */
+    rose: boolean;
+    /**
+     * Empty for a Player when the DM did not share it.
+     */
+    reason: string;
+    status: 'pending' | 'confirmed' | 'dismissed';
+    createdAt: string;
+    dm?: StandingChangeSecrets;
+};
+
+/**
+ * What only the DM sees of a Standing Change.
+ */
+export type StandingChangeSecrets = {
+    delta: number;
+    shareReason: boolean;
+    origin: 'ui' | 'mcp' | 'generator' | 'system';
+    client: string;
+};
+
+/**
+ * A suggested Standing Change. Without a Character it is for the party.
+ */
+export type StandingChangeInput = {
+    characterId?: Id;
+    delta: number;
+    reason: string;
+    shareReason?: boolean;
+};
+
+/**
+ * The DM's word on a pending Standing Change. What is left out of a confirmation stays as it was suggested.
+ */
+export type StandingDecision = {
+    confirm: boolean;
+    delta?: number;
+    reason?: string;
+    shareReason?: boolean;
+};
+
+/**
  * An ally who travels with the party. A creature with a name of its own, run by a Player or by the DM.
  */
 export type Companion = {
@@ -7921,6 +8038,255 @@ export type ListEncounterChecksResponses = {
 };
 
 export type ListEncounterChecksResponse = ListEncounterChecksResponses[keyof ListEncounterChecksResponses];
+
+export type ListFactionArchetypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/faction-archetypes';
+};
+
+export type ListFactionArchetypesErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListFactionArchetypesError = ListFactionArchetypesErrors[keyof ListFactionArchetypesErrors];
+
+export type ListFactionArchetypesResponses = {
+    /**
+     * The archetypes, by slug.
+     */
+    200: Array<FactionArchetype>;
+};
+
+export type ListFactionArchetypesResponse = ListFactionArchetypesResponses[keyof ListFactionArchetypesResponses];
+
+export type ListFactionsData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/factions';
+};
+
+export type ListFactionsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListFactionsError = ListFactionsErrors[keyof ListFactionsErrors];
+
+export type ListFactionsResponses = {
+    /**
+     * The Factions, by name.
+     */
+    200: Array<Faction>;
+};
+
+export type ListFactionsResponse = ListFactionsResponses[keyof ListFactionsResponses];
+
+export type CreateFactionData = {
+    body: FactionInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/factions';
+};
+
+export type CreateFactionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateFactionError = CreateFactionErrors[keyof CreateFactionErrors];
+
+export type CreateFactionResponses = {
+    /**
+     * The new Faction.
+     */
+    201: Faction;
+};
+
+export type CreateFactionResponse = CreateFactionResponses[keyof CreateFactionResponses];
+
+export type DeleteFactionData = {
+    body?: never;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Faction id.
+         */
+        factionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/factions/{factionId}';
+};
+
+export type DeleteFactionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteFactionError = DeleteFactionErrors[keyof DeleteFactionErrors];
+
+export type DeleteFactionResponses = {
+    /**
+     * The Faction is gone.
+     */
+    204: void;
+};
+
+export type DeleteFactionResponse = DeleteFactionResponses[keyof DeleteFactionResponses];
+
+export type UpdateFactionData = {
+    body: FactionInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Faction id.
+         */
+        factionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/factions/{factionId}';
+};
+
+export type UpdateFactionErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type UpdateFactionError = UpdateFactionErrors[keyof UpdateFactionErrors];
+
+export type UpdateFactionResponses = {
+    /**
+     * The Faction is changed.
+     */
+    204: void;
+};
+
+export type UpdateFactionResponse = UpdateFactionResponses[keyof UpdateFactionResponses];
+
+export type ProposeStandingChangeData = {
+    body: StandingChangeInput;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Faction id.
+         */
+        factionId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/factions/{factionId}/standing-changes';
+};
+
+export type ProposeStandingChangeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ProposeStandingChangeError = ProposeStandingChangeErrors[keyof ProposeStandingChangeErrors];
+
+export type ProposeStandingChangeResponses = {
+    /**
+     * The suggestion, pending.
+     */
+    201: StandingChange;
+};
+
+export type ProposeStandingChangeResponse = ProposeStandingChangeResponses[keyof ProposeStandingChangeResponses];
+
+export type DecideStandingChangeData = {
+    body: StandingDecision;
+    path: {
+        /**
+         * Campaign id.
+         */
+        campaignId: Id;
+        /**
+         * Standing Change id.
+         */
+        changeId: Id;
+    };
+    query?: never;
+    url: '/api/v1/campaigns/{campaignId}/standing-changes/{changeId}/decision';
+};
+
+export type DecideStandingChangeErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DecideStandingChangeError = DecideStandingChangeErrors[keyof DecideStandingChangeErrors];
+
+export type DecideStandingChangeResponses = {
+    /**
+     * The change is decided.
+     */
+    204: void;
+};
+
+export type DecideStandingChangeResponse = DecideStandingChangeResponses[keyof DecideStandingChangeResponses];
 
 export type ListCompanionsData = {
     body?: never;

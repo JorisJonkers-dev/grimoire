@@ -220,6 +220,16 @@ func (UnimplementedHandler) CreateEncounterTable(ctx context.Context, req *Encou
 	return r, ht.ErrNotImplemented
 }
 
+// CreateFaction implements createFaction operation.
+//
+// Adds a Faction, Neutral towards the party, from an archetype of the catalogue or from nothing. DM
+// only.
+//
+// POST /api/v1/campaigns/{campaignId}/factions
+func (UnimplementedHandler) CreateFaction(ctx context.Context, req *FactionInput, params CreateFactionParams) (r CreateFactionRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateInvite implements createInvite operation.
 //
 // Opens a link that adds whoever follows it as a Player. The token is shown only once. DM only.
@@ -320,6 +330,17 @@ func (UnimplementedHandler) CreateShop(ctx context.Context, req *ShopInput, para
 	return r, ht.ErrNotImplemented
 }
 
+// DecideStandingChange implements decideStandingChange operation.
+//
+// The DM's word on a pending Standing Change, confirmed as suggested or edited, or dismissed.
+// Confirmed, it moves the party's Standing or the Character's Personal Standing, which starts from the
+// party's. Only the DM decides, signed in: an Access Token may suggest a change and never confirm one.
+//
+// POST /api/v1/campaigns/{campaignId}/standing-changes/{changeId}/decision
+func (UnimplementedHandler) DecideStandingChange(ctx context.Context, req *StandingDecision, params DecideStandingChangeParams) (r DecideStandingChangeRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeclineFriendRequest implements declineFriendRequest operation.
 //
 // Turns the request down; with block, the sender's later requests never show.
@@ -381,6 +402,15 @@ func (UnimplementedHandler) DeleteEncounterPool(ctx context.Context, params Dele
 //
 // DELETE /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 func (UnimplementedHandler) DeleteEncounterTable(ctx context.Context, params DeleteEncounterTableParams) (r DeleteEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteFaction implements deleteFaction operation.
+//
+// Removes a Faction with its Standing and its changes. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/factions/{factionId}
+func (UnimplementedHandler) DeleteFaction(ctx context.Context, params DeleteFactionParams) (r DeleteFactionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1146,6 +1176,28 @@ func (UnimplementedHandler) ListEntries(ctx context.Context, params ListEntriesP
 	return r, ht.ErrNotImplemented
 }
 
+// ListFactionArchetypes implements listFactionArchetypes operation.
+//
+// The catalogue of generic Factions a DM copies and names. None is a named faction of a published
+// setting.
+//
+// GET /api/v1/faction-archetypes
+func (UnimplementedHandler) ListFactionArchetypes(ctx context.Context) (r ListFactionArchetypesRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListFactions implements listFactions operation.
+//
+// The Campaign's Factions with how each regards the party. Every Member sees names and the tier of
+// each Standing, their own Characters' Personal Standing, and the confirmed changes with the reasons
+// the DM shared. Goals, territory, notes, scores, amounts, unshared reasons and changes not yet
+// decided are the DM's alone.
+//
+// GET /api/v1/campaigns/{campaignId}/factions
+func (UnimplementedHandler) ListFactions(ctx context.Context, params ListFactionsParams) (r ListFactionsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListFriends implements listFriends operation.
 //
 // The signed-in Account's Friends, Friend requests both ways, and the Accounts it blocked.
@@ -1620,6 +1672,16 @@ func (UnimplementedHandler) PreviewSpell(ctx context.Context, req *SpellPreviewI
 //
 // POST /api/v1/builders/subclasses/preview
 func (UnimplementedHandler) PreviewSubclass(ctx context.Context, req *SubclassPreviewInput) (r PreviewSubclassRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ProposeStandingChange implements proposeStandingChange operation.
+//
+// Suggests a move in a Faction's Standing, for the party or for one Character, with a reason. It moves
+// nothing and waits for the DM to confirm it in person, whoever or whatever suggested it. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/factions/{factionId}/standing-changes
+func (UnimplementedHandler) ProposeStandingChange(ctx context.Context, req *StandingChangeInput, params ProposeStandingChangeParams) (r ProposeStandingChangeRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -2307,6 +2369,16 @@ func (UnimplementedHandler) UpdateEncounterPool(ctx context.Context, req *Encoun
 //
 // PUT /api/v1/campaigns/{campaignId}/encounter-tables/{tableId}
 func (UnimplementedHandler) UpdateEncounterTable(ctx context.Context, req *EncounterTableInput, params UpdateEncounterTableParams) (r UpdateEncounterTableRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateFaction implements updateFaction operation.
+//
+// Changes a Faction's name and what the DM knows of it. Its Standing moves only by a Standing Change.
+// DM only.
+//
+// PUT /api/v1/campaigns/{campaignId}/factions/{factionId}
+func (UnimplementedHandler) UpdateFaction(ctx context.Context, req *FactionInput, params UpdateFactionParams) (r UpdateFactionRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -26,6 +26,7 @@ type Handler struct {
 	Characters CharacterService
 	NPCs       NPCService
 	Companions CompanionService
+	Factions   FactionService
 	Rolls      RollService
 	Inventory  InventoryService
 	Sessions   SessionService
