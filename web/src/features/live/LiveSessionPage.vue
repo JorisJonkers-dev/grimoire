@@ -827,16 +827,17 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
   .live > * {
     grid-column: 1 / -1;
   }
+  /* The map stays in view while the page scrolls the dock past it: the dock has no scroll of its own,
+     so dragging between its panels never fights a moving list. */
   .stage {
     grid-column: 1;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100dvh - 24px);
     min-height: calc(100dvh - 240px);
   }
   .dock {
     grid-column: 2;
-    position: sticky;
-    top: 12px;
-    max-height: calc(100dvh - 88px);
-    overflow-y: auto;
   }
 }
 @media (max-width: 899px) {
