@@ -109,7 +109,8 @@ func (r *runtime) shareRoll(id domain.RollID) {
 		return
 	}
 	// A roller who cannot be found is treated as the DM: when in doubt the roll stays off the screens.
-	if who, err := r.members.Member(context.Background(), r.st.session.CampaignID, roll.Roller.ID); err != nil || who.DM {
+	who, err := r.members.Member(context.Background(), r.st.session.CampaignID, roll.Roller.ID)
+	if err != nil || who.DM {
 		return
 	}
 	shown := RollShown{ID: uuid.UUID(roll.ID).String(), Roller: roll.Roller.Name, Purpose: roll.Purpose, Dice: make([]RollDie, 0, len(roll.Dice)), Modifier: roll.Total, Total: roll.Total}
@@ -122,6 +123,9 @@ func (r *runtime) shareRoll(id domain.RollID) {
 	}
 	if !shown.fits() {
 		return
+	}
+	if r.dice != nil {
+		shown.Look = r.dice.DiceLook(context.Background(), who.Subject)
 	}
 	r.lastRoll = &shown
 	for sub := range r.subs {

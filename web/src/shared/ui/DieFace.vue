@@ -2,9 +2,18 @@
 import { computed } from 'vue'
 
 const props = withDefaults(
-  defineProps<{ sides: 4 | 6 | 8 | 10 | 12 | 20 | 100; value?: number | null; state?: 'idle' | 'rolling' | 'kept' | 'dropped'; size?: number }>(),
-  { value: null, state: 'idle', size: 84 },
+  defineProps<{
+    sides: 4 | 6 | 8 | 10 | 12 | 20 | 100; value?: number | null; state?: 'idle' | 'rolling' | 'kept' | 'dropped'; size?: number
+    /** A Dice Set's colours for this die: its body tints the facets, its numbers colour the face. */
+    look?: { body: string; numbers: string }
+  }>(),
+  { value: null, state: 'idle', size: 84, look: undefined },
 )
+// The outline of each shape, which the tint of a Dice Set fills.
+const outlines: Record<number, string> = {
+  20: '50,4 90,27 90,73 50,96 10,73 10,27', 4: '50,6 94,88 6,88', 6: '50,8 90,28 90,74 50,94 10,74 10,28',
+  10: '50,4 92,44 50,96 8,44', 100: '50,4 92,44 50,96 8,44', 12: '50,6 93,37 77,88 23,88 7,37', 8: '50,4 94,50 50,96 6,50',
+}
 const face = computed(() => (props.value === null ? '?' : String(props.value)))
 const label = computed(() => {
   const shown = props.value === null ? 'not rolled yet' : `showing ${props.value}`
@@ -27,44 +36,50 @@ const label = computed(() => {
         <polygon points="10,73 50,96 27,66" fill="#8C2A20" />
         <polygon points="27,66 73,66 50,96" fill="#76201A" />
         <polygon points="50,30 73,66 27,66" fill="#EF7B6B" />
+        <polygon v-if="look" :points="outlines[sides]" :fill="look.body" fill-opacity="0.82" data-testid="die-tint" />
         <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#3A0E0A" stroke-width="2" />
-        <text x="50" y="59" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="19" fill="#F8E7B0">{{ face }}</text>
+        <text x="50" y="59" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="19" :fill="look?.numbers ?? '#F8E7B0'">{{ face }}</text>
       </template>
       <template v-else-if="sides === 4">
         <polygon points="50,6 6,88 50,64" fill="#F1E3B8" />
         <polygon points="50,6 94,88 50,64" fill="#D2B86C" />
         <polygon points="6,88 94,88 50,64" fill="#A88A3E" />
+        <polygon v-if="look" :points="outlines[sides]" :fill="look.body" fill-opacity="0.82" data-testid="die-tint" />
         <polygon points="50,6 94,88 6,88" fill="none" stroke="#4A3810" stroke-width="2" />
-        <text x="36" y="62" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="18" fill="#2B2118">{{ face }}</text>
+        <text x="36" y="62" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="18" :fill="look?.numbers ?? '#2B2118'">{{ face }}</text>
       </template>
       <template v-else-if="sides === 6">
         <polygon points="50,8 90,28 50,48 10,28" fill="#F4ECDA" />
         <polygon points="10,28 50,48 50,94 10,74" fill="#D9C9A3" />
         <polygon points="90,28 50,48 50,94 90,74" fill="#B8A57C" />
+        <polygon v-if="look" :points="outlines[sides]" :fill="look.body" fill-opacity="0.82" data-testid="die-tint" />
         <polygon points="50,8 90,28 90,74 50,94 10,74 10,28" fill="none" stroke="#2B2118" stroke-width="2" />
-        <text x="50" y="35" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="18" fill="#2B2118">{{ face }}</text>
+        <text x="50" y="35" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="18" :fill="look?.numbers ?? '#2B2118'">{{ face }}</text>
       </template>
       <template v-else-if="sides === 10 || sides === 100">
         <polygon points="50,4 92,44 50,56" fill="#B7D9A8" />
         <polygon points="50,4 8,44 50,56" fill="#D2E8C6" />
         <polygon points="8,44 50,96 50,56" fill="#8FBF7C" />
         <polygon points="92,44 50,96 50,56" fill="#6E9E5C" />
+        <polygon v-if="look" :points="outlines[sides]" :fill="look.body" fill-opacity="0.82" data-testid="die-tint" />
         <polygon points="50,4 92,44 50,96 8,44" fill="none" stroke="#1D2B23" stroke-width="2" />
-        <text x="50" y="44" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="16" fill="#1D2B23">{{ face }}</text>
+        <text x="50" y="44" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="16" :fill="look?.numbers ?? '#1D2B23'">{{ face }}</text>
       </template>
       <template v-else-if="sides === 12">
         <polygon points="50,6 93,37 77,88 23,88 7,37" fill="#D9B8E8" />
         <polygon points="50,24 72,40 64,68 36,68 28,40" fill="#C49BD8" />
+        <polygon v-if="look" :points="outlines[sides]" :fill="look.body" fill-opacity="0.82" data-testid="die-tint" />
         <polygon points="50,6 93,37 77,88 23,88 7,37" fill="none" stroke="#2E1A38" stroke-width="2" />
-        <text x="50" y="56" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="17" fill="#2E1A38">{{ face }}</text>
+        <text x="50" y="56" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="17" :fill="look?.numbers ?? '#2E1A38'">{{ face }}</text>
       </template>
       <template v-else>
         <polygon points="50,4 94,50 50,58" fill="#9EC6E8" />
         <polygon points="50,4 6,50 50,58" fill="#C3DDF2" />
         <polygon points="6,50 50,96 50,58" fill="#6F9CC4" />
         <polygon points="94,50 50,96 50,58" fill="#4F7BA3" />
+        <polygon v-if="look" :points="outlines[sides]" :fill="look.body" fill-opacity="0.82" data-testid="die-tint" />
         <polygon points="50,4 94,50 50,96 6,50" fill="none" stroke="#1A2430" stroke-width="2" />
-        <text x="40" y="44" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="17" fill="#1A2430">{{ face }}</text>
+        <text x="40" y="44" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="17" :fill="look?.numbers ?? '#1A2430'">{{ face }}</text>
       </template>
     </svg>
   </span>

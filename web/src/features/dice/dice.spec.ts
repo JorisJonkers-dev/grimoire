@@ -76,6 +76,14 @@ describe('dice stage', () => {
     vi.useRealTimers()
     await w.setProps({ roll: athletics, n: 5 })
     await expectAccessible(w.element as Element)
+    // A roll made with a Dice Set wears it: the dice the set dresses take its colours, the others stay plain.
+    const ember = { dice: { d20: { pattern: 'marble' as const, body: '#102030', numbers: '#fafafa' } } }
+    await w.setProps({ roll: { ...athletics, dice: [...athletics.dice, { faces: 6, value: 2, kept: true }], look: ember }, n: 6 })
+    const flat = w.findAll('[data-testid="dice-2d"] [role="img"]')
+    expect(flat.map((d) => d.find('[data-testid="die-tint"]').exists())).toEqual([true, true, false])
+    expect(flat[0]?.get('[data-testid="die-tint"]').attributes('fill')).toBe('#102030')
+    expect([flat[0]?.get('text').attributes('fill'), flat[2]?.get('text').attributes('fill')]).toEqual(['#fafafa', '#2B2118'])
+    await expectAccessible(w.element as Element)
     w.unmount()
     expect(gpu.posts).toEqual([])
   })
@@ -107,7 +115,13 @@ describe('dice stage', () => {
     expect(w.find('[data-testid="dice-result"]').exists()).toBe(false)
     expect(gpu.posts.at(-1)).toEqual({ type: 'clear' })
 
-    await w.setProps({ roll: athletics, n: 3 })
+    // The roller's Dice Set goes to the worker with the dice, as plain data too.
+    const ember = { dice: { d20: { pattern: 'stripes' as const, body: '#102030', numbers: '#fafafa', image: { x: 0.5, y: 0.5, scale: 1, rotation: 0 } } }, imageUrl: '/api/v1/dice-sets/x/image?v=1' }
+    await w.setProps({ roll: reactive({ ...athletics, look: ember }), n: 3 })
+    expect(gpu.posts.at(-1)).toEqual({ type: 'roll', dice: athletics.dice, seed: 3, look: ember })
+    await vi.advanceTimersByTimeAsync(THROW_MS + GATHER_MS + HOLD_MS)
+
+    await w.setProps({ roll: athletics, n: 4 })
     await vi.advanceTimersByTimeAsync(THROW_MS + GATHER_MS - 1)
     expect(w.find('[data-testid="dice-result"]').exists()).toBe(false)
     await vi.advanceTimersByTimeAsync(1)

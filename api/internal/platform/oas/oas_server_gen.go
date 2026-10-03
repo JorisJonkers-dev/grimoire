@@ -43,12 +43,31 @@ type AccountHandler interface {
 	//
 	// DELETE /api/v1/friend-requests/{requestId}
 	CancelFriendRequest(ctx context.Context, params CancelFriendRequestParams) (CancelFriendRequestRes, error)
+	// ChooseDiceSet implements chooseDiceSet operation.
+	//
+	// One of the sets or copies of the signed-in Account; without a set the dice roll plain.
+	//
+	// PUT /api/v1/dice-sets/chosen
+	ChooseDiceSet(ctx context.Context, req *DiceSetChoice) (ChooseDiceSetRes, error)
+	// ClearDiceSetImage implements clearDiceSetImage operation.
+	//
+	// The set goes back to its preset patterns and needs no review.
+	//
+	// DELETE /api/v1/dice-sets/{diceSetId}/image
+	ClearDiceSetImage(ctx context.Context, params ClearDiceSetImageParams) (ClearDiceSetImageRes, error)
 	// ConfirmTwoStep implements confirmTwoStep operation.
 	//
 	// Checks a first code from the app and returns the recovery codes, shown only now.
 	//
 	// POST /api/v1/account/two-step/confirm
 	ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (ConfirmTwoStepRes, error)
+	// CopyDiceSet implements copyDiceSet operation.
+	//
+	// A read-only copy of a set shared with the signed-in Account. It stays as it was when the original
+	// changes or stops being shared. One copy of a set per Account.
+	//
+	// POST /api/v1/dice-sets/{diceSetId}/copy
+	CopyDiceSet(ctx context.Context, params CopyDiceSetParams) (CopyDiceSetRes, error)
 	// CreateAccessToken implements createAccessToken operation.
 	//
 	// A token for MCP clients and scripts that acts as this Account within its scopes; it is shown only
@@ -63,6 +82,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/admin/account-invites
 	CreateAccountInvite(ctx context.Context, req *AccountInviteRequest) (CreateAccountInviteRes, error)
+	// CreateDiceSet implements createDiceSet operation.
+	//
+	// A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
+	//
+	// POST /api/v1/dice-sets
+	CreateDiceSet(ctx context.Context, req *DiceSetChange) (CreateDiceSetRes, error)
 	// CreateOidcAccount implements createOidcAccount operation.
 	//
 	// Sets up an Account for a login no Account has yet, and signs it in.
@@ -82,6 +107,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/friend-requests/{requestId}/decline
 	DeclineFriendRequest(ctx context.Context, req *FriendRequestDecline, params DeclineFriendRequestParams) (DeclineFriendRequestRes, error)
+	// DeleteDiceSet implements deleteDiceSet operation.
+	//
+	// Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
+	//
+	// DELETE /api/v1/dice-sets/{diceSetId}
+	DeleteDiceSet(ctx context.Context, params DeleteDiceSetParams) (DeleteDiceSetRes, error)
 	// DeletePushSubscription implements deletePushSubscription operation.
 	//
 	// Stops notifications to one of the caller's devices.
@@ -101,6 +132,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/admin/release-notes
 	DraftReleaseNote(ctx context.Context, req *ReleaseNoteDraft) (DraftReleaseNoteRes, error)
+	// EditDiceSet implements editDiceSet operation.
+	//
+	// Sets its name and looks. A copy cannot be changed.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}
+	EditDiceSet(ctx context.Context, req *DiceSetChange, params EditDiceSetParams) (EditDiceSetRes, error)
 	// EditReleaseNote implements editReleaseNote operation.
 	//
 	// Changes its words until it has been announced. For Admins.
@@ -169,6 +206,12 @@ type AccountHandler interface {
 	//
 	// POST /api/v1/account/two-step/recovery-codes
 	ResetRecoveryCodes(ctx context.Context, req *TwoStepCode) (ResetRecoveryCodesRes, error)
+	// ReviewDiceSet implements reviewDiceSet operation.
+	//
+	// Decides whether everyone may see a set that waits. Admins only.
+	//
+	// POST /api/v1/admin/dice-sets/{diceSetId}/review
+	ReviewDiceSet(ctx context.Context, req *DiceSetVerdict, params ReviewDiceSetParams) (ReviewDiceSetRes, error)
 	// ReviewSharedSubmission implements reviewSharedSubmission operation.
 	//
 	// Approves or declines a request with the IP check recorded either way; approval needs the Admin's
@@ -226,12 +269,26 @@ type AccountHandler interface {
 	//
 	// PUT /api/v1/admin/accounts/{accountId}/admin
 	SetAdminRole(ctx context.Context, req *Toggle, params SetAdminRoleParams) (SetAdminRoleRes, error)
+	// SetDiceSetImage implements setDiceSetImage operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with
+	// everyone goes back before the Admins.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}/image
+	SetDiceSetImage(ctx context.Context, req SetDiceSetImageReq, params SetDiceSetImageParams) (SetDiceSetImageRes, error)
 	// SetNotificationPreferences implements setNotificationPreferences operation.
 	//
 	// Sets the channels for each kind given; security Notifications always show in app.
 	//
 	// PUT /api/v1/notification-preferences
 	SetNotificationPreferences(ctx context.Context, req *NotificationPreferences) (SetNotificationPreferencesRes, error)
+	// ShareDiceSet implements shareDiceSet operation.
+	//
+	// Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone
+	// waits for an Admin; until then only Friends see it. A copy cannot be shared on.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}/sharing
+	ShareDiceSet(ctx context.Context, req *DiceSetSharingChange, params ShareDiceSetParams) (ShareDiceSetRes, error)
 	// SignIn implements signIn operation.
 	//
 	// Signs the Account in on this device. Every failure answers the same.
@@ -1022,6 +1079,14 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/builders/conditions/{entryId}
 	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
+	// GetDiceSetImage implements getDiceSetImage operation.
+	//
+	// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
+	// reviewing it. Asked for by its SHA-256, it is that picture or not found, never the one that replaced
+	// it.
+	//
+	// GET /api/v1/dice-sets/{diceSetId}/image
+	GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (GetDiceSetImageRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -1264,6 +1329,19 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
 	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
+	// ListDiceSets implements listDiceSets operation.
+	//
+	// The Dice Sets of the signed-in Account, its own and its copies, and the one it rolls with.
+	//
+	// GET /api/v1/dice-sets
+	ListDiceSets(ctx context.Context) (ListDiceSetsRes, error)
+	// ListDiceSetsToReview implements listDiceSetsToReview operation.
+	//
+	// Sets shared with everyone that carry an uploaded picture no Admin has decided on, oldest first.
+	// Admins only.
+	//
+	// GET /api/v1/admin/dice-sets
+	ListDiceSetsToReview(ctx context.Context) (ListDiceSetsToReviewRes, error)
 	// ListEncounterChecks implements listEncounterChecks operation.
 	//
 	// The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
@@ -1447,6 +1525,14 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/settlements
 	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
+	// ListSharedDiceSets implements listSharedDiceSets operation.
+	//
+	// Sets of others the signed-in Account may take a copy of. Those of its Friends that are shared with
+	// Friends or with everyone, and sets shared with everyone that carry no uploaded picture or one an
+	// Admin approved.
+	//
+	// GET /api/v1/dice-sets/shared
+	ListSharedDiceSets(ctx context.Context) (ListSharedDiceSetsRes, error)
 	// ListSharedEntries implements listSharedEntries operation.
 	//
 	// Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check.

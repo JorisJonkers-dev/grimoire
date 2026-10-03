@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { LiveDiceLook } from '@/infrastructure/api/types.gen'
 import { DieFace } from '@/shared/ui'
 import { GATHER_MS, HOLD_MS, THROW_MS, breakdown, criticalOf, sidesOf, type ShownRoll } from './choreography'
 import { goFlat, startWorker, wantsGPU, type DiceWorker } from './gpu'
+import { lookFor } from './sets'
 
 // A roll plays whenever `n` changes. The total and the breakdown come straight from the roll the
 // server resolved; the 3D dice are only the way there, so whatever they do the result shown is right.
@@ -52,7 +54,9 @@ function play() {
   timer = setTimeout(total, THROW_MS + GATHER_MS)
   try {
     // The dice are copied plain: a roll that came through the page's state cannot cross to a worker as it is.
-    worker.post({ type: 'roll', dice: props.roll.dice.map((d) => ({ faces: d.faces, value: d.value, kept: d.kept })), seed: props.n })
+    const dice = props.roll.dice.map((d) => ({ faces: d.faces, value: d.value, kept: d.kept }))
+    const look = props.roll.look ? { look: JSON.parse(JSON.stringify(props.roll.look)) as LiveDiceLook } : {}
+    worker.post({ type: 'roll', dice, seed: props.n, ...look })
   } catch {
     flat()
   }
@@ -88,7 +92,7 @@ onBeforeUnmount(() => {
     <div v-if="roll && phase === 'total'" :class="['result', critical ? `result--${critical}` : '']" role="status" data-testid="dice-result">
       <p class="who">{{ roll.roller }} · {{ roll.purpose }}</p>
       <div v-if="!gpu" class="flat" data-testid="dice-2d">
-        <DieFace v-for="(d, i) in roll.dice" :key="i" :sides="sidesOf(d.faces)" :value="d.value" :state="d.kept ? 'kept' : 'dropped'" :size="64" />
+        <DieFace v-for="(d, i) in roll.dice" :key="i" :sides="sidesOf(d.faces)" :value="d.value" :state="d.kept ? 'kept' : 'dropped'" :size="64" :look="lookFor(roll.look, d.faces)" />
       </div>
       <p class="total" data-testid="dice-total">{{ roll.total }}</p>
       <p v-if="criticalText" class="critical" data-testid="dice-critical">{{ criticalText }}</p>

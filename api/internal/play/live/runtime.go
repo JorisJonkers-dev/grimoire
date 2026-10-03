@@ -343,6 +343,11 @@ type Members interface {
 	Member(ctx context.Context, campaign, id uuid.UUID) (domain.Member, error)
 }
 
+// DiceLooks finds the Dice Set a subject rolls with; nil is the plain dice.
+type DiceLooks interface {
+	DiceLook(ctx context.Context, subject string) *DiceLook
+}
+
 // Owner guarantees one runtime per Session across processes.
 type Owner interface {
 	Acquire(ctx context.Context, id domain.SessionID) (func(), error)
@@ -385,6 +390,7 @@ type runtime struct {
 	seed     func() uint64
 	source   func(seed uint64) dice.Source
 	notify   Notifier
+	dice     DiceLooks
 	// dm is the DM last seen on this Session; an ambush opens its creatures' rolls for them.
 	dm    *domain.Member
 	subs  map[*Subscriber]struct{}
@@ -408,6 +414,8 @@ type Hub struct {
 	Source func(seed uint64) dice.Source
 	// Notify reaches players' devices when their turn starts or a Reaction Prompt waits; nil leaves them be.
 	Notify Notifier
+	// Dice dresses a player's shared roll in their Dice Set; nil rolls every roll plain.
+	Dice DiceLooks
 
 	mu       sync.Mutex
 	runtimes map[domain.SessionID]*runtime
@@ -504,7 +512,7 @@ func (h *Hub) start(ctx context.Context, id domain.SessionID) (*runtime, error) 
 	st.setBoard(board)
 	st.setWorld(world)
 	rt := &runtime{
-		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
+		store: h.Store, campaign: s.CampaignID, seed: h.Seed, source: h.Source, members: h.Members, stats: h.Stats, notify: h.Notify, dice: h.Dice, now: h.Now, log: h.Log, release: release, st: st, subs: map[*Subscriber]struct{}{},
 		join: make(chan *Subscriber), leave: make(chan *Subscriber), cmds: make(chan request), stop: make(chan struct{}), done: make(chan struct{}),
 	}
 	if h.runtimes == nil {

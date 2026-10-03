@@ -29,12 +29,24 @@ type CastRitualRes interface {
 	castRitualRes()
 }
 
+type ChooseDiceSetRes interface {
+	chooseDiceSetRes()
+}
+
+type ClearDiceSetImageRes interface {
+	clearDiceSetImageRes()
+}
+
 type ClearTokenIconRes interface {
 	clearTokenIconRes()
 }
 
 type ConfirmTwoStepRes interface {
 	confirmTwoStepRes()
+}
+
+type CopyDiceSetRes interface {
+	copyDiceSetRes()
 }
 
 type CopySpellRes interface {
@@ -55,6 +67,10 @@ type CreateCampaignRes interface {
 
 type CreateCharacterRes interface {
 	createCharacterRes()
+}
+
+type CreateDiceSetRes interface {
+	createDiceSetRes()
 }
 
 type CreateEncounterPoolRes interface {
@@ -121,6 +137,10 @@ type DeleteCharacterRes interface {
 	deleteCharacterRes()
 }
 
+type DeleteDiceSetRes interface {
+	deleteDiceSetRes()
+}
+
 type DeleteEncounterPoolRes interface {
 	deleteEncounterPoolRes()
 }
@@ -163,6 +183,10 @@ type DiscardCharacterDraftRes interface {
 
 type DraftReleaseNoteRes interface {
 	draftReleaseNoteRes()
+}
+
+type EditDiceSetRes interface {
+	editDiceSetRes()
 }
 
 type EditReleaseNoteRes interface {
@@ -231,6 +255,10 @@ type GetClassBuildRes interface {
 
 type GetConditionBuildRes interface {
 	getConditionBuildRes()
+}
+
+type GetDiceSetImageRes interface {
+	getDiceSetImageRes()
 }
 
 type GetEntryRes interface {
@@ -413,6 +441,14 @@ type ListDeletedNpcsRes interface {
 	listDeletedNpcsRes()
 }
 
+type ListDiceSetsRes interface {
+	listDiceSetsRes()
+}
+
+type ListDiceSetsToReviewRes interface {
+	listDiceSetsToReviewRes()
+}
+
 type ListEncounterChecksRes interface {
 	listEncounterChecksRes()
 }
@@ -531,6 +567,10 @@ type ListSettlementRevisionsRes interface {
 
 type ListSettlementsRes interface {
 	listSettlementsRes()
+}
+
+type ListSharedDiceSetsRes interface {
+	listSharedDiceSetsRes()
 }
 
 type ListSharedEntriesRes interface {
@@ -705,6 +745,10 @@ type ResubmitProposalRes interface {
 	resubmitProposalRes()
 }
 
+type ReviewDiceSetRes interface {
+	reviewDiceSetRes()
+}
+
 type ReviewProposalRes interface {
 	reviewProposalRes()
 }
@@ -809,6 +853,10 @@ type SetCampaignOverrideRes interface {
 	setCampaignOverrideRes()
 }
 
+type SetDiceSetImageRes interface {
+	setDiceSetImageRes()
+}
+
 type SetDieRes interface {
 	setDieRes()
 }
@@ -823,6 +871,10 @@ type SetPortraitRes interface {
 
 type SetTokenIconRes interface {
 	setTokenIconRes()
+}
+
+type ShareDiceSetRes interface {
+	shareDiceSetRes()
 }
 
 type ShareLibraryEntryRes interface {

@@ -127,13 +127,14 @@ func newStack(t *testing.T, configure func(*identityapp.Service)) stack {
 			return "## [1.1.0](https://x) (2026-10-05)\n\n### Features\n\n* **social:** Friends with requests ([#110](https://x))\n* Release Notes ([#114](https://x))\n"
 		},
 	}
+	social.Blobs = storage.Dir{Path: t.TempDir()}
 	accounts.Alerts = social
 	configure(accounts)
 	build := func(trust bool) http.Handler {
 		h, err := httpapi.New(httpapi.Options{
 			Handler: &httpapi.Handler{
 				Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Accounts: accounts, Log: quiet, OIDCName: "jorisjonkers.dev",
-				Friends: social, Conversations: social, Notifications: social, Releases: social,
+				Friends: social, Conversations: social, Notifications: social, Releases: social, DiceSets: social,
 				Campaigns: campaignapp.NewService(campaignpg.New(store.Pool())), NPCs: &campaignapp.NPCs{Repo: campaignpg.New(store.Pool()), Now: time.Now},
 				Characters: &campaignapp.Characters{
 					Repo: campaignpg.New(store.Pool()), Compendium: &fakeCompendium{}, Combat: campaignapp.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now,

@@ -1813,7 +1813,23 @@
           }
         ],
         "modifier": 3,
-        "total": 17
+        "total": 17,
+        "look": {
+          "dice": {
+            "d20": {
+              "pattern": "marble",
+              "body": "#7a1f1a",
+              "numbers": "#f3d27a",
+              "image": {
+                "x": 0.5,
+                "y": 0.5,
+                "scale": 1,
+                "rotation": 90
+              }
+            }
+          },
+          "imageUrl": "/api/v1/dice-sets/0190c7a8-0000-7000-8000-000000000041/image?v=0123456789ab"
+        }
       }
     },
     {

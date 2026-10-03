@@ -20,6 +20,8 @@ const InventoryPage = () => import('@/features/characters/InventoryPage.vue')
 const MyCharactersPage = () => import('@/features/characters/MyCharactersPage.vue')
 const MyCharacterPage = () => import('@/features/characters/MyCharacterPage.vue')
 const FriendsPage = () => import('@/features/friends/FriendsPage.vue')
+const DiceSetsPage = () => import('@/features/dice/DiceSetsPage.vue')
+const DiceReviewPage = () => import('@/features/admin/DiceReviewPage.vue')
 const ConversationsPage = () => import('@/features/conversations/ConversationsPage.vue')
 const ConversationPage = () => import('@/features/conversations/ConversationPage.vue')
 const NpcListPage = () => import('@/features/npcs/NpcListPage.vue')
@@ -117,6 +119,8 @@ export function createAppRouter(history: RouterHistory = createWebHistory()) {
       { path: '/admin', name: 'admin', component: AdminPage },
       { path: '/characters', name: 'my-characters', component: MyCharactersPage },
       { path: '/friends', name: 'friends', component: FriendsPage },
+      { path: '/dice-sets', name: 'dice-sets', component: DiceSetsPage },
+      { path: '/admin/dice-sets', name: 'admin-dice', component: DiceReviewPage },
       { path: '/conversations', name: 'conversations', component: ConversationsPage },
       { path: '/conversations/:conversationId', name: 'conversation', component: ConversationPage },
       { path: '/characters/:characterId', name: 'my-character', component: MyCharacterPage },

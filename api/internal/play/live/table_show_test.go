@@ -1,6 +1,7 @@
 package live_test
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -23,6 +24,12 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 	t.Parallel()
 	w := setup(t)
 	w.hub.Stats = bestiary{owner: w.player.ID}
+	ember := &live.DiceLook{
+		Dice:     map[string]live.DieLook{"d20": {Pattern: "marble", Body: "#7a1f1a", Numbers: "#f3d27a", Image: &live.DiePlacement{X: 0.5, Y: 0.5, Scale: 1, Rotation: 90}}},
+		ImageURL: "/api/v1/dice-sets/0190c7a8-0000-7000-8000-000000000041/image?v=abc",
+	}
+	sets := diceSets{playerCaller.Subject: ember, dmCaller.Subject: ember}
+	w.hub.Dice = sets
 	rolls := &app.Rolls{
 		Repo: pgstore.New(w.pool), Members: pgstore.CampaignMembers{Store: campaignpg.New(w.pool)}, Seed: func() uint64 { return 7 },
 		Source: func(seed uint64) dice.Source { return rng.New(seed) }, Now: time.Now, Resolved: w.hub.RollResolved,
@@ -95,6 +102,10 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 		r.Dice[0] != (live.RollDie{Faces: 20, Value: 14, Kept: true}) || r.Modifier != 3 {
 		t.Fatalf("the player's roll on the table = %+v %+v", u, u.Roll)
 	}
+	// It rolls in the Dice Set its roller chose.
+	if got, _ := json.Marshal(u.Roll.Look); string(got) != `{"dice":{"d20":{"pattern":"marble","body":"#7a1f1a","numbers":"#f3d27a","image":{"x":0.5,"y":0.5,"scale":1,"rotation":90}}},"imageUrl":"/api/v1/dice-sets/0190c7a8-0000-7000-8000-000000000041/image?v=abc"}` {
+		t.Fatalf("the look of the player's roll = %s", got)
+	}
 	roll(rolls, w.dm, "Lurker's Stealth", 19)
 	// What the screens are sent has to fit what they accept, or a roll kept for later screens would
 	// spoil every snapshot. A purpose within its limit in characters can still be too long on the wire.
@@ -115,6 +126,12 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 	if again := tvNext(); again.View.Table.Caption != "The gate creaks open." || again.Roll != nil {
 		t.Fatalf("after a restart = %+v %+v", again.View.Table, again.Roll)
 	}
+	// A roller on the plain dice sends no look.
+	delete(sets, playerCaller.Subject)
+	roll(rolls, w.player, "Acrobatics", 2)
+	if u := frame(t, tv); u.Kind != live.UpdRoll || u.Roll.Purpose != "Acrobatics" || u.Roll.Look != nil {
+		t.Fatalf("a roll on the plain dice = %+v %+v", u, u.Roll)
+	}
 	if u := say(live.Command{Kind: live.CmdTableCaption, Caption: ""}); u.View.Table.Caption != "" {
 		t.Fatalf("a cleared caption = %+v", u.View.Table)
 	}
@@ -131,3 +148,8 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 		}
 	}
 }
+
+// diceSets is the Dice Set each subject rolls with.
+type diceSets map[string]*live.DiceLook
+
+func (d diceSets) DiceLook(_ context.Context, subject string) *live.DiceLook { return d[subject] }

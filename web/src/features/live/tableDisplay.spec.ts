@@ -56,6 +56,12 @@ describe('table display', () => {
     s.receive({ kind: 'roll', seq: 2, roll: { id: RID.replace('d1', 'd3'), roller: 'Aria', purpose: 'Bane', dice: [{ faces: 4, value: 2, kept: true }], modifier: -1, total: 1 } })
     await flushPromises()
     expect(wrapper.get('[data-testid="table-roll"]').text()).toBe('Aria · Bane2− 1= 1')
+    expect(wrapper.find('[data-testid="dice-2d"] [data-testid="die-tint"]').exists()).toBe(false)
+    // A roll made with a Dice Set is thrown in that set's colours.
+    const look = { dice: { d20: { pattern: 'stripes', body: '#102030', numbers: '#fafafa', image: { x: 0.5, y: 0.5, scale: 1, rotation: 0 } } }, imageUrl: '/api/v1/dice-sets/x/image?v=1' }
+    s.receive({ kind: 'roll', seq: 2, roll: { ...athletics, id: RID.replace('d1', 'd4'), look } })
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="dice-2d"] [data-testid="die-tint"]').map((t) => t.attributes('fill'))).toEqual(['#102030', '#102030'])
 
     // Whose turn it is, as each turn starts; then it leaves.
     const fight = { status: 'active', round: 1, combatants: [fighter(goblin, true), fighter(aria, false)] }

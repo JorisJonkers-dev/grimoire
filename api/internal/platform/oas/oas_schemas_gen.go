@@ -6115,6 +6115,45 @@ func (s *CharacterSummary) SetHeroicInspiration(val OptBool) {
 	s.HeroicInspiration = val
 }
 
+// ChooseDiceSetNoContent is response for ChooseDiceSet operation.
+type ChooseDiceSetNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ChooseDiceSetNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ChooseDiceSetNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ChooseDiceSetNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ChooseDiceSetNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ChooseDiceSetNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ChooseDiceSetNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*ChooseDiceSetNoContent) chooseDiceSetRes() {}
+
 // A homebrew class in the class builder, the slug it is known by on a sheet, and how it reads back
 // with its level table.
 // Ref: #/components/schemas/ClassBuild
@@ -7800,6 +7839,45 @@ func (s *DeleteCharacterNoContent) SetRateLimitReset(val OptInt32) {
 
 func (*DeleteCharacterNoContent) deleteCharacterRes() {}
 
+// DeleteDiceSetNoContent is response for DeleteDiceSet operation.
+type DeleteDiceSetNoContent struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DeleteDiceSetNoContent) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DeleteDiceSetNoContent) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DeleteDiceSetNoContent) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DeleteDiceSetNoContent) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DeleteDiceSetNoContent) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DeleteDiceSetNoContent) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+func (*DeleteDiceSetNoContent) deleteDiceSetRes() {}
+
 // DeleteEncounterPoolNoContent is response for DeleteEncounterPool operation.
 type DeleteEncounterPoolNoContent struct {
 	RateLimitLimit     OptInt32
@@ -8111,6 +8189,22 @@ func (s *DeletedNpc) SetDeletedAt(val time.Time) {
 	s.DeletedAt = val
 }
 
+// The looks of a Dice Set by die type. A die type it leaves out rolls plain.
+// Ref: #/components/schemas/DiceDesign
+type DiceDesign struct {
+	Dice DieLooks `json:"dice"`
+}
+
+// GetDice returns the value of Dice.
+func (s *DiceDesign) GetDice() DieLooks {
+	return s.Dice
+}
+
+// SetDice sets the value of Dice.
+func (s *DiceDesign) SetDice(val DieLooks) {
+	s.Dice = val
+}
+
 // A group of identical dice and which of them count.
 // Ref: #/components/schemas/DiceGroup
 type DiceGroup struct {
@@ -8234,6 +8328,521 @@ func (s *DiceGroupKeep) UnmarshalText(data []byte) error {
 	}
 }
 
+// The look an Account gives its dice. A copy was taken of a set shared with its owner and cannot be
+// edited. Review says where a set shared with everyone stands with the Admins.
+// Ref: #/components/schemas/DiceSet
+type DiceSet struct {
+	ID       ID          `json:"id"`
+	Name     string      `json:"name"`
+	Design   DiceDesign  `json:"design"`
+	HasImage bool        `json:"hasImage"`
+	ImageUrl OptAssetUrl `json:"imageUrl"`
+	// The SHA-256 of the uploaded picture, which names it.
+	ImageVersion OptString      `json:"imageVersion"`
+	Sharing      DiceSetSharing `json:"sharing"`
+	Review       DiceSetReview  `json:"review"`
+	// Whether the signed-in Account owns it.
+	Mine bool `json:"mine"`
+	Copy bool `json:"copy"`
+	// The Username of whoever designed it.
+	By        string    `json:"by"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// GetID returns the value of ID.
+func (s *DiceSet) GetID() ID {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *DiceSet) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *DiceSet) GetDesign() DiceDesign {
+	return s.Design
+}
+
+// GetHasImage returns the value of HasImage.
+func (s *DiceSet) GetHasImage() bool {
+	return s.HasImage
+}
+
+// GetImageUrl returns the value of ImageUrl.
+func (s *DiceSet) GetImageUrl() OptAssetUrl {
+	return s.ImageUrl
+}
+
+// GetImageVersion returns the value of ImageVersion.
+func (s *DiceSet) GetImageVersion() OptString {
+	return s.ImageVersion
+}
+
+// GetSharing returns the value of Sharing.
+func (s *DiceSet) GetSharing() DiceSetSharing {
+	return s.Sharing
+}
+
+// GetReview returns the value of Review.
+func (s *DiceSet) GetReview() DiceSetReview {
+	return s.Review
+}
+
+// GetMine returns the value of Mine.
+func (s *DiceSet) GetMine() bool {
+	return s.Mine
+}
+
+// GetCopy returns the value of Copy.
+func (s *DiceSet) GetCopy() bool {
+	return s.Copy
+}
+
+// GetBy returns the value of By.
+func (s *DiceSet) GetBy() string {
+	return s.By
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *DiceSet) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *DiceSet) SetID(val ID) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *DiceSet) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *DiceSet) SetDesign(val DiceDesign) {
+	s.Design = val
+}
+
+// SetHasImage sets the value of HasImage.
+func (s *DiceSet) SetHasImage(val bool) {
+	s.HasImage = val
+}
+
+// SetImageUrl sets the value of ImageUrl.
+func (s *DiceSet) SetImageUrl(val OptAssetUrl) {
+	s.ImageUrl = val
+}
+
+// SetImageVersion sets the value of ImageVersion.
+func (s *DiceSet) SetImageVersion(val OptString) {
+	s.ImageVersion = val
+}
+
+// SetSharing sets the value of Sharing.
+func (s *DiceSet) SetSharing(val DiceSetSharing) {
+	s.Sharing = val
+}
+
+// SetReview sets the value of Review.
+func (s *DiceSet) SetReview(val DiceSetReview) {
+	s.Review = val
+}
+
+// SetMine sets the value of Mine.
+func (s *DiceSet) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetCopy sets the value of Copy.
+func (s *DiceSet) SetCopy(val bool) {
+	s.Copy = val
+}
+
+// SetBy sets the value of By.
+func (s *DiceSet) SetBy(val string) {
+	s.By = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *DiceSet) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// The name and looks of a Dice Set.
+// Ref: #/components/schemas/DiceSetChange
+type DiceSetChange struct {
+	Name   string     `json:"name"`
+	Design DiceDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *DiceSetChange) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *DiceSetChange) GetDesign() DiceDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *DiceSetChange) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *DiceSetChange) SetDesign(val DiceDesign) {
+	s.Design = val
+}
+
+// The Dice Set to roll with; leave it out for the plain dice.
+// Ref: #/components/schemas/DiceSetChoice
+type DiceSetChoice struct {
+	DiceSetId OptID `json:"diceSetId"`
+}
+
+// GetDiceSetId returns the value of DiceSetId.
+func (s *DiceSetChoice) GetDiceSetId() OptID {
+	return s.DiceSetId
+}
+
+// SetDiceSetId sets the value of DiceSetId.
+func (s *DiceSetChoice) SetDiceSetId(val OptID) {
+	s.DiceSetId = val
+}
+
+// DiceSetHeaders wraps DiceSet with response headers.
+type DiceSetHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           DiceSet
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DiceSetHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DiceSetHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DiceSetHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *DiceSetHeaders) GetResponse() DiceSet {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DiceSetHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DiceSetHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DiceSetHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *DiceSetHeaders) SetResponse(val DiceSet) {
+	s.Response = val
+}
+
+func (*DiceSetHeaders) clearDiceSetImageRes() {}
+func (*DiceSetHeaders) copyDiceSetRes()       {}
+func (*DiceSetHeaders) createDiceSetRes()     {}
+func (*DiceSetHeaders) editDiceSetRes()       {}
+func (*DiceSetHeaders) reviewDiceSetRes()     {}
+func (*DiceSetHeaders) setDiceSetImageRes()   {}
+func (*DiceSetHeaders) shareDiceSetRes()      {}
+
+// Dice Sets by name, and for a list of the caller's own the set chosen to roll with.
+// Ref: #/components/schemas/DiceSetList
+type DiceSetList struct {
+	Items  []DiceSet `json:"items"`
+	Chosen OptID     `json:"chosen"`
+}
+
+// GetItems returns the value of Items.
+func (s *DiceSetList) GetItems() []DiceSet {
+	return s.Items
+}
+
+// GetChosen returns the value of Chosen.
+func (s *DiceSetList) GetChosen() OptID {
+	return s.Chosen
+}
+
+// SetItems sets the value of Items.
+func (s *DiceSetList) SetItems(val []DiceSet) {
+	s.Items = val
+}
+
+// SetChosen sets the value of Chosen.
+func (s *DiceSetList) SetChosen(val OptID) {
+	s.Chosen = val
+}
+
+// DiceSetListHeaders wraps DiceSetList with response headers.
+type DiceSetListHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           DiceSetList
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *DiceSetListHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *DiceSetListHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *DiceSetListHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *DiceSetListHeaders) GetResponse() DiceSetList {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *DiceSetListHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *DiceSetListHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *DiceSetListHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *DiceSetListHeaders) SetResponse(val DiceSetList) {
+	s.Response = val
+}
+
+func (*DiceSetListHeaders) listDiceSetsRes()         {}
+func (*DiceSetListHeaders) listDiceSetsToReviewRes() {}
+func (*DiceSetListHeaders) listSharedDiceSetsRes()   {}
+
+type DiceSetReview string
+
+const (
+	DiceSetReviewNone     DiceSetReview = "none"
+	DiceSetReviewPending  DiceSetReview = "pending"
+	DiceSetReviewApproved DiceSetReview = "approved"
+	DiceSetReviewRejected DiceSetReview = "rejected"
+)
+
+// AllValues returns all DiceSetReview values.
+func (DiceSetReview) AllValues() []DiceSetReview {
+	return []DiceSetReview{
+		DiceSetReviewNone,
+		DiceSetReviewPending,
+		DiceSetReviewApproved,
+		DiceSetReviewRejected,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DiceSetReview) MarshalText() ([]byte, error) {
+	switch s {
+	case DiceSetReviewNone:
+		return []byte(s), nil
+	case DiceSetReviewPending:
+		return []byte(s), nil
+	case DiceSetReviewApproved:
+		return []byte(s), nil
+	case DiceSetReviewRejected:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DiceSetReview) UnmarshalText(data []byte) error {
+	switch DiceSetReview(data) {
+	case DiceSetReviewNone:
+		*s = DiceSetReviewNone
+		return nil
+	case DiceSetReviewPending:
+		*s = DiceSetReviewPending
+		return nil
+	case DiceSetReviewApproved:
+		*s = DiceSetReviewApproved
+		return nil
+	case DiceSetReviewRejected:
+		*s = DiceSetReviewRejected
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type DiceSetSharing string
+
+const (
+	DiceSetSharingPrivate  DiceSetSharing = "private"
+	DiceSetSharingFriends  DiceSetSharing = "friends"
+	DiceSetSharingEveryone DiceSetSharing = "everyone"
+)
+
+// AllValues returns all DiceSetSharing values.
+func (DiceSetSharing) AllValues() []DiceSetSharing {
+	return []DiceSetSharing{
+		DiceSetSharingPrivate,
+		DiceSetSharingFriends,
+		DiceSetSharingEveryone,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DiceSetSharing) MarshalText() ([]byte, error) {
+	switch s {
+	case DiceSetSharingPrivate:
+		return []byte(s), nil
+	case DiceSetSharingFriends:
+		return []byte(s), nil
+	case DiceSetSharingEveryone:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DiceSetSharing) UnmarshalText(data []byte) error {
+	switch DiceSetSharing(data) {
+	case DiceSetSharingPrivate:
+		*s = DiceSetSharingPrivate
+		return nil
+	case DiceSetSharingFriends:
+		*s = DiceSetSharingFriends
+		return nil
+	case DiceSetSharingEveryone:
+		*s = DiceSetSharingEveryone
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Who a Dice Set is shared with.
+// Ref: #/components/schemas/DiceSetSharingChange
+type DiceSetSharingChange struct {
+	Sharing DiceSetSharingChangeSharing `json:"sharing"`
+}
+
+// GetSharing returns the value of Sharing.
+func (s *DiceSetSharingChange) GetSharing() DiceSetSharingChangeSharing {
+	return s.Sharing
+}
+
+// SetSharing sets the value of Sharing.
+func (s *DiceSetSharingChange) SetSharing(val DiceSetSharingChangeSharing) {
+	s.Sharing = val
+}
+
+type DiceSetSharingChangeSharing string
+
+const (
+	DiceSetSharingChangeSharingPrivate  DiceSetSharingChangeSharing = "private"
+	DiceSetSharingChangeSharingFriends  DiceSetSharingChangeSharing = "friends"
+	DiceSetSharingChangeSharingEveryone DiceSetSharingChangeSharing = "everyone"
+)
+
+// AllValues returns all DiceSetSharingChangeSharing values.
+func (DiceSetSharingChangeSharing) AllValues() []DiceSetSharingChangeSharing {
+	return []DiceSetSharingChangeSharing{
+		DiceSetSharingChangeSharingPrivate,
+		DiceSetSharingChangeSharingFriends,
+		DiceSetSharingChangeSharingEveryone,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DiceSetSharingChangeSharing) MarshalText() ([]byte, error) {
+	switch s {
+	case DiceSetSharingChangeSharingPrivate:
+		return []byte(s), nil
+	case DiceSetSharingChangeSharingFriends:
+		return []byte(s), nil
+	case DiceSetSharingChangeSharingEveryone:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DiceSetSharingChangeSharing) UnmarshalText(data []byte) error {
+	switch DiceSetSharingChangeSharing(data) {
+	case DiceSetSharingChangeSharingPrivate:
+		*s = DiceSetSharingChangeSharingPrivate
+		return nil
+	case DiceSetSharingChangeSharingFriends:
+		*s = DiceSetSharingChangeSharingFriends
+		return nil
+	case DiceSetSharingChangeSharingEveryone:
+		*s = DiceSetSharingChangeSharingEveryone
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The decision of an Admin on a Dice Set that waits, bound to the picture they looked at.
+// Ref: #/components/schemas/DiceSetVerdict
+type DiceSetVerdict struct {
+	Approve bool `json:"approve"`
+	// The SHA-256 of the picture the Admin looked at. A decision on a picture that is no longer on the set
+	// is refused.
+	Picture string `json:"picture"`
+}
+
+// GetApprove returns the value of Approve.
+func (s *DiceSetVerdict) GetApprove() bool {
+	return s.Approve
+}
+
+// GetPicture returns the value of Picture.
+func (s *DiceSetVerdict) GetPicture() string {
+	return s.Picture
+}
+
+// SetApprove sets the value of Approve.
+func (s *DiceSetVerdict) SetApprove(val bool) {
+	s.Approve = val
+}
+
+// SetPicture sets the value of Picture.
+func (s *DiceSetVerdict) SetPicture(val string) {
+	s.Picture = val
+}
+
 // Roll the die on the server, or enter the face of a physical die.
 // Ref: #/components/schemas/DieFill
 type DieFill struct {
@@ -8300,6 +8909,243 @@ func (s *DieFillMode) UnmarshalText(data []byte) error {
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
+}
+
+// How one type of die looks. A preset pattern in two colours, with the picture of the set on it when
+// it is placed. Numbers are drawn on their own layer.
+// Ref: #/components/schemas/DieLook
+type DieLook struct {
+	Pattern DieLookPattern  `json:"pattern"`
+	Body    string          `json:"body"`
+	Numbers string          `json:"numbers"`
+	Image   OptDiePlacement `json:"image"`
+}
+
+// GetPattern returns the value of Pattern.
+func (s *DieLook) GetPattern() DieLookPattern {
+	return s.Pattern
+}
+
+// GetBody returns the value of Body.
+func (s *DieLook) GetBody() string {
+	return s.Body
+}
+
+// GetNumbers returns the value of Numbers.
+func (s *DieLook) GetNumbers() string {
+	return s.Numbers
+}
+
+// GetImage returns the value of Image.
+func (s *DieLook) GetImage() OptDiePlacement {
+	return s.Image
+}
+
+// SetPattern sets the value of Pattern.
+func (s *DieLook) SetPattern(val DieLookPattern) {
+	s.Pattern = val
+}
+
+// SetBody sets the value of Body.
+func (s *DieLook) SetBody(val string) {
+	s.Body = val
+}
+
+// SetNumbers sets the value of Numbers.
+func (s *DieLook) SetNumbers(val string) {
+	s.Numbers = val
+}
+
+// SetImage sets the value of Image.
+func (s *DieLook) SetImage(val OptDiePlacement) {
+	s.Image = val
+}
+
+type DieLookPattern string
+
+const (
+	DieLookPatternPlain    DieLookPattern = "plain"
+	DieLookPatternMarble   DieLookPattern = "marble"
+	DieLookPatternSpeckled DieLookPattern = "speckled"
+	DieLookPatternStripes  DieLookPattern = "stripes"
+)
+
+// AllValues returns all DieLookPattern values.
+func (DieLookPattern) AllValues() []DieLookPattern {
+	return []DieLookPattern{
+		DieLookPatternPlain,
+		DieLookPatternMarble,
+		DieLookPatternSpeckled,
+		DieLookPatternStripes,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DieLookPattern) MarshalText() ([]byte, error) {
+	switch s {
+	case DieLookPatternPlain:
+		return []byte(s), nil
+	case DieLookPatternMarble:
+		return []byte(s), nil
+	case DieLookPatternSpeckled:
+		return []byte(s), nil
+	case DieLookPatternStripes:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DieLookPattern) UnmarshalText(data []byte) error {
+	switch DieLookPattern(data) {
+	case DieLookPatternPlain:
+		*s = DieLookPatternPlain
+		return nil
+	case DieLookPatternMarble:
+		*s = DieLookPatternMarble
+		return nil
+	case DieLookPatternSpeckled:
+		*s = DieLookPatternSpeckled
+		return nil
+	case DieLookPatternStripes:
+		*s = DieLookPatternStripes
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A look for each die type that has one.
+// Ref: #/components/schemas/DieLooks
+type DieLooks struct {
+	D4   OptDieLook `json:"d4"`
+	D6   OptDieLook `json:"d6"`
+	D8   OptDieLook `json:"d8"`
+	D10  OptDieLook `json:"d10"`
+	D12  OptDieLook `json:"d12"`
+	D20  OptDieLook `json:"d20"`
+	D100 OptDieLook `json:"d100"`
+}
+
+// GetD4 returns the value of D4.
+func (s *DieLooks) GetD4() OptDieLook {
+	return s.D4
+}
+
+// GetD6 returns the value of D6.
+func (s *DieLooks) GetD6() OptDieLook {
+	return s.D6
+}
+
+// GetD8 returns the value of D8.
+func (s *DieLooks) GetD8() OptDieLook {
+	return s.D8
+}
+
+// GetD10 returns the value of D10.
+func (s *DieLooks) GetD10() OptDieLook {
+	return s.D10
+}
+
+// GetD12 returns the value of D12.
+func (s *DieLooks) GetD12() OptDieLook {
+	return s.D12
+}
+
+// GetD20 returns the value of D20.
+func (s *DieLooks) GetD20() OptDieLook {
+	return s.D20
+}
+
+// GetD100 returns the value of D100.
+func (s *DieLooks) GetD100() OptDieLook {
+	return s.D100
+}
+
+// SetD4 sets the value of D4.
+func (s *DieLooks) SetD4(val OptDieLook) {
+	s.D4 = val
+}
+
+// SetD6 sets the value of D6.
+func (s *DieLooks) SetD6(val OptDieLook) {
+	s.D6 = val
+}
+
+// SetD8 sets the value of D8.
+func (s *DieLooks) SetD8(val OptDieLook) {
+	s.D8 = val
+}
+
+// SetD10 sets the value of D10.
+func (s *DieLooks) SetD10(val OptDieLook) {
+	s.D10 = val
+}
+
+// SetD12 sets the value of D12.
+func (s *DieLooks) SetD12(val OptDieLook) {
+	s.D12 = val
+}
+
+// SetD20 sets the value of D20.
+func (s *DieLooks) SetD20(val OptDieLook) {
+	s.D20 = val
+}
+
+// SetD100 sets the value of D100.
+func (s *DieLooks) SetD100(val OptDieLook) {
+	s.D100 = val
+}
+
+// Where the uploaded picture of a Dice Set sits on the unwrapped faces of one die. x and y are its
+// centre as fractions of the sheet, rotation is in degrees.
+// Ref: #/components/schemas/DiePlacement
+type DiePlacement struct {
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
+	Scale    float64 `json:"scale"`
+	Rotation float64 `json:"rotation"`
+}
+
+// GetX returns the value of X.
+func (s *DiePlacement) GetX() float64 {
+	return s.X
+}
+
+// GetY returns the value of Y.
+func (s *DiePlacement) GetY() float64 {
+	return s.Y
+}
+
+// GetScale returns the value of Scale.
+func (s *DiePlacement) GetScale() float64 {
+	return s.Scale
+}
+
+// GetRotation returns the value of Rotation.
+func (s *DiePlacement) GetRotation() float64 {
+	return s.Rotation
+}
+
+// SetX sets the value of X.
+func (s *DiePlacement) SetX(val float64) {
+	s.X = val
+}
+
+// SetY sets the value of Y.
+func (s *DiePlacement) SetY(val float64) {
+	s.Y = val
+}
+
+// SetScale sets the value of Scale.
+func (s *DiePlacement) SetScale(val float64) {
+	s.Scale = val
+}
+
+// SetRotation sets the value of Rotation.
+func (s *DiePlacement) SetRotation(val float64) {
+	s.Rotation = val
 }
 
 // DiffNpcRevisionsOKHeaders wraps []FieldChange with response headers.
@@ -10872,6 +11718,231 @@ func (s *GetBuilderOptionsNotModified) SetETag(val OptString) {
 }
 
 func (*GetBuilderOptionsNotModified) getBuilderOptionsRes() {}
+
+type GetDiceSetImageOKImageJpeg struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetDiceSetImageOKImageJpeg) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetDiceSetImageOKImageJpegHeaders wraps GetDiceSetImageOKImageJpeg with response headers.
+type GetDiceSetImageOKImageJpegHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetDiceSetImageOKImageJpeg
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetDiceSetImageOKImageJpegHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetDiceSetImageOKImageJpegHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetDiceSetImageOKImageJpegHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetDiceSetImageOKImageJpegHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetDiceSetImageOKImageJpegHeaders) GetResponse() GetDiceSetImageOKImageJpeg {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetDiceSetImageOKImageJpegHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetDiceSetImageOKImageJpegHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetDiceSetImageOKImageJpegHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetDiceSetImageOKImageJpegHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetDiceSetImageOKImageJpegHeaders) SetResponse(val GetDiceSetImageOKImageJpeg) {
+	s.Response = val
+}
+
+func (*GetDiceSetImageOKImageJpegHeaders) getDiceSetImageRes() {}
+
+type GetDiceSetImageOKImagePNG struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetDiceSetImageOKImagePNG) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetDiceSetImageOKImagePNGHeaders wraps GetDiceSetImageOKImagePNG with response headers.
+type GetDiceSetImageOKImagePNGHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetDiceSetImageOKImagePNG
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetDiceSetImageOKImagePNGHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetDiceSetImageOKImagePNGHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetDiceSetImageOKImagePNGHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetDiceSetImageOKImagePNGHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetDiceSetImageOKImagePNGHeaders) GetResponse() GetDiceSetImageOKImagePNG {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetDiceSetImageOKImagePNGHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetDiceSetImageOKImagePNGHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetDiceSetImageOKImagePNGHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetDiceSetImageOKImagePNGHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetDiceSetImageOKImagePNGHeaders) SetResponse(val GetDiceSetImageOKImagePNG) {
+	s.Response = val
+}
+
+func (*GetDiceSetImageOKImagePNGHeaders) getDiceSetImageRes() {}
+
+type GetDiceSetImageOKImageWEBP struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetDiceSetImageOKImageWEBP) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetDiceSetImageOKImageWEBPHeaders wraps GetDiceSetImageOKImageWEBP with response headers.
+type GetDiceSetImageOKImageWEBPHeaders struct {
+	CacheControl       OptString
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           GetDiceSetImageOKImageWEBP
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetDiceSetImageOKImageWEBPHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *GetDiceSetImageOKImageWEBPHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *GetDiceSetImageOKImageWEBPHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *GetDiceSetImageOKImageWEBPHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *GetDiceSetImageOKImageWEBPHeaders) GetResponse() GetDiceSetImageOKImageWEBP {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetDiceSetImageOKImageWEBPHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *GetDiceSetImageOKImageWEBPHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *GetDiceSetImageOKImageWEBPHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *GetDiceSetImageOKImageWEBPHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetDiceSetImageOKImageWEBPHeaders) SetResponse(val GetDiceSetImageOKImageWEBP) {
+	s.Response = val
+}
+
+func (*GetDiceSetImageOKImageWEBPHeaders) getDiceSetImageRes() {}
 
 // GetEntryNotModified is response for GetEntry operation.
 type GetEntryNotModified struct {
@@ -21491,6 +22562,34 @@ func (s *LiveContainerKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is
+// named only when every screen may fetch it, which is once an Admin approved it.
+// Ref: #/components/schemas/LiveDiceLook
+type LiveDiceLook struct {
+	Dice     DieLooks    `json:"dice"`
+	ImageUrl OptAssetUrl `json:"imageUrl"`
+}
+
+// GetDice returns the value of Dice.
+func (s *LiveDiceLook) GetDice() DieLooks {
+	return s.Dice
+}
+
+// GetImageUrl returns the value of ImageUrl.
+func (s *LiveDiceLook) GetImageUrl() OptAssetUrl {
+	return s.ImageUrl
+}
+
+// SetDice sets the value of Dice.
+func (s *LiveDiceLook) SetDice(val DieLooks) {
+	s.Dice = val
+}
+
+// SetImageUrl sets the value of ImageUrl.
+func (s *LiveDiceLook) SetImageUrl(val OptAssetUrl) {
+	s.ImageUrl = val
+}
+
 // A Character at 0 hit points, its death saves, and whether it is stable or dead. Shown to the DM and
 // for the party's tokens.
 // Ref: #/components/schemas/LiveDying
@@ -23705,6 +24804,7 @@ type LiveRollShown struct {
 	Dice     []LiveRollShownDiceItem `json:"dice"`
 	Modifier int32                   `json:"modifier"`
 	Total    int32                   `json:"total"`
+	Look     OptLiveDiceLook         `json:"look"`
 }
 
 // GetID returns the value of ID.
@@ -23737,6 +24837,11 @@ func (s *LiveRollShown) GetTotal() int32 {
 	return s.Total
 }
 
+// GetLook returns the value of Look.
+func (s *LiveRollShown) GetLook() OptLiveDiceLook {
+	return s.Look
+}
+
 // SetID sets the value of ID.
 func (s *LiveRollShown) SetID(val ID) {
 	s.ID = val
@@ -23765,6 +24870,11 @@ func (s *LiveRollShown) SetModifier(val int32) {
 // SetTotal sets the value of Total.
 func (s *LiveRollShown) SetTotal(val int32) {
 	s.Total = val
+}
+
+// SetLook sets the value of Look.
+func (s *LiveRollShown) SetLook(val OptLiveDiceLook) {
+	s.Look = val
 }
 
 type LiveRollShownDiceItem struct {
@@ -30248,6 +31358,98 @@ func (o OptDiceGroupKeep) Or(d DiceGroupKeep) DiceGroupKeep {
 	return d
 }
 
+// NewOptDieLook returns new OptDieLook with value set to v.
+func NewOptDieLook(v DieLook) OptDieLook {
+	return OptDieLook{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDieLook is optional DieLook.
+type OptDieLook struct {
+	Value DieLook
+	Set   bool
+}
+
+// IsSet returns true if OptDieLook was set.
+func (o OptDieLook) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDieLook) Reset() {
+	var v DieLook
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDieLook) SetTo(v DieLook) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDieLook) Get() (v DieLook, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDieLook) Or(d DieLook) DieLook {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDiePlacement returns new OptDiePlacement with value set to v.
+func NewOptDiePlacement(v DiePlacement) OptDiePlacement {
+	return OptDiePlacement{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDiePlacement is optional DiePlacement.
+type OptDiePlacement struct {
+	Value DiePlacement
+	Set   bool
+}
+
+// IsSet returns true if OptDiePlacement was set.
+func (o OptDiePlacement) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDiePlacement) Reset() {
+	var v DiePlacement
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDiePlacement) SetTo(v DiePlacement) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDiePlacement) Get() (v DiePlacement, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDiePlacement) Or(d DiePlacement) DiePlacement {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptDisplayName returns new OptDisplayName with value set to v.
 func NewOptDisplayName(v DisplayName) OptDisplayName {
 	return OptDisplayName{
@@ -31806,6 +33008,52 @@ func (o OptLiveCommandTrigger) Get() (v LiveCommandTrigger, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveCommandTrigger) Or(d LiveCommandTrigger) LiveCommandTrigger {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveDiceLook returns new OptLiveDiceLook with value set to v.
+func NewOptLiveDiceLook(v LiveDiceLook) OptLiveDiceLook {
+	return OptLiveDiceLook{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveDiceLook is optional LiveDiceLook.
+type OptLiveDiceLook struct {
+	Value LiveDiceLook
+	Set   bool
+}
+
+// IsSet returns true if OptLiveDiceLook was set.
+func (o OptLiveDiceLook) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveDiceLook) Reset() {
+	var v LiveDiceLook
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveDiceLook) SetTo(v LiveDiceLook) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveDiceLook) Get() (v LiveDiceLook, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveDiceLook) Or(d LiveDiceLook) LiveDiceLook {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -34642,13 +35890,17 @@ func (*ProblemStatusCodeWithHeaders) approveRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) beginTwoStepRes()                  {}
 func (*ProblemStatusCodeWithHeaders) cancelFriendRequestRes()           {}
 func (*ProblemStatusCodeWithHeaders) castRitualRes()                    {}
+func (*ProblemStatusCodeWithHeaders) chooseDiceSetRes()                 {}
+func (*ProblemStatusCodeWithHeaders) clearDiceSetImageRes()             {}
 func (*ProblemStatusCodeWithHeaders) clearTokenIconRes()                {}
 func (*ProblemStatusCodeWithHeaders) confirmTwoStepRes()                {}
+func (*ProblemStatusCodeWithHeaders) copyDiceSetRes()                   {}
 func (*ProblemStatusCodeWithHeaders) copySpellRes()                     {}
 func (*ProblemStatusCodeWithHeaders) createAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) createAccountInviteRes()           {}
 func (*ProblemStatusCodeWithHeaders) createCampaignRes()                {}
 func (*ProblemStatusCodeWithHeaders) createCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) createDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) createEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) createEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) createInviteRes()                  {}
@@ -34665,6 +35917,7 @@ func (*ProblemStatusCodeWithHeaders) createShopRes()                    {}
 func (*ProblemStatusCodeWithHeaders) declineFriendRequestRes()          {}
 func (*ProblemStatusCodeWithHeaders) declineRetrainRes()                {}
 func (*ProblemStatusCodeWithHeaders) deleteCharacterRes()               {}
+func (*ProblemStatusCodeWithHeaders) deleteDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterPoolRes()           {}
 func (*ProblemStatusCodeWithHeaders) deleteEncounterTableRes()          {}
 func (*ProblemStatusCodeWithHeaders) deleteLootTableRes()               {}
@@ -34676,6 +35929,7 @@ func (*ProblemStatusCodeWithHeaders) diffNpcRevisionsRes()              {}
 func (*ProblemStatusCodeWithHeaders) disableTwoStepRes()                {}
 func (*ProblemStatusCodeWithHeaders) discardCharacterDraftRes()         {}
 func (*ProblemStatusCodeWithHeaders) draftReleaseNoteRes()              {}
+func (*ProblemStatusCodeWithHeaders) editDiceSetRes()                   {}
 func (*ProblemStatusCodeWithHeaders) editReleaseNoteRes()               {}
 func (*ProblemStatusCodeWithHeaders) endSessionRes()                    {}
 func (*ProblemStatusCodeWithHeaders) exportLibraryRes()                 {}
@@ -34693,6 +35947,7 @@ func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getConditionBuildRes()             {}
+func (*ProblemStatusCodeWithHeaders) getDiceSetImageRes()               {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
 func (*ProblemStatusCodeWithHeaders) getFeatBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
@@ -34738,6 +35993,8 @@ func (*ProblemStatusCodeWithHeaders) listCharacterRevisionsRes()        {}
 func (*ProblemStatusCodeWithHeaders) listCharactersRes()                {}
 func (*ProblemStatusCodeWithHeaders) listConversationsRes()             {}
 func (*ProblemStatusCodeWithHeaders) listDeletedNpcsRes()               {}
+func (*ProblemStatusCodeWithHeaders) listDiceSetsRes()                  {}
+func (*ProblemStatusCodeWithHeaders) listDiceSetsToReviewRes()          {}
 func (*ProblemStatusCodeWithHeaders) listEncounterChecksRes()           {}
 func (*ProblemStatusCodeWithHeaders) listEncounterPoolRevisionsRes()    {}
 func (*ProblemStatusCodeWithHeaders) listEncounterPoolsRes()            {}
@@ -34768,6 +36025,7 @@ func (*ProblemStatusCodeWithHeaders) listRollsRes()                     {}
 func (*ProblemStatusCodeWithHeaders) listSessionsRes()                  {}
 func (*ProblemStatusCodeWithHeaders) listSettlementRevisionsRes()       {}
 func (*ProblemStatusCodeWithHeaders) listSettlementsRes()               {}
+func (*ProblemStatusCodeWithHeaders) listSharedDiceSetsRes()            {}
 func (*ProblemStatusCodeWithHeaders) listSharedEntriesRes()             {}
 func (*ProblemStatusCodeWithHeaders) listSharedSubmissionsRes()         {}
 func (*ProblemStatusCodeWithHeaders) listShopRevisionsRes()             {}
@@ -34811,6 +36069,7 @@ func (*ProblemStatusCodeWithHeaders) restoreNpcRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) restoreSettlementRevisionRes()     {}
 func (*ProblemStatusCodeWithHeaders) restoreShopRevisionRes()           {}
 func (*ProblemStatusCodeWithHeaders) resubmitProposalRes()              {}
+func (*ProblemStatusCodeWithHeaders) reviewDiceSetRes()                 {}
 func (*ProblemStatusCodeWithHeaders) reviewProposalRes()                {}
 func (*ProblemStatusCodeWithHeaders) reviewSharedSubmissionRes()        {}
 func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
@@ -34837,10 +36096,12 @@ func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
 func (*ProblemStatusCodeWithHeaders) setActionBarsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) setAdminRoleRes()                  {}
 func (*ProblemStatusCodeWithHeaders) setCampaignOverrideRes()           {}
+func (*ProblemStatusCodeWithHeaders) setDiceSetImageRes()               {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}
 func (*ProblemStatusCodeWithHeaders) setNotificationPreferencesRes()    {}
 func (*ProblemStatusCodeWithHeaders) setPortraitRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setTokenIconRes()                  {}
+func (*ProblemStatusCodeWithHeaders) shareDiceSetRes()                  {}
 func (*ProblemStatusCodeWithHeaders) shareLibraryEntryRes()             {}
 func (*ProblemStatusCodeWithHeaders) signInRes()                        {}
 func (*ProblemStatusCodeWithHeaders) signOutRes()                       {}
@@ -38212,6 +39473,20 @@ func (s *SetAdminRoleNoContent) SetRateLimitReset(val OptInt32) {
 }
 
 func (*SetAdminRoleNoContent) setAdminRoleRes() {}
+
+type SetDiceSetImageReq struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s SetDiceSetImageReq) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
 
 // SetPortraitNoContent is response for SetPortrait operation.
 type SetPortraitNoContent struct {

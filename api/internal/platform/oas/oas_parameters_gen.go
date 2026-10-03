@@ -430,6 +430,79 @@ func decodeCastRitualParams(args [2]string, argsEscaped bool, r *http.Request) (
 	return params, nil
 }
 
+// ClearDiceSetImageParams is parameters of clearDiceSetImage operation.
+type ClearDiceSetImageParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackClearDiceSetImageParams(packed middleware.Parameters) (params ClearDiceSetImageParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeClearDiceSetImageParams(args [1]string, argsEscaped bool, r *http.Request) (params ClearDiceSetImageParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ClearTokenIconParams is parameters of clearTokenIcon operation.
 type ClearTokenIconParams struct {
 	// Campaign id.
@@ -648,6 +721,79 @@ func decodeConfirmTwoStepParams(args [0]string, argsEscaped bool, r *http.Reques
 		return params, &ogenerrors.DecodeParamError{
 			Name: "grimoire_session",
 			In:   "cookie",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// CopyDiceSetParams is parameters of copyDiceSet operation.
+type CopyDiceSetParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackCopyDiceSetParams(packed middleware.Parameters) (params CopyDiceSetParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeCopyDiceSetParams(args [1]string, argsEscaped bool, r *http.Request) (params CopyDiceSetParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
+			In:   "path",
 			Err:  err,
 		}
 	}
@@ -1859,6 +2005,79 @@ func decodeDeleteCharacterParams(args [2]string, argsEscaped bool, r *http.Reque
 	return params, nil
 }
 
+// DeleteDiceSetParams is parameters of deleteDiceSet operation.
+type DeleteDiceSetParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackDeleteDiceSetParams(packed middleware.Parameters) (params DeleteDiceSetParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeDeleteDiceSetParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteDiceSetParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // DeleteEncounterPoolParams is parameters of deleteEncounterPool operation.
 type DeleteEncounterPoolParams struct {
 	// Campaign id.
@@ -3063,6 +3282,79 @@ func decodeDiscardCharacterDraftParams(args [1]string, argsEscaped bool, r *http
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// EditDiceSetParams is parameters of editDiceSet operation.
+type EditDiceSetParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackEditDiceSetParams(packed middleware.Parameters) (params EditDiceSetParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeEditDiceSetParams(args [1]string, argsEscaped bool, r *http.Request) (params EditDiceSetParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
 			In:   "path",
 			Err:  err,
 		}
@@ -4586,6 +4878,159 @@ func decodeGetConditionBuildParams(args [1]string, argsEscaped bool, r *http.Req
 		return params, &ogenerrors.DecodeParamError{
 			Name: "entryId",
 			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetDiceSetImageParams is parameters of getDiceSetImage operation.
+type GetDiceSetImageParams struct {
+	// Dice Set id.
+	DiceSetId ID
+	// The SHA-256 of the picture that is wanted.
+	V OptString `json:",omitempty,omitzero"`
+}
+
+func unpackGetDiceSetImageParams(packed middleware.Parameters) (params GetDiceSetImageParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "v",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.V = v.(OptString)
+		}
+	}
+	return params
+}
+
+func decodeGetDiceSetImageParams(args [1]string, argsEscaped bool, r *http.Request) (params GetDiceSetImageParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: v.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "v",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotVVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotVVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.V.SetTo(paramsDotVVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.V.Get(); ok {
+					if err := func() error {
+						if err := (validate.String{
+							MinLength:     0,
+							MinLengthSet:  false,
+							MaxLength:     64,
+							MaxLengthSet:  true,
+							Email:         false,
+							Hostname:      false,
+							Regex:         regexMap["^[0-9a-f]{64}$"],
+							MinNumeric:    0,
+							MinNumericSet: false,
+							MaxNumeric:    0,
+							MaxNumericSet: false,
+						}).Validate(string(value)); err != nil {
+							return errors.Wrap(err, "string")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "v",
+			In:   "query",
 			Err:  err,
 		}
 	}
@@ -15121,6 +15566,79 @@ func decodeResubmitProposalParams(args [2]string, argsEscaped bool, r *http.Requ
 	return params, nil
 }
 
+// ReviewDiceSetParams is parameters of reviewDiceSet operation.
+type ReviewDiceSetParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackReviewDiceSetParams(packed middleware.Parameters) (params ReviewDiceSetParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeReviewDiceSetParams(args [1]string, argsEscaped bool, r *http.Request) (params ReviewDiceSetParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ReviewProposalParams is parameters of reviewProposal operation.
 type ReviewProposalParams struct {
 	// Campaign id.
@@ -17178,6 +17696,79 @@ func decodeSetCampaignOverrideParams(args [2]string, argsEscaped bool, r *http.R
 	return params, nil
 }
 
+// SetDiceSetImageParams is parameters of setDiceSetImage operation.
+type SetDiceSetImageParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackSetDiceSetImageParams(packed middleware.Parameters) (params SetDiceSetImageParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSetDiceSetImageParams(args [1]string, argsEscaped bool, r *http.Request) (params SetDiceSetImageParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // SetDieParams is parameters of setDie operation.
 type SetDieParams struct {
 	// Campaign id.
@@ -17645,6 +18236,79 @@ func decodeSetTokenIconParams(args [2]string, argsEscaped bool, r *http.Request)
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "characterId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ShareDiceSetParams is parameters of shareDiceSet operation.
+type ShareDiceSetParams struct {
+	// Dice Set id.
+	DiceSetId ID
+}
+
+func unpackShareDiceSetParams(packed middleware.Parameters) (params ShareDiceSetParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "diceSetId",
+			In:   "path",
+		}
+		params.DiceSetId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeShareDiceSetParams(args [1]string, argsEscaped bool, r *http.Request) (params ShareDiceSetParams, _ error) {
+	// Decode path: diceSetId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "diceSetId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotDiceSetIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDiceSetIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DiceSetId = ID(paramsDotDiceSetIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "diceSetId",
 			In:   "path",
 			Err:  err,
 		}

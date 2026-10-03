@@ -251,6 +251,8 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	if s, ok := notices.(*push.Sender); ok {
 		social.Devices = s
 	}
+	social.Blobs = blobs(cfg, logger)
+	hub.Dice = httpapi.DiceLooks{Sets: social}
 	go digests(ctx, social, logger)
 	accounts := &identityapp.Service{
 		Repo: identitypg.New(store.Pool()), Mailer: mailer(cfg, logger), Passwords: identityapp.DefaultPasswords(), Now: time.Now,
@@ -275,7 +277,7 @@ func serve(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		Sessions: accounts, TrustForwardAuth: cfg.TrustForwardAuth,
 		Handler: &httpapi.Handler{
 			Push: notices, Accounts: accounts, OIDCName: oidcName,
-			Friends: social, Conversations: social, Notifications: social, Releases: social,
+			Friends: social, Conversations: social, Notifications: social, Releases: social, DiceSets: social,
 			Version: version, Store: store, Compendium: compendiumStore, Log: logger,
 			Campaigns:  campaignapp.NewService(campaignpg.New(store.Pool())),
 			Characters: characters,
