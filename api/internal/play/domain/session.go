@@ -120,6 +120,9 @@ type Token struct {
 	// with a check; Disguise is the name a Disguised token shows until then.
 	Qualities map[string]bool
 	Disguise  string
+	// Mount is the creature the token rides; Steers is set when the rider controls it.
+	Mount  *TokenID
+	Steers bool
 }
 
 // Form is a shape a token has taken: the Effect keeping it, the creature's name, and the token's own

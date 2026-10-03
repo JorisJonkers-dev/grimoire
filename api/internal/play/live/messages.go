@@ -113,6 +113,8 @@ const (
 	CmdDisarm           = "disarm"
 	CmdJump             = "jump"
 	CmdThrow            = "throw"
+	CmdMount            = "mount"
+	CmdDismount         = "dismount"
 	CmdCheckpoint       = "checkpoint"
 	CmdRewind           = "rewind"
 	CmdAssignControl    = "assign_control"
@@ -295,10 +297,12 @@ type Command struct {
 	TokenIDs  []string `json:"tokenIds,omitempty"`
 	SessionID string   `json:"sessionId,omitempty"`
 	// Cured says end_effect ends a lingering injury because its cure was applied.
-	Cured    bool `json:"cured,omitempty"`
-	promptID uuid.UUID
-	rollID   domain.RollID
-	crossed  *crossings
+	Cured bool `json:"cured,omitempty"`
+	// Controlled says mount takes a mount the rider controls, not one that acts for itself.
+	Controlled bool `json:"controlled,omitempty"`
+	promptID   uuid.UUID
+	rollID     domain.RollID
+	crossed    *crossings
 }
 
 // Update kinds. A snapshot answers a join or resync; a view follows every change.
@@ -337,6 +341,11 @@ type TokenView struct {
 	ControllerID string `json:"controllerId,omitempty"`
 	// CharacterID is the Campaign Character a party token was placed from.
 	CharacterID string `json:"characterId,omitempty"`
+	// MountID is the creature the token rides, and MountControlled whether its rider controls it;
+	// RiderID is the creature riding the token.
+	MountID         string `json:"mountId,omitempty"`
+	MountControlled bool   `json:"mountControlled,omitempty"`
+	RiderID         string `json:"riderId,omitempty"`
 	// CompanionID is the Companion the token is on the map as: an ally who travels with the party.
 	CompanionID string `json:"companionId,omitempty"`
 	// FactionID is the Faction the creature openly belongs to: every screen is told, as the Roll Card
@@ -1078,6 +1087,9 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	}
 	if t.Companion != nil {
 		v.CompanionID = t.Companion.String()
+	}
+	if t.Mount != nil {
+		v.MountID, v.MountControlled = uuid.UUID(*t.Mount).String(), t.Steers
 	}
 	if t.Faction != nil {
 		v.FactionID = t.Faction.String()

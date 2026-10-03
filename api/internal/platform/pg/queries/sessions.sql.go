@@ -1627,7 +1627,7 @@ func (q *Queries) MoveEffectSaves(ctx context.Context, arg MoveEffectSavesParams
 }
 
 const moveToken = `-- name: MoveToken :execrows
-UPDATE play.tokens SET session_id = $1, q = $2, r = $3 WHERE session_id = $4 AND id = $5
+UPDATE play.tokens SET session_id = $1, q = $2, r = $3, mount_token_id = NULL, mount_controlled = false WHERE session_id = $4 AND id = $5
 `
 
 type MoveTokenParams struct {
@@ -2894,7 +2894,7 @@ func (q *Queries) SessionTokenSenses(ctx context.Context, sessionID uuid.UUID) (
 
 const sessionTokens = `-- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend, companion_id, faction_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend, companion_id, faction_id, mount_token_id, mount_controlled FROM play.tokens WHERE session_id = $1 ORDER BY label, id
 `
 
 type SessionTokensRow struct {
@@ -2928,6 +2928,8 @@ type SessionTokensRow struct {
 	Legend             []byte
 	CompanionID        pgtype.UUID
 	FactionID          pgtype.UUID
+	MountTokenID       pgtype.UUID
+	MountControlled    bool
 }
 
 func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]SessionTokensRow, error) {
@@ -2970,6 +2972,8 @@ func (q *Queries) SessionTokens(ctx context.Context, sessionID uuid.UUID) ([]Ses
 			&i.Legend,
 			&i.CompanionID,
 			&i.FactionID,
+			&i.MountTokenID,
+			&i.MountControlled,
 		); err != nil {
 			return nil, err
 		}
@@ -3221,6 +3225,32 @@ func (q *Queries) SetTokenReaction(ctx context.Context, arg SetTokenReactionPara
 		arg.Kind,
 		arg.Mode,
 		arg.Condition,
+	)
+	return err
+}
+
+const setTokenSeat = `-- name: SetTokenSeat :exec
+UPDATE play.tokens SET q = $1, r = $2, mount_token_id = $3, mount_controlled = $4
+WHERE session_id = $5 AND id = $6
+`
+
+type SetTokenSeatParams struct {
+	Q               int32
+	R               int32
+	MountTokenID    pgtype.UUID
+	MountControlled bool
+	SessionID       uuid.UUID
+	ID              uuid.UUID
+}
+
+func (q *Queries) SetTokenSeat(ctx context.Context, arg SetTokenSeatParams) error {
+	_, err := q.db.Exec(ctx, setTokenSeat,
+		arg.Q,
+		arg.R,
+		arg.MountTokenID,
+		arg.MountControlled,
+		arg.SessionID,
+		arg.ID,
 	)
 	return err
 }

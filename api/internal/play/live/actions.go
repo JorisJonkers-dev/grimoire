@@ -27,7 +27,7 @@ func (r *runtime) actor(m domain.Member, tokenID string, fightOnly bool) (domain
 	switch {
 	case !ok || t.Stats == nil:
 		return t, nil, "No such creature."
-	case !m.DM && (t.Controller == nil || *t.Controller != m.ID):
+	case !r.st.plays(m, t):
 		return t, nil, "That token is not yours to play."
 	case r.st.catalog.Incapacitated(r.st.actives(t.ID)):
 		return t, nil, t.Label + " can't act while Incapacitated."
@@ -58,8 +58,8 @@ func (r *runtime) planAction(m domain.Member, cmd Command) (Write, string) {
 	}
 	inFight := info.Action == actions.Dash || info.Action == actions.Disengage || info.Action == actions.Dodge || info.Action == actions.Ready
 	t, x, reason := r.actor(m, cmd.TokenID, inFight)
-	if reason == "" && info.Action != actions.Dodge {
-		reason = r.st.uncommanded(t)
+	if reason == "" {
+		reason = r.st.barred(t, info.Action)
 	}
 	if reason != "" {
 		return Write{}, reason
@@ -174,6 +174,9 @@ func (r *runtime) planUnarmed(m domain.Member, cmd Command) (Write, string) {
 		return Write{}, "Grapple, or shove away or down."
 	}
 	a, x, reason := r.actor(m, cmd.TokenID, true)
+	if reason == "" {
+		reason = r.st.reined(a, "")
+	}
 	if reason != "" {
 		return Write{}, reason
 	}
@@ -227,6 +230,9 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 	switch {
 	case p.Action == tableRoll:
 		r.tableRolled(w, p, roll)
+		return
+	case p.Action == keepSeat:
+		r.seatRolled(w, p, roll)
 		return
 	case p.Action == stabilising:
 		if d, down := r.st.dying[*p.Target]; down && roll.Total >= p.DC && d.State.Rolls() {

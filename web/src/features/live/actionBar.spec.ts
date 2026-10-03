@@ -18,6 +18,9 @@ describe('action bar tiles', () => {
     expect(tiles.find((t) => t.key === 'attack:Longsword')).toMatchObject({ name: 'Longsword', testid: 'attack-0', detail: '+5 · 1d8+3 · reach 5 ft' })
     expect(tiles.find((t) => t.key === 'move:swap')).toMatchObject({ name: 'Swap weapons', testid: 'swap-weapons' })
     expect(tilesOf({ ...aria, kind: 'enemy' }).some((t) => t.key === 'move:swap')).toBe(false)
+    // One tile gets a creature on a mount, and off the one it rides.
+    expect(tiles.find((t) => t.key === 'move:mount')).toMatchObject({ name: 'Mount', testid: 'ride' })
+    expect(tilesOf({ ...aria, mountId: aria.id }).find((t) => t.key === 'move:mount')).toMatchObject({ name: 'Dismount', testid: 'ride' })
     expect(tiles.map((t) => t.key)).toEqual(expect.arrayContaining(['unarmed:grapple', 'move:jump', 'move:misty-step', 'spell:fireball', 'summon:find-familiar']))
     expect(new Set(tiles.map((t) => t.key)).size).toBe(tiles.length)
   })

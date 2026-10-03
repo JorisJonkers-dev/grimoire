@@ -204,6 +204,7 @@ func (s *state) project(a Audience) View {
 		}
 	}
 	sort.Slice(v.Tokens, func(i, j int) bool { return v.Tokens[i].ID < v.Tokens[j].ID })
+	saddles(v.Tokens)
 	s.firstReactions(v.Tokens, a)
 	s.attitudeViews(v.Tokens)
 	s.projectCombat(&v, a, seen)

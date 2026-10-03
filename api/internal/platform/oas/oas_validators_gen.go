@@ -38782,6 +38782,10 @@ func (s LiveCommandKind) Validate() error {
 		return nil
 	case "throw":
 		return nil
+	case "mount":
+		return nil
+	case "dismount":
+		return nil
 	case "sneak":
 		return nil
 	case "explore":

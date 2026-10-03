@@ -22052,8 +22052,13 @@ type LiveCommand struct {
 	EffectId    OptID                `json:"effectId"`
 	// With end_effect, says a lingering injury ends because its cure was applied; without it such an
 	// Effect is not ended.
-	Cured    OptBool `json:"cured"`
-	ManualId OptID   `json:"manualId"`
+	Cured OptBool `json:"cured"`
+	// With mount, tokenId gets onto targetId, a willing creature of its own side within 5 feet, for half
+	// its Speed. Set, the rider controls the mount: it takes the rider's initiative, moves at the rider's
+	// word and only Dashes, Disengages or Dodges. Left out, the mount acts for itself. With dismount,
+	// tokenId gets off onto the free hex q and r next to its mount, for half its Speed.
+	Controlled OptBool `json:"controlled"`
+	ManualId   OptID   `json:"manualId"`
 	// With paint_surface, a Surface from the catalogue; leave it out to clear.
 	Surface     OptString      `json:"surface"`
 	ElevationFt OptInt32       `json:"elevationFt"`
@@ -22412,6 +22417,11 @@ func (s *LiveCommand) GetEffectId() OptID {
 // GetCured returns the value of Cured.
 func (s *LiveCommand) GetCured() OptBool {
 	return s.Cured
+}
+
+// GetControlled returns the value of Controlled.
+func (s *LiveCommand) GetControlled() OptBool {
+	return s.Controlled
 }
 
 // GetManualId returns the value of ManualId.
@@ -22959,6 +22969,11 @@ func (s *LiveCommand) SetCured(val OptBool) {
 	s.Cured = val
 }
 
+// SetControlled sets the value of Controlled.
+func (s *LiveCommand) SetControlled(val OptBool) {
+	s.Controlled = val
+}
+
 // SetManualId sets the value of ManualId.
 func (s *LiveCommand) SetManualId(val OptID) {
 	s.ManualId = val
@@ -23500,6 +23515,8 @@ const (
 	LiveCommandKindDisarm              LiveCommandKind = "disarm"
 	LiveCommandKindJump                LiveCommandKind = "jump"
 	LiveCommandKindThrow               LiveCommandKind = "throw"
+	LiveCommandKindMount               LiveCommandKind = "mount"
+	LiveCommandKindDismount            LiveCommandKind = "dismount"
 	LiveCommandKindSneak               LiveCommandKind = "sneak"
 	LiveCommandKindExplore             LiveCommandKind = "explore"
 	LiveCommandKindPassTurn            LiveCommandKind = "pass_turn"
@@ -23608,6 +23625,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindDisarm,
 		LiveCommandKindJump,
 		LiveCommandKindThrow,
+		LiveCommandKindMount,
+		LiveCommandKindDismount,
 		LiveCommandKindSneak,
 		LiveCommandKindExplore,
 		LiveCommandKindPassTurn,
@@ -23803,6 +23822,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindJump:
 		return []byte(s), nil
 	case LiveCommandKindThrow:
+		return []byte(s), nil
+	case LiveCommandKindMount:
+		return []byte(s), nil
+	case LiveCommandKindDismount:
 		return []byte(s), nil
 	case LiveCommandKindSneak:
 		return []byte(s), nil
@@ -24104,6 +24127,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindThrow:
 		*s = LiveCommandKindThrow
+		return nil
+	case LiveCommandKindMount:
+		*s = LiveCommandKindMount
+		return nil
+	case LiveCommandKindDismount:
+		*s = LiveCommandKindDismount
 		return nil
 	case LiveCommandKindSneak:
 		*s = LiveCommandKindSneak
@@ -28271,7 +28300,13 @@ type LiveToken struct {
 	Kind         TokenKind `json:"kind"`
 	DarkvisionFt int32     `json:"darkvisionFt"`
 	CompanionId  OptID     `json:"companionId"`
-	FactionId    OptID     `json:"factionId"`
+	MountId      OptID     `json:"mountId"`
+	// Set when the token rides mountId and controls it. A rider goes where its mount goes; one knocked
+	// Prone, or whose mount is moved against its will, makes a DC 10 Dexterity save or falls off Prone
+	// beside it.
+	MountControlled OptBool `json:"mountControlled"`
+	RiderId         OptID   `json:"riderId"`
+	FactionId       OptID   `json:"factionId"`
 	// How a creature of a Faction first takes to the party, by the Faction's Standing. For the DM alone;
 	// factionId itself goes to every screen that sees the creature.
 	FirstReaction OptLiveTokenFirstReaction `json:"firstReaction"`
@@ -28328,6 +28363,21 @@ func (s *LiveToken) GetDarkvisionFt() int32 {
 // GetCompanionId returns the value of CompanionId.
 func (s *LiveToken) GetCompanionId() OptID {
 	return s.CompanionId
+}
+
+// GetMountId returns the value of MountId.
+func (s *LiveToken) GetMountId() OptID {
+	return s.MountId
+}
+
+// GetMountControlled returns the value of MountControlled.
+func (s *LiveToken) GetMountControlled() OptBool {
+	return s.MountControlled
+}
+
+// GetRiderId returns the value of RiderId.
+func (s *LiveToken) GetRiderId() OptID {
+	return s.RiderId
 }
 
 // GetFactionId returns the value of FactionId.
@@ -28463,6 +28513,21 @@ func (s *LiveToken) SetDarkvisionFt(val int32) {
 // SetCompanionId sets the value of CompanionId.
 func (s *LiveToken) SetCompanionId(val OptID) {
 	s.CompanionId = val
+}
+
+// SetMountId sets the value of MountId.
+func (s *LiveToken) SetMountId(val OptID) {
+	s.MountId = val
+}
+
+// SetMountControlled sets the value of MountControlled.
+func (s *LiveToken) SetMountControlled(val OptBool) {
+	s.MountControlled = val
+}
+
+// SetRiderId sets the value of RiderId.
+func (s *LiveToken) SetRiderId(val OptID) {
+	s.RiderId = val
 }
 
 // SetFactionId sets the value of FactionId.

@@ -24,7 +24,7 @@ UPDATE play.sessions SET seq = seq + 1 WHERE id = $1 RETURNING seq;
 
 -- name: SessionTokens :many
 SELECT id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class, hp, hp_max, intelligence, tactics, can_shield, spell_dc,
-    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend, companion_id, faction_id FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
+    stealth, perception, initiative, speed_ft, unarmed_dc, attacks_per_action, temp_hp, summon_effect_id, disguise, strength, creature_type, legend, companion_id, faction_id, mount_token_id, mount_controlled FROM play.tokens WHERE session_id = $1 ORDER BY label, id;
 
 -- name: InsertToken :exec
 INSERT INTO play.tokens (id, session_id, label, kind, q, r, hidden, darkvision_ft, controller_member_id, stat_source, armor_class,
@@ -35,6 +35,10 @@ VALUES (@id, @session_id, @label, @kind, @q, @r, @hidden, @darkvision_ft, @contr
 
 -- name: UpdateToken :exec
 UPDATE play.tokens SET q = @q, r = @r, hidden = @hidden WHERE session_id = @session_id AND id = @id;
+
+-- name: SetTokenSeat :exec
+UPDATE play.tokens SET q = @q, r = @r, mount_token_id = sqlc.narg(mount_token_id), mount_controlled = @mount_controlled
+WHERE session_id = @session_id AND id = @id;
 
 -- name: DeleteToken :exec
 DELETE FROM play.tokens WHERE session_id = @session_id AND id = @id;
@@ -486,7 +490,7 @@ WHERE t.kind = 'party' AND s.status = 'live' AND (s.id = @root OR s.parent_sessi
 ORDER BY t.label, t.id;
 
 -- name: MoveToken :execrows
-UPDATE play.tokens SET session_id = @to_session, q = @q, r = @r WHERE session_id = @from_session AND id = @id;
+UPDATE play.tokens SET session_id = @to_session, q = @q, r = @r, mount_token_id = NULL, mount_controlled = false WHERE session_id = @from_session AND id = @id;
 
 -- name: MoveTokenEffects :exec
 UPDATE play.active_effects SET session_id = @to_session WHERE session_id = @from_session AND target_token_id = ANY(@ids::uuid[]);

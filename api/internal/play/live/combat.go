@@ -66,7 +66,7 @@ func (r *runtime) combatant(m domain.Member, id string) (domain.Combatant, domai
 			continue
 		}
 		t := r.st.tokens[x.TokenID]
-		if !m.DM && (t.Controller == nil || *t.Controller != m.ID) {
+		if !r.st.plays(m, t) {
 			return x, t, "That combatant is not yours to play."
 		}
 		return x, t, ""
@@ -298,8 +298,10 @@ func applyCombat(s *state, w *Write) {
 		rollInitiative(c, x.RollID, w.total)
 	case domain.ActionTurnEnded:
 		x.Done = true
+		steered, _ := s.steed(x.TokenID)
 		for i := range c.Combatants {
-			if o := c.Combatants[i].Owner; o != nil && *o == x.ID && c.Acting(c.Combatants[i]) {
+			o := c.Combatants[i].Owner
+			if ((o != nil && *o == x.ID) || c.Combatants[i].TokenID == steered) && c.Acting(c.Combatants[i]) {
 				c.Combatants[i].Done = true
 			}
 		}

@@ -775,6 +775,7 @@ type Querier interface {
 	// fills it, in one statement: the check on hit points holds at every step.
 	SetTokenLegend(ctx context.Context, arg SetTokenLegendParams) error
 	SetTokenReaction(ctx context.Context, arg SetTokenReactionParams) error
+	SetTokenSeat(ctx context.Context, arg SetTokenSeatParams) error
 	SetTokenTactics(ctx context.Context, arg SetTokenTacticsParams) error
 	SetTokenTempHP(ctx context.Context, arg SetTokenTempHPParams) error
 	SetWeaponSet(ctx context.Context, arg SetWeaponSetParams) error

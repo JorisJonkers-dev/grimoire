@@ -13,7 +13,7 @@ import { useWakeLock } from '@/shared/pwa/wakeLock'
 import { GButton } from '@/shared/ui'
 import { BANNER_MS } from './motion'
 import { DM_PAGES, PLAYER_PAGES, usePhoneShell } from './phoneShell'
-import { board, describe, emanations, hexes, zoneHexes } from './board'
+import { after, board, describe, emanations, hexes, stacks, zoneHexes } from './board'
 import { runByDM, suggested, taken } from './console'
 import { cellsFor, key, layoutOf } from './geometry'
 import DiceHost from '@/features/dice/DiceHost.vue'
@@ -149,7 +149,9 @@ const cells = computed(() =>
 )
 const chosen = computed(() => view.value?.tokens.find((t) => t.id === selected.value) ?? null)
 const mine = computed(() => view.value?.tokens.filter((t) => t.controllerId && t.controllerId === campaign.data.value?.me.id) ?? [])
-const walker = computed(() => (isDM.value ? chosen.value : (mine.value.find((t) => t.id === selected.value) ?? mine.value[0] ?? null)))
+// A rider who controls its mount walks by walking the mount.
+const steedOf = (t: LiveToken | null) => (t?.mountControlled ? (view.value?.tokens.find((o) => o.id === t.mountId) ?? t) : t)
+const walker = computed(() => steedOf(isDM.value ? chosen.value : (mine.value.find((t) => t.id === selected.value) ?? mine.value[0] ?? null)))
 const combat = computed(() => view.value?.combat ?? null)
 // The shared roster strip, and whose Effects the effects card shows.
 const roster = computed(() => view.value?.roster ?? [])
@@ -187,7 +189,9 @@ function dismissBanner() {
   banner.value = ''
 }
 const playable = (c: LiveCombatant) => isDM.value || (c.controllerId !== undefined && c.controllerId === campaign.data.value?.me.id)
-const turns = computed(() => combat.value?.combatants.filter((c) => c.acting && playable(c)) ?? [])
+// A mount is its rider's to play while the rider controls it.
+const steered = (c: LiveCombatant) => mine.value.some((t) => t.mountControlled && t.mountId === c.tokenId)
+const turns = computed(() => combat.value?.combatants.filter((c) => c.acting && (playable(c) || steered(c))) ?? [])
 const toRoll = computed(() =>
   combat.value?.status === 'rolling'
     ? combat.value.combatants.filter((c) => c.initiative === undefined && (isDM.value ? !c.controllerId : playable(c)))
@@ -285,6 +289,9 @@ const areaPreview = computed(() => {
 const areaHexes = computed(() => [...(areaPreview.value?.hexes ?? view.value?.area?.hexes ?? []), ...emanations(view.value?.tokens ?? [])])
 const teleporting = ref<string | null>(null)
 const jumping = ref<string | null>(null)
+// riding is the creature getting onto a mount, or off the one it rides; steer whether it will control it.
+const riding = ref<{ tokenId: string; off: boolean } | null>(null)
+const steer = ref(true)
 // throwing is the thrower, then what it throws: a creature it grapples or an object next to it.
 const throwing = ref<{ tokenId: string; targetId?: string; objectId?: string } | null>(null)
 const surfaceKinds = computed(
@@ -342,7 +349,8 @@ const attackRoll = computed(() => {
   if (!a || !attacker) return null
   return (isDM.value ? !attacker.controllerId : attacker.controllerId === campaign.data.value?.me.id) ? a.rollId : null
 })
-const tokenAt = (c: Coord) => view.value?.tokens.find((t) => t.q === c.q && t.r === c.r)
+const tokensAt = computed(() => stacks(view.value?.tokens ?? []))
+const tokenAt = (c: Coord) => after(tokensAt.value, c, undefined)
 
 // A tap on a hex only plans the walk there; nothing moves until the plan is confirmed.
 function walkTo(c: Coord) {
@@ -355,9 +363,9 @@ function confirmWalk() {
   if (p && end) live.value?.send({ kind: 'walk', tokenId: p.tokenId, q: end.q, r: end.r })
 }
 function tokenTool(c: Coord) {
-  const there = tokenAt(c)
-  if (there) {
-    selected.value = there.id === selected.value ? null : there.id
+  if (tokenAt(c)) {
+    // A hex with a rider on its mount gives the rider, then the mount, then lets go.
+    selected.value = after(tokensAt.value, c, selected.value)?.id ?? null
   } else if (chosen.value) {
     walkTo(c)
   } else if (companion.value) {
@@ -384,6 +392,15 @@ function pick(c: Coord) {
   if (jumping.value) {
     live.value.send({ kind: 'jump', tokenId: jumping.value, q: c.q, r: c.r })
     jumping.value = null
+    return
+  }
+  if (riding.value) {
+    const { tokenId, off } = riding.value
+    const mount = tokensAt.value.get(`${String(c.q)},${String(c.r)}`)?.find((t) => t.id !== tokenId)
+    if (off) live.value.send({ kind: 'dismount', tokenId, q: c.q, r: c.r })
+    else if (mount) live.value.send({ kind: 'mount', tokenId, targetId: mount.id, controlled: steer.value })
+    else return
+    riding.value = null
     return
   }
   if (throwing.value) {
@@ -414,7 +431,8 @@ function pick(c: Coord) {
     live.value.send({ kind: 'preview_area', tokenId, effect, q: c.q, r: c.r, ...(slot ? { slot } : {}) })
     return
   }
-  const target = tokenAt(c)
+  // Aimed at a hex whose rider the preview already shows, the next tap is at its mount.
+  const target = aiming.value && preview.value ? (after(tokensAt.value, c, preview.value.targetId) ?? tokenAt(c)) : tokenAt(c)
   if (grabbing.value && target) {
     live.value.send({ kind: 'unarmed', tokenId: grabbing.value.tokenId, targetId: target.id, option: grabbing.value.option as 'grapple' })
     grabbing.value = null
@@ -655,6 +673,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           @swap="live?.send({ kind: 'swap_weapons', tokenId: b.token.id })"
           @teleport="teleporting = b.token.id"
           @jump="jumping = b.token.id"
+          @ride="riding = { tokenId: b.token.id, off: b.token.mountId !== undefined }"
           @throw="throwing = { tokenId: b.token.id }"
           @summon="(e) => (summoning = e ? { tokenId: b.token.id, effect: e } : null)"
           @command="(id) => live?.send({ kind: 'command', tokenId: b.token.id, targetId: id })"
@@ -673,6 +692,13 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <p v-if="summoning" data-page="always" role="status" class="walk" data-testid="summoning">Tap where they appear.</p>
         <p v-if="teleporting" data-page="always" role="status" class="walk" data-testid="teleporting">Tap a free hex within 30 feet.</p>
         <p v-if="jumping" data-page="always" role="status" class="walk" data-testid="jumping">Tap where to land.</p>
+        <div v-if="riding" data-page="always" role="status" class="walk" data-testid="riding">
+          <template v-if="riding.off">Tap a free hex next to your mount.</template>
+          <template v-else>
+            Tap the creature to ride.
+            <label class="check"><input v-model="steer" type="checkbox" data-testid="ride-control" /><span>Control it</span></label>
+          </template>
+        </div>
         <p v-if="throwing" data-page="always" role="status" class="walk" data-testid="throwing">
           {{ throwing.targetId || throwing.objectId ? 'Tap where it lands.' : 'Tap the creature or object to throw.' }}
         </p>
