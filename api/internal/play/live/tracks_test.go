@@ -68,7 +68,7 @@ func TestTrackThresholdsLandOnTheBoard(t *testing.T) {
 	}
 	var label string
 	if err := w.pool.QueryRow(ctx, `SELECT e.label FROM play.actions a JOIN play.action_token_events e ON e.action_id = a.id
-		WHERE a.session_id = $1 AND a.kind = 'rule_hook_fired' ORDER BY a.seq DESC LIMIT 1`, w.session.ID).Scan(&label); err != nil || label != "Aria: Stress (Shaken)" {
+		WHERE a.session_id = $1 AND a.kind = 'rule_hook_fired' ORDER BY a.seq DESC LIMIT 1`, w.session.ID).Scan(&label); err != nil || label != "Aria: Stress" {
 		t.Fatalf("the Action Log says %q %v", label, err)
 	}
 	// The party's threshold lands on every Character on the board, and not on the Raider.
@@ -78,8 +78,9 @@ func TestTrackThresholdsLandOnTheBoard(t *testing.T) {
 	}
 
 	// A threshold that rolls on a table asks the Character's Player, though the DM moved the score. However
-	// long the names, the roll is asked for.
-	track, mark := strings.Repeat("x", 80), strings.Repeat("y", 80)
+	// long the names, the roll is asked for. A threshold is the DM's to know: what the Player is shown
+	// names the Track and the table, and never the threshold.
+	track, mark := strings.Repeat("x", 80), "The DM's secret mark"
 	cross(&aria, track, campaigndomain.TrackThreshold{At: 8, Rising: true, Label: mark, RollTable: &madness})
 	var id uuid.UUID
 	var purpose string
@@ -96,6 +97,24 @@ func TestTrackThresholdsLandOnTheBoard(t *testing.T) {
 	v := look(t, w, tb.player)
 	if r := v.TableResult; r == nil || r.Label != "Aria" || r.Text != "The walls whisper." || r.Hook != track || r.Total != 3 {
 		t.Fatalf("the result = %+v", v.TableResult)
+	}
+	// A short Track name leaves room for the label, which still goes nowhere a Player reads.
+	cross(&aria, "Stress", campaigndomain.TrackThreshold{At: 9, Rising: true, Label: mark, RollTable: &madness})
+	var said string
+	if err := w.pool.QueryRow(ctx, "SELECT id, purpose FROM play.roll_requests WHERE campaign_id = $1 AND status = 'pending' AND notation = '1d4'", w.session.CampaignID).Scan(&id, &said); err != nil || strings.Contains(said, "secret") || !strings.HasPrefix(said, "Stress: ") {
+		t.Fatalf("the second roll is for %q: %v", said, err)
+	}
+	if _, err := tb.rolls.SetDie(ctx, playerCaller, w.session.CampaignID, domain.RollID(id), 0, app.Fill{Value: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if r := look(t, w, tb.player).TableResult; r == nil || r.Hook != "Stress" {
+		t.Fatalf("the second result = %+v", r)
+	}
+	var leaked int
+	if err := w.pool.QueryRow(ctx, `SELECT (SELECT count(*) FROM play.roll_requests WHERE campaign_id = $1 AND purpose LIKE '%secret%')
+		+ (SELECT count(*) FROM play.action_token_events e JOIN play.actions a ON a.id = e.action_id WHERE a.session_id = $2 AND e.label LIKE '%secret%')
+		+ (SELECT count(*) FROM play.pending_actions WHERE session_id = $2 AND hook_name LIKE '%secret%')`, w.session.CampaignID, w.session.ID).Scan(&leaked); err != nil || leaked != 0 {
+		t.Fatalf("the threshold's label was written in %d places a Session keeps: %v", leaked, err)
 	}
 
 	// With the tables unreadable an Effect still lands, and no roll is asked for.
