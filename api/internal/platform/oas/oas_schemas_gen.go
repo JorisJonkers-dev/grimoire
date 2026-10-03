@@ -18818,6 +18818,7 @@ func (s *LiveCombatantSetup) SetSpeedFt(val int32) {
 type LiveCommand struct {
 	Nonce        string                 `json:"nonce"`
 	Kind         LiveCommandKind        `json:"kind"`
+	Caption      OptString              `json:"caption"`
 	TokenId      OptID                  `json:"tokenId"`
 	Label        OptString              `json:"label"`
 	TokenKind    OptTokenKind           `json:"tokenKind"`
@@ -18940,6 +18941,11 @@ func (s *LiveCommand) GetNonce() string {
 // GetKind returns the value of Kind.
 func (s *LiveCommand) GetKind() LiveCommandKind {
 	return s.Kind
+}
+
+// GetCaption returns the value of Caption.
+func (s *LiveCommand) GetCaption() OptString {
+	return s.Caption
 }
 
 // GetTokenId returns the value of TokenId.
@@ -19430,6 +19436,11 @@ func (s *LiveCommand) SetNonce(val string) {
 // SetKind sets the value of Kind.
 func (s *LiveCommand) SetKind(val LiveCommandKind) {
 	s.Kind = val
+}
+
+// SetCaption sets the value of Caption.
+func (s *LiveCommand) SetCaption(val OptString) {
+	s.Caption = val
 }
 
 // SetTokenId sets the value of TokenId.
@@ -20133,6 +20144,7 @@ const (
 	LiveCommandKindTableCamera         LiveCommandKind = "table_camera"
 	LiveCommandKindTableScene          LiveCommandKind = "table_scene"
 	LiveCommandKindTableBlackout       LiveCommandKind = "table_blackout"
+	LiveCommandKindTableCaption        LiveCommandKind = "table_caption"
 	LiveCommandKindPing                LiveCommandKind = "ping"
 	LiveCommandKindSetWorld            LiveCommandKind = "set_world"
 	LiveCommandKindAddNode             LiveCommandKind = "add_node"
@@ -20230,6 +20242,7 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindTableCamera,
 		LiveCommandKindTableScene,
 		LiveCommandKindTableBlackout,
+		LiveCommandKindTableCaption,
 		LiveCommandKindPing,
 		LiveCommandKindSetWorld,
 		LiveCommandKindAddNode,
@@ -20359,6 +20372,8 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindTableScene:
 		return []byte(s), nil
 	case LiveCommandKindTableBlackout:
+		return []byte(s), nil
+	case LiveCommandKindTableCaption:
 		return []byte(s), nil
 	case LiveCommandKindPing:
 		return []byte(s), nil
@@ -20583,6 +20598,9 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindTableBlackout:
 		*s = LiveCommandKindTableBlackout
+		return nil
+	case LiveCommandKindTableCaption:
+		*s = LiveCommandKindTableCaption
 		return nil
 	case LiveCommandKindPing:
 		*s = LiveCommandKindPing
@@ -23677,6 +23695,103 @@ func (s *LiveResterHitDie) UnmarshalText(data []byte) error {
 	}
 }
 
+// The last roll a player made, as every screen may show it. It arrives as a roll frame when it
+// resolves and again with a snapshot. A DM's roll is never sent.
+// Ref: #/components/schemas/LiveRollShown
+type LiveRollShown struct {
+	Roller   DisplayName             `json:"roller"`
+	Purpose  string                  `json:"purpose"`
+	Dice     []LiveRollShownDiceItem `json:"dice"`
+	Modifier int32                   `json:"modifier"`
+	Total    int32                   `json:"total"`
+}
+
+// GetRoller returns the value of Roller.
+func (s *LiveRollShown) GetRoller() DisplayName {
+	return s.Roller
+}
+
+// GetPurpose returns the value of Purpose.
+func (s *LiveRollShown) GetPurpose() string {
+	return s.Purpose
+}
+
+// GetDice returns the value of Dice.
+func (s *LiveRollShown) GetDice() []LiveRollShownDiceItem {
+	return s.Dice
+}
+
+// GetModifier returns the value of Modifier.
+func (s *LiveRollShown) GetModifier() int32 {
+	return s.Modifier
+}
+
+// GetTotal returns the value of Total.
+func (s *LiveRollShown) GetTotal() int32 {
+	return s.Total
+}
+
+// SetRoller sets the value of Roller.
+func (s *LiveRollShown) SetRoller(val DisplayName) {
+	s.Roller = val
+}
+
+// SetPurpose sets the value of Purpose.
+func (s *LiveRollShown) SetPurpose(val string) {
+	s.Purpose = val
+}
+
+// SetDice sets the value of Dice.
+func (s *LiveRollShown) SetDice(val []LiveRollShownDiceItem) {
+	s.Dice = val
+}
+
+// SetModifier sets the value of Modifier.
+func (s *LiveRollShown) SetModifier(val int32) {
+	s.Modifier = val
+}
+
+// SetTotal sets the value of Total.
+func (s *LiveRollShown) SetTotal(val int32) {
+	s.Total = val
+}
+
+type LiveRollShownDiceItem struct {
+	Faces int32 `json:"faces"`
+	Value int32 `json:"value"`
+	Kept  bool  `json:"kept"`
+}
+
+// GetFaces returns the value of Faces.
+func (s *LiveRollShownDiceItem) GetFaces() int32 {
+	return s.Faces
+}
+
+// GetValue returns the value of Value.
+func (s *LiveRollShownDiceItem) GetValue() int32 {
+	return s.Value
+}
+
+// GetKept returns the value of Kept.
+func (s *LiveRollShownDiceItem) GetKept() bool {
+	return s.Kept
+}
+
+// SetFaces sets the value of Faces.
+func (s *LiveRollShownDiceItem) SetFaces(val int32) {
+	s.Faces = val
+}
+
+// SetValue sets the value of Value.
+func (s *LiveRollShownDiceItem) SetValue(val int32) {
+	s.Value = val
+}
+
+// SetKept sets the value of Kept.
+func (s *LiveRollShownDiceItem) SetKept(val bool) {
+	s.Kept = val
+}
+
 // One creature on the roster strip: hit points for the DM and the party's own, a rough health for
 // anyone else, its Effects, and whether it acts now. Hidden is set for the DM only.
 // Ref: #/components/schemas/LiveRosterEntry
@@ -24238,7 +24353,7 @@ func (s *LiveSurface) SetRoundsLeft(val OptInt32) {
 }
 
 // What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows
-// worldMap.
+// worldMap; the caption is a line the DM puts under the map.
 // Ref: #/components/schemas/LiveTable
 type LiveTable struct {
 	Camera   TableCamera `json:"camera"`
@@ -24250,6 +24365,7 @@ type LiveTable struct {
 	Body     OptString   `json:"body"`
 	WorldMap OptLiveMap  `json:"worldMap"`
 	Blackout bool        `json:"blackout"`
+	Caption  OptString   `json:"caption"`
 }
 
 // GetCamera returns the value of Camera.
@@ -24297,6 +24413,11 @@ func (s *LiveTable) GetBlackout() bool {
 	return s.Blackout
 }
 
+// GetCaption returns the value of Caption.
+func (s *LiveTable) GetCaption() OptString {
+	return s.Caption
+}
+
 // SetCamera sets the value of Camera.
 func (s *LiveTable) SetCamera(val TableCamera) {
 	s.Camera = val
@@ -24340,6 +24461,11 @@ func (s *LiveTable) SetWorldMap(val OptLiveMap) {
 // SetBlackout sets the value of Blackout.
 func (s *LiveTable) SetBlackout(val bool) {
 	s.Blackout = val
+}
+
+// SetCaption sets the value of Caption.
+func (s *LiveTable) SetCaption(val OptString) {
+	s.Caption = val
 }
 
 // A Token as a connection sees it.
@@ -24844,6 +24970,7 @@ type LiveUpdate struct {
 	Ping       OptHexCoord             `json:"ping"`
 	Initiative OptLiveInitiativeReveal `json:"initiative"`
 	Turn       OptLiveTurnStart        `json:"turn"`
+	Roll       OptLiveRollShown        `json:"roll"`
 }
 
 // GetKind returns the value of Kind.
@@ -24916,6 +25043,11 @@ func (s *LiveUpdate) GetTurn() OptLiveTurnStart {
 	return s.Turn
 }
 
+// GetRoll returns the value of Roll.
+func (s *LiveUpdate) GetRoll() OptLiveRollShown {
+	return s.Roll
+}
+
 // SetKind sets the value of Kind.
 func (s *LiveUpdate) SetKind(val LiveUpdateKind) {
 	s.Kind = val
@@ -24986,6 +25118,11 @@ func (s *LiveUpdate) SetTurn(val OptLiveTurnStart) {
 	s.Turn = val
 }
 
+// SetRoll sets the value of Roll.
+func (s *LiveUpdate) SetRoll(val OptLiveRollShown) {
+	s.Roll = val
+}
+
 type LiveUpdateKind string
 
 const (
@@ -24997,6 +25134,7 @@ const (
 	LiveUpdateKindAttackPreview LiveUpdateKind = "attack_preview"
 	LiveUpdateKindAreaPreview   LiveUpdateKind = "area_preview"
 	LiveUpdateKindPing          LiveUpdateKind = "ping"
+	LiveUpdateKindRoll          LiveUpdateKind = "roll"
 )
 
 // AllValues returns all LiveUpdateKind values.
@@ -25010,6 +25148,7 @@ func (LiveUpdateKind) AllValues() []LiveUpdateKind {
 		LiveUpdateKindAttackPreview,
 		LiveUpdateKindAreaPreview,
 		LiveUpdateKindPing,
+		LiveUpdateKindRoll,
 	}
 }
 
@@ -25031,6 +25170,8 @@ func (s LiveUpdateKind) MarshalText() ([]byte, error) {
 	case LiveUpdateKindAreaPreview:
 		return []byte(s), nil
 	case LiveUpdateKindPing:
+		return []byte(s), nil
+	case LiveUpdateKindRoll:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -25063,6 +25204,9 @@ func (s *LiveUpdateKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveUpdateKindPing:
 		*s = LiveUpdateKindPing
+		return nil
+	case LiveUpdateKindRoll:
+		*s = LiveUpdateKindRoll
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -32111,6 +32255,52 @@ func (o OptLiveRest) Get() (v LiveRest, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptLiveRest) Or(d LiveRest) LiveRest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptLiveRollShown returns new OptLiveRollShown with value set to v.
+func NewOptLiveRollShown(v LiveRollShown) OptLiveRollShown {
+	return OptLiveRollShown{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptLiveRollShown is optional LiveRollShown.
+type OptLiveRollShown struct {
+	Value LiveRollShown
+	Set   bool
+}
+
+// IsSet returns true if OptLiveRollShown was set.
+func (o OptLiveRollShown) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptLiveRollShown) Reset() {
+	var v LiveRollShown
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptLiveRollShown) SetTo(v LiveRollShown) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptLiveRollShown) Get() (v LiveRollShown, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptLiveRollShown) Or(d LiveRollShown) LiveRollShown {
 	if v, ok := o.Get(); ok {
 		return v
 	}

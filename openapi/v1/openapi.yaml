@@ -10225,7 +10225,8 @@ components:
       required: [nonce, kind, q, r, hidden]
       properties:
         nonce: { type: string, minLength: 1, maxLength: 64 }
-        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance] }
+        kind: { type: string, enum: [resync, place_token, move_token, set_token_hidden, remove_token, set_map, reveal_hexes, set_walls, place_light, remove_light, set_ambient, plan_walk, walk, start_combat, end_turn, spend, end_combat, preview_attack, attack, undo_damage, set_tactics, react, apply_effect, end_effect, resolve_manual, preview_area, cast_area, paint_surface, set_elevation, table_camera, table_scene, table_blackout, table_caption, ping, set_world, add_node, add_route, remove_node, remove_route, place_party, travel, add_zone, remove_zone, hold_zone, spring_zone, rest, encounter_check, schedule_check, roll_loot, move_item, move_coins, claim_loot, settle_loot, trade, open_shop, close_shop, buy, sell, haggle, spawn_encounter, adjust_hp, undo, propose_rest, agree_rest, spend_hit_die, finish_rest, interrupt_rest, take_action, unarmed, interact, swap_weapons, set_reaction, stabilise, revive, teleport, summon, command, set_visibility, place_object, remove_object, use_object, damage_object, find_object, unlock, disarm, jump, throw, sneak, explore, pass_turn, legendary_action, lair_action, legendary_resistance] }
+        caption: { type: string, maxLength: 400 }
         tokenId: { $ref: "#/components/schemas/Id" }
         label: { type: string, maxLength: 40 }
         tokenKind: { $ref: "#/components/schemas/TokenKind" }
@@ -11877,7 +11878,7 @@ components:
       enum: [local, world, handout, title]
     LiveTable:
       type: object
-      description: What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap.
+      description: What the Table Display shows. q, r and zoomPct steer the free camera; the world scene shows worldMap; the caption is a line the DM puts under the map.
       additionalProperties: false
       required: [camera, q, r, zoomPct, scene, blackout]
       properties:
@@ -11890,6 +11891,7 @@ components:
         body: { type: string, maxLength: 1000 }
         worldMap: { $ref: "#/components/schemas/LiveMap" }
         blackout: { type: boolean }
+        caption: { type: string, maxLength: 200 }
     LiveAreaPreview:
       type: object
       description: An area spell's hexes and every creature it would catch, allies flagged, sent only to whoever asked.
@@ -12174,7 +12176,7 @@ components:
       additionalProperties: false
       required: [kind, seq]
       properties:
-        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping] }
+        kind: { type: string, enum: [snapshot, view, rejected, ended, path, attack_preview, area_preview, ping, roll] }
         seq: { type: integer, format: int32, minimum: 0, maximum: 2147483647 }
         nonce: { type: string, maxLength: 64 }
         actionSeq: { type: integer, format: int32, minimum: 1, maximum: 2147483647 }
@@ -12191,6 +12193,28 @@ components:
         ping: { $ref: "#/components/schemas/HexCoord" }
         initiative: { $ref: "#/components/schemas/LiveInitiativeReveal" }
         turn: { $ref: "#/components/schemas/LiveTurnStart" }
+        roll: { $ref: "#/components/schemas/LiveRollShown" }
+    LiveRollShown:
+      type: object
+      description: The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
+      additionalProperties: false
+      required: [roller, purpose, dice, modifier, total]
+      properties:
+        roller: { $ref: "#/components/schemas/DisplayName" }
+        purpose: { type: string, maxLength: 120 }
+        dice:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            additionalProperties: false
+            required: [faces, value, kept]
+            properties:
+              faces: { type: integer, format: int32, minimum: 2, maximum: 1000 }
+              value: { type: integer, format: int32, minimum: 0, maximum: 1000 }
+              kept: { type: boolean }
+        modifier: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        total: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
     LiveInitiativeReveal:
       type: object
       description: Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.

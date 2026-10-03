@@ -43,8 +43,7 @@ func TestDownedStabilisedAndRevived(t *testing.T) {
 	tb.roll(combatant(d.View, "Goblin"), w.dm, 10)
 	settle := func() *live.View {
 		t.Helper()
-		drain(tb.dm)
-		drain(tb.player)
+		barrier(t, w, tb)
 		return look(t, w, tb.dm)
 	}
 	say := func(sub *live.Subscriber, cmd live.Command) *live.View {

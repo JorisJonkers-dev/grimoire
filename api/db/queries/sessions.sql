@@ -266,13 +266,14 @@ DELETE FROM campaign.map_elevations WHERE map_id = @map_id AND q = @q AND r = @r
 SELECT high_ground FROM campaign.campaigns WHERE id = $1;
 
 -- name: SessionTable :one
-SELECT camera, q, r, zoom_pct, scene, title, body, map_id, blackout FROM play.table_displays WHERE session_id = $1;
+SELECT camera, q, r, zoom_pct, scene, title, body, map_id, blackout, caption FROM play.table_displays WHERE session_id = $1;
 
 -- name: SaveTable :exec
-INSERT INTO play.table_displays (session_id, camera, q, r, zoom_pct, scene, title, body, map_id, blackout)
-VALUES (@session_id, @camera, @q, @r, @zoom_pct, @scene, @title, @body, sqlc.narg(map_id), @blackout)
+INSERT INTO play.table_displays (session_id, camera, q, r, zoom_pct, scene, title, body, map_id, blackout, caption)
+VALUES (@session_id, @camera, @q, @r, @zoom_pct, @scene, @title, @body, sqlc.narg(map_id), @blackout, @caption)
 ON CONFLICT (session_id) DO UPDATE SET camera = excluded.camera, q = excluded.q, r = excluded.r, zoom_pct = excluded.zoom_pct,
-    scene = excluded.scene, title = excluded.title, body = excluded.body, map_id = excluded.map_id, blackout = excluded.blackout;
+    scene = excluded.scene, title = excluded.title, body = excluded.body, map_id = excluded.map_id, blackout = excluded.blackout,
+    caption = excluded.caption;
 
 -- name: MonsterAmbushStats :many
 SELECT kind, name, value FROM compendium.monster_stats

@@ -33,17 +33,6 @@ func lastRoll(t *testing.T, w world, purpose string) domain.Roll {
 	return roll
 }
 
-// drain empties a subscriber's queue of updates already sent.
-func drain(sub *live.Subscriber) {
-	for {
-		select {
-		case <-sub.Out:
-		case <-time.After(50 * time.Millisecond):
-			return
-		}
-	}
-}
-
 func qOf(t *testing.T, v *live.View, label string) int {
 	t.Helper()
 	return token(v, label).Q
@@ -208,8 +197,7 @@ func TestTheActionsOfATurn(t *testing.T) {
 		t.Fatalf("leaving the invisible archer's reach offers it an opportunity attack the party cannot see = %+v %+v", d.View.Combat, p.View.Combat)
 	}
 	tb.dmSays(live.Command{Kind: live.CmdReact, Use: false})
-	drain(tb.dm)
-	drain(tb.player)
+	barrier(t, w, tb)
 	p = tb.playerSays(live.Command{Kind: live.CmdUnarmed, TokenID: ids["Aria"], TargetID: ids["Goblin"], Option: "shove_prone"})
 	if effect(token(p.View, "Goblin"), "Prone") == nil {
 		t.Fatalf("a paralysed goblin fails its save unrolled and falls = %+v", token(p.View, "Goblin").Effects)

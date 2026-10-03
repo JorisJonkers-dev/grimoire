@@ -70,8 +70,7 @@ func TestEveryWeaponMastery(t *testing.T) {
 			faces[i] = face
 		}
 		tb.fill(rollID, who, faces...)
-		drain(tb.dm)
-		drain(tb.player)
+		barrier(t, w, tb)
 	}
 	strike := func(no int, target string, hit bool, extra live.Command) {
 		t.Helper()

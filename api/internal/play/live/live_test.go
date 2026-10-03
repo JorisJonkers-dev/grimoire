@@ -97,7 +97,19 @@ func (w world) picture(t *testing.T, name, kind string) domain.Map {
 	return m
 }
 
+// next is the next Update a subscriber is sent, past any roll shown on the way: a shared roll changes
+// nothing, like a ping, and most tests are not about it.
 func next(t *testing.T, sub *live.Subscriber) live.Update {
+	t.Helper()
+	for {
+		if u := frame(t, sub); u.Kind != live.UpdRoll {
+			return u
+		}
+	}
+}
+
+// frame is the very next Update a subscriber is sent, whatever it is.
+func frame(t *testing.T, sub *live.Subscriber) live.Update {
 	t.Helper()
 	select {
 	case u, ok := <-sub.Out:

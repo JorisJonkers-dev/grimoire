@@ -809,6 +809,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
             @camera="(camera, zoomPct) => live?.send({ kind: 'table_camera', camera, zoomPct, q: view?.table?.q ?? 0, r: view?.table?.r ?? 0 })"
             @scene="(s) => live?.send({ kind: 'table_scene', ...s })"
             @blackout="(on) => live?.send({ kind: 'table_blackout', on })"
+            @caption="(text) => live?.send({ kind: 'table_caption', caption: text })"
           />
           <GButton variant="danger" data-testid="end-session" @click="endSession()">End session</GButton>
         </section>

@@ -342,6 +342,14 @@
       "on": true
     },
     {
+      "nonce": "n99",
+      "kind": "table_caption",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "caption": "The gate creaks open."
+    },
+    {
       "nonce": "n37",
       "kind": "ping",
       "q": 1,
@@ -975,7 +983,8 @@
             "originY": 40,
             "imageVersion": 2
           },
-          "blackout": false
+          "blackout": false,
+          "caption": "The gate creaks open."
         },
         "world": {
           "map": {
@@ -1432,7 +1441,8 @@
             "originY": 40,
             "imageVersion": 2
           },
-          "blackout": false
+          "blackout": false,
+          "caption": "The gate creaks open."
         },
         "world": {
           "map": {
@@ -1784,6 +1794,28 @@
       }
     },
     {
+      "kind": "roll",
+      "seq": 7,
+      "roll": {
+        "roller": "Aria",
+        "purpose": "Athletics",
+        "dice": [
+          {
+            "faces": 20,
+            "value": 14,
+            "kept": true
+          },
+          {
+            "faces": 20,
+            "value": 3,
+            "kept": false
+          }
+        ],
+        "modifier": 3,
+        "total": 17
+      }
+    },
+    {
       "kind": "view",
       "seq": 7,
       "nonce": "n14",
@@ -1997,7 +2029,8 @@
             "originY": 40,
             "imageVersion": 2
           },
-          "blackout": false
+          "blackout": false,
+          "caption": "The gate creaks open."
         },
         "world": {
           "map": {
@@ -2428,7 +2461,8 @@
               "originY": 40,
               "imageVersion": 2
             },
-            "blackout": false
+            "blackout": false,
+            "caption": "The gate creaks open."
           },
           "world": {
             "map": {

@@ -31652,6 +31652,12 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 		s.Kind.Encode(e)
 	}
 	{
+		if s.Caption.Set {
+			e.FieldStart("caption")
+			s.Caption.Encode(e)
+		}
+	}
+	{
 		if s.TokenId.Set {
 			e.FieldStart("tokenId")
 			s.TokenId.Encode(e)
@@ -32255,105 +32261,106 @@ func (s *LiveCommand) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfLiveCommand = [98]string{
+var jsonFieldsNameOfLiveCommand = [99]string{
 	0:  "nonce",
 	1:  "kind",
-	2:  "tokenId",
-	3:  "label",
-	4:  "tokenKind",
-	5:  "q",
-	6:  "r",
-	7:  "hidden",
-	8:  "darkvisionFt",
-	9:  "mapId",
-	10: "hexes",
-	11: "on",
-	12: "lightId",
-	13: "brightFt",
-	14: "dimFt",
-	15: "ambient",
-	16: "controllerId",
-	17: "combatants",
-	18: "combatantId",
-	19: "resource",
-	20: "monsterSlug",
-	21: "characterId",
-	22: "targetId",
-	23: "attackNo",
-	24: "tactics",
-	25: "use",
-	26: "shield",
-	27: "effect",
-	28: "effectName",
-	29: "sourceId",
-	30: "rounds",
-	31: "slot",
-	32: "effectMode",
-	33: "tempHp",
-	34: "qualities",
-	35: "seenThrough",
-	36: "disguise",
-	37: "objectId",
-	38: "objectKind",
-	39: "objectName",
-	40: "armorClass",
-	41: "hpMax",
-	42: "secret",
-	43: "radiusFt",
-	44: "links",
-	45: "detectDc",
-	46: "disarmDc",
-	47: "triggerFt",
-	48: "lockDc",
-	49: "key",
-	50: "method",
-	51: "saveAbility",
-	52: "saveDc",
-	53: "effectId",
-	54: "manualId",
-	55: "surface",
-	56: "elevationFt",
-	57: "camera",
-	58: "zoomPct",
-	59: "scene",
-	60: "title",
-	61: "body",
-	62: "nodeId",
-	63: "toNodeId",
-	64: "routeId",
-	65: "distanceMi",
-	66: "pace",
-	67: "zoneId",
-	68: "radiusHexes",
-	69: "dmOnly",
-	70: "rest",
-	71: "tableId",
-	72: "mode",
-	73: "entry",
-	74: "due",
-	75: "lootTableId",
-	76: "fromId",
-	77: "buys",
-	78: "sells",
-	79: "instanceId",
-	80: "action",
-	81: "legend",
-	82: "detail",
-	83: "trigger",
-	84: "option",
-	85: "offHand",
-	86: "cleave",
-	87: "reactionKind",
-	88: "reactionMode",
-	89: "condition",
-	90: "toId",
-	91: "itemSlug",
-	92: "coin",
-	93: "count",
-	94: "shopId",
-	95: "monsters",
-	96: "hpDelta",
-	97: "seq",
+	2:  "caption",
+	3:  "tokenId",
+	4:  "label",
+	5:  "tokenKind",
+	6:  "q",
+	7:  "r",
+	8:  "hidden",
+	9:  "darkvisionFt",
+	10: "mapId",
+	11: "hexes",
+	12: "on",
+	13: "lightId",
+	14: "brightFt",
+	15: "dimFt",
+	16: "ambient",
+	17: "controllerId",
+	18: "combatants",
+	19: "combatantId",
+	20: "resource",
+	21: "monsterSlug",
+	22: "characterId",
+	23: "targetId",
+	24: "attackNo",
+	25: "tactics",
+	26: "use",
+	27: "shield",
+	28: "effect",
+	29: "effectName",
+	30: "sourceId",
+	31: "rounds",
+	32: "slot",
+	33: "effectMode",
+	34: "tempHp",
+	35: "qualities",
+	36: "seenThrough",
+	37: "disguise",
+	38: "objectId",
+	39: "objectKind",
+	40: "objectName",
+	41: "armorClass",
+	42: "hpMax",
+	43: "secret",
+	44: "radiusFt",
+	45: "links",
+	46: "detectDc",
+	47: "disarmDc",
+	48: "triggerFt",
+	49: "lockDc",
+	50: "key",
+	51: "method",
+	52: "saveAbility",
+	53: "saveDc",
+	54: "effectId",
+	55: "manualId",
+	56: "surface",
+	57: "elevationFt",
+	58: "camera",
+	59: "zoomPct",
+	60: "scene",
+	61: "title",
+	62: "body",
+	63: "nodeId",
+	64: "toNodeId",
+	65: "routeId",
+	66: "distanceMi",
+	67: "pace",
+	68: "zoneId",
+	69: "radiusHexes",
+	70: "dmOnly",
+	71: "rest",
+	72: "tableId",
+	73: "mode",
+	74: "entry",
+	75: "due",
+	76: "lootTableId",
+	77: "fromId",
+	78: "buys",
+	79: "sells",
+	80: "instanceId",
+	81: "action",
+	82: "legend",
+	83: "detail",
+	84: "trigger",
+	85: "option",
+	86: "offHand",
+	87: "cleave",
+	88: "reactionKind",
+	89: "reactionMode",
+	90: "condition",
+	91: "toId",
+	92: "itemSlug",
+	93: "coin",
+	94: "count",
+	95: "shopId",
+	96: "monsters",
+	97: "hpDelta",
+	98: "seq",
 }
 
 // Decode decodes LiveCommand from json.
@@ -32387,6 +32394,16 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"kind\"")
 			}
+		case "caption":
+			if err := func() error {
+				s.Caption.Reset()
+				if err := s.Caption.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"caption\"")
+			}
 		case "tokenId":
 			if err := func() error {
 				s.TokenId.Reset()
@@ -32418,7 +32435,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"tokenKind\"")
 			}
 		case "q":
-			requiredBitSet[0] |= 1 << 5
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				v, err := d.Int32()
 				s.Q = int32(v)
@@ -32430,7 +32447,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"q\"")
 			}
 		case "r":
-			requiredBitSet[0] |= 1 << 6
+			requiredBitSet[0] |= 1 << 7
 			if err := func() error {
 				v, err := d.Int32()
 				s.R = int32(v)
@@ -32442,7 +32459,7 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"r\"")
 			}
 		case "hidden":
-			requiredBitSet[0] |= 1 << 7
+			requiredBitSet[1] |= 1 << 0
 			if err := func() error {
 				v, err := d.Bool()
 				s.Hidden = bool(v)
@@ -33419,8 +33436,8 @@ func (s *LiveCommand) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [13]uint8{
-		0b11100011,
-		0b00000000,
+		0b11000011,
+		0b00000001,
 		0b00000000,
 		0b00000000,
 		0b00000000,
@@ -33695,6 +33712,8 @@ func (s *LiveCommandKind) Decode(d *jx.Decoder) error {
 		*s = LiveCommandKindTableScene
 	case LiveCommandKindTableBlackout:
 		*s = LiveCommandKindTableBlackout
+	case LiveCommandKindTableCaption:
+		*s = LiveCommandKindTableCaption
 	case LiveCommandKindPing:
 		*s = LiveCommandKindPing
 	case LiveCommandKindSetWorld:
@@ -39480,6 +39499,308 @@ func (s *LiveResterHitDie) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *LiveRollShown) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveRollShown) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("roller")
+		s.Roller.Encode(e)
+	}
+	{
+		e.FieldStart("purpose")
+		e.Str(s.Purpose)
+	}
+	{
+		e.FieldStart("dice")
+		e.ArrStart()
+		for _, elem := range s.Dice {
+			elem.Encode(e)
+		}
+		e.ArrEnd()
+	}
+	{
+		e.FieldStart("modifier")
+		e.Int32(s.Modifier)
+	}
+	{
+		e.FieldStart("total")
+		e.Int32(s.Total)
+	}
+}
+
+var jsonFieldsNameOfLiveRollShown = [5]string{
+	0: "roller",
+	1: "purpose",
+	2: "dice",
+	3: "modifier",
+	4: "total",
+}
+
+// Decode decodes LiveRollShown from json.
+func (s *LiveRollShown) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveRollShown to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "roller":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				if err := s.Roller.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"roller\"")
+			}
+		case "purpose":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Purpose = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"purpose\"")
+			}
+		case "dice":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				s.Dice = make([]LiveRollShownDiceItem, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem LiveRollShownDiceItem
+					if err := elem.Decode(d); err != nil {
+						return err
+					}
+					s.Dice = append(s.Dice, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"dice\"")
+			}
+		case "modifier":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int32()
+				s.Modifier = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"modifier\"")
+			}
+		case "total":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Int32()
+				s.Total = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"total\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveRollShown")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00011111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveRollShown) {
+					name = jsonFieldsNameOfLiveRollShown[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveRollShown) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveRollShown) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
+func (s *LiveRollShownDiceItem) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *LiveRollShownDiceItem) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("faces")
+		e.Int32(s.Faces)
+	}
+	{
+		e.FieldStart("value")
+		e.Int32(s.Value)
+	}
+	{
+		e.FieldStart("kept")
+		e.Bool(s.Kept)
+	}
+}
+
+var jsonFieldsNameOfLiveRollShownDiceItem = [3]string{
+	0: "faces",
+	1: "value",
+	2: "kept",
+}
+
+// Decode decodes LiveRollShownDiceItem from json.
+func (s *LiveRollShownDiceItem) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode LiveRollShownDiceItem to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "faces":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Int32()
+				s.Faces = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"faces\"")
+			}
+		case "value":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Int32()
+				s.Value = int32(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"value\"")
+			}
+		case "kept":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Bool()
+				s.Kept = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"kept\"")
+			}
+		default:
+			return errors.Errorf("unexpected field %q", k)
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode LiveRollShownDiceItem")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00000111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfLiveRollShownDiceItem) {
+					name = jsonFieldsNameOfLiveRollShownDiceItem[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *LiveRollShownDiceItem) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *LiveRollShownDiceItem) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *LiveRosterEntry) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -40840,9 +41161,15 @@ func (s *LiveTable) encodeFields(e *jx.Encoder) {
 		e.FieldStart("blackout")
 		e.Bool(s.Blackout)
 	}
+	{
+		if s.Caption.Set {
+			e.FieldStart("caption")
+			s.Caption.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveTable = [9]string{
+var jsonFieldsNameOfLiveTable = [10]string{
 	0: "camera",
 	1: "q",
 	2: "r",
@@ -40852,6 +41179,7 @@ var jsonFieldsNameOfLiveTable = [9]string{
 	6: "body",
 	7: "worldMap",
 	8: "blackout",
+	9: "caption",
 }
 
 // Decode decodes LiveTable from json.
@@ -40960,6 +41288,16 @@ func (s *LiveTable) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"blackout\"")
+			}
+		case "caption":
+			if err := func() error {
+				s.Caption.Reset()
+				if err := s.Caption.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"caption\"")
 			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
@@ -42208,9 +42546,15 @@ func (s *LiveUpdate) encodeFields(e *jx.Encoder) {
 			s.Turn.Encode(e)
 		}
 	}
+	{
+		if s.Roll.Set {
+			e.FieldStart("roll")
+			s.Roll.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfLiveUpdate = [14]string{
+var jsonFieldsNameOfLiveUpdate = [15]string{
 	0:  "kind",
 	1:  "seq",
 	2:  "nonce",
@@ -42225,6 +42569,7 @@ var jsonFieldsNameOfLiveUpdate = [14]string{
 	11: "ping",
 	12: "initiative",
 	13: "turn",
+	14: "roll",
 }
 
 // Decode decodes LiveUpdate from json.
@@ -42385,6 +42730,16 @@ func (s *LiveUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"turn\"")
 			}
+		case "roll":
+			if err := func() error {
+				s.Roll.Reset()
+				if err := s.Roll.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"roll\"")
+			}
 		default:
 			return errors.Errorf("unexpected field %q", k)
 		}
@@ -42474,6 +42829,8 @@ func (s *LiveUpdateKind) Decode(d *jx.Decoder) error {
 		*s = LiveUpdateKindAreaPreview
 	case LiveUpdateKindPing:
 		*s = LiveUpdateKindPing
+	case LiveUpdateKindRoll:
+		*s = LiveUpdateKindRoll
 	default:
 		*s = LiveUpdateKind(v)
 	}
@@ -53753,6 +54110,39 @@ func (s OptLiveRest) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptLiveRest) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes LiveRollShown as json.
+func (o OptLiveRollShown) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	o.Value.Encode(e)
+}
+
+// Decode decodes LiveRollShown from json.
+func (o *OptLiveRollShown) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptLiveRollShown to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptLiveRollShown) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptLiveRollShown) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

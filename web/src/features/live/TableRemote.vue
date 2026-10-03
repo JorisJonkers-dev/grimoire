@@ -8,7 +8,18 @@ const emit = defineEmits<{
   camera: [camera: TableCamera, zoomPct: number]
   scene: [scene: { scene: TableScene; title?: string; body?: string; mapId?: string }]
   blackout: [on: boolean]
+  caption: [text: string]
 }>()
+// The caption under the map: what is on the table now, until the DM types another.
+const caption = ref(props.table?.caption ?? '')
+watch(
+  () => props.table?.caption,
+  (c) => { caption.value = c ?? '' },
+)
+function clearCaption() {
+  caption.value = ''
+  emit('caption', '')
+}
 const zoom = ref(props.table?.zoomPct ?? 100)
 watch(
   () => props.table?.zoomPct,
@@ -73,6 +84,11 @@ function show() {
         </select>
       </label>
       <GButton type="submit" data-testid="show-scene">Show on the table</GButton>
+    </form>
+    <form class="row" data-testid="table-caption-form" @submit.prevent="emit('caption', caption)">
+      <label class="g-field grow"><span>Caption</span><input v-model="caption" maxlength="200" placeholder="The gate creaks open." data-testid="table-caption-text" /></label>
+      <GButton type="submit" data-testid="show-caption">Put it on the table</GButton>
+      <GButton data-testid="clear-caption" @click="clearCaption">Clear</GButton>
     </form>
     <GButton :variant="table?.blackout ? 'primary' : 'danger'" data-testid="blackout-toggle" @click="emit('blackout', !table?.blackout)">
       {{ table?.blackout ? 'Lights back on' : 'Blackout' }}

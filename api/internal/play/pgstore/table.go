@@ -21,7 +21,7 @@ func (s *Store) saveTable(ctx context.Context, sid uuid.UUID, t *domain.TableDis
 	}
 	p := queries.SaveTableParams{
 		SessionID: sid, Camera: t.Camera, Q: int32(t.Q), R: int32(t.R), ZoomPct: int32(t.ZoomPct), Scene: t.Scene, Title: t.Title, Body: t.Body,
-		Blackout: t.Blackout,
+		Blackout: t.Blackout, Caption: t.Caption,
 	}
 	if t.MapID != nil {
 		p.MapID = pgtype.UUID{Bytes: *t.MapID, Valid: true}
@@ -39,7 +39,7 @@ func (s *Store) LoadTable(ctx context.Context, id domain.SessionID) (domain.Tabl
 		return domain.TableDisplay{}, err
 	}
 	t := domain.TableDisplay{
-		Camera: r.Camera, Q: int(r.Q), R: int(r.R), ZoomPct: int(r.ZoomPct), Scene: r.Scene, Title: r.Title, Body: r.Body, Blackout: r.Blackout,
+		Camera: r.Camera, Q: int(r.Q), R: int(r.R), ZoomPct: int(r.ZoomPct), Scene: r.Scene, Title: r.Title, Body: r.Body, Blackout: r.Blackout, Caption: r.Caption,
 	}
 	if r.MapID.Valid {
 		id := domain.MapID(r.MapID.Bytes)

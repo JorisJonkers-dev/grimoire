@@ -59,6 +59,7 @@ const (
 	CmdTableCamera    = "table_camera"
 	CmdTableScene     = "table_scene"
 	CmdTableBlackout  = "table_blackout"
+	CmdTableCaption   = "table_caption"
 	CmdPing           = "ping"
 	CmdSetWorld       = "set_world"
 	CmdAddNode        = "add_node"
@@ -153,6 +154,7 @@ type Command struct {
 	MapID        string           `json:"mapId,omitempty"`
 	Hexes        []Hex            `json:"hexes,omitempty"`
 	On           bool             `json:"on,omitempty"`
+	Caption      string           `json:"caption,omitempty"`
 	LightID      string           `json:"lightId,omitempty"`
 	BrightFt     int              `json:"brightFt,omitempty"`
 	DimFt        int              `json:"dimFt,omitempty"`
@@ -269,6 +271,7 @@ const (
 	UpdAttackPreview = "attack_preview"
 	UpdAreaPreview   = "area_preview"
 	UpdPing          = "ping"
+	UpdRoll          = "roll"
 	UpdEnded         = "ended"
 )
 
@@ -796,6 +799,24 @@ type Update struct {
 	// both leave out what the audience may not see.
 	Initiative *InitiativeReveal `json:"initiative,omitempty"`
 	Turn       *TurnStart        `json:"turn,omitempty"`
+	// Roll is the last roll a player made, sent as it resolves and again with a snapshot.
+	Roll *RollShown `json:"roll,omitempty"`
+}
+
+// RollShown is a resolved roll as every screen may show it: who rolled, for what, each die and the total.
+type RollShown struct {
+	Roller   string    `json:"roller"`
+	Purpose  string    `json:"purpose"`
+	Dice     []RollDie `json:"dice"`
+	Modifier int       `json:"modifier"`
+	Total    int       `json:"total"`
+}
+
+// RollDie is one die of a RollShown; a die that was not kept is dropped by advantage or disadvantage.
+type RollDie struct {
+	Faces int  `json:"faces"`
+	Value int  `json:"value"`
+	Kept  bool `json:"kept"`
 }
 
 // InitiativeReveal is every Combatant's initiative in turn order, for screens to show as the fight begins.
@@ -828,6 +849,7 @@ type TableView struct {
 	Body     string   `json:"body,omitempty"`
 	WorldMap *MapView `json:"worldMap,omitempty"`
 	Blackout bool     `json:"blackout"`
+	Caption  string   `json:"caption,omitempty"`
 }
 
 // AreaPreview is an area spell's template and who it would catch, allies flagged, sent only to whoever asked.

@@ -58,7 +58,7 @@ func samples() contract {
 		CasterID: token.ID, Name: "Fireball", Hexes: []live.Hex{{Q: 3, R: 0}}, DamageRollID: "0190c7a8-0000-7000-8000-000000000020",
 		Saves: []live.AreaSave{{TokenID: token.ID, RollID: "0190c7a8-0000-7000-8000-000000000021"}},
 	}
-	view.Table = &live.TableView{Camera: "free", Q: 2, R: -1, ZoomPct: 150, Scene: "world", WorldMap: view.Map}
+	view.Table = &live.TableView{Camera: "free", Q: 2, R: -1, ZoomPct: 150, Scene: "world", WorldMap: view.Map, Caption: "The gate creaks open."}
 	view.World = &live.WorldView{
 		Map: *view.Map, Revealed: []live.Hex{{Q: 0, R: 0}},
 		Nodes: []live.NodeView{{ID: "0190c7a8-0000-7000-8000-000000000022", Name: "Oakford", Q: 0, R: 0}, {ID: "0190c7a8-0000-7000-8000-000000000023", Name: "Mill", Q: 5, R: 0}},
@@ -154,6 +154,7 @@ func samples() contract {
 			{Nonce: "n34", Kind: live.CmdTableCamera, Camera: "free", Q: 2, R: -1, ZoomPct: 150},
 			{Nonce: "n35", Kind: live.CmdTableScene, Scene: "world", MapID: id, Title: "Greyfen", Body: "Mists."},
 			{Nonce: "n36", Kind: live.CmdTableBlackout, On: true},
+			{Nonce: "n99", Kind: live.CmdTableCaption, Caption: "The gate creaks open."},
 			{Nonce: "n37", Kind: live.CmdPing, Q: 1, R: 0},
 			{Nonce: "n38", Kind: live.CmdSetWorld, MapID: id},
 			{Nonce: "n39", Kind: live.CmdAddNode, Label: "Oakford", Q: 0, R: 0},
@@ -221,6 +222,9 @@ func samples() contract {
 				Initiative: &live.InitiativeReveal{Order: []live.InitiativeRoll{{TokenID: token.ID, Label: "Goblin", Kind: "enemy", Initiative: 17}}},
 				Turn:       &live.TurnStart{Round: 1, TokenIDs: []string{token.ID}},
 			},
+			{Kind: live.UpdRoll, Seq: 7, Roll: &live.RollShown{
+				Roller: "Aria", Purpose: "Athletics", Dice: []live.RollDie{{Faces: 20, Value: 14, Kept: true}, {Faces: 20, Value: 3, Kept: false}}, Modifier: 3, Total: 17,
+			}},
 			{Kind: live.UpdView, Seq: 7, Nonce: "n14", View: view, Steps: []live.View{*view}},
 			{Kind: live.UpdAttackPreview, Seq: 7, Nonce: "n21", Preview: &live.AttackPreview{
 				TokenID: token.ID, TargetID: "0190c7a8-0000-7000-8000-000000000013", AttackNo: 1, Name: "Shortbow", HitChance: 30, Mode: "disadvantage",
