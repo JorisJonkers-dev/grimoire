@@ -88,6 +88,12 @@ SELECT c.character_id, c.id, c.campaign_id, cp.name AS campaign_name, c.level, c
 FROM campaign.characters c JOIN campaign.campaigns cp ON cp.id = c.campaign_id
 WHERE c.character_id = ANY(@ids::uuid[]) ORDER BY c.updated_at DESC, c.id;
 
+-- name: AccountCharacterActionBars :one
+SELECT action_bars FROM campaign.account_characters WHERE id = @id;
+
+-- name: SetAccountCharacterActionBars :exec
+UPDATE campaign.account_characters SET action_bars = @action_bars, updated_at = @now WHERE id = @id;
+
 -- name: UpdateAccountCharacter :exec
 UPDATE campaign.account_characters SET name = @name, backstory = @backstory, updated_at = @now WHERE id = @id;
 

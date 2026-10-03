@@ -27,6 +27,8 @@ type CharacterService interface {
 	Mine(ctx context.Context, c caller.Caller) ([]domain.OwnedCharacter, error)
 	Owned(ctx context.Context, c caller.Caller, id domain.OwnedID) (domain.OwnedCharacter, error)
 	UpdateOwned(ctx context.Context, c caller.Caller, id domain.OwnedID, name, backstory string) (domain.OwnedCharacter, error)
+	ActionBars(ctx context.Context, c caller.Caller, id domain.OwnedID) (domain.ActionBars, error)
+	SetActionBars(ctx context.Context, c caller.Caller, id domain.OwnedID, bars domain.ActionBars) (domain.ActionBars, error)
 	Join(ctx context.Context, c caller.Caller, id domain.OwnedID, campaign domain.CampaignID) (app.Sheet, error)
 	Draft(ctx context.Context, c caller.Caller, id domain.CampaignID) (domain.Draft, error)
 	SaveDraft(ctx context.Context, c caller.Caller, id domain.CampaignID, step int, build []byte) (domain.Draft, error)

@@ -1446,6 +1446,150 @@ func (s *AccountSetup) SetPassword(val string) {
 	s.Password = val
 }
 
+type ActionBarTile string
+
+// How a player laid out a Character's action bars. Arranged is false until a layout is first saved;
+// until then live play shows every action in its usual order.
+// Ref: #/components/schemas/ActionBars
+type ActionBars struct {
+	Bars  [][]ActionBarTile `json:"bars"`
+	Quick []ActionBarTile   `json:"quick"`
+	// Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
+	Stowed   []ActionBarTile `json:"stowed"`
+	Arranged bool            `json:"arranged"`
+}
+
+// GetBars returns the value of Bars.
+func (s *ActionBars) GetBars() [][]ActionBarTile {
+	return s.Bars
+}
+
+// GetQuick returns the value of Quick.
+func (s *ActionBars) GetQuick() []ActionBarTile {
+	return s.Quick
+}
+
+// GetStowed returns the value of Stowed.
+func (s *ActionBars) GetStowed() []ActionBarTile {
+	return s.Stowed
+}
+
+// GetArranged returns the value of Arranged.
+func (s *ActionBars) GetArranged() bool {
+	return s.Arranged
+}
+
+// SetBars sets the value of Bars.
+func (s *ActionBars) SetBars(val [][]ActionBarTile) {
+	s.Bars = val
+}
+
+// SetQuick sets the value of Quick.
+func (s *ActionBars) SetQuick(val []ActionBarTile) {
+	s.Quick = val
+}
+
+// SetStowed sets the value of Stowed.
+func (s *ActionBars) SetStowed(val []ActionBarTile) {
+	s.Stowed = val
+}
+
+// SetArranged sets the value of Arranged.
+func (s *ActionBars) SetArranged(val bool) {
+	s.Arranged = val
+}
+
+// A layout to save. The first bar answers to the keys 1 to 0. No tile may be on the bars or stowed
+// twice, or on the quick bar twice.
+// Ref: #/components/schemas/ActionBarsChange
+type ActionBarsChange struct {
+	Bars  [][]ActionBarTile `json:"bars"`
+	Quick []ActionBarTile   `json:"quick"`
+	// Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
+	Stowed []ActionBarTile `json:"stowed"`
+}
+
+// GetBars returns the value of Bars.
+func (s *ActionBarsChange) GetBars() [][]ActionBarTile {
+	return s.Bars
+}
+
+// GetQuick returns the value of Quick.
+func (s *ActionBarsChange) GetQuick() []ActionBarTile {
+	return s.Quick
+}
+
+// GetStowed returns the value of Stowed.
+func (s *ActionBarsChange) GetStowed() []ActionBarTile {
+	return s.Stowed
+}
+
+// SetBars sets the value of Bars.
+func (s *ActionBarsChange) SetBars(val [][]ActionBarTile) {
+	s.Bars = val
+}
+
+// SetQuick sets the value of Quick.
+func (s *ActionBarsChange) SetQuick(val []ActionBarTile) {
+	s.Quick = val
+}
+
+// SetStowed sets the value of Stowed.
+func (s *ActionBarsChange) SetStowed(val []ActionBarTile) {
+	s.Stowed = val
+}
+
+// ActionBarsHeaders wraps ActionBars with response headers.
+type ActionBarsHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           ActionBars
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *ActionBarsHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *ActionBarsHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *ActionBarsHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *ActionBarsHeaders) GetResponse() ActionBars {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *ActionBarsHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *ActionBarsHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *ActionBarsHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *ActionBarsHeaders) SetResponse(val ActionBars) {
+	s.Response = val
+}
+
+func (*ActionBarsHeaders) getActionBarsRes() {}
+func (*ActionBarsHeaders) setActionBarsRes() {}
+
 // One entry of the Action Log.
 // Ref: #/components/schemas/ActionEntry
 type ActionEntry struct {
@@ -24209,6 +24353,7 @@ type LiveToken struct {
 	R            int32     `json:"r"`
 	Hidden       bool      `json:"hidden"`
 	ControllerId OptID     `json:"controllerId"`
+	CharacterId  OptID     `json:"characterId"`
 	Ac           OptInt32  `json:"ac"`
 	Hp           OptInt32  `json:"hp"`
 	HpMax        OptInt32  `json:"hpMax"`
@@ -24268,6 +24413,11 @@ func (s *LiveToken) GetHidden() bool {
 // GetControllerId returns the value of ControllerId.
 func (s *LiveToken) GetControllerId() OptID {
 	return s.ControllerId
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveToken) GetCharacterId() OptID {
+	return s.CharacterId
 }
 
 // GetAc returns the value of Ac.
@@ -24378,6 +24528,11 @@ func (s *LiveToken) SetHidden(val bool) {
 // SetControllerId sets the value of ControllerId.
 func (s *LiveToken) SetControllerId(val OptID) {
 	s.ControllerId = val
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveToken) SetCharacterId(val OptID) {
+	s.CharacterId = val
 }
 
 // SetAc sets the value of Ac.
@@ -34326,6 +34481,7 @@ func (*ProblemStatusCodeWithHeaders) exportLibraryRes()                 {}
 func (*ProblemStatusCodeWithHeaders) finishOidcRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getAccountHistoryRes()             {}
 func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
+func (*ProblemStatusCodeWithHeaders) getActionBarsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getAdminAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
@@ -34477,6 +34633,7 @@ func (*ProblemStatusCodeWithHeaders) sendLiveCommandRes()               {}
 func (*ProblemStatusCodeWithHeaders) sendMessageRes()                   {}
 func (*ProblemStatusCodeWithHeaders) setAccountDisabledRes()            {}
 func (*ProblemStatusCodeWithHeaders) setAccountPasswordRes()            {}
+func (*ProblemStatusCodeWithHeaders) setActionBarsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) setAdminRoleRes()                  {}
 func (*ProblemStatusCodeWithHeaders) setCampaignOverrideRes()           {}
 func (*ProblemStatusCodeWithHeaders) setDieRes()                        {}

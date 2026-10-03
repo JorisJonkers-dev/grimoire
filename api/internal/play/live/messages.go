@@ -290,6 +290,8 @@ type TokenView struct {
 	Hidden       bool   `json:"hidden"`
 	DarkvisionFt int    `json:"darkvisionFt"`
 	ControllerID string `json:"controllerId,omitempty"`
+	// CharacterID is the Campaign Character a party token was placed from.
+	CharacterID string `json:"characterId,omitempty"`
 	// AC, HP and attacks go to the DM, and to everyone for party tokens; others only show their health.
 	AC     *int   `json:"ac,omitempty"`
 	HP     *int   `json:"hp,omitempty"`
@@ -886,6 +888,9 @@ func tokenView(t domain.Token, a Audience) TokenView {
 	}
 	if t.Form != nil {
 		v.Form = t.Form.Name
+	}
+	if id, ok := characterOf(t); ok && t.Kind == domain.TokenParty {
+		v.CharacterID = id.String()
 	}
 	if a == AudienceDM {
 		v.Disguise = t.Disguise

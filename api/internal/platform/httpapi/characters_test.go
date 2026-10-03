@@ -136,6 +136,14 @@ func (b brokenCharacters) UpdateOwned(context.Context, caller.Caller, domain.Own
 	return domain.OwnedCharacter{}, b.err
 }
 
+func (b brokenCharacters) ActionBars(context.Context, caller.Caller, domain.OwnedID) (domain.ActionBars, error) {
+	return domain.ActionBars{}, b.err
+}
+
+func (b brokenCharacters) SetActionBars(context.Context, caller.Caller, domain.OwnedID, domain.ActionBars) (domain.ActionBars, error) {
+	return domain.ActionBars{}, b.err
+}
+
 func (b brokenCharacters) Join(context.Context, caller.Caller, domain.OwnedID, domain.CampaignID) (app.Sheet, error) {
 	return app.Sheet{}, b.err
 }
@@ -226,6 +234,8 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 		{http.MethodGet, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", ""},
 		{http.MethodPut, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003", `{"name":"X","backstory":""}`},
 		{http.MethodPost, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003/campaigns", `{"campaignId":"0190c7a8-0000-7000-8000-000000000001"}`},
+		{http.MethodGet, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003/action-bars", ""},
+		{http.MethodPut, "/api/v1/characters/0190c7a8-0000-7000-8000-000000000003/action-bars", `{"bars":[["action:dash"]],"quick":[],"stowed":[]}`},
 		{http.MethodGet, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
 		{http.MethodPut, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", `{"step":1,"build":{}}`},
 		{http.MethodDelete, "/api/v1/campaigns/0190c7a8-0000-7000-8000-000000000001/character-draft", ""},
@@ -272,6 +282,8 @@ func TestCharacterErrorsBecomeProblems(t *testing.T) {
 	add(h.GetMyCharacter(ctx, oas.GetMyCharacterParams{}))
 	add(h.UpdateMyCharacter(ctx, &oas.OwnedCharacterChange{}, oas.UpdateMyCharacterParams{}))
 	add(h.JoinCampaign(ctx, &oas.CharacterJoin{}, oas.JoinCampaignParams{}))
+	add(h.GetActionBars(ctx, oas.GetActionBarsParams{}))
+	add(h.SetActionBars(ctx, &oas.ActionBarsChange{}, oas.SetActionBarsParams{}))
 	add(h.GetCharacterDraft(ctx, oas.GetCharacterDraftParams{}))
 	add(h.SaveCharacterDraft(ctx, &oas.CharacterDraftSave{}, oas.SaveCharacterDraftParams{}))
 	add(h.DiscardCharacterDraft(ctx, oas.DiscardCharacterDraftParams{}))

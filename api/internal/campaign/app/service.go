@@ -73,6 +73,8 @@ type Repository interface {
 	OwnedCharacters(ctx context.Context, subject string) ([]domain.OwnedCharacter, error)
 	OwnedCharacter(ctx context.Context, id domain.OwnedID) (domain.OwnedCharacter, error)
 	UpdateOwnedCharacter(ctx context.Context, id domain.OwnedID, name, backstory string, now time.Time) error
+	ActionBars(ctx context.Context, id domain.OwnedID) (domain.ActionBars, error)
+	SetActionBars(ctx context.Context, id domain.OwnedID, bars domain.ActionBars, now time.Time) error
 	Draft(ctx context.Context, campaign domain.CampaignID, subject string) (domain.Draft, error)
 	SaveDraft(ctx context.Context, campaign domain.CampaignID, subject string, step int, build []byte, now time.Time) error
 	RollDraft(ctx context.Context, campaign domain.CampaignID, subject string, rolled []int, now time.Time) (bool, error)

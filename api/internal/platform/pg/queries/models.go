@@ -27,6 +27,7 @@ type CampaignAccountCharacter struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Appearance     string
+	ActionBars     []byte
 }
 
 type CampaignCampaign struct {

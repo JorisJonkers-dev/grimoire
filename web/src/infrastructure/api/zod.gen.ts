@@ -854,6 +854,30 @@ export const zOwnedCharacterList = z.object({
 });
 
 /**
+ * A tile on an action bar, named kind:name, such as attack:Longsword or action:dash.
+ */
+export const zActionBarTile = z.string().min(3).max(90);
+
+/**
+ * How a player laid out a Character's action bars. Arranged is false until a layout is first saved; until then live play shows every action in its usual order.
+ */
+export const zActionBars = z.object({
+    bars: z.array(z.array(zActionBarTile).max(10)).max(2),
+    quick: z.array(zActionBarTile).max(4),
+    stowed: z.array(zActionBarTile).max(100),
+    arranged: z.boolean()
+});
+
+/**
+ * A layout to save. The first bar answers to the keys 1 to 0. No tile may be on the bars or stowed twice, or on the quick bar twice.
+ */
+export const zActionBarsChange = z.object({
+    bars: z.array(z.array(zActionBarTile).max(10)).max(2),
+    quick: z.array(zActionBarTile).max(4),
+    stowed: z.array(zActionBarTile).max(100)
+});
+
+/**
  * A Character's new name and Backstory.
  */
 export const zOwnedCharacterChange = z.object({
@@ -2864,6 +2888,7 @@ export const zLiveToken = z.object({
     r: z.int().gte(-500).lte(500),
     hidden: z.boolean(),
     controllerId: zId.optional(),
+    characterId: zId.optional(),
     ac: z.int().gte(0).lte(40).optional(),
     hp: z.int().gte(0).lte(10000).optional(),
     hpMax: z.int().gte(1).lte(10000).optional(),
@@ -6812,6 +6837,26 @@ export const zUpdateMyCharacterPath = z.object({
  * The Character.
  */
 export const zUpdateMyCharacterResponse = zOwnedCharacter;
+
+export const zGetActionBarsPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The layout; empty and not arranged until first saved.
+ */
+export const zGetActionBarsResponse = zActionBars;
+
+export const zSetActionBarsBody = zActionBarsChange;
+
+export const zSetActionBarsPath = z.object({
+    characterId: zId
+});
+
+/**
+ * The saved layout.
+ */
+export const zSetActionBarsResponse = zActionBars;
 
 export const zJoinCampaignBody = zCharacterJoin;
 

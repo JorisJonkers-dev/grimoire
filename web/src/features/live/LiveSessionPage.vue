@@ -405,6 +405,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
         <WorldPanel v-if="scope === 'world'" :world="view?.world" :dm="isDM" :maps="worldMaps" @send="(cmd) => live?.send(cmd)" />
         <MapBoard v-else-if="view?.map" :map="view.map" :view="view" :dm="isDM" :selected="selected" :path="walkPath" :danger="walkDanger" :area="areaHexes" :zone="zoneCells" :reach="view.sneak?.reach ?? []" :title="view.map.name" @select="pick" />
         <HexGrid v-else :cells="cells" :title="`Session ${String(state.session?.number ?? '')} map`" @select="pick" />
+        <div id="quick-bar-slot" class="quick-slot" />
         <WalkPlan v-if="state.path" :path="state.path" :mover="tokenById(state.path.tokenId)?.label ?? 'it'" @confirm="confirmWalk" @cancel="live?.dropPath()" />
         <p v-else-if="!isDM && walker" class="walk" data-testid="walker">Tap a hex to walk {{ walker.label }} there.</p>
       </div>
@@ -482,6 +483,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
           :interaction="b.c.interaction ?? false"
           :cleave="b.c.cleave ?? false"
           :summons="awaitingOrders(b.c.id)"
+          :own="b.token.controllerId !== undefined && b.token.controllerId === campaign.data.value?.me.id"
           @arm="(n) => arm(b.token, n)"
           @use="useSuggestion(b.token.id, b.c.suggestion)"
           @tactics="(t) => live?.send({ kind: 'set_tactics', tokenId: b.token.id, tactics: t })"

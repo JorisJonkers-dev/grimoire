@@ -696,6 +696,13 @@ type BuildInvoker interface {
 	//
 	// PUT /api/v1/builders/subclasses/{entryId}
 	SaveSubclassBuild(ctx context.Context, request *SubclassDesign, params SaveSubclassBuildParams) (SaveSubclassBuildRes, error)
+	// SetActionBars invokes setActionBars operation.
+	//
+	// Saves up to two bars of ten tiles and a quick bar of four. A tile is named kind:name. A tile the
+	// Character lacks is kept and shows greyed in its place.
+	//
+	// PUT /api/v1/characters/{characterId}/action-bars
+	SetActionBars(ctx context.Context, request *ActionBarsChange, params SetActionBarsParams) (SetActionBarsRes, error)
 	// SetCampaignOverride invokes setCampaignOverride operation.
 	//
 	// Replaces the fields this Campaign sees differently from the entry's base. DM only.
@@ -966,6 +973,14 @@ type ReadInvoker interface {
 	//
 	// GET /api/v1/account/history
 	GetAccountHistory(ctx context.Context) (GetAccountHistoryRes, error)
+	// GetActionBars invokes getActionBars operation.
+	//
+	// How the signed-in Account laid out one of its Characters' action bars for live play. The layout
+	// belongs to the Character, so it is the same in every Campaign and on every device. Anyone else's
+	// Character is not found.
+	//
+	// GET /api/v1/characters/{characterId}/action-bars
+	GetActionBars(ctx context.Context, params GetActionBarsParams) (GetActionBarsRes, error)
 	// GetActionLog invokes getActionLog operation.
 	//
 	// The Campaign's recent Actions with their seeds. DM only.
@@ -7967,6 +7982,143 @@ func (c *Client) sendGetAccountHistory(ctx context.Context) (res GetAccountHisto
 
 	stage = "DecodeResponse"
 	result, err := decodeGetAccountHistoryResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// GetActionBars invokes getActionBars operation.
+//
+// How the signed-in Account laid out one of its Characters' action bars for live play. The layout
+// belongs to the Character, so it is the same in every Campaign and on every device. Anyone else's
+// Character is not found.
+//
+// GET /api/v1/characters/{characterId}/action-bars
+func (c *Client) GetActionBars(ctx context.Context, params GetActionBarsParams) (GetActionBarsRes, error) {
+	res, err := c.sendGetActionBars(ctx, params)
+	return res, err
+}
+
+func (c *Client) sendGetActionBars(ctx context.Context, params GetActionBarsParams) (res GetActionBarsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("getActionBars"),
+		semconv.HTTPRequestMethodKey.String("GET"),
+		semconv.URLTemplateKey.String("/api/v1/characters/{characterId}/action-bars"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, GetActionBarsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/characters/"
+	{
+		// Encode "characterId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "characterId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CharacterId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/action-bars"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "GET", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, GetActionBarsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeGetActionBarsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}
@@ -28977,6 +29129,145 @@ func (c *Client) sendSetAccountPassword(ctx context.Context, request *PasswordCh
 
 	stage = "DecodeResponse"
 	result, err := decodeSetAccountPasswordResponse(resp)
+	if err != nil {
+		return res, errors.Wrap(err, "decode response")
+	}
+
+	return result, nil
+}
+
+// SetActionBars invokes setActionBars operation.
+//
+// Saves up to two bars of ten tiles and a quick bar of four. A tile is named kind:name. A tile the
+// Character lacks is kept and shows greyed in its place.
+//
+// PUT /api/v1/characters/{characterId}/action-bars
+func (c *Client) SetActionBars(ctx context.Context, request *ActionBarsChange, params SetActionBarsParams) (SetActionBarsRes, error) {
+	res, err := c.sendSetActionBars(ctx, request, params)
+	return res, err
+}
+
+func (c *Client) sendSetActionBars(ctx context.Context, request *ActionBarsChange, params SetActionBarsParams) (res SetActionBarsRes, err error) {
+	otelAttrs := []attribute.KeyValue{
+		otelogen.OperationID("setActionBars"),
+		semconv.HTTPRequestMethodKey.String("PUT"),
+		semconv.URLTemplateKey.String("/api/v1/characters/{characterId}/action-bars"),
+	}
+	otelAttrs = append(otelAttrs, c.cfg.Attributes...)
+
+	// Run stopwatch.
+	startTime := time.Now()
+	defer func() {
+		// Use floating point division here for higher precision (instead of Millisecond method).
+		elapsedDuration := time.Since(startTime)
+		c.duration.Record(ctx, float64(elapsedDuration)/float64(time.Millisecond), metric.WithAttributes(otelAttrs...))
+	}()
+
+	// Increment request counter.
+	c.requests.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+
+	// Start a span for this request.
+	ctx, span := c.cfg.Tracer.Start(ctx, SetActionBarsOperation,
+		trace.WithAttributes(otelAttrs...),
+		clientSpanKind,
+	)
+	// Track stage for error reporting.
+	var stage string
+	defer func() {
+		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, stage)
+			c.errors.Add(ctx, 1, metric.WithAttributes(otelAttrs...))
+		}
+		span.End()
+	}()
+
+	stage = "BuildURL"
+	u := uri.Clone(c.requestURL(ctx))
+	var pathParts [3]string
+	pathParts[0] = "/api/v1/characters/"
+	{
+		// Encode "characterId" parameter.
+		e := uri.NewPathEncoder(uri.PathEncoderConfig{
+			Param:   "characterId",
+			Style:   uri.PathStyleSimple,
+			Explode: false,
+		})
+		if err := func() error {
+			if unwrapped := uuid.UUID(params.CharacterId); true {
+				return e.EncodeValue(conv.UUIDToString(unwrapped))
+			}
+			return nil
+		}(); err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		encoded, err := e.Result()
+		if err != nil {
+			return res, errors.Wrap(err, "encode path")
+		}
+		pathParts[1] = encoded
+	}
+	pathParts[2] = "/action-bars"
+	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeRequest"
+	r, err := ht.NewRequest(ctx, "PUT", u)
+	if err != nil {
+		return res, errors.Wrap(err, "create request")
+	}
+	if err := encodeSetActionBarsRequest(request, r); err != nil {
+		return res, errors.Wrap(err, "encode request")
+	}
+
+	{
+		type bitset = [1]uint8
+		var satisfied bitset
+		{
+			stage = "Security:ForwardAuth"
+			switch err := c.securityForwardAuth(ctx, SetActionBarsOperation, r); {
+			case err == nil: // if NO error
+				satisfied[0] |= 1 << 0
+			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
+				// Skip this security.
+			default:
+				return res, errors.Wrap(err, "security \"ForwardAuth\"")
+			}
+		}
+
+		if ok := func() bool {
+		nextRequirement:
+			for _, requirement := range []bitset{
+				{0b00000001},
+			} {
+				for i, mask := range requirement {
+					if satisfied[i]&mask != mask {
+						continue nextRequirement
+					}
+				}
+				return true
+			}
+			return false
+		}(); !ok {
+			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
+		}
+	}
+
+	stage = "SendRequest"
+	resp, err := c.cfg.Client.Do(r)
+	if err != nil {
+		return res, errors.Wrap(err, "do request")
+	}
+	body := resp.Body
+	defer func() {
+		// Drain the body to EOF before closing, so the underlying
+		// connection can be reused by the Transport regardless of the
+		// response status code. See https://github.com/ogen-go/ogen/issues/1670.
+		_, _ = io.Copy(io.Discard, body)
+		_ = body.Close()
+	}()
+
+	stage = "DecodeResponse"
+	result, err := decodeSetActionBarsResponse(resp)
 	if err != nil {
 		return res, errors.Wrap(err, "decode response")
 	}

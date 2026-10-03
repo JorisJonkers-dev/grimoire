@@ -284,6 +284,17 @@ type OwnedCharacter struct {
 	Campaigns    []CampaignEntry
 }
 
+// ActionBars is how a player laid out a Character's actions in live play: up to two bars of ten tiles,
+// a quick bar of four, and the tiles put away. A tile is named kind:name, such as attack:Longsword. Arranged is false until
+// the player first saves a layout.
+type ActionBars struct {
+	Bars  [][]string `json:"bars"`
+	Quick []string   `json:"quick"`
+	// Stowed are the tiles the player took off the bars; any other tile the Character gains joins the end.
+	Stowed   []string `json:"stowed"`
+	Arranged bool     `json:"-"`
+}
+
 // CampaignEntry is one Campaign Character of an OwnedCharacter.
 type CampaignEntry struct {
 	CampaignID   CampaignID

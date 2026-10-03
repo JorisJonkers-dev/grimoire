@@ -189,6 +189,10 @@ type GetAccountRes interface {
 	getAccountRes()
 }
 
+type GetActionBarsRes interface {
+	getActionBarsRes()
+}
+
 type GetActionLogRes interface {
 	getActionLogRes()
 }
@@ -791,6 +795,10 @@ type SetAccountDisabledRes interface {
 
 type SetAccountPasswordRes interface {
 	setAccountPasswordRes()
+}
+
+type SetActionBarsRes interface {
+	setActionBarsRes()
 }
 
 type SetAdminRoleRes interface {

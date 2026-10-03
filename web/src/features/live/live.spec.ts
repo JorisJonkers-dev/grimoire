@@ -1,3 +1,4 @@
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LiveCheck, LiveContainer, LiveShop, LiveTable, LiveToken, LiveWorld, LiveZone } from '@/infrastructure/api/types.gen'
@@ -2079,7 +2080,7 @@ describe('hotbar', () => {
         { name: 'Greataxe', toHit: 6, reachFt: 5, rangeFt: 0, longRangeFt: 0, damage: '1d12', damageBonus: 3, mastery: 'cleave' },
       ],
     }
-    const w = mount(Hotbar, { props: { token, armed: null, blocked: '', attacksLeft: 1, offHand: true, interaction: true, cleave: true } })
+    const w = mount(Hotbar, { global: { plugins: [[VueQueryPlugin, { queryClient: new QueryClient() }]] }, props: { token, armed: null, blocked: '', attacksLeft: 1, offHand: true, interaction: true, cleave: true } })
     expect(w.get('[data-testid="mastery-1"]').text()).toBe('nick')
     expect(w.get('[data-testid="mastery-2"]').attributes('title')).toContain('second creature')
     expect(w.find('[data-testid="mastery-0"]').exists()).toBe(false)
@@ -2103,7 +2104,7 @@ describe('hotbar', () => {
   it('swaps weapon sets for a Character only', async () => {
     const { mount } = await import('@vue/test-utils')
     const Hotbar = (await import('./Hotbar.vue')).default
-    const w = mount(Hotbar, { props: { token: goblin, armed: null, blocked: '' } })
+    const w = mount(Hotbar, { global: { plugins: [[VueQueryPlugin, { queryClient: new QueryClient() }]] }, props: { token: goblin, armed: null, blocked: '' } })
     expect(w.find('[data-testid="swap-weapons"]').exists()).toBe(false)
     await w.setProps({ token: { ...goblin, kind: 'party' } })
     await w.get('[data-testid="swap-weapons"]').trigger('click')
