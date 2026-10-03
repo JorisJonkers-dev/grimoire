@@ -60,9 +60,13 @@ func (s *Characters) Spells(ctx context.Context, c caller.Caller, id domain.Camp
 }
 
 func (s *Characters) spellcasting(ctx context.Context, sheet Sheet) (Spellcasting, error) {
+	s, err := s.within(ctx, sheet.CampaignID)
+	if err != nil {
+		return Spellcasting{}, err
+	}
 	out := Spellcasting{CanPrepare: sheet.CanPrepare, Classes: []ClassSpells{}}
 	for _, x := range sheet.Classes {
-		if rules.CasterFor(x.Class) == rules.NoCaster {
+		if !sheet.Profile(x.Class).Caster() {
 			continue
 		}
 		cs, err := s.classSpells(ctx, sheet, x)
@@ -81,7 +85,8 @@ func (s *Characters) spellcasting(ctx context.Context, sheet Sheet) (Spellcastin
 }
 
 func (s *Characters) classSpells(ctx context.Context, sheet Sheet, x domain.ClassLevel) (ClassSpells, error) {
-	maxLevel := rules.MaxSpellLevel(x.Class, x.Level)
+	profile := sheet.Profile(x.Class)
+	maxLevel := profile.MaxSpellLevel(x.Level)
 	list, err := s.Compendium.ClassSpells(ctx, sheet.Ruleset, x.Class, maxLevel)
 	if err != nil {
 		return ClassSpells{}, err
@@ -91,8 +96,8 @@ func (s *Characters) classSpells(ctx context.Context, sheet Sheet, x domain.Clas
 		return ClassSpells{}, err
 	}
 	cs := ClassSpells{
-		Class: x.Class, Name: sheet.ClassNames[x.Class], Level: x.Level, Limit: rules.PreparedSpells(x.Class, x.Level), MaxLevel: maxLevel,
-		Book: rules.KeepsSpellbook(x.Class), Allotment: rules.SpellbookAllotment(x.Level), Always: always,
+		Class: x.Class, Name: sheet.ClassNames[x.Class], Level: x.Level, Limit: profile.PreparedAt(x.Level), MaxLevel: maxLevel,
+		Book: profile.Casting.Spellbook, Allotment: rules.SpellbookAllotment(x.Level), Always: always,
 	}
 	for _, sp := range list {
 		cs.sort(sp, sheet.Spells, always)
@@ -143,7 +148,7 @@ func (s *Characters) Prepare(ctx context.Context, c caller.Caller, id domain.Cam
 	for _, sp := range cs.Prepared {
 		previous = append(previous, sp.Slug)
 	}
-	if err := rules.CheckPreparation(class, cs.Limit, previous, spells); err != nil {
+	if err := rules.CheckPreparation(sheet.Profile(class), cs.Limit, previous, spells); err != nil {
 		return Spellcasting{}, invalid(err)
 	}
 	for _, slug := range spells {
@@ -182,7 +187,7 @@ func preparedRows(sheet Sheet, cs ClassSpells, spells []string) []domain.Learned
 
 func (s *Characters) casterClass(ctx context.Context, sheet Sheet, class string) (ClassSpells, error) {
 	x, ok := find(sheet.Classes, func(x domain.ClassLevel) bool { return x.Class == class })
-	if !ok || rules.CasterFor(class) == rules.NoCaster {
+	if !ok || !sheet.Profile(class).Caster() {
 		return ClassSpells{}, refuse("this Character casts no spells as " + class)
 	}
 	return s.classSpells(ctx, sheet, x)
@@ -238,7 +243,7 @@ func (s *Characters) CopySpell(ctx context.Context, c caller.Caller, id domain.C
 		return Spellcasting{}, refuse("only a wizard keeps a spellbook")
 	}
 	cs := sc.Classes[i]
-	list, err := s.Compendium.ClassSpells(ctx, sheet.Ruleset, cs.Class, cs.MaxLevel)
+	list, err := s.classList(ctx, sheet, cs)
 	if err != nil {
 		return Spellcasting{}, err
 	}

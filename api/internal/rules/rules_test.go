@@ -130,18 +130,18 @@ func TestSkills(t *testing.T) {
 		t.Fatal("skills")
 	}
 	for class, want := range map[string]int{"rogue": 4, "bard": 3, "ranger": 3, "fighter": 2} {
-		if got := rules.ClassSkillCount(class); got != want {
+		if got := rules.SRD(class).Skills; got != want {
 			t.Errorf("%s: %d", class, got)
 		}
 	}
 	bg := []rules.Skill{"insight", "religion"}
-	if err := rules.ValidateSkills("fighter", []rules.Skill{"athletics", "perception"}, bg); err != nil {
+	if err := rules.ValidateSkills(rules.SRD("fighter"), []rules.Skill{"athletics", "perception"}, bg); err != nil {
 		t.Fatal(err)
 	}
-	isViolation(t, rules.ValidateSkills("fighter", []rules.Skill{"athletics"}, bg), "choose 2")
-	isViolation(t, rules.ValidateSkills("fighter", []rules.Skill{"athletics", "cooking"}, bg), "not a skill")
-	isViolation(t, rules.ValidateSkills("fighter", []rules.Skill{"athletics", "athletics"}, bg), "chosen twice")
-	isViolation(t, rules.ValidateSkills("fighter", []rules.Skill{"athletics", "insight"}, bg), "already grants insight")
+	isViolation(t, rules.ValidateSkills(rules.SRD("fighter"), []rules.Skill{"athletics"}, bg), "choose 2")
+	isViolation(t, rules.ValidateSkills(rules.SRD("fighter"), []rules.Skill{"athletics", "cooking"}, bg), "not a skill")
+	isViolation(t, rules.ValidateSkills(rules.SRD("fighter"), []rules.Skill{"athletics", "athletics"}, bg), "chosen twice")
+	isViolation(t, rules.ValidateSkills(rules.SRD("fighter"), []rules.Skill{"athletics", "insight"}, bg), "already grants insight")
 }
 
 func TestArmorClassAndHP(t *testing.T) {
@@ -174,7 +174,7 @@ func TestArmorClassAndHP(t *testing.T) {
 func TestResourcesByCaster(t *testing.T) {
 	t.Parallel()
 	slots := func(class string) int {
-		for _, r := range rules.ResourcesAt(class, 8, 1) {
+		for _, r := range rules.ResourcesAt(rules.SRD(class), 8, 1) {
 			if r.Key == "spell-slots-1" {
 				return r.Max
 			}
@@ -187,10 +187,10 @@ func TestResourcesByCaster(t *testing.T) {
 			t.Errorf("%s: %d slots", class, got)
 		}
 	}
-	if n := len(rules.ResourcesAt("fighter", 10, 1)); n != 1 {
+	if n := len(rules.ResourcesAt(rules.SRD("fighter"), 10, 1)); n != 1 {
 		t.Fatalf("fighter has %d resources", n)
 	}
-	if r := rules.ResourcesAt("wizard", 6, 0)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 || r.Current != 1 {
+	if r := rules.ResourcesAt(rules.SRD("wizard"), 6, 0)[0]; r.Label != "Hit Dice (d6)" || r.Max != 1 || r.Current != 1 {
 		t.Fatalf("hit dice = %+v", r)
 	}
 }
@@ -198,7 +198,7 @@ func TestResourcesByCaster(t *testing.T) {
 func TestBuildSheet(t *testing.T) {
 	t.Parallel()
 	in := rules.SheetInput{
-		Class: "fighter", Level: 1, HitDie: 10, Scores: scores(13, 14, 15, 8, 12, 10),
+		Class: rules.SRD("fighter"), Level: 1, HitDie: 10, Scores: scores(13, 14, 15, 8, 12, 10),
 		SaveProfs: []rules.Ability{rules.Strength, rules.Constitution}, SkillProfs: []rules.Skill{"perception", "athletics"},
 		Armor: &rules.Armor{Base: 18, DexCap: 0, StrengthRequired: 15, Stealth: true}, ShieldBonus: 2, SpeedFeet: 30,
 	}

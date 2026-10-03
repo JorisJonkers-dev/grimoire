@@ -3244,7 +3244,9 @@ export const zClassChoice = z.object({
         'none',
         'full',
         'half',
-        'pact'
+        'pact',
+        'slots',
+        'points'
     ]).optional()
 });
 

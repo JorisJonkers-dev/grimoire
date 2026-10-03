@@ -30,7 +30,7 @@ test('the DM grants a level and the player takes it through the level-up wizard'
   await sheet.getByTestId('level-up').click()
   await expect(page.getByTestId('step-class')).toBeVisible()
   await expect(page.getByTestId('level-class-wizard')).toBeDisabled()
-  await expect(page.getByTestId('step-class')).toContainText('Needs Intelligence 13+ (wizard)')
+  await expect(page.getByTestId('step-class')).toContainText('Needs Intelligence 13+ (Wizard)')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
   await page.getByTestId('next').click()

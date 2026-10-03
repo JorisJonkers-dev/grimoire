@@ -43,22 +43,10 @@ func (s Skill) Valid() bool {
 	return false
 }
 
-// ClassSkillCount is how many skills a class lets a first-level character choose.
-func ClassSkillCount(class string) int {
-	switch class {
-	case "rogue":
-		return 4
-	case "bard", "ranger":
-		return 3
-	default:
-		return 2
-	}
-}
-
 // ValidateSkills checks the class skill choices: the right count, real skills, no repeats, and none
 // the background already grants.
-func ValidateSkills(class string, chosen, fromBackground []Skill) error {
-	if want := ClassSkillCount(class); len(chosen) != want {
+func ValidateSkills(class Class, chosen, fromBackground []Skill) error {
+	if want := class.Skills; len(chosen) != want {
 		return violation("choose %d class skills", want)
 	}
 	seen := map[Skill]bool{}

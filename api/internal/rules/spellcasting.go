@@ -6,17 +6,6 @@ import (
 	"strings"
 )
 
-// PreparesAfterLongRest reports whether a class changes its prepared spells whenever it finishes a long
-// rest (SRD 5.2); the others swap one spell when they gain a level.
-func PreparesAfterLongRest(class string) bool {
-	return slices.Contains([]string{"cleric", "druid", "paladin", "wizard"}, class)
-}
-
-// KeepsSpellbook reports whether a class prepares from a spellbook it copies spells into.
-func KeepsSpellbook(class string) bool {
-	return class == "wizard"
-}
-
 // SpellbookAllotment is how many spells a wizard's book holds for free at a wizard level: six at first
 // level and two more each level after.
 func SpellbookAllotment(level int) int {
@@ -47,7 +36,7 @@ func castingMinutes(text string) int {
 
 // CheckPreparation checks a new list of prepared spells: no more than the class prepares, each once, and
 // for a class that does not prepare after a long rest, at most one spell swapped out.
-func CheckPreparation(class string, limit int, previous, next []string) error {
+func CheckPreparation(class Class, limit int, previous, next []string) error {
 	if len(next) > limit {
 		return violation("prepare at most %d spells", limit)
 	}
@@ -56,7 +45,7 @@ func CheckPreparation(class string, limit int, previous, next []string) error {
 			return violation("prepare each spell once")
 		}
 	}
-	if PreparesAfterLongRest(class) {
+	if class.Casting.AfterRest {
 		return nil
 	}
 	dropped := 0

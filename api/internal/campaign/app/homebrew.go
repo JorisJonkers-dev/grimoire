@@ -17,6 +17,9 @@ type homebrew struct {
 
 // within is the use cases over the compendium as a Campaign sees it.
 func (s *Characters) within(ctx context.Context, id domain.CampaignID) (*Characters, error) {
+	if _, done := s.Compendium.(homebrew); done {
+		return s, nil
+	}
 	subs, err := s.Repo.HomebrewSubclasses(ctx, id)
 	if err != nil {
 		return nil, err
@@ -24,6 +27,24 @@ func (s *Characters) within(ctx context.Context, id domain.CampaignID) (*Charact
 	in := *s
 	in.Compendium = homebrew{Compendium: s.Compendium, subs: subs}
 	return &in, nil
+}
+
+// options are the builder options as a Campaign sees them.
+func (s *Characters) options(ctx context.Context, id domain.CampaignID, ruleset string) (compendium.BuilderOptions, error) {
+	in, err := s.within(ctx, id)
+	if err != nil {
+		return compendium.BuilderOptions{}, err
+	}
+	return in.Compendium.BuilderOptions(ctx, ruleset)
+}
+
+// classList is a casting class's spell list up to the highest level it casts, as a Campaign sees it.
+func (s *Characters) classList(ctx context.Context, sheet Sheet, cs ClassSpells) ([]compendium.SpellOption, error) {
+	in, err := s.within(ctx, sheet.CampaignID)
+	if err != nil {
+		return nil, err
+	}
+	return in.Compendium.ClassSpells(ctx, sheet.Ruleset, cs.Class, cs.MaxLevel)
 }
 
 // Features adds the homebrew subclasses' Resources and choices.

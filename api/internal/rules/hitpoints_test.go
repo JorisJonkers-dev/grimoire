@@ -45,7 +45,7 @@ func TestClassProficiencies(t *testing.T) {
 		"monk":     {Armor: nil, Weapons: []string{"Simple weapons", "Martial weapons with the Light property"}},
 		"sorcerer": {Armor: nil, Weapons: simple}, "wizard": {Armor: nil, Weapons: simple}, "artificer": {Armor: nil, Weapons: nil},
 	} {
-		got := rules.ClassProficiencies(class)
+		got := rules.SRD(class).Proficiencies
 		if !slices.Equal(got.Armor, want.Armor) || !slices.Equal(got.Weapons, want.Weapons) {
 			t.Errorf("%s = %+v, want %+v", class, got, want)
 		}
@@ -55,7 +55,7 @@ func TestClassProficiencies(t *testing.T) {
 func TestExpertiseDoublesProficiency(t *testing.T) {
 	t.Parallel()
 	s := rules.BuildSheet(rules.SheetInput{
-		Class: "rogue", Level: 5, HitDie: 8, Scores: scores(10, 16, 12, 10, 14, 10),
+		Class: rules.SRD("rogue"), Level: 5, HitDie: 8, Scores: scores(10, 16, 12, 10, 14, 10),
 		SkillProfs: []rules.Skill{"stealth", "perception"}, Expertise: []rules.Skill{"stealth", "arcana"},
 	})
 	for _, k := range s.Skills {

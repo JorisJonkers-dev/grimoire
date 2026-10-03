@@ -1588,9 +1588,9 @@ export type ClassChoice = {
      */
     primaryAbilities?: Array<Ability>;
     /**
-     * How the class casts spells.
+     * How the class casts spells: the SRD kinds, or a homebrew slot table or spell points.
      */
-    caster?: 'none' | 'full' | 'half' | 'pact';
+    caster?: 'none' | 'full' | 'half' | 'pact' | 'slots' | 'points';
 };
 
 /**

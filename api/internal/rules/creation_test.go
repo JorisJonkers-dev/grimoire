@@ -13,7 +13,7 @@ func TestEveryClassHasPrimaryAbilities(t *testing.T) {
 		t.Fatalf("classes = %v", rules.Classes())
 	}
 	for _, c := range rules.Classes() {
-		if len(rules.PrimaryAbilities(c)) == 0 {
+		if len(rules.SRD(c).Primary) == 0 {
 			t.Errorf("%s has no primary ability", c)
 		}
 	}
@@ -27,7 +27,7 @@ func TestPrimaryAbilities(t *testing.T) {
 		"monk": {rules.Dexterity, rules.Wisdom}, "ranger": {rules.Dexterity, rules.Wisdom}, "paladin": {rules.Strength, rules.Charisma},
 		"rogue": {rules.Dexterity}, "wizard": {rules.Intelligence}, "artificer": nil,
 	} {
-		if got := rules.PrimaryAbilities(class); !slices.Equal(got, want) {
+		if got := rules.SRD(class).Primary; !slices.Equal(got, want) {
 			t.Errorf("%s = %v, want %v", class, got, want)
 		}
 	}
@@ -126,7 +126,7 @@ func TestResourcesAtALevel(t *testing.T) {
 		{"warlock", 9, map[string]int{"hit-dice": 9, "spell-slots-5": 2}},
 		{"warlock", 8, map[string]int{"hit-dice": 8, "spell-slots-4": 2}},
 	} {
-		got := slots(rules.ResourcesAt(c.class, 8, c.level))
+		got := slots(rules.ResourcesAt(rules.SRD(c.class), 8, c.level))
 		if len(got) != len(c.want) {
 			t.Errorf("%s %d = %v, want %v", c.class, c.level, got, c.want)
 			continue
@@ -137,7 +137,7 @@ func TestResourcesAtALevel(t *testing.T) {
 			}
 		}
 	}
-	labels := rules.ResourcesAt("wizard", 6, 9)
+	labels := rules.ResourcesAt(rules.SRD("wizard"), 6, 9)
 	if labels[len(labels)-1].Label != "Level 5 spell slots" || labels[0].Label != "Hit Dice (d6)" {
 		t.Errorf("labels = %+v", labels)
 	}
@@ -148,7 +148,7 @@ func TestFullCasterSlotsGrow(t *testing.T) {
 	t.Parallel()
 	total := func(level int) int {
 		n := 0
-		for _, r := range rules.ResourcesAt("sorcerer", 6, level) {
+		for _, r := range rules.ResourcesAt(rules.SRD("sorcerer"), 6, level) {
 			if r.Key != "hit-dice" {
 				n += r.Max
 			}

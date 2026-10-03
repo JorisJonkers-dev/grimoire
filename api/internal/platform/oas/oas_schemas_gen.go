@@ -5724,7 +5724,7 @@ type ClassChoice struct {
 	SkillChoices int32     `json:"skillChoices"`
 	// The abilities the class leans on most, highlighted when choosing it.
 	PrimaryAbilities []Ability `json:"primaryAbilities"`
-	// How the class casts spells.
+	// How the class casts spells: the SRD kinds, or a homebrew slot table or spell points.
 	Caster OptClassChoiceCaster `json:"caster"`
 }
 
@@ -5798,14 +5798,16 @@ func (s *ClassChoice) SetCaster(val OptClassChoiceCaster) {
 	s.Caster = val
 }
 
-// How the class casts spells.
+// How the class casts spells: the SRD kinds, or a homebrew slot table or spell points.
 type ClassChoiceCaster string
 
 const (
-	ClassChoiceCasterNone ClassChoiceCaster = "none"
-	ClassChoiceCasterFull ClassChoiceCaster = "full"
-	ClassChoiceCasterHalf ClassChoiceCaster = "half"
-	ClassChoiceCasterPact ClassChoiceCaster = "pact"
+	ClassChoiceCasterNone   ClassChoiceCaster = "none"
+	ClassChoiceCasterFull   ClassChoiceCaster = "full"
+	ClassChoiceCasterHalf   ClassChoiceCaster = "half"
+	ClassChoiceCasterPact   ClassChoiceCaster = "pact"
+	ClassChoiceCasterSlots  ClassChoiceCaster = "slots"
+	ClassChoiceCasterPoints ClassChoiceCaster = "points"
 )
 
 // AllValues returns all ClassChoiceCaster values.
@@ -5815,6 +5817,8 @@ func (ClassChoiceCaster) AllValues() []ClassChoiceCaster {
 		ClassChoiceCasterFull,
 		ClassChoiceCasterHalf,
 		ClassChoiceCasterPact,
+		ClassChoiceCasterSlots,
+		ClassChoiceCasterPoints,
 	}
 }
 
@@ -5828,6 +5832,10 @@ func (s ClassChoiceCaster) MarshalText() ([]byte, error) {
 	case ClassChoiceCasterHalf:
 		return []byte(s), nil
 	case ClassChoiceCasterPact:
+		return []byte(s), nil
+	case ClassChoiceCasterSlots:
+		return []byte(s), nil
+	case ClassChoiceCasterPoints:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -5848,6 +5856,12 @@ func (s *ClassChoiceCaster) UnmarshalText(data []byte) error {
 		return nil
 	case ClassChoiceCasterPact:
 		*s = ClassChoiceCasterPact
+		return nil
+	case ClassChoiceCasterSlots:
+		*s = ClassChoiceCasterSlots
+		return nil
+	case ClassChoiceCasterPoints:
+		*s = ClassChoiceCasterPoints
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)

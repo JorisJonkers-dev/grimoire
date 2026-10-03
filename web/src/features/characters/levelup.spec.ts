@@ -12,7 +12,7 @@ const base = `/api/v1/campaigns/${ID}/characters/${CH}`
 const classes = [
   { slug: 'fighter', name: 'Fighter', hitDie: 10, level: 3, unmet: [] },
   { slug: 'wizard', name: 'Wizard', hitDie: 6, level: 0, unmet: [] },
-  { slug: 'paladin', name: 'Paladin', hitDie: 10, level: 0, unmet: ['Charisma 13+ (paladin)'] },
+  { slug: 'paladin', name: 'Paladin', hitDie: 10, level: 0, unmet: ['Charisma 13+ (Paladin)'] },
 ]
 const fighterPlan = {
   ready: true, held: false, level: 4, classes, class: 'fighter', classLevel: 4, hitDie: 10, average: 8,
@@ -58,7 +58,7 @@ describe('level-up wizard', () => {
       [base]: () => sheet({ level: 4 }),
     })
     expect(wrapper.get('[data-testid="level-class-paladin"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.text()).toContain('Needs Charisma 13+ (paladin)')
+    expect(wrapper.text()).toContain('Needs Charisma 13+ (Paladin)')
     await expectAccessible(wrapper.element as Element)
     await wrapper.get('[data-testid="next"]').trigger('click')
     expect(wrapper.find('[data-testid="step-choices"]').exists()).toBe(true)
@@ -175,7 +175,7 @@ describe('level-up wizard', () => {
     expect(locked.wrapper.get('[data-testid="level-up-locked"]').text()).toContain('after a long rest')
     unmountAll()
     const broken = await mountApp(`/campaigns/${ID}/characters/${CH}/level-up`, {
-      [`${base}/level-up`]: () => jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'multiclassing into Wizard needs Intelligence 13+ (wizard)' }, 422),
+      [`${base}/level-up`]: () => jsonResponse({ type: 'about:blank', title: 'Not allowed', status: 422, detail: 'multiclassing into Wizard needs Intelligence 13+ (Wizard)' }, 422),
     })
     expect(broken.wrapper.get('[data-testid="level-up-error"]').text()).toContain('Intelligence 13+')
   })

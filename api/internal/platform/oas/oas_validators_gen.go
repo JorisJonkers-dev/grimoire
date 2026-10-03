@@ -8444,6 +8444,10 @@ func (s ClassChoiceCaster) Validate() error {
 		return nil
 	case "pact":
 		return nil
+	case "slots":
+		return nil
+	case "points":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}

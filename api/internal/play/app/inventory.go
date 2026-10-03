@@ -354,7 +354,7 @@ func attune(ctx context.Context, inv domain.Inventory, mine domain.Container, h 
 			attuned++
 		}
 	}
-	caster := slices.ContainsFunc(b.Classes, func(c string) bool { return rules.CasterFor(c) != rules.NoCaster })
+	caster := slices.ContainsFunc(b.Classes, func(c string) bool { return rules.SRD(c).Caster() })
 	switch {
 	case !info.RequiresAttunement:
 		return nil, apperr.Refuse(info.Name + " needs no attunement")

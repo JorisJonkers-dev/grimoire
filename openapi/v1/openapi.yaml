@@ -8731,7 +8731,7 @@ components:
           description: The abilities the class leans on most, highlighted when choosing it.
           maxItems: 2
           items: { $ref: "#/components/schemas/Ability" }
-        caster: { type: string, enum: [none, full, half, pact], description: "How the class casts spells." }
+        caster: { type: string, enum: [none, full, half, pact, slots, points], description: "How the class casts spells: the SRD kinds, or a homebrew slot table or spell points." }
     SpeciesChoice:
       type: object
       description: A playable species.

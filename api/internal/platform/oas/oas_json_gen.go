@@ -10411,6 +10411,10 @@ func (s *ClassChoiceCaster) Decode(d *jx.Decoder) error {
 		*s = ClassChoiceCasterHalf
 	case ClassChoiceCasterPact:
 		*s = ClassChoiceCasterPact
+	case ClassChoiceCasterSlots:
+		*s = ClassChoiceCasterSlots
+	case ClassChoiceCasterPoints:
+		*s = ClassChoiceCasterPoints
 	default:
 		*s = ClassChoiceCaster(v)
 	}

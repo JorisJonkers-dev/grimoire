@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules"
 )
 
 // ErrNotFound is returned when an entry does not exist in the requested ruleset.
@@ -173,6 +175,16 @@ type ClassOption struct {
 	Name   string
 	HitDie int
 	Saves  []string
+	// Rules are a homebrew class's rules; an SRD class reads its own by slug.
+	Rules rules.Class
+}
+
+// Profile is what the rules read of the class.
+func (c ClassOption) Profile() rules.Class {
+	if c.Rules.Slug == "" {
+		return rules.SRD(c.Slug)
+	}
+	return c.Rules
 }
 
 // SpeciesOption is a playable species.

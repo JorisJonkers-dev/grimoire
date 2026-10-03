@@ -97,7 +97,7 @@ func orEmpty(m map[string]int) map[string]int {
 // checkRetrain checks a rebuilt Character against the rules and returns it with its hit point maximum
 // adjusted for any change to its Constitution modifier.
 func (s *Characters) checkRetrain(ctx context.Context, sheet Sheet, next domain.Character) (domain.Character, error) {
-	o, err := s.Compendium.BuilderOptions(ctx, next.Ruleset)
+	o, err := s.options(ctx, next.CampaignID, next.Ruleset)
 	if err != nil {
 		return next, err
 	}
