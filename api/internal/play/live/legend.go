@@ -70,8 +70,8 @@ func (r *runtime) lair(t domain.Token, l domain.Legend, name string) (Write, str
 	switch {
 	case i < 0:
 		return Write{}, t.Label + "'s lair has no action called " + name + "."
-	case c.Turn > 20:
-		return Write{}, "The lair acts on initiative count 20."
+	case c.Turn >= 20:
+		return Write{}, "The lair acts on initiative count 20, after anyone on 20."
 	case l.LairRound == c.Round:
 		return Write{}, "The lair has acted this round."
 	}
@@ -157,7 +157,7 @@ func (s *state) legendView(t domain.Token) *LegendView {
 		Phase: l.Phase, Phases: len(l.Phases), Threshold: l.Threshold,
 	}
 	if c := s.combat; c != nil && c.Status == domain.CombatActive && len(l.Lair) > 0 {
-		v.LairReady = c.Turn <= 20 && l.LairRound != c.Round
+		v.LairReady = c.Turn < 20 && l.LairRound != c.Round
 	}
 	return v
 }
