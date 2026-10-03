@@ -12198,8 +12198,9 @@ components:
       type: object
       description: The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
       additionalProperties: false
-      required: [roller, purpose, dice, modifier, total]
+      required: [id, roller, purpose, dice, modifier, total]
       properties:
+        id: { $ref: "#/components/schemas/Id" }
         roller: { $ref: "#/components/schemas/DisplayName" }
         purpose: { type: string, maxLength: 120 }
         dice:

@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { createRollMutation, getActionLogOptions, getCampaignOptions, listRollsOptions } from '@/infrastructure/api/@tanstack/vue-query.gen'
 import type { RollModifier, RollRequest } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import DiceHost from '@/features/dice/DiceHost.vue'
 import RollCard from './RollCard.vue'
 import { dieSizes, notationFor, type Throw } from './notation'
 
@@ -115,6 +116,7 @@ function updated(r: RollRequest) {
         </ol>
       </section>
     </template>
+    <DiceHost />
   </main>
 </template>
 

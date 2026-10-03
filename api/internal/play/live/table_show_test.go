@@ -88,6 +88,9 @@ func TestTheTableDisplayShowsCaptionsAndPlayersRollsAndNothingOfTheDMs(t *testin
 	roll(rolls, w.player, "Athletics", 14)
 	u := frame(t, tv)
 	shown = append(shown, u)
+	if _, err := uuid.Parse(u.Roll.ID); err != nil {
+		t.Fatalf("a shared roll names itself, so a screen shows it once: %+v", u.Roll)
+	}
 	if r := u.Roll; u.Kind != live.UpdRoll || r == nil || r.Roller != w.player.Name || r.Purpose != "Athletics" || r.Total != 17 || len(r.Dice) != 1 ||
 		r.Dice[0] != (live.RollDie{Faces: 20, Value: 14, Kept: true}) || r.Modifier != 3 {
 		t.Fatalf("the player's roll on the table = %+v %+v", u, u.Roll)

@@ -16,6 +16,8 @@ import { DM_PAGES, PLAYER_PAGES, usePhoneShell } from './phoneShell'
 import { board, describe, emanations, hexes, zoneHexes } from './board'
 import { runByDM, suggested, taken } from './console'
 import { cellsFor, key, layoutOf } from './geometry'
+import DiceHost from '@/features/dice/DiceHost.vue'
+import { throwDice } from '@/features/dice/stage'
 import ControlSwitcher from './ControlSwitcher.vue'
 import CreaturePanel from './CreaturePanel.vue'
 import SpellList from './SpellList.vue'
@@ -132,6 +134,14 @@ const chips = [
   { key: 'bonus', field: 'bonusAction', label: 'Bonus' },
   { key: 'reaction', field: 'reaction', label: 'Reaction' },
 ] as const
+// A player's roll, as it resolves anywhere at the table, is thrown on this screen's dice stage.
+watch(
+  () => state.value?.rolls,
+  () => {
+    const r = state.value?.roll
+    if (r) throwDice(r, r.id)
+  },
+)
 // "It's your turn" rises over a player's screen as their turn starts, then fades.
 const banner = ref('')
 let bannerTimer: ReturnType<typeof setTimeout> | undefined
@@ -895,6 +905,7 @@ const status = computed(() => ({ connecting: 'Connecting…', open: 'Live', reco
       </nav>
     </template>
     <p v-else>Opening the session…</p>
+    <DiceHost />
   </main>
 </template>
 

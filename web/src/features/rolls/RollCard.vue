@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import type { RollDie, RollRequest } from '@/infrastructure/api/types.gen'
 import { keepRoll, rerollDie, rollRest, setDie } from '@/infrastructure/api/sdk.gen'
 import { DieFace, GButton } from '@/shared/ui'
+import { shownOf } from '@/features/dice/choreography'
+import { throwDice } from '@/features/dice/stage'
 import { describeGroup, signed } from './notation'
 
 const props = defineProps<{ roll: RollRequest; campaignId: string }>()
@@ -50,6 +52,8 @@ async function run(dice: RollDie[], call: () => Promise<RollRequest>) {
   try {
     const updated = reduced() ? await call() : (await Promise.all([call(), new Promise((r) => setTimeout(r, 450))]))[0]
     emit('updated', updated)
+    // The server has the result: throw it on this screen's dice stage.
+    if (updated.status === 'resolved' && !updated.choosing) throwDice(shownOf(updated), updated.id)
   } catch {
     failed.value = 'That roll could not be saved. Try again.'
   } finally {

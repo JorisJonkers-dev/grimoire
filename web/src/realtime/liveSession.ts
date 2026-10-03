@@ -31,6 +31,7 @@ export type LiveState = {
   reveal: { order: LiveInitiativeRoll[]; n: number } | null
   turn: { round: number; tokenIds: string[]; n: number } | null
   roll: LiveRollShown | null
+  rolls: number
   rejection: string
 }
 
@@ -46,7 +47,7 @@ export function useLiveSession(
   delay: (attempt: number) => number = (n) => Math.min(10_000, 500 * 2 ** n),
 ) {
   const state = new SessionState()
-  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rejection: '' })
+  const view = reactive<LiveState>({ connection: 'connecting', session: null, view: null, path: null, preview: null, areaPreview: null, ping: null, reveal: null, turn: null, roll: null, rolls: 0, rejection: '' })
   let socket: Socket | null = null
   let attempt = 0
   let stopped = false
@@ -71,6 +72,7 @@ export function useLiveSession(
     view.reveal = state.reveal
     view.turn = state.turn
     view.roll = state.roll
+    view.rolls = state.rolls
     view.rejection = state.rejection
     if (state.ended) view.connection = 'ended'
   }

@@ -1797,6 +1797,7 @@
       "kind": "roll",
       "seq": 7,
       "roll": {
+        "id": "0190c7a8-0000-7000-8000-00000000000a",
         "roller": "Aria",
         "purpose": "Athletics",
         "dice": [

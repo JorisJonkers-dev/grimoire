@@ -22,6 +22,8 @@ export class SessionState {
   turn: { round: number; tokenIds: string[]; n: number } | null = null
   /** The last roll a player made, for screens that show it. */
   roll: LiveRollShown | null = null
+  /** How many rolls arrived as they resolved; a snapshot's roll is old news and does not count. */
+  rolls = 0
 
   apply(frame: unknown): Outcome {
     const parsed = zLiveUpdate.safeParse(frame)
@@ -37,6 +39,7 @@ export class SessionState {
         return 'applied'
       case 'roll':
         this.roll = u.roll ?? this.roll
+        this.rolls++
         return 'applied'
       case 'rejected':
         this.rejection = u.reason ?? 'That was not allowed.'

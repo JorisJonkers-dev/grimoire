@@ -112,7 +112,7 @@ func (r *runtime) shareRoll(id domain.RollID) {
 	if who, err := r.members.Member(context.Background(), r.st.session.CampaignID, roll.Roller.ID); err != nil || who.DM {
 		return
 	}
-	shown := RollShown{Roller: roll.Roller.Name, Purpose: roll.Purpose, Dice: make([]RollDie, 0, len(roll.Dice)), Modifier: roll.Total, Total: roll.Total}
+	shown := RollShown{ID: uuid.UUID(roll.ID).String(), Roller: roll.Roller.Name, Purpose: roll.Purpose, Dice: make([]RollDie, 0, len(roll.Dice)), Modifier: roll.Total, Total: roll.Total}
 	kept := keptDice(roll)
 	for i, d := range roll.Dice {
 		shown.Dice = append(shown.Dice, RollDie{Faces: d.Faces, Value: d.Value, Kept: kept[i]})
