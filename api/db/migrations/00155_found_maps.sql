@@ -12,6 +12,10 @@ ALTER TABLE campaign.map_nodes ADD CONSTRAINT map_nodes_local_map_fk FOREIGN KEY
 -- squawk-ignore require-concurrent-index-creation
 CREATE UNIQUE INDEX IF NOT EXISTS map_nodes_local_map_idx ON campaign.map_nodes (map_id, local_map_id) WHERE local_map_id IS NOT NULL;
 
+-- A Travel Leg remembers which of its ends was a secret place, so its name never reaches the party.
+ALTER TABLE play.travel_legs ADD COLUMN IF NOT EXISTS from_secret boolean NOT NULL DEFAULT false;
+ALTER TABLE play.travel_legs ADD COLUMN IF NOT EXISTS to_secret boolean NOT NULL DEFAULT false;
+
 ALTER TABLE play.actions DROP CONSTRAINT IF EXISTS actions_kind_check;
 ALTER TABLE play.actions ADD CONSTRAINT actions_kind_check CHECK (kind IN ('roll_requested', 'die_rolled', 'die_entered',
     'roll_resolved', 'session_started', 'session_ended', 'token_placed', 'token_moved', 'token_hidden', 'token_revealed',

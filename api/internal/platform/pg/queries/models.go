@@ -1735,6 +1735,8 @@ type PlayTravelLeg struct {
 	DistanceMi int32
 	Minutes    int32
 	Days       int32
+	FromSecret bool
+	ToSecret   bool
 }
 
 type PlayXpAward struct {

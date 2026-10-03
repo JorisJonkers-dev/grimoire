@@ -783,6 +783,9 @@ type MeasureView struct {
 	Plans []PlanView `json:"plans"`
 }
 
+// SecretPlace stands for the name of a secret place wherever anyone but the DM would read it.
+const SecretPlace = "a place unknown"
+
 // LegView is one Travel Leg the party made this Session.
 type LegView struct {
 	From       string `json:"from"`

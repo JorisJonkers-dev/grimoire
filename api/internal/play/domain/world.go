@@ -86,7 +86,8 @@ func (w *World) Clone() *World {
 	return &c
 }
 
-// TravelLeg is one journey of the party along a route.
+// TravelLeg is one journey of the party along a route. FromSecret and ToSecret say an end of it was a
+// secret place when the party walked it: only the DM is told that end's name.
 type TravelLeg struct {
 	From       string
 	To         string
@@ -94,6 +95,8 @@ type TravelLeg struct {
 	DistanceMi int
 	Minutes    int
 	Days       int
+	FromSecret bool
+	ToSecret   bool
 }
 
 // World action kinds in the Action Log.

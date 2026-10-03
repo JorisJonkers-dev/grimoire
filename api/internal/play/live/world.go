@@ -163,7 +163,10 @@ func planTravel(w *domain.World, cmd Command) (Write, string) {
 	}
 	there, _ := w.Node(dest)
 	p := travel.Plan(route.DistanceMi, pace)
-	leg := domain.TravelLeg{From: here.Name, To: there.Name, Pace: pace.String(), DistanceMi: route.DistanceMi, Minutes: p.Minutes, Days: p.Days}
+	leg := domain.TravelLeg{
+		From: here.Name, To: there.Name, Pace: pace.String(), DistanceMi: route.DistanceMi, Minutes: p.Minutes, Days: p.Days,
+		FromSecret: here.Secret, ToSecret: there.Secret,
+	}
 	return Write{Kind: domain.ActionTravelLeg, Node: there, Leg: &leg}, ""
 }
 
@@ -191,7 +194,7 @@ func applyWorld(s *state, w *Write) {
 	switch w.Kind {
 	case domain.ActionNodeAdded:
 		world.Nodes = append(world.Nodes, w.Node)
-		if w.Node.LocalFound {
+		if w.Node.LocalFound && !w.Node.Secret {
 			s.light(w, hex.Disk(w.Node.At, 1))
 		}
 	case domain.ActionMapFound, domain.ActionMapLost:
@@ -234,8 +237,8 @@ func arrive(s *state, w *Write) {
 	s.light(w, hex.Disk(w.Node.At, travel.SightHexes))
 }
 
-// found is the party finding or losing a Map. A local Map found lights its place on the world map, and
-// what the party has seen stays seen when a Map is lost.
+// found is the party finding or losing a Map. A local Map found lights its place on the world map,
+// unless that place is secret, and what the party has seen stays seen when a Map is lost.
 func found(s *state, w *Write) {
 	world := s.world
 	if w.Found.Map == world.Map.ID {
@@ -245,7 +248,7 @@ func found(s *state, w *Write) {
 	for i, n := range world.Nodes {
 		if n.LocalMap != nil && *n.LocalMap == w.Found.Map {
 			world.Nodes[i].LocalFound = w.Found.On
-			if w.Found.On {
+			if w.Found.On && !n.Secret {
 				s.light(w, hex.Disk(n.At, 1))
 			}
 		}
@@ -275,7 +278,22 @@ func (s *state) worldView(a Audience) *WorldView {
 		v.PartyNodeID = uuid.UUID(*w.Party).String()
 	}
 	for _, l := range w.Legs {
-		v.Legs = append(v.Legs, LegView{From: l.From, To: l.To, Pace: l.Pace, DistanceMi: l.DistanceMi, Minutes: l.Minutes, Days: l.Days})
+		v.Legs = append(v.Legs, legView(l, a))
+	}
+	return v
+}
+
+// legView is a Travel Leg as one audience may read it: a secret place at either end is named to the DM only.
+func legView(l domain.TravelLeg, a Audience) LegView {
+	v := LegView{From: l.From, To: l.To, Pace: l.Pace, DistanceMi: l.DistanceMi, Minutes: l.Minutes, Days: l.Days}
+	if a == AudienceDM {
+		return v
+	}
+	if l.FromSecret {
+		v.From = SecretPlace
+	}
+	if l.ToSecret {
+		v.To = SecretPlace
 	}
 	return v
 }
