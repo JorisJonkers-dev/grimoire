@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLiveSession } from '@/realtime/liveSession'
+import { tableResultLine } from './tableResult'
 import { type Coord, toPixel } from '@/shared/hex'
 import { gridBox } from '@/shared/map/grid'
 import DiceHost from '@/features/dice/DiceHost.vue'
@@ -95,6 +96,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
         <span v-if="state.roll.modifier" class="mod">{{ signed(state.roll.modifier) }}</span>
         <strong class="total">= {{ state.roll.total }}</strong>
       </aside>
+      <p v-if="state.view.tableResult" class="result" role="status" data-testid="table-result">{{ tableResultLine(state.view.tableResult) }}</p>
       <p v-if="table?.caption" class="caption" data-testid="table-caption">{{ table.caption }}</p>
     </template>
     <p v-if="state.connection === 'ended'" class="ended" role="status" data-testid="session-ended">The session has ended.</p>
@@ -132,6 +134,7 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
 <style scoped>
 .turn,
 .roll,
+.result,
 .caption {
   position: fixed;
   z-index: 3;
@@ -185,6 +188,15 @@ const worldBoard = computed(() => ({ tokens: [], fog: world.value !== null, visi
 .total {
   font-family: var(--font-display);
   color: var(--color-gold-high);
+}
+.result {
+  bottom: 120px;
+  left: 50%;
+  max-width: 70vw;
+  padding: 10px 22px;
+  font-size: clamp(16px, 1.5vw, 30px);
+  text-align: center;
+  transform: translateX(-50%);
 }
 .caption {
   bottom: 24px;

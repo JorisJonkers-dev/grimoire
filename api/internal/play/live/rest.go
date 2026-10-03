@@ -317,7 +317,7 @@ func (r *runtime) finishRest(rest *domain.Rest) (Write, string) {
 	r.pass(&w, r.st.gameTime().Add(variants.RestMinutes(set.Get(variants.Rests), rest.Kind == RestLong)))
 	for _, x := range rest.Resters {
 		t := r.st.tokens[x.TokenID]
-		res := domain.RestResult{CharacterID: x.CharacterID, HPCurrent: t.Stats.HP, HitDiceSpent: x.Level - x.HitDiceLeft, Used: map[string]int{}}
+		res := domain.RestResult{CharacterID: x.CharacterID, Token: x.TokenID, HPCurrent: t.Stats.HP, HitDiceSpent: x.Level - x.HitDiceLeft, Used: map[string]int{}}
 		if rest.Kind == RestLong {
 			res.HPCurrent, res.HitDiceSpent, res.LevelUpReady = set.LongRestHP(t.Stats.HP, t.Stats.HPMax), 0, true
 			w.Healed = append(w.Healed, HPChange{Token: t.ID, Before: t.Stats.HP, After: res.HPCurrent})

@@ -374,6 +374,20 @@ func encodeCreateRollRequest(
 	return nil
 }
 
+func encodeCreateRuleHookRequest(
+	req *RuleHookInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCreateSettlementRequest(
 	req *SettlementInput,
 	r *http.Request,
@@ -780,6 +794,20 @@ func encodePreviewReachRequest(
 	return nil
 }
 
+func encodePreviewRollTableRequest(
+	req *RollTablePreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewSightRequest(
 	req *SightRequest,
 	r *http.Request,
@@ -1076,6 +1104,20 @@ func encodeSaveItemBuildRequest(
 
 func encodeSaveMonsterBuildRequest(
 	req *MonsterDesign,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveRollTableBuildRequest(
+	req *RollTableDesign,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

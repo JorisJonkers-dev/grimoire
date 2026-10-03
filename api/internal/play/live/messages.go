@@ -578,7 +578,9 @@ type View struct {
 	Inventory  []ContainerView     `json:"inventory,omitempty"`
 	Shop       *ShopView           `json:"shop,omitempty"`
 	Rest       *RestView           `json:"rest,omitempty"`
-	GameDay    int                 `json:"gameDay"`
+	// TableResult is the last result a roll on a Roll Table landed on, for a creature this screen sees.
+	TableResult *TableResultView `json:"tableResult,omitempty"`
+	GameDay     int              `json:"gameDay"`
 	// GameMinute is the time of day on the Game Clock, in minutes after midnight.
 	GameMinute int `json:"gameMinute"`
 	// MarchingOrder is every Character of the Campaign: those with a place in the order first, from the front.

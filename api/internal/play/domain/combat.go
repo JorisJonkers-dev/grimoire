@@ -87,6 +87,9 @@ type PendingAction struct {
 	DC     int
 	// Object is the Map Object a disarm, pick or force check works on.
 	Object *ObjectID
+	// Table is the Roll Table a roll is made on, and Hook the Rule Variant that asked for it.
+	Table *uuid.UUID
+	Hook  string
 }
 
 // Action kinds for the 2024 actions in the Action Log.
@@ -98,6 +101,10 @@ const (
 	ActionObjectUsed = "object_used"
 	// ActionMasteryUsed is what a Weapon Mastery did after an attack.
 	ActionMasteryUsed = "mastery_used"
+	// ActionHookFired is one of the Campaign's own Rule Variants firing at its hook point; ActionTableRolled
+	// the roll on a Roll Table it asked for landing on a result.
+	ActionHookFired   = "rule_hook_fired"
+	ActionTableRolled = "roll_table_rolled"
 	// ActionReactionSet is a Controller changing a token's reaction settings.
 	ActionReactionSet = "reaction_set"
 	// ActionConcentrationChecked is damage opening a concentration save.

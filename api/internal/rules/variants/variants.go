@@ -239,3 +239,45 @@ func BurdenedSpeed(mode string, speed int, weight float64, strength int) int {
 	}
 	return speed
 }
+
+// The hook points a Rule Variant a DM authors can hang on.
+const (
+	HookNatural1 = "natural-1"
+	HookCritical = "critical"
+	HookDropTo0  = "drop-to-0"
+	HookRest     = "rest"
+	HookCast     = "cast"
+)
+
+// HookPoint is a moment in play a DM's own Rule Variant can hang on.
+type HookPoint struct {
+	Slug  string
+	Label string
+}
+
+// HookPoints lists the hook points.
+func HookPoints() []HookPoint {
+	return []HookPoint{
+		{HookNatural1, "On a natural 1 on an attack roll"},
+		{HookCritical, "On a natural 20 on an attack roll"},
+		{HookDropTo0, "On dropping to 0 hit points"},
+		{HookRest, "On finishing a rest"},
+		{HookCast, "On casting a spell"},
+	}
+}
+
+// ValidHook reports whether a hook point exists.
+func ValidHook(slug string) bool {
+	return slices.ContainsFunc(HookPoints(), func(p HookPoint) bool { return p.Slug == slug })
+}
+
+// AttackHook is the hook point an attack's d20 fires: a natural 1, a natural 20, or none.
+func AttackHook(natural int) string {
+	if Fumbles(natural) {
+		return HookNatural1
+	}
+	if natural == 20 {
+		return HookCritical
+	}
+	return ""
+}

@@ -137,6 +137,10 @@ type CreateRollRes interface {
 	createRollRes()
 }
 
+type CreateRuleHookRes interface {
+	createRuleHookRes()
+}
+
 type CreateSettlementRes interface {
 	createSettlementRes()
 }
@@ -199,6 +203,10 @@ type DeletePushSubscriptionRes interface {
 
 type DeleteQuestRes interface {
 	deleteQuestRes()
+}
+
+type DeleteRuleHookRes interface {
+	deleteRuleHookRes()
 }
 
 type DeleteSettlementRes interface {
@@ -375,6 +383,10 @@ type GetReadinessRes interface {
 
 type GetRollRes interface {
 	getRollRes()
+}
+
+type GetRollTableBuildRes interface {
+	getRollTableBuildRes()
 }
 
 type GetSessionLogRes interface {
@@ -613,6 +625,10 @@ type ListRollsRes interface {
 	listRollsRes()
 }
 
+type ListRuleHooksRes interface {
+	listRuleHooksRes()
+}
+
 type ListRuleVariantsRes interface {
 	listRuleVariantsRes()
 }
@@ -719,6 +735,10 @@ type PreviewMonsterRes interface {
 
 type PreviewReachRes interface {
 	previewReachRes()
+}
+
+type PreviewRollTableRes interface {
+	previewRollTableRes()
 }
 
 type PreviewSightRes interface {
@@ -867,6 +887,10 @@ type SaveItemBuildRes interface {
 
 type SaveMonsterBuildRes interface {
 	saveMonsterBuildRes()
+}
+
+type SaveRollTableBuildRes interface {
+	saveRollTableBuildRes()
 }
 
 type SaveSpeciesBuildRes interface {

@@ -331,6 +331,17 @@ func (UnimplementedHandler) CreateRoll(ctx context.Context, req *RollCreate, par
 	return r, ht.ErrNotImplemented
 }
 
+// CreateRuleHook implements createRuleHook operation.
+//
+// Adds a Rule Variant of the Campaign's own: at a hook point it applies an Effect to whoever it
+// happened to, or has them roll on a Roll Table the Campaign sees. It names exactly one of the two. A
+// Session under way follows it at once. DM only.
+//
+// POST /api/v1/campaigns/{campaignId}/rule-hooks
+func (UnimplementedHandler) CreateRuleHook(ctx context.Context, req *RuleHookInput, params CreateRuleHookParams) (r CreateRuleHookRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CreateSettlement implements createSettlement operation.
 //
 // Adds a Settlement and records its first Revision. DM only.
@@ -475,6 +486,15 @@ func (UnimplementedHandler) DeletePushSubscription(ctx context.Context, params D
 //
 // DELETE /api/v1/campaigns/{campaignId}/quests/{questId}
 func (UnimplementedHandler) DeleteQuest(ctx context.Context, params DeleteQuestParams) (r DeleteQuestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// DeleteRuleHook implements deleteRuleHook operation.
+//
+// Removes a Rule Variant the DM authored. DM only.
+//
+// DELETE /api/v1/campaigns/{campaignId}/rule-hooks/{hookId}
+func (UnimplementedHandler) DeleteRuleHook(ctx context.Context, params DeleteRuleHookParams) (r DeleteRuleHookRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -888,6 +908,15 @@ func (UnimplementedHandler) GetReadiness(ctx context.Context) (r GetReadinessRes
 //
 // GET /api/v1/campaigns/{campaignId}/rolls/{rollId}
 func (UnimplementedHandler) GetRoll(ctx context.Context, params GetRollParams) (r GetRollRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetRollTableBuild implements getRollTableBuild operation.
+//
+// A Roll Table's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/roll-tables/{entryId}
+func (UnimplementedHandler) GetRollTableBuild(ctx context.Context, params GetRollTableBuildParams) (r GetRollTableBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1438,6 +1467,16 @@ func (UnimplementedHandler) ListRolls(ctx context.Context, params ListRollsParam
 	return r, ht.ErrNotImplemented
 }
 
+// ListRuleHooks implements listRuleHooks operation.
+//
+// The Rule Variants the DM authored from hook points, for every Member to see, with the hook points
+// there are. The DM also gets the Roll Tables the Campaign sees, to choose from.
+//
+// GET /api/v1/campaigns/{campaignId}/rule-hooks
+func (UnimplementedHandler) ListRuleHooks(ctx context.Context, params ListRuleHooksParams) (r ListRuleHooksRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListRuleVariants implements listRuleVariants operation.
 //
 // Every built-in Rule Variant with what the Campaign has it at, for every Member to see how the table
@@ -1692,6 +1731,16 @@ func (UnimplementedHandler) PreviewMonster(ctx context.Context, req *MonsterPrev
 //
 // POST /api/v1/rules/hex/reach
 func (UnimplementedHandler) PreviewReach(ctx context.Context, req *ReachRequest) (r PreviewReachRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewRollTable implements previewRollTable operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/roll-tables/preview
+func (UnimplementedHandler) PreviewRollTable(ctx context.Context, req *RollTablePreviewInput) (r PreviewRollTableRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -2051,6 +2100,16 @@ func (UnimplementedHandler) SaveItemBuild(ctx context.Context, req *ItemDesign, 
 //
 // PUT /api/v1/builders/monsters/{entryId}
 func (UnimplementedHandler) SaveMonsterBuild(ctx context.Context, req *MonsterDesign, params SaveMonsterBuildParams) (r SaveMonsterBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveRollTableBuild implements saveRollTableBuild operation.
+//
+// Saves the design of one of the caller's table entries as its next Revision. A Campaign that sees the
+// table can hook it to a Rule Variant of its own.
+//
+// PUT /api/v1/builders/roll-tables/{entryId}
+func (UnimplementedHandler) SaveRollTableBuild(ctx context.Context, req *RollTableDesign, params SaveRollTableBuildParams) (r SaveRollTableBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

@@ -217,6 +217,7 @@ type Querier interface {
 	DeletePushSubscription(ctx context.Context, arg DeletePushSubscriptionParams) (int64, error)
 	DeleteQuest(ctx context.Context, arg DeleteQuestParams) (int64, error)
 	DeleteRecoveryCodes(ctx context.Context, accountID uuid.UUID) error
+	DeleteRuleHook(ctx context.Context, arg DeleteRuleHookParams) (int64, error)
 	DeleteScheduledCheck(ctx context.Context, id uuid.UUID) error
 	DeleteSettlement(ctx context.Context, arg DeleteSettlementParams) (int64, error)
 	DeleteShop(ctx context.Context, arg DeleteShopParams) (int64, error)
@@ -394,6 +395,7 @@ type Querier interface {
 	InsertRollEvent(ctx context.Context, arg InsertRollEventParams) error
 	InsertRollLabel(ctx context.Context, arg InsertRollLabelParams) error
 	InsertRollModifier(ctx context.Context, arg InsertRollModifierParams) error
+	InsertRuleHook(ctx context.Context, arg InsertRuleHookParams) error
 	InsertScheduledCheck(ctx context.Context, arg InsertScheduledCheckParams) error
 	InsertSession(ctx context.Context, arg InsertSessionParams) (PlaySession, error)
 	InsertSessionAction(ctx context.Context, arg InsertSessionActionParams) (uuid.UUID, error)
@@ -517,6 +519,7 @@ type Querier interface {
 	ListRetrains(ctx context.Context, arg ListRetrainsParams) ([]ListRetrainsRow, error)
 	ListRevisions(ctx context.Context, arg ListRevisionsParams) ([]ListRevisionsRow, error)
 	ListRolls(ctx context.Context, arg ListRollsParams) ([]uuid.UUID, error)
+	ListRuleHooks(ctx context.Context, campaignID uuid.UUID) ([]CampaignRuleVariantHook, error)
 	ListRuleVariants(ctx context.Context, campaignID uuid.UUID) ([]ListRuleVariantsRow, error)
 	ListScaleSteps(ctx context.Context) ([]CompendiumScaleStep, error)
 	ListScales(ctx context.Context) ([]CompendiumScale, error)

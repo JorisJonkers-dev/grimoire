@@ -2,6 +2,7 @@ package pgstore
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/live"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/rolltable"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/surface"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/variants"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -38,6 +40,42 @@ func (s *Store) RuleVariants(ctx context.Context, campaign uuid.UUID) (variants.
 	out := make(variants.Set, len(rows))
 	for _, r := range rows {
 		out[r.Variant] = r.Value
+	}
+	return out, nil
+}
+
+// RuleHooks reads the Rule Variants the DM authored from hook points, oldest first.
+func (s *Store) RuleHooks(ctx context.Context, campaign uuid.UUID) ([]live.Hook, error) {
+	rows, err := s.q.ListRuleHooks(ctx, campaign)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]live.Hook, 0, len(rows))
+	for _, r := range rows {
+		h := live.Hook{Name: r.Name, Point: r.Hook, Table: nil, Effect: r.Effect.String}
+		if r.RollTable.Valid {
+			table := uuid.UUID(r.RollTable.Bytes)
+			h.Table = &table
+		}
+		out = append(out, h)
+	}
+	return out, nil
+}
+
+// RollTables reads the Roll Tables of the Library a Campaign sees, linked or through a Collection, at
+// the Revision each is pinned to. A design the rules no longer take is left out.
+func (s *Store) RollTables(ctx context.Context, campaign uuid.UUID) ([]live.Table, error) {
+	rows, err := s.q.CampaignHomebrewDesigns(ctx, queries.CampaignHomebrewDesignsParams{CampaignID: campaign, Kind: "table"})
+	if err != nil {
+		return nil, err
+	}
+	out := make([]live.Table, 0, len(rows))
+	for _, r := range rows {
+		var d rolltable.Design
+		if json.Unmarshal(r.Design, &d) != nil || rolltable.Check(d) != nil {
+			continue
+		}
+		out = append(out, live.Table{ID: r.ID, Name: r.Name, Design: d})
 	}
 	return out, nil
 }

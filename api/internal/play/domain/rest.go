@@ -76,7 +76,9 @@ type Recharge struct {
 
 // RestResult is what a finished rest leaves a Character with.
 type RestResult struct {
-	CharacterID  uuid.UUID
+	CharacterID uuid.UUID
+	// Token is the Character's token on the board.
+	Token        TokenID
 	HPCurrent    int
 	HitDiceSpent int
 	Used         map[string]int

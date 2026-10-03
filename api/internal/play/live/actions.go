@@ -225,6 +225,9 @@ func (r *runtime) actionRolled(p domain.PendingAction) {
 		return
 	}
 	switch {
+	case p.Action == tableRoll:
+		r.tableRolled(w, p, roll)
+		return
 	case p.Action == stabilising:
 		if d, down := r.st.dying[*p.Target]; down && roll.Total >= p.DC && d.State.Rolls() {
 			d.State = d.State.Stabilise()

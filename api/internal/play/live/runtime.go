@@ -133,7 +133,12 @@ type Write struct {
 	Minute int
 	// ShortRests is the count of Short Rests since the last Long Rest, once a rest changes it.
 	ShortRests *int
-	Dawned     []domain.Recharge
+	// Note is what the Action Log says of a Rule Variant of the Campaign's own firing or of a Roll
+	// Table's result. hook is the hook point an attack's d20 fires; tableResult the result to show.
+	Note        string
+	hook        string
+	tableResult *TableResult
+	Dawned      []domain.Recharge
 	// March is the Marching Order a marching_order_set leaves, from the front.
 	March  []uuid.UUID
 	haggle *haggleChange
@@ -344,6 +349,10 @@ type Store interface {
 	// Rests the party has taken since its last Long Rest.
 	RuleVariants(ctx context.Context, campaign uuid.UUID) (variants.Set, error)
 	ShortRests(ctx context.Context, campaign uuid.UUID) (int, error)
+	// RuleHooks reads the Rule Variants the DM authored from hook points, oldest first, and RollTables
+	// the Roll Tables of the Library the Campaign sees, at the Revision each is pinned to.
+	RuleHooks(ctx context.Context, campaign uuid.UUID) ([]Hook, error)
+	RollTables(ctx context.Context, campaign uuid.UUID) ([]Table, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
 	Observations(ctx context.Context, id domain.SessionID) (map[domain.TokenID]map[domain.TokenID]int, error)
 	Roll(ctx context.Context, campaign uuid.UUID, id domain.RollID) (domain.Roll, error)
@@ -1092,6 +1101,9 @@ func change(s *state, w *Write) {
 		applyObject(s, w)
 	case domain.ActionMasteryUsed:
 		applyMastery(s, w)
+		return
+	case domain.ActionHookFired, domain.ActionTableRolled:
+		applyHook(s, w)
 		return
 	case domain.ActionReactionSet:
 		s.tokens[w.Token.ID] = w.Token

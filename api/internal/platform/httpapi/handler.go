@@ -30,6 +30,7 @@ type Handler struct {
 	Journal    JournalService
 	// RuleVariants keeps the Campaign's Rule Variants.
 	RuleVariants RuleVariantService
+	RuleHooks    RuleHookService
 	Rolls        RollService
 	Inventory    InventoryService
 	Sessions     SessionService
@@ -58,6 +59,7 @@ type Handler struct {
 	Classes          ClassBuilder
 	BackgroundBuilds BackgroundBuilder
 	ConditionBuilds  ConditionBuilder
+	RollTableBuilds  RollTableBuilder
 	MonsterBuilds    MonsterBuilder
 	FeatBuilds       FeatBuilder
 	SpeciesBuilds    SpeciesBuilder

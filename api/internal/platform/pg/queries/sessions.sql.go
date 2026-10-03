@@ -916,8 +916,8 @@ func (q *Queries) InsertManual(ctx context.Context, arg InsertManualParams) erro
 }
 
 const insertPendingAction = `-- name: InsertPendingAction :exec
-INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc, object_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO play.pending_actions (roll_id, session_id, actor_token_id, target_token_id, action, dc, object_id, roll_table, hook_name)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
 type InsertPendingActionParams struct {
@@ -928,6 +928,8 @@ type InsertPendingActionParams struct {
 	Action        string
 	Dc            int32
 	ObjectID      pgtype.UUID
+	RollTable     pgtype.UUID
+	HookName      pgtype.Text
 }
 
 func (q *Queries) InsertPendingAction(ctx context.Context, arg InsertPendingActionParams) error {
@@ -939,6 +941,8 @@ func (q *Queries) InsertPendingAction(ctx context.Context, arg InsertPendingActi
 		arg.Action,
 		arg.Dc,
 		arg.ObjectID,
+		arg.RollTable,
+		arg.HookName,
 	)
 	return err
 }
@@ -2494,7 +2498,7 @@ func (q *Queries) SessionObservations(ctx context.Context, sessionID uuid.UUID) 
 }
 
 const sessionPendingActions = `-- name: SessionPendingActions :many
-SELECT roll_id, actor_token_id, target_token_id, action, dc, object_id FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id
+SELECT roll_id, actor_token_id, target_token_id, action, dc, object_id, roll_table, hook_name FROM play.pending_actions WHERE session_id = $1 ORDER BY roll_id
 `
 
 type SessionPendingActionsRow struct {
@@ -2504,6 +2508,8 @@ type SessionPendingActionsRow struct {
 	Action        string
 	Dc            int32
 	ObjectID      pgtype.UUID
+	RollTable     pgtype.UUID
+	HookName      pgtype.Text
 }
 
 func (q *Queries) SessionPendingActions(ctx context.Context, sessionID uuid.UUID) ([]SessionPendingActionsRow, error) {
@@ -2522,6 +2528,8 @@ func (q *Queries) SessionPendingActions(ctx context.Context, sessionID uuid.UUID
 			&i.Action,
 			&i.Dc,
 			&i.ObjectID,
+			&i.RollTable,
+			&i.HookName,
 		); err != nil {
 			return nil, err
 		}

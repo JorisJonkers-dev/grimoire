@@ -52,7 +52,8 @@ func armouryStack(t *testing.T) (http.Handler, *pgxpool.Pool) {
 	chars := &app.Characters{Repo: repo, Compendium: compendium, Combat: app.NoCombat{}, Blobs: storage.Dir{Path: t.TempDir()}, Now: time.Now, Die: func(int) int { return 1 }}
 	inv := &playapp.Inventories{Store: playpg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Roll: func(count, _ int) int { return count }}
 	lib := &libraryapp.Service{Repo: librarypg.New(store.Pool()), Members: playpg.CampaignMembers{Store: repo}, Now: time.Now, Surfaces: playpg.New(store.Pool()).SurfaceKinds}
-	h := campaignServer(t, app.NewService(repo), chars, httpapi.InventoryService(inv), httpapi.LibraryService(lib))
+	hooks := &app.RuleHooks{Repo: repo, Now: time.Now}
+	h := campaignServer(t, app.NewService(repo), chars, httpapi.InventoryService(inv), httpapi.LibraryService(lib), httpapi.RuleHookService(hooks))
 	return h, store.Pool()
 }
 

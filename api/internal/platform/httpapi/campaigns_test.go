@@ -38,6 +38,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var facs httpapi.FactionService
 	var js httpapi.JournalService
 	var rvs httpapi.RuleVariantService
+	var rhs httpapi.RuleHookService
 	var rs httpapi.RollService
 	var ss httpapi.SessionService
 	var hub httpapi.LiveHub
@@ -51,6 +52,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 	var scb httpapi.SubclassBuilder
 	var cb httpapi.ClassBuilder
 	var conditionb httpapi.ConditionBuilder
+	var tableb httpapi.RollTableBuilder
 	var monsterb httpapi.MonsterBuilder
 	var backgroundb httpapi.BackgroundBuilder
 	var featb httpapi.FeatBuilder
@@ -64,6 +66,7 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 			scb, _ = v.(httpapi.SubclassBuilder)
 			cb, _ = v.(httpapi.ClassBuilder)
 			conditionb, _ = v.(httpapi.ConditionBuilder)
+			tableb, _ = v.(httpapi.RollTableBuilder)
 			monsterb, _ = v.(httpapi.MonsterBuilder)
 			backgroundb, _ = v.(httpapi.BackgroundBuilder)
 			featb, _ = v.(httpapi.FeatBuilder)
@@ -94,10 +97,12 @@ func campaignServer(t *testing.T, c httpapi.Campaigns, extra ...any) http.Handle
 			js = v
 		case httpapi.RuleVariantService:
 			rvs = v
+		case httpapi.RuleHookService:
+			rhs = v
 		}
 	}
 	h, err := httpapi.New(httpapi.Options{
-		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Companions: comps, Factions: facs, Journal: js, RuleVariants: rvs, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, FeatBuilds: featb, BackgroundBuilds: backgroundb, ConditionBuilds: conditionb, MonsterBuilds: monsterb, Log: quiet},
+		Handler:   &httpapi.Handler{Version: "1", Store: fakeStore{}, Compendium: &fakeCompendium{}, Campaigns: c, Characters: cs, NPCs: ns, Companions: comps, Factions: facs, Journal: js, RuleVariants: rvs, RuleHooks: rhs, Rolls: rs, Sessions: ss, Hub: hub, LiveMembers: lm, Maps: ms, Prep: ps, Inventory: is, Library: ls, Spells: sb, ItemBuilder: ib, Subclasses: scb, Classes: cb, SpeciesBuilds: speciesb, FeatBuilds: featb, BackgroundBuilds: backgroundb, ConditionBuilds: conditionb, RollTableBuilds: tableb, MonsterBuilds: monsterb, Log: quiet},
 		RateLimit: 1000, Now: time.Now,
 	})
 	if err != nil {

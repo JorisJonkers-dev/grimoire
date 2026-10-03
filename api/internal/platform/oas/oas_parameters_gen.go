@@ -1944,6 +1944,79 @@ func decodeCreateRollParams(args [1]string, argsEscaped bool, r *http.Request) (
 	return params, nil
 }
 
+// CreateRuleHookParams is parameters of createRuleHook operation.
+type CreateRuleHookParams struct {
+	// Campaign id.
+	CampaignId ID
+}
+
+func unpackCreateRuleHookParams(packed middleware.Parameters) (params CreateRuleHookParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeCreateRuleHookParams(args [1]string, argsEscaped bool, r *http.Request) (params CreateRuleHookParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // CreateSettlementParams is parameters of createSettlement operation.
 type CreateSettlementParams struct {
 	// Campaign id.
@@ -3776,6 +3849,140 @@ func decodeDeleteQuestParams(args [2]string, argsEscaped bool, r *http.Request) 
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "questId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// DeleteRuleHookParams is parameters of deleteRuleHook operation.
+type DeleteRuleHookParams struct {
+	// Campaign id.
+	CampaignId ID
+	// Rule Variant id.
+	HookId ID
+}
+
+func unpackDeleteRuleHookParams(packed middleware.Parameters) (params DeleteRuleHookParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "hookId",
+			In:   "path",
+		}
+		params.HookId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeDeleteRuleHookParams(args [2]string, argsEscaped bool, r *http.Request) (params DeleteRuleHookParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: hookId.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "hookId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotHookIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotHookIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.HookId = ID(paramsDotHookIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "hookId",
 			In:   "path",
 			Err:  err,
 		}
@@ -7870,6 +8077,79 @@ func decodeGetRollParams(args [2]string, argsEscaped bool, r *http.Request) (par
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "rollId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// GetRollTableBuildParams is parameters of getRollTableBuild operation.
+type GetRollTableBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackGetRollTableBuildParams(packed middleware.Parameters) (params GetRollTableBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeGetRollTableBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params GetRollTableBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
 			In:   "path",
 			Err:  err,
 		}
@@ -12669,6 +12949,79 @@ func decodeListRollsParams(args [1]string, argsEscaped bool, r *http.Request) (p
 		return params, &ogenerrors.DecodeParamError{
 			Name: "limit",
 			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ListRuleHooksParams is parameters of listRuleHooks operation.
+type ListRuleHooksParams struct {
+	// Campaign id.
+	CampaignId ID
+}
+
+func unpackListRuleHooksParams(packed middleware.Parameters) (params ListRuleHooksParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "campaignId",
+			In:   "path",
+		}
+		params.CampaignId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeListRuleHooksParams(args [1]string, argsEscaped bool, r *http.Request) (params ListRuleHooksParams, _ error) {
+	// Decode path: campaignId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "campaignId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotCampaignIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotCampaignIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.CampaignId = ID(paramsDotCampaignIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "campaignId",
+			In:   "path",
 			Err:  err,
 		}
 	}
@@ -18312,6 +18665,79 @@ func unpackSaveMonsterBuildParams(packed middleware.Parameters) (params SaveMons
 }
 
 func decodeSaveMonsterBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveMonsterBuildParams, _ error) {
+	// Decode path: entryId.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "entryId",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				var paramsDotEntryIdVal uuid.UUID
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToUUID(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotEntryIdVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.EntryId = ID(paramsDotEntryIdVal)
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "entryId",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// SaveRollTableBuildParams is parameters of saveRollTableBuild operation.
+type SaveRollTableBuildParams struct {
+	// Library entry id.
+	EntryId ID
+}
+
+func unpackSaveRollTableBuildParams(packed middleware.Parameters) (params SaveRollTableBuildParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "entryId",
+			In:   "path",
+		}
+		params.EntryId = packed[key].(ID)
+	}
+	return params
+}
+
+func decodeSaveRollTableBuildParams(args [1]string, argsEscaped bool, r *http.Request) (params SaveRollTableBuildParams, _ error) {
 	// Decode path: entryId.
 	if err := func() error {
 		param := args[0]

@@ -322,7 +322,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 	}
 	result := attack.Outcome(natural(roll), roll.Total-natural(roll), r.st.armor(t)+p.CoverBonus)
 	if result == attack.Miss {
-		r.commit(request{}, Write{Kind: domain.ActionAttackMissed, Token: a}, roll.Roller, sys)
+		r.commit(request{}, Write{Kind: domain.ActionAttackMissed, Token: a, hook: variants.AttackHook(natural(roll))}, roll.Roller, sys)
 		r.graze(a, t, p, roll.Roller, sys)
 		return
 	}
@@ -335,6 +335,7 @@ func (r *runtime) attackRolled(roll domain.Roll) {
 		return
 	}
 	w := r.hit(a, t, p, result == attack.Critical, roll)
+	w.hook = variants.AttackHook(natural(roll))
 	r.commit(request{}, w, roll.Roller, sys)
 	if w.Kind == domain.ActionDamageDealt {
 		r.masteryAfterHit(a, t, p, w.HP.Lost(), roll.Roller, sys)
