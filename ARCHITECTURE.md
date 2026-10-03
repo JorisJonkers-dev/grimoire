@@ -9,7 +9,7 @@
 
 **Status.** Settled 2026-09-29 in a design grilling session. This document supersedes the earlier
 Grimoire design (Rails) and specialises the generic
-[Go API](docs/blueprints/go-api.md) and [Vue + TS SPA](docs/blueprints/vue-ts-spa.md) blueprints for this product. Where this document and a generic blueprint
+[Go API](https://github.com/JorisJonkers-dev/template-go-vue/blob/main/docs/blueprints/go-api.md) and [Vue + TS SPA](https://github.com/JorisJonkers-dev/template-go-vue/blob/main/docs/blueprints/vue-ts-spa.md) blueprints for this product. Where this document and a generic blueprint
 disagree, **this document wins**. Vocabulary lives in [`CONTEXT.md`](CONTEXT.md); decisions that are hard to reverse have
 ADRs in [`docs/adr/`](docs/adr/).
 
@@ -319,7 +319,7 @@ grimoire/
 
 ## 6. Backend — Go
 
-Follows the [Go API blueprint](docs/blueprints/go-api.md) in full except where stated. Summary of what binds here:
+Follows the [Go API blueprint](https://github.com/JorisJonkers-dev/template-go-vue/blob/main/docs/blueprints/go-api.md) in full except where stated. Summary of what binds here:
 
 ### 6.1 Stack
 
@@ -910,7 +910,7 @@ into Postgres/S3 — it never enters the repository.
 
 ## 15. Frontend
 
-Follows the [Vue + TS SPA blueprint](docs/blueprints/vue-ts-spa.md) in full except where stated.
+Follows the [Vue + TS SPA blueprint](https://github.com/JorisJonkers-dev/template-go-vue/blob/main/docs/blueprints/vue-ts-spa.md) in full except where stated.
 
 ### 15.1 Stack
 
@@ -1288,8 +1288,8 @@ least 44 px. The Claude Design canvas "Grimoire UI mockups" is the visual refere
   §21–§28 live play, maps, boards, control, XP, optional rules, vision, challenges) is carried
   forward with the changes above. Its stack sections (Rails, RBS/Steep, Packwerk, Kamal, Solid
   Cable, Rails auth) are superseded.
-- **[Go API blueprint](docs/blueprints/go-api.md)**: adopted for the API. Deviations: realtime is required, not optional; one
+- **[Go API blueprint](https://github.com/JorisJonkers-dev/template-go-vue/blob/main/docs/blueprints/go-api.md)**: adopted for the API. Deviations: realtime is required, not optional; one
   spec also carries WS and MCP schemas; property tests added; CI may parallelise (public repo).
-- **[Vue + TS SPA blueprint](docs/blueprints/vue-ts-spa.md)**: adopted for the web app. Additions: realtime client, hybrid canvas/SVG
+- **[Vue + TS SPA blueprint](https://github.com/JorisJonkers-dev/template-go-vue/blob/main/docs/blueprints/vue-ts-spa.md)**: adopted for the web app. Additions: realtime client, hybrid canvas/SVG
   map, PWA + Capacitor shells, i18n. The FMG sidecar exception to "no TS backend" is scoped in §13.5.
 - **Rails, Rust, .NET and Spring/Kotlin blueprints**: evaluated; not chosen ([ADR-0001](docs/adr/0001-go-backend-not-estate-kotlin.md)).
