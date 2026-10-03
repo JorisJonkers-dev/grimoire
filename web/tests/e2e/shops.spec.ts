@@ -101,6 +101,12 @@ test('the DM opens a shop stocked from a loot table, and a player haggles, buys 
   await expect(mira).toContainText('Rope ×2')
   await expect(shop.getByTestId('stock-rope')).toContainText('Rope ×4')
 
+  // The night's rest begins in the evening: the Game Clock passes midnight, and the shop restocks for a new day.
+  await page.getByTestId('scope-world').check()
+  await page.getByTestId('clock-time').fill('22:00')
+  await page.getByTestId('clock-set').click()
+  await expect(page.getByTestId('game-clock')).toHaveText('Day 0, 22:00')
+  await page.getByTestId('scope-local').check()
   await page.getByTestId('rest-long').click()
   await expect(page.getByTestId('game-day')).toHaveText('Day 1')
   await expect(shop.getByTestId('game-day')).toHaveText('Day 1')

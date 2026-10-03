@@ -4,6 +4,7 @@ package tactics
 
 import (
 	"cmp"
+	"math"
 	"slices"
 	"strings"
 )
@@ -49,11 +50,21 @@ type Attack struct {
 	LongRangeFt int
 }
 
-// Target is an enemy the creature can see, with the ranged damage it has seen that enemy deal.
+// Target is an enemy the creature can see, with the ranged damage it has seen that enemy deal. March is
+// its place in the Marching Order, from 1 at the front; 0 for one that has none.
 type Target struct {
 	ID               string
 	DistanceFt       int
 	RangedDamageSeen int
+	March            int
+}
+
+// rank orders targets by the Marching Order: the front first, and those with no place last.
+func (t Target) rank() int {
+	if t.March <= 0 {
+		return math.MaxInt
+	}
+	return t.March
 }
 
 // Reason says why a suggestion was made.
@@ -73,15 +84,16 @@ type Suggestion struct {
 	Reason Reason
 }
 
-// Suggest picks the creature's action. Simple attacks the nearest enemy. Cunning, if it has a ranged
+// Suggest picks the creature's action. Simple attacks the nearest enemy, and of several equally near
+// the one furthest to the front of the Marching Order. Cunning, if it has a ranged
 // attack, shoots the enemy it has seen deal the most damage from range; otherwise it too goes nearest.
 func Suggest(s Style, attacks []Attack, targets []Target) (Suggestion, bool) {
 	if s == Off || len(targets) == 0 || len(attacks) == 0 {
-		return Suggestion{Attack: -1, Target: Target{ID: "", DistanceFt: 0, RangedDamageSeen: 0}, Reason: Nearest}, false
+		return Suggestion{Attack: -1, Target: Target{ID: "", DistanceFt: 0, RangedDamageSeen: 0, March: 0}, Reason: Nearest}, false
 	}
 	ordered := slices.Clone(targets)
 	slices.SortFunc(ordered, func(a, b Target) int {
-		return cmp.Or(cmp.Compare(a.DistanceFt, b.DistanceFt), strings.Compare(a.ID, b.ID))
+		return cmp.Or(cmp.Compare(a.DistanceFt, b.DistanceFt), cmp.Compare(a.rank(), b.rank()), strings.Compare(a.ID, b.ID))
 	})
 	if s == Cunning {
 		if sniped, ok := snipe(attacks, ordered); ok {

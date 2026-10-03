@@ -47,7 +47,7 @@ func (s *state) suggest(x domain.Combatant, t domain.Token) *SuggestionView {
 		}
 		id := uuid.UUID(o.ID).String()
 		labels[id] = o.Label
-		targets = append(targets, tactics.Target{ID: id, DistanceFt: hex.Distance(from, to) * hex.FeetPerHex, RangedDamageSeen: s.observed[t.ID][o.ID]})
+		targets = append(targets, tactics.Target{ID: id, DistanceFt: hex.Distance(from, to) * hex.FeetPerHex, RangedDamageSeen: s.observed[t.ID][o.ID], March: s.marchPlace(o)})
 	}
 	sug, ok := tactics.Suggest(style, attacks, targets)
 	if !ok {

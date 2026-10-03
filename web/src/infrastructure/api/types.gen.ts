@@ -2516,7 +2516,7 @@ export type LiveSessionView = {
  */
 export type LiveCommand = {
     nonce: string;
-    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control' | 'measure_route' | 'find_map';
+    kind: 'resync' | 'place_token' | 'move_token' | 'set_token_hidden' | 'remove_token' | 'set_map' | 'reveal_hexes' | 'set_walls' | 'place_light' | 'remove_light' | 'set_ambient' | 'plan_walk' | 'walk' | 'start_combat' | 'end_turn' | 'spend' | 'end_combat' | 'preview_attack' | 'attack' | 'undo_damage' | 'set_tactics' | 'react' | 'apply_effect' | 'end_effect' | 'resolve_manual' | 'preview_area' | 'cast_area' | 'paint_surface' | 'set_elevation' | 'table_camera' | 'table_scene' | 'table_blackout' | 'table_caption' | 'ping' | 'set_world' | 'add_node' | 'add_route' | 'remove_node' | 'remove_route' | 'place_party' | 'travel' | 'add_zone' | 'remove_zone' | 'hold_zone' | 'spring_zone' | 'rest' | 'encounter_check' | 'schedule_check' | 'roll_loot' | 'move_item' | 'move_coins' | 'claim_loot' | 'settle_loot' | 'trade' | 'open_shop' | 'close_shop' | 'buy' | 'sell' | 'haggle' | 'spawn_encounter' | 'adjust_hp' | 'undo' | 'propose_rest' | 'agree_rest' | 'spend_hit_die' | 'finish_rest' | 'interrupt_rest' | 'take_action' | 'unarmed' | 'interact' | 'swap_weapons' | 'set_reaction' | 'stabilise' | 'revive' | 'teleport' | 'summon' | 'command' | 'set_visibility' | 'place_object' | 'remove_object' | 'use_object' | 'damage_object' | 'find_object' | 'unlock' | 'disarm' | 'jump' | 'throw' | 'sneak' | 'explore' | 'pass_turn' | 'legendary_action' | 'lair_action' | 'legendary_resistance' | 'checkpoint' | 'rewind' | 'split_party' | 'rejoin_party' | 'table_follow' | 'assign_control' | 'measure_route' | 'find_map' | 'set_clock' | 'set_marching_order';
     caption?: string;
     tokenId?: Id;
     label?: string;
@@ -2670,6 +2670,18 @@ export type LiveCommand = {
      * With rewind, the Checkpoint to go back to.
      */
     checkpointId?: string;
+    /**
+     * With set_marching_order, the Characters to place in the Marching Order, from the front; each once. Anyone at the table may arrange it.
+     */
+    characterIds?: Array<Id>;
+    /**
+     * With set_clock, the day the DM sets the Game Clock to.
+     */
+    gameDay?: number;
+    /**
+     * With set_clock, the time of day, in minutes after midnight.
+     */
+    gameMinute?: number;
     /**
      * With place_token, the Companion to put on the map. It stands with the party under its own name, run by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the Member who runs the token from now on; left out, the DM does.
      */
@@ -3917,6 +3929,15 @@ export type LiveTravelPlan = {
 };
 
 /**
+ * A Character in the Marching Order. Its place counts from 1 at the front; a Character nobody has placed has none and marches behind the rest.
+ */
+export type LiveMarcher = {
+    characterId: Id;
+    name: string;
+    place?: number;
+};
+
+/**
  * The length of a measured route over the world map, in hexes and in miles by the Map's scale, and how long it takes at each pace. A route of more than a million miles is refused.
  */
 export type LiveMeasure = {
@@ -4580,9 +4601,17 @@ export type LiveView = {
     shop?: LiveShop;
     rest?: LiveRest;
     /**
-     * Days passed in the Campaign; a long rest or travel moves it on.
+     * The day on the Campaign's Game Clock. Rests, travel and the DM move the clock on.
      */
     gameDay?: number;
+    /**
+     * The time of day on the Game Clock, in minutes after midnight. Dawn is at 360; charges that come back at dawn do so when the clock passes it.
+     */
+    gameMinute?: number;
+    /**
+     * Every Character of the Campaign, those with a place in the Marching Order first, from the front. Of two of the party equally near, an enemy goes for the one further to the front.
+     */
+    marchingOrder?: Array<LiveMarcher>;
     /**
      * The points the DM can rewind to, oldest first. Sent to the DM only.
      */

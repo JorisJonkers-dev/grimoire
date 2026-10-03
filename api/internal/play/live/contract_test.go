@@ -115,7 +115,8 @@ func samples() contract {
 			{CharacterID: "0190c7a8-0000-7000-8000-000000000034", RollID: "0190c7a8-0000-7000-8000-000000000035"},
 		},
 	}
-	view.GameDay = 3
+	view.GameDay, view.GameMinute = 3, 14*60+30
+	view.MarchingOrder = []live.MarchView{{CharacterID: "0190c7a8-0000-7000-8000-000000000031", Name: "Brom", Place: 1}, {CharacterID: "0190c7a8-0000-7000-8000-000000000032", Name: "Aria"}}
 	dmView := *view
 	noticed, target := true, "0190c7a8-0000-7000-8000-000000000013"
 	dmView.Checks = []live.CheckView{{
@@ -179,6 +180,8 @@ func samples() contract {
 			{Nonce: "n43", Kind: live.CmdPlaceParty, NodeID: "0190c7a8-0000-7000-8000-000000000022"},
 			{Nonce: "n44a", Kind: live.CmdAddNode, Label: "Lair", Q: 1, R: 1, Secret: true, MapID: "0190c7a8-0000-7000-8000-00000000000d"},
 			{Nonce: "n44b", Kind: live.CmdFindMap, MapID: "0190c7a8-0000-7000-8000-00000000000d", On: true},
+			{Nonce: "n44c", Kind: live.CmdSetClock, GameDay: 3, GameMinute: 6 * 60},
+			{Nonce: "n44d", Kind: live.CmdSetMarchingOrder, CharacterIDs: []string{"0190c7a8-0000-7000-8000-000000000031", "0190c7a8-0000-7000-8000-000000000032"}},
 			{Nonce: "n44", Kind: live.CmdTravel, RouteID: "0190c7a8-0000-7000-8000-000000000024", Pace: "fast"},
 			{Nonce: "n45", Kind: live.CmdAddZone, Label: "Ambush", Q: 3, R: 0, RadiusHexes: 2, DMOnly: true},
 			{Nonce: "n46", Kind: live.CmdHoldZone, ZoneID: "0190c7a8-0000-7000-8000-000000000025", On: true},

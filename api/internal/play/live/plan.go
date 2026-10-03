@@ -95,6 +95,10 @@ func (r *runtime) plan(req request) (Write, string) {
 		return r.planZone(m, cmd)
 	case CmdSetWorld, CmdAddNode, CmdAddRoute, CmdRemoveNode, CmdRemoveRoute, CmdPlaceParty, CmdTravel, CmdFindMap:
 		return r.planWorld(cmd)
+	case CmdSetClock:
+		return r.planClock(cmd)
+	case CmdSetMarchingOrder:
+		return r.planMarch(cmd)
 	case CmdReact:
 		return r.planReact(m, cmd)
 	case CmdWalk:

@@ -20625,6 +20625,13 @@ type LiveCommand struct {
 	Name OptString `json:"name"`
 	// With rewind, the Checkpoint to go back to.
 	CheckpointId OptString `json:"checkpointId"`
+	// With set_marching_order, the Characters to place in the Marching Order, from the front; each once.
+	// Anyone at the table may arrange it.
+	CharacterIds []ID `json:"characterIds"`
+	// With set_clock, the day the DM sets the Game Clock to.
+	GameDay OptInt32 `json:"gameDay"`
+	// With set_clock, the time of day, in minutes after midnight.
+	GameMinute OptInt32 `json:"gameMinute"`
 	// With place_token, the Companion to put on the map. It stands with the party under its own name, run
 	// by whoever it is given to, with the hit points it kept. With assign_control, controllerId is the
 	// Member who runs the token from now on; left out, the DM does.
@@ -21139,6 +21146,21 @@ func (s *LiveCommand) GetName() OptString {
 // GetCheckpointId returns the value of CheckpointId.
 func (s *LiveCommand) GetCheckpointId() OptString {
 	return s.CheckpointId
+}
+
+// GetCharacterIds returns the value of CharacterIds.
+func (s *LiveCommand) GetCharacterIds() []ID {
+	return s.CharacterIds
+}
+
+// GetGameDay returns the value of GameDay.
+func (s *LiveCommand) GetGameDay() OptInt32 {
+	return s.GameDay
+}
+
+// GetGameMinute returns the value of GameMinute.
+func (s *LiveCommand) GetGameMinute() OptInt32 {
+	return s.GameMinute
 }
 
 // GetCompanionId returns the value of CompanionId.
@@ -21661,6 +21683,21 @@ func (s *LiveCommand) SetCheckpointId(val OptString) {
 	s.CheckpointId = val
 }
 
+// SetCharacterIds sets the value of CharacterIds.
+func (s *LiveCommand) SetCharacterIds(val []ID) {
+	s.CharacterIds = val
+}
+
+// SetGameDay sets the value of GameDay.
+func (s *LiveCommand) SetGameDay(val OptInt32) {
+	s.GameDay = val
+}
+
+// SetGameMinute sets the value of GameMinute.
+func (s *LiveCommand) SetGameMinute(val OptInt32) {
+	s.GameMinute = val
+}
+
 // SetCompanionId sets the value of CompanionId.
 func (s *LiveCommand) SetCompanionId(val OptString) {
 	s.CompanionId = val
@@ -21966,6 +22003,8 @@ const (
 	LiveCommandKindAssignControl       LiveCommandKind = "assign_control"
 	LiveCommandKindMeasureRoute        LiveCommandKind = "measure_route"
 	LiveCommandKindFindMap             LiveCommandKind = "find_map"
+	LiveCommandKindSetClock            LiveCommandKind = "set_clock"
+	LiveCommandKindSetMarchingOrder    LiveCommandKind = "set_marching_order"
 )
 
 // AllValues returns all LiveCommandKind values.
@@ -22072,6 +22111,8 @@ func (LiveCommandKind) AllValues() []LiveCommandKind {
 		LiveCommandKindAssignControl,
 		LiveCommandKindMeasureRoute,
 		LiveCommandKindFindMap,
+		LiveCommandKindSetClock,
+		LiveCommandKindSetMarchingOrder,
 	}
 }
 
@@ -22279,6 +22320,10 @@ func (s LiveCommandKind) MarshalText() ([]byte, error) {
 	case LiveCommandKindMeasureRoute:
 		return []byte(s), nil
 	case LiveCommandKindFindMap:
+		return []byte(s), nil
+	case LiveCommandKindSetClock:
+		return []byte(s), nil
+	case LiveCommandKindSetMarchingOrder:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -22590,6 +22635,12 @@ func (s *LiveCommandKind) UnmarshalText(data []byte) error {
 		return nil
 	case LiveCommandKindFindMap:
 		*s = LiveCommandKindFindMap
+		return nil
+	case LiveCommandKindSetClock:
+		*s = LiveCommandKindSetClock
+		return nil
+	case LiveCommandKindSetMarchingOrder:
+		*s = LiveCommandKindSetMarchingOrder
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -24382,6 +24433,45 @@ func (s *LiveMap) SetGridKind(val GridKind) {
 // SetGridStrength sets the value of GridStrength.
 func (s *LiveMap) SetGridStrength(val GridStrength) {
 	s.GridStrength = val
+}
+
+// A Character in the Marching Order. Its place counts from 1 at the front; a Character nobody has
+// placed has none and marches behind the rest.
+// Ref: #/components/schemas/LiveMarcher
+type LiveMarcher struct {
+	CharacterId ID       `json:"characterId"`
+	Name        string   `json:"name"`
+	Place       OptInt32 `json:"place"`
+}
+
+// GetCharacterId returns the value of CharacterId.
+func (s *LiveMarcher) GetCharacterId() ID {
+	return s.CharacterId
+}
+
+// GetName returns the value of Name.
+func (s *LiveMarcher) GetName() string {
+	return s.Name
+}
+
+// GetPlace returns the value of Place.
+func (s *LiveMarcher) GetPlace() OptInt32 {
+	return s.Place
+}
+
+// SetCharacterId sets the value of CharacterId.
+func (s *LiveMarcher) SetCharacterId(val ID) {
+	s.CharacterId = val
+}
+
+// SetName sets the value of Name.
+func (s *LiveMarcher) SetName(val string) {
+	s.Name = val
+}
+
+// SetPlace sets the value of Place.
+func (s *LiveMarcher) SetPlace(val OptInt32) {
+	s.Place = val
 }
 
 // The length of a measured route over the world map, in hexes and in miles by the Map's scale, and how
@@ -27363,8 +27453,14 @@ type LiveView struct {
 	Inventory  []LiveContainer  `json:"inventory"`
 	Shop       OptLiveShop      `json:"shop"`
 	Rest       OptLiveRest      `json:"rest"`
-	// Days passed in the Campaign; a long rest or travel moves it on.
+	// The day on the Campaign's Game Clock. Rests, travel and the DM move the clock on.
 	GameDay OptInt32 `json:"gameDay"`
+	// The time of day on the Game Clock, in minutes after midnight. Dawn is at 360; charges that come back
+	// at dawn do so when the clock passes it.
+	GameMinute OptInt32 `json:"gameMinute"`
+	// Every Character of the Campaign, those with a place in the Marching Order first, from the front. Of
+	// two of the party equally near, an enemy goes for the one further to the front.
+	MarchingOrder []LiveMarcher `json:"marchingOrder"`
 	// The points the DM can rewind to, oldest first. Sent to the DM only.
 	Checkpoints []LiveCheckpoint `json:"checkpoints"`
 	// The Campaign is played without undo. Sent to the DM only.
@@ -27509,6 +27605,16 @@ func (s *LiveView) GetRest() OptLiveRest {
 // GetGameDay returns the value of GameDay.
 func (s *LiveView) GetGameDay() OptInt32 {
 	return s.GameDay
+}
+
+// GetGameMinute returns the value of GameMinute.
+func (s *LiveView) GetGameMinute() OptInt32 {
+	return s.GameMinute
+}
+
+// GetMarchingOrder returns the value of MarchingOrder.
+func (s *LiveView) GetMarchingOrder() []LiveMarcher {
+	return s.MarchingOrder
 }
 
 // GetCheckpoints returns the value of Checkpoints.
@@ -27674,6 +27780,16 @@ func (s *LiveView) SetRest(val OptLiveRest) {
 // SetGameDay sets the value of GameDay.
 func (s *LiveView) SetGameDay(val OptInt32) {
 	s.GameDay = val
+}
+
+// SetGameMinute sets the value of GameMinute.
+func (s *LiveView) SetGameMinute(val OptInt32) {
+	s.GameMinute = val
+}
+
+// SetMarchingOrder sets the value of MarchingOrder.
+func (s *LiveView) SetMarchingOrder(val []LiveMarcher) {
+	s.MarchingOrder = val
 }
 
 // SetCheckpoints sets the value of Checkpoints.

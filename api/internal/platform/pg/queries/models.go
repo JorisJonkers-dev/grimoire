@@ -339,6 +339,12 @@ type CampaignMapWall struct {
 	R     int32
 }
 
+type CampaignMarchingOrder struct {
+	CampaignID  uuid.UUID
+	Position    int32
+	CharacterID uuid.UUID
+}
+
 type CampaignMember struct {
 	ID          uuid.UUID
 	CampaignID  uuid.UUID

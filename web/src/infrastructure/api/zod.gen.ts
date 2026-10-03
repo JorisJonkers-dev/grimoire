@@ -2803,6 +2803,15 @@ export const zLiveWorldRoute = z.object({
 });
 
 /**
+ * A Character in the Marching Order. Its place counts from 1 at the front; a Character nobody has placed has none and marches behind the rest.
+ */
+export const zLiveMarcher = z.object({
+    characterId: zId,
+    name: z.string().max(200),
+    place: z.int().gte(1).lte(100).optional()
+});
+
+/**
  * How long a measured route takes at one pace, in minutes on the road and the travel days they span.
  */
 export const zLiveMeasurePlan = z.object({
@@ -4383,7 +4392,9 @@ export const zLiveCommand = z.object({
         'table_follow',
         'assign_control',
         'measure_route',
-        'find_map'
+        'find_map',
+        'set_clock',
+        'set_marching_order'
     ]),
     caption: z.string().max(400).optional(),
     tokenId: zId.optional(),
@@ -4526,6 +4537,9 @@ export const zLiveCommand = z.object({
     seq: z.int().gte(1).lte(2147483647).optional(),
     name: z.string().max(120).optional(),
     checkpointId: z.string().max(64).optional(),
+    characterIds: z.array(zId).max(100).optional(),
+    gameDay: z.int().gte(0).lte(1000000).optional(),
+    gameMinute: z.int().gte(0).lte(1439).optional(),
     companionId: z.string().max(64).optional(),
     tokenIds: z.array(zId).max(40).optional(),
     sessionId: z.string().max(64).optional()
@@ -4630,6 +4644,8 @@ export const zLiveView = z.object({
     shop: zLiveShop.optional(),
     rest: zLiveRest.optional(),
     gameDay: z.int().gte(0).lte(1000000).optional(),
+    gameMinute: z.int().gte(0).lte(1439).optional(),
+    marchingOrder: z.array(zLiveMarcher).max(1000).optional(),
     checkpoints: z.array(zLiveCheckpoint).max(2000).optional(),
     noUndo: z.boolean().optional(),
     groups: z.array(zLiveGroup).max(8).optional(),

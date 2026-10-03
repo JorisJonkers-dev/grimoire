@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { LiveMeasure, LiveWorld, LocalMap, TravelPace } from '@/infrastructure/api/types.gen'
+import type { LiveMarcher, LiveMeasure, LiveWorld, LocalMap, TravelPace } from '@/infrastructure/api/types.gen'
 import type { Outgoing } from '@/realtime/liveSession'
 import type { Coord } from '@/shared/hex'
 import { GButton } from '@/shared/ui'
 import { cellsFor, key, layoutOf } from './geometry'
 import MapBoard from './MapBoard.vue'
+import PartyClock from './PartyClock.vue'
 import { duration, journey, MAX_WAYPOINTS, measured } from './travel'
 import WorldOverlay from './WorldOverlay.vue'
 
 type Tool = 'node' | 'route' | 'party' | 'remove'
 
-const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; localMaps: LocalMap[]; measure: LiveMeasure | null }>()
+const props = defineProps<{ world?: LiveWorld; dm: boolean; maps: LocalMap[]; localMaps: LocalMap[]; measure: LiveMeasure | null; gameDay: number; gameMinute: number; marchingOrder: LiveMarcher[] }>()
 const emit = defineEmits<{ send: [cmd: Outgoing] }>()
 const choice = ref('')
 const tool = ref<Tool>('node')
@@ -109,6 +110,7 @@ function tap(c: Coord) {
       </label>
       <GButton data-testid="use-world" @click="emit('send', choice ? { kind: 'set_world', mapId: choice } : { kind: 'set_world' })">Use world map</GButton>
     </div>
+    <PartyClock :game-day="gameDay" :game-minute="gameMinute" :marching-order="marchingOrder" :dm="dm" @send="(cmd) => emit('send', cmd)" />
     <p v-if="!world" class="hint" data-testid="no-world">{{ dm ? 'Choose a world map for the party to travel.' : 'The DM has not opened a world map yet.' }}</p>
     <template v-else>
       <MapBoard :map="world.map" :view="board" :dm="dm" :title="world.map.name" :path="waypoints" @select="tap">

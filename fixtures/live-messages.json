@@ -447,6 +447,26 @@
       "on": true
     },
     {
+      "nonce": "n44c",
+      "kind": "set_clock",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "gameDay": 3,
+      "gameMinute": 360
+    },
+    {
+      "nonce": "n44d",
+      "kind": "set_marching_order",
+      "q": 0,
+      "r": 0,
+      "hidden": false,
+      "characterIds": [
+        "0190c7a8-0000-7000-8000-000000000031",
+        "0190c7a8-0000-7000-8000-000000000032"
+      ]
+    },
+    {
       "nonce": "n44",
       "kind": "travel",
       "q": 0,
@@ -1331,6 +1351,18 @@
           ]
         },
         "gameDay": 3,
+        "gameMinute": 870,
+        "marchingOrder": [
+          {
+            "characterId": "0190c7a8-0000-7000-8000-000000000031",
+            "name": "Brom",
+            "place": 1
+          },
+          {
+            "characterId": "0190c7a8-0000-7000-8000-000000000032",
+            "name": "Aria"
+          }
+        ],
         "checkpoints": [
           {
             "id": "0190c7a8-0000-7000-8000-00000000000c",
@@ -1878,6 +1910,18 @@
           ]
         },
         "gameDay": 3,
+        "gameMinute": 870,
+        "marchingOrder": [
+          {
+            "characterId": "0190c7a8-0000-7000-8000-000000000031",
+            "name": "Brom",
+            "place": 1
+          },
+          {
+            "characterId": "0190c7a8-0000-7000-8000-000000000032",
+            "name": "Aria"
+          }
+        ],
         "checkpoints": [
           {
             "id": "0190c7a8-0000-7000-8000-00000000000c",
@@ -1932,7 +1976,8 @@
         "visible": [],
         "remembered": [],
         "roster": [],
-        "gameDay": 0
+        "gameDay": 0,
+        "gameMinute": 0
       }
     },
     {
@@ -2001,7 +2046,8 @@
         "visible": [],
         "remembered": [],
         "roster": [],
-        "gameDay": 0
+        "gameDay": 0,
+        "gameMinute": 0
       },
       "initiative": {
         "order": [
@@ -2505,6 +2551,18 @@
           ]
         },
         "gameDay": 3,
+        "gameMinute": 870,
+        "marchingOrder": [
+          {
+            "characterId": "0190c7a8-0000-7000-8000-000000000031",
+            "name": "Brom",
+            "place": 1
+          },
+          {
+            "characterId": "0190c7a8-0000-7000-8000-000000000032",
+            "name": "Aria"
+          }
+        ],
         "checkpoints": [
           {
             "id": "0190c7a8-0000-7000-8000-00000000000c",
@@ -2992,6 +3050,18 @@
             ]
           },
           "gameDay": 3,
+          "gameMinute": 870,
+          "marchingOrder": [
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000031",
+              "name": "Brom",
+              "place": 1
+            },
+            {
+              "characterId": "0190c7a8-0000-7000-8000-000000000032",
+              "name": "Aria"
+            }
+          ],
           "checkpoints": [
             {
               "id": "0190c7a8-0000-7000-8000-00000000000c",

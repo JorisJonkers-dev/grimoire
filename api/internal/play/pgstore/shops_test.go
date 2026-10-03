@@ -113,8 +113,8 @@ func TestShopsAreStoredWithTheirTradesHagglesAndRestocks(t *testing.T) {
 	if err != nil || back == nil || *back.Haggles[char].Adjust != -10 || len(back.Shop.Stock) != 1 || back.Shop.Stock[0].Quantity != 2 || back.Shop.StockedDay != 1 {
 		t.Fatalf("open shop after = %+v %v", back, err)
 	}
-	if d, _ := store.GameDay(ctx, tb.campaign); d != 1 {
-		t.Fatalf("game day = %d", d)
+	if now, _ := store.GameClock(ctx, tb.campaign); now.Day != 1 || now.Minute != 0 {
+		t.Fatalf("game clock = %+v", now)
 	}
 	inv, _ = store.LoadInventory(ctx, tb.campaign)
 	if p := inv.Containers[slicesIndex(inv.Containers, domain.ContainerCharacter)]; len(p.Items) != 0 || p.Coins["sp"] != 2 || p.Coins["gp"] != 1 {
@@ -139,7 +139,7 @@ func TestShopsAreStoredWithTheirTradesHagglesAndRestocks(t *testing.T) {
 			return err
 		},
 		"bonus": func(repo *pgstore.Store) error { _, err := repo.TradeBonus(ctx, tb.campaign, char); return err },
-		"day":   func(repo *pgstore.Store) error { _, err := repo.GameDay(ctx, tb.campaign); return err },
+		"day":   func(repo *pgstore.Store) error { _, err := repo.GameClock(ctx, tb.campaign); return err },
 	}
 	for i, w := range writes {
 		ops["write "+w.Kind+string(rune('a'+i))] = func(repo *pgstore.Store) error {

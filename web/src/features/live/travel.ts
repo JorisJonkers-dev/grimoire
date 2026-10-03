@@ -27,3 +27,13 @@ export function measured(m: LiveMeasure, pace: TravelPace): string {
   const plan = m.plans.find((p) => p.pace === pace)
   return plan ? `${length} · ${duration(plan.minutes, plan.days)} at a ${pace} pace` : length
 }
+
+/** Dawn on the Game Clock, in minutes after midnight. */
+export const DAWN_MINUTE = 6 * 60
+const two = (n: number) => String(n).padStart(2, '0')
+
+// The Game Clock as the table reads it: the day and the time of day.
+export const clockText = (day: number, minute: number) => `Day ${String(day)}, ${two(Math.floor(minute / 60))}:${two(minute % 60)}`
+
+/** The next dawn after a time on the Game Clock. */
+export const nextDawn = (day: number, minute: number) => ({ gameDay: minute < DAWN_MINUTE ? day : day + 1, gameMinute: DAWN_MINUTE })

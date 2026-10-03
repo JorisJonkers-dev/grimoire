@@ -8,11 +8,6 @@ ORDER BY i.slug, (d.key = (SELECT c.ruleset_pref FROM campaign.campaigns c WHERE
 -- name: CampaignNpc :one
 SELECT name FROM campaign.npcs WHERE campaign_id = @campaign_id AND id = @id;
 
--- name: GameDay :one
-SELECT game_day FROM campaign.campaigns WHERE id = $1;
-
--- name: SetGameDay :exec
-UPDATE campaign.campaigns SET game_day = @game_day WHERE id = @id;
 
 -- name: ListSettlements :many
 SELECT id, name, size, wealth, location_id, updated_at FROM prep.settlements WHERE campaign_id = $1 ORDER BY name, id;
@@ -117,3 +112,6 @@ DELETE FROM play.haggles WHERE session_id = $1;
 
 -- name: ClearContainerCoins :exec
 DELETE FROM campaign.container_coins WHERE container_id = $1;
+
+-- name: GameDay :one
+SELECT game_day FROM campaign.campaigns WHERE id = $1;

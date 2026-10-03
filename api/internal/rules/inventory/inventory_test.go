@@ -123,16 +123,16 @@ func TestUnknownItemsKeepTheirKindOnly(t *testing.T) {
 
 func TestChargesComeBackOnTheirSchedule(t *testing.T) {
 	t.Parallel()
+	// A dawn item waits for dawn: no rest gives its charges back, and each dawn does.
 	wand := inventory.Charges{Max: 7, Dice: 1, Faces: 6, Bonus: 1, On: inventory.Dawn}
-	for _, c := range []struct {
-		current, rolled int
-		event           inventory.Rest
-		want            int
-	}{
-		{0, 4, inventory.LongRest, 5}, {5, 6, inventory.LongRest, 7}, {2, 3, inventory.ShortRest, 2}, {7, 1, inventory.LongRest, 7},
-	} {
-		if got := wand.Regain(c.event, c.current, c.rolled); got != c.want {
-			t.Errorf("%+v = %d", c, got)
+	for _, rest := range []inventory.Rest{inventory.ShortRest, inventory.LongRest} {
+		if got := wand.Regain(rest, 2, 6); got != 2 {
+			t.Errorf("a dawn item after a %s holds %d", rest, got)
+		}
+	}
+	for _, c := range []struct{ current, rolled, want int }{{0, 4, 5}, {5, 6, 7}, {7, 1, 7}, {2, 0, 3}} {
+		if got := wand.AtDawn(c.current, c.rolled); got != c.want {
+			t.Errorf("at dawn %+v = %d", c, got)
 		}
 	}
 	quick := inventory.Charges{Max: 3, Dice: 0, Faces: 0, Bonus: 3, On: inventory.ShortRestRecharge}
@@ -140,8 +140,16 @@ func TestChargesComeBackOnTheirSchedule(t *testing.T) {
 		t.Fatal("a short-rest item regains on any rest")
 	}
 	nightly := inventory.Charges{Max: 3, Dice: 0, Faces: 0, Bonus: 3, On: inventory.LongRestRecharge}
-	if nightly.Regain(inventory.ShortRest, 0, 0) != 0 || nightly.Regain(inventory.LongRest, 0, 0) != 3 {
+	if nightly.Regain(inventory.ShortRest, 0, 0) != 0 || nightly.Regain(inventory.LongRest, 0, 0) != 3 || nightly.Regain(inventory.LongRest, 1, 1) != 3 {
 		t.Fatal("a long-rest item regains only on a long rest")
+	}
+	rod := inventory.Charges{Max: 10, Dice: 1, Faces: 4, Bonus: 1, On: inventory.LongRestRecharge}
+	if got := rod.Regain(inventory.LongRest, 2, 3); got != 6 {
+		t.Fatalf("a rod with 2 charges that rolls 3 and adds 1 holds %d", got)
+	}
+	// Dawn passes the items that recharge on a rest by.
+	if quick.AtDawn(1, 0) != 1 || nightly.AtDawn(0, 2) != 0 {
+		t.Fatal("a rest item regained at dawn")
 	}
 }
 

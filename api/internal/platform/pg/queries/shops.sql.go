@@ -647,20 +647,6 @@ func (q *Queries) SessionShop(ctx context.Context, sessionID uuid.UUID) ([]uuid.
 	return items, nil
 }
 
-const setGameDay = `-- name: SetGameDay :exec
-UPDATE campaign.campaigns SET game_day = $1 WHERE id = $2
-`
-
-type SetGameDayParams struct {
-	GameDay int32
-	ID      uuid.UUID
-}
-
-func (q *Queries) SetGameDay(ctx context.Context, arg SetGameDayParams) error {
-	_, err := q.db.Exec(ctx, setGameDay, arg.GameDay, arg.ID)
-	return err
-}
-
 const setSessionShop = `-- name: SetSessionShop :exec
 INSERT INTO play.session_shops (session_id, shop_id) VALUES ($1, $2)
 ON CONFLICT (session_id) DO UPDATE SET shop_id = excluded.shop_id

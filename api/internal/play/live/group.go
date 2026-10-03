@@ -320,7 +320,7 @@ func (r *runtime) refresh() {
 		return
 	}
 	next := r.st.clone()
-	next.inventory, next.shop, next.day = trade.inventory, trade.shop, trade.day
+	next.inventory, next.shop, next.day, next.minute, next.march = trade.inventory, trade.shop, trade.clock.Day, trade.clock.Minute, trade.march
 	r.st = next
 	r.show()
 }
@@ -336,5 +336,5 @@ func (r *runtime) show() {
 // shared reports whether a change touched what every group of the party shares.
 func shared(w *Write) bool {
 	return w.Move != nil || len(w.Moves) > 0 || w.Drop != nil || w.Gone != nil || w.Claim != nil || w.Trade != nil || len(w.Trades) > 0 ||
-		w.Shop != nil || w.Restock != nil || w.Day != nil || len(w.Supplies) > 0 || len(w.Recharged) > 0 || len(w.Results) > 0
+		w.Shop != nil || w.Restock != nil || w.Day != nil || w.Kind == domain.ActionMarchingOrderSet || len(w.Dawned) > 0 || len(w.Supplies) > 0 || len(w.Recharged) > 0 || len(w.Results) > 0
 }

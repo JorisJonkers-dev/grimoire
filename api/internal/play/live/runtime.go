@@ -13,6 +13,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/play/domain"
 	prep "github.com/JorisJonkers-dev/grimoire/api/internal/prep/domain"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/clock"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/combat"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/conditionbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/dice"
@@ -127,7 +128,12 @@ type Write struct {
 	Trade   *domain.Trade
 	Restock *prep.Shop
 	Day     *int
-	haggle  *haggleChange
+	// Minute is the time of day that goes with Day; Dawned the charges the dawns that passed gave back.
+	Minute int
+	Dawned []domain.Recharge
+	// March is the Marching Order a marching_order_set leaves, from the front.
+	March  []uuid.UUID
+	haggle *haggleChange
 	// Resting is the rest a write leaves under way; RestOver ends it. Supplies are the Rations a Long
 	// Rest ate; Results what a finished rest leaves each Character with; Healed the hit points it gave back.
 	Resting  *domain.Rest
@@ -314,7 +320,9 @@ type Store interface {
 	ItemPrices(ctx context.Context, campaign uuid.UUID, slugs []string) (map[string]prep.ItemPrice, error)
 	// TradeBonus is a Character's Persuasion bonus.
 	TradeBonus(ctx context.Context, campaign, character uuid.UUID) (int, error)
-	GameDay(ctx context.Context, campaign uuid.UUID) (int, error)
+	GameClock(ctx context.Context, campaign uuid.UUID) (clock.Time, error)
+	// MarchingOrder reads the Characters that have a place in the Campaign's Marching Order, from the front.
+	MarchingOrder(ctx context.Context, campaign uuid.UUID) ([]uuid.UUID, error)
 	// HighGround reports whether the Campaign uses the high-ground optional rule.
 	HighGround(ctx context.Context, campaign uuid.UUID) (bool, error)
 	// Observations is how much damage each creature has seen each other creature deal from range.
@@ -569,7 +577,7 @@ func (h *Hub) load(ctx context.Context, store Store, id domain.SessionID) (*stat
 	}
 	st := &state{
 		session: s, tokens: map[domain.TokenID]domain.Token{}, combat: fight, observed: seen, now: h.Now, fx: fx, catalog: kept.catalog, looks: kept.looks, terrainKinds: kept.surfaces, sneak: kept.sneak, explore: kept.explore, rest: kept.rest, pending: kept.pending, dying: kept.dying, surfaces: ground, cast: cast, table: table,
-		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.day,
+		tableMap: tableMap, zones: zones, checks: checks, inventory: trade.inventory, shop: trade.shop, day: trade.clock.Day, minute: trade.clock.Minute, march: trade.march,
 	}
 	for _, t := range tokens {
 		st.tokens[t.ID] = t
@@ -609,7 +617,8 @@ func loadTable(ctx context.Context, store Store, s domain.Session) (domain.Table
 type trading struct {
 	inventory domain.Inventory
 	shop      *domain.OpenShop
-	day       int
+	clock     clock.Time
+	march     []uuid.UUID
 }
 
 // loadTrade reads the Campaign's Containers, the Shop the Session has open and the in-game day.
@@ -625,7 +634,10 @@ func loadTrade(ctx context.Context, store Store, s domain.Session) (trading, err
 	if err = priceCarried(ctx, store, s.CampaignID, out.inventory, out.shop); err != nil {
 		return out, err
 	}
-	out.day, err = store.GameDay(ctx, s.CampaignID)
+	if out.clock, err = store.GameClock(ctx, s.CampaignID); err != nil {
+		return out, err
+	}
+	out.march, err = store.MarchingOrder(ctx, s.CampaignID)
 	return out, err
 }
 
@@ -877,7 +889,7 @@ func (r *runtime) handle(req request) {
 func playerMay(kind string) bool {
 	switch kind {
 	case CmdWalk, CmdEndTurn, CmdSpend, CmdAttack, CmdReact, CmdCastArea, CmdMoveItem, CmdMoveCoins, CmdClaimLoot, CmdBuy, CmdSell, CmdHaggle, CmdTrade,
-		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn:
+		CmdProposeRest, CmdAgreeRest, CmdSpendHitDie, CmdTakeAction, CmdUnarmed, CmdInteract, CmdSwapWeapons, CmdSetReaction, CmdStabilise, CmdRevive, CmdTeleport, CmdSummon, CmdCommand, CmdUseObject, CmdUnlock, CmdDisarm, CmdJump, CmdThrow, CmdSneak, CmdPassTurn, CmdSetMarchingOrder:
 		return true
 	}
 	return false
@@ -957,7 +969,10 @@ func apply(s *state, w *Write) {
 		s.setLegend(c)
 	}
 	if w.Day != nil {
-		s.day = *w.Day
+		s.day, s.minute = *w.Day, w.Minute
+	}
+	for _, rc := range w.Dawned {
+		s.setCharges(rc)
 	}
 	applyZones(s, w)
 	if w.Kind == domain.ActionRestTaken {
@@ -1113,6 +1128,11 @@ func change(s *state, w *Write) {
 	case domain.ActionWorldSet, domain.ActionNodeAdded, domain.ActionNodeRemoved, domain.ActionRouteAdded, domain.ActionRouteRemoved,
 		domain.ActionPartyPlaced, domain.ActionTravelLeg, domain.ActionMapFound, domain.ActionMapLost:
 		applyWorld(s, w)
+		return
+	case domain.ActionMarchingOrderSet:
+		s.march = w.March
+		return
+	case domain.ActionClockSet:
 		return
 	case domain.ActionHPAdjusted:
 		s.setHP(*w.HP)

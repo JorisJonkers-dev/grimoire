@@ -101,15 +101,17 @@ type TravelLeg struct {
 
 // World action kinds in the Action Log.
 const (
-	ActionWorldSet     = "world_set"
-	ActionNodeAdded    = "node_added"
-	ActionNodeRemoved  = "node_removed"
-	ActionRouteAdded   = "route_added"
-	ActionRouteRemoved = "route_removed"
-	ActionPartyPlaced  = "party_placed"
-	ActionMapFound     = "map_found"
-	ActionMapLost      = "map_lost"
-	ActionTravelLeg    = "travel_leg"
+	ActionWorldSet         = "world_set"
+	ActionNodeAdded        = "node_added"
+	ActionNodeRemoved      = "node_removed"
+	ActionRouteAdded       = "route_added"
+	ActionRouteRemoved     = "route_removed"
+	ActionPartyPlaced      = "party_placed"
+	ActionMapFound         = "map_found"
+	ActionClockSet         = "clock_set"
+	ActionMarchingOrderSet = "marching_order_set"
+	ActionMapLost          = "map_lost"
+	ActionTravelLeg        = "travel_leg"
 )
 
 // Random encounter action kinds in the Action Log.
