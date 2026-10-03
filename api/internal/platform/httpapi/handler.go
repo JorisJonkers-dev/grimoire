@@ -40,7 +40,9 @@ type Handler struct {
 	// OIDCName names the external sign-in on the sign-in page.
 	OIDCName string
 	// Friends are Friends between Accounts, and Conversations their talk.
-	Friends          FriendService
+	Friends FriendService
+	// DiceSets are the looks Accounts give their dice.
+	DiceSets         DiceSetService
 	Conversations    ConversationService
 	Notifications    NotificationService
 	Releases         ReleaseService

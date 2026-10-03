@@ -78,6 +78,24 @@ func (UnimplementedHandler) CastRitual(ctx context.Context, req *SpellChoice, pa
 	return r, ht.ErrNotImplemented
 }
 
+// ChooseDiceSet implements chooseDiceSet operation.
+//
+// One of the sets or copies of the signed-in Account; without a set the dice roll plain.
+//
+// PUT /api/v1/dice-sets/chosen
+func (UnimplementedHandler) ChooseDiceSet(ctx context.Context, req *DiceSetChoice) (r ChooseDiceSetRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ClearDiceSetImage implements clearDiceSetImage operation.
+//
+// The set goes back to its preset patterns and needs no review.
+//
+// DELETE /api/v1/dice-sets/{diceSetId}/image
+func (UnimplementedHandler) ClearDiceSetImage(ctx context.Context, params ClearDiceSetImageParams) (r ClearDiceSetImageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ClearTokenIcon implements clearTokenIcon operation.
 //
 // Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
@@ -93,6 +111,16 @@ func (UnimplementedHandler) ClearTokenIcon(ctx context.Context, params ClearToke
 //
 // POST /api/v1/account/two-step/confirm
 func (UnimplementedHandler) ConfirmTwoStep(ctx context.Context, req *TwoStepCode, params ConfirmTwoStepParams) (r ConfirmTwoStepRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CopyDiceSet implements copyDiceSet operation.
+//
+// A read-only copy of a set shared with the signed-in Account. It stays as it was when the original
+// changes or stops being shared. One copy of a set per Account.
+//
+// POST /api/v1/dice-sets/{diceSetId}/copy
+func (UnimplementedHandler) CopyDiceSet(ctx context.Context, params CopyDiceSetParams) (r CopyDiceSetRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -141,6 +169,15 @@ func (UnimplementedHandler) CreateCampaign(ctx context.Context, req *CampaignCre
 //
 // POST /api/v1/campaigns/{campaignId}/characters
 func (UnimplementedHandler) CreateCharacter(ctx context.Context, req *CharacterBuild, params CreateCharacterParams) (r CreateCharacterRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateDiceSet implements createDiceSet operation.
+//
+// A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
+//
+// POST /api/v1/dice-sets
+func (UnimplementedHandler) CreateDiceSet(ctx context.Context, req *DiceSetChange) (r CreateDiceSetRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -289,6 +326,15 @@ func (UnimplementedHandler) DeleteCharacter(ctx context.Context, params DeleteCh
 	return r, ht.ErrNotImplemented
 }
 
+// DeleteDiceSet implements deleteDiceSet operation.
+//
+// Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
+//
+// DELETE /api/v1/dice-sets/{diceSetId}
+func (UnimplementedHandler) DeleteDiceSet(ctx context.Context, params DeleteDiceSetParams) (r DeleteDiceSetRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // DeleteEncounterPool implements deleteEncounterPool operation.
 //
 // Removes the Encounter Pool; its Revisions keep it restorable. DM only.
@@ -386,6 +432,15 @@ func (UnimplementedHandler) DiscardCharacterDraft(ctx context.Context, params Di
 //
 // POST /api/v1/admin/release-notes
 func (UnimplementedHandler) DraftReleaseNote(ctx context.Context, req *ReleaseNoteDraft) (r DraftReleaseNoteRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// EditDiceSet implements editDiceSet operation.
+//
+// Sets its name and looks. A copy cannot be changed.
+//
+// PUT /api/v1/dice-sets/{diceSetId}
+func (UnimplementedHandler) EditDiceSet(ctx context.Context, req *DiceSetChange, params EditDiceSetParams) (r EditDiceSetRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -546,6 +601,16 @@ func (UnimplementedHandler) GetClassBuild(ctx context.Context, params GetClassBu
 //
 // GET /api/v1/builders/conditions/{entryId}
 func (UnimplementedHandler) GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (r GetConditionBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetDiceSetImage implements getDiceSetImage operation.
+//
+// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
+// reviewing it.
+//
+// GET /api/v1/dice-sets/{diceSetId}/image
+func (UnimplementedHandler) GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (r GetDiceSetImageRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -966,6 +1031,25 @@ func (UnimplementedHandler) ListDeletedNpcs(ctx context.Context, params ListDele
 	return r, ht.ErrNotImplemented
 }
 
+// ListDiceSets implements listDiceSets operation.
+//
+// The Dice Sets of the signed-in Account, its own and its copies, and the one it rolls with.
+//
+// GET /api/v1/dice-sets
+func (UnimplementedHandler) ListDiceSets(ctx context.Context) (r ListDiceSetsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListDiceSetsToReview implements listDiceSetsToReview operation.
+//
+// Sets shared with everyone that carry an uploaded picture no Admin has decided on, oldest first.
+// Admins only.
+//
+// GET /api/v1/admin/dice-sets
+func (UnimplementedHandler) ListDiceSetsToReview(ctx context.Context) (r ListDiceSetsToReviewRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListEncounterChecks implements listEncounterChecks operation.
 //
 // The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
@@ -1236,6 +1320,17 @@ func (UnimplementedHandler) ListSettlementRevisions(ctx context.Context, params 
 //
 // GET /api/v1/campaigns/{campaignId}/settlements
 func (UnimplementedHandler) ListSettlements(ctx context.Context, params ListSettlementsParams) (r ListSettlementsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListSharedDiceSets implements listSharedDiceSets operation.
+//
+// Sets of others the signed-in Account may take a copy of. Those of its Friends that are shared with
+// Friends or with everyone, and sets shared with everyone that carry no uploaded picture or one an
+// Admin approved.
+//
+// GET /api/v1/dice-sets/shared
+func (UnimplementedHandler) ListSharedDiceSets(ctx context.Context) (r ListSharedDiceSetsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1649,6 +1744,15 @@ func (UnimplementedHandler) ResubmitProposal(ctx context.Context, req *ProposalU
 	return r, ht.ErrNotImplemented
 }
 
+// ReviewDiceSet implements reviewDiceSet operation.
+//
+// Decides whether everyone may see a set that waits. Admins only.
+//
+// POST /api/v1/admin/dice-sets/{diceSetId}/review
+func (UnimplementedHandler) ReviewDiceSet(ctx context.Context, req *DiceSetVerdict, params ReviewDiceSetParams) (r ReviewDiceSetRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ReviewProposal implements reviewProposal operation.
 //
 // A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
@@ -1900,6 +2004,16 @@ func (UnimplementedHandler) SetCampaignOverride(ctx context.Context, req *Campai
 	return r, ht.ErrNotImplemented
 }
 
+// SetDiceSetImage implements setDiceSetImage operation.
+//
+// A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with
+// everyone goes back before the Admins.
+//
+// PUT /api/v1/dice-sets/{diceSetId}/image
+func (UnimplementedHandler) SetDiceSetImage(ctx context.Context, req SetDiceSetImageReq, params SetDiceSetImageParams) (r SetDiceSetImageRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SetDie implements setDie operation.
 //
 // The server rolls the die from a logged seed, or takes the face read off a physical die. The roller
@@ -1934,6 +2048,16 @@ func (UnimplementedHandler) SetPortrait(ctx context.Context, req SetPortraitReq,
 //
 // PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 func (UnimplementedHandler) SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (r SetTokenIconRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ShareDiceSet implements shareDiceSet operation.
+//
+// Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone
+// waits for an Admin; until then only Friends see it. A copy cannot be shared on.
+//
+// PUT /api/v1/dice-sets/{diceSetId}/sharing
+func (UnimplementedHandler) ShareDiceSet(ctx context.Context, req *DiceSetSharingChange, params ShareDiceSetParams) (r ShareDiceSetRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

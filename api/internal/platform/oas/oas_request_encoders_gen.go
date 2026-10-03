@@ -52,6 +52,20 @@ func encodeCastRitualRequest(
 	return nil
 }
 
+func encodeChooseDiceSetRequest(
+	req *DiceSetChoice,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeConfirmTwoStepRequest(
 	req *TwoStepCode,
 	r *http.Request,
@@ -124,6 +138,20 @@ func encodeCreateCampaignRequest(
 
 func encodeCreateCharacterRequest(
 	req *CharacterBuild,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCreateDiceSetRequest(
+	req *DiceSetChange,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -334,6 +362,20 @@ func encodeDisableTwoStepRequest(
 
 func encodeDraftReleaseNoteRequest(
 	req *ReleaseNoteDraft,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeEditDiceSetRequest(
+	req *DiceSetChange,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -794,6 +836,20 @@ func encodeResubmitProposalRequest(
 	return nil
 }
 
+func encodeReviewDiceSetRequest(
+	req *DiceSetVerdict,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeReviewProposalRequest(
 	req *ProposalReviewInput,
 	r *http.Request,
@@ -1074,6 +1130,16 @@ func encodeSetCampaignOverrideRequest(
 	return nil
 }
 
+func encodeSetDiceSetImageRequest(
+	req SetDiceSetImageReq,
+	r *http.Request,
+) error {
+	const contentType = "application/octet-stream"
+	body := req
+	ht.SetBody(r, body, contentType)
+	return nil
+}
+
 func encodeSetDieRequest(
 	req *DieFill,
 	r *http.Request,
@@ -1119,6 +1185,20 @@ func encodeSetTokenIconRequest(
 	const contentType = "application/octet-stream"
 	body := req
 	ht.SetBody(r, body, contentType)
+	return nil
+}
+
+func encodeShareDiceSetRequest(
+	req *DiceSetSharingChange,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
 	return nil
 }
 

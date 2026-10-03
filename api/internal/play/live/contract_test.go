@@ -224,6 +224,10 @@ func samples() contract {
 			},
 			{Kind: live.UpdRoll, Seq: 7, Roll: &live.RollShown{
 				ID: token.ID, Roller: "Aria", Purpose: "Athletics", Dice: []live.RollDie{{Faces: 20, Value: 14, Kept: true}, {Faces: 20, Value: 3, Kept: false}}, Modifier: 3, Total: 17,
+				Look: &live.DiceLook{
+					Dice:     map[string]live.DieLook{"d20": {Pattern: "marble", Body: "#7a1f1a", Numbers: "#f3d27a", Image: &live.DiePlacement{X: 0.5, Y: 0.5, Scale: 1, Rotation: 90}}},
+					ImageURL: "/api/v1/dice-sets/0190c7a8-0000-7000-8000-000000000041/image?v=0123456789ab",
+				},
 			}},
 			{Kind: live.UpdView, Seq: 7, Nonce: "n14", View: view, Steps: []live.View{*view}},
 			{Kind: live.UpdAttackPreview, Seq: 7, Nonce: "n21", Preview: &live.AttackPreview{

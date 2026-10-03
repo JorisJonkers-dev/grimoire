@@ -1948,6 +1948,26 @@ type SocialConversationMember struct {
 	LastReadAt     time.Time
 }
 
+type SocialDiceSet struct {
+	ID           uuid.UUID
+	OwnerAccount uuid.UUID
+	Name         string
+	Design       []byte
+	ImageKey     pgtype.Text
+	ImageType    pgtype.Text
+	Sharing      string
+	Review       string
+	CopiedFrom   pgtype.UUID
+	MadeBy       string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
+type SocialDiceSetChoice struct {
+	AccountID uuid.UUID
+	DiceSetID uuid.UUID
+}
+
 type SocialDigest struct {
 	AccountID uuid.UUID
 	SentAt    time.Time

@@ -1,8 +1,11 @@
 package pgstore_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"image"
+	"image/png"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +16,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/mail"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/pgtest"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/storage"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/social/app"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/social/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/social/pgstore"
@@ -353,4 +357,254 @@ func TestNotifyingASubject(t *testing.T) {
 		}
 		return err
 	})
+}
+
+// Every Dice Set operation reports a database fault at any of its calls.
+func TestEveryDiceSetDatabaseFaultSurfaces(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	pool := db.Pool()
+	account(t, pool, "aria")
+	account(t, pool, "bram")
+	blobs := storage.Dir{Path: t.TempDir()}
+	base := &app.Service{Repo: pgstore.New(pool), Now: time.Now, Blobs: blobs}
+	design := domain.DiceDesign{Dice: map[string]domain.DieLook{"d20": {Pattern: "marble", Body: "#102030", Numbers: "#f0e0d0", Image: nil}}}
+	set, err := base.CreateDiceSet(ctx, "aria", "Embers", design)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var picture bytes.Buffer
+	if err := png.Encode(&picture, image.NewRGBA(image.Rect(0, 0, 2, 2))); err != nil {
+		t.Fatal(err)
+	}
+	everyone := func() error { _, err := base.ShareDiceSet(ctx, "aria", set.ID, domain.SharingEveryone); return err }
+	ops := map[string]func(s *app.Service) error{
+		"create": func(s *app.Service) error { _, err := s.CreateDiceSet(ctx, "aria", "Ash", design); return err },
+		"list":   func(s *app.Service) error { _, _, err := s.DiceSets(ctx, "aria"); return err },
+		"edit": func(s *app.Service) error {
+			_, err := s.EditDiceSet(ctx, "aria", set.ID, "Cinders", design)
+			return err
+		},
+		"share": func(s *app.Service) error {
+			_, err := s.ShareDiceSet(ctx, "aria", set.ID, domain.SharingEveryone)
+			return err
+		},
+		"shared": func(s *app.Service) error { _, err := s.SharedDiceSets(ctx, "bram"); return err },
+		"copy":   func(s *app.Service) error { _, err := s.CopyDiceSet(ctx, "bram", set.ID); return err },
+		"choose": func(s *app.Service) error { return s.ChooseDiceSet(ctx, "aria", &set.ID) },
+		"chosen": func(s *app.Service) error { _, _, err := s.DiceSets(ctx, "aria"); return err },
+		"plain":  func(s *app.Service) error { return s.ChooseDiceSet(ctx, "aria", nil) },
+		"picture": func(s *app.Service) error {
+			_, err := s.SetDiceSetPicture(ctx, "aria", set.ID, picture.Bytes())
+			return err
+		},
+		"shown":   func(s *app.Service) error { _, _, err := s.DiceSetPicture(ctx, "bram", set.ID, false); return err },
+		"waiting": func(s *app.Service) error { _, err := s.DiceSetsToReview(ctx); return err },
+		"review": func(s *app.Service) error {
+			if err := everyone(); err != nil {
+				return err
+			}
+			_, err := s.ReviewDiceSet(ctx, set.ID, true)
+			return err
+		},
+		"bare":   func(s *app.Service) error { _, err := s.ClearDiceSetPicture(ctx, "aria", set.ID); return err },
+		"delete": func(s *app.Service) error { return s.DeleteDiceSet(ctx, "aria", set.ID) },
+	}
+	for _, name := range []string{"create", "list", "edit", "share", "shared", "copy", "choose", "chosen", "plain", "picture", "review", "shown", "waiting", "bare", "delete"} {
+		pgtest.EveryFault(t, func(f *pgtest.Faulty) error {
+			err := ops[name](&app.Service{Repo: pgstore.NewFaulty(pool, f), Now: time.Now, Blobs: blobs})
+			if err != nil && !errors.Is(err, pgtest.ErrInjected) {
+				t.Fatalf("%s: %v", name, err)
+			}
+			return err
+		})
+	}
+	// The copy outlives the set it was taken from, with the look it had when it was taken.
+	kept, _, err := base.DiceSets(ctx, "bram")
+	if err != nil || len(kept) != 1 || kept[0].Name != "Cinders" || !kept[0].Copy() || kept[0].Design.Dice["d20"].Pattern != "marble" {
+		t.Fatalf("bram's copy = %+v, %v", kept, err)
+	}
+}
+
+type brokenBlobs struct{}
+
+func (brokenBlobs) Put(context.Context, string, string, []byte) error { return errors.New("disk full") }
+
+func (brokenBlobs) Get(context.Context, string) ([]byte, error) { return nil, errors.New("disk gone") }
+
+// A Dice Set dresses only dice there are, in patterns and colours there are, under a name that fits.
+func TestWhatADiceSetMayBe(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	account(t, db.Pool(), "aria")
+	svc := &app.Service{Repo: pgstore.New(db.Pool()), Now: time.Now, Blobs: brokenBlobs{}}
+	look := func(die, pattern, body, numbers string, at *domain.DiePlacement) domain.DiceDesign {
+		return domain.DiceDesign{Dice: map[string]domain.DieLook{die: {Pattern: pattern, Body: body, Numbers: numbers, Image: at}}}
+	}
+	placed := func(x, y, scale, turn float64) *domain.DiePlacement {
+		return &domain.DiePlacement{X: x, Y: y, Scale: scale, Rotation: turn}
+	}
+	good := look("d20", "stripes", "#000000", "#FFffFF", placed(0, 1, 0.1, -360))
+	set, err := svc.CreateDiceSet(ctx, "aria", "  Embers  ", good)
+	if err != nil || set.Name != "Embers" {
+		t.Fatalf("create = %+v, %v", set, err)
+	}
+	if _, err := svc.EditDiceSet(ctx, "aria", set.ID, strings.Repeat("é", 60), look("d100", "plain", "#abcdef", "#012345", placed(1, 0, 10, 360))); err != nil {
+		t.Fatalf("a name of 60 and a picture at the far corner: %v", err)
+	}
+	for name, d := range map[string]domain.DiceDesign{
+		"a d7":              look("d7", "plain", "#000000", "#ffffff", nil),
+		"no such pattern":   look("d20", "glitter", "#000000", "#ffffff", nil),
+		"a named colour":    look("d20", "plain", "red", "#ffffff", nil),
+		"short numbers":     look("d20", "plain", "#000000", "#fff", nil),
+		"left of the sheet": look("d20", "plain", "#000000", "#ffffff", placed(-0.01, 0, 1, 0)),
+		"right of it":       look("d20", "plain", "#000000", "#ffffff", placed(1.01, 0, 1, 0)),
+		"above it":          look("d20", "plain", "#000000", "#ffffff", placed(0, -0.01, 1, 0)),
+		"below it":          look("d20", "plain", "#000000", "#ffffff", placed(0, 1.01, 1, 0)),
+		"too small":         look("d20", "plain", "#000000", "#ffffff", placed(0, 0, 0.09, 0)),
+		"too large":         look("d20", "plain", "#000000", "#ffffff", placed(0, 0, 10.1, 0)),
+		"turned too far":    look("d20", "plain", "#000000", "#ffffff", placed(0, 0, 1, 361)),
+		"turned back far":   look("d20", "plain", "#000000", "#ffffff", placed(0, 0, 1, -361)),
+	} {
+		if _, err := svc.CreateDiceSet(ctx, "aria", "Bad", d); !errors.Is(err, domain.ErrInvalid) {
+			t.Fatalf("create with %s = %v", name, err)
+		}
+		if _, err := svc.EditDiceSet(ctx, "aria", set.ID, "Bad", d); !errors.Is(err, domain.ErrInvalid) {
+			t.Fatalf("edit to %s = %v", name, err)
+		}
+	}
+	for _, name := range []string{"", "   ", strings.Repeat("é", 61), strings.Repeat("🎲", 31)} {
+		if _, err := svc.CreateDiceSet(ctx, "aria", name, good); !errors.Is(err, domain.ErrInvalid) {
+			t.Fatalf("create named %q = %v", name, err)
+		}
+		if _, err := svc.EditDiceSet(ctx, "aria", set.ID, name, good); !errors.Is(err, domain.ErrInvalid) {
+			t.Fatalf("rename to %q = %v", name, err)
+		}
+	}
+	if _, err := svc.CreateDiceSet(ctx, "aria", strings.Repeat("🎲", 30), good); err != nil {
+		t.Fatalf("thirty dice are sixty units: %v", err)
+	}
+	if _, err := svc.ShareDiceSet(ctx, "aria", set.ID, "the world"); !errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("shared with nobody we know = %v", err)
+	}
+	var picture bytes.Buffer
+	if err := png.Encode(&picture, image.NewRGBA(image.Rect(0, 0, 2, 2))); err != nil {
+		t.Fatal(err)
+	}
+	// A picture that could not be stored is not put on the set.
+	if _, err := svc.SetDiceSetPicture(ctx, "aria", set.ID, picture.Bytes()); err == nil || errors.Is(err, domain.ErrInvalid) {
+		t.Fatalf("a picture the store refused = %v", err)
+	}
+	if got, err := svc.Repo.DiceSet(ctx, set.ID); err != nil || got.Image != nil {
+		t.Fatalf("after a failed upload = %+v, %v", got.Image, err)
+	}
+	if _, _, err := svc.DiceSetPicture(ctx, "aria", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("the picture of a set without one = %v", err)
+	}
+	if _, _, err := svc.DiceSetPicture(ctx, "nobody", set.ID, false); !errors.Is(err, domain.ErrNoAccount) {
+		t.Fatalf("a picture for someone without an Account = %v", err)
+	}
+}
+
+// A roll is made with the Dice Set its roller chose. The picture on it shows to others only once an
+// Admin approved it, and a copy of an approved set carries that approval with it.
+func TestTheDiceSetARollIsMadeWith(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db, err := pg.Open(ctx, pgtest.URL(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(db.Close)
+	for _, name := range []string{"aria", "bram", "cara"} {
+		account(t, db.Pool(), name)
+	}
+	svc := &app.Service{Repo: pgstore.New(db.Pool()), Now: time.Now, Blobs: storage.Dir{Path: t.TempDir()}}
+	design := domain.DiceDesign{Dice: map[string]domain.DieLook{"d20": {Pattern: "marble", Body: "#102030", Numbers: "#f0e0d0", Image: nil}}}
+	var picture bytes.Buffer
+	if err := png.Encode(&picture, image.NewRGBA(image.Rect(0, 0, 2, 2))); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := svc.ChosenDiceSet(ctx, "aria"); err != nil || got != nil {
+		t.Fatalf("before choosing = %+v, %v", got, err)
+	}
+	if _, err := svc.ChosenDiceSet(ctx, "nobody"); !errors.Is(err, domain.ErrNoAccount) {
+		t.Fatalf("the dice of someone without an Account = %v", err)
+	}
+	set, _ := svc.CreateDiceSet(ctx, "aria", "Embers", design)
+	for _, step := range []func() error{
+		func() error { _, err := svc.SetDiceSetPicture(ctx, "aria", set.ID, picture.Bytes()); return err },
+		func() error { _, err := svc.ShareDiceSet(ctx, "aria", set.ID, domain.SharingEveryone); return err },
+		func() error { return svc.ChooseDiceSet(ctx, "aria", &set.ID) },
+	} {
+		if err := step(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// It waits for an Admin: Aria rolls with it, and nobody else may see its picture.
+	if got, err := svc.ChosenDiceSet(ctx, "aria"); err != nil || got == nil || got.ID != set.ID || got.Cleared() {
+		t.Fatalf("a set that waits = %+v, %v", got, err)
+	}
+	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger fetches a picture that waits = %v", err)
+	}
+	if _, err := svc.ReviewDiceSet(ctx, set.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := svc.ChosenDiceSet(ctx, "aria"); got == nil || !got.Cleared() {
+		t.Fatalf("an approved set = %+v", got)
+	}
+	// Bram's copy carries the approval: Cara, who knows neither, may see its picture on his rolls.
+	copied, err := svc.CopyDiceSet(ctx, "bram", set.ID)
+	if err != nil || !copied.Cleared() || copied.Sharing != domain.SharingPrivate {
+		t.Fatalf("a copy of an approved set = %+v, %v", copied, err)
+	}
+	if _, data, err := svc.DiceSetPicture(ctx, "cara", copied.ID, false); err != nil || !bytes.Equal(data, picture.Bytes()) {
+		t.Fatalf("a stranger fetches the picture on a copy of an approved set = %v", err)
+	}
+	if list, err := svc.DiceSetsToReview(ctx); err != nil || len(list) != 0 {
+		t.Fatalf("a copy waits for nobody: %+v, %v", list, err)
+	}
+	// Aria goes back to Friends only: hers is no longer everyone's, and the copy stays as it was.
+	if _, err := svc.ShareDiceSet(ctx, "aria", set.ID, domain.SharingFriends); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := svc.ChosenDiceSet(ctx, "aria"); got == nil || got.Cleared() {
+		t.Fatalf("a set shared with Friends only = %+v", got)
+	}
+	if _, _, err := svc.DiceSetPicture(ctx, "cara", set.ID, false); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger fetches the picture of a Friends-only set = %v", err)
+	}
+	if _, _, err := svc.DiceSetPicture(ctx, "cara", copied.ID, false); err != nil {
+		t.Fatalf("the copy's picture after the original went Friends-only = %v", err)
+	}
+	// A copy of a set nobody approved carries no approval: its picture stays its owner's.
+	if err := svc.Request(ctx, "cara", "aria"); err != nil {
+		t.Fatal(err)
+	}
+	page, _ := svc.Friends(ctx, "aria")
+	if err := svc.Accept(ctx, "aria", page.Incoming[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	plain, err := svc.CopyDiceSet(ctx, "cara", set.ID)
+	if err != nil || plain.Cleared() || plain.Review != domain.ReviewNone {
+		t.Fatalf("a Friend's copy of an unapproved set = %+v, %v", plain, err)
+	}
+	if _, _, err := svc.DiceSetPicture(ctx, "bram", plain.ID, false); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a stranger fetches the picture on a copy nobody approved = %v", err)
+	}
+	// A set without a picture has nothing to clear, whatever its review says.
+	if (domain.DiceSet{Review: domain.ReviewApproved}).Cleared() {
+		t.Fatal("a set without a picture is cleared")
+	}
 }

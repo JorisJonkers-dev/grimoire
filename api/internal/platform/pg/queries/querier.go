@@ -119,6 +119,8 @@ type Querier interface {
 	CharacterTrade(ctx context.Context, campaignID uuid.UUID) ([]CharacterTradeRow, error)
 	CharacterWeapons(ctx context.Context, characterID uuid.UUID) ([]string, error)
 	CheckMonsters(ctx context.Context, campaignID uuid.UUID) ([]PrepCheckMonster, error)
+	ChooseDiceSet(ctx context.Context, arg ChooseDiceSetParams) error
+	ChosenDiceSet(ctx context.Context, accountID uuid.UUID) (SocialDiceSet, error)
 	ClassFeatures(ctx context.Context, classID int64) ([]ClassFeaturesRow, error)
 	ClassSaves(ctx context.Context, classID int64) ([]string, error)
 	ClearAttacks(ctx context.Context, combatID uuid.UUID) error
@@ -182,6 +184,7 @@ type Querier interface {
 	DeleteCharacterDraft(ctx context.Context, arg DeleteCharacterDraftParams) error
 	DeleteContainer(ctx context.Context, id uuid.UUID) error
 	DeleteContainerCoins(ctx context.Context, arg DeleteContainerCoinsParams) error
+	DeleteDiceSet(ctx context.Context, id uuid.UUID) error
 	DeleteDying(ctx context.Context, tokenID uuid.UUID) error
 	DeleteEdge(ctx context.Context, arg DeleteEdgeParams) error
 	DeleteEncounterTable(ctx context.Context, arg DeleteEncounterTableParams) (int64, error)
@@ -210,6 +213,12 @@ type Querier interface {
 	DeleteTokenForm(ctx context.Context, tokenID uuid.UUID) error
 	DeleteZone(ctx context.Context, arg DeleteZoneParams) error
 	DeletedNPCs(ctx context.Context, campaignID uuid.UUID) ([]DeletedNPCsRow, error)
+	DiceSet(ctx context.Context, id uuid.UUID) (SocialDiceSet, error)
+	DiceSetsAwaitingReview(ctx context.Context) ([]SocialDiceSet, error)
+	DiceSetsOf(ctx context.Context, ownerAccount uuid.UUID) ([]SocialDiceSet, error)
+	// Sets of others that an Account may see: those of its Friends shared with Friends or with everyone,
+	// and those shared with everyone that carry no picture or a picture an Admin approved.
+	DiceSetsSharedWith(ctx context.Context, me uuid.UUID) ([]SocialDiceSet, error)
 	// The one-to-one Conversation between two Accounts, if they have one.
 	DirectConversation(ctx context.Context, arg DirectConversationParams) (uuid.UUID, error)
 	DropPushEndpoint(ctx context.Context, endpoint string) error
@@ -276,6 +285,7 @@ type Querier interface {
 	InsertCheckMonster(ctx context.Context, arg InsertCheckMonsterParams) error
 	InsertContainer(ctx context.Context, arg InsertContainerParams) error
 	InsertConversation(ctx context.Context, arg InsertConversationParams) error
+	InsertDiceSet(ctx context.Context, arg InsertDiceSetParams) error
 	InsertEdge(ctx context.Context, arg InsertEdgeParams) error
 	InsertEffect(ctx context.Context, arg InsertEffectParams) error
 	InsertEffectArea(ctx context.Context, arg InsertEffectAreaParams) error
@@ -617,6 +627,9 @@ type Querier interface {
 	SetCharacterPortrait(ctx context.Context, arg SetCharacterPortraitParams) error
 	SetCharacterToken(ctx context.Context, arg SetCharacterTokenParams) error
 	SetContainerCoins(ctx context.Context, arg SetContainerCoinsParams) error
+	SetDiceSetImage(ctx context.Context, arg SetDiceSetImageParams) error
+	SetDiceSetReview(ctx context.Context, arg SetDiceSetReviewParams) error
+	SetDiceSetSharing(ctx context.Context, arg SetDiceSetSharingParams) error
 	SetElevation(ctx context.Context, arg SetElevationParams) error
 	SetGameDay(ctx context.Context, arg SetGameDayParams) error
 	SetHeroicInspiration(ctx context.Context, arg SetHeroicInspirationParams) error
@@ -680,6 +693,7 @@ type Querier interface {
 	TouchAccountSession(ctx context.Context, arg TouchAccountSessionParams) error
 	TouchConversation(ctx context.Context, arg TouchConversationParams) error
 	TryTwoStepChallenge(ctx context.Context, arg TryTwoStepChallengeParams) (uuid.UUID, error)
+	UnchooseDiceSet(ctx context.Context, accountID uuid.UUID) error
 	UnlinkLibraryEntry(ctx context.Context, arg UnlinkLibraryEntryParams) (int64, error)
 	UnlockSessionOwner(ctx context.Context, lockKey string) (bool, error)
 	UnreadNotifications(ctx context.Context, accountID uuid.UUID) (int32, error)
@@ -689,6 +703,7 @@ type Querier interface {
 	UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error
 	UpdateCampaign(ctx context.Context, arg UpdateCampaignParams) (UpdateCampaignRow, error)
 	UpdateCharacter(ctx context.Context, arg UpdateCharacterParams) error
+	UpdateDiceSet(ctx context.Context, arg UpdateDiceSetParams) error
 	UpdateLibraryCollection(ctx context.Context, arg UpdateLibraryCollectionParams) error
 	UpdateLibraryEntry(ctx context.Context, arg UpdateLibraryEntryParams) (int32, error)
 	UpdateMap(ctx context.Context, arg UpdateMapParams) (int64, error)

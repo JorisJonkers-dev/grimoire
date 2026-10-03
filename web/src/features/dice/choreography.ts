@@ -1,6 +1,8 @@
+import type { LiveDiceLook } from '@/infrastructure/api/types.gen'
+
 /** A resolved roll as the dice stage shows it: who rolled, for what, each die, the modifier and the total. */
 export type ShownDie = { faces: number; value: number; kept: boolean }
-export type ShownRoll = { roller: string; purpose: string; dice: ShownDie[]; modifier: number; total: number }
+export type ShownRoll = { roller: string; purpose: string; dice: ShownDie[]; modifier: number; total: number; look?: LiveDiceLook }
 export type Critical = 'hit' | 'miss' | null
 
 type ResolvedDie = { group: number; faces: number; value?: number; kept: boolean }

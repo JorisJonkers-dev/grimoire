@@ -1131,6 +1131,106 @@ export type ActionBarsChange = {
 };
 
 /**
+ * Where the uploaded picture of a Dice Set sits on the unwrapped faces of one die. x and y are its centre as fractions of the sheet, rotation is in degrees.
+ */
+export type DiePlacement = {
+    x: number;
+    y: number;
+    scale: number;
+    rotation: number;
+};
+
+/**
+ * How one type of die looks. A preset pattern in two colours, with the picture of the set on it when it is placed. Numbers are drawn on their own layer.
+ */
+export type DieLook = {
+    pattern: 'plain' | 'marble' | 'speckled' | 'stripes';
+    body: string;
+    numbers: string;
+    image?: DiePlacement;
+};
+
+/**
+ * The looks of a Dice Set by die type. A die type it leaves out rolls plain.
+ */
+export type DiceDesign = {
+    dice: DieLooks;
+};
+
+/**
+ * A look for each die type that has one.
+ */
+export type DieLooks = {
+    d4?: DieLook;
+    d6?: DieLook;
+    d8?: DieLook;
+    d10?: DieLook;
+    d12?: DieLook;
+    d20?: DieLook;
+    d100?: DieLook;
+};
+
+/**
+ * The look an Account gives its dice. A copy was taken of a set shared with its owner and cannot be edited. Review says where a set shared with everyone stands with the Admins.
+ */
+export type DiceSet = {
+    id: Id;
+    name: string;
+    design: DiceDesign;
+    hasImage: boolean;
+    imageUrl?: AssetUrl;
+    sharing: 'private' | 'friends' | 'everyone';
+    review: 'none' | 'pending' | 'approved' | 'rejected';
+    /**
+     * Whether the signed-in Account owns it.
+     */
+    mine: boolean;
+    copy: boolean;
+    /**
+     * The Username of whoever designed it.
+     */
+    by: string;
+    updatedAt: string;
+};
+
+/**
+ * Dice Sets by name, and for a list of the caller's own the set chosen to roll with.
+ */
+export type DiceSetList = {
+    items: Array<DiceSet>;
+    chosen?: Id;
+};
+
+/**
+ * The name and looks of a Dice Set.
+ */
+export type DiceSetChange = {
+    name: string;
+    design: DiceDesign;
+};
+
+/**
+ * Who a Dice Set is shared with.
+ */
+export type DiceSetSharingChange = {
+    sharing: 'private' | 'friends' | 'everyone';
+};
+
+/**
+ * The Dice Set to roll with; leave it out for the plain dice.
+ */
+export type DiceSetChoice = {
+    diceSetId?: Id;
+};
+
+/**
+ * The decision of an Admin on a Dice Set that waits.
+ */
+export type DiceSetVerdict = {
+    approve: boolean;
+};
+
+/**
  * A Character's new name and Backstory.
  */
 export type OwnedCharacterChange = {
@@ -4141,6 +4241,15 @@ export type LiveRollShown = {
     }>;
     modifier: number;
     total: number;
+    look?: LiveDiceLook;
+};
+
+/**
+ * The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is named only when every screen may fetch it, which is once an Admin approved it.
+ */
+export type LiveDiceLook = {
+    dice: DieLooks;
+    imageUrl?: AssetUrl;
 };
 
 /**
@@ -12012,6 +12121,423 @@ export type JoinCampaignResponses = {
 };
 
 export type JoinCampaignResponse = JoinCampaignResponses[keyof JoinCampaignResponses];
+
+export type ListDiceSetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/dice-sets';
+};
+
+export type ListDiceSetsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListDiceSetsError = ListDiceSetsErrors[keyof ListDiceSetsErrors];
+
+export type ListDiceSetsResponses = {
+    /**
+     * The sets.
+     */
+    200: DiceSetList;
+};
+
+export type ListDiceSetsResponse = ListDiceSetsResponses[keyof ListDiceSetsResponses];
+
+export type CreateDiceSetData = {
+    body: DiceSetChange;
+    path?: never;
+    query?: never;
+    url: '/api/v1/dice-sets';
+};
+
+export type CreateDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CreateDiceSetError = CreateDiceSetErrors[keyof CreateDiceSetErrors];
+
+export type CreateDiceSetResponses = {
+    /**
+     * The new set.
+     */
+    201: DiceSet;
+};
+
+export type CreateDiceSetResponse = CreateDiceSetResponses[keyof CreateDiceSetResponses];
+
+export type ListSharedDiceSetsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/dice-sets/shared';
+};
+
+export type ListSharedDiceSetsErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListSharedDiceSetsError = ListSharedDiceSetsErrors[keyof ListSharedDiceSetsErrors];
+
+export type ListSharedDiceSetsResponses = {
+    /**
+     * The sets.
+     */
+    200: DiceSetList;
+};
+
+export type ListSharedDiceSetsResponse = ListSharedDiceSetsResponses[keyof ListSharedDiceSetsResponses];
+
+export type ChooseDiceSetData = {
+    body: DiceSetChoice;
+    path?: never;
+    query?: never;
+    url: '/api/v1/dice-sets/chosen';
+};
+
+export type ChooseDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ChooseDiceSetError = ChooseDiceSetErrors[keyof ChooseDiceSetErrors];
+
+export type ChooseDiceSetResponses = {
+    /**
+     * Chosen.
+     */
+    204: void;
+};
+
+export type ChooseDiceSetResponse = ChooseDiceSetResponses[keyof ChooseDiceSetResponses];
+
+export type DeleteDiceSetData = {
+    body?: never;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}';
+};
+
+export type DeleteDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type DeleteDiceSetError = DeleteDiceSetErrors[keyof DeleteDiceSetErrors];
+
+export type DeleteDiceSetResponses = {
+    /**
+     * Deleted.
+     */
+    204: void;
+};
+
+export type DeleteDiceSetResponse = DeleteDiceSetResponses[keyof DeleteDiceSetResponses];
+
+export type EditDiceSetData = {
+    body: DiceSetChange;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}';
+};
+
+export type EditDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type EditDiceSetError = EditDiceSetErrors[keyof EditDiceSetErrors];
+
+export type EditDiceSetResponses = {
+    /**
+     * The set.
+     */
+    200: DiceSet;
+};
+
+export type EditDiceSetResponse = EditDiceSetResponses[keyof EditDiceSetResponses];
+
+export type ShareDiceSetData = {
+    body: DiceSetSharingChange;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}/sharing';
+};
+
+export type ShareDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ShareDiceSetError = ShareDiceSetErrors[keyof ShareDiceSetErrors];
+
+export type ShareDiceSetResponses = {
+    /**
+     * The set.
+     */
+    200: DiceSet;
+};
+
+export type ShareDiceSetResponse = ShareDiceSetResponses[keyof ShareDiceSetResponses];
+
+export type CopyDiceSetData = {
+    body?: never;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}/copy';
+};
+
+export type CopyDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type CopyDiceSetError = CopyDiceSetErrors[keyof CopyDiceSetErrors];
+
+export type CopyDiceSetResponses = {
+    /**
+     * The copy.
+     */
+    201: DiceSet;
+};
+
+export type CopyDiceSetResponse = CopyDiceSetResponses[keyof CopyDiceSetResponses];
+
+export type ClearDiceSetImageData = {
+    body?: never;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}/image';
+};
+
+export type ClearDiceSetImageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ClearDiceSetImageError = ClearDiceSetImageErrors[keyof ClearDiceSetImageErrors];
+
+export type ClearDiceSetImageResponses = {
+    /**
+     * The set.
+     */
+    200: DiceSet;
+};
+
+export type ClearDiceSetImageResponse = ClearDiceSetImageResponses[keyof ClearDiceSetImageResponses];
+
+export type GetDiceSetImageData = {
+    body?: never;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}/image';
+};
+
+export type GetDiceSetImageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetDiceSetImageError = GetDiceSetImageErrors[keyof GetDiceSetImageErrors];
+
+export type GetDiceSetImageResponses = {
+    /**
+     * The picture.
+     */
+    200: Blob | File;
+};
+
+export type GetDiceSetImageResponse = GetDiceSetImageResponses[keyof GetDiceSetImageResponses];
+
+export type SetDiceSetImageData = {
+    body: Blob | File;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/dice-sets/{diceSetId}/image';
+};
+
+export type SetDiceSetImageErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SetDiceSetImageError = SetDiceSetImageErrors[keyof SetDiceSetImageErrors];
+
+export type SetDiceSetImageResponses = {
+    /**
+     * The set.
+     */
+    200: DiceSet;
+};
+
+export type SetDiceSetImageResponse = SetDiceSetImageResponses[keyof SetDiceSetImageResponses];
+
+export type ListDiceSetsToReviewData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/dice-sets';
+};
+
+export type ListDiceSetsToReviewErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ListDiceSetsToReviewError = ListDiceSetsToReviewErrors[keyof ListDiceSetsToReviewErrors];
+
+export type ListDiceSetsToReviewResponses = {
+    /**
+     * The sets.
+     */
+    200: DiceSetList;
+};
+
+export type ListDiceSetsToReviewResponse = ListDiceSetsToReviewResponses[keyof ListDiceSetsToReviewResponses];
+
+export type ReviewDiceSetData = {
+    body: DiceSetVerdict;
+    path: {
+        /**
+         * Dice Set id.
+         */
+        diceSetId: Id;
+    };
+    query?: never;
+    url: '/api/v1/admin/dice-sets/{diceSetId}/review';
+};
+
+export type ReviewDiceSetErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type ReviewDiceSetError = ReviewDiceSetErrors[keyof ReviewDiceSetErrors];
+
+export type ReviewDiceSetResponses = {
+    /**
+     * The set.
+     */
+    200: DiceSet;
+};
+
+export type ReviewDiceSetResponse = ReviewDiceSetResponses[keyof ReviewDiceSetResponses];
 
 export type ListFriendsData = {
     body?: never;

@@ -811,6 +811,31 @@ type RollShown struct {
 	Dice     []RollDie `json:"dice"`
 	Modifier int       `json:"modifier"`
 	Total    int       `json:"total"`
+	// Look is the Dice Set the roller chose; nil rolls the plain dice.
+	Look *DiceLook `json:"look,omitempty"`
+}
+
+// DiceLook is how a roller's dice look, by die type: d4 to d100. ImageURL is the picture of the set,
+// there only when every screen may fetch it.
+type DiceLook struct {
+	Dice     map[string]DieLook `json:"dice"`
+	ImageURL string             `json:"imageUrl,omitempty"`
+}
+
+// DieLook is one die type's pattern and colours, and where the set's picture sits on its faces.
+type DieLook struct {
+	Pattern string        `json:"pattern"`
+	Body    string        `json:"body"`
+	Numbers string        `json:"numbers"`
+	Image   *DiePlacement `json:"image,omitempty"`
+}
+
+// DiePlacement is the picture's centre as fractions of the sheet, its scale, and its turn in degrees.
+type DiePlacement struct {
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
+	Scale    float64 `json:"scale"`
+	Rotation float64 `json:"rotation"`
 }
 
 // RollDie is one die of a RollShown; a die that was not kept is dropped by advantage or disadvantage.

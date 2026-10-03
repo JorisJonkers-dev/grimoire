@@ -878,6 +878,84 @@ export const zActionBarsChange = z.object({
 });
 
 /**
+ * Where the uploaded picture of a Dice Set sits on the unwrapped faces of one die. x and y are its centre as fractions of the sheet, rotation is in degrees.
+ */
+export const zDiePlacement = z.object({
+    x: z.number().gte(0).lte(1),
+    y: z.number().gte(0).lte(1),
+    scale: z.number().gte(0.1).lte(10),
+    rotation: z.number().gte(-360).lte(360)
+});
+
+/**
+ * How one type of die looks. A preset pattern in two colours, with the picture of the set on it when it is placed. Numbers are drawn on their own layer.
+ */
+export const zDieLook = z.object({
+    pattern: z.enum([
+        'plain',
+        'marble',
+        'speckled',
+        'stripes'
+    ]),
+    body: z.string().max(7).regex(/^#[0-9a-fA-F]{6}$/),
+    numbers: z.string().max(7).regex(/^#[0-9a-fA-F]{6}$/),
+    image: zDiePlacement.optional()
+});
+
+/**
+ * A look for each die type that has one.
+ */
+export const zDieLooks = z.object({
+    d4: zDieLook.optional(),
+    d6: zDieLook.optional(),
+    d8: zDieLook.optional(),
+    d10: zDieLook.optional(),
+    d12: zDieLook.optional(),
+    d20: zDieLook.optional(),
+    d100: zDieLook.optional()
+});
+
+/**
+ * The looks of a Dice Set by die type. A die type it leaves out rolls plain.
+ */
+export const zDiceDesign = z.object({
+    dice: zDieLooks
+});
+
+/**
+ * The name and looks of a Dice Set.
+ */
+export const zDiceSetChange = z.object({
+    name: z.string().min(1).max(120),
+    design: zDiceDesign
+});
+
+/**
+ * Who a Dice Set is shared with.
+ */
+export const zDiceSetSharingChange = z.object({
+    sharing: z.enum([
+        'private',
+        'friends',
+        'everyone'
+    ])
+});
+
+/**
+ * The Dice Set to roll with; leave it out for the plain dice.
+ */
+export const zDiceSetChoice = z.object({
+    diceSetId: zId.optional()
+});
+
+/**
+ * The decision of an Admin on a Dice Set that waits.
+ */
+export const zDiceSetVerdict = z.object({
+    approve: z.boolean()
+});
+
+/**
  * A Character's new name and Backstory.
  */
 export const zOwnedCharacterChange = z.object({
@@ -944,6 +1022,40 @@ export const zPartyBearer = z.object({
  * Same-origin path of a stored picture; it changes when the picture does.
  */
 export const zAssetUrl = z.string().max(300).regex(/^\/api\/v1\//);
+
+/**
+ * The look an Account gives its dice. A copy was taken of a set shared with its owner and cannot be edited. Review says where a set shared with everyone stands with the Admins.
+ */
+export const zDiceSet = z.object({
+    id: zId,
+    name: z.string().min(1).max(60),
+    design: zDiceDesign,
+    hasImage: z.boolean(),
+    imageUrl: zAssetUrl.optional(),
+    sharing: z.enum([
+        'private',
+        'friends',
+        'everyone'
+    ]),
+    review: z.enum([
+        'none',
+        'pending',
+        'approved',
+        'rejected'
+    ]),
+    mine: z.boolean(),
+    copy: z.boolean(),
+    by: z.string().max(60),
+    updatedAt: z.iso.datetime().max(40)
+});
+
+/**
+ * Dice Sets by name, and for a list of the caller's own the set chosen to roll with.
+ */
+export const zDiceSetList = z.object({
+    items: z.array(zDiceSet).max(500),
+    chosen: zId.optional()
+});
 
 /**
  * How an NPC feels about the party.
@@ -3039,6 +3151,14 @@ export const zLiveCombat = z.object({
 });
 
 /**
+ * The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is named only when every screen may fetch it, which is once an Admin approved it.
+ */
+export const zLiveDiceLook = z.object({
+    dice: zDieLooks,
+    imageUrl: zAssetUrl.optional()
+});
+
+/**
  * The last roll a player made, as every screen may show it. It arrives as a roll frame when it resolves and again with a snapshot. A DM's roll is never sent.
  */
 export const zLiveRollShown = z.object({
@@ -3051,7 +3171,8 @@ export const zLiveRollShown = z.object({
         kept: z.boolean()
     })).max(100),
     modifier: z.int().gte(-100000).lte(100000),
-    total: z.int().gte(-100000).lte(100000)
+    total: z.int().gte(-100000).lte(100000),
+    look: zLiveDiceLook.optional()
 });
 
 /**
@@ -6890,6 +7011,115 @@ export const zJoinCampaignPath = z.object({
  * The new Campaign Character.
  */
 export const zJoinCampaignResponse = zCharacterSheet;
+
+/**
+ * The sets.
+ */
+export const zListDiceSetsResponse = zDiceSetList;
+
+export const zCreateDiceSetBody = zDiceSetChange;
+
+/**
+ * The new set.
+ */
+export const zCreateDiceSetResponse = zDiceSet;
+
+/**
+ * The sets.
+ */
+export const zListSharedDiceSetsResponse = zDiceSetList;
+
+export const zChooseDiceSetBody = zDiceSetChoice;
+
+/**
+ * Chosen.
+ */
+export const zChooseDiceSetResponse = z.void();
+
+export const zDeleteDiceSetPath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * Deleted.
+ */
+export const zDeleteDiceSetResponse = z.void();
+
+export const zEditDiceSetBody = zDiceSetChange;
+
+export const zEditDiceSetPath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The set.
+ */
+export const zEditDiceSetResponse = zDiceSet;
+
+export const zShareDiceSetBody = zDiceSetSharingChange;
+
+export const zShareDiceSetPath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The set.
+ */
+export const zShareDiceSetResponse = zDiceSet;
+
+export const zCopyDiceSetPath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The copy.
+ */
+export const zCopyDiceSetResponse = zDiceSet;
+
+export const zClearDiceSetImagePath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The set.
+ */
+export const zClearDiceSetImageResponse = zDiceSet;
+
+export const zGetDiceSetImagePath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The picture.
+ */
+export const zGetDiceSetImageResponse = z.string().max(10485760);
+
+export const zSetDiceSetImageBody = z.string().max(10485760);
+
+export const zSetDiceSetImagePath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The set.
+ */
+export const zSetDiceSetImageResponse = zDiceSet;
+
+/**
+ * The sets.
+ */
+export const zListDiceSetsToReviewResponse = zDiceSetList;
+
+export const zReviewDiceSetBody = zDiceSetVerdict;
+
+export const zReviewDiceSetPath = z.object({
+    diceSetId: zId
+});
+
+/**
+ * The set.
+ */
+export const zReviewDiceSetResponse = zDiceSet;
 
 /**
  * The Friends page.

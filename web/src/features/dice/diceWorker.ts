@@ -5,15 +5,17 @@
 // The page shows the total itself, so the result is right whatever happens here.
 import {
   AmbientLight, BoxGeometry, BufferGeometry, CanvasTexture, Color, DirectionalLight, DodecahedronGeometry, Float32BufferAttribute, Group, IcosahedronGeometry,
-  Mesh, MeshBasicMaterial, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PlaneGeometry, Quaternion, Scene, TetrahedronGeometry, Vector3,
-  WebGLRenderer,
+  Mesh, MeshBasicMaterial, MeshStandardMaterial, OctahedronGeometry, OrthographicCamera, PlaneGeometry, Quaternion, SRGBColorSpace, Scene, TetrahedronGeometry,
+  Vector3, WebGLRenderer,
 } from 'three'
+import type { DieLook, LiveDiceLook } from '@/infrastructure/api/types.gen'
 import { GATHER_MS, TABLE_HEIGHT, THROW_MS, throwPlan, type DieThrow, type ShownDie } from './choreography'
+import { cellOf, lookFor, sheetCols } from './sets'
 
 export type ToWorker =
   | { type: 'init'; canvas: OffscreenCanvas; width: number; height: number; dpr: number }
   | { type: 'size'; width: number; height: number; dpr: number }
-  | { type: 'roll'; dice: ShownDie[]; seed: number }
+  | { type: 'roll'; dice: ShownDie[]; seed: number; look?: LiveDiceLook }
   | { type: 'clear' }
 export type FromWorker = { type: 'ready' } | { type: 'failed' } | { type: 'slow' } | { type: 'settled' }
 
@@ -95,18 +97,147 @@ function numberTexture(text: string, colour: string): CanvasTexture<OffscreenCan
   return new CanvasTexture(canvas)
 }
 
+/** A die's sheet is painted this many pixels square; every face is cut from its own cell of it. */
+const SHEET_PX = 512
+/** How far a face reaches from its centre at most, so that any face fits its cell. */
+const FACE_REACH = RADIUS * 1.3
+const DIM = 0.45
+
+// Gives every face its own cell of the sheet, the way the Dice Set editor draws it: the face that shows
+// a number is cut from the cell of that number.
+function unwrap(geometry: BufferGeometry, faces: Face[], first: number): BufferGeometry {
+  const flat = geometry.index ? geometry.toNonIndexed() : geometry
+  const p = flat.getAttribute('position')
+  const cols = sheetCols(faces.length)
+  const frames = faces.map((f) => {
+    const turn = new Quaternion().setFromUnitVectors(UP, f.normal)
+    return { u: new Vector3(1, 0, 0).applyQuaternion(turn), v: new Vector3(0, 1, 0).applyQuaternion(turn) }
+  })
+  const uv: number[] = []
+  for (let i = 0; i < p.count; i += 3) {
+    const corners = [0, 1, 2].map((k) => new Vector3().fromBufferAttribute(p, i + k))
+    const [a, b, c] = corners
+    if (!a || !b || !c) continue
+    const normal = new Vector3().subVectors(b, a).cross(new Vector3().subVectors(c, a)).normalize()
+    const at = Math.max(0, faces.findIndex((f) => f.normal.dot(normal) > 0.98))
+    const [face, frame] = [faces[at], frames[at]]
+    if (!face || !frame) continue
+    const { col, row } = cellOf((first + at) % faces.length, cols)
+    for (const corner of corners) {
+      const d = corner.clone().sub(face.centre)
+      const [across, up] = [d.dot(frame.u) / (2 * FACE_REACH) + 0.5, d.dot(frame.v) / (2 * FACE_REACH) + 0.5]
+      uv.push((col + across) / cols, 1 - (row + 1 - up) / cols)
+    }
+  }
+  flat.setAttribute('uv', new Float32BufferAttribute(uv, 2))
+  return flat
+}
+
+// A small generator, so a pattern paints the same on every screen.
+function scatter(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
+    return s / 0x100000000
+  }
+}
+
+// Paints the sheet a die's faces are cut from: the pattern in the body colour, then the set's picture
+// where it was placed. The numbers are their own layer above it.
+function paintSheet(canvas: OffscreenCanvas, look: DieLook, kept: boolean, picture: ImageBitmap | null) {
+  const pen = canvas.getContext('2d')
+  if (!pen) return
+  const size = canvas.width
+  const body = new Color(look.body).multiplyScalar(kept ? 1 : DIM)
+  const hex = (c: Color) => `#${c.getHexString()}`
+  const [light, dark] = [hex(body.clone().lerp(new Color('#ffffff'), 0.3)), hex(body.clone().lerp(new Color('#000000'), 0.4))]
+  const next = scatter(7)
+  pen.globalAlpha = 1
+  pen.fillStyle = hex(body)
+  pen.fillRect(0, 0, size, size)
+  if (look.pattern === 'marble') {
+    pen.strokeStyle = light
+    pen.globalAlpha = 0.6
+    for (let i = 0; i < 14; i++) {
+      pen.lineWidth = 2 + next() * 6
+      pen.beginPath()
+      pen.moveTo(next() * size, 0)
+      pen.bezierCurveTo(next() * size, size * 0.3, next() * size, size * 0.6, next() * size, size)
+      pen.stroke()
+    }
+  } else if (look.pattern === 'speckled') {
+    for (let i = 0; i < 900; i++) {
+      pen.fillStyle = i % 2 ? light : dark
+      pen.beginPath()
+      pen.arc(next() * size, next() * size, 1.5 + next() * 3, 0, Math.PI * 2)
+      pen.fill()
+    }
+  } else if (look.pattern === 'stripes') {
+    pen.strokeStyle = light
+    pen.lineWidth = size / 24
+    for (let x = -size; x < size * 2; x += size / 10) {
+      pen.beginPath()
+      pen.moveTo(x, size)
+      pen.lineTo(x + size, 0)
+      pen.stroke()
+    }
+  }
+  if (picture && look.image) {
+    const width = look.image.scale * size
+    const height = width * (picture.height / picture.width)
+    pen.save()
+    pen.globalAlpha = kept ? 1 : DIM
+    pen.translate(look.image.x * size, look.image.y * size)
+    pen.rotate((look.image.rotation * Math.PI) / 180)
+    pen.drawImage(picture, -width / 2, -height / 2, width, height)
+    pen.restore()
+  }
+}
+
+// A set's picture is fetched once; a picture that cannot be had leaves the dice in their pattern.
+const pictures = new Map<string, Promise<ImageBitmap | null>>()
+function pictureAt(url: string): Promise<ImageBitmap | null> {
+  const known = pictures.get(url)
+  if (known) return known
+  const fetched = fetch(url, { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('no picture'))))
+    .then((b) => createImageBitmap(b))
+    .catch(() => null)
+  pictures.set(url, fetched)
+  return fetched
+}
+
 type Die = { group: Group; plan: DieThrow; target: Quaternion; tumble: Vector3 }
 
+// The body of a die in its Dice Set: the sheet as its skin, repainted when the set's picture arrives.
+function dressed(geometry: BufferGeometry, faces: Face[], die: ShownDie, look: DieLook, imageUrl?: string): Mesh {
+  const canvas = new OffscreenCanvas(SHEET_PX, SHEET_PX)
+  paintSheet(canvas, look, die.kept, null)
+  const map = new CanvasTexture(canvas)
+  map.colorSpace = SRGBColorSpace
+  if (imageUrl && look.image) {
+    void pictureAt(imageUrl).then((picture) => {
+      if (!picture) return
+      paintSheet(canvas, look, die.kept, picture)
+      map.needsUpdate = true
+      if (renderer && camera) renderer.render(scene, camera)
+    })
+  }
+  return new Mesh(unwrap(geometry, faces, die.value - 1), new MeshStandardMaterial({ map, flatShading: true, roughness: 0.55, metalness: 0.1 }))
+}
+
 // Builds a die whose first face shows the server's number; the other faces count on from it.
-function build(die: ShownDie, plan: DieThrow): Die {
+function build(die: ShownDie, plan: DieThrow, set?: LiveDiceLook): Die {
   const geometry = shapeOf(die.faces)
   const group = new Group()
-  const body = new Mesh(geometry, new MeshStandardMaterial({ color: new Color(die.kept ? '#7a1f1a' : '#3a2f2b'), flatShading: true, roughness: 0.55, metalness: 0.1 }))
-  group.add(body)
   const faces = facesOf(geometry)
+  const look = lookFor(set, die.faces)
+  const plain = () => new Mesh(geometry, new MeshStandardMaterial({ color: new Color(die.kept ? '#7a1f1a' : '#3a2f2b'), flatShading: true, roughness: 0.55, metalness: 0.1 }))
+  group.add(look ? dressed(geometry, faces, die, look, set?.imageUrl) : plain())
+  const ink = look ? `#${new Color(look.numbers).multiplyScalar(die.kept ? 1 : 0.6).getHexString()}` : die.kept ? '#f3d27a' : '#9a8f86'
   faces.forEach((face, i) => {
     const value = ((die.value - 1 + i) % die.faces) + 1
-    const label = new Mesh(new PlaneGeometry(RADIUS * 0.8, RADIUS * 0.8), new MeshBasicMaterial({ map: numberTexture(String(value), die.kept ? '#f3d27a' : '#9a8f86'), transparent: true }))
+    const label = new Mesh(new PlaneGeometry(RADIUS * 0.8, RADIUS * 0.8), new MeshBasicMaterial({ map: numberTexture(String(value), ink), transparent: true }))
     label.position.copy(face.centre).addScaledVector(face.normal, 0.012)
     label.quaternion.setFromUnitVectors(UP, face.normal)
     group.add(label)
@@ -169,16 +300,25 @@ function tick(now: number) {
 
 function clear() {
   cancelAnimationFrame(frame)
-  for (const d of dice) scene.remove(d.group)
+  for (const d of dice) {
+    scene.remove(d.group)
+    d.group.traverse((o) => {
+      if (!(o instanceof Mesh)) return
+      const material = o.material as MeshStandardMaterial | MeshBasicMaterial
+      ;(o.geometry as BufferGeometry).dispose()
+      material.map?.dispose()
+      material.dispose()
+    })
+  }
   dice = []
   if (renderer && camera) renderer.render(scene, camera)
 }
 
-function roll(shown: ShownDie[], seed: number) {
+function roll(shown: ShownDie[], seed: number, look?: LiveDiceLook) {
   if (!renderer || !camera) return
   clear()
   const aspect = (camera.right - camera.left) / (camera.top - camera.bottom)
-  dice = shown.map((die, i) => build(die, throwPlan(shown, seed, aspect)[i] ?? { from: { x: 0, y: 0 }, rest: { x: 0, y: 0 }, gather: { x: 0, y: 0 }, spin: 0, yaw: 0 }))
+  dice = shown.map((die, i) => build(die, throwPlan(shown, seed, aspect)[i] ?? { from: { x: 0, y: 0 }, rest: { x: 0, y: 0 }, gather: { x: 0, y: 0 }, spin: 0, yaw: 0 }, look))
   for (const d of dice) scene.add(d.group)
   started = performance.now()
   frames = []
@@ -206,7 +346,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
       frameCamera(m.width, m.height, m.dpr)
       return
     case 'roll':
-      roll(m.dice, m.seed)
+      roll(m.dice, m.seed, m.look)
       return
     case 'clear':
       clear()

@@ -6652,6 +6652,411 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets:
+    get:
+      operationId: listDiceSets
+      x-ogen-operation-group: Read
+      summary: List my Dice Sets
+      description: The Dice Sets of the signed-in Account, its own and its copies, and the one it rolls with.
+      tags: [Social]
+      responses:
+        "200":
+          description: The sets.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSetList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createDiceSet
+      x-ogen-operation-group: Build
+      summary: Make a Dice Set
+      description: A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
+      tags: [Social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceSetChange"
+      responses:
+        "201":
+          description: The new set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets/shared:
+    get:
+      operationId: listSharedDiceSets
+      x-ogen-operation-group: Read
+      summary: List Dice Sets shared with me
+      description: Sets of others the signed-in Account may take a copy of. Those of its Friends that are shared with Friends or with everyone, and sets shared with everyone that carry no uploaded picture or one an Admin approved.
+      tags: [Social]
+      responses:
+        "200":
+          description: The sets.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSetList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets/chosen:
+    put:
+      operationId: chooseDiceSet
+      x-ogen-operation-group: Build
+      summary: Choose the Dice Set to roll with
+      description: One of the sets or copies of the signed-in Account; without a set the dice roll plain.
+      tags: [Social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceSetChoice"
+      responses:
+        "204":
+          description: Chosen.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets/{diceSetId}:
+    put:
+      operationId: editDiceSet
+      x-ogen-operation-group: Build
+      summary: Change a Dice Set
+      description: Sets its name and looks. A copy cannot be changed.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceSetChange"
+      responses:
+        "200":
+          description: The set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteDiceSet
+      x-ogen-operation-group: Build
+      summary: Delete a Dice Set
+      description: Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "204":
+          description: Deleted.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets/{diceSetId}/sharing:
+    put:
+      operationId: shareDiceSet
+      x-ogen-operation-group: Build
+      summary: Share a Dice Set
+      description: Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone waits for an Admin; until then only Friends see it. A copy cannot be shared on.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceSetSharingChange"
+      responses:
+        "200":
+          description: The set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets/{diceSetId}/copy:
+    post:
+      operationId: copyDiceSet
+      x-ogen-operation-group: Build
+      summary: Take a copy of a shared Dice Set
+      description: A read-only copy of a set shared with the signed-in Account. It stays as it was when the original changes or stops being shared. One copy of a set per Account.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "201":
+          description: The copy.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/dice-sets/{diceSetId}/image:
+    get:
+      operationId: getDiceSetImage
+      x-ogen-operation-group: Read
+      summary: Get the picture on a Dice Set
+      description: The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin reviewing it.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The picture.
+          headers:
+            Cache-Control:
+              description: Private caches may keep it for a short while.
+              schema: { type: string, maxLength: 100 }
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            image/png:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+            image/jpeg:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+            image/webp:
+              schema: { type: string, format: binary, maxLength: 10485760 }
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: setDiceSetImage
+      x-ogen-operation-group: Build
+      summary: Upload the picture for a Dice Set
+      description: A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with everyone goes back before the Admins.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              maxLength: 10485760
+      responses:
+        "200":
+          description: The set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: clearDiceSetImage
+      x-ogen-operation-group: Build
+      summary: Take the picture off a Dice Set
+      description: The set goes back to its preset patterns and needs no review.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      responses:
+        "200":
+          description: The set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/dice-sets:
+    get:
+      operationId: listDiceSetsToReview
+      x-ogen-operation-group: Read
+      summary: List Dice Sets waiting for review
+      description: Sets shared with everyone that carry an uploaded picture no Admin has decided on, oldest first. Admins only.
+      tags: [Social]
+      responses:
+        "200":
+          description: The sets.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSetList"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/admin/dice-sets/{diceSetId}/review:
+    post:
+      operationId: reviewDiceSet
+      x-ogen-operation-group: Build
+      summary: Approve or reject a Dice Set
+      description: Decides whether everyone may see a set that waits. Admins only.
+      tags: [Social]
+      parameters:
+        - name: diceSetId
+          in: path
+          required: true
+          description: Dice Set id.
+          schema: { $ref: "#/components/schemas/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceSetVerdict"
+      responses:
+        "200":
+          description: The set.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceSet"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/friends:
     get:
       operationId: listFriends
@@ -8830,6 +9235,101 @@ components:
           description: Tiles the player took off the bars. Any other tile the Character gains joins the end of the bars.
           maxItems: 100
           items: { $ref: "#/components/schemas/ActionBarTile" }
+    DiePlacement:
+      type: object
+      description: Where the uploaded picture of a Dice Set sits on the unwrapped faces of one die. x and y are its centre as fractions of the sheet, rotation is in degrees.
+      additionalProperties: false
+      required: [x, y, scale, rotation]
+      properties:
+        x: { type: number, format: double, minimum: 0, maximum: 1 }
+        y: { type: number, format: double, minimum: 0, maximum: 1 }
+        scale: { type: number, format: double, minimum: 0.1, maximum: 10 }
+        rotation: { type: number, format: double, minimum: -360, maximum: 360 }
+    DieLook:
+      type: object
+      description: How one type of die looks. A preset pattern in two colours, with the picture of the set on it when it is placed. Numbers are drawn on their own layer.
+      additionalProperties: false
+      required: [pattern, body, numbers]
+      properties:
+        pattern: { type: string, enum: [plain, marble, speckled, stripes] }
+        body: { type: string, pattern: "^#[0-9a-fA-F]{6}$", maxLength: 7 }
+        numbers: { type: string, pattern: "^#[0-9a-fA-F]{6}$", maxLength: 7 }
+        image: { $ref: "#/components/schemas/DiePlacement" }
+    DiceDesign:
+      type: object
+      description: The looks of a Dice Set by die type. A die type it leaves out rolls plain.
+      additionalProperties: false
+      required: [dice]
+      properties:
+        dice: { $ref: "#/components/schemas/DieLooks" }
+    DieLooks:
+      type: object
+      description: A look for each die type that has one.
+      additionalProperties: false
+      properties:
+        d4: { $ref: "#/components/schemas/DieLook" }
+        d6: { $ref: "#/components/schemas/DieLook" }
+        d8: { $ref: "#/components/schemas/DieLook" }
+        d10: { $ref: "#/components/schemas/DieLook" }
+        d12: { $ref: "#/components/schemas/DieLook" }
+        d20: { $ref: "#/components/schemas/DieLook" }
+        d100: { $ref: "#/components/schemas/DieLook" }
+    DiceSet:
+      type: object
+      description: The look an Account gives its dice. A copy was taken of a set shared with its owner and cannot be edited. Review says where a set shared with everyone stands with the Admins.
+      additionalProperties: false
+      required: [id, name, design, hasImage, sharing, review, mine, copy, by, updatedAt]
+      properties:
+        id: { $ref: "#/components/schemas/Id" }
+        name: { type: string, minLength: 1, maxLength: 60 }
+        design: { $ref: "#/components/schemas/DiceDesign" }
+        hasImage: { type: boolean }
+        imageUrl: { $ref: "#/components/schemas/AssetUrl" }
+        sharing: { type: string, enum: [private, friends, everyone] }
+        review: { type: string, enum: [none, pending, approved, rejected] }
+        mine: { type: boolean, description: Whether the signed-in Account owns it. }
+        copy: { type: boolean }
+        by: { type: string, maxLength: 60, description: The Username of whoever designed it. }
+        updatedAt: { type: string, format: date-time, maxLength: 40 }
+    DiceSetList:
+      type: object
+      description: Dice Sets by name, and for a list of the caller's own the set chosen to roll with.
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 500
+          items: { $ref: "#/components/schemas/DiceSet" }
+        chosen: { $ref: "#/components/schemas/Id" }
+    DiceSetChange:
+      type: object
+      description: The name and looks of a Dice Set.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        design: { $ref: "#/components/schemas/DiceDesign" }
+    DiceSetSharingChange:
+      type: object
+      description: Who a Dice Set is shared with.
+      additionalProperties: false
+      required: [sharing]
+      properties:
+        sharing: { type: string, enum: [private, friends, everyone] }
+    DiceSetChoice:
+      type: object
+      description: The Dice Set to roll with; leave it out for the plain dice.
+      additionalProperties: false
+      properties:
+        diceSetId: { $ref: "#/components/schemas/Id" }
+    DiceSetVerdict:
+      type: object
+      description: The decision of an Admin on a Dice Set that waits.
+      additionalProperties: false
+      required: [approve]
+      properties:
+        approve: { type: boolean }
     OwnedCharacterChange:
       type: object
       description: A Character's new name and Backstory.
@@ -12216,6 +12716,15 @@ components:
               kept: { type: boolean }
         modifier: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
         total: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        look: { $ref: "#/components/schemas/LiveDiceLook" }
+    LiveDiceLook:
+      type: object
+      description: The Dice Set the roller chose. Left out, the roll is on the plain dice. The picture of the set is named only when every screen may fetch it, which is once an Admin approved it.
+      additionalProperties: false
+      required: [dice]
+      properties:
+        dice: { $ref: "#/components/schemas/DieLooks" }
+        imageUrl: { $ref: "#/components/schemas/AssetUrl" }
     LiveInitiativeReveal:
       type: object
       description: Every Combatant's initiative in turn order, sent with the view that settles initiative. It leaves out creatures the audience may not see.

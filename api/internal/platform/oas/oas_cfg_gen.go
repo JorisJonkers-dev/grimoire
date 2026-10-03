@@ -18,6 +18,7 @@ import (
 )
 
 var regexMap = map[string]ogenregex.Regexp{
+	"^#[0-9a-fA-F]{6}$":           ogenregex.MustCompile("^#[0-9a-fA-F]{6}$"),
 	"^([a-z0-9]+(-[a-z0-9]+)*)?$": ogenregex.MustCompile("^([a-z0-9]+(-[a-z0-9]+)*)?$"),
 	"^/":                          ogenregex.MustCompile("^/"),
 	"^/api/v1/":                   ogenregex.MustCompile("^/api/v1/"),

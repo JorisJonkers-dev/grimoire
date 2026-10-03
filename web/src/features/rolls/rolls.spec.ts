@@ -200,6 +200,32 @@ describe('dice tray', () => {
     expect(card().text()).toContain('Stealth')
   })
 
+  it('throws your own roll in the Dice Set you chose', async () => {
+    reducedMotion(true)
+    const ember = {
+      id: '0190c7a8-0000-7000-8000-000000000041', name: 'Ember', hasImage: false, sharing: 'private', review: 'none', mine: true, copy: false, by: 'joris',
+      updatedAt: '2026-10-03T10:00:00Z', design: { dice: { d20: { pattern: 'marble', body: '#102030', numbers: '#fafafa' } } },
+    }
+    const other = { ...ember, id: ember.id.replace('41', '42'), name: 'Frost', design: { dice: { d20: { pattern: 'plain', body: '#ffffff', numbers: '#000000' } } } }
+    // A roll of its own: the stage throws each roll once.
+    const mine = ROLL.replace(/05$/, '07')
+    const { wrapper } = await mountApp(`/campaigns/${ID}/dice`, {
+      [`${base}/rolls/${mine}/rest`]: () => withDice([12, 17, 3], { id: mine, status: 'resolved', total: 23, resolvedAt: '2026-09-30T20:01:00Z' }),
+      [`${base}/rolls`]: (_u, req) => (req.method === 'POST' ? roll({ id: mine }) : []),
+      [`${base}/log`]: () => [],
+      [base]: () => campaign(),
+      '/api/v1/dice-sets': () => ({ items: [other, ember], chosen: ember.id }),
+    })
+    await wrapper.get('[data-testid="roll-purpose"]').setValue('Stealth')
+    await wrapper.get('[data-testid="roll-form"]').trigger('submit')
+    await flushPromises()
+    await wrapper.get('[data-testid="roll-rest"]').trigger('click')
+    await flushPromises()
+    // The d20s wear the chosen set; the d4, which the set leaves alone, stays plain.
+    const flat = wrapper.findAll('[data-testid="dice-2d"] [role="img"]')
+    expect(flat.map((d) => d.element.querySelector('[data-testid="die-tint"]')?.getAttribute('fill'))).toEqual(['#102030', '#102030', undefined])
+  })
+
   it('tumbles until the server answers, and reports failures', async () => {
     reducedMotion(false)
     const { wrapper } = await mountApp(`/campaigns/${ID}/dice`, {

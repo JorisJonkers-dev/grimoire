@@ -63,7 +63,7 @@ async function run(dice: RollDie[], call: () => Promise<RollRequest>) {
     const updated = reduced() ? await call() : (await Promise.all([call(), new Promise((r) => setTimeout(r, 450))]))[0]
     emit('updated', updated)
     // The server has the result: throw it on this screen's dice stage.
-    if (updated.status === 'resolved' && !updated.choosing) throwDice(shownOf(updated), updated.id)
+    if (updated.status === 'resolved' && !updated.choosing) throwDice(shownOf(updated), updated.id, true)
   } catch {
     failed.value = 'That roll could not be saved. Try again.'
   } finally {

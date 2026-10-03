@@ -312,12 +312,31 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/retrains/{retrainId}/approve
 	ApproveRetrain(ctx context.Context, params ApproveRetrainParams) (ApproveRetrainRes, error)
+	// ChooseDiceSet implements chooseDiceSet operation.
+	//
+	// One of the sets or copies of the signed-in Account; without a set the dice roll plain.
+	//
+	// PUT /api/v1/dice-sets/chosen
+	ChooseDiceSet(ctx context.Context, req *DiceSetChoice) (ChooseDiceSetRes, error)
+	// ClearDiceSetImage implements clearDiceSetImage operation.
+	//
+	// The set goes back to its preset patterns and needs no review.
+	//
+	// DELETE /api/v1/dice-sets/{diceSetId}/image
+	ClearDiceSetImage(ctx context.Context, params ClearDiceSetImageParams) (ClearDiceSetImageRes, error)
 	// ClearTokenIcon implements clearTokenIcon operation.
 	//
 	// Removes the token icon so the token shows initials. The owner or a DM, never during Combat.
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	ClearTokenIcon(ctx context.Context, params ClearTokenIconParams) (ClearTokenIconRes, error)
+	// CopyDiceSet implements copyDiceSet operation.
+	//
+	// A read-only copy of a set shared with the signed-in Account. It stays as it was when the original
+	// changes or stops being shared. One copy of a set per Account.
+	//
+	// POST /api/v1/dice-sets/{diceSetId}/copy
+	CopyDiceSet(ctx context.Context, params CopyDiceSetParams) (CopyDiceSetRes, error)
 	// CopySpell implements copySpell operation.
 	//
 	// Writes a wizard spell into the spellbook, free up to the book's allotment, otherwise for 50 gp and 2
@@ -337,6 +356,12 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/characters
 	CreateCharacter(ctx context.Context, req *CharacterBuild, params CreateCharacterParams) (CreateCharacterRes, error)
+	// CreateDiceSet implements createDiceSet operation.
+	//
+	// A private Dice Set with a look for each die type it dresses, from a preset pattern and two colours.
+	//
+	// POST /api/v1/dice-sets
+	CreateDiceSet(ctx context.Context, req *DiceSetChange) (CreateDiceSetRes, error)
 	// CreateEncounterPool implements createEncounterPool operation.
 	//
 	// Adds an Encounter Pool and records its first Revision. DM only.
@@ -409,6 +434,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/characters/{characterId}
 	DeleteCharacter(ctx context.Context, params DeleteCharacterParams) (DeleteCharacterRes, error)
+	// DeleteDiceSet implements deleteDiceSet operation.
+	//
+	// Removes one of the sets of the signed-in Account, a copy too. Copies others took of it stay.
+	//
+	// DELETE /api/v1/dice-sets/{diceSetId}
+	DeleteDiceSet(ctx context.Context, params DeleteDiceSetParams) (DeleteDiceSetRes, error)
 	// DeleteEncounterPool implements deleteEncounterPool operation.
 	//
 	// Removes the Encounter Pool; its Revisions keep it restorable. DM only.
@@ -451,6 +482,12 @@ type BuildHandler interface {
 	//
 	// DELETE /api/v1/campaigns/{campaignId}/character-draft
 	DiscardCharacterDraft(ctx context.Context, params DiscardCharacterDraftParams) (DiscardCharacterDraftRes, error)
+	// EditDiceSet implements editDiceSet operation.
+	//
+	// Sets its name and looks. A copy cannot be changed.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}
+	EditDiceSet(ctx context.Context, req *DiceSetChange, params EditDiceSetParams) (EditDiceSetRes, error)
 	// ImportLibrary implements importLibrary operation.
 	//
 	// Adds the entries and Collections of an export to the caller's Library as new ones. Whatever Grimoire
@@ -584,6 +621,12 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/proposals/{proposalId}
 	ResubmitProposal(ctx context.Context, req *ProposalUpdate, params ResubmitProposalParams) (ResubmitProposalRes, error)
+	// ReviewDiceSet implements reviewDiceSet operation.
+	//
+	// Decides whether everyone may see a set that waits. Admins only.
+	//
+	// POST /api/v1/admin/dice-sets/{diceSetId}/review
+	ReviewDiceSet(ctx context.Context, req *DiceSetVerdict, params ReviewDiceSetParams) (ReviewDiceSetRes, error)
 	// ReviewProposal implements reviewProposal operation.
 	//
 	// A DM approves a pending Proposal (copied once into their Library and linked into the Campaign
@@ -687,6 +730,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/library/{entryId}/override
 	SetCampaignOverride(ctx context.Context, req *CampaignOverrideInput, params SetCampaignOverrideParams) (SetCampaignOverrideRes, error)
+	// SetDiceSetImage implements setDiceSetImage operation.
+	//
+	// A PNG, JPEG or WebP picture of at most 10 MB, placed on each die by the design. A set shared with
+	// everyone goes back before the Admins.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}/image
+	SetDiceSetImage(ctx context.Context, req SetDiceSetImageReq, params SetDiceSetImageParams) (SetDiceSetImageRes, error)
 	// SetPortrait implements setPortrait operation.
 	//
 	// A PNG, JPEG or WebP picture of at most 10 MB. The owner or a DM, never during Combat.
@@ -699,6 +749,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/campaigns/{campaignId}/characters/{characterId}/token
 	SetTokenIcon(ctx context.Context, req SetTokenIconReq, params SetTokenIconParams) (SetTokenIconRes, error)
+	// ShareDiceSet implements shareDiceSet operation.
+	//
+	// Private, with Friends, or with everyone. A set with an uploaded picture that is shared with everyone
+	// waits for an Admin; until then only Friends see it. A copy cannot be shared on.
+	//
+	// PUT /api/v1/dice-sets/{diceSetId}/sharing
+	ShareDiceSet(ctx context.Context, req *DiceSetSharingChange, params ShareDiceSetParams) (ShareDiceSetRes, error)
 	// ShareLibraryEntry implements shareLibraryEntry operation.
 	//
 	// Asks the Admins to put the latest Revision of one of the caller's entries in the Shared Library.
@@ -1022,6 +1079,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/builders/conditions/{entryId}
 	GetConditionBuild(ctx context.Context, params GetConditionBuildParams) (GetConditionBuildRes, error)
+	// GetDiceSetImage implements getDiceSetImage operation.
+	//
+	// The uploaded picture itself, for the owner of the set, anyone the set is shared with, and an Admin
+	// reviewing it.
+	//
+	// GET /api/v1/dice-sets/{diceSetId}/image
+	GetDiceSetImage(ctx context.Context, params GetDiceSetImageParams) (GetDiceSetImageRes, error)
 	// GetEntry implements getEntry operation.
 	//
 	// One entry rendered for reading, with the conditions its text mentions.
@@ -1264,6 +1328,19 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/npcs/deleted
 	ListDeletedNpcs(ctx context.Context, params ListDeletedNpcsParams) (ListDeletedNpcsRes, error)
+	// ListDiceSets implements listDiceSets operation.
+	//
+	// The Dice Sets of the signed-in Account, its own and its copies, and the one it rolls with.
+	//
+	// GET /api/v1/dice-sets
+	ListDiceSets(ctx context.Context) (ListDiceSetsRes, error)
+	// ListDiceSetsToReview implements listDiceSetsToReview operation.
+	//
+	// Sets shared with everyone that carry an uploaded picture no Admin has decided on, oldest first.
+	// Admins only.
+	//
+	// GET /api/v1/admin/dice-sets
+	ListDiceSetsToReview(ctx context.Context) (ListDiceSetsToReviewRes, error)
 	// ListEncounterChecks implements listEncounterChecks operation.
 	//
 	// The Campaign's latest 100 Encounter Checks with their seeds and what they produced. DM only.
@@ -1447,6 +1524,14 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/settlements
 	ListSettlements(ctx context.Context, params ListSettlementsParams) (ListSettlementsRes, error)
+	// ListSharedDiceSets implements listSharedDiceSets operation.
+	//
+	// Sets of others the signed-in Account may take a copy of. Those of its Friends that are shared with
+	// Friends or with everyone, and sets shared with everyone that carry no uploaded picture or one an
+	// Admin approved.
+	//
+	// GET /api/v1/dice-sets/shared
+	ListSharedDiceSets(ctx context.Context) (ListSharedDiceSetsRes, error)
 	// ListSharedEntries implements listSharedEntries operation.
 	//
 	// Read-only entries every DM can link into their Campaigns, approved by an Admin with an IP check.

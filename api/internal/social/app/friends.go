@@ -30,6 +30,7 @@ type Repository interface {
 	Friends(ctx context.Context, me domain.AccountID) (domain.Friends, error)
 	ConversationRepository
 	NotificationRepository
+	DiceRepository
 	ReleaseRepository
 	InTx(ctx context.Context, fn func(Repository) error) error
 }
@@ -45,6 +46,8 @@ type Service struct {
 	BaseURL string
 	// Changelog reads the release-please changelog Release Notes are drafted from; nil drafts them empty.
 	Changelog func() string
+	// Blobs keeps the pictures uploaded onto Dice Sets.
+	Blobs Blobs
 }
 
 func (s *Service) me(ctx context.Context, subject string) (domain.Person, error) {
