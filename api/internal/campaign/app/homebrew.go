@@ -2,23 +2,28 @@ package app
 
 import (
 	"context"
+	"maps"
+	"slices"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/compendium"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/featbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/features"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
-// homebrew is the compendium as one Campaign sees it: with the homebrew classes and subclasses its
-// Library adds.
+// homebrew is the compendium as one Campaign sees it: with the homebrew classes, subclasses, species,
+// backgrounds and feats its Library adds.
 type homebrew struct {
 	Compendium
-	classes []classbuild.Class
-	subs    []subclassbuild.Subclass
-	species []speciesbuild.Option
+	classes     []classbuild.Class
+	subs        []subclassbuild.Subclass
+	species     []speciesbuild.Option
+	feats       []featbuild.BuiltFeat
+	backgrounds []featbuild.BuiltBackground
 }
 
 // class is a homebrew class by slug.
@@ -31,20 +36,25 @@ func (s *Characters) within(ctx context.Context, id domain.CampaignID) (*Charact
 	if _, done := s.Compendium.(homebrew); done {
 		return s, nil
 	}
-	subs, err := s.Repo.HomebrewSubclasses(ctx, id)
-	if err != nil {
+	h := homebrew{Compendium: s.Compendium}
+	var err error
+	if h.subs, err = s.Repo.HomebrewSubclasses(ctx, id); err != nil {
 		return nil, err
 	}
-	classes, err := s.Repo.HomebrewClasses(ctx, id)
-	if err != nil {
+	if h.classes, err = s.Repo.HomebrewClasses(ctx, id); err != nil {
 		return nil, err
 	}
-	species, err := s.Repo.HomebrewSpecies(ctx, id)
-	if err != nil {
+	if h.species, err = s.Repo.HomebrewSpecies(ctx, id); err != nil {
+		return nil, err
+	}
+	if h.feats, err = s.Repo.HomebrewFeats(ctx, id); err != nil {
+		return nil, err
+	}
+	if h.backgrounds, err = s.Repo.HomebrewBackgrounds(ctx, id); err != nil {
 		return nil, err
 	}
 	in := *s
-	in.Compendium = homebrew{Compendium: s.Compendium, classes: classes, subs: subs, species: species}
+	in.Compendium = h
 	return &in, nil
 }
 
@@ -91,6 +101,9 @@ func (h homebrew) BuilderOptions(ctx context.Context, ruleset string) (compendiu
 	for _, sp := range h.species {
 		o.Species = append(o.Species, compendium.SpeciesOption{Slug: sp.Slug, Name: sp.Name, SpeedFeet: sp.SpeedFeet})
 	}
+	for _, b := range h.backgrounds {
+		o.Backgrounds = append(o.Backgrounds, compendium.BackgroundOption{Slug: b.Slug, Name: b.Name, Abilities: b.Abilities, Skills: b.Skills})
+	}
 	return o, nil
 }
 
@@ -100,7 +113,12 @@ func (h homebrew) Features(ctx context.Context) (features.Catalog, error) {
 	if err != nil {
 		return cat, err
 	}
-	return classbuild.Merge(subclassbuild.Merge(cat, h.subs), h.classes), nil
+	cat = classbuild.Merge(subclassbuild.Merge(cat, h.subs), h.classes)
+	cat.Prerequisites = maps.Clone(cat.Prerequisites)
+	for _, f := range h.feats {
+		cat.Prerequisites[features.Owner{Kind: "feat", Slug: f.Slug}] = f.Requirements
+	}
+	return cat, nil
 }
 
 // ClassSpells reads a homebrew class's spells from the SRD list it casts from.
@@ -126,6 +144,9 @@ func (h homebrew) LevelUpOptions(ctx context.Context, ruleset, class string, max
 	if own {
 		lu.Subclasses = []compendium.Named{}
 	}
+	for _, f := range h.feats {
+		lu.Feats = append(lu.Feats, compendium.FeatOption{Slug: f.Slug, Name: f.Name, Category: f.Category, Description: f.Description, Repeatable: f.Repeatable})
+	}
 	for _, sc := range h.subs {
 		if sc.Class == class {
 			lu.Subclasses = append(lu.Subclasses, compendium.Named{Slug: sc.Slug, Name: sc.Name})
@@ -139,6 +160,11 @@ func (h homebrew) Traits(ctx context.Context, ruleset, species string, classes [
 	out, err := h.Compendium.Traits(ctx, ruleset, species, classes, feats)
 	if err != nil {
 		return nil, err
+	}
+	for _, f := range h.feats {
+		if slices.Contains(feats, f.Slug) {
+			out = append(out, compendium.Trait{Name: f.Name, Source: "feat", Level: 0, Description: f.Description})
+		}
 	}
 	if sp, ok := find(h.species, func(o speciesbuild.Option) bool { return o.Slug == species }); ok {
 		level := 0
@@ -162,6 +188,19 @@ func (h homebrew) Traits(ctx context.Context, ruleset, species string, classes [
 		}
 	}
 	return out, nil
+}
+
+// background is a homebrew background's traits and the Origin feat it grants; none for any other.
+func (h homebrew) background(slug string) ([]compendium.Trait, string) {
+	b, ok := find(h.backgrounds, func(b featbuild.BuiltBackground) bool { return b.Slug == slug })
+	if !ok {
+		return nil, ""
+	}
+	out := make([]compendium.Trait, 0, len(b.Traits))
+	for _, t := range b.Traits {
+		out = append(out, compendium.Trait{Name: t.Name, Source: "background", Level: 0, Description: t.Text})
+	}
+	return out, b.Feat
 }
 
 // gained are the traits gained by a class level.

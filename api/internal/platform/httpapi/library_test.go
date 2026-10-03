@@ -594,10 +594,12 @@ func TestHomebrewExportAndImport(t *testing.T) {
 		{"key":"d","kind":"subclass","name":"Tinker","parts":[{"type":"subclass","design":{"class":"artificer","features":[]}}]},
 		{"key":"e","kind":"item","name":"Spoon","parts":[{"type":"item","design":{"kind":"spoon"}}]},
 		{"key":"f","kind":"class","name":"Odd","parts":[{"type":"class","design":{"hitDie":7}}]},
-		{"key":"g","kind":"species","name":"Odd","parts":[{"type":"species","design":{"sizes":[]}}]}],
+		{"key":"g","kind":"species","name":"Odd","parts":[{"type":"species","design":{"sizes":[]}}]},
+		{"key":"h","kind":"feat","name":"Odd","parts":[{"type":"feat","design":{"category":"heroic"}}]},
+		{"key":"i","kind":"background","name":"Odd","parts":[{"type":"background","design":{"abilities":[]}}]}],
 		"collections":[{"name":"Mixed","description":"","entries":["a","b"]}]}`
 	report = decode(t, call(h, http.MethodPost, "/api/v1/library/import", "player", odd))
-	if len(report["entries"].([]any)) != 6 || len(report["manual"].([]any)) != 9 {
+	if len(report["entries"].([]any)) != 8 || len(report["manual"].([]any)) != 11 {
 		t.Fatalf("an import with odd parts = %v", report)
 	}
 	if rec := call(h, http.MethodPost, "/api/v1/library/import", "player", `{"format":"other","version":1,"entries":[]}`); rec.Code != http.StatusBadRequest {

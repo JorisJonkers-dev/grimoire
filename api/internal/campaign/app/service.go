@@ -14,6 +14,7 @@ import (
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/featbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
@@ -33,6 +34,9 @@ type Repository interface {
 	HomebrewClasses(ctx context.Context, id domain.CampaignID) ([]classbuild.Class, error)
 	// HomebrewSpecies are the species, one for each lineage, a Campaign's Library adds.
 	HomebrewSpecies(ctx context.Context, id domain.CampaignID) ([]speciesbuild.Option, error)
+	// HomebrewFeats and HomebrewBackgrounds are the feats and backgrounds a Campaign's Library adds.
+	HomebrewFeats(ctx context.Context, id domain.CampaignID) ([]featbuild.BuiltFeat, error)
+	HomebrewBackgrounds(ctx context.Context, id domain.CampaignID) ([]featbuild.BuiltBackground, error)
 	AddMember(ctx context.Context, m domain.Member) (domain.Member, error)
 	Membership(ctx context.Context, id domain.CampaignID, subject string) (domain.Member, error)
 	Member(ctx context.Context, id domain.CampaignID, member domain.MemberID) (domain.Member, error)

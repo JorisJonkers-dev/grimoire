@@ -16,12 +16,12 @@ import (
 
 // Kinds are what a Library keeps.
 func Kinds() []string {
-	return []string{"creature", "npc", "location", "shop", "item", "spell", "table", "subclass", "class", "species"}
+	return []string{"creature", "npc", "location", "shop", "item", "spell", "table", "subclass", "class", "species", "background", "feat"}
 }
 
 // BuiltKinds are the kinds a builder designs; an export carries their designs as typed parts.
 func BuiltKinds() []string {
-	return []string{"spell", "item", "subclass", "class", "species"}
+	return []string{"spell", "item", "subclass", "class", "species", "background", "feat"}
 }
 
 // Limits on an entry's fields.

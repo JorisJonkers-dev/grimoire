@@ -1,34 +1,21 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { useMutation, useQuery } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSpeciesBuildOptions, previewSpeciesMutation, saveSpeciesBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { SpeciesBuild, SpeciesDesign, SpeciesSpell } from '@/infrastructure/api/types.gen'
+import type { SpeciesSpell } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import { useBuilder } from './useBuilder'
 
 const route = useRoute()
-const client = useQueryClient()
-const path = computed(() => ({ path: { entryId: String(route.params.entryId) } }))
+const entryId = computed(() => String(route.params.entryId))
+const path = computed(() => ({ path: { entryId: entryId.value } }))
 const species = useQuery(computed(() => ({ ...getSpeciesBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewSpeciesMutation())
 const save = useMutation(saveSpeciesBuildMutation())
-const problem = computed(() => preview.error.value ?? save.error.value)
-// copy takes plain data out of a reactive value.
-const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-const design = ref<SpeciesDesign>()
-const shown = ref<SpeciesBuild>()
-const status = ref('')
-watch(
-  () => species.data.value,
-  (b) => {
-    if (!b || design.value) return
-    design.value = copy(b.design)
-    shown.value = b
-  },
-  { immediate: true },
-)
-const name = computed(() => species.data.value?.entry?.name ?? '')
-const readOnly = computed(() => species.data.value?.entry?.shared ?? false)
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+  entryId, data: species.data, key: computed(() => getSpeciesBuildOptions(path.value).queryKey), preview, save, fallback: 'Species',
+})
 
 const sizes = ['tiny', 'small', 'medium', 'large', 'huge']
 const types = ['aberration', 'beast', 'celestial', 'construct', 'dragon', 'elemental', 'fey', 'fiend', 'giant', 'humanoid', 'monstrosity', 'ooze', 'plant', 'undead']
@@ -41,23 +28,6 @@ function toggle(list: string[], value: string) {
   const i = list.indexOf(value)
   if (i >= 0) list.splice(i, 1)
   else list.push(value)
-}
-function runPreview() {
-  if (!design.value) return
-  status.value = ''
-  preview.mutate({ body: { name: name.value || 'Species', design: design.value } }, { onSuccess: (b) => (shown.value = b) })
-}
-function runSave() {
-  if (!design.value) return
-  status.value = ''
-  save.mutate({ ...path.value, body: design.value }, {
-    onSuccess: (b) => {
-      shown.value = b
-      client.setQueryData(getSpeciesBuildOptions(path.value).queryKey, b)
-      void client.invalidateQueries()
-      status.value = `Saved as Revision ${String(b.entry?.revision ?? 0)}.`
-    },
-  })
 }
 </script>
 

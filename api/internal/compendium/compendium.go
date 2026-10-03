@@ -252,12 +252,14 @@ type Named struct {
 	Name string
 }
 
-// FeatOption is a feat and the category it belongs to: General, Fighting Style, Epic Boon or Origin.
+// FeatOption is a feat and the category it belongs to: General, Fighting Style, Epic Boon or Origin. A
+// repeatable one can be taken again.
 type FeatOption struct {
 	Slug        string
 	Name        string
 	Category    string
 	Description string
+	Repeatable  bool
 }
 
 // SpellOption is a cantrip (level 0) or spell on a class's list, whether it can be cast as a ritual,

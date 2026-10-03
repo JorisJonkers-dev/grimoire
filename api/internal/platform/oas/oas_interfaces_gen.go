@@ -201,6 +201,10 @@ type GetAutomationCoverageRes interface {
 	getAutomationCoverageRes()
 }
 
+type GetBackgroundBuildRes interface {
+	getBackgroundBuildRes()
+}
+
 type GetBuilderOptionsRes interface {
 	getBuilderOptionsRes()
 }
@@ -223,6 +227,10 @@ type GetClassBuildRes interface {
 
 type GetEntryRes interface {
 	getEntryRes()
+}
+
+type GetFeatBuildRes interface {
+	getFeatBuildRes()
 }
 
 type GetHealthRes interface {
@@ -565,12 +573,20 @@ type PreviewAccountInviteRes interface {
 	previewAccountInviteRes()
 }
 
+type PreviewBackgroundRes interface {
+	previewBackgroundRes()
+}
+
 type PreviewCharacterRes interface {
 	previewCharacterRes()
 }
 
 type PreviewClassRes interface {
 	previewClassRes()
+}
+
+type PreviewFeatRes interface {
+	previewFeatRes()
 }
 
 type PreviewInviteRes interface {
@@ -693,12 +709,20 @@ type RollRestRes interface {
 	rollRestRes()
 }
 
+type SaveBackgroundBuildRes interface {
+	saveBackgroundBuildRes()
+}
+
 type SaveCharacterDraftRes interface {
 	saveCharacterDraftRes()
 }
 
 type SaveClassBuildRes interface {
 	saveClassBuildRes()
+}
+
+type SaveFeatBuildRes interface {
+	saveFeatBuildRes()
 }
 
 type SaveItemBuildRes interface {

@@ -267,7 +267,7 @@ func featOptions(cat features.Catalog, feats []compendium.FeatOption, sheet Shee
 	}
 	var out []LevelUpOption
 	for _, f := range feats {
-		if f.Category == featCategories()[ch.From] && (f.Slug == asi || !slices.Contains(taken, f.Slug)) {
+		if f.Category == featCategories()[ch.From] && (f.Repeatable || f.Slug == asi || !slices.Contains(taken, f.Slug)) {
 			out = append(out, LevelUpOption{Slug: f.Slug, Name: f.Name, Unmet: features.Unmet(cat.Prerequisites[features.Owner{Kind: "feat", Slug: f.Slug}], who)})
 		}
 	}

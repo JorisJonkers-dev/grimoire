@@ -3005,6 +3005,107 @@ func (s *AutomationCountKind) UnmarshalText(data []byte) error {
 	}
 }
 
+// A homebrew background in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/BackgroundBuild
+type BackgroundBuild struct {
+	Entry  OptLibraryEntry  `json:"entry"`
+	Design BackgroundDesign `json:"design"`
+	Slug   OptString        `json:"slug"`
+	Lines  []string         `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *BackgroundBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *BackgroundBuild) GetDesign() BackgroundDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *BackgroundBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *BackgroundBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *BackgroundBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *BackgroundBuild) SetDesign(val BackgroundDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *BackgroundBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *BackgroundBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// BackgroundBuildHeaders wraps BackgroundBuild with response headers.
+type BackgroundBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           BackgroundBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *BackgroundBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *BackgroundBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *BackgroundBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *BackgroundBuildHeaders) GetResponse() BackgroundBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *BackgroundBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *BackgroundBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *BackgroundBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *BackgroundBuildHeaders) SetResponse(val BackgroundBuild) {
+	s.Response = val
+}
+
+func (*BackgroundBuildHeaders) getBackgroundBuildRes()  {}
+func (*BackgroundBuildHeaders) previewBackgroundRes()   {}
+func (*BackgroundBuildHeaders) saveBackgroundBuildRes() {}
+
 // A background and what it grants; empty abilities means a free choice.
 // Ref: #/components/schemas/BackgroundChoice
 type BackgroundChoice struct {
@@ -3052,6 +3153,126 @@ func (s *BackgroundChoice) SetAbilities(val []Ability) {
 // SetSkills sets the value of Skills.
 func (s *BackgroundChoice) SetSkills(val []Slug) {
 	s.Skills = val
+}
+
+// A homebrew background as the background builder makes it, shaped like the 2024 ones.
+// Ref: #/components/schemas/BackgroundDesign
+type BackgroundDesign struct {
+	Abilities []string  `json:"abilities"`
+	Skills    []string  `json:"skills"`
+	Feat      string    `json:"feat"`
+	FeatName  string    `json:"featName"`
+	Tool      OptString `json:"tool"`
+	Equipment OptString `json:"equipment"`
+	Gold      OptInt32  `json:"gold"`
+	Text      OptString `json:"text"`
+}
+
+// GetAbilities returns the value of Abilities.
+func (s *BackgroundDesign) GetAbilities() []string {
+	return s.Abilities
+}
+
+// GetSkills returns the value of Skills.
+func (s *BackgroundDesign) GetSkills() []string {
+	return s.Skills
+}
+
+// GetFeat returns the value of Feat.
+func (s *BackgroundDesign) GetFeat() string {
+	return s.Feat
+}
+
+// GetFeatName returns the value of FeatName.
+func (s *BackgroundDesign) GetFeatName() string {
+	return s.FeatName
+}
+
+// GetTool returns the value of Tool.
+func (s *BackgroundDesign) GetTool() OptString {
+	return s.Tool
+}
+
+// GetEquipment returns the value of Equipment.
+func (s *BackgroundDesign) GetEquipment() OptString {
+	return s.Equipment
+}
+
+// GetGold returns the value of Gold.
+func (s *BackgroundDesign) GetGold() OptInt32 {
+	return s.Gold
+}
+
+// GetText returns the value of Text.
+func (s *BackgroundDesign) GetText() OptString {
+	return s.Text
+}
+
+// SetAbilities sets the value of Abilities.
+func (s *BackgroundDesign) SetAbilities(val []string) {
+	s.Abilities = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *BackgroundDesign) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetFeat sets the value of Feat.
+func (s *BackgroundDesign) SetFeat(val string) {
+	s.Feat = val
+}
+
+// SetFeatName sets the value of FeatName.
+func (s *BackgroundDesign) SetFeatName(val string) {
+	s.FeatName = val
+}
+
+// SetTool sets the value of Tool.
+func (s *BackgroundDesign) SetTool(val OptString) {
+	s.Tool = val
+}
+
+// SetEquipment sets the value of Equipment.
+func (s *BackgroundDesign) SetEquipment(val OptString) {
+	s.Equipment = val
+}
+
+// SetGold sets the value of Gold.
+func (s *BackgroundDesign) SetGold(val OptInt32) {
+	s.Gold = val
+}
+
+// SetText sets the value of Text.
+func (s *BackgroundDesign) SetText(val OptString) {
+	s.Text = val
+}
+
+// A design to preview, with the background's name.
+// Ref: #/components/schemas/BackgroundPreviewInput
+type BackgroundPreviewInput struct {
+	Name   string           `json:"name"`
+	Design BackgroundDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *BackgroundPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *BackgroundPreviewInput) GetDesign() BackgroundDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *BackgroundPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *BackgroundPreviewInput) SetDesign(val BackgroundDesign) {
+	s.Design = val
 }
 
 // A Character's rebuildable choices.
@@ -9486,6 +9707,244 @@ func (s *ExportedEntryPartsItem) init() ExportedEntryPartsItem {
 	return m
 }
 
+// A homebrew feat in its builder, the slug it is known by, and how it reads back.
+// Ref: #/components/schemas/FeatBuild
+type FeatBuild struct {
+	Entry  OptLibraryEntry `json:"entry"`
+	Design FeatDesign      `json:"design"`
+	Slug   OptString       `json:"slug"`
+	Lines  []string        `json:"lines"`
+}
+
+// GetEntry returns the value of Entry.
+func (s *FeatBuild) GetEntry() OptLibraryEntry {
+	return s.Entry
+}
+
+// GetDesign returns the value of Design.
+func (s *FeatBuild) GetDesign() FeatDesign {
+	return s.Design
+}
+
+// GetSlug returns the value of Slug.
+func (s *FeatBuild) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetLines returns the value of Lines.
+func (s *FeatBuild) GetLines() []string {
+	return s.Lines
+}
+
+// SetEntry sets the value of Entry.
+func (s *FeatBuild) SetEntry(val OptLibraryEntry) {
+	s.Entry = val
+}
+
+// SetDesign sets the value of Design.
+func (s *FeatBuild) SetDesign(val FeatDesign) {
+	s.Design = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *FeatBuild) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetLines sets the value of Lines.
+func (s *FeatBuild) SetLines(val []string) {
+	s.Lines = val
+}
+
+// FeatBuildHeaders wraps FeatBuild with response headers.
+type FeatBuildHeaders struct {
+	RateLimitLimit     OptInt32
+	RateLimitRemaining OptInt32
+	RateLimitReset     OptInt32
+	Response           FeatBuild
+}
+
+// GetRateLimitLimit returns the value of RateLimitLimit.
+func (s *FeatBuildHeaders) GetRateLimitLimit() OptInt32 {
+	return s.RateLimitLimit
+}
+
+// GetRateLimitRemaining returns the value of RateLimitRemaining.
+func (s *FeatBuildHeaders) GetRateLimitRemaining() OptInt32 {
+	return s.RateLimitRemaining
+}
+
+// GetRateLimitReset returns the value of RateLimitReset.
+func (s *FeatBuildHeaders) GetRateLimitReset() OptInt32 {
+	return s.RateLimitReset
+}
+
+// GetResponse returns the value of Response.
+func (s *FeatBuildHeaders) GetResponse() FeatBuild {
+	return s.Response
+}
+
+// SetRateLimitLimit sets the value of RateLimitLimit.
+func (s *FeatBuildHeaders) SetRateLimitLimit(val OptInt32) {
+	s.RateLimitLimit = val
+}
+
+// SetRateLimitRemaining sets the value of RateLimitRemaining.
+func (s *FeatBuildHeaders) SetRateLimitRemaining(val OptInt32) {
+	s.RateLimitRemaining = val
+}
+
+// SetRateLimitReset sets the value of RateLimitReset.
+func (s *FeatBuildHeaders) SetRateLimitReset(val OptInt32) {
+	s.RateLimitReset = val
+}
+
+// SetResponse sets the value of Response.
+func (s *FeatBuildHeaders) SetResponse(val FeatBuild) {
+	s.Response = val
+}
+
+func (*FeatBuildHeaders) getFeatBuildRes()  {}
+func (*FeatBuildHeaders) previewFeatRes()   {}
+func (*FeatBuildHeaders) saveFeatBuildRes() {}
+
+// A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it
+// can be taken again.
+// Ref: #/components/schemas/FeatDesign
+type FeatDesign struct {
+	Category      string             `json:"category"`
+	Text          string             `json:"text"`
+	Repeatable    OptBool            `json:"repeatable"`
+	Prerequisites []FeatPrerequisite `json:"prerequisites"`
+}
+
+// GetCategory returns the value of Category.
+func (s *FeatDesign) GetCategory() string {
+	return s.Category
+}
+
+// GetText returns the value of Text.
+func (s *FeatDesign) GetText() string {
+	return s.Text
+}
+
+// GetRepeatable returns the value of Repeatable.
+func (s *FeatDesign) GetRepeatable() OptBool {
+	return s.Repeatable
+}
+
+// GetPrerequisites returns the value of Prerequisites.
+func (s *FeatDesign) GetPrerequisites() []FeatPrerequisite {
+	return s.Prerequisites
+}
+
+// SetCategory sets the value of Category.
+func (s *FeatDesign) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetText sets the value of Text.
+func (s *FeatDesign) SetText(val string) {
+	s.Text = val
+}
+
+// SetRepeatable sets the value of Repeatable.
+func (s *FeatDesign) SetRepeatable(val OptBool) {
+	s.Repeatable = val
+}
+
+// SetPrerequisites sets the value of Prerequisites.
+func (s *FeatDesign) SetPrerequisites(val []FeatPrerequisite) {
+	s.Prerequisites = val
+}
+
+// One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+// Ref: #/components/schemas/FeatPrerequisite
+type FeatPrerequisite struct {
+	Kind    string    `json:"kind"`
+	Ability OptString `json:"ability"`
+	Minimum OptInt32  `json:"minimum"`
+	Feat    OptString `json:"feat"`
+	Group   int32     `json:"group"`
+}
+
+// GetKind returns the value of Kind.
+func (s *FeatPrerequisite) GetKind() string {
+	return s.Kind
+}
+
+// GetAbility returns the value of Ability.
+func (s *FeatPrerequisite) GetAbility() OptString {
+	return s.Ability
+}
+
+// GetMinimum returns the value of Minimum.
+func (s *FeatPrerequisite) GetMinimum() OptInt32 {
+	return s.Minimum
+}
+
+// GetFeat returns the value of Feat.
+func (s *FeatPrerequisite) GetFeat() OptString {
+	return s.Feat
+}
+
+// GetGroup returns the value of Group.
+func (s *FeatPrerequisite) GetGroup() int32 {
+	return s.Group
+}
+
+// SetKind sets the value of Kind.
+func (s *FeatPrerequisite) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetAbility sets the value of Ability.
+func (s *FeatPrerequisite) SetAbility(val OptString) {
+	s.Ability = val
+}
+
+// SetMinimum sets the value of Minimum.
+func (s *FeatPrerequisite) SetMinimum(val OptInt32) {
+	s.Minimum = val
+}
+
+// SetFeat sets the value of Feat.
+func (s *FeatPrerequisite) SetFeat(val OptString) {
+	s.Feat = val
+}
+
+// SetGroup sets the value of Group.
+func (s *FeatPrerequisite) SetGroup(val int32) {
+	s.Group = val
+}
+
+// A design to preview, with the feat's name.
+// Ref: #/components/schemas/FeatPreviewInput
+type FeatPreviewInput struct {
+	Name   string     `json:"name"`
+	Design FeatDesign `json:"design"`
+}
+
+// GetName returns the value of Name.
+func (s *FeatPreviewInput) GetName() string {
+	return s.Name
+}
+
+// GetDesign returns the value of Design.
+func (s *FeatPreviewInput) GetDesign() FeatDesign {
+	return s.Design
+}
+
+// SetName sets the value of Name.
+func (s *FeatPreviewInput) SetName(val string) {
+	s.Name = val
+}
+
+// SetDesign sets the value of Design.
+func (s *FeatPreviewInput) SetDesign(val FeatDesign) {
+	s.Design = val
+}
+
 // A field whose value differs between two Revisions.
 // Ref: #/components/schemas/FieldChange
 type FieldChange struct {
@@ -14348,16 +14807,18 @@ func (s *LibraryImportFormat) UnmarshalText(data []byte) error {
 type LibraryKind string
 
 const (
-	LibraryKindCreature LibraryKind = "creature"
-	LibraryKindNpc      LibraryKind = "npc"
-	LibraryKindLocation LibraryKind = "location"
-	LibraryKindShop     LibraryKind = "shop"
-	LibraryKindItem     LibraryKind = "item"
-	LibraryKindSpell    LibraryKind = "spell"
-	LibraryKindTable    LibraryKind = "table"
-	LibraryKindSubclass LibraryKind = "subclass"
-	LibraryKindClass    LibraryKind = "class"
-	LibraryKindSpecies  LibraryKind = "species"
+	LibraryKindCreature   LibraryKind = "creature"
+	LibraryKindNpc        LibraryKind = "npc"
+	LibraryKindLocation   LibraryKind = "location"
+	LibraryKindShop       LibraryKind = "shop"
+	LibraryKindItem       LibraryKind = "item"
+	LibraryKindSpell      LibraryKind = "spell"
+	LibraryKindTable      LibraryKind = "table"
+	LibraryKindSubclass   LibraryKind = "subclass"
+	LibraryKindClass      LibraryKind = "class"
+	LibraryKindSpecies    LibraryKind = "species"
+	LibraryKindBackground LibraryKind = "background"
+	LibraryKindFeat       LibraryKind = "feat"
 )
 
 // AllValues returns all LibraryKind values.
@@ -14373,6 +14834,8 @@ func (LibraryKind) AllValues() []LibraryKind {
 		LibraryKindSubclass,
 		LibraryKindClass,
 		LibraryKindSpecies,
+		LibraryKindBackground,
+		LibraryKindFeat,
 	}
 }
 
@@ -14398,6 +14861,10 @@ func (s LibraryKind) MarshalText() ([]byte, error) {
 	case LibraryKindClass:
 		return []byte(s), nil
 	case LibraryKindSpecies:
+		return []byte(s), nil
+	case LibraryKindBackground:
+		return []byte(s), nil
+	case LibraryKindFeat:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -14436,6 +14903,12 @@ func (s *LibraryKind) UnmarshalText(data []byte) error {
 		return nil
 	case LibraryKindSpecies:
 		*s = LibraryKindSpecies
+		return nil
+	case LibraryKindBackground:
+		*s = LibraryKindBackground
+		return nil
+	case LibraryKindFeat:
+		*s = LibraryKindFeat
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -31683,12 +32156,14 @@ func (*ProblemStatusCodeWithHeaders) getAccountRes()                    {}
 func (*ProblemStatusCodeWithHeaders) getActionLogRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getAdminAccountRes()               {}
 func (*ProblemStatusCodeWithHeaders) getAutomationCoverageRes()         {}
+func (*ProblemStatusCodeWithHeaders) getBackgroundBuildRes()            {}
 func (*ProblemStatusCodeWithHeaders) getBuilderOptionsRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCampaignRes()                   {}
 func (*ProblemStatusCodeWithHeaders) getCharacterDraftRes()             {}
 func (*ProblemStatusCodeWithHeaders) getCharacterRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getClassBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) getEntryRes()                      {}
+func (*ProblemStatusCodeWithHeaders) getFeatBuildRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getHealthRes()                     {}
 func (*ProblemStatusCodeWithHeaders) getInventoryRes()                  {}
 func (*ProblemStatusCodeWithHeaders) getItemBuildRes()                  {}
@@ -31774,8 +32249,10 @@ func (*ProblemStatusCodeWithHeaders) pinLibraryRevisionRes()            {}
 func (*ProblemStatusCodeWithHeaders) planLevelUpRes()                   {}
 func (*ProblemStatusCodeWithHeaders) prepareSpellsRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewAccountInviteRes()          {}
+func (*ProblemStatusCodeWithHeaders) previewBackgroundRes()             {}
 func (*ProblemStatusCodeWithHeaders) previewCharacterRes()              {}
 func (*ProblemStatusCodeWithHeaders) previewClassRes()                  {}
+func (*ProblemStatusCodeWithHeaders) previewFeatRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewInviteRes()                 {}
 func (*ProblemStatusCodeWithHeaders) previewItemRes()                   {}
 func (*ProblemStatusCodeWithHeaders) previewReachRes()                  {}
@@ -31806,8 +32283,10 @@ func (*ProblemStatusCodeWithHeaders) revokeAccessTokenRes()             {}
 func (*ProblemStatusCodeWithHeaders) revokeInviteRes()                  {}
 func (*ProblemStatusCodeWithHeaders) rollCharacterScoresRes()           {}
 func (*ProblemStatusCodeWithHeaders) rollRestRes()                      {}
+func (*ProblemStatusCodeWithHeaders) saveBackgroundBuildRes()           {}
 func (*ProblemStatusCodeWithHeaders) saveCharacterDraftRes()            {}
 func (*ProblemStatusCodeWithHeaders) saveClassBuildRes()                {}
+func (*ProblemStatusCodeWithHeaders) saveFeatBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveItemBuildRes()                 {}
 func (*ProblemStatusCodeWithHeaders) saveSpeciesBuildRes()              {}
 func (*ProblemStatusCodeWithHeaders) saveSpellBuildRes()                {}

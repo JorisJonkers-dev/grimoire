@@ -4986,6 +4986,186 @@ paths:
           $ref: "#/components/responses/Problem"
         "5XX":
           $ref: "#/components/responses/Problem"
+  /api/v1/builders/feats/preview:
+    post:
+      operationId: previewFeat
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew feat
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/feats/{entryId}:
+    get:
+      operationId: getFeatBuild
+      x-ogen-operation-group: Read
+      summary: Open a feat in the feat builder
+      description: "A homebrew feat's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The feat.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveFeatBuild
+      x-ogen-operation-group: Build
+      summary: Save a feat design
+      description: "Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it offer it when a level grants a feat of its category."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatDesign"
+      responses:
+        "200":
+          description: The feat.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/backgrounds/preview:
+    post:
+      operationId: previewBackground
+      x-ogen-operation-group: Read
+      summary: Preview a homebrew background
+      description: "Checks a design without saving it and reads it back. A design the rules refuse comes back with the reason."
+      tags: [Library]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackgroundPreviewInput"
+      responses:
+        "200":
+          description: The preview.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+  /api/v1/builders/backgrounds/{entryId}:
+    get:
+      operationId: getBackgroundBuild
+      x-ogen-operation-group: Read
+      summary: Open a background in the background builder
+      description: "A homebrew background's design, read back: one of the caller's, or a Shared Library copy."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      responses:
+        "200":
+          description: The background.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: saveBackgroundBuild
+      x-ogen-operation-group: Build
+      summary: Save a background design
+      description: "Saves the design of one of the caller's background entries as its next Revision; Campaigns that see it offer it in character creation."
+      tags: [Library]
+      parameters:
+        - $ref: "#/components/parameters/LibraryEntryId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackgroundDesign"
+      responses:
+        "200":
+          description: The background.
+          headers:
+            RateLimit-Limit:
+              $ref: "#/components/headers/RateLimit-Limit"
+            RateLimit-Remaining:
+              $ref: "#/components/headers/RateLimit-Remaining"
+            RateLimit-Reset:
+              $ref: "#/components/headers/RateLimit-Reset"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundBuild"
+        "4XX":
+          $ref: "#/components/responses/Problem"
+        "5XX":
+          $ref: "#/components/responses/Problem"
   /api/v1/me:
     get:
       operationId: getMe
@@ -9892,7 +10072,7 @@ components:
     LibraryKind:
       type: string
       description: What a Library entry is.
-      enum: [creature, npc, location, shop, item, spell, table, subclass, class, species]
+      enum: [creature, npc, location, shop, item, spell, table, subclass, class, species, background, feat]
     LibraryField:
       type: object
       description: One named value of a Library entry.
@@ -10594,6 +10774,92 @@ components:
           type: array
           maxItems: 40
           items: { $ref: "#/components/schemas/SpeciesSpell" }
+    FeatPreviewInput:
+      type: object
+      description: A design to preview, with the feat's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/FeatDesign" }
+    FeatBuild:
+      type: object
+      description: A homebrew feat in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/FeatDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    BackgroundPreviewInput:
+      type: object
+      description: A design to preview, with the background's name.
+      additionalProperties: false
+      required: [name, design]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        design: { $ref: "#/components/schemas/BackgroundDesign" }
+    BackgroundBuild:
+      type: object
+      description: A homebrew background in its builder, the slug it is known by, and how it reads back.
+      additionalProperties: false
+      required: [design, lines]
+      properties:
+        entry: { $ref: "#/components/schemas/LibraryEntry" }
+        design: { $ref: "#/components/schemas/BackgroundDesign" }
+        slug: { type: string, maxLength: 40 }
+        lines:
+          type: array
+          maxItems: 400
+          items: { type: string, maxLength: 2400 }
+    FeatDesign:
+      type: object
+      description: A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.
+      additionalProperties: false
+      required: [category, text, prerequisites]
+      properties:
+        category: { type: string, maxLength: 40 }
+        text: { type: string, maxLength: 16000 }
+        repeatable: { type: boolean }
+        prerequisites:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/FeatPrerequisite" }
+    FeatPrerequisite:
+      type: object
+      description: One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+      additionalProperties: false
+      required: [kind, group]
+      properties:
+        kind: { type: string, maxLength: 40 }
+        ability: { type: string, maxLength: 40 }
+        minimum: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        feat: { type: string, maxLength: 120 }
+        group: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+    BackgroundDesign:
+      type: object
+      description: A homebrew background as the background builder makes it, shaped like the 2024 ones.
+      additionalProperties: false
+      required: [abilities, skills, feat, featName]
+      properties:
+        abilities:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        skills:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 40 }
+        feat: { type: string, maxLength: 120 }
+        featName: { type: string, maxLength: 200 }
+        tool: { type: string, maxLength: 400 }
+        equipment: { type: string, maxLength: 2000 }
+        gold: { type: integer, format: int32, minimum: -100000, maximum: 100000 }
+        text: { type: string, maxLength: 8000 }
     SubclassDesign:
       type: object
       description: A homebrew subclass as the subclass builder makes it, from level-gated Features, the Resources they spend and the choices they ask for.

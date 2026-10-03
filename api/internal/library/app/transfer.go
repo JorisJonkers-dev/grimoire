@@ -10,11 +10,8 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/JorisJonkers-dev/grimoire/api/internal/library/domain"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/itembuild"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
-	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/shared/caller"
 )
 
@@ -136,36 +133,30 @@ func (s *Service) checkDesign(ctx context.Context, x domain.Exported) string {
 	if x.Design == nil {
 		return ""
 	}
-	var err error
-	switch x.Kind {
-	case "item":
-		var d itembuild.Design
-		if err = json.Unmarshal(x.Design, &d); err == nil {
-			err = itembuild.Check(d)
-		}
-	case "subclass":
-		var d subclassbuild.Design
-		if err = json.Unmarshal(x.Design, &d); err == nil {
-			err = checkSubclass(d)
-		}
-	case "class":
-		var d classbuild.Design
-		if err = json.Unmarshal(x.Design, &d); err == nil {
-			err = checkClass(d)
-		}
-	case "species":
-		var d speciesbuild.Design
-		if err = json.Unmarshal(x.Design, &d); err == nil {
-			err = checkSpecies(d)
-		}
-	default:
-		var d spellbuild.Design
-		if err = json.Unmarshal(x.Design, &d); err == nil {
-			_, err = s.build(ctx, uuid.Nil, x.Name, d)
-		}
+	spell := func(d spellbuild.Design) error {
+		_, err := s.build(ctx, uuid.Nil, x.Name, d)
+		return err
 	}
-	if err != nil {
+	checks := map[string]func([]byte) error{
+		"spell":      func(raw []byte) error { return checked(raw, spell) },
+		"item":       func(raw []byte) error { return checked(raw, itembuild.Check) },
+		"subclass":   func(raw []byte) error { return checked(raw, checkSubclass) },
+		"class":      func(raw []byte) error { return checked(raw, checkClass) },
+		"species":    func(raw []byte) error { return checked(raw, checkSpecies) },
+		"background": func(raw []byte) error { return checked(raw, checkBackground) },
+		"feat":       func(raw []byte) error { return checked(raw, checkFeat) },
+	}
+	if err := checks[x.Kind](x.Design); err != nil {
 		return err.Error()
 	}
 	return ""
+}
+
+// checked reads a design and checks it.
+func checked[D any](raw []byte, check func(D) error) error {
+	var d D
+	if err := json.Unmarshal(raw, &d); err != nil {
+		return err
+	}
+	return check(d)
 }

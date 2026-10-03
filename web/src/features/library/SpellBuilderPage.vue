@@ -1,35 +1,24 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { useMutation, useQuery } from '@tanstack/vue-query'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSpellBuildOptions, previewSpellMutation, saveSpellBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { SpellBuild, SpellDesign, SpellPart } from '@/infrastructure/api/types.gen'
+import type { SpellPart } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import { useBuilder } from './useBuilder'
 import AreaPreview from './AreaPreview.vue'
 
 const route = useRoute()
-const client = useQueryClient()
-const path = computed(() => ({ path: { entryId: String(route.params.entryId) } }))
+const entryId = computed(() => String(route.params.entryId))
+const path = computed(() => ({ path: { entryId: entryId.value } }))
 const spell = useQuery(computed(() => ({ ...getSpellBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewSpellMutation())
 const save = useMutation(saveSpellBuildMutation())
-const problem = computed(() => preview.error.value ?? save.error.value)
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+  entryId, data: spell.data, key: computed(() => getSpellBuildOptions(path.value).queryKey), preview, save, fallback: 'Spell',
+})
 // copy takes plain data out of a reactive value.
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-const design = ref<SpellDesign>()
-const shown = ref<SpellBuild>()
-const status = ref('')
-watch(
-  () => spell.data.value,
-  (b) => {
-    if (!b || design.value) return
-    design.value = copy(b.design)
-    shown.value = b
-  },
-  { immediate: true },
-)
-const name = computed(() => spell.data.value?.entry?.name ?? '')
-const readOnly = computed(() => spell.data.value?.entry?.shared ?? false)
 
 const shapes = ['sphere', 'cylinder', 'emanation', 'ring', 'cone', 'cube', 'line', 'wall'] as const
 const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'] as const
@@ -72,23 +61,6 @@ function toggle(list: string[] | undefined, value: string): string[] {
 }
 function setMaterial(on: boolean) {
   if (design.value) design.value.components.material = on ? { text: '' } : undefined
-}
-function runPreview() {
-  if (!design.value) return
-  status.value = ''
-  preview.mutate({ body: { name: name.value || 'Spell', design: design.value } }, { onSuccess: (b) => (shown.value = b) })
-}
-function runSave() {
-  if (!design.value) return
-  status.value = ''
-  save.mutate({ ...path.value, body: design.value }, {
-    onSuccess: (b) => {
-      shown.value = b
-      client.setQueryData(getSpellBuildOptions(path.value).queryKey, b)
-      void client.invalidateQueries()
-      status.value = `Saved as Revision ${String(b.entry?.revision ?? 0)}.`
-    },
-  })
 }
 </script>
 

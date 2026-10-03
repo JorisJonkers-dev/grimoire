@@ -10,6 +10,7 @@ import (
 	"github.com/JorisJonkers-dev/grimoire/api/internal/campaign/domain"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/platform/pg/queries"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/classbuild"
+	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/featbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/speciesbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/spellbuild"
 	"github.com/JorisJonkers-dev/grimoire/api/internal/rules/subclassbuild"
@@ -37,6 +38,16 @@ func (s *Store) HomebrewSubclasses(ctx context.Context, id domain.CampaignID) ([
 func (s *Store) HomebrewSpecies(ctx context.Context, id domain.CampaignID) ([]speciesbuild.Option, error) {
 	built, err := homebrew(ctx, s, id, "species", speciesbuild.Compile)
 	return slices.Concat(built...), err
+}
+
+// HomebrewFeats builds the feats a Campaign's Library adds.
+func (s *Store) HomebrewFeats(ctx context.Context, id domain.CampaignID) ([]featbuild.BuiltFeat, error) {
+	return homebrew(ctx, s, id, "feat", featbuild.CompileFeat)
+}
+
+// HomebrewBackgrounds builds the backgrounds a Campaign's Library adds.
+func (s *Store) HomebrewBackgrounds(ctx context.Context, id domain.CampaignID) ([]featbuild.BuiltBackground, error) {
+	return homebrew(ctx, s, id, "background", featbuild.CompileBackground)
 }
 
 // HomebrewClasses builds the classes a Campaign's Library adds.

@@ -1,35 +1,24 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { useMutation, useQuery } from '@tanstack/vue-query'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getItemBuildOptions, previewItemMutation, saveItemBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { ItemBuild, ItemDesign, ItemProperty } from '@/infrastructure/api/types.gen'
+import type { ItemProperty } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import { useBuilder } from './useBuilder'
 import { freshRow, itemKinds, masteries, rarities, rowFields, weaponProperties } from './itemRows'
 
 const route = useRoute()
-const client = useQueryClient()
-const path = computed(() => ({ path: { entryId: String(route.params.entryId) } }))
+const entryId = computed(() => String(route.params.entryId))
+const path = computed(() => ({ path: { entryId: entryId.value } }))
 const item = useQuery(computed(() => ({ ...getItemBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewItemMutation())
 const save = useMutation(saveItemBuildMutation())
-const problem = computed(() => preview.error.value ?? save.error.value)
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+  entryId, data: item.data, key: computed(() => getItemBuildOptions(path.value).queryKey), preview, save, fallback: 'Item',
+})
 // copy takes plain data out of a reactive value.
 const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-const design = ref<ItemDesign>()
-const shown = ref<ItemBuild>()
-const status = ref('')
-watch(
-  () => item.data.value,
-  (b) => {
-    if (!b || design.value) return
-    design.value = copy(b.design)
-    shown.value = b
-  },
-  { immediate: true },
-)
-const name = computed(() => item.data.value?.entry?.name ?? '')
-const readOnly = computed(() => item.data.value?.entry?.shared ?? false)
 const adding = ref('skill_boost')
 const words = (s: string) => s.replaceAll('_', ' ')
 
@@ -58,23 +47,6 @@ function field(row: ItemProperty, key: keyof ItemProperty): string | number | bo
 }
 function setField(row: ItemProperty, key: keyof ItemProperty, value: string | number | boolean) {
   ;(row as Record<string, unknown>)[key] = value
-}
-function runPreview() {
-  if (!design.value) return
-  status.value = ''
-  preview.mutate({ body: { name: name.value || 'Item', design: design.value } }, { onSuccess: (b) => (shown.value = b) })
-}
-function runSave() {
-  if (!design.value) return
-  status.value = ''
-  save.mutate({ ...path.value, body: design.value }, {
-    onSuccess: (b) => {
-      shown.value = b
-      client.setQueryData(getItemBuildOptions(path.value).queryKey, b)
-      void client.invalidateQueries()
-      status.value = `Saved as Revision ${String(b.entry?.revision ?? 0)}.`
-    },
-  })
 }
 </script>
 

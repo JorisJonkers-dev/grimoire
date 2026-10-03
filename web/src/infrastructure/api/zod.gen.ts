@@ -1556,7 +1556,9 @@ export const zLibraryKind = z.enum([
     'table',
     'subclass',
     'class',
-    'species'
+    'species',
+    'background',
+    'feat'
 ]);
 
 /**
@@ -2154,6 +2156,77 @@ export const zSpeciesPreviewInput = z.object({
 export const zSpeciesBuild = z.object({
     entry: zLibraryEntry.optional(),
     design: zSpeciesDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+ */
+export const zFeatPrerequisite = z.object({
+    kind: z.string().max(40),
+    ability: z.string().max(40).optional(),
+    minimum: z.int().gte(-100000).lte(100000).optional(),
+    feat: z.string().max(120).optional(),
+    group: z.int().gte(-100000).lte(100000)
+});
+
+/**
+ * A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.
+ */
+export const zFeatDesign = z.object({
+    category: z.string().max(40),
+    text: z.string().max(16000),
+    repeatable: z.boolean().optional(),
+    prerequisites: z.array(zFeatPrerequisite).max(40)
+});
+
+/**
+ * A design to preview, with the feat's name.
+ */
+export const zFeatPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zFeatDesign
+});
+
+/**
+ * A homebrew feat in its builder, the slug it is known by, and how it reads back.
+ */
+export const zFeatBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zFeatDesign,
+    slug: z.string().max(40).optional(),
+    lines: z.array(z.string().max(2400)).max(400)
+});
+
+/**
+ * A homebrew background as the background builder makes it, shaped like the 2024 ones.
+ */
+export const zBackgroundDesign = z.object({
+    abilities: z.array(z.string().max(40)).max(10),
+    skills: z.array(z.string().max(40)).max(10),
+    feat: z.string().max(120),
+    featName: z.string().max(200),
+    tool: z.string().max(400).optional(),
+    equipment: z.string().max(2000).optional(),
+    gold: z.int().gte(-100000).lte(100000).optional(),
+    text: z.string().max(8000).optional()
+});
+
+/**
+ * A design to preview, with the background's name.
+ */
+export const zBackgroundPreviewInput = z.object({
+    name: z.string().min(1).max(80),
+    design: zBackgroundDesign
+});
+
+/**
+ * A homebrew background in its builder, the slug it is known by, and how it reads back.
+ */
+export const zBackgroundBuild = z.object({
+    entry: zLibraryEntry.optional(),
+    design: zBackgroundDesign,
     slug: z.string().max(40).optional(),
     lines: z.array(z.string().max(2400)).max(400)
 });
@@ -6113,6 +6186,60 @@ export const zSaveSpeciesBuildPath = z.object({
  * The species.
  */
 export const zSaveSpeciesBuildResponse = zSpeciesBuild;
+
+export const zPreviewFeatBody = zFeatPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewFeatResponse = zFeatBuild;
+
+export const zGetFeatBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The feat.
+ */
+export const zGetFeatBuildResponse = zFeatBuild;
+
+export const zSaveFeatBuildBody = zFeatDesign;
+
+export const zSaveFeatBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The feat.
+ */
+export const zSaveFeatBuildResponse = zFeatBuild;
+
+export const zPreviewBackgroundBody = zBackgroundPreviewInput;
+
+/**
+ * The preview.
+ */
+export const zPreviewBackgroundResponse = zBackgroundBuild;
+
+export const zGetBackgroundBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The background.
+ */
+export const zGetBackgroundBuildResponse = zBackgroundBuild;
+
+export const zSaveBackgroundBuildBody = zBackgroundDesign;
+
+export const zSaveBackgroundBuildPath = z.object({
+    entryId: zId
+});
+
+/**
+ * The background.
+ */
+export const zSaveBackgroundBuildResponse = zBackgroundBuild;
 
 /**
  * The signed-in account.

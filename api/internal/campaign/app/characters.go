@@ -449,9 +449,16 @@ func (s *Characters) extras(ctx context.Context, sheet Sheet) (Sheet, error) {
 		classes = append(classes, compendium.ClassLevel{Class: x.Class, Subclass: x.Subclass, Level: x.Level})
 		masteries = max(masteries, cat.MasteryCount(x.Class, x.Level))
 	}
-	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Species, classes, pickValues(sheet.Picks)); err != nil {
+	h, _ := s.Compendium.(homebrew)
+	background, origin := h.background(sheet.Background)
+	feats := pickValues(sheet.Picks)
+	if origin != "" {
+		feats = append(feats, origin)
+	}
+	if sheet.Traits, err = s.Compendium.Traits(ctx, sheet.Ruleset, sheet.Species, classes, feats); err != nil {
 		return Sheet{}, err
 	}
+	sheet.Traits = append(sheet.Traits, background...)
 	sheet.Proficiencies = sheet.Profile(sheet.Class).Proficiencies
 	var carried []string
 	for _, w := range sheet.Weapons {

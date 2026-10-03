@@ -1,35 +1,21 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { useMutation, useQuery } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getClassBuildOptions, previewClassMutation, saveClassBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { ClassBuild, ClassDesign } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import { useBuilder } from './useBuilder'
 import { abilities, casterKinds, castingFor, srdClasses } from './classPresets'
 
 const route = useRoute()
-const client = useQueryClient()
-const path = computed(() => ({ path: { entryId: String(route.params.entryId) } }))
+const entryId = computed(() => String(route.params.entryId))
+const path = computed(() => ({ path: { entryId: entryId.value } }))
 const klass = useQuery(computed(() => ({ ...getClassBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewClassMutation())
 const save = useMutation(saveClassBuildMutation())
-const problem = computed(() => preview.error.value ?? save.error.value)
-// copy takes plain data out of a reactive value.
-const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-const design = ref<ClassDesign>()
-const shown = ref<ClassBuild>()
-const status = ref('')
-watch(
-  () => klass.data.value,
-  (b) => {
-    if (!b || design.value) return
-    design.value = copy(b.design)
-    shown.value = b
-  },
-  { immediate: true },
-)
-const name = computed(() => klass.data.value?.entry?.name ?? '')
-const readOnly = computed(() => klass.data.value?.entry?.shared ?? false)
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+  entryId, data: klass.data, key: computed(() => getClassBuildOptions(path.value).queryKey), preview, save, fallback: 'Class',
+})
 const levels = Array.from({ length: 20 }, (_, i) => i + 1)
 const casts = computed(() => design.value !== undefined && design.value.casting.kind !== 'none')
 
@@ -53,23 +39,6 @@ function addColumn() {
 }
 function addFeature() {
   design.value?.features.push({ level: 1, name: '', text: '' })
-}
-function runPreview() {
-  if (!design.value) return
-  status.value = ''
-  preview.mutate({ body: { name: name.value || 'Class', design: design.value } }, { onSuccess: (b) => (shown.value = b) })
-}
-function runSave() {
-  if (!design.value) return
-  status.value = ''
-  save.mutate({ ...path.value, body: design.value }, {
-    onSuccess: (b) => {
-      shown.value = b
-      client.setQueryData(getClassBuildOptions(path.value).queryKey, b)
-      void client.invalidateQueries()
-      status.value = `Saved as Revision ${String(b.entry?.revision ?? 0)}.`
-    },
-  })
 }
 </script>
 

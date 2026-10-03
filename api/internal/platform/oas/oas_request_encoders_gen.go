@@ -528,6 +528,20 @@ func encodePreviewAccountInviteRequest(
 	return nil
 }
 
+func encodePreviewBackgroundRequest(
+	req *BackgroundPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodePreviewCharacterRequest(
 	req *CharacterBuild,
 	r *http.Request,
@@ -544,6 +558,20 @@ func encodePreviewCharacterRequest(
 
 func encodePreviewClassRequest(
 	req *ClassPreviewInput,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodePreviewFeatRequest(
+	req *FeatPreviewInput,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -766,6 +794,20 @@ func encodeReviewSharedSubmissionRequest(
 	return nil
 }
 
+func encodeSaveBackgroundBuildRequest(
+	req *BackgroundDesign,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeSaveCharacterDraftRequest(
 	req *CharacterDraftSave,
 	r *http.Request,
@@ -782,6 +824,20 @@ func encodeSaveCharacterDraftRequest(
 
 func encodeSaveClassBuildRequest(
 	req *ClassDesign,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	e := new(jx.Encoder)
+	{
+		req.Encode(e)
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeSaveFeatBuildRequest(
+	req *FeatDesign,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

@@ -604,6 +604,13 @@ type BuildHandler interface {
 	//
 	// POST /api/v1/campaigns/{campaignId}/character-draft/roll
 	RollCharacterScores(ctx context.Context, params RollCharacterScoresParams) (RollCharacterScoresRes, error)
+	// SaveBackgroundBuild implements saveBackgroundBuild operation.
+	//
+	// Saves the design of one of the caller's background entries as its next Revision; Campaigns that see
+	// it offer it in character creation.
+	//
+	// PUT /api/v1/builders/backgrounds/{entryId}
+	SaveBackgroundBuild(ctx context.Context, req *BackgroundDesign, params SaveBackgroundBuildParams) (SaveBackgroundBuildRes, error)
 	// SaveCharacterDraft implements saveCharacterDraft operation.
 	//
 	// Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
@@ -618,6 +625,13 @@ type BuildHandler interface {
 	//
 	// PUT /api/v1/builders/classes/{entryId}
 	SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (SaveClassBuildRes, error)
+	// SaveFeatBuild implements saveFeatBuild operation.
+	//
+	// Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it
+	// offer it when a level grants a feat of its category.
+	//
+	// PUT /api/v1/builders/feats/{entryId}
+	SaveFeatBuild(ctx context.Context, req *FeatDesign, params SaveFeatBuildParams) (SaveFeatBuildRes, error)
 	// SaveItemBuild implements saveItemBuild operation.
 	//
 	// Saves the design of one of the caller's items as its next Revision; Campaigns that see it carry it
@@ -934,6 +948,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/automation
 	GetAutomationCoverage(ctx context.Context, params GetAutomationCoverageParams) (GetAutomationCoverageRes, error)
+	// GetBackgroundBuild implements getBackgroundBuild operation.
+	//
+	// A homebrew background's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/backgrounds/{entryId}
+	GetBackgroundBuild(ctx context.Context, params GetBackgroundBuildParams) (GetBackgroundBuildRes, error)
 	// GetBuilderOptions implements getBuilderOptions operation.
 	//
 	// Every class, species, background, armour and weapon a first-level character can choose in one
@@ -973,6 +993,12 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/compendium/entries/{kind}/{slug}
 	GetEntry(ctx context.Context, params GetEntryParams) (GetEntryRes, error)
+	// GetFeatBuild implements getFeatBuild operation.
+	//
+	// A homebrew feat's design, read back: one of the caller's, or a Shared Library copy.
+	//
+	// GET /api/v1/builders/feats/{entryId}
+	GetFeatBuild(ctx context.Context, params GetFeatBuildParams) (GetFeatBuildRes, error)
 	// GetHealth implements getHealth operation.
 	//
 	// Returns ok while the process is serving requests.
@@ -1423,6 +1449,13 @@ type ReadHandler interface {
 	//
 	// GET /api/v1/campaigns/{campaignId}/characters/{characterId}/level-up
 	PlanLevelUp(ctx context.Context, params PlanLevelUpParams) (PlanLevelUpRes, error)
+	// PreviewBackground implements previewBackground operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/backgrounds/preview
+	PreviewBackground(ctx context.Context, req *BackgroundPreviewInput) (PreviewBackgroundRes, error)
 	// PreviewClass implements previewClass operation.
 	//
 	// Checks a design without saving it and reads it back with its level table. A design the rules refuse
@@ -1430,6 +1463,13 @@ type ReadHandler interface {
 	//
 	// POST /api/v1/builders/classes/preview
 	PreviewClass(ctx context.Context, req *ClassPreviewInput) (PreviewClassRes, error)
+	// PreviewFeat implements previewFeat operation.
+	//
+	// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+	// reason.
+	//
+	// POST /api/v1/builders/feats/preview
+	PreviewFeat(ctx context.Context, req *FeatPreviewInput) (PreviewFeatRes, error)
 	// PreviewItem implements previewItem operation.
 	//
 	// Checks a design without saving it: its item card and its Price Check. A design the rules refuse

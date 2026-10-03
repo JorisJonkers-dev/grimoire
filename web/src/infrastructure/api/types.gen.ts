@@ -2526,7 +2526,7 @@ export type SessionAction = {
 /**
  * What a Library entry is.
  */
-export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class' | 'species';
+export type LibraryKind = 'creature' | 'npc' | 'location' | 'shop' | 'item' | 'spell' | 'table' | 'subclass' | 'class' | 'species' | 'background' | 'feat';
 
 /**
  * One named value of a Library entry.
@@ -3092,6 +3092,77 @@ export type SpeciesLineage = {
     name: string;
     text: string;
     spells: Array<SpeciesSpell>;
+};
+
+/**
+ * A design to preview, with the feat's name.
+ */
+export type FeatPreviewInput = {
+    name: string;
+    design: FeatDesign;
+};
+
+/**
+ * A homebrew feat in its builder, the slug it is known by, and how it reads back.
+ */
+export type FeatBuild = {
+    entry?: LibraryEntry;
+    design: FeatDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A design to preview, with the background's name.
+ */
+export type BackgroundPreviewInput = {
+    name: string;
+    design: BackgroundDesign;
+};
+
+/**
+ * A homebrew background in its builder, the slug it is known by, and how it reads back.
+ */
+export type BackgroundBuild = {
+    entry?: LibraryEntry;
+    design: BackgroundDesign;
+    slug?: string;
+    lines: Array<string>;
+};
+
+/**
+ * A homebrew feat as the feat builder makes it, with its category, text, prerequisites and whether it can be taken again.
+ */
+export type FeatDesign = {
+    category: string;
+    text: string;
+    repeatable?: boolean;
+    prerequisites: Array<FeatPrerequisite>;
+};
+
+/**
+ * One thing a feat needs; prerequisites in one group are alternatives, and every group must hold.
+ */
+export type FeatPrerequisite = {
+    kind: string;
+    ability?: string;
+    minimum?: number;
+    feat?: string;
+    group: number;
+};
+
+/**
+ * A homebrew background as the background builder makes it, shaped like the 2024 ones.
+ */
+export type BackgroundDesign = {
+    abilities: Array<string>;
+    skills: Array<string>;
+    feat: string;
+    featName: string;
+    tool?: string;
+    equipment?: string;
+    gold?: number;
+    text?: string;
 };
 
 /**
@@ -9927,6 +9998,200 @@ export type SaveSpeciesBuildResponses = {
 };
 
 export type SaveSpeciesBuildResponse = SaveSpeciesBuildResponses[keyof SaveSpeciesBuildResponses];
+
+export type PreviewFeatData = {
+    body: FeatPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/feats/preview';
+};
+
+export type PreviewFeatErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewFeatError = PreviewFeatErrors[keyof PreviewFeatErrors];
+
+export type PreviewFeatResponses = {
+    /**
+     * The preview.
+     */
+    200: FeatBuild;
+};
+
+export type PreviewFeatResponse = PreviewFeatResponses[keyof PreviewFeatResponses];
+
+export type GetFeatBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/feats/{entryId}';
+};
+
+export type GetFeatBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetFeatBuildError = GetFeatBuildErrors[keyof GetFeatBuildErrors];
+
+export type GetFeatBuildResponses = {
+    /**
+     * The feat.
+     */
+    200: FeatBuild;
+};
+
+export type GetFeatBuildResponse = GetFeatBuildResponses[keyof GetFeatBuildResponses];
+
+export type SaveFeatBuildData = {
+    body: FeatDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/feats/{entryId}';
+};
+
+export type SaveFeatBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveFeatBuildError = SaveFeatBuildErrors[keyof SaveFeatBuildErrors];
+
+export type SaveFeatBuildResponses = {
+    /**
+     * The feat.
+     */
+    200: FeatBuild;
+};
+
+export type SaveFeatBuildResponse = SaveFeatBuildResponses[keyof SaveFeatBuildResponses];
+
+export type PreviewBackgroundData = {
+    body: BackgroundPreviewInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/builders/backgrounds/preview';
+};
+
+export type PreviewBackgroundErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type PreviewBackgroundError = PreviewBackgroundErrors[keyof PreviewBackgroundErrors];
+
+export type PreviewBackgroundResponses = {
+    /**
+     * The preview.
+     */
+    200: BackgroundBuild;
+};
+
+export type PreviewBackgroundResponse = PreviewBackgroundResponses[keyof PreviewBackgroundResponses];
+
+export type GetBackgroundBuildData = {
+    body?: never;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/backgrounds/{entryId}';
+};
+
+export type GetBackgroundBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type GetBackgroundBuildError = GetBackgroundBuildErrors[keyof GetBackgroundBuildErrors];
+
+export type GetBackgroundBuildResponses = {
+    /**
+     * The background.
+     */
+    200: BackgroundBuild;
+};
+
+export type GetBackgroundBuildResponse = GetBackgroundBuildResponses[keyof GetBackgroundBuildResponses];
+
+export type SaveBackgroundBuildData = {
+    body: BackgroundDesign;
+    path: {
+        /**
+         * Library entry id.
+         */
+        entryId: Id;
+    };
+    query?: never;
+    url: '/api/v1/builders/backgrounds/{entryId}';
+};
+
+export type SaveBackgroundBuildErrors = {
+    /**
+     * An RFC 9457 problem.
+     */
+    '4XX': Problem;
+    /**
+     * An RFC 9457 problem.
+     */
+    '5XX': Problem;
+};
+
+export type SaveBackgroundBuildError = SaveBackgroundBuildErrors[keyof SaveBackgroundBuildErrors];
+
+export type SaveBackgroundBuildResponses = {
+    /**
+     * The background.
+     */
+    200: BackgroundBuild;
+};
+
+export type SaveBackgroundBuildResponse = SaveBackgroundBuildResponses[keyof SaveBackgroundBuildResponses];
 
 export type GetMeData = {
     body?: never;

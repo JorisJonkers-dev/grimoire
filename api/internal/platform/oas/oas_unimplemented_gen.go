@@ -472,6 +472,15 @@ func (UnimplementedHandler) GetAutomationCoverage(ctx context.Context, params Ge
 	return r, ht.ErrNotImplemented
 }
 
+// GetBackgroundBuild implements getBackgroundBuild operation.
+//
+// A homebrew background's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/backgrounds/{entryId}
+func (UnimplementedHandler) GetBackgroundBuild(ctx context.Context, params GetBackgroundBuildParams) (r GetBackgroundBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // GetBuilderOptions implements getBuilderOptions operation.
 //
 // Every class, species, background, armour and weapon a first-level character can choose in one
@@ -526,6 +535,15 @@ func (UnimplementedHandler) GetClassBuild(ctx context.Context, params GetClassBu
 //
 // GET /api/v1/compendium/entries/{kind}/{slug}
 func (UnimplementedHandler) GetEntry(ctx context.Context, params GetEntryParams) (r GetEntryRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// GetFeatBuild implements getFeatBuild operation.
+//
+// A homebrew feat's design, read back: one of the caller's, or a Shared Library copy.
+//
+// GET /api/v1/builders/feats/{entryId}
+func (UnimplementedHandler) GetFeatBuild(ctx context.Context, params GetFeatBuildParams) (r GetFeatBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1314,6 +1332,16 @@ func (UnimplementedHandler) PreviewAccountInvite(ctx context.Context, req *LinkT
 	return r, ht.ErrNotImplemented
 }
 
+// PreviewBackground implements previewBackground operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/backgrounds/preview
+func (UnimplementedHandler) PreviewBackground(ctx context.Context, req *BackgroundPreviewInput) (r PreviewBackgroundRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // PreviewCharacter implements previewCharacter operation.
 //
 // Validates a build and returns the sheet it would make, without saving it.
@@ -1330,6 +1358,16 @@ func (UnimplementedHandler) PreviewCharacter(ctx context.Context, req *Character
 //
 // POST /api/v1/builders/classes/preview
 func (UnimplementedHandler) PreviewClass(ctx context.Context, req *ClassPreviewInput) (r PreviewClassRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// PreviewFeat implements previewFeat operation.
+//
+// Checks a design without saving it and reads it back. A design the rules refuse comes back with the
+// reason.
+//
+// POST /api/v1/builders/feats/preview
+func (UnimplementedHandler) PreviewFeat(ctx context.Context, req *FeatPreviewInput) (r PreviewFeatRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -1620,6 +1658,16 @@ func (UnimplementedHandler) RollRest(ctx context.Context, params RollRestParams)
 	return r, ht.ErrNotImplemented
 }
 
+// SaveBackgroundBuild implements saveBackgroundBuild operation.
+//
+// Saves the design of one of the caller's background entries as its next Revision; Campaigns that see
+// it offer it in character creation.
+//
+// PUT /api/v1/builders/backgrounds/{entryId}
+func (UnimplementedHandler) SaveBackgroundBuild(ctx context.Context, req *BackgroundDesign, params SaveBackgroundBuildParams) (r SaveBackgroundBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // SaveCharacterDraft implements saveCharacterDraft operation.
 //
 // Keeps the wizard's choices so the caller can come back to them; rolled scores stay as the server
@@ -1637,6 +1685,16 @@ func (UnimplementedHandler) SaveCharacterDraft(ctx context.Context, req *Charact
 //
 // PUT /api/v1/builders/classes/{entryId}
 func (UnimplementedHandler) SaveClassBuild(ctx context.Context, req *ClassDesign, params SaveClassBuildParams) (r SaveClassBuildRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// SaveFeatBuild implements saveFeatBuild operation.
+//
+// Saves the design of one of the caller's feat entries as its next Revision; Campaigns that see it
+// offer it when a level grants a feat of its category.
+//
+// PUT /api/v1/builders/feats/{entryId}
+func (UnimplementedHandler) SaveFeatBuild(ctx context.Context, req *FeatDesign, params SaveFeatBuildParams) (r SaveFeatBuildRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

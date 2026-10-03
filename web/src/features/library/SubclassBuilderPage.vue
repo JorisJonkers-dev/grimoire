@@ -1,34 +1,21 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { useMutation, useQuery } from '@tanstack/vue-query'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getSubclassBuildOptions, previewSubclassMutation, saveSubclassBuildMutation } from '@/infrastructure/api/@tanstack/vue-query.gen'
-import type { SubclassBuild, SubclassDesign, SubclassResource } from '@/infrastructure/api/types.gen'
+import type { SubclassResource } from '@/infrastructure/api/types.gen'
 import { GButton } from '@/shared/ui'
+import { useBuilder } from './useBuilder'
 
 const route = useRoute()
-const client = useQueryClient()
-const path = computed(() => ({ path: { entryId: String(route.params.entryId) } }))
+const entryId = computed(() => String(route.params.entryId))
+const path = computed(() => ({ path: { entryId: entryId.value } }))
 const subclass = useQuery(computed(() => ({ ...getSubclassBuildOptions(path.value), retry: false })))
 const preview = useMutation(previewSubclassMutation())
 const save = useMutation(saveSubclassBuildMutation())
-const problem = computed(() => preview.error.value ?? save.error.value)
-// copy takes plain data out of a reactive value.
-const copy = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T
-const design = ref<SubclassDesign>()
-const shown = ref<SubclassBuild>()
-const status = ref('')
-watch(
-  () => subclass.data.value,
-  (b) => {
-    if (!b || design.value) return
-    design.value = copy(b.design)
-    shown.value = b
-  },
-  { immediate: true },
-)
-const name = computed(() => subclass.data.value?.entry?.name ?? '')
-const readOnly = computed(() => subclass.data.value?.entry?.shared ?? false)
+const { design, shown, status, name, readOnly, problem, runPreview, runSave } = useBuilder({
+  entryId, data: subclass.data, key: computed(() => getSubclassBuildOptions(path.value).queryKey), preview, save, fallback: 'Subclass',
+})
 
 const classes = ['barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk', 'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard']
 const abilities = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']
@@ -70,23 +57,6 @@ function setBasis(r: SubclassResource, basis: string) {
 function setOptions(i: number, text: string) {
   const c = design.value?.choices[i]
   if (c) c.options = text.split(',').map((o) => o.trim()).filter(Boolean)
-}
-function runPreview() {
-  if (!design.value) return
-  status.value = ''
-  preview.mutate({ body: { name: name.value || 'Subclass', design: design.value } }, { onSuccess: (b) => (shown.value = b) })
-}
-function runSave() {
-  if (!design.value) return
-  status.value = ''
-  save.mutate({ ...path.value, body: design.value }, {
-    onSuccess: (b) => {
-      shown.value = b
-      client.setQueryData(getSubclassBuildOptions(path.value).queryKey, b)
-      void client.invalidateQueries()
-      status.value = `Saved as Revision ${String(b.entry?.revision ?? 0)}.`
-    },
-  })
 }
 </script>
 

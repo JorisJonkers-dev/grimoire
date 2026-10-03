@@ -546,6 +546,15 @@ func TestEveryCharacterDatabaseFaultSurfaces(t *testing.T) {
 			return err
 		},
 		"level up": func(c *app.Characters) error {
+			// Each run whose level commits before its fault climbs a level; start every run low again.
+			for _, q := range []string{
+				"UPDATE campaign.characters SET level = 1 WHERE id = $1",
+				"UPDATE campaign.character_classes SET level = 1 WHERE character_id = $1",
+			} {
+				if _, err := db.Pool().Exec(ctx, q, uuid.UUID(climber.ID)); err != nil {
+					t.Fatal(err)
+				}
+			}
 			if err := store.SetLevelUpReady(ctx, d.ID, climber.ID, true, time.Now()); err != nil {
 				t.Fatal(err)
 			}
